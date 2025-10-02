@@ -1,0 +1,13 @@
+2025-09-13 21:21:35,380 [   ERROR] [toolboxai_settings.settings] CRITICAL SECURITY ISSUE: No secure JWT secret configured!
+2025-09-13 21:21:35,380 [ WARNING] [toolboxai_settings.settings] Generating secure development JWT secret...
+2025-09-13 21:21:35,380 [ WARNING] [toolboxai_settings.settings] DEVELOPMENT MODE: Auto-generated secure JWT secret
+2025-09-13 21:21:35,380 [ WARNING] [toolboxai_settings.settings] Add to your .env file: JWT_SECRET_KEY=Vb(+^>F_Fk[TIch5(rK5fj(>OX:^{%qyQ#hTS#Z.yKYjf8w=*wVyM*ZY3hglPZhd
+2025-09-13 21:21:35,380 [ WARNING] [toolboxai_settings.settings] DO NOT use this auto-generated secret in production!
+2025-09-13 21:21:35,380 [    INFO] [toolboxai_settings.settings] JWT Security Status:
+2025-09-13 21:21:35,380 [    INFO] [toolboxai_settings.settings]   Secret Length: 64 characters
+2025-09-13 21:21:35,380 [    INFO] [toolboxai_settings.settings]   Character Diversity: 42 unique characters
+2025-09-13 21:21:35,380 [    INFO] [toolboxai_settings.settings]   Environment: development
+2025-09-13 21:21:35,380 [    INFO] [toolboxai_settings.settings] ToolboxAI settings loaded with enhanced JWT security
+✅ Logging system initialized for environment: development
+{"timestamp": "2025-09-14T01:21:35.740570+00:00", "level": "INFO", "logger": "apps.backend.core.monitoring", "message": "Sentry DSN not configured, skipping initialization", "module": "monitoring", "function": "initialize", "line": 49}
+⚠️  Sentry initialization skipped for environment: development

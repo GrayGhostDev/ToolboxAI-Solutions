@@ -1,0 +1,41 @@
+@startuml
+!define ENTITY entity
+!define TABLE(x) class x << (T,#FFAAAA) >>
+
+title ToolBoxAI Complete Database ERD
+
+package educational_platform {
+  TABLE(educational_platform.users)
+  TABLE(educational_platform.roles)
+  TABLE(educational_platform.user_roles)
+  TABLE(educational_platform.user_sessions)
+  TABLE(educational_platform.learning_objectives)
+  TABLE(educational_platform.educational_content)
+  TABLE(educational_platform.content_objectives)
+  TABLE(educational_platform.quizzes)
+  TABLE(educational_platform.quiz_questions)
+  TABLE(educational_platform.quiz_options)
+  TABLE(educational_platform.quiz_attempts)
+  TABLE(educational_platform.user_progress)
+}
+
+package dashboard {
+  TABLE(dashboard.schools)
+  TABLE(dashboard.dashboard_users)
+  TABLE(dashboard.classes)
+  TABLE(dashboard.class_students)
+  TABLE(dashboard.assignments)
+  TABLE(dashboard.submissions)
+  TABLE(dashboard.lessons)
+  TABLE(dashboard.student_progress)
+  TABLE(dashboard.student_activity)
+  TABLE(dashboard.student_achievements)
+  TABLE(dashboard.attendance)
+  TABLE(dashboard.messages)
+  TABLE(dashboard.parent_children)
+  TABLE(dashboard.system_events)
+  TABLE(dashboard.api_logs)
+  TABLE(dashboard.compliance_records)
+}
+
+@enduml

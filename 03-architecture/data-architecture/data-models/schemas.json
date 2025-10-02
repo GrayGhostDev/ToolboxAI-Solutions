@@ -1,0 +1,3637 @@
+{
+  "educational_platform": {
+    "users": {
+      "columns": [
+        {
+          "name": "password_hash",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "first_name",
+          "type": "VARCHAR(100)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "last_name",
+          "type": "VARCHAR(100)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "display_name",
+          "type": "VARCHAR(200)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "avatar_url",
+          "type": "VARCHAR(500)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "bio",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "role",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "'student'",
+          "references": null
+        },
+        {
+          "name": "grade_level",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "school_name",
+          "type": "VARCHAR(200)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "district_name",
+          "type": "VARCHAR(200)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "subjects_taught",
+          "type": "JSONB",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "subjects_interested",
+          "type": "JSONB",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "true",
+          "references": null
+        },
+        {
+          "name": "is_verified",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "false",
+          "references": null
+        },
+        {
+          "name": "is_superuser",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "false",
+          "references": null
+        },
+        {
+          "name": "email_verified_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "last_login",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "login_count",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "0",
+          "references": null
+        },
+        {
+          "name": "failed_login_count",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "0",
+          "references": null
+        },
+        {
+          "name": "locked_until",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "two_factor_enabled",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "false",
+          "references": null
+        },
+        {
+          "name": "two_factor_secret",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "settings",
+          "type": "JSONB",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "'{}'",
+          "references": null
+        },
+        {
+          "name": "preferences",
+          "type": "JSONB",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "'{}'",
+          "references": null
+        },
+        {
+          "name": "notification_settings",
+          "type": "JSONB",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "'{}'",
+          "references": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        },
+        {
+          "name": "created_by",
+          "type": "UUID",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "users",
+            "column": "id"
+          }
+        },
+        {
+          "name": "updated_by",
+          "type": "UUID",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "users",
+            "column": "id"
+          }
+        },
+        {
+          "name": "version",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "1",
+          "references": null
+        },
+        {
+          "name": "audit_log",
+          "type": "JSONB",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "'[]'",
+          "references": null
+        }
+      ],
+      "constraints": [],
+      "indexes": [
+        {
+          "name": "idx_users_email",
+          "columns": [
+            "email"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_users_username",
+          "columns": [
+            "username"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_users_role",
+          "columns": [
+            "role"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_users_created_at",
+          "columns": [
+            "created_at DESC"
+          ],
+          "unique": false
+        }
+      ],
+      "foreign_keys": []
+    },
+    "roles": {
+      "columns": [
+        {
+          "name": "description",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "is_system",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "false",
+          "references": null
+        },
+        {
+          "name": "priority",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "0",
+          "references": null
+        },
+        {
+          "name": "permissions",
+          "type": "JSONB",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "'{}'",
+          "references": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        }
+      ],
+      "constraints": [],
+      "indexes": [],
+      "foreign_keys": []
+    },
+    "user_roles": {
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "UUID",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "users",
+            "column": "id"
+          }
+        },
+        {
+          "name": "role_id",
+          "type": "UUID",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "roles",
+            "column": "id"
+          }
+        },
+        {
+          "name": "assigned_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        },
+        {
+          "name": "assigned_by",
+          "type": "UUID",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "users",
+            "column": "id"
+          }
+        }
+      ],
+      "constraints": [
+        {
+          "type": "PRIMARY KEY",
+          "name": "PRIMARY",
+          "columns": [
+            "user_id",
+            "role_id"
+          ]
+        }
+      ],
+      "indexes": [],
+      "foreign_keys": []
+    },
+    "user_sessions": {
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "UUID",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "users",
+            "column": "id"
+          }
+        },
+        {
+          "name": "session_type",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "'web'",
+          "references": null
+        },
+        {
+          "name": "ip_address",
+          "type": "INET",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "user_agent",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "device_id",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "browser_fingerprint",
+          "type": "VARCHAR(500)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "country",
+          "type": "VARCHAR(2)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "timezone",
+          "type": "VARCHAR(50)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "locale",
+          "type": "VARCHAR(10)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        },
+        {
+          "name": "expires_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "refresh_expires_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "last_activity",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "true",
+          "references": null
+        },
+        {
+          "name": "revoked_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "revoked_reason",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "security_events",
+          "type": "JSONB",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "'[]'",
+          "references": null
+        }
+      ],
+      "constraints": [],
+      "indexes": [
+        {
+          "name": "idx_sessions_user_id",
+          "columns": [
+            "user_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_sessions_token",
+          "columns": [
+            "token"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_sessions_expires_at",
+          "columns": [
+            "expires_at"
+          ],
+          "unique": false
+        }
+      ],
+      "foreign_keys": []
+    },
+    "learning_objectives": {
+      "columns": [
+        {
+          "name": "title",
+          "type": "VARCHAR(200)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "subject",
+          "type": "VARCHAR(50)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "bloom_level",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "curriculum_standard",
+          "type": "VARCHAR(100)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "measurable",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "true",
+          "references": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        }
+      ],
+      "constraints": [],
+      "indexes": [],
+      "foreign_keys": []
+    },
+    "educational_content": {
+      "columns": [
+        {
+          "name": "title",
+          "type": "VARCHAR(200)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "subject",
+          "type": "VARCHAR(50)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "grade_level",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "environment_type",
+          "type": "VARCHAR(50)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "terrain_size",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "'medium'",
+          "references": null
+        },
+        {
+          "name": "difficulty_level",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "'medium'",
+          "references": null
+        },
+        {
+          "name": "duration_minutes",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "30",
+          "references": null
+        },
+        {
+          "name": "max_students",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "30",
+          "references": null
+        },
+        {
+          "name": "content_data",
+          "type": "JSONB",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "generated_scripts",
+          "type": "JSONB",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "terrain_config",
+          "type": "JSONB",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "game_mechanics",
+          "type": "JSONB",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "accessibility_features",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "false",
+          "references": null
+        },
+        {
+          "name": "multilingual",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "false",
+          "references": null
+        },
+        {
+          "name": "version",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "1",
+          "references": null
+        },
+        {
+          "name": "is_template",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "false",
+          "references": null
+        },
+        {
+          "name": "is_published",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "false",
+          "references": null
+        },
+        {
+          "name": "created_by",
+          "type": "UUID",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "users",
+            "column": "id"
+          }
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        }
+      ],
+      "constraints": [],
+      "indexes": [
+        {
+          "name": "idx_content_subject_grade",
+          "columns": [
+            "subject",
+            "grade_level"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_content_created_by",
+          "columns": [
+            "created_by",
+            "created_at DESC"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_content_published",
+          "columns": [
+            "is_published",
+            "created_at DESC"
+          ],
+          "unique": false
+        }
+      ],
+      "foreign_keys": []
+    },
+    "content_objectives": {
+      "columns": [
+        {
+          "name": "content_id",
+          "type": "UUID",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "educational_content",
+            "column": "id"
+          }
+        },
+        {
+          "name": "objective_id",
+          "type": "UUID",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "learning_objectives",
+            "column": "id"
+          }
+        }
+      ],
+      "constraints": [
+        {
+          "type": "PRIMARY KEY",
+          "name": "PRIMARY",
+          "columns": [
+            "content_id",
+            "objective_id"
+          ]
+        }
+      ],
+      "indexes": [],
+      "foreign_keys": []
+    },
+    "quizzes": {
+      "columns": [
+        {
+          "name": "title",
+          "type": "VARCHAR(200)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "subject",
+          "type": "VARCHAR(50)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "grade_level",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "content_id",
+          "type": "UUID",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "educational_content",
+            "column": "id"
+          }
+        },
+        {
+          "name": "time_limit",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "passing_score",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "70",
+          "references": null
+        },
+        {
+          "name": "max_attempts",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "3",
+          "references": null
+        },
+        {
+          "name": "shuffle_questions",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "true",
+          "references": null
+        },
+        {
+          "name": "shuffle_options",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "true",
+          "references": null
+        },
+        {
+          "name": "show_results",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "true",
+          "references": null
+        },
+        {
+          "name": "is_adaptive",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "false",
+          "references": null
+        },
+        {
+          "name": "difficulty_progression",
+          "type": "JSONB",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "created_by",
+          "type": "UUID",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "users",
+            "column": "id"
+          }
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        }
+      ],
+      "constraints": [],
+      "indexes": [],
+      "foreign_keys": []
+    },
+    "quiz_questions": {
+      "columns": [
+        {
+          "name": "quiz_id",
+          "type": "UUID",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "quizzes",
+            "column": "id"
+          }
+        },
+        {
+          "name": "question_type",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "question_text",
+          "type": "TEXT",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "correct_answer",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "difficulty",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "'medium'",
+          "references": null
+        },
+        {
+          "name": "points",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "1",
+          "references": null
+        },
+        {
+          "name": "time_limit",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "hint",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "explanation",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "order_index",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "question_data",
+          "type": "JSONB",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        }
+      ],
+      "constraints": [],
+      "indexes": [
+        {
+          "name": "idx_quiz_questions_quiz",
+          "columns": [
+            "quiz_id",
+            "order_index"
+          ],
+          "unique": false
+        }
+      ],
+      "foreign_keys": []
+    },
+    "quiz_options": {
+      "columns": [
+        {
+          "name": "question_id",
+          "type": "UUID",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "quiz_questions",
+            "column": "id"
+          }
+        },
+        {
+          "name": "option_text",
+          "type": "TEXT",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "is_correct",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "false",
+          "references": null
+        },
+        {
+          "name": "explanation",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "order_index",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        }
+      ],
+      "constraints": [],
+      "indexes": [],
+      "foreign_keys": []
+    },
+    "quiz_attempts": {
+      "columns": [
+        {
+          "name": "quiz_id",
+          "type": "UUID",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "quizzes",
+            "column": "id"
+          }
+        },
+        {
+          "name": "user_id",
+          "type": "UUID",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "users",
+            "column": "id"
+          }
+        },
+        {
+          "name": "session_id",
+          "type": "UUID",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "user_sessions",
+            "column": "id"
+          }
+        },
+        {
+          "name": "attempt_number",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "started_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        },
+        {
+          "name": "completed_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "score",
+          "type": "DECIMAL",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "passed",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "time_taken",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "answers",
+          "type": "JSONB",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "feedback",
+          "type": "JSONB",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "adaptive_adjustments",
+          "type": "JSONB",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        }
+      ],
+      "constraints": [
+        {
+          "type": "UNIQUE",
+          "name": "UQ_quiz_id, user_id, attempt_number",
+          "columns": [
+            "quiz_id",
+            "user_id",
+            "attempt_number"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_quiz_attempts_user",
+          "columns": [
+            "user_id",
+            "completed_at DESC"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_quiz_attempts_quiz",
+          "columns": [
+            "quiz_id",
+            "score DESC"
+          ],
+          "unique": false
+        }
+      ],
+      "foreign_keys": []
+    },
+    "user_progress": {
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "UUID",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "users",
+            "column": "id"
+          }
+        },
+        {
+          "name": "content_id",
+          "type": "UUID",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "educational_content",
+            "column": "id"
+          }
+        },
+        {
+          "name": "progress_type",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "completion_percentage",
+          "type": "DECIMAL",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "time_spent_seconds",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "0",
+          "references": null
+        },
+        {
+          "name": "attempts_count",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "0",
+          "references": null
+        },
+        {
+          "name": "best_score",
+          "type": "DECIMAL",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "current_streak",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "0",
+          "references": null
+        },
+        {
+          "name": "max_streak",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "0",
+          "references": null
+        },
+        {
+          "name": "difficulty_level",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "mastery_level",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "last_interaction",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "next_recommended_content",
+          "type": "UUID",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "educational_content",
+            "column": "id"
+          }
+        },
+        {
+          "name": "learning_style",
+          "type": "JSONB",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "performance_trends",
+          "type": "JSONB",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "recommendations",
+          "type": "JSONB",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        }
+      ],
+      "constraints": [
+        {
+          "type": "UNIQUE",
+          "name": "UQ_user_id, content_id, progress_type",
+          "columns": [
+            "user_id",
+            "content_id",
+            "progress_type"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_progress_user_content",
+          "columns": [
+            "user_id",
+            "content_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_progress_completion",
+          "columns": [
+            "completion_percentage DESC",
+            "last_interaction DESC"
+          ],
+          "unique": false
+        }
+      ],
+      "foreign_keys": []
+    }
+  },
+  "dashboard": {
+    "schools": {
+      "columns": [
+        {
+          "name": "name",
+          "type": "VARCHAR(200)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "address",
+          "type": "VARCHAR(500)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "city",
+          "type": "VARCHAR(100)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "state",
+          "type": "VARCHAR(50)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "zip_code",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "phone",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR(100)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "principal_name",
+          "type": "VARCHAR(100)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "district",
+          "type": "VARCHAR(200)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "max_students",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "500",
+          "references": null
+        },
+        {
+          "name": "student_count",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "0",
+          "references": null
+        },
+        {
+          "name": "teacher_count",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "0",
+          "references": null
+        },
+        {
+          "name": "class_count",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "0",
+          "references": null
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "true",
+          "references": null
+        },
+        {
+          "name": "logo_url",
+          "type": "VARCHAR(500)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "website",
+          "type": "VARCHAR(500)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "founded_year",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        }
+      ],
+      "constraints": [],
+      "indexes": [
+        {
+          "name": "idx_schools_district",
+          "columns": [
+            "district"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_schools_active",
+          "columns": [
+            "is_active"
+          ],
+          "unique": false
+        }
+      ],
+      "foreign_keys": []
+    },
+    "dashboard_users": {
+      "columns": [
+        {
+          "name": "password_hash",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "first_name",
+          "type": "VARCHAR(100)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "last_name",
+          "type": "VARCHAR(100)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "role",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": "'student'",
+          "references": null
+        },
+        {
+          "name": "school_id",
+          "type": "VARCHAR(36)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "schools",
+            "column": "id"
+          }
+        },
+        {
+          "name": "grade_level",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "phone",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "address",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "emergency_contact_name",
+          "type": "VARCHAR(100)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "emergency_contact_phone",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "true",
+          "references": null
+        },
+        {
+          "name": "is_verified",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "false",
+          "references": null
+        },
+        {
+          "name": "profile_picture_url",
+          "type": "VARCHAR(500)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "last_login",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        }
+      ],
+      "constraints": [],
+      "indexes": [
+        {
+          "name": "idx_dashboard_users_email",
+          "columns": [
+            "email"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_dashboard_users_role",
+          "columns": [
+            "role"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_dashboard_users_school",
+          "columns": [
+            "school_id"
+          ],
+          "unique": false
+        }
+      ],
+      "foreign_keys": []
+    },
+    "classes": {
+      "columns": [
+        {
+          "name": "name",
+          "type": "VARCHAR(200)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "subject",
+          "type": "VARCHAR(100)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "grade_level",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "teacher_id",
+          "type": "VARCHAR(36)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "dashboard_users",
+            "column": "id"
+          }
+        },
+        {
+          "name": "school_id",
+          "type": "VARCHAR(36)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "schools",
+            "column": "id"
+          }
+        },
+        {
+          "name": "schedule",
+          "type": "VARCHAR(200)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "start_date",
+          "type": "DATE",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "end_date",
+          "type": "DATE",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "max_students",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "30",
+          "references": null
+        },
+        {
+          "name": "student_count",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "0",
+          "references": null
+        },
+        {
+          "name": "room",
+          "type": "VARCHAR(50)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "true",
+          "references": null
+        },
+        {
+          "name": "syllabus_url",
+          "type": "VARCHAR(500)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        }
+      ],
+      "constraints": [],
+      "indexes": [
+        {
+          "name": "idx_classes_teacher",
+          "columns": [
+            "teacher_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_classes_school",
+          "columns": [
+            "school_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_classes_subject_grade",
+          "columns": [
+            "subject",
+            "grade_level"
+          ],
+          "unique": false
+        }
+      ],
+      "foreign_keys": []
+    },
+    "class_students": {
+      "columns": [
+        {
+          "name": "class_id",
+          "type": "VARCHAR(36)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "classes",
+            "column": "id"
+          }
+        },
+        {
+          "name": "student_id",
+          "type": "VARCHAR(36)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "dashboard_users",
+            "column": "id"
+          }
+        },
+        {
+          "name": "enrolled_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "'active'",
+          "references": null
+        },
+        {
+          "name": "grade",
+          "type": "DECIMAL",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "attendance_rate",
+          "type": "DECIMAL",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        }
+      ],
+      "constraints": [
+        {
+          "type": "UNIQUE",
+          "name": "UQ_class_id, student_id",
+          "columns": [
+            "class_id",
+            "student_id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_class_students_class",
+          "columns": [
+            "class_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_class_students_student",
+          "columns": [
+            "student_id"
+          ],
+          "unique": false
+        }
+      ],
+      "foreign_keys": []
+    },
+    "assignments": {
+      "columns": [
+        {
+          "name": "title",
+          "type": "VARCHAR(200)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "type",
+          "type": "VARCHAR(50)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": "'assignment'",
+          "references": null
+        },
+        {
+          "name": "subject",
+          "type": "VARCHAR(100)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "class_id",
+          "type": "VARCHAR(36)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "classes",
+            "column": "id"
+          }
+        },
+        {
+          "name": "teacher_id",
+          "type": "VARCHAR(36)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "dashboard_users",
+            "column": "id"
+          }
+        },
+        {
+          "name": "due_date",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "points",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "100",
+          "references": null
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "'active'",
+          "references": null
+        },
+        {
+          "name": "instructions",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "materials_url",
+          "type": "VARCHAR(500)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "is_published",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "false",
+          "references": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        }
+      ],
+      "constraints": [],
+      "indexes": [
+        {
+          "name": "idx_assignments_class",
+          "columns": [
+            "class_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_assignments_teacher",
+          "columns": [
+            "teacher_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_assignments_due_date",
+          "columns": [
+            "due_date"
+          ],
+          "unique": false
+        }
+      ],
+      "foreign_keys": []
+    },
+    "submissions": {
+      "columns": [
+        {
+          "name": "assignment_id",
+          "type": "VARCHAR(36)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "assignments",
+            "column": "id"
+          }
+        },
+        {
+          "name": "student_id",
+          "type": "VARCHAR(36)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "dashboard_users",
+            "column": "id"
+          }
+        },
+        {
+          "name": "submitted_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "'submitted'",
+          "references": null
+        },
+        {
+          "name": "grade",
+          "type": "DECIMAL",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "progress",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "0",
+          "references": null
+        },
+        {
+          "name": "content",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "file_url",
+          "type": "VARCHAR(500)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "feedback",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "graded_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "graded_by",
+          "type": "VARCHAR(36)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "dashboard_users",
+            "column": "id"
+          }
+        }
+      ],
+      "constraints": [
+        {
+          "type": "UNIQUE",
+          "name": "UQ_assignment_id, student_id",
+          "columns": [
+            "assignment_id",
+            "student_id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_submissions_assignment",
+          "columns": [
+            "assignment_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_submissions_student",
+          "columns": [
+            "student_id"
+          ],
+          "unique": false
+        }
+      ],
+      "foreign_keys": []
+    },
+    "lessons": {
+      "columns": [
+        {
+          "name": "title",
+          "type": "VARCHAR(200)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "subject",
+          "type": "VARCHAR(100)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "class_id",
+          "type": "VARCHAR(36)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "classes",
+            "column": "id"
+          }
+        },
+        {
+          "name": "teacher_id",
+          "type": "VARCHAR(36)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "dashboard_users",
+            "column": "id"
+          }
+        },
+        {
+          "name": "scheduled_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "duration_minutes",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "50",
+          "references": null
+        },
+        {
+          "name": "lesson_type",
+          "type": "VARCHAR(50)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "'standard'",
+          "references": null
+        },
+        {
+          "name": "content_url",
+          "type": "VARCHAR(500)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "roblox_world_id",
+          "type": "VARCHAR(100)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "learning_objectives",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "materials",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "'scheduled'",
+          "references": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        }
+      ],
+      "constraints": [],
+      "indexes": [
+        {
+          "name": "idx_lessons_class",
+          "columns": [
+            "class_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_lessons_scheduled",
+          "columns": [
+            "scheduled_at"
+          ],
+          "unique": false
+        }
+      ],
+      "foreign_keys": []
+    },
+    "student_progress": {
+      "columns": [
+        {
+          "name": "student_id",
+          "type": "VARCHAR(36)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "dashboard_users",
+            "column": "id"
+          }
+        },
+        {
+          "name": "class_id",
+          "type": "VARCHAR(36)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "classes",
+            "column": "id"
+          }
+        },
+        {
+          "name": "subject",
+          "type": "VARCHAR(100)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "grade_level",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "xp_points",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "0",
+          "references": null
+        },
+        {
+          "name": "level",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "1",
+          "references": null
+        },
+        {
+          "name": "streak_days",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "0",
+          "references": null
+        },
+        {
+          "name": "total_badges",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "0",
+          "references": null
+        },
+        {
+          "name": "rank_position",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "0",
+          "references": null
+        },
+        {
+          "name": "gpa",
+          "type": "DECIMAL",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "attendance_rate",
+          "type": "DECIMAL",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "assignments_completed",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "0",
+          "references": null
+        },
+        {
+          "name": "assignments_total",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "0",
+          "references": null
+        },
+        {
+          "name": "last_activity",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        }
+      ],
+      "constraints": [
+        {
+          "type": "UNIQUE",
+          "name": "UQ_student_id, class_id",
+          "columns": [
+            "student_id",
+            "class_id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_student_progress_student",
+          "columns": [
+            "student_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_student_progress_class",
+          "columns": [
+            "class_id"
+          ],
+          "unique": false
+        }
+      ],
+      "foreign_keys": []
+    },
+    "student_activity": {
+      "columns": [
+        {
+          "name": "student_id",
+          "type": "VARCHAR(36)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "dashboard_users",
+            "column": "id"
+          }
+        },
+        {
+          "name": "type",
+          "type": "VARCHAR(50)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "xp_earned",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "0",
+          "references": null
+        },
+        {
+          "name": "class_id",
+          "type": "VARCHAR(36)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "classes",
+            "column": "id"
+          }
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        }
+      ],
+      "constraints": [],
+      "indexes": [
+        {
+          "name": "idx_student_activity_student",
+          "columns": [
+            "student_id"
+          ],
+          "unique": false
+        }
+      ],
+      "foreign_keys": []
+    },
+    "student_achievements": {
+      "columns": [
+        {
+          "name": "student_id",
+          "type": "VARCHAR(36)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "dashboard_users",
+            "column": "id"
+          }
+        },
+        {
+          "name": "achievement_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "achievements",
+            "column": "id"
+          }
+        },
+        {
+          "name": "earned_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        },
+        {
+          "name": "class_id",
+          "type": "VARCHAR(36)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "classes",
+            "column": "id"
+          }
+        }
+      ],
+      "constraints": [
+        {
+          "type": "UNIQUE",
+          "name": "UQ_student_id, achievement_id",
+          "columns": [
+            "student_id",
+            "achievement_id"
+          ]
+        }
+      ],
+      "indexes": [],
+      "foreign_keys": []
+    },
+    "attendance": {
+      "columns": [
+        {
+          "name": "student_id",
+          "type": "VARCHAR(36)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "dashboard_users",
+            "column": "id"
+          }
+        },
+        {
+          "name": "class_id",
+          "type": "VARCHAR(36)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "classes",
+            "column": "id"
+          }
+        },
+        {
+          "name": "lesson_id",
+          "type": "VARCHAR(36)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "lessons",
+            "column": "id"
+          }
+        },
+        {
+          "name": "date",
+          "type": "DATE",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": "'present'",
+          "references": null
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "recorded_by",
+          "type": "VARCHAR(36)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "dashboard_users",
+            "column": "id"
+          }
+        },
+        {
+          "name": "recorded_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        }
+      ],
+      "constraints": [
+        {
+          "type": "UNIQUE",
+          "name": "UQ_student_id, class_id, date",
+          "columns": [
+            "student_id",
+            "class_id",
+            "date"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_attendance_student_date",
+          "columns": [
+            "student_id",
+            "date"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_attendance_class_date",
+          "columns": [
+            "class_id",
+            "date"
+          ],
+          "unique": false
+        }
+      ],
+      "foreign_keys": []
+    },
+    "messages": {
+      "columns": [
+        {
+          "name": "sender_id",
+          "type": "VARCHAR(36)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "dashboard_users",
+            "column": "id"
+          }
+        },
+        {
+          "name": "recipient_id",
+          "type": "VARCHAR(36)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "dashboard_users",
+            "column": "id"
+          }
+        },
+        {
+          "name": "subject",
+          "type": "VARCHAR(200)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "content",
+          "type": "TEXT",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "type",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "'general'",
+          "references": null
+        },
+        {
+          "name": "priority",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "'normal'",
+          "references": null
+        },
+        {
+          "name": "is_read",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "false",
+          "references": null
+        },
+        {
+          "name": "read_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "class_id",
+          "type": "VARCHAR(36)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "classes",
+            "column": "id"
+          }
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        }
+      ],
+      "constraints": [],
+      "indexes": [
+        {
+          "name": "idx_messages_recipient",
+          "columns": [
+            "recipient_id",
+            "created_at DESC"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_messages_sender",
+          "columns": [
+            "sender_id",
+            "created_at DESC"
+          ],
+          "unique": false
+        }
+      ],
+      "foreign_keys": []
+    },
+    "parent_children": {
+      "columns": [
+        {
+          "name": "parent_id",
+          "type": "VARCHAR(36)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "dashboard_users",
+            "column": "id"
+          }
+        },
+        {
+          "name": "student_id",
+          "type": "VARCHAR(36)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "dashboard_users",
+            "column": "id"
+          }
+        },
+        {
+          "name": "relationship",
+          "type": "VARCHAR(50)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "'parent'",
+          "references": null
+        },
+        {
+          "name": "is_primary",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "false",
+          "references": null
+        },
+        {
+          "name": "can_view_grades",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "true",
+          "references": null
+        },
+        {
+          "name": "can_view_attendance",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "true",
+          "references": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        }
+      ],
+      "constraints": [
+        {
+          "type": "UNIQUE",
+          "name": "UQ_parent_id, student_id",
+          "columns": [
+            "parent_id",
+            "student_id"
+          ]
+        }
+      ],
+      "indexes": [],
+      "foreign_keys": []
+    },
+    "system_events": {
+      "columns": [
+        {
+          "name": "event_type",
+          "type": "VARCHAR(50)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "message",
+          "type": "TEXT",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "severity",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "'info'",
+          "references": null
+        },
+        {
+          "name": "user_id",
+          "type": "VARCHAR(36)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "dashboard_users",
+            "column": "id"
+          }
+        },
+        {
+          "name": "metadata",
+          "type": "JSONB",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "'{}'",
+          "references": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        }
+      ],
+      "constraints": [],
+      "indexes": [],
+      "foreign_keys": []
+    },
+    "api_logs": {
+      "columns": [
+        {
+          "name": "method",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "endpoint",
+          "type": "VARCHAR(500)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "status_code",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "response_time",
+          "type": "DECIMAL",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "user_id",
+          "type": "VARCHAR(36)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "dashboard_users",
+            "column": "id"
+          }
+        },
+        {
+          "name": "ip_address",
+          "type": "INET",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "user_agent",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "timestamp",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        }
+      ],
+      "constraints": [],
+      "indexes": [],
+      "foreign_keys": []
+    },
+    "compliance_records": {
+      "columns": [
+        {
+          "name": "type",
+          "type": "VARCHAR(50)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "details",
+          "type": "JSONB",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "'{}'",
+          "references": null
+        },
+        {
+          "name": "reviewed_by",
+          "type": "VARCHAR(36)",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": {
+            "table": "dashboard_users",
+            "column": "id"
+          }
+        },
+        {
+          "name": "reviewed_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": null,
+          "references": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "primary_key": false,
+          "unique": false,
+          "default": "NOW()",
+          "references": null
+        }
+      ],
+      "constraints": [],
+      "indexes": [],
+      "foreign_keys": []
+    }
+  }
+}

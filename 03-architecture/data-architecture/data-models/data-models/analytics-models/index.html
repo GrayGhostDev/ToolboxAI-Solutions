@@ -1,0 +1,1065 @@
+<!doctype html><html lang=en class=no-js> <head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="Comprehensive documentation for the ToolBoxAI educational platform with AI-powered content generation and Roblox integration"><meta name=author content="ToolBoxAI Team"><link href=https://docs.toolboxai.com/03-architecture/data-architecture/data-models/data-models/analytics-models/ rel=canonical><link rel=icon href=../../../../../images/favicon.png><meta name=generator content="mkdocs-1.6.1, mkdocs-material-9.6.21"><title>Analytics and Reporting Models - ToolBoxAI Solutions Documentation</title><link rel=stylesheet href=../../../../../assets/stylesheets/main.2a3383ac.min.css><link rel=stylesheet href=../../../../../assets/stylesheets/palette.06af60db.min.css><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback"><style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style><link rel=stylesheet href=../../../../../css/timeago.css><link rel=stylesheet href=../../../../../stylesheets/extra.css><script>__md_scope=new URL("../../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script><script id=__analytics>function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-XXXXXXXXXX"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-XXXXXXXXXX",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script><script>if("undefined"!=typeof __md_analytics){var consent=__md_get("__consent");consent&&consent.analytics&&__md_analytics()}</script></head> <body dir=ltr data-md-color-scheme=default data-md-color-primary=indigo data-md-color-accent=indigo> <input class=md-toggle data-md-toggle=drawer type=checkbox id=__drawer autocomplete=off> <input class=md-toggle data-md-toggle=search type=checkbox id=__search autocomplete=off> <label class=md-overlay for=__drawer></label> <div data-md-component=skip> <a href=#analytics-and-reporting-models class=md-skip> Skip to content </a> </div> <div data-md-component=announce> </div> <div data-md-color-scheme=default data-md-component=outdated hidden> </div> <header class="md-header md-header--shadow md-header--lifted" data-md-component=header> <nav class="md-header__inner md-grid" aria-label=Header> <a href=../../../../.. title="ToolBoxAI Solutions Documentation" class="md-header__button md-logo" aria-label="ToolBoxAI Solutions Documentation" data-md-component=logo> <img src=../../../../../images/logo.png alt=logo> </a> <label class="md-header__button md-icon" for=__drawer> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg> </label> <div class=md-header__title data-md-component=header-title> <div class=md-header__ellipsis> <div class=md-header__topic> <span class=md-ellipsis> ToolBoxAI Solutions Documentation </span> </div> <div class=md-header__topic data-md-component=header-topic> <span class=md-ellipsis> Analytics and Reporting Models </span> </div> </div> </div> <form class=md-header__option data-md-component=palette> <input class=md-option data-md-color-media=(prefers-color-scheme) data-md-color-scheme=default data-md-color-primary=indigo data-md-color-accent=indigo aria-label="Switch to light mode" type=radio name=__palette id=__palette_0> <label class="md-header__button md-icon" title="Switch to light mode" for=__palette_1 hidden> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"/></svg> </label> <input class=md-option data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme=default data-md-color-primary=indigo data-md-color-accent=indigo aria-label="Switch to dark mode" type=radio name=__palette id=__palette_1> <label class="md-header__button md-icon" title="Switch to dark mode" for=__palette_2 hidden> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg> </label> <input class=md-option data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme=slate data-md-color-primary=black data-md-color-accent=indigo aria-label="Switch to system preference" type=radio name=__palette id=__palette_2> <label class="md-header__button md-icon" title="Switch to system preference" for=__palette_0 hidden> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg> </label> </form> <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script> <label class="md-header__button md-icon" for=__search> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg> </label> <div class=md-search data-md-component=search role=dialog> <label class=md-search__overlay for=__search></label> <div class=md-search__inner role=search> <form class=md-search__form name=search> <input type=text class=md-search__input name=query aria-label=Search placeholder=Search autocapitalize=off autocorrect=off autocomplete=off spellcheck=false data-md-component=search-query required> <label class="md-search__icon md-icon" for=__search> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg> </label> <nav class=md-search__options aria-label=Search> <a href=javascript:void(0) class="md-search__icon md-icon" title=Share aria-label=Share data-clipboard data-clipboard-text data-md-component=search-share tabindex=-1> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg> </a> <button type=reset class="md-search__icon md-icon" title=Clear aria-label=Clear tabindex=-1> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg> </button> </nav> <div class=md-search__suggest data-md-component=search-suggest></div> </form> <div class=md-search__output> <div class=md-search__scrollwrap tabindex=0 data-md-scrollfix> <div class=md-search-result data-md-component=search-result> <div class=md-search-result__meta> Initializing search </div> <ol class=md-search-result__list role=presentation></ol> </div> </div> </div> </div> </div> <div class=md-header__source> <a href=https://github.com/ToolBoxAI-Solutions/toolboxai title="Go to repository" class=md-source data-md-component=source> <div class="md-source__icon md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 512 512"><!-- Font Awesome Free 7.0.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg> </div> <div class=md-source__repository> ToolBoxAI-Solutions/toolboxai </div> </a> </div> </nav> <nav class=md-tabs aria-label=Tabs data-md-component=tabs> <div class=md-grid> <ul class=md-tabs__list> <li class=md-tabs__item> <a href=../../../../.. class=md-tabs__link> Home </a> </li> <li class=md-tabs__item> <a href=../../../../../01-overview/README.md class=md-tabs__link> Getting Started </a> </li> <li class=md-tabs__item> <a href=../../../../../02-architecture/README.md class=md-tabs__link> Architecture </a> </li> <li class=md-tabs__item> <a href=../../../../../03-api/README.md class=md-tabs__link> API Documentation </a> </li> <li class=md-tabs__item> <a href=../../../../../04-implementation/README.md class=md-tabs__link> Implementation </a> </li> <li class=md-tabs__item> <a href=../../../../../05-features/README.md class=md-tabs__link> Features </a> </li> <li class=md-tabs__item> <a href=../../../../../06-user-guides/README.md class=md-tabs__link> User Guides </a> </li> <li class=md-tabs__item> <a href=../../../../../07-operations/README.md class=md-tabs__link> Operations </a> </li> <li class=md-tabs__item> <a href=../../../../../08-reference/README.md class=md-tabs__link> Reference </a> </li> <li class=md-tabs__item> <a href=../../../../../09-meta/README.md class=md-tabs__link> Meta </a> </li> <li class=md-tabs__item> <a href=../../../../../10-reports/README.md class=md-tabs__link> Reports </a> </li> <li class=md-tabs__item> <a href=../../../../../11-sdks/README.md class=md-tabs__link> SDKs </a> </li> <li class=md-tabs__item> <a href=../../../../../phase2/ class=md-tabs__link> Phase 2 (Current) </a> </li> <li class=md-tabs__item> <a href=../../../../../DOCUMENTATION_AUDIT_REPORT_2025-10-01/ class=md-tabs__link> Audit & Reports </a> </li> </ul> </div> </nav> </header> <div class=md-container data-md-component=container> <main class=md-main data-md-component=main> <div class="md-main__inner md-grid"> <div class="md-sidebar md-sidebar--primary" data-md-component=sidebar data-md-type=navigation> <div class=md-sidebar__scrollwrap> <div class=md-sidebar__inner> <nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label=Navigation data-md-level=0> <label class=md-nav__title for=__drawer> <a href=../../../../.. title="ToolBoxAI Solutions Documentation" class="md-nav__button md-logo" aria-label="ToolBoxAI Solutions Documentation" data-md-component=logo> <img src=../../../../../images/logo.png alt=logo> </a> ToolBoxAI Solutions Documentation </label> <div class=md-nav__source> <a href=https://github.com/ToolBoxAI-Solutions/toolboxai title="Go to repository" class=md-source data-md-component=source> <div class="md-source__icon md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 512 512"><!-- Font Awesome Free 7.0.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg> </div> <div class=md-source__repository> ToolBoxAI-Solutions/toolboxai </div> </a> </div> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../../../.. class=md-nav__link> <span class=md-ellipsis> Home </span> </a> </li> <li class="md-nav__item md-nav__item--pruned md-nav__item--nested"> <a href=../../../../../01-overview/README.md class=md-nav__link> <span class=md-ellipsis> Getting Started </span> <span class="md-nav__icon md-icon"></span> </a> </li> <li class="md-nav__item md-nav__item--pruned md-nav__item--nested"> <a href=../../../../../02-architecture/README.md class=md-nav__link> <span class=md-ellipsis> Architecture </span> <span class="md-nav__icon md-icon"></span> </a> </li> <li class="md-nav__item md-nav__item--pruned md-nav__item--nested"> <a href=../../../../../03-api/README.md class=md-nav__link> <span class=md-ellipsis> API Documentation </span> <span class="md-nav__icon md-icon"></span> </a> </li> <li class="md-nav__item md-nav__item--pruned md-nav__item--nested"> <a href=../../../../../04-implementation/README.md class=md-nav__link> <span class=md-ellipsis> Implementation </span> <span class="md-nav__icon md-icon"></span> </a> </li> <li class="md-nav__item md-nav__item--pruned md-nav__item--nested"> <a href=../../../../../05-features/README.md class=md-nav__link> <span class=md-ellipsis> Features </span> <span class="md-nav__icon md-icon"></span> </a> </li> <li class="md-nav__item md-nav__item--pruned md-nav__item--nested"> <a href=../../../../../06-user-guides/README.md class=md-nav__link> <span class=md-ellipsis> User Guides </span> <span class="md-nav__icon md-icon"></span> </a> </li> <li class="md-nav__item md-nav__item--pruned md-nav__item--nested"> <a href=../../../../../07-operations/README.md class=md-nav__link> <span class=md-ellipsis> Operations </span> <span class="md-nav__icon md-icon"></span> </a> </li> <li class="md-nav__item md-nav__item--pruned md-nav__item--nested"> <a href=../../../../../08-reference/README.md class=md-nav__link> <span class=md-ellipsis> Reference </span> <span class="md-nav__icon md-icon"></span> </a> </li> <li class="md-nav__item md-nav__item--pruned md-nav__item--nested"> <a href=../../../../../09-meta/README.md class=md-nav__link> <span class=md-ellipsis> Meta </span> <span class="md-nav__icon md-icon"></span> </a> </li> <li class="md-nav__item md-nav__item--pruned md-nav__item--nested"> <a href=../../../../../10-reports/README.md class=md-nav__link> <span class=md-ellipsis> Reports </span> <span class="md-nav__icon md-icon"></span> </a> </li> <li class="md-nav__item md-nav__item--pruned md-nav__item--nested"> <a href=../../../../../11-sdks/README.md class=md-nav__link> <span class=md-ellipsis> SDKs </span> <span class="md-nav__icon md-icon"></span> </a> </li> <li class="md-nav__item md-nav__item--pruned md-nav__item--nested"> <a href=../../../../../phase2/ class=md-nav__link> <span class=md-ellipsis> Phase 2 (Current) </span> <span class="md-nav__icon md-icon"></span> </a> </li> <li class="md-nav__item md-nav__item--pruned md-nav__item--nested"> <a href=../../../../../DOCUMENTATION_AUDIT_REPORT_2025-10-01/ class=md-nav__link> <span class=md-ellipsis> Audit & Reports </span> <span class="md-nav__icon md-icon"></span> </a> </li> </ul> </nav> </div> </div> </div> <div class=md-content data-md-component=content> <article class="md-content__inner md-typeset"> <a href=https://github.com/ToolBoxAI-Solutions/toolboxai/edit/main/docs/03-architecture/data-architecture/data-models/data-models/analytics-models.md title="Edit this page" class="md-content__button md-icon" rel=edit> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75z"/></svg> </a> <a href=https://github.com/ToolBoxAI-Solutions/toolboxai/raw/main/docs/03-architecture/data-architecture/data-models/data-models/analytics-models.md title="View source of this page" class="md-content__button md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M12 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0 8a5 5 0 0 1-5-5 5 5 0 0 1 5-5 5 5 0 0 1 5 5 5 5 0 0 1-5 5m0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5"/></svg> </a> <h1 id=analytics-and-reporting-models>Analytics and Reporting Models<a class=headerlink href=#analytics-and-reporting-models title="Permanent link">&para;</a></h1> <p>This document defines the data models for analytics, reporting, and business intelligence within ToolBoxAI-Solutions.</p> <h2 id=analyticsevent-model>AnalyticsEvent Model<a class=headerlink href=#analyticsevent-model title="Permanent link">&para;</a></h2> <p>Raw event data captured for analytics processing.</p> <h3 id=schema-definition>Schema Definition<a class=headerlink href=#schema-definition title="Permanent link">&para;</a></h3> <p>```lua AnalyticsEvent = { -- Event Identification id = string, -- Event ID (UUID) event_id = string, -- Unique event identifier session_id = string, -- Session identifier</p> <div class="language-text highlight"><pre><span></span><code>-- Event Details
+event = {
+    name = string,                -- Event name
+    category = string,            -- Event category
+    action = string,              -- Specific action
+    label = string,               -- Event label
+
+    timestamp = DateTime,         -- Event timestamp
+
+    properties = {                -- Event-specific properties
+        -- Flexible key-value pairs
+    },
+
+    value = number,              -- Numeric value (optional)
+
+    revenue = number,            -- Revenue impact (if applicable)
+},
+
+-- User Context
+user = {
+    user_id = string,            -- User identifier
+    anonymous_id = string,       -- Anonymous identifier
+
+    role = string,               -- User role at time of event
+
+    organization_id = string,    -- Organization
+
+    segment = string,            -- User segment
+    cohort = string,            -- User cohort
+
+    attributes = {               -- User attributes at event time
+        grade_level = number,
+        subject = string,
+        account_age_days = number,
+        subscription_tier = string
+    }
+},
+
+-- Context Information
+context = {
+    -- Page/Screen Context
+    page = {
+        url = string,
+        path = string,
+        title = string,
+        referrer = string,
+        search = string          -- Query parameters
+    },
+
+    -- Application Context
+    app = {
+        name = string,
+        version = string,
+        build = string,
+        namespace = string
+    },
+
+    -- Campaign Attribution
+    campaign = {
+        source = string,         -- utm_source
+        medium = string,         -- utm_medium
+        campaign = string,       -- utm_campaign
+        term = string,          -- utm_term
+        content = string        -- utm_content
+    },
+
+    -- Device Information
+    device = {
+        type = string,          -- &quot;desktop&quot;, &quot;mobile&quot;, &quot;tablet&quot;
+        manufacturer = string,
+        model = string,
+
+        screen = {
+            width = number,
+            height = number,
+            density = number
+        },
+
+        os = {
+            name = string,
+            version = string
+        },
+
+        browser = {
+            name = string,
+            version = string,
+            engine = string
+        }
+    },
+
+    -- Network Information
+    network = {
+        ip = string,            -- Hashed IP
+        connection_type = string,
+        carrier = string,
+
+        location = {
+            country = string,
+            region = string,
+            city = string,
+            postal_code = string,
+            timezone = string,
+            coordinates = {
+                latitude = number,
+                longitude = number
+            }
+        }
+    },
+
+    -- Session Context
+    session = {
+        duration = number,      -- Session duration so far
+        page_views = number,    -- Pages viewed in session
+        events_count = number   -- Events in session
+    }
+},
+
+-- Educational Context
+education = {
+    course_id = string,
+    lesson_id = string,
+    quiz_id = string,
+
+    learning_path_id = string,
+
+    content_type = string,      -- Type of educational content
+    interaction_type = string,  -- Type of interaction
+
+    difficulty_level = string,
+
+    time_on_task = number      -- Seconds on current task
+},
+
+-- Processing Metadata
+processing = {
+    received_at = DateTime,     -- When event was received
+    processed_at = DateTime,    -- When event was processed
+
+    source = string,           -- Event source system
+
+    version = string,          -- Event schema version
+
+    enrichments = {string},    -- Applied enrichments
+
+    quality_score = number,    -- Data quality score
+
+    flags = {                  -- Processing flags
+        duplicate = boolean,
+        anomaly = boolean,
+        test_event = boolean
+    }
+}
+</code></pre></div> <p>} ```text</p> <h2 id=aggregatedmetrics-model>AggregatedMetrics Model<a class=headerlink href=#aggregatedmetrics-model title="Permanent link">&para;</a></h2> <p>Pre-computed metrics for efficient reporting.</p> <h3 id=schema-definition_1>Schema Definition<a class=headerlink href=#schema-definition_1 title="Permanent link">&para;</a></h3> <p>```lua AggregatedMetrics = { id = string,</p> <div class="language-text highlight"><pre><span></span><code>-- Aggregation Dimensions
+dimensions = {
+    time_period = string,        -- &quot;hour&quot;, &quot;day&quot;, &quot;week&quot;, &quot;month&quot;
+    start_time = DateTime,
+    end_time = DateTime,
+
+    granularity = string,        -- &quot;user&quot;, &quot;class&quot;, &quot;school&quot;, &quot;district&quot;
+    entity_id = string,          -- ID of entity being aggregated
+    entity_type = string,        -- Type of entity
+
+    segment = string,            -- User segment
+    cohort = string,            -- User cohort
+
+    filters = {                  -- Applied filters
+        grade_level = number,
+        subject = string,
+        course_id = string
+    }
+},
+
+-- User Metrics
+user_metrics = {
+    active_users = number,       -- Unique active users
+    new_users = number,          -- New registrations
+    returning_users = number,    -- Returning users
+
+    user_retention = {
+        day_1 = number,         -- Day 1 retention %
+        day_7 = number,         -- Day 7 retention %
+        day_30 = number,        -- Day 30 retention %
+    },
+
+    churn_rate = number,        -- User churn rate
+
+    average_session_duration = number,
+    sessions_per_user = number,
+
+    engagement_score = number   -- Calculated engagement
+},
+
+-- Learning Metrics
+learning_metrics = {
+    lessons_started = number,
+    lessons_completed = number,
+
+    completion_rate = number,
+
+    quizzes_taken = number,
+    average_quiz_score = number,
+    quiz_pass_rate = number,
+
+    assignments_submitted = number,
+
+    total_learning_time = number,  -- Total minutes
+    average_learning_time = number, -- Per user
+
+    content_interactions = number,
+
+    skills_mastered = number,
+    objectives_achieved = number,
+
+    average_progress = number      -- Average progress %
+},
+
+-- Performance Metrics
+performance_metrics = {
+    average_grade = number,
+    grade_distribution = {
+        a = number,              -- Count of A grades
+        b = number,
+        c = number,
+        d = number,
+        f = number
+    },
+
+    improvement_rate = number,   -- Performance improvement
+
+    mastery_rate = number,       -- Concept mastery rate
+
+    at_risk_students = number,   -- Students at risk
+
+    intervention_success_rate = number
+},
+
+-- Engagement Metrics
+engagement_metrics = {
+    login_frequency = number,
+
+    content_views = number,
+    content_shares = number,
+    content_bookmarks = number,
+
+    discussion_posts = number,
+    discussion_replies = number,
+
+    collaboration_sessions = number,
+
+    help_requests = number,
+
+    feature_adoption = {         -- Feature usage rates
+        gamification = number,
+        social = number,
+        ai_tutor = number,
+        roblox = number
+    },
+
+    nps_score = number          -- Net Promoter Score
+},
+
+-- Platform Metrics
+platform_metrics = {
+    page_views = number,
+    unique_visitors = number,
+
+    api_calls = number,
+
+    error_rate = number,
+
+    response_time_p50 = number,  -- 50th percentile
+    response_time_p95 = number,  -- 95th percentile
+    response_time_p99 = number,  -- 99th percentile
+
+    uptime_percentage = number,
+
+    bandwidth_usage = number,    -- GB
+    storage_usage = number,      -- GB
+
+    compute_usage = number      -- CPU hours
+},
+
+-- Business Metrics
+business_metrics = {
+    revenue = number,
+
+    new_subscriptions = number,
+    cancelled_subscriptions = number,
+
+    mrr = number,               -- Monthly recurring revenue
+    arr = number,               -- Annual recurring revenue
+
+    ltv = number,               -- Lifetime value
+    cac = number,               -- Customer acquisition cost
+
+    conversion_rate = number,
+
+    support_tickets = number,
+    support_resolution_time = number
+},
+
+-- Calculated Scores
+scores = {
+    health_score = number,       -- Overall health score
+    risk_score = number,         -- Risk assessment
+
+    quality_score = number,      -- Content quality
+
+    efficiency_score = number,   -- Learning efficiency
+
+    satisfaction_score = number  -- User satisfaction
+},
+
+-- Metadata
+calculated_at = DateTime,
+last_updated = DateTime,
+
+calculation_version = string,    -- Algorithm version
+
+confidence_level = number,       -- Statistical confidence
+sample_size = number,           -- Data points used
+
+anomalies_detected = {string}   -- Detected anomalies
+</code></pre></div> <p>} ```text</p> <h2 id=dashboard-model>Dashboard Model<a class=headerlink href=#dashboard-model title="Permanent link">&para;</a></h2> <p>Configurable dashboard definitions for different user roles.</p> <h3 id=schema-definition_2>Schema Definition<a class=headerlink href=#schema-definition_2 title="Permanent link">&para;</a></h3> <p>```lua Dashboard = { id = string, name = string, description = string,</p> <div class="language-text highlight"><pre><span></span><code>-- Dashboard Configuration
+configuration = {
+    type = string,              -- &quot;overview&quot;, &quot;detailed&quot;, &quot;custom&quot;
+
+    role = string,              -- Target role
+
+    layout = string,            -- &quot;grid&quot;, &quot;list&quot;, &quot;tabs&quot;
+
+    refresh_interval = number,  -- Seconds between refresh
+
+    time_range = {
+        default = string,       -- &quot;today&quot;, &quot;week&quot;, &quot;month&quot;, &quot;custom&quot;
+
+        allow_custom = boolean,
+
+        min_range = string,     -- Minimum selectable range
+        max_range = string     -- Maximum selectable range
+    },
+
+    filters = {                 -- Available filters
+        {
+            name = string,
+            type = string,      -- &quot;select&quot;, &quot;multi-select&quot;, &quot;date&quot;, &quot;range&quot;
+            options = {any},
+            default = any
+        }
+    },
+
+    permissions = {
+        view = {string},        -- Roles that can view
+        edit = {string},        -- Roles that can edit
+        share = {string}       -- Roles that can share
+    }
+},
+
+-- Widgets
+widgets = {
+    {
+        id = string,
+        type = string,          -- Widget type
+        -- Types: &quot;metric&quot;, &quot;chart&quot;, &quot;table&quot;, &quot;map&quot;, &quot;timeline&quot;,
+        -- &quot;heatmap&quot;, &quot;funnel&quot;, &quot;gauge&quot;, &quot;list&quot;, &quot;text&quot;
+
+        title = string,
+        description = string,
+
+        position = {
+            x = number,
+            y = number,
+            width = number,
+            height = number
+        },
+
+        data_source = {
+            type = string,      -- &quot;metrics&quot;, &quot;events&quot;, &quot;custom&quot;
+
+            query = string,     -- Data query
+
+            aggregation = string, -- Aggregation type
+
+            dimensions = {string}, -- Group by dimensions
+
+            metrics = {string}, -- Metrics to display
+
+            filters = {},      -- Widget-specific filters
+
+            time_range = string, -- Override dashboard range
+
+            refresh = number   -- Widget refresh interval
+        },
+
+        visualization = {
+            chart_type = string, -- For charts
+
+            colors = {string},  -- Color scheme
+
+            show_legend = boolean,
+            show_labels = boolean,
+            show_grid = boolean,
+
+            axis = {
+                x_label = string,
+                y_label = string,
+
+                x_scale = string, -- &quot;linear&quot;, &quot;log&quot;, &quot;time&quot;
+                y_scale = string
+            },
+
+            thresholds = {      -- Alert thresholds
+                {
+                    value = number,
+                    color = string,
+                    label = string
+                }
+            },
+
+            formatting = {
+                number_format = string,
+                date_format = string,
+
+                prefix = string,
+                suffix = string,
+
+                decimal_places = number
+            }
+        },
+
+        interactions = {
+            clickable = boolean,
+
+            drill_down = {
+                enabled = boolean,
+                target = string -- Target dashboard/report
+            },
+
+            export = boolean,  -- Allow export
+
+            tooltips = boolean
+        },
+
+        conditions = {         -- Conditional formatting
+            {
+                field = string,
+                operator = string,
+                value = any,
+
+                style = {}    -- Applied style
+            }
+        }
+    }
+},
+
+-- Alerts
+alerts = {
+    {
+        id = string,
+        name = string,
+
+        condition = {
+            metric = string,
+            operator = string,   -- &quot;&gt;&quot;, &quot;&lt;&quot;, &quot;=&quot;, &quot;change&quot;
+            threshold = number,
+
+            duration = number,  -- Minutes condition must persist
+
+            frequency = string  -- Check frequency
+        },
+
+        actions = {
+            email = boolean,
+            sms = boolean,
+            push = boolean,
+            webhook = string,
+
+            recipients = {string}
+        },
+
+        enabled = boolean,
+
+        last_triggered = DateTime,
+        trigger_count = number
+    }
+},
+
+-- Sharing
+sharing = {
+    visibility = string,        -- &quot;private&quot;, &quot;team&quot;, &quot;organization&quot;, &quot;public&quot;
+
+    shared_with = {
+        {
+            entity_type = string, -- &quot;user&quot;, &quot;role&quot;, &quot;group&quot;
+            entity_id = string,
+            permissions = string -- &quot;view&quot;, &quot;edit&quot;
+        }
+    },
+
+    public_url = string,       -- Public share URL
+
+    embed_code = string       -- Embed HTML
+},
+
+-- Schedule
+schedule = {
+    enabled = boolean,
+
+    frequency = string,        -- &quot;daily&quot;, &quot;weekly&quot;, &quot;monthly&quot;
+
+    time = string,            -- Delivery time
+
+    recipients = {
+        {
+            email = string,
+            format = string   -- &quot;pdf&quot;, &quot;excel&quot;, &quot;link&quot;
+        }
+    },
+
+    include_data = boolean,   -- Include raw data
+
+    last_sent = DateTime,
+    next_scheduled = DateTime
+},
+
+-- Metadata
+owner_id = string,
+
+created_at = DateTime,
+updated_at = DateTime,
+
+last_viewed = DateTime,
+view_count = number,
+
+tags = {string},
+
+version = number,
+
+is_default = boolean,         -- Default for role
+is_template = boolean        -- Template dashboard
+</code></pre></div> <p>} ```text</p> <h2 id=report-model>Report Model<a class=headerlink href=#report-model title="Permanent link">&para;</a></h2> <p>Structured reports for detailed analysis and compliance.</p> <h3 id=schema-definition_3>Schema Definition<a class=headerlink href=#schema-definition_3 title="Permanent link">&para;</a></h3> <p>```lua Report = { id = string, title = string, description = string,</p> <div class="language-text highlight"><pre><span></span><code>-- Report Type
+type = string,                 -- Report type
+-- Types: &quot;progress&quot;, &quot;performance&quot;, &quot;engagement&quot;, &quot;compliance&quot;,
+-- &quot;financial&quot;, &quot;usage&quot;, &quot;custom&quot;
+
+category = string,             -- Report category
+
+-- Report Configuration
+configuration = {
+    format = string,           -- &quot;pdf&quot;, &quot;excel&quot;, &quot;html&quot;, &quot;csv&quot;
+
+    template = string,         -- Report template
+
+    sections = {               -- Report sections
+        {
+            name = string,
+            type = string,     -- &quot;summary&quot;, &quot;detail&quot;, &quot;chart&quot;, &quot;table&quot;
+
+            content = {
+                title = string,
+                description = string,
+
+                data_source = string,
+
+                query = string,
+
+                visualization = string,
+
+                include_raw_data = boolean
+            },
+
+            order = number,
+
+            page_break = boolean -- Force page break after
+        }
+    },
+
+    parameters = {             -- Report parameters
+        {
+            name = string,
+            type = string,
+            required = boolean,
+            default = any,
+
+            validation = {}
+        }
+    },
+
+    filters = {               -- Applied filters
+        date_range = {
+            start = DateTime,
+            end = DateTime
+        },
+
+        entities = {string},  -- Entity IDs
+
+        custom = {}          -- Custom filters
+    },
+
+    grouping = {             -- Data grouping
+        group_by = {string},
+
+        subtotals = boolean,
+
+        grand_total = boolean
+    },
+
+    sorting = {
+        field = string,
+        direction = string   -- &quot;asc&quot;, &quot;desc&quot;
+    },
+
+    formatting = {
+        logo_url = string,
+
+        header = string,     -- Report header
+        footer = string,     -- Report footer
+
+        styles = {},        -- CSS/formatting styles
+
+        charts = {
+            theme = string,
+            colors = {string}
+        },
+
+        tables = {
+            striped = boolean,
+            borders = boolean,
+            compact = boolean
+        }
+    }
+},
+
+-- Data
+data = {
+    generated_at = DateTime,
+
+    period = {
+        start = DateTime,
+        end = DateTime
+    },
+
+    summary = {              -- Summary statistics
+        -- Key metrics
+    },
+
+    details = {             -- Detailed data
+        -- Report content
+    },
+
+    charts = {              -- Chart data
+        {
+            id = string,
+            type = string,
+            data = {},
+            config = {}
+        }
+    },
+
+    tables = {              -- Table data
+        {
+            id = string,
+            headers = {string},
+            rows = {{any}},
+            totals = {any}
+        }
+    },
+
+    metadata = {
+        row_count = number,
+
+        processing_time = number,
+
+        data_quality = number,
+
+        warnings = {string},
+
+        notes = string
+    }
+},
+
+-- Distribution
+distribution = {
+    recipients = {
+        {
+            type = string,   -- &quot;user&quot;, &quot;email&quot;, &quot;webhook&quot;
+
+            destination = string,
+
+            format = string,
+
+            delivered = boolean,
+            delivered_at = DateTime,
+
+            opened = boolean,
+            opened_at = DateTime
+        }
+    },
+
+    schedule = {
+        frequency = string,
+
+        next_run = DateTime,
+
+        active = boolean
+    },
+
+    retention = {
+        days = number,       -- Days to retain
+
+        archive = boolean,   -- Archive after retention
+
+        delete_after = DateTime
+    }
+},
+
+-- Compliance
+compliance = {
+    regulation = string,     -- &quot;ferpa&quot;, &quot;coppa&quot;, &quot;gdpr&quot;
+
+    data_classification = string,
+
+    audit_trail = {
+        {
+            action = string,
+            user_id = string,
+            timestamp = DateTime,
+            ip_address = string
+        }
+    },
+
+    redactions = {          -- Redacted fields
+        {
+            field = string,
+            reason = string
+        }
+    },
+
+    certifications = {
+        certified_by = string,
+        certified_at = DateTime,
+
+        signature = string
+    }
+},
+
+-- Status
+status = string,            -- &quot;draft&quot;, &quot;generating&quot;, &quot;ready&quot;, &quot;sent&quot;, &quot;archived&quot;
+
+generation_time = number,   -- Seconds to generate
+
+file_size = number,        -- Bytes
+
+file_url = string,         -- Download URL
+
+expires_at = DateTime,     -- URL expiration
+
+-- Metadata
+created_by = string,
+created_at = DateTime,
+
+last_accessed = DateTime,
+access_count = number,
+
+tags = {string},
+
+version = number
+</code></pre></div> <p>} ```text</p> <h2 id=insightmodel>InsightModel<a class=headerlink href=#insightmodel title="Permanent link">&para;</a></h2> <p>AI-generated insights and recommendations.</p> <h3 id=schema-definition_4>Schema Definition<a class=headerlink href=#schema-definition_4 title="Permanent link">&para;</a></h3> <p>```lua Insight = { id = string,</p> <div class="language-text highlight"><pre><span></span><code>-- Insight Details
+type = string,              -- Insight type
+-- Types: &quot;trend&quot;, &quot;anomaly&quot;, &quot;prediction&quot;, &quot;recommendation&quot;,
+-- &quot;correlation&quot;, &quot;pattern&quot;, &quot;alert&quot;
+
+category = string,          -- Category
+
+title = string,
+description = string,
+
+summary = string,          -- Brief summary
+
+-- Analysis
+analysis = {
+    metric = string,       -- Primary metric
+
+    dimension = string,    -- Analysis dimension
+
+    segment = string,      -- Analyzed segment
+
+    time_period = {
+        start = DateTime,
+        end = DateTime
+    },
+
+    data_points = number,  -- Data points analyzed
+
+    statistical = {
+        mean = number,
+        median = number,
+        std_dev = number,
+
+        trend = string,    -- &quot;increasing&quot;, &quot;decreasing&quot;, &quot;stable&quot;
+
+        change_rate = number,
+
+        correlation = number,
+
+        confidence = number,
+
+        p_value = number
+    },
+
+    comparison = {
+        baseline = number,
+        current = number,
+
+        change = number,
+        change_percentage = number,
+
+        vs_average = number,
+        vs_best = number
+    },
+
+    factors = {            -- Contributing factors
+        {
+            factor = string,
+            impact = number,
+            confidence = number
+        }
+    }
+},
+
+-- Visualization
+visualization = {
+    type = string,         -- Chart type
+
+    data = {},            -- Chart data
+
+    highlights = {        -- Data points to highlight
+        {
+            point = any,
+            label = string,
+            color = string
+        }
+    },
+
+    annotations = {       -- Chart annotations
+        {
+            type = string,
+            position = {},
+            text = string
+        }
+    }
+},
+
+-- Impact
+impact = {
+    severity = string,     -- &quot;low&quot;, &quot;medium&quot;, &quot;high&quot;, &quot;critical&quot;
+
+    urgency = string,     -- &quot;low&quot;, &quot;medium&quot;, &quot;high&quot;, &quot;immediate&quot;
+
+    affected_users = number,
+
+    affected_areas = {string},
+
+    potential_value = number, -- Potential value/cost
+
+    risk_score = number
+},
+
+-- Recommendations
+recommendations = {
+    {
+        action = string,
+
+        description = string,
+
+        priority = number,
+
+        effort = string,   -- &quot;low&quot;, &quot;medium&quot;, &quot;high&quot;
+
+        expected_impact = number,
+
+        resources = {string},
+
+        timeline = string
+    }
+},
+
+-- Related Insights
+related = {
+    insights = {string},   -- Related insight IDs
+
+    reports = {string},   -- Related report IDs
+
+    dashboards = {string} -- Related dashboard IDs
+},
+
+-- Feedback
+feedback = {
+    useful = boolean,
+
+    rating = number,
+
+    comments = string,
+
+    action_taken = string,
+
+    outcome = string
+},
+
+-- Status
+status = string,          -- &quot;new&quot;, &quot;reviewed&quot;, &quot;actioned&quot;, &quot;dismissed&quot;
+
+reviewed_by = string,
+reviewed_at = DateTime,
+
+-- AI Generation
+ai = {
+    model = string,       -- AI model used
+
+    version = string,     -- Model version
+
+    prompt = string,      -- Generation prompt
+
+    parameters = {},     -- Model parameters
+
+    processing_time = number,
+
+    cost = number        -- Generation cost
+},
+
+-- Metadata
+generated_at = DateTime,
+
+expires_at = DateTime,    -- When insight expires
+
+tags = {string},
+
+priority = number,
+
+auto_generated = boolean
+</code></pre></div> <p>} ```text</p> <h2 id=implementation-notes>Implementation Notes<a class=headerlink href=#implementation-notes title="Permanent link">&para;</a></h2> <h3 id=event-processing-pipeline>Event Processing Pipeline<a class=headerlink href=#event-processing-pipeline title="Permanent link">&para;</a></h3> <p>```python class AnalyticsPipeline: async def process_event(self, event: AnalyticsEvent): # 1. Validation validated = await self.validate_event(event)</p> <div class="language-text highlight"><pre><span></span><code>    # 2. Enrichment
+    enriched = await self.enrich_event(validated)
+
+    # 3. Stream Processing
+    await self.stream_processor.process(enriched)
+
+    # 4. Batch Aggregation
+    await self.batch_aggregator.add(enriched)
+
+    # 5. Real-time Updates
+    await self.update_real_time_metrics(enriched)
+
+    # 6. Anomaly Detection
+    await self.detect_anomalies(enriched)
+
+    # 7. Trigger Insights
+    await self.generate_insights(enriched)
+</code></pre></div> <p>```text</p> <h3 id=metric-aggregation-strategy>Metric Aggregation Strategy<a class=headerlink href=#metric-aggregation-strategy title="Permanent link">&para;</a></h3> <p>```lua AggregationStrategy = { dimensions = { time = {"minute", "hour", "day", "week", "month"},</p> <div class="language-text highlight"><pre><span></span><code>    entity = {&quot;user&quot;, &quot;class&quot;, &quot;school&quot;, &quot;district&quot;},
+
+    content = {&quot;lesson&quot;, &quot;course&quot;, &quot;subject&quot;}
+},
+
+metrics = {
+    count = &quot;COUNT(*)&quot;,
+
+    unique = &quot;COUNT(DISTINCT user_id)&quot;,
+
+    average = &quot;AVG(value)&quot;,
+
+    percentile = &quot;PERCENTILE_CONT(0.5)&quot;,
+
+    sum = &quot;SUM(value)&quot;
+},
+
+windows = {
+    tumbling = {           -- Fixed windows
+        size = &quot;1 hour&quot;,
+
+        overlap = 0
+    },
+
+    sliding = {           -- Overlapping windows
+        size = &quot;1 hour&quot;,
+
+        slide = &quot;15 minutes&quot;
+    },
+
+    session = {          -- Session-based windows
+        gap = &quot;30 minutes&quot;
+    }
+},
+
+storage = {
+    hot = &quot;7 days&quot;,      -- Recent data in fast storage
+
+    warm = &quot;90 days&quot;,    -- Older data in slower storage
+
+    cold = &quot;2 years&quot;     -- Archive storage
+}
+</code></pre></div> <p>} ```text</p> <h3 id=dashboard-performance-optimization>Dashboard Performance Optimization<a class=headerlink href=#dashboard-performance-optimization title="Permanent link">&para;</a></h3> <p>```python class DashboardOptimizer: def optimize_queries(self, dashboard: Dashboard): # Identify common filters common_filters = self.extract_common_filters(dashboard.widgets)</p> <div class="language-text highlight"><pre><span></span><code>    # Create materialized views
+    for filter_set in common_filters:
+        self.create_materialized_view(filter_set)
+
+    # Implement query caching
+    cache_keys = self.generate_cache_keys(dashboard.widgets)
+
+    # Pre-compute expensive aggregations
+    self.precompute_aggregations(dashboard)
+
+    # Optimize widget refresh
+    self.batch_widget_refreshes(dashboard.widgets)
+</code></pre></div> <p>```text</p> <h3 id=insight-generation>Insight Generation<a class=headerlink href=#insight-generation title="Permanent link">&para;</a></h3> <p>```python class InsightGenerator: async def generate_insights(self, metrics: AggregatedMetrics): insights = []</p> <div class="language-text highlight"><pre><span></span><code>    # Trend Detection
+    if trend := self.detect_trend(metrics):
+        insights.append(self.create_trend_insight(trend))
+
+    # Anomaly Detection
+    if anomaly := self.detect_anomaly(metrics):
+        insights.append(self.create_anomaly_insight(anomaly))
+
+    # Pattern Recognition
+    if pattern := self.find_pattern(metrics):
+        insights.append(self.create_pattern_insight(pattern))
+
+    # Predictive Analysis
+    if prediction := self.predict_future(metrics):
+        insights.append(self.create_prediction_insight(prediction))
+
+    # Recommendations
+    recommendations = self.generate_recommendations(metrics)
+    insights.extend(recommendations)
+
+    return insights
+</code></pre></div> <p>```text</p> <h3 id=real-time-analytics>Real-time Analytics<a class=headerlink href=#real-time-analytics title="Permanent link">&para;</a></h3> <p>```lua RealTimeAnalytics = { streaming = { platform = "Apache Kafka",</p> <div class="language-text highlight"><pre><span></span><code>    topics = {
+        events = &quot;analytics.events&quot;,
+        metrics = &quot;analytics.metrics&quot;,
+        alerts = &quot;analytics.alerts&quot;
+    },
+
+    processing = &quot;Apache Flink&quot;
+},
+
+websocket = {
+    channels = {
+        dashboard = &quot;/ws/dashboard/{dashboard_id}&quot;,
+
+        metrics = &quot;/ws/metrics/{metric_name}&quot;,
+
+        alerts = &quot;/ws/alerts/{user_id}&quot;
+    },
+
+    update_frequency = 1000  -- Milliseconds
+},
+
+cache = {
+    provider = &quot;Redis&quot;,
+
+    ttl = {
+        real_time = 10,      -- Seconds
+
+        aggregated = 300,    -- 5 minutes
+
+        reports = 3600      -- 1 hour
+    }
+}
+</code></pre></div> <p>} ```text</p> <hr> <p><em>For user activity tracking, see <a href=../progress-models/ >Progress Models</a>. For assessment analytics, see <a href=../quiz-models/ >Quiz Models</a>.</em></p> <aside class=md-source-file> <span class=md-source-file__fact> <span class=md-icon title="Last update"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg> </span> <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="September 28, 2025 02:20:28 UTC"><span class=timeago datetime=2025-09-28T02:20:28+00:00 locale=en></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="September 28, 2025 02:20:28 UTC">2025-09-28</span> </span> <span class=md-source-file__fact> <span class=md-icon title=Created> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg> </span> <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="September 7, 2025 08:07:10 UTC"><span class=timeago datetime=2025-09-07T08:07:10+00:00 locale=en></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="September 7, 2025 08:07:10 UTC">2025-09-07</span> </span> <span class=md-source-file__fact> <span class=md-icon title=Contributors> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M12 4a4 4 0 0 1 4 4 4 4 0 0 1-4 4 4 4 0 0 1-4-4 4 4 0 0 1 4-4m0 10c4.42 0 8 1.79 8 4v2H4v-2c0-2.21 3.58-4 8-4"/></svg> </span> <nav> <a href=mailto:140660682+grayghostdev@users.noreply.github.com>GrayGhostDev</a> </nav> </span> </aside> </article> </div> <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script> <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script> </div> <button type=button class="md-top md-icon" data-md-component=top hidden> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg> Back to top </button> </main> <footer class=md-footer> <div class="md-footer-meta md-typeset"> <div class="md-footer-meta__inner md-grid"> <div class=md-copyright> <div class=md-copyright__highlight> Copyright &copy; 2025 ToolBoxAI Solutions </div> Made with <a href=https://squidfunk.github.io/mkdocs-material/ target=_blank rel=noopener> Material for MkDocs </a> </div> <div class=md-social> <a href=https://github.com/ToolBoxAI-Solutions target=_blank rel=noopener title="ToolBoxAI on GitHub" class=md-social__link> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 512 512"><!-- Font Awesome Free 7.0.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg> </a> <a href=https://discord.gg/toolboxai target=_blank rel=noopener title="ToolBoxAI on Discord" class=md-social__link> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 576 512"><!-- Font Awesome Free 7.0.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M492.5 69.8c-.2-.3-.4-.6-.8-.7-38.1-17.5-78.4-30-119.7-37.1-.4-.1-.8 0-1.1.1s-.6.4-.8.8c-5.5 9.9-10.5 20.2-14.9 30.6-44.6-6.8-89.9-6.8-134.4 0-4.5-10.5-9.5-20.7-15.1-30.6-.2-.3-.5-.6-.8-.8s-.7-.2-1.1-.2C162.5 39 122.2 51.5 84.1 69c-.3.1-.6.4-.8.7C7.1 183.5-13.8 294.6-3.6 404.2c0 .3.1.5.2.8s.3.4.5.6c44.4 32.9 94 58 146.8 74.2.4.1.8.1 1.1 0s.7-.4.9-.7c11.3-15.4 21.4-31.8 30-48.8.1-.2.2-.5.2-.8s0-.5-.1-.8-.2-.5-.4-.6-.4-.3-.7-.4c-15.8-6.1-31.2-13.4-45.9-21.9-.3-.2-.5-.4-.7-.6s-.3-.6-.3-.9 0-.6.2-.9.3-.5.6-.7c3.1-2.3 6.2-4.7 9.1-7.1.3-.2.6-.4.9-.4s.7 0 1 .1c96.2 43.9 200.4 43.9 295.5 0 .3-.1.7-.2 1-.2s.7.2.9.4c2.9 2.4 6 4.9 9.1 7.2.2.2.4.4.6.7s.2.6.2.9-.1.6-.3.9-.4.5-.6.6c-14.7 8.6-30 15.9-45.9 21.8-.2.1-.5.2-.7.4s-.3.4-.4.7-.1.5-.1.8.1.5.2.8c8.8 17 18.8 33.3 30 48.8.2.3.6.6.9.7s.8.1 1.1 0c52.9-16.2 102.6-41.3 147.1-74.2.2-.2.4-.4.5-.6s.2-.5.2-.8c12.3-126.8-20.5-236.9-86.9-334.5zm-302 267.7c-29 0-52.8-26.6-52.8-59.2s23.4-59.2 52.8-59.2c29.7 0 53.3 26.8 52.8 59.2 0 32.7-23.4 59.2-52.8 59.2m195.4 0c-29 0-52.8-26.6-52.8-59.2s23.4-59.2 52.8-59.2c29.7 0 53.3 26.8 52.8 59.2 0 32.7-23.2 59.2-52.8 59.2"/></svg> </a> <a href=https://twitter.com/toolboxai target=_blank rel=noopener title="ToolBoxAI on Twitter" class=md-social__link> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 512 512"><!-- Font Awesome Free 7.0.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M459.4 151.7c.3 4.5.3 9.1.3 13.6 0 138.7-105.6 298.6-298.6 298.6-59.5 0-114.7-17.2-161.1-47.1 8.4 1 16.6 1.3 25.3 1.3 49.1 0 94.2-16.6 130.3-44.8-46.1-1-84.8-31.2-98.1-72.8 6.5 1 13 1.6 19.8 1.6 9.4 0 18.8-1.3 27.6-3.6-48.1-9.7-84.1-52-84.1-103v-1.3c14 7.8 30.2 12.7 47.4 13.3-28.3-18.8-46.8-51-46.8-87.4 0-19.5 5.2-37.4 14.3-53C87.4 130.8 165 172.4 252.1 176.9c-1.6-7.8-2.6-15.9-2.6-24C249.5 95.1 296.3 48 354.4 48c30.2 0 57.5 12.7 76.7 33.1 23.7-4.5 46.5-13.3 66.6-25.3-7.8 24.4-24.4 44.8-46.1 57.8 21.1-2.3 41.6-8.1 60.4-16.2-14.3 20.8-32.2 39.3-52.6 54.3"/></svg> </a> </div> </div> </div> </footer> </div> <div class=md-dialog data-md-component=dialog> <div class="md-dialog__inner md-typeset"></div> </div> <div class=md-progress data-md-component=progress role=progressbar></div> <div class=md-consent data-md-component=consent id=__consent hidden> <div class=md-consent__overlay></div> <aside class=md-consent__inner> <form class="md-consent__form md-grid md-typeset" name=consent> <h4>Cookie consent</h4> <p>We use cookies to recognize your repeated visits and preferences, as well as to measure the effectiveness of our documentation and whether users find what they're searching for. With your consent, you're helping us to make our documentation better.</p> <input class=md-toggle type=checkbox id=__settings> <div class=md-consent__settings> <ul class=task-list> <li class=task-list-item> <label class=task-list-control> <input type=checkbox name=analytics checked> <span class=task-list-indicator></span> Google Analytics </label> </li> <li class=task-list-item> <label class=task-list-control> <input type=checkbox name=github checked> <span class=task-list-indicator></span> GitHub </label> </li> </ul> </div> <div class=md-consent__controls> <button class="md-button md-button--primary">Accept</button> <label class=md-button for=__settings>Manage settings</label> </div> </form> </aside> </div> <script>var consent=__md_get("__consent");if(consent)for(var input of document.forms.consent.elements)input.name&&(input.checked=consent[input.name]||!1);else"file:"!==location.protocol&&setTimeout((function(){document.querySelector("[data-md-component=consent]").hidden=!1}),250);var form=document.forms.consent;for(var action of["submit","reset"])form.addEventListener(action,(function(e){if(e.preventDefault(),"reset"===e.type)for(var n of document.forms.consent.elements)n.name&&(n.checked=!1);__md_set("__consent",Object.fromEntries(Array.from(new FormData(form).keys()).map((function(e){return[e,!0]})))),location.hash="",location.reload()}))</script> <script id=__config type=application/json>{"base": "../../../../..", "features": ["announce.dismiss", "content.action.edit", "content.action.view", "content.code.annotate", "content.code.copy", "content.tabs.link", "content.tooltips", "header.autohide", "navigation.expand", "navigation.footer", "navigation.indexes", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.path", "navigation.prune", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "toc.follow", "toc.integrate"], "search": "../../../../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script> <script src=../../../../../assets/javascripts/bundle.f55a23d4.min.js></script> <script src=../../../../../js/timeago.min.js></script> <script src=../../../../../js/timeago_mkdocs_material.js></script> <script src=../../../../../javascripts/extra.js></script> <script src=../../../../../javascripts/mathjax.js></script> <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script> <script src=https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js></script> </body> </html>

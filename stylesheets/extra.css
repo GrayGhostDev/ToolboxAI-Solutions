@@ -1,0 +1,104 @@
+/* Custom CSS for ToolBoxAI Documentation */
+
+:root {
+  --toolboxai-primary: #009688;
+  --toolboxai-accent: #00D9FF;
+  --toolboxai-danger: #FF6B6B;
+  --toolboxai-warning: #FFD700;
+  --toolboxai-success: #90EE90;
+}
+
+/* Custom color scheme for ToolBoxAI branding */
+[data-md-color-scheme="toolboxai"] {
+  --md-primary-fg-color: var(--toolboxai-primary);
+  --md-primary-fg-color--light: #00BFA5;
+  --md-primary-fg-color--dark: #00796B;
+  --md-accent-fg-color: var(--toolboxai-accent);
+}
+
+/* Enhanced code blocks */
+.highlight .hll {
+  background-color: rgba(255, 255, 0, 0.2);
+}
+
+/* Mermaid diagram styling */
+.mermaid {
+  text-align: center;
+  margin: 2em 0;
+}
+
+/* Custom admonition colors */
+.md-typeset .admonition.note {
+  border-color: var(--toolboxai-primary);
+}
+
+.md-typeset .admonition.warning {
+  border-color: var(--toolboxai-warning);
+}
+
+.md-typeset .admonition.danger {
+  border-color: var(--toolboxai-danger);
+}
+
+.md-typeset .admonition.success {
+  border-color: var(--toolboxai-success);
+}
+
+/* Table improvements */
+.md-typeset table:not([class]) {
+  font-size: 0.85em;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.md-typeset table:not([class]) th {
+  background-color: var(--toolboxai-primary);
+  color: white;
+  font-weight: bold;
+}
+
+/* Code copy button enhancement */
+.md-clipboard {
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.md-clipboard:hover {
+  opacity: 1;
+}
+
+/* Navigation improvements */
+.md-nav__link--active {
+  font-weight: bold;
+}
+
+/* Search result highlighting */
+.md-search-result__article--document {
+  border-left: 3px solid var(--toolboxai-primary);
+}
+
+/* Footer customization */
+.md-footer-meta {
+  background-color: rgba(0, 150, 136, 0.1);
+}
+
+/* Responsive improvements */
+@media screen and (max-width: 76.1875em) {
+  .md-nav--primary .md-nav__title {
+    background-color: var(--toolboxai-primary);
+  }
+}
+
+/* Print styles */
+@media print {
+  .md-header,
+  .md-tabs,
+  .md-sidebar,
+  .md-footer {
+    display: none;
+  }
+
+  .md-content {
+    max-width: 100%;
+  }
+}

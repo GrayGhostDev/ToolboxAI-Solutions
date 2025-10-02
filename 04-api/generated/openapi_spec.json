@@ -1,0 +1,7096 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "ToolBoxAI Solutions API",
+    "version": "1.0.0",
+    "description": "Educational Technology Platform API"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8009",
+      "description": "Development"
+    },
+    {
+      "url": "https://api.toolboxai.solutions",
+      "description": "Production"
+    }
+  ],
+  "paths": {
+    "/pusher/auth": {
+      "post": {
+        "summary": "Get Field Path",
+        "description": "Extract field path from validation error",
+        "operationId": "get_field_path",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/realtime/trigger": {
+      "post": {
+        "summary": "Get Field Path",
+        "description": "Extract field path from validation error",
+        "operationId": "get_field_path",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pusher/webhook": {
+      "post": {
+        "summary": "Get Field Path",
+        "description": "Extract field path from validation error",
+        "operationId": "get_field_path",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "options": {
+        "summary": "Generate Csv Content",
+        "description": "Generate CSV content from report data",
+        "operationId": "generate_csv_content",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Register User Routers",
+        "description": "Register all user-specific routers with the main app",
+        "operationId": "register_user_routers",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "summary": "Register User Routers",
+        "description": "Register all user-specific routers with the main app",
+        "operationId": "register_user_routers",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ws/status": {
+      "get": {
+        "summary": "Generate Csv Content",
+        "description": "Generate CSV content from report data",
+        "operationId": "generate_csv_content",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pusher/status": {
+      "get": {
+        "summary": "Generate Csv Content",
+        "description": "Generate CSV content from report data",
+        "operationId": "generate_csv_content",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pusher/trigger": {
+      "post": {
+        "summary": "Generate Csv Content",
+        "description": "Generate CSV content from report data",
+        "operationId": "generate_csv_content",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sentry/status": {
+      "get": {
+        "summary": "Generate Csv Content",
+        "description": "Generate CSV content from report data",
+        "operationId": "generate_csv_content",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/info": {
+      "get": {
+        "summary": "Generate Csv Content",
+        "description": "Generate CSV content from report data",
+        "operationId": "generate_csv_content",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/content/generate": {
+      "post": {
+        "summary": "Generate Csv Content",
+        "description": "Generate CSV content from report data",
+        "operationId": "generate_csv_content",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/content/{content_id}": {
+      "get": {
+        "summary": "Generate Csv Content",
+        "description": "Generate CSV content from report data",
+        "operationId": "generate_csv_content",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/endpoint/that/errors": {
+      "get": {
+        "summary": "Generate Csv Content",
+        "description": "Generate CSV content from report data",
+        "operationId": "generate_csv_content",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sentry-debug": {
+      "get": {
+        "summary": "Generate Csv Content",
+        "description": "Generate CSV content from report data",
+        "operationId": "generate_csv_content",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/test/rate-limit": {
+      "get": {
+        "summary": "Generate Csv Content",
+        "description": "Generate CSV content from report data",
+        "operationId": "generate_csv_content",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/roblox/deploy/{content_id}": {
+      "post": {
+        "summary": "Generate Csv Content",
+        "description": "Generate CSV content from report data",
+        "operationId": "generate_csv_content",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/roblox/download/{content_id}": {
+      "get": {
+        "summary": "Generate Csv Content",
+        "description": "Generate CSV content from report data",
+        "operationId": "generate_csv_content",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ai-chat/conversations": {
+      "post": {
+        "summary": "Generate Csv Content",
+        "description": "Generate CSV content from report data",
+        "operationId": "generate_csv_content",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ai-chat/conversations/{conversation_id}/messages": {
+      "post": {
+        "summary": "Generate Csv Content",
+        "description": "Generate CSV content from report data",
+        "operationId": "generate_csv_content",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ai-chat/generate": {
+      "post": {
+        "summary": "Generate Csv Content",
+        "description": "Generate CSV content from report data",
+        "operationId": "generate_csv_content",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/summary": {
+      "get": {
+        "summary": "Generate Csv Content",
+        "description": "Generate CSV content from report data",
+        "operationId": "generate_csv_content",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/generate": {
+      "post": {
+        "summary": "Generate Csv Content",
+        "description": "Generate CSV content from report data",
+        "operationId": "generate_csv_content",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/download/{report_id}": {
+      "get": {
+        "summary": "Generate Csv Content",
+        "description": "Generate CSV content from report data",
+        "operationId": "generate_csv_content",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users": {
+      "get": {
+        "summary": "Generate Csv Content",
+        "description": "Generate CSV content from report data",
+        "operationId": "generate_csv_content",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Generate Csv Content",
+        "description": "Generate CSV content from report data",
+        "operationId": "generate_csv_content",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{user_id}": {
+      "put": {
+        "summary": "Generate Csv Content",
+        "description": "Generate CSV content from report data",
+        "operationId": "generate_csv_content",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Generate Csv Content",
+        "description": "Generate CSV content from report data",
+        "operationId": "generate_csv_content",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "options": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/token": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ws/rbac": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/status": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/me": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dashboard/overview": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/weekly_xp": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/subject_mastery": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/verify": {
+      "options": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/terminal/verification": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate_content": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate_quiz": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate_terrain_original": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lms/courses": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lms/course/{course_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/plugin/register": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/plugin/message": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/status": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/broadcast": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/health": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/user/profile": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sync": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/register_plugin": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/plugin/{plugin_id}/heartbeat": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/plugin/{plugin_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/plugins": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate_simple_content": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate_terrain": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/script/{script_type}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/status": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/config": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cache/clear": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/versions": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ready": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/live": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/environments": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/environments/{environment_id}/generate": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/environments/{environment_id}/deploy": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/environments/{environment_id}": {
+      "delete": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/live": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/setup/init": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/setup/confirm": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/verify": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/resend": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/disable": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/backup-codes": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/rollout": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/enable-role": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/enable-user": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/authorize": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/authorize/consent": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/token": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/introspect": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/revoke": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/register": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/clients": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/clients/{client_id}": {
+      "delete": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/.well-known/jwks.json": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/.well-known/oauth-authorization-server": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/preview": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/create": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/status/{environment_name}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rojo/info": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rojo/check": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/list": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{environment_name}": {
+      "delete": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/refresh": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/logout": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhooks": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhook-status": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{lesson_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{lesson_id}/progress": {
+      "put": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{lesson_id}/statistics": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhook": {
+      "post": {
+        "summary": "Estimate Generation Time",
+        "description": "Estimate content generation time in minutes",
+        "operationId": "estimate_generation_time",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/initiate": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oauth/callback": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/revoke": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversation/start": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversation/input": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversation/advance": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversation/generate": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rojo/projects": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rojo/project/{project_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rojo/project/{project_id}/start": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rojo/project/{project_id}/stop": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rojo/project/{project_id}/build": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/assets/upload": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/assets/{asset_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/datastore/set": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/datastore/get": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/messaging/publish": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks/{task_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/{agent_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workflows": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workflows/{workflow_id}/start": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sparc": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sparc/{sparc_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/swarms": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/performance/agents/{agent_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reports": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audit-logs": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/verify/{category}": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/requirements/{category}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversations": {
+      "post": {
+        "summary": "Initialize Assistant",
+        "description": "Initialize the assistant with API key",
+        "operationId": "initialize_assistant",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversations/{conversation_id}/messages": {
+      "post": {
+        "summary": "Initialize Assistant",
+        "description": "Initialize the assistant with API key",
+        "operationId": "initialize_assistant",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversations/{conversation_id}": {
+      "get": {
+        "summary": "Initialize Assistant",
+        "description": "Initialize the assistant with API key",
+        "operationId": "initialize_assistant",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stats/users": {
+      "get": {
+        "summary": "Register User Routers",
+        "description": "Register all user-specific routers with the main app",
+        "operationId": "register_user_routers",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/activity": {
+      "get": {
+        "summary": "Register User Routers",
+        "description": "Register all user-specific routers with the main app",
+        "operationId": "register_user_routers",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/revenue": {
+      "get": {
+        "summary": "Register User Routers",
+        "description": "Register all user-specific routers with the main app",
+        "operationId": "register_user_routers",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/support/queue": {
+      "get": {
+        "summary": "Register User Routers",
+        "description": "Register all user-specific routers with the main app",
+        "operationId": "register_user_routers",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/compliance/status": {
+      "get": {
+        "summary": "Register User Routers",
+        "description": "Register all user-specific routers with the main app",
+        "operationId": "register_user_routers",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/classes/today": {
+      "get": {
+        "summary": "Register User Routers",
+        "description": "Register all user-specific routers with the main app",
+        "operationId": "register_user_routers",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/progress": {
+      "get": {
+        "summary": "Register User Routers",
+        "description": "Register all user-specific routers with the main app",
+        "operationId": "register_user_routers",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/grades/pending": {
+      "get": {
+        "summary": "Register User Routers",
+        "description": "Register all user-specific routers with the main app",
+        "operationId": "register_user_routers",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calendar": {
+      "get": {
+        "summary": "Register User Routers",
+        "description": "Register all user-specific routers with the main app",
+        "operationId": "register_user_routers",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/submissions": {
+      "get": {
+        "summary": "Register User Routers",
+        "description": "Register all user-specific routers with the main app",
+        "operationId": "register_user_routers",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/xp": {
+      "get": {
+        "summary": "Register User Routers",
+        "description": "Register all user-specific routers with the main app",
+        "operationId": "register_user_routers",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/assignments/due": {
+      "get": {
+        "summary": "Register User Routers",
+        "description": "Register all user-specific routers with the main app",
+        "operationId": "register_user_routers",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/achievements/recent": {
+      "get": {
+        "summary": "Register User Routers",
+        "description": "Register all user-specific routers with the main app",
+        "operationId": "register_user_routers",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rank": {
+      "get": {
+        "summary": "Register User Routers",
+        "description": "Register all user-specific routers with the main app",
+        "operationId": "register_user_routers",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/path": {
+      "get": {
+        "summary": "Register User Routers",
+        "description": "Register all user-specific routers with the main app",
+        "operationId": "register_user_routers",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/roblox/worlds": {
+      "get": {
+        "summary": "Register User Routers",
+        "description": "Register all user-specific routers with the main app",
+        "operationId": "register_user_routers",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/children/overview": {
+      "get": {
+        "summary": "Register User Routers",
+        "description": "Register all user-specific routers with the main app",
+        "operationId": "register_user_routers",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/grades/recent": {
+      "get": {
+        "summary": "Register User Routers",
+        "description": "Register all user-specific routers with the main app",
+        "operationId": "register_user_routers",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/events": {
+      "get": {
+        "summary": "Register User Routers",
+        "description": "Register all user-specific routers with the main app",
+        "operationId": "register_user_routers",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/attendance/summary": {
+      "get": {
+        "summary": "Register User Routers",
+        "description": "Register all user-specific routers with the main app",
+        "operationId": "register_user_routers",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/progress/chart": {
+      "get": {
+        "summary": "Register User Routers",
+        "description": "Register all user-specific routers with the main app",
+        "operationId": "register_user_routers",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversation/{conversation_id}/status": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversation/{conversation_id}": {
+      "delete": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhook/pusher": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/checkout-session": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{content_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{content_id}/analytics": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{content_id}/publish": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/standards/search": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/query": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reports/{report_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dashboards": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dashboards/{dashboard_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/learning-analytics": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system-health": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/engagement": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/export/{query_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversations/start": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversations/process": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversations/{conversation_id}/personalize": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversations/{conversation_id}/enhance-uniqueness": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversations/{conversation_id}/validate": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversations/{conversation_id}/generate-workflow": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversations/{conversation_id}/analytics": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/status": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/templates": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/guidance/{stage}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/register-device": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/mobile-login": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/content/mobile-list": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/progress/batch-update": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/push/send": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/content/{content_id}/download": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/network-status": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/data-usage": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{school_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{user_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{user_id}/progress": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{user_id}/achievements": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/parent-dashboard": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/link-parent": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{user_id}/sessions": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workflow/create": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workflow/templates": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schema/register": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sync/trigger": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/event/broadcast": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/check": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/maintenance/cleanup": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/status/{pipeline_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/validate": {
+      "post": {
+        "summary": " Filter Report By Type",
+        "description": "Filter comprehensive report based on validation type",
+        "operationId": "_filter_report_by_type",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/history": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/personalize": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/game/create": {
+      "post": {
+        "summary": "Estimate Generation Time",
+        "description": "Estimate content generation time in minutes",
+        "operationId": "estimate_generation_time",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/game/{game_id}": {
+      "get": {
+        "summary": "Estimate Generation Time",
+        "description": "Estimate content generation time in minutes",
+        "operationId": "estimate_generation_time",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Estimate Generation Time",
+        "description": "Estimate content generation time in minutes",
+        "operationId": "estimate_generation_time",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/game/{game_id}/settings": {
+      "put": {
+        "summary": "Estimate Generation Time",
+        "description": "Estimate content generation time in minutes",
+        "operationId": "estimate_generation_time",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/content/generate": {
+      "post": {
+        "summary": "Estimate Generation Time",
+        "description": "Estimate content generation time in minutes",
+        "operationId": "estimate_generation_time",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/content/templates": {
+      "get": {
+        "summary": "Estimate Generation Time",
+        "description": "Estimate content generation time in minutes",
+        "operationId": "estimate_generation_time",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/content/deploy": {
+      "post": {
+        "summary": "Estimate Generation Time",
+        "description": "Estimate content generation time in minutes",
+        "operationId": "estimate_generation_time",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/content/{content_id}/status": {
+      "get": {
+        "summary": "Estimate Generation Time",
+        "description": "Estimate content generation time in minutes",
+        "operationId": "estimate_generation_time",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/progress/update": {
+      "post": {
+        "summary": "Estimate Generation Time",
+        "description": "Estimate content generation time in minutes",
+        "operationId": "estimate_generation_time",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/progress/{student_id}": {
+      "get": {
+        "summary": "Estimate Generation Time",
+        "description": "Estimate content generation time in minutes",
+        "operationId": "estimate_generation_time",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/progress/checkpoint": {
+      "post": {
+        "summary": "Estimate Generation Time",
+        "description": "Estimate content generation time in minutes",
+        "operationId": "estimate_generation_time",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/progress/leaderboard": {
+      "get": {
+        "summary": "Estimate Generation Time",
+        "description": "Estimate content generation time in minutes",
+        "operationId": "estimate_generation_time",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/session/{session_id}": {
+      "get": {
+        "summary": "Estimate Generation Time",
+        "description": "Estimate content generation time in minutes",
+        "operationId": "estimate_generation_time",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/performance": {
+      "get": {
+        "summary": "Estimate Generation Time",
+        "description": "Estimate content generation time in minutes",
+        "operationId": "estimate_generation_time",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/event": {
+      "post": {
+        "summary": "Estimate Generation Time",
+        "description": "Estimate content generation time in minutes",
+        "operationId": "estimate_generation_time",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/plugin/status": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/overview/{role}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/student": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/teacher": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/parent": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/quick-stats": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/submit": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/status/{task_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/worktree/distribute": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/worktree/sessions": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/resources/monitor": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/resources/alerts": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/resources/optimize": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/shutdown": {
+      "delete": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/stream": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/task": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/session/{session_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reset": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lesson/create": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/assessment/create": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analyze/progress": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/unread-count": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{message_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{message_id}/read": {
+      "put": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{message_id}/archive": {
+      "put": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/recent": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stats/overview": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{report_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/engagement": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/status/{report_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/download/{report_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/scripts/generate": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/scripts/validate": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/assets": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/environments/deploy": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/environments/{deployment_id}/status": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/studio/sync": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/environments/active": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/marketplace/browse": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/overview": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/student-progress": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/weekly_xp": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/subject_mastery": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/leaderboard": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{user_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trends/engagement": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trends/content": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dashboard": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/realtime": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/summary": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{key_id}": {
+      "delete": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/roblox/generate-script": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/roblox/validate-script": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/roblox/content": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/usage-stats": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{class_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{class_id}/students": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{class_id}/students/{student_id}": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{class_id}/students/batch": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{item_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/update": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate-content": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/optimize-script": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/validate-security": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/batch-validate": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/process-file": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/scan-folder": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/folder/{folder_path:path}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/categories": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/supported-extensions": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/change": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/strength-requirements": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/logout-all": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{assessment_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{assessment_id}/submit": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{assessment_id}/results": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{assessment_id}/statistics": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workflow/execute": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workflow/state/{thread_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/status": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/events/append": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/events/replay/{aggregate_id}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/query/optimize": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/backup/create": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/migration/execute": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/monitoring/metrics": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cache/invalidate": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/request-export": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/export/{ticket}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/request-deletion": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/export-status/{ticket}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/consents": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/consents/parent-verify": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/achievements": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/badges": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/xp/add": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stats/{userId}": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/validate/batch": {
+      "post": {
+        "summary": " Filter Report By Type",
+        "description": "Filter comprehensive report based on validation type",
+        "operationId": "_filter_report_by_type",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reports/{validation_id}": {
+      "get": {
+        "summary": " Filter Report By Type",
+        "description": "Filter comprehensive report based on validation type",
+        "operationId": "_filter_report_by_type",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/statistics": {
+      "get": {
+        "summary": " Filter Report By Type",
+        "description": "Filter comprehensive report based on validation type",
+        "operationId": "_filter_report_by_type",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/templates/secure": {
+      "post": {
+        "summary": " Filter Report By Type",
+        "description": "Filter comprehensive report based on validation type",
+        "operationId": "_filter_report_by_type",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/checklists/security": {
+      "get": {
+        "summary": " Filter Report By Type",
+        "description": "Filter comprehensive report based on validation type",
+        "operationId": "_filter_report_by_type",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/checklists/compliance": {
+      "get": {
+        "summary": " Filter Report By Type",
+        "description": "Filter comprehensive report based on validation type",
+        "operationId": "_filter_report_by_type",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/report-error": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/process-errors": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workflow/{workflow_id}/status": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/patterns/analyze": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/predict-errors": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/swarm/status": {
+      "get": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/recovery/trigger": {
+      "post": {
+        "summary": "Unknown",
+        "description": "No description available",
+        "operationId": "unknown",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
