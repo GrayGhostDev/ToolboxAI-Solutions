@@ -1,92 +1,123 @@
+/**
+ * Roblox Notification System Component
+ *
+ * Displays fun, engaging notifications for achievements, level ups, XP gains, etc.
+ * Designed with a Roblox-inspired aesthetic for educational gaming experiences.
+ */
+
 import React, { useState, useEffect } from 'react';
 import {
   Box,
   Text,
   ActionIcon,
-  Badge,
   Group,
-  Transition,
   useMantineTheme,
-  keyframes,
   rem
 } from '@mantine/core';
-import { createStyles } from '@mantine/emotion';
 import {
   IconX,
-  IconBell,
   IconTrophy,
-  IconSchool,
-  IconDeviceGamepad2,
   IconStar,
-  IconFlame
+  IconCoin,
+  IconBadge,
+  IconTarget,
+  IconBell
 } from '@tabler/icons-react';
 
-interface Notification {
+export type NotificationType =
+  | 'achievement'
+  | 'level_up'
+  | 'xp_gain'
+  | 'badge_earned'
+  | 'mission_complete'
+  | 'general';
+
+export type NotificationPriority = 'low' | 'medium' | 'high';
+
+export type NotificationPosition =
+  | 'top-right'
+  | 'top-left'
+  | 'bottom-right'
+  | 'bottom-left';
+
+export interface RobloxNotification {
   id: string;
-  type: 'achievement' | 'level_up' | 'xp_gain' | 'badge_earned' | 'mission_complete' | 'general';
+  type: NotificationType;
   title: string;
   message: string;
-  icon?: string;
-  timestamp: Date;
-  read: boolean;
-  priority: 'low' | 'medium' | 'high';
-  action?: {
-    label: string;
-    onClick: () => void;
-  };
+  priority: NotificationPriority;
+  duration?: number;
+  icon?: React.ReactNode;
+}
+
+interface NotificationCardProps {
+  notification: RobloxNotification;
+  onClose: (id: string) => void;
 }
 
 interface RobloxNotificationSystemProps {
-  notifications: Notification[];
-  onMarkAsRead: (id: string) => void;
-  onRemove: (id: string) => void;
-  onClearAll: () => void;
-  maxVisible?: number;
-  position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
+  notifications: RobloxNotification[];
+  position?: NotificationPosition;
+  maxNotifications?: number;
+  onNotificationClose?: (id: string) => void;
 }
 
-// Animations
-const slideInAnimation = keyframes({
-  '0%': {
-    transform: 'translateX(100%)',
-    opacity: 0
-  },
-  '100%': {
-    transform: 'translateX(0)',
-    opacity: 1
+// Keyframe animations defined as CSS strings
+const animations = `
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
   }
-});
 
-const bounceAnimation = keyframes({
-  '0%, 20%, 50%, 80%, 100%': {
-    transform: 'translateY(0)'
-  },
-  '40%': {
-    transform: 'translateY(-10px)'
-  },
-  '60%': {
-    transform: 'translateY(-5px)'
+  @keyframes bounce {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
   }
-});
 
-const glowAnimation = keyframes({
-  '0%': {
-    boxShadow: '0 0 5px currentColor'
-  },
-  '50%': {
-    boxShadow: '0 0 20px currentColor, 0 0 30px currentColor'
-  },
-  '100%': {
-    boxShadow: '0 0 5px currentColor'
+  @keyframes glow {
+    0%, 100% {
+      box-shadow: 0 0 10px currentColor;
+    }
+    50% {
+      box-shadow: 0 0 20px currentColor, 0 0 30px currentColor;
+    }
   }
-});
 
-interface NotificationStyleOptions {
-  notificationType: string;
-  priority: string;
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%) skewX(-15deg);
+    }
+    100% {
+      transform: translateX(200%) skewX(-15deg);
+    }
+  }
+`;
+
+// Inject animations into document head
+if (typeof document !== 'undefined') {
+  const styleId = 'roblox-notification-system-animations';
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = animations;
+    document.head.appendChild(style);
+  }
 }
 
-const useStyles = createStyles((theme, { notificationType, priority }: NotificationStyleOptions) => {
+const NotificationCard: React.FC<NotificationCardProps> = ({ notification, onClose }) => {
+  const theme = useMantineTheme();
+  const [isHovered, setIsHovered] = useState(false);
+
   const typeColors = {
     achievement: theme.colors.green[6],
     level_up: theme.colors.blue[6],
@@ -96,289 +127,189 @@ const useStyles = createStyles((theme, { notificationType, priority }: Notificat
     general: theme.colors.gray[6]
   };
 
+  const typeIcons = {
+    achievement: <IconTrophy size={24} />,
+    level_up: <IconStar size={24} />,
+    xp_gain: <IconCoin size={24} />,
+    badge_earned: <IconBadge size={24} />,
+    mission_complete: <IconTarget size={24} />,
+    general: <IconBell size={24} />
+  };
+
+  const mainColor = typeColors[notification.type];
+
   const priorityStyles = {
-    low: { borderLeft: `3px solid ${typeColors[notificationType as keyof typeof typeColors]}` },
+    low: {
+      borderLeft: `3px solid ${mainColor}`
+    },
     medium: {
-      borderLeft: `4px solid ${typeColors[notificationType as keyof typeof typeColors]}`,
-      boxShadow: `0 0 10px ${theme.fn.rgba(typeColors[notificationType as keyof typeof typeColors], 0.3)}`
+      borderLeft: `4px solid ${mainColor}`,
+      boxShadow: `0 0 10px rgba(${parseInt(mainColor.slice(1,3), 16)}, ${parseInt(mainColor.slice(3,5), 16)}, ${parseInt(mainColor.slice(5,7), 16)}, 0.3)`
     },
     high: {
-      borderLeft: `5px solid ${typeColors[notificationType as keyof typeof typeColors]}`,
-      boxShadow: `0 0 15px ${theme.fn.rgba(typeColors[notificationType as keyof typeof typeColors], 0.5)}`,
-      animation: `${glowAnimation} 2s ease-in-out infinite`
+      borderLeft: `5px solid ${mainColor}`,
+      boxShadow: `0 0 15px rgba(${parseInt(mainColor.slice(1,3), 16)}, ${parseInt(mainColor.slice(3,5), 16)}, ${parseInt(mainColor.slice(5,7), 16)}, 0.5)`,
+      animation: 'glow 2s ease-in-out infinite'
     }
   };
 
-  return {
-    container: {
-      position: 'fixed',
-      top: 20,
-      right: 20,
-      zIndex: 9999,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: rem(12),
-      maxWidth: 400,
-      width: '100%'
-    },
-    card: {
-      background: `linear-gradient(135deg, ${theme.colors.dark[6]}, ${theme.fn.rgba(typeColors[notificationType as keyof typeof typeColors], 0.05)})`,
-      borderRadius: rem(12),
-      padding: rem(16),
-      border: `1px solid ${theme.fn.rgba(typeColors[notificationType as keyof typeof typeColors], 0.2)}`,
-      backdropFilter: 'blur(10px)',
-      animation: `${slideInAnimation} 0.3s ease-out`,
-      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-      cursor: 'pointer',
-      position: 'relative',
-      overflow: 'hidden',
-      ...priorityStyles[priority as keyof typeof priorityStyles],
-
-      '&:hover': {
-        transform: 'translateX(-5px) scale(1.02)',
-        boxShadow: `0 8px 25px ${theme.fn.rgba(typeColors[notificationType as keyof typeof typeColors], 0.4)}`
-      },
-
-      '&::before': {
-        content: '""',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: `linear-gradient(45deg, transparent, ${theme.fn.rgba(typeColors[notificationType as keyof typeof typeColors], 0.1)}, transparent)`,
-        transform: 'translateX(-100%)',
-        transition: 'transform 0.6s ease'
-      },
-
-      '&:hover::before': {
-        transform: 'translateX(100%)'
-      }
-    },
-    iconContainer: {
-      width: 40,
-      height: 40,
-      borderRadius: '50%',
-      background: `linear-gradient(135deg, ${typeColors[notificationType as keyof typeof typeColors]}, ${theme.fn.rgba(typeColors[notificationType as keyof typeof typeColors], 0.7)})`,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      color: 'white',
-      boxShadow: `0 4px 12px ${theme.fn.rgba(typeColors[notificationType as keyof typeof typeColors], 0.4)}`,
-      animation: `${bounceAnimation} 0.6s ease-out`
-    }
-  };
-});
-
-const getNotificationIcon = (type: string) => {
-  const iconMap: Record<string, React.ComponentType<any>> = {
-    achievement: IconTrophy,
-    level_up: IconStar,
-    xp_gain: IconFlame,
-    badge_earned: IconSchool,
-    mission_complete: IconDeviceGamepad2,
-    general: IconBell,
-  };
-  return iconMap[type] || IconBell;
-};
-
-interface NotificationCardProps {
-  notification: Notification;
-  index: number;
-  onRemove: (id: string) => void;
-  onClick: (notification: Notification) => void;
-  priorityBadge: React.ReactNode;
-}
-
-export const NotificationCard = ({
-  notification,
-  index,
-  onRemove,
-  onClick,
-  priorityBadge,
-}: NotificationCardProps) => {
-  const { classes } = useStyles({ notificationType: notification.type, priority: notification.priority });
-  const theme = useMantineTheme();
-  const IconComponent = getNotificationIcon(notification.type);
-
-  return (
-    <Transition mounted transition="slide-left" duration={300 + index * 100}>
-      {(styles) => (
-        <Box
-          className={classes.card}
-          style={styles}
-          onClick={() => onClick(notification)}
-        >
-          <Group spacing="md" align="flex-start">
-            <Box className={classes.iconContainer}>
-              <IconComponent size={20} />
-            </Box>
-
-            <Box style={{ flex: 1, minWidth: 0 }}>
-              <Group spacing="xs" mb="xs" align="center">
-                <Text size="sm" fw={700} style={{ flex: 1 }}>
-                  {notification.title}
-                </Text>
-                {priorityBadge}
-              </Group>
-
-              <Text size="sm" c="dimmed" mb="xs" style={{ lineHeight: 1.4 }}>
-                {notification.message}
-              </Text>
-
-              <Group justify="space-between" align="center">
-                <Text size="xs" c="dimmed">
-                  {notification.timestamp.toLocaleTimeString()}
-                </Text>
-
-                <Group spacing="xs">
-                  {notification.action && (
-                    <Badge
-                      size="sm"
-                      variant="filled"
-                      style={{
-                        cursor: 'pointer',
-                        backgroundColor: theme.colors.blue[6],
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        notification.action?.onClick();
-                      }}
-                    >
-                      {notification.action.label}
-                    </Badge>
-                  )}
-
-                  <ActionIcon
-                    size="sm"
-                    variant="subtle"
-                    c="dimmed"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRemove(notification.id);
-                    }}
-                    styles={{
-                      root: {
-                        '&:hover': {
-                          color: theme.colors.red[6],
-                          backgroundColor: theme.fn.rgba(theme.colors.red[6], 0.1),
-                        },
-                      },
-                    }}
-                  >
-                    <IconX size={16} />
-                  </ActionIcon>
-                </Group>
-              </Group>
-            </Box>
-          </Group>
-        </Box>
-      )}
-    </Transition>
-  );
-};
-
-export const RobloxNotificationSystem: React.FunctionComponent<RobloxNotificationSystemProps> = ({
-  notifications,
-  onMarkAsRead,
-  onRemove,
-  onClearAll,
-  maxVisible = 5,
-  position = 'top-right'
-}) => {
-  const theme = useMantineTheme();
-  const [visibleNotifications, setVisibleNotifications] = useState<Notification[]>([]);
-
-  useEffect(() => {
-    const unreadNotifications = notifications
-      .filter(n => !n.read)
-      .sort((a, b) => {
-        const priorityOrder = { high: 3, medium: 2, low: 1 };
-        return priorityOrder[b.priority] - priorityOrder[a.priority];
-      })
-      .slice(0, maxVisible);
-
-    setVisibleNotifications(unreadNotifications);
-  }, [notifications, maxVisible]);
-
-  const handleNotificationClick = (notification: Notification) => {
-    if (!notification.read) {
-      onMarkAsRead(notification.id);
-    }
-    if (notification.action) {
-      notification.action.onClick();
-    }
+  const cardStyle: React.CSSProperties = {
+    position: 'relative',
+    background: `linear-gradient(135deg, ${theme.colors.dark[6]}, rgba(${parseInt(mainColor.slice(1,3), 16)}, ${parseInt(mainColor.slice(3,5), 16)}, ${parseInt(mainColor.slice(5,7), 16)}, 0.05))`,
+    borderRadius: rem(12),
+    padding: rem(16),
+    marginBottom: rem(12),
+    minWidth: 300,
+    maxWidth: 400,
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    animation: 'slideIn 0.4s ease-out',
+    overflow: 'hidden',
+    transform: isHovered ? 'translateX(-5px) scale(1.02)' : 'none',
+    ...priorityStyles[notification.priority]
   };
 
-  const getPriorityBadge = (priority: string) => {
-    const priorityStyles = {
-      low: { color: theme.colors.gray[5], label: 'Low' },
-      medium: { color: theme.colors.yellow[6], label: 'Medium' },
-      high: { color: theme.colors.red[6], label: 'High' }
-    };
-
-    const style = priorityStyles[priority as keyof typeof priorityStyles];
-    return (
-      <Badge
-        size="sm"
-        variant="outline"
-        style={{
-          color: style.color,
-          borderColor: style.color,
-          backgroundColor: theme.fn.rgba(style.color, 0.1)
-        }}
-      >
-        {style.label}
-      </Badge>
-    );
+  const iconContainerStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 48,
+    height: 48,
+    borderRadius: '50%',
+    background: `linear-gradient(135deg, ${mainColor}, rgba(${parseInt(mainColor.slice(1,3), 16)}, ${parseInt(mainColor.slice(3,5), 16)}, ${parseInt(mainColor.slice(5,7), 16)}, 0.7))`,
+    color: 'white',
+    boxShadow: `0 4px 12px rgba(${parseInt(mainColor.slice(1,3), 16)}, ${parseInt(mainColor.slice(3,5), 16)}, ${parseInt(mainColor.slice(5,7), 16)}, 0.4)`,
+    animation: notification.priority === 'high' ? 'bounce 1s ease-in-out infinite' : 'none'
   };
 
-  if (visibleNotifications.length === 0) {
-    return null;
-  }
+  const shimmerOverlayStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)',
+    pointerEvents: 'none',
+    opacity: isHovered ? 1 : 0,
+    animation: isHovered ? 'shimmer 2s infinite' : 'none',
+    transition: 'opacity 0.3s ease'
+  };
 
   return (
     <Box
-      style={{
-        position: 'fixed',
-        [position.includes('left') ? 'left' : 'right']: 20,
-        [position.includes('top') ? 'top' : 'bottom']: 20,
-        zIndex: 9999,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: rem(12),
-        maxWidth: 400,
-        width: '100%'
-      }}
+      style={cardStyle}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      {visibleNotifications.map((notification, index) => (
-        <NotificationCard
-          key={notification.id}
-          notification={notification}
-          index={index}
-          onRemove={onRemove}
-          onClick={handleNotificationClick}
-          priorityBadge={getPriorityBadge(notification.priority)}
-        />
-      ))}
+      <Group style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <Group style={{ gap: rem(12), alignItems: 'flex-start', flex: 1 }}>
+          <Box style={iconContainerStyle}>
+            {notification.icon || typeIcons[notification.type]}
+          </Box>
 
-      {notifications.length > maxVisible && (
-        <Box ta="center" mt="xs">
-          <Badge
-            size="lg"
-            variant="outline"
-            style={{
-              cursor: 'pointer',
-              backgroundColor: theme.fn.rgba(theme.colors.blue[6], 0.1),
-              color: theme.colors.blue[6],
-              border: `1px solid ${theme.fn.rgba(theme.colors.blue[6], 0.3)}`
-            }}
-            onClick={onClearAll}
-          >
-            +{notifications.length - maxVisible} more notifications
-          </Badge>
-        </Box>
-      )}
+          <Box style={{ flex: 1 }}>
+            <Text
+              fw={700}
+              size="lg"
+              style={{
+                color: mainColor,
+                textShadow: `0 0 10px rgba(${parseInt(mainColor.slice(1,3), 16)}, ${parseInt(mainColor.slice(3,5), 16)}, ${parseInt(mainColor.slice(5,7), 16)}, 0.5)`,
+                marginBottom: rem(4)
+              }}
+            >
+              {notification.title}
+            </Text>
+
+            <Text
+              size="sm"
+              c="dimmed"
+            >
+              {notification.message}
+            </Text>
+          </Box>
+        </Group>
+
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          onClick={() => onClose(notification.id)}
+          style={{
+            opacity: isHovered ? 1 : 0.6,
+            transition: 'opacity 0.3s ease'
+          }}
+        >
+          <IconX size={18} />
+        </ActionIcon>
+      </Group>
+
+      {/* Shimmer effect overlay */}
+      <Box style={shimmerOverlayStyle} />
     </Box>
   );
 };
+
+export const RobloxNotificationSystem: React.FC<RobloxNotificationSystemProps> = ({
+  notifications,
+  position = 'top-right',
+  maxNotifications = 5,
+  onNotificationClose
+}) => {
+  const [activeNotifications, setActiveNotifications] = useState<RobloxNotification[]>([]);
+
+  useEffect(() => {
+    setActiveNotifications(notifications.slice(0, maxNotifications));
+  }, [notifications, maxNotifications]);
+
+  useEffect(() => {
+    const timers = activeNotifications
+      .filter(n => n.duration)
+      .map(notification => {
+        return setTimeout(() => {
+          handleClose(notification.id);
+        }, notification.duration);
+      });
+
+    return () => {
+      timers.forEach(timer => clearTimeout(timer));
+    };
+  }, [activeNotifications]);
+
+  const handleClose = (id: string) => {
+    setActiveNotifications(prev => prev.filter(n => n.id !== id));
+    onNotificationClose?.(id);
+  };
+
+  const positionStyles = {
+    'top-right': { top: 20, right: 20 },
+    'top-left': { top: 20, left: 20 },
+    'bottom-right': { bottom: 20, right: 20 },
+    'bottom-left': { bottom: 20, left: 20 }
+  };
+
+  const containerStyle: React.CSSProperties = {
+    position: 'fixed',
+    ...positionStyles[position],
+    zIndex: 9999,
+    pointerEvents: 'none'
+  };
+
+  const notificationWrapperStyle: React.CSSProperties = {
+    pointerEvents: 'auto'
+  };
+
+  return (
+    <Box style={containerStyle}>
+      <Box style={notificationWrapperStyle}>
+        {activeNotifications.map(notification => (
+          <NotificationCard
+            key={notification.id}
+            notification={notification}
+            onClose={handleClose}
+          />
+        ))}
+      </Box>
+    </Box>
+  );
+};
+
+export default RobloxNotificationSystem;

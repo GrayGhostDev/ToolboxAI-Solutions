@@ -3,57 +3,43 @@ import { useState, useEffect } from "react";
 import {
   Box,
   Card,
-  CardContent,
-  Typography,
+  Text,
   Button,
   Stack,
-  IconButton,
-  LinearProgress,
-  Chip,
+  ActionIcon,
+  Progress,
+  Badge,
   Alert,
   Slider,
   Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Paper,
   List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  ListItemButton,
   Divider,
-  Tab,
   Tabs,
   Avatar,
-} from "@mui/material";
-import Grid2 from "@mui/material/Unstable_Grid2";
+  Grid,
+  Group,
+} from "@mantine/core";
+import { DatePickerInput } from "@mantine/dates";
 import {
-  PlayArrow,
-  Pause,
-  SkipNext,
-  SkipPrevious,
-  Replay,
-  VolumeUp,
-  Fullscreen,
-  Speed,
-  EmojiEvents,
-  Stars,
-  TrendingUp,
-  School,
-  Timer,
-  CheckCircle,
-  Warning,
-  SportsEsports,
-  Timeline,
-  Insights,
-  Download,
-  Share,
-  CalendarToday,
-} from "@mui/icons-material";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+  IconPlayerPlay,
+  IconPlayerPause,
+  IconPlayerSkipForward,
+  IconPlayerSkipBack,
+  IconReload,
+  IconMaximize,
+  IconTrophy,
+  IconStarFilled,
+  IconTrendingUp,
+  IconSchool,
+  IconCircleCheck,
+  IconAlertTriangle,
+  IconDeviceGamepad2,
+  IconBulb,
+  IconDownload,
+  IconShare,
+  IconCalendar,
+} from "@tabler/icons-react";
 import { useAppSelector } from "../../store";
 
 interface GameplaySession {
@@ -114,7 +100,7 @@ export default function GameplayReplay() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState<string | null>('0');
   const [selectedHighlight, setSelectedHighlight] = useState<string | null>(null);
 
   // Mock data for children (in real app, fetch from API)
@@ -292,17 +278,17 @@ export default function GameplayReplay() {
   const getHighlightIcon = (type: Highlight["type"]) => {
     switch (type) {
       case "achievement":
-        return <EmojiEvents color="warning" />;
+        return <IconTrophy size={20} color="var(--mantine-color-yellow-6)" />;
       case "milestone":
-        return <Stars color="primary" />;
+        return <IconStarFilled size={20} color="var(--mantine-color-blue-6)" />;
       case "breakthrough":
-        return <TrendingUp color="success" />;
+        return <IconTrendingUp size={20} color="var(--mantine-color-green-6)" />;
       case "struggle":
-        return <Warning color="error" />;
+        return <IconAlertTriangle size={20} color="var(--mantine-color-red-6)" />;
       case "collaboration":
-        return <School color="secondary" />;
+        return <IconSchool size={20} color="var(--mantine-color-grape-6)" />;
       default:
-        return <CheckCircle />;
+        return <IconCircleCheck size={20} />;
     }
   };
 
@@ -321,10 +307,10 @@ export default function GameplayReplay() {
   if (!currentSession) {
     return (
       <Box>
-        <Typography variant="h4" sx={{ mb: 3 }}>
+        <Text size="xl" fw={600} mb="md">
           Gameplay Replay
-        </Typography>
-        <Alert severity="info">
+        </Text>
+        <Alert color="blue">
           Select a child and date to view their gameplay sessions
         </Alert>
       </Box>
@@ -333,52 +319,48 @@ export default function GameplayReplay() {
 
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4" sx={{ fontWeight: 600 }}>
+      <Group justify="space-between" align="center" mb="md">
+        <Text size="xl" fw={600}>
           Gameplay Replay
-        </Typography>
-        <Stack direction="row" spacing={2}>
-          <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel>Select Child</InputLabel>
-            <Select
-              value={selectedChild}
-              onChange={(e) => setSelectedChild(e.target.value)}
-              label="Select Child"
-            >
-              {children.map((child) => (
-                <MenuItem key={child.id} value={child.id}>
-                  {child.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <DatePicker
-              label="Select Date"
-              value={selectedDate}
-              onChange={(newDate) => newDate && setSelectedDate(newDate)}
-              slotProps={{ textField: { size: "small" } }}
-            />
-          </LocalizationProvider>
-        </Stack>
-      </Stack>
+        </Text>
+        <Group gap="sm">
+          <Select
+            placeholder="Select Child"
+            value={selectedChild}
+            onChange={(value) => setSelectedChild(value || '')}
+            data={children.map((child) => ({
+              value: child.id,
+              label: child.name,
+            }))}
+            style={{ minWidth: 150 }}
+            size="sm"
+          />
+          <DatePickerInput
+            placeholder="Select Date"
+            value={selectedDate}
+            onChange={(date) => date && setSelectedDate(date)}
+            size="sm"
+            leftSection={<IconCalendar size={16} />}
+          />
+        </Group>
+      </Group>
 
-      <Grid2 container spacing={3}>
+      <Grid gutter="md">
         {/* Video Player Area */}
-        <Grid2 xs={12} lg={8}>
+        <Grid.Col span={{ base: 12, lg: 8 }}>
           <Card>
             <Box
-              sx={{
+              style={{
                 position: "relative",
                 paddingTop: "56.25%", // 16:9 aspect ratio
-                bgcolor: "black",
-                borderRadius: 1,
+                backgroundColor: "black",
+                borderRadius: 4,
                 overflow: "hidden",
               }}
             >
               {/* Replay Visualization */}
               <Box
-                sx={{
+                style={{
                   position: "absolute",
                   top: 0,
                   left: 0,
@@ -390,169 +372,170 @@ export default function GameplayReplay() {
                   background: `linear-gradient(135deg, #667eea 0%, #764ba2 100%)`,
                 }}
               >
-                <Stack alignItems="center" spacing={2}>
-                  <SportsEsports sx={{ fontSize: 80, color: "white", opacity: 0.8 }} />
-                  <Typography variant="h5" color="white">
+                <Stack align="center" gap="sm">
+                  <IconDeviceGamepad2 size={80} color="white" style={{ opacity: 0.8 }} />
+                  <Text size="lg" c="white">
                     {currentSession.worldName}
-                  </Typography>
-                  <Typography variant="body1" color="white" sx={{ opacity: 0.9 }}>
+                  </Text>
+                  <Text c="white" style={{ opacity: 0.9 }}>
                     {formatTime(currentTime)} / {formatTime(currentSession.duration)}
-                  </Typography>
+                  </Text>
                 </Stack>
               </Box>
 
               {/* Highlight Markers on Timeline */}
               <Box
-                sx={{
+                style={{
                   position: "absolute",
                   bottom: 80,
                   left: 0,
                   right: 0,
                   height: 4,
-                  bgcolor: "rgba(255,255,255,0.3)",
+                  backgroundColor: "rgba(255,255,255,0.3)",
                 }}
               >
                 {currentSession.highlights.map((highlight) => (
                   <Box
                     key={highlight.id}
-                    sx={{
+                    style={{
                       position: "absolute",
                       left: `${(highlight.timestamp / currentSession.duration) * 100}%`,
                       top: -6,
                       width: 16,
                       height: 16,
                       borderRadius: "50%",
-                      bgcolor:
+                      backgroundColor:
                         highlight.importance === "high"
-                          ? "warning.main"
+                          ? "var(--mantine-color-yellow-6)"
                           : highlight.importance === "medium"
-                          ? "info.main"
-                          : "grey.500",
+                          ? "var(--mantine-color-blue-6)"
+                          : "var(--mantine-color-gray-6)",
                       cursor: "pointer",
-                      "&:hover": {
-                        transform: "scale(1.3)",
-                      },
+                      transition: "transform 0.2s",
                     }}
                     onClick={() => jumpToHighlight(highlight.timestamp)}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.3)"}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
                   />
                 ))}
               </Box>
             </Box>
 
             {/* Player Controls */}
-            <CardContent>
-              <Stack spacing={2}>
+            <Card.Section p="md">
+              <Stack gap="sm">
                 <Slider
                   value={currentTime}
                   max={currentSession.duration}
-                  onChange={(_, value) => handleSeek(value as number)}
-                  sx={{ width: "100%" }}
+                  onChange={handleSeek}
+                  style={{ width: "100%" }}
                 />
-                <Stack direction="row" alignItems="center" justifyContent="center" spacing={2}>
-                  <IconButton onClick={() => handleSeek(Math.max(0, currentTime - 30))}>
-                    <SkipPrevious />
-                  </IconButton>
-                  <IconButton
+                <Group justify="center" gap="sm">
+                  <ActionIcon onClick={() => handleSeek(Math.max(0, currentTime - 30))} size="lg">
+                    <IconPlayerSkipBack size={20} />
+                  </ActionIcon>
+                  <ActionIcon
                     onClick={handlePlayPause}
-                    sx={{
-                      bgcolor: "primary.main",
-                      color: "white",
-                      "&:hover": { bgcolor: "primary.dark" },
-                    }}
+                    size="xl"
+                    color="blue"
+                    variant="filled"
                   >
-                    {isPlaying ? <Pause /> : <PlayArrow />}
-                  </IconButton>
-                  <IconButton
+                    {isPlaying ? <IconPlayerPause size={24} /> : <IconPlayerPlay size={24} />}
+                  </ActionIcon>
+                  <ActionIcon
                     onClick={() => handleSeek(Math.min(currentSession.duration, currentTime + 30))}
+                    size="lg"
                   >
-                    <SkipNext />
-                  </IconButton>
-                  <IconButton onClick={() => handleSeek(0)}>
-                    <Replay />
-                  </IconButton>
-                  <FormControl size="small" sx={{ ml: 2, minWidth: 80 }}>
-                    <Select
-                      value={playbackSpeed}
-                      onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
-                      size="small"
-                    >
-                      <MenuItem value={0.5}>0.5x</MenuItem>
-                      <MenuItem value={1}>1x</MenuItem>
-                      <MenuItem value={1.5}>1.5x</MenuItem>
-                      <MenuItem value={2}>2x</MenuItem>
-                    </Select>
-                  </FormControl>
-                  <IconButton sx={{ ml: "auto" }}>
-                    <Download />
-                  </IconButton>
-                  <IconButton>
-                    <Share />
-                  </IconButton>
-                  <IconButton>
-                    <Fullscreen />
-                  </IconButton>
-                </Stack>
+                    <IconPlayerSkipForward size={20} />
+                  </ActionIcon>
+                  <ActionIcon onClick={() => handleSeek(0)} size="lg">
+                    <IconReload size={20} />
+                  </ActionIcon>
+                  <Select
+                    value={playbackSpeed.toString()}
+                    onChange={(value) => setPlaybackSpeed(Number(value))}
+                    data={[
+                      { value: "0.5", label: "0.5x" },
+                      { value: "1", label: "1x" },
+                      { value: "1.5", label: "1.5x" },
+                      { value: "2", label: "2x" },
+                    ]}
+                    size="sm"
+                    style={{ width: 80, marginLeft: 'auto' }}
+                  />
+                  <ActionIcon size="lg">
+                    <IconDownload size={20} />
+                  </ActionIcon>
+                  <ActionIcon size="lg">
+                    <IconShare size={20} />
+                  </ActionIcon>
+                  <ActionIcon size="lg">
+                    <IconMaximize size={20} />
+                  </ActionIcon>
+                </Group>
               </Stack>
-            </CardContent>
+            </Card.Section>
           </Card>
 
           {/* Session Tabs */}
-          <Card sx={{ mt: 3 }}>
-            <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
-              <Tab label="Highlights" />
-              <Tab label="Progress" />
-              <Tab label="Interactions" />
-              <Tab label="Achievements" />
-            </Tabs>
-            <CardContent>
-              {activeTab === 0 && (
-                <List>
-                  {currentSession.highlights.map((highlight) => (
+          <Card mt="md">
+            <Tabs value={activeTab} onChange={setActiveTab}>
+              <Tabs.List>
+                <Tabs.Tab value="0">Highlights</Tabs.Tab>
+                <Tabs.Tab value="1">Progress</Tabs.Tab>
+                <Tabs.Tab value="2">Interactions</Tabs.Tab>
+                <Tabs.Tab value="3">Achievements</Tabs.Tab>
+              </Tabs.List>
+
+              <Tabs.Panel value="0" pt="md">
+                <List spacing={0}>
+                  {currentSession.highlights.map((highlight, index) => (
                     <React.Fragment key={highlight.id}>
-                      <ListItemButton
-                        selected={selectedHighlight === highlight.id}
+                      <List.Item
                         onClick={() => {
                           setSelectedHighlight(highlight.id);
                           jumpToHighlight(highlight.timestamp);
                         }}
+                        style={{
+                          cursor: 'pointer',
+                          padding: '12px',
+                          backgroundColor: selectedHighlight === highlight.id ? 'var(--mantine-color-gray-1)' : undefined,
+                        }}
+                        icon={getHighlightIcon(highlight.type)}
                       >
-                        <ListItemIcon>{getHighlightIcon(highlight.type)}</ListItemIcon>
-                        <ListItemText
-                          primary={highlight.title}
-                          secondary={
-                            <Stack direction="row" spacing={1} alignItems="center">
-                              <Typography variant="caption">
-                                {formatTime(highlight.timestamp)}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                • {highlight.description}
-                              </Typography>
-                            </Stack>
-                          }
-                        />
-                        <Chip
-                          label={highlight.importance}
-                          size="small"
-                          color={
-                            highlight.importance === "high"
-                              ? "error"
-                              : highlight.importance === "medium"
-                              ? "warning"
-                              : "default"
-                          }
-                        />
-                      </ListItemButton>
-                      <Divider />
+                        <Group justify="space-between">
+                          <Box style={{ flex: 1 }}>
+                            <Text fw={500}>{highlight.title}</Text>
+                            <Group gap="xs">
+                              <Text size="xs">{formatTime(highlight.timestamp)}</Text>
+                              <Text size="xs" c="dimmed">• {highlight.description}</Text>
+                            </Group>
+                          </Box>
+                          <Badge
+                            size="sm"
+                            color={
+                              highlight.importance === "high"
+                                ? "red"
+                                : highlight.importance === "medium"
+                                ? "yellow"
+                                : "gray"
+                            }
+                          >
+                            {highlight.importance}
+                          </Badge>
+                        </Group>
+                      </List.Item>
+                      {index < currentSession.highlights.length - 1 && <Divider />}
                     </React.Fragment>
                   ))}
                 </List>
-              )}
+              </Tabs.Panel>
 
-              {activeTab === 1 && (
+              <Tabs.Panel value="1" pt="md">
                 <Box>
-                  <Typography variant="h6" sx={{ mb: 2 }}>
+                  <Text size="lg" fw={500} mb="md">
                     Concept Mastery Progress
-                  </Typography>
+                  </Text>
                   {Array.from(new Set(currentSession.progress.map((p) => p.concept))).map(
                     (concept) => {
                       const conceptProgress = currentSession.progress.filter(
@@ -563,212 +546,214 @@ export default function GameplayReplay() {
                       const improvement = final - initial;
 
                       return (
-                        <Box key={concept} sx={{ mb: 2 }}>
-                          <Stack direction="row" justifyContent="space-between" mb={1}>
-                            <Typography variant="body2">{concept}</Typography>
-                            <Stack direction="row" spacing={1}>
-                              <Chip
-                                label={`${final}%`}
-                                size="small"
-                                color={final >= 80 ? "success" : "default"}
-                              />
+                        <Box key={concept} mb="md">
+                          <Group justify="space-between" mb="xs">
+                            <Text size="sm">{concept}</Text>
+                            <Group gap="xs">
+                              <Badge
+                                size="sm"
+                                color={final >= 80 ? "green" : "gray"}
+                              >
+                                {final}%
+                              </Badge>
                               {improvement > 0 && (
-                                <Chip
-                                  label={`+${improvement}%`}
-                                  size="small"
-                                  color="success"
-                                  variant="outlined"
-                                />
+                                <Badge
+                                  size="sm"
+                                  color="green"
+                                  variant="outline"
+                                >
+                                  +{improvement}%
+                                </Badge>
                               )}
-                            </Stack>
-                          </Stack>
-                          <LinearProgress variant="determinate" value={final} />
+                            </Group>
+                          </Group>
+                          <Progress value={final} />
                         </Box>
                       );
                     }
                   )}
                 </Box>
-              )}
+              </Tabs.Panel>
 
-              {activeTab === 2 && (
-                <List>
-                  {currentSession.interactions.map((interaction) => (
+              <Tabs.Panel value="2" pt="md">
+                <List spacing={0}>
+                  {currentSession.interactions.map((interaction, index) => (
                     <React.Fragment key={interaction.id}>
-                      <ListItem>
-                        <ListItemText
-                          primary={interaction.details}
-                          secondary={
-                            <Stack direction="row" spacing={1} alignItems="center">
-                              <Typography variant="caption">
-                                {formatTime(interaction.timestamp)}
-                              </Typography>
-                              <Chip
-                                label={interaction.outcome}
-                                size="small"
-                                color={interaction.outcome === "success" ? "success" : "warning"}
-                              />
-                            </Stack>
-                          }
-                        />
-                      </ListItem>
-                      <Divider />
+                      <List.Item style={{ padding: '12px' }}>
+                        <Box>
+                          <Text>{interaction.details}</Text>
+                          <Group gap="xs" mt="xs">
+                            <Text size="xs">{formatTime(interaction.timestamp)}</Text>
+                            <Badge
+                              size="sm"
+                              color={interaction.outcome === "success" ? "green" : "yellow"}
+                            >
+                              {interaction.outcome}
+                            </Badge>
+                          </Group>
+                        </Box>
+                      </List.Item>
+                      {index < currentSession.interactions.length - 1 && <Divider />}
                     </React.Fragment>
                   ))}
                 </List>
-              )}
+              </Tabs.Panel>
 
-              {activeTab === 3 && (
-                <List>
-                  {currentSession.achievements.map((achievement) => (
+              <Tabs.Panel value="3" pt="md">
+                <List spacing={0}>
+                  {currentSession.achievements.map((achievement, index) => (
                     <React.Fragment key={achievement.id}>
-                      <ListItem>
-                        <ListItemIcon>
-                          <Typography variant="h5">{achievement.icon}</Typography>
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={achievement.name}
-                          secondary={formatTime(achievement.timestamp)}
-                        />
-                        <Chip label={`+${achievement.xpReward} XP`} color="primary" />
-                      </ListItem>
-                      <Divider />
+                      <List.Item
+                        icon={<Text size="xl">{achievement.icon}</Text>}
+                        style={{ padding: '12px' }}
+                      >
+                        <Group justify="space-between">
+                          <Box>
+                            <Text fw={500}>{achievement.name}</Text>
+                            <Text size="xs" c="dimmed">{formatTime(achievement.timestamp)}</Text>
+                          </Box>
+                          <Badge color="blue">+{achievement.xpReward} XP</Badge>
+                        </Group>
+                      </List.Item>
+                      {index < currentSession.achievements.length - 1 && <Divider />}
                     </React.Fragment>
                   ))}
                 </List>
-              )}
-            </CardContent>
+              </Tabs.Panel>
+            </Tabs>
           </Card>
-        </Grid2>
+        </Grid.Col>
 
         {/* Session Info Sidebar */}
-        <Grid2 xs={12} lg={4}>
+        <Grid.Col span={{ base: 12, lg: 4 }}>
           {/* Session Overview */}
           <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                Session Overview
-              </Typography>
-              <Stack spacing={2}>
-                <Paper sx={{ p: 2, bgcolor: "primary.50" }}>
-                  <Stack direction="row" alignItems="center" spacing={2}>
-                    <Avatar src={currentSession.studentAvatar}>
-                      {currentSession.studentName[0]}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="subtitle2">
-                        {currentSession.studentName}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {currentSession.date.toLocaleDateString()}
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </Paper>
+            <Text size="lg" fw={500} mb="md">
+              Session Overview
+            </Text>
+            <Stack gap="md">
+              <Paper p="md" style={{ backgroundColor: 'var(--mantine-color-blue-0)' }}>
+                <Group>
+                  <Avatar src={currentSession.studentAvatar} radius="xl">
+                    {currentSession.studentName[0]}
+                  </Avatar>
+                  <Box>
+                    <Text fw={500}>
+                      {currentSession.studentName}
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      {currentSession.date.toLocaleDateString()}
+                    </Text>
+                  </Box>
+                </Group>
+              </Paper>
 
-                <Stack spacing={1}>
-                  <Stack direction="row" justifyContent="space-between">
-                    <Typography variant="body2" color="text.secondary">
-                      Duration
-                    </Typography>
-                    <Typography variant="body2" fontWeight={600}>
-                      {formatTime(currentSession.duration)}
-                    </Typography>
-                  </Stack>
-                  <Stack direction="row" justifyContent="space-between">
-                    <Typography variant="body2" color="text.secondary">
-                      Overall Score
-                    </Typography>
-                    <Chip
-                      label={`${currentSession.overallScore}%`}
-                      size="small"
-                      color={currentSession.overallScore >= 90 ? "success" : "primary"}
-                    />
-                  </Stack>
-                  <Stack direction="row" justifyContent="space-between">
-                    <Typography variant="body2" color="text.secondary">
-                      XP Earned
-                    </Typography>
-                    <Typography variant="body2" fontWeight={600} color="primary.main">
-                      +{currentSession.xpEarned} XP
-                    </Typography>
-                  </Stack>
-                  <Stack direction="row" justifyContent="space-between">
-                    <Typography variant="body2" color="text.secondary">
-                      Achievements
-                    </Typography>
-                    <Typography variant="body2" fontWeight={600}>
-                      {currentSession.achievements.length}
-                    </Typography>
-                  </Stack>
-                </Stack>
-
-                <Divider />
-
-                <Box>
-                  <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                    Mastered Concepts
-                  </Typography>
-                  <Stack direction="row" spacing={0.5} flexWrap="wrap">
-                    {currentSession.masteryConcepts.map((concept) => (
-                      <Chip key={concept} label={concept} size="small" variant="outlined" />
-                    ))}
-                  </Stack>
-                </Box>
+              <Stack gap="xs">
+                <Group justify="space-between">
+                  <Text size="sm" c="dimmed">
+                    Duration
+                  </Text>
+                  <Text size="sm" fw={600}>
+                    {formatTime(currentSession.duration)}
+                  </Text>
+                </Group>
+                <Group justify="space-between">
+                  <Text size="sm" c="dimmed">
+                    Overall Score
+                  </Text>
+                  <Badge
+                    size="sm"
+                    color={currentSession.overallScore >= 90 ? "green" : "blue"}
+                  >
+                    {currentSession.overallScore}%
+                  </Badge>
+                </Group>
+                <Group justify="space-between">
+                  <Text size="sm" c="dimmed">
+                    XP Earned
+                  </Text>
+                  <Text size="sm" fw={600} c="blue">
+                    +{currentSession.xpEarned} XP
+                  </Text>
+                </Group>
+                <Group justify="space-between">
+                  <Text size="sm" c="dimmed">
+                    Achievements
+                  </Text>
+                  <Text size="sm" fw={600}>
+                    {currentSession.achievements.length}
+                  </Text>
+                </Group>
               </Stack>
-            </CardContent>
+
+              <Divider />
+
+              <Box>
+                <Text fw={500} mb="xs">
+                  Mastered Concepts
+                </Text>
+                <Group gap="xs">
+                  {currentSession.masteryConcepts.map((concept) => (
+                    <Badge key={concept} size="sm" variant="outline">
+                      {concept}
+                    </Badge>
+                  ))}
+                </Group>
+              </Box>
+            </Stack>
           </Card>
 
           {/* Other Sessions */}
-          <Card sx={{ mt: 3 }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                Other Sessions Today
-              </Typography>
-              <List>
-                {sessions.slice(0, 3).map((session) => (
-                  <ListItemButton
-                    key={session.id}
-                    selected={session.id === currentSession.id}
-                    onClick={() => setCurrentSession(session)}
-                  >
-                    <ListItemIcon>
-                      <SportsEsports />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={session.worldName}
-                      secondary={`${formatTime(session.duration)} • ${session.xpEarned} XP`}
-                    />
-                  </ListItemButton>
-                ))}
-              </List>
-            </CardContent>
+          <Card mt="md">
+            <Text size="lg" fw={500} mb="md">
+              Other Sessions Today
+            </Text>
+            <List spacing={0}>
+              {sessions.slice(0, 3).map((session) => (
+                <List.Item
+                  key={session.id}
+                  onClick={() => setCurrentSession(session)}
+                  style={{
+                    cursor: 'pointer',
+                    padding: '12px',
+                    backgroundColor: session.id === currentSession.id ? 'var(--mantine-color-gray-1)' : undefined,
+                  }}
+                  icon={<IconDeviceGamepad2 size={20} />}
+                >
+                  <Box>
+                    <Text fw={500}>{session.worldName}</Text>
+                    <Text size="xs" c="dimmed">
+                      {formatTime(session.duration)} • {session.xpEarned} XP
+                    </Text>
+                  </Box>
+                </List.Item>
+              ))}
+            </List>
           </Card>
 
           {/* Insights */}
-          <Card sx={{ mt: 3 }}>
-            <CardContent>
-              <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-                <Insights />
-                <Typography variant="h6">AI Insights</Typography>
-              </Stack>
-              <Stack spacing={2}>
-                <Alert severity="success">
-                  Emma showed excellent problem-solving skills, particularly in the multiplication
-                  section.
-                </Alert>
-                <Alert severity="info">
-                  Consider more division practice. Emma needed multiple attempts but showed good
-                  perseverance.
-                </Alert>
-                <Alert severity="warning">
-                  Emma spent 5 minutes on one problem. This might indicate the need for additional
-                  support in this area.
-                </Alert>
-              </Stack>
-            </CardContent>
+          <Card mt="md">
+            <Group mb="md">
+              <IconBulb size={20} />
+              <Text size="lg" fw={500}>AI Insights</Text>
+            </Group>
+            <Stack gap="sm">
+              <Alert color="green">
+                Emma showed excellent problem-solving skills, particularly in the multiplication
+                section.
+              </Alert>
+              <Alert color="blue">
+                Consider more division practice. Emma needed multiple attempts but showed good
+                perseverance.
+              </Alert>
+              <Alert color="yellow">
+                Emma spent 5 minutes on one problem. This might indicate the need for additional
+                support in this area.
+              </Alert>
+            </Stack>
           </Card>
-        </Grid2>
-      </Grid2>
+        </Grid.Col>
+      </Grid>
     </Box>
   );
 }

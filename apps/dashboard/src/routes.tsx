@@ -42,6 +42,9 @@ const Rewards = lazy(() => import("./components/pages/Rewards"));
 const Avatar = lazy(() => import("./components/pages/Avatar"));
 const Play = lazy(() => import("./components/pages/student/Play"));
 
+// Roblox Component Showcase (development/demo)
+const RobloxComponentShowcase = lazy(() => import("./pages/RobloxComponentShowcase"));
+
 // Heavy/complex components (3D, charts, admin)
 const GameplayReplay = lazy(() =>
   import("./components/pages/GameplayReplay").then(module => ({
@@ -85,16 +88,7 @@ const RobloxStudioPage = lazy(() =>
 );
 
 // Development/test components
-const WebSocketTest = lazy(() =>
-  import("./components/test/WebSocketTest").then(module => ({
-    default: module.default
-  }))
-);
-const WebSocketDemo = lazy(() =>
-  import("./components/test/WebSocketDemo").then(module => ({
-    default: module.default
-  }))
-);
+// Note: WebSocket test components removed - directory does not exist
 const HealthCheck = lazy(() => import("./pages/Health"));
 // MigrationDemo removed - not needed in production
 const AgentDashboard = lazy(() =>
@@ -234,6 +228,14 @@ export default function AppRoutes() {
         }
       />
       <Route
+        path="/roblox-showcase"
+        element={
+          <PerformanceRoute priority="low" skeletonVariant="dashboard">
+            <RobloxComponentShowcase />
+          </PerformanceRoute>
+        }
+      />
+      <Route
         path="/environment-preview/:environmentId"
         element={
           <RoleGuard allow={["teacher", "admin", "student"]}>
@@ -362,8 +364,7 @@ export default function AppRoutes() {
       />
 
       {/* Development Test Routes */}
-      <Route path="/websocket-test" element={<WebSocketTest />} />
-      <Route path="/websocket-demo" element={<WebSocketDemo />} />
+      {/* WebSocket test routes removed - components do not exist */}
       <Route path="/health" element={<HealthCheck />} />
       {/* Migration demo removed - not needed in production */}
 

@@ -10,10 +10,8 @@ import {
   Tooltip,
   Group,
   useMantineTheme,
-  keyframes,
   rem
 } from '@mantine/core';
-import { createStyles } from '@mantine/emotion';
 import {
   IconTrophy,
   IconStar,
@@ -36,111 +34,100 @@ const robloxColors = {
   gold: '#F59E0B'
 };
 
-const slideIn = keyframes({
-  'from': {
-    opacity: 0,
-    transform: 'translateX(-100%)'
-  },
-  'to': {
-    opacity: 1,
-    transform: 'translateX(0)'
+// Keyframe animations defined as CSS strings
+const animations = `
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
-});
 
-const glow = keyframes({
-  '0%, 100%': { boxShadow: `0 0 20px ${robloxColors.gold}77` },
-  '50%': { boxShadow: `0 0 40px ${robloxColors.gold}CC` }
-});
-
-const useStyles = createStyles((theme) => ({
-  card: {
-    background: `linear-gradient(135deg, ${robloxColors.dark} 0%, ${theme.fn.rgba(robloxColors.darkGray, 0.95)} 100%)`,
-    border: `2px solid ${theme.fn.rgba(robloxColors.primary, 0.3)}`,
-    borderRadius: rem(20),
-    padding: theme.spacing.lg,
-    position: 'relative',
-    overflow: 'hidden',
-
-    '&::before': {
-      content: '""',
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: rem(4),
-      background: `linear-gradient(90deg, ${robloxColors.primary}, ${robloxColors.secondary}, ${robloxColors.accent})`,
-      animation: 'shimmer 3s linear infinite'
+  @keyframes glow {
+    0%, 100% {
+      box-shadow: 0 0 20px ${robloxColors.gold}77;
     }
-  },
-  leaderItem: {
-    display: 'flex',
-    alignItems: 'center',
-    padding: theme.spacing.md,
-    borderRadius: rem(12),
-    marginBottom: theme.spacing.sm,
-    position: 'relative',
-    transition: 'all 0.3s ease',
-    cursor: 'pointer',
-    animation: `${slideIn} 0.5s ease-out`,
-
-    '&:hover': {
-      transform: 'translateX(8px) scale(1.02)',
-      boxShadow: `0 8px 24px ${theme.fn.rgba(robloxColors.primary, 0.3)}`
+    50% {
+      box-shadow: 0 0 40px ${robloxColors.gold}CC;
     }
-  },
-  leaderItemTop3: {
-    background: (rank: number) => rank <= 3
-      ? `linear-gradient(135deg, ${theme.fn.rgba(robloxColors.gold, rank === 1 ? 0.2 : rank === 2 ? 0.15 : 0.1)} 0%, ${theme.fn.rgba(robloxColors.dark, 0.9)} 100%)`
-      : theme.fn.rgba(robloxColors.darkGray, 0.5),
-    border: (rank: number) => `1px solid ${rank <= 3 ? theme.fn.rgba(robloxColors.gold, 0.3) : theme.fn.rgba(robloxColors.gray, 0.2)}`,
-
-    '&:hover': {
-      background: (rank: number) => rank <= 3
-        ? `linear-gradient(135deg, ${theme.fn.rgba(robloxColors.gold, rank === 1 ? 0.3 : rank === 2 ? 0.25 : 0.2)} 0%, ${theme.fn.rgba(robloxColors.dark, 0.95)} 100%)`
-        : theme.fn.rgba(robloxColors.darkGray, 0.7)
-    }
-  },
-  leaderItemFirst: {
-    animation: `${slideIn} 0.5s ease-out 0.1s both, ${glow} 2s ease-in-out infinite`
-  },
-  rankBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontWeight: 800,
-    fontSize: rem(20),
-    position: 'relative'
   }
-}));
+
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.05);
+      opacity: 0.9;
+    }
+  }
+`;
+
+// Inject animations into document head
+if (typeof document !== 'undefined') {
+  const styleId = 'animated-leaderboard-animations';
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = animations;
+    document.head.appendChild(style);
+  }
+}
 
 const RankBadge: React.FC<{ rank: number }> = ({ rank }) => {
   const theme = useMantineTheme();
-  const { classes } = useStyles();
 
-  const getBadgeStyle = (rank: number) => {
+  const getBadgeStyle = (rank: number): React.CSSProperties => {
+    const baseStyle: React.CSSProperties = {
+      width: 40,
+      height: 40,
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontWeight: 800,
+      fontSize: rem(20),
+      position: 'relative'
+    };
+
     if (rank === 1) {
       return {
-        background: `linear-gradient(135deg, ${robloxColors.gold} 0%, #FFD700 100%)`,
+        ...baseStyle,
+        background: 'linear-gradient(135deg, #F59E0B 0%, #FFD700 100%)',
         color: '#fff',
-        boxShadow: `0 4px 12px ${theme.fn.rgba(robloxColors.gold, 0.3)}`
+        boxShadow: `0 4px 12px rgba(${parseInt(robloxColors.gold.slice(1,3), 16)}, ${parseInt(robloxColors.gold.slice(3,5), 16)}, ${parseInt(robloxColors.gold.slice(5,7), 16)}, 0.3)`
       };
     } else if (rank === 2) {
       return {
+        ...baseStyle,
         background: 'linear-gradient(135deg, #C0C0C0 0%, #B8B8B8 100%)',
         color: '#fff',
-        boxShadow: `0 4px 12px ${theme.fn.rgba('#C0C0C0', 0.3)}`
+        boxShadow: '0 4px 12px rgba(192, 192, 192, 0.3)'
       };
     } else if (rank === 3) {
       return {
+        ...baseStyle,
         background: 'linear-gradient(135deg, #CD7F32 0%, #B87333 100%)',
         color: '#fff',
-        boxShadow: `0 4px 12px ${theme.fn.rgba('#CD7F32', 0.3)}`
+        boxShadow: '0 4px 12px rgba(205, 127, 50, 0.3)'
       };
     } else {
       return {
+        ...baseStyle,
         background: `linear-gradient(135deg, ${robloxColors.darkGray} 0%, ${robloxColors.gray} 100%)`,
         color: robloxColors.lightGray
       };
@@ -155,10 +142,7 @@ const RankBadge: React.FC<{ rank: number }> = ({ rank }) => {
   };
 
   return (
-    <Box
-      className={classes.rankBadge}
-      style={getBadgeStyle(rank)}
-    >
+    <Box style={getBadgeStyle(rank)}>
       {getTrophyIcon(rank)}
     </Box>
   );
@@ -173,7 +157,7 @@ const XPBar: React.FC<{ value: number }> = ({ value }) => {
       size="sm"
       radius="md"
       style={{
-        backgroundColor: theme.fn.rgba(robloxColors.gray, 0.2)
+        backgroundColor: `rgba(${parseInt(robloxColors.gray.slice(1,3), 16)}, ${parseInt(robloxColors.gray.slice(3,5), 16)}, ${parseInt(robloxColors.gray.slice(5,7), 16)}, 0.2)`
       }}
       styles={{
         bar: {
@@ -185,8 +169,6 @@ const XPBar: React.FC<{ value: number }> = ({ value }) => {
 };
 
 const StreakBadge: React.FC<{ streak: number }> = ({ streak }) => {
-  const theme = useMantineTheme();
-
   return (
     <Badge
       size="sm"
@@ -229,7 +211,6 @@ export const AnimatedLeaderboard: React.FunctionComponent<AnimatedLeaderboardPro
   onPlayerClick,
 }) => {
   const theme = useMantineTheme();
-  const { classes } = useStyles();
   const [displayPlayers, setDisplayPlayers] = useState<LeaderboardPlayer[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
 
@@ -246,8 +227,62 @@ export const AnimatedLeaderboard: React.FunctionComponent<AnimatedLeaderboardPro
     onPlayerClick?.(player);
   };
 
+  const cardStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${robloxColors.dark} 0%, rgba(${parseInt(robloxColors.darkGray.slice(1,3), 16)}, ${parseInt(robloxColors.darkGray.slice(3,5), 16)}, ${parseInt(robloxColors.darkGray.slice(5,7), 16)}, 0.95) 100%)`,
+    border: `2px solid rgba(${parseInt(robloxColors.primary.slice(1,3), 16)}, ${parseInt(robloxColors.primary.slice(3,5), 16)}, ${parseInt(robloxColors.primary.slice(5,7), 16)}, 0.3)`,
+    borderRadius: rem(20),
+    padding: theme.spacing.lg,
+    position: 'relative',
+    overflow: 'hidden'
+  };
+
+  const topBorderStyle: React.CSSProperties = {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: rem(4),
+    background: `linear-gradient(90deg, ${robloxColors.primary}, ${robloxColors.secondary}, ${robloxColors.accent})`,
+    animation: 'shimmer 3s linear infinite'
+  };
+
+  const getLeaderItemStyle = (rank: number, isFirst: boolean, isSelected: boolean): React.CSSProperties => {
+    const baseStyle: React.CSSProperties = {
+      display: 'flex',
+      alignItems: 'center',
+      padding: theme.spacing.md,
+      borderRadius: rem(12),
+      marginBottom: theme.spacing.sm,
+      position: 'relative',
+      transition: 'all 0.3s ease',
+      cursor: 'pointer',
+      animation: isFirst ? 'slideIn 0.5s ease-out 0.1s both, glow 2s ease-in-out infinite' : 'slideIn 0.5s ease-out'
+    };
+
+    const background = rank <= 3
+      ? `linear-gradient(135deg, rgba(${parseInt(robloxColors.gold.slice(1,3), 16)}, ${parseInt(robloxColors.gold.slice(3,5), 16)}, ${parseInt(robloxColors.gold.slice(5,7), 16)}, ${rank === 1 ? 0.2 : rank === 2 ? 0.15 : 0.1}) 0%, rgba(${parseInt(robloxColors.dark.slice(1,3), 16)}, ${parseInt(robloxColors.dark.slice(3,5), 16)}, ${parseInt(robloxColors.dark.slice(5,7), 16)}, 0.9) 100%)`
+      : `rgba(${parseInt(robloxColors.darkGray.slice(1,3), 16)}, ${parseInt(robloxColors.darkGray.slice(3,5), 16)}, ${parseInt(robloxColors.darkGray.slice(5,7), 16)}, 0.5)`;
+
+    const defaultBorderColor = rank <= 3
+      ? `rgba(${parseInt(robloxColors.gold.slice(1,3), 16)}, ${parseInt(robloxColors.gold.slice(3,5), 16)}, ${parseInt(robloxColors.gold.slice(5,7), 16)}, 0.3)`
+      : `rgba(${parseInt(robloxColors.gray.slice(1,3), 16)}, ${parseInt(robloxColors.gray.slice(3,5), 16)}, ${parseInt(robloxColors.gray.slice(5,7), 16)}, 0.2)`;
+
+    const borderColor = isSelected ? robloxColors.primary : defaultBorderColor;
+    const borderWidth = isSelected ? 2 : 1;
+
+    return {
+      ...baseStyle,
+      background,
+      border: `${borderWidth}px solid ${borderColor}`
+    };
+  };
+
   return (
-    <Card className={classes.card}>
+    <Card style={cardStyle}>
+      {/* Top gradient border */}
+      <Box style={topBorderStyle} />
+
       <Group justify="space-between" mb="lg">
         <Text
           size="xl"
@@ -282,11 +317,7 @@ export const AnimatedLeaderboard: React.FunctionComponent<AnimatedLeaderboardPro
           const rank = index + 1;
           const xpProgress = (player.xp % 1000) / 10; // XP progress to next level
           const isSelected = selectedPlayer === player.id;
-          const defaultBorderColor = rank <= 3
-            ? theme.fn.rgba(robloxColors.gold, 0.3)
-            : theme.fn.rgba(robloxColors.gray, 0.2);
-          const borderColor = isSelected ? robloxColors.primary : defaultBorderColor;
-          const borderWidth = isSelected ? 2 : 1;
+          const isFirst = rank === 1;
 
           return (
             <motion.div
@@ -297,14 +328,8 @@ export const AnimatedLeaderboard: React.FunctionComponent<AnimatedLeaderboardPro
               transition={{ delay: index * 0.05 }}
             >
               <Box
-                className={`${classes.leaderItem} ${rank <= 3 ? classes.leaderItemTop3 : ''} ${rank === 1 ? classes.leaderItemFirst : ''}`}
+                style={getLeaderItemStyle(rank, isFirst, isSelected)}
                 onClick={() => handlePlayerClick(player)}
-                style={{
-                  background: rank <= 3
-                    ? `linear-gradient(135deg, ${theme.fn.rgba(robloxColors.gold, rank === 1 ? 0.2 : rank === 2 ? 0.15 : 0.1)} 0%, ${theme.fn.rgba(robloxColors.dark, 0.9)} 100%)`
-                    : theme.fn.rgba(robloxColors.darkGray, 0.5),
-                  border: `${borderWidth}px solid ${borderColor}`
-                }}
               >
                 <RankBadge rank={rank} />
 
@@ -372,7 +397,7 @@ export const AnimatedLeaderboard: React.FunctionComponent<AnimatedLeaderboardPro
                       leftSection={<IconStar size={14} />}
                       size="sm"
                       style={{
-                        backgroundColor: theme.fn.rgba(robloxColors.gold, 0.2),
+                        backgroundColor: `rgba(${parseInt(robloxColors.gold.slice(1,3), 16)}, ${parseInt(robloxColors.gold.slice(3,5), 16)}, ${parseInt(robloxColors.gold.slice(5,7), 16)}, 0.2)`,
                         color: robloxColors.gold,
                         fontWeight: 700
                       }}

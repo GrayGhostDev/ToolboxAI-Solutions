@@ -1,11 +1,12 @@
 /**
  * Clerk Provider Wrapper Component (2025)
  * Enhanced Clerk integration with loading states and error handling
+ * Migrated to Mantine v8 components
  */
 
 import React, { Suspense } from 'react';
 import { ClerkProvider } from '@clerk/clerk-react';
-import { Box, CircularProgress, Typography, Alert } from '@mui/material';
+import { Box, Loader, Text, Alert, Stack, Center } from '@mantine/core';
 import ClerkErrorBoundary from './ClerkErrorBoundary';
 
 interface ClerkProviderWrapperProps {
@@ -14,52 +15,35 @@ interface ClerkProviderWrapperProps {
 }
 
 // Loading component for Clerk initialization
-const ClerkLoadingFallback= () => (
-  <Box
-    sx={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
-      gap: 2
-    }}
-  >
-    <CircularProgress size={40} />
-    <Typography variant="body2" color="text.secondary">
-      Initializing authentication...
-    </Typography>
-  </Box>
+const ClerkLoadingFallback = () => (
+  <Center style={{ minHeight: '100vh' }}>
+    <Stack align="center" gap="md">
+      <Loader size="lg" />
+      <Text size="sm" c="dimmed">
+        Initializing authentication...
+      </Text>
+    </Stack>
+  </Center>
 );
 
 // Error fallback for Clerk provider
 const ClerkErrorFallback = ({ error, retry }: { error: Error; retry: () => void }) => (
-  <Box
-    sx={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
-      p: 3,
-      maxWidth: 600,
-      mx: 'auto'
-    }}
-  >
-    <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
-      <Typography variant="h6" gutterBottom>
-        Authentication Service Unavailable
-      </Typography>
-      <Typography variant="body2" sx={{ mb: 2 }}>
-        {error.message.includes('publishable key')
-          ? 'The authentication service is not properly configured.'
-          : 'Unable to connect to the authentication service.'}
-      </Typography>
-      <Typography variant="body2" color="text.secondary">
-        Please check your connection and try again.
-      </Typography>
-    </Alert>
-  </Box>
+  <Center style={{ minHeight: '100vh', padding: '1rem' }}>
+    <Box style={{ maxWidth: 600, width: '100%' }}>
+      <Alert color="red" title="Authentication Service Unavailable">
+        <Stack gap="sm">
+          <Text size="sm">
+            {error.message.includes('publishable key')
+              ? 'The authentication service is not properly configured.'
+              : 'Unable to connect to the authentication service.'}
+          </Text>
+          <Text size="sm" c="dimmed">
+            Please check your connection and try again.
+          </Text>
+        </Stack>
+      </Alert>
+    </Box>
+  </Center>
 );
 
 // Check if Clerk is properly configured
@@ -113,7 +97,7 @@ export const ClerkProviderWrapper = ({
       locale: 'en-US' // Can be made dynamic based on user preference
     },
 
-    // Appearance customization for Material-UI theme integration
+    // Appearance customization for Mantine theme integration
     appearance: {
       elements: {
         rootBox: {
@@ -125,7 +109,7 @@ export const ClerkProviderWrapper = ({
         }
       },
       variables: {
-        colorPrimary: '#1976d2', // Material-UI primary blue
+        colorPrimary: '#00bfff', // Electric blue from Roblox theme
         fontFamily: '"Roboto","Helvetica","Arial",sans-serif'
       }
     },

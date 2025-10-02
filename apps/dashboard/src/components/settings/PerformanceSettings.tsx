@@ -1,5 +1,5 @@
 /**
- * Performance Settings Component
+ * Performance Settings Component (Migrated to Mantine v8)
  *
  * UI for controlling performance monitoring feature flags
  * and displaying performance metrics
@@ -9,34 +9,30 @@ import React from 'react';
 import {
   Box,
   Card,
-  CardContent,
-  Typography,
+  Text,
   Switch,
-  FormControlLabel,
   Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Divider,
   Alert,
-  AlertTitle,
-  Chip,
-  LinearProgress,
+  Badge,
+  Progress,
   Button,
   Stack,
   Grid,
-} from '@mui/material';
+  Group,
+  Title,
+} from '@mantine/core';
 import {
-  Speed,
-  Warning,
-  CheckCircle,
-  Error as ErrorIcon,
-  Memory,
-  Timer,
-  TrendingUp,
-  Refresh,
-  Clear,
-} from '@mui/icons-material';
+  IconGauge,
+  IconAlertTriangle,
+  IconCircleCheck,
+  IconAlertCircle,
+  IconCpu,
+  IconClock,
+  IconTrendingUp,
+  IconRefresh,
+  IconX,
+} from '@tabler/icons-react';
 import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 import { featureFlags, useFeatureFlags } from '@/config/features';
 
@@ -53,11 +49,10 @@ export default function PerformanceSettings() {
   /**
    * Handle performance monitoring toggle
    */
-  const handleMonitoringToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const enabled = event.target.checked;
-    featureFlags.updateFlags({ enablePerformanceMonitoring: enabled });
+  const handleMonitoringToggle = (checked: boolean) => {
+    featureFlags.updateFlags({ enablePerformanceMonitoring: checked });
 
-    if (enabled) {
+    if (checked) {
       startMonitoring();
     } else {
       stopMonitoring();
@@ -67,271 +62,269 @@ export default function PerformanceSettings() {
   /**
    * Handle monitoring level change
    */
-  const handleLevelChange = (event: any) => {
-    featureFlags.updateFlags({
-      performanceMonitoringLevel: event.target.value,
-    });
+  const handleLevelChange = (value: string | null) => {
+    if (value) {
+      featureFlags.updateFlags({
+        performanceMonitoringLevel: value,
+      });
+    }
   };
 
   /**
    * Get score color based on value
    */
   const getScoreColor = (score: number): string => {
-    if (score >= 90) return 'success';
-    if (score >= 70) return 'warning';
-    return 'error';
+    if (score >= 90) return 'green';
+    if (score >= 70) return 'yellow';
+    return 'red';
   };
 
   /**
    * Get severity color
    */
-  const getSeverityColor = (severity: string): 'error' | 'warning' | 'info' => {
+  const getSeverityColor = (severity: string): 'red' | 'yellow' | 'blue' => {
     switch (severity) {
       case 'critical':
       case 'error':
-        return 'error';
+        return 'red';
       case 'warning':
-        return 'warning';
+        return 'yellow';
       default:
-        return 'info';
+        return 'blue';
     }
   };
 
   return (
     <Box>
-      <Typography variant="h5" gutterBottom>
+      <Title order={2} mb="lg">
         Performance Monitoring
-      </Typography>
+      </Title>
 
       {/* Main Settings */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Monitoring Configuration
-          </Typography>
+      <Card shadow="sm" p="lg" mb="md" withBorder>
+        <Text size="lg" fw={600} mb="md">
+          Monitoring Configuration
+        </Text>
 
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={flags.enablePerformanceMonitoring}
-                    onChange={handleMonitoringToggle}
-                    color="primary"
-                  />
-                }
-                label="Enable Performance Monitoring"
-              />
-            </Grid>
+        <Grid gutter="lg">
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <Switch
+              label="Enable Performance Monitoring"
+              checked={flags.enablePerformanceMonitoring}
+              onChange={(event) => handleMonitoringToggle(event.currentTarget.checked)}
+              color="blue"
+            />
+          </Grid.Col>
 
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth disabled={!flags.enablePerformanceMonitoring}>
-                <InputLabel>Monitoring Level</InputLabel>
-                <Select
-                  value={flags.performanceMonitoringLevel}
-                  onChange={handleLevelChange}
-                  label="Monitoring Level"
-                >
-                  <MenuItem value="off">Off</MenuItem>
-                  <MenuItem value="basic">Basic</MenuItem>
-                  <MenuItem value="detailed">Detailed</MenuItem>
-                  <MenuItem value="verbose">Verbose</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <Select
+              label="Monitoring Level"
+              value={flags.performanceMonitoringLevel}
+              onChange={handleLevelChange}
+              disabled={!flags.enablePerformanceMonitoring}
+              data={[
+                { value: 'off', label: 'Off' },
+                { value: 'basic', label: 'Basic' },
+                { value: 'detailed', label: 'Detailed' },
+                { value: 'verbose', label: 'Verbose' },
+              ]}
+            />
+          </Grid.Col>
 
-            <Grid item xs={12} md={6}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={flags.enableSlowApiWarnings}
-                    onChange={(e) =>
-                      featureFlags.updateFlags({
-                        enableSlowApiWarnings: e.target.checked,
-                      })
-                    }
-                    color="primary"
-                  />
-                }
-                label="Enable Slow API Warnings"
-              />
-            </Grid>
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <Switch
+              label="Enable Slow API Warnings"
+              checked={flags.enableSlowApiWarnings}
+              onChange={(event) =>
+                featureFlags.updateFlags({
+                  enableSlowApiWarnings: event.currentTarget.checked,
+                })
+              }
+              color="blue"
+            />
+          </Grid.Col>
 
-            <Grid item xs={12} md={6}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={flags.enableReactProfiler}
-                    onChange={(e) =>
-                      featureFlags.updateFlags({
-                        enableReactProfiler: e.target.checked,
-                      })
-                    }
-                    color="primary"
-                  />
-                }
-                label="Enable React Profiler"
-              />
-            </Grid>
-          </Grid>
-        </CardContent>
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <Switch
+              label="Enable React Profiler"
+              checked={flags.enableReactProfiler}
+              onChange={(event) =>
+                featureFlags.updateFlags({
+                  enableReactProfiler: event.currentTarget.checked,
+                })
+              }
+              color="blue"
+            />
+          </Grid.Col>
+        </Grid>
       </Card>
 
       {/* Performance Status */}
       {isMonitoring && (
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-              <Typography variant="h6">Performance Status</Typography>
-              <Chip
-                icon={<Speed />}
-                label="Monitoring Active"
-                color="success"
-                size="small"
-              />
-            </Box>
+        <Card shadow="sm" p="lg" mb="md" withBorder>
+          <Group justify="space-between" mb="md">
+            <Text size="lg" fw={600}>Performance Status</Text>
+            <Badge
+              leftSection={<IconGauge size={14} />}
+              color="green"
+              size="sm"
+            >
+              Monitoring Active
+            </Badge>
+          </Group>
 
-            {summary ? (
-              <>
-                {/* Performance Score */}
-                <Box mb={3}>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Overall Score
-                  </Typography>
-                  <Box display="flex" alignItems="center" gap={2}>
-                    <Typography variant="h3" color={`${getScoreColor(summary.score)}.main`}>
-                      {summary.score}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      / 100
-                    </Typography>
-                  </Box>
-                  <LinearProgress
-                    variant="determinate"
-                    value={summary.score}
-                    color={getScoreColor(summary.score) as any}
-                    sx={{ mt: 1, height: 8, borderRadius: 1 }}
-                  />
-                </Box>
-
-                <Divider sx={{ my: 2 }} />
-
-                {/* Key Metrics */}
-                <Grid container spacing={2}>
-                  <Grid item xs={6} md={3}>
-                    <Box textAlign="center">
-                      <Timer color="action" />
-                      <Typography variant="body2" color="text.secondary">
-                        FCP
-                      </Typography>
-                      <Typography variant="h6">
-                        {summary.metrics.firstContentfulPaint.toFixed(0)}ms
-                      </Typography>
-                    </Box>
-                  </Grid>
-
-                  <Grid item xs={6} md={3}>
-                    <Box textAlign="center">
-                      <TrendingUp color="action" />
-                      <Typography variant="body2" color="text.secondary">
-                        LCP
-                      </Typography>
-                      <Typography variant="h6">
-                        {summary.metrics.largestContentfulPaint.toFixed(0)}ms
-                      </Typography>
-                    </Box>
-                  </Grid>
-
-                  <Grid item xs={6} md={3}>
-                    <Box textAlign="center">
-                      <Memory color="action" />
-                      <Typography variant="body2" color="text.secondary">
-                        Memory
-                      </Typography>
-                      <Typography variant="h6">
-                        {summary.systemHealth.memory_usage}MB
-                      </Typography>
-                    </Box>
-                  </Grid>
-
-                  <Grid item xs={6} md={3}>
-                    <Box textAlign="center">
-                      <Speed color="action" />
-                      <Typography variant="body2" color="text.secondary">
-                        CPU
-                      </Typography>
-                      <Typography variant="h6">{summary.systemHealth.cpu_usage}%</Typography>
-                    </Box>
-                  </Grid>
-                </Grid>
-
-                <Divider sx={{ my: 2 }} />
-
-                {/* Alerts */}
-                {summary.alerts.length > 0 && (
-                  <Box mb={2}>
-                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                      <Typography variant="subtitle1">Active Alerts</Typography>
-                      <Button size="small" startIcon={<Clear />} onClick={clearAlerts}>
-                        Clear All
-                      </Button>
-                    </Box>
-                    <Stack spacing={1}>
-                      {summary.alerts.slice(-5).map((alert, index) => (
-                        <Alert
-                          key={index}
-                          severity={getSeverityColor(alert.severity)}
-                          onClose={() => {}}
-                        >
-                          <AlertTitle>{alert.message}</AlertTitle>
-                          {alert.suggestion && (
-                            <Typography variant="body2">{alert.suggestion}</Typography>
-                          )}
-                        </Alert>
-                      ))}
-                    </Stack>
-                  </Box>
-                )}
-
-                {/* Recommendations */}
-                {summary.recommendations.length > 0 && (
-                  <Box>
-                    <Typography variant="subtitle1" gutterBottom>
-                      Recommendations
-                    </Typography>
-                    <Stack spacing={1}>
-                      {summary.recommendations.map((rec, index) => (
-                        <Box key={index} display="flex" alignItems="center" gap={1}>
-                          <CheckCircle color="info" fontSize="small" />
-                          <Typography variant="body2">{rec}</Typography>
-                        </Box>
-                      ))}
-                    </Stack>
-                  </Box>
-                )}
-              </>
-            ) : (
-              <Box textAlign="center" py={3}>
-                <Typography color="text.secondary">
-                  Collecting performance data...
-                </Typography>
-                <LinearProgress sx={{ mt: 2 }} />
+          {summary ? (
+            <>
+              {/* Performance Score */}
+              <Box mb="lg">
+                <Text size="sm" c="dimmed" mb="xs">
+                  Overall Score
+                </Text>
+                <Group gap="xs" align="baseline">
+                  <Text size={48} fw={700} c={getScoreColor(summary.score)}>
+                    {summary.score}
+                  </Text>
+                  <Text size="sm" c="dimmed">
+                    / 100
+                  </Text>
+                </Group>
+                <Progress
+                  value={summary.score}
+                  color={getScoreColor(summary.score)}
+                  size="lg"
+                  radius="sm"
+                  mt="xs"
+                />
               </Box>
-            )}
-          </CardContent>
+
+              <Divider my="md" />
+
+              {/* Key Metrics */}
+              <Grid gutter="md">
+                <Grid.Col span={{ base: 6, md: 3 }}>
+                  <Stack align="center" gap="xs">
+                    <IconClock size={24} />
+                    <Text size="xs" c="dimmed">
+                      FCP
+                    </Text>
+                    <Text size="lg" fw={600}>
+                      {summary.metrics.firstContentfulPaint.toFixed(0)}ms
+                    </Text>
+                  </Stack>
+                </Grid.Col>
+
+                <Grid.Col span={{ base: 6, md: 3 }}>
+                  <Stack align="center" gap="xs">
+                    <IconTrendingUp size={24} />
+                    <Text size="xs" c="dimmed">
+                      LCP
+                    </Text>
+                    <Text size="lg" fw={600}>
+                      {summary.metrics.largestContentfulPaint.toFixed(0)}ms
+                    </Text>
+                  </Stack>
+                </Grid.Col>
+
+                <Grid.Col span={{ base: 6, md: 3 }}>
+                  <Stack align="center" gap="xs">
+                    <IconCpu size={24} />
+                    <Text size="xs" c="dimmed">
+                      Memory
+                    </Text>
+                    <Text size="lg" fw={600}>
+                      {summary.systemHealth.memory_usage}MB
+                    </Text>
+                  </Stack>
+                </Grid.Col>
+
+                <Grid.Col span={{ base: 6, md: 3 }}>
+                  <Stack align="center" gap="xs">
+                    <IconGauge size={24} />
+                    <Text size="xs" c="dimmed">
+                      CPU
+                    </Text>
+                    <Text size="lg" fw={600}>{summary.systemHealth.cpu_usage}%</Text>
+                  </Stack>
+                </Grid.Col>
+              </Grid>
+
+              <Divider my="md" />
+
+              {/* Alerts */}
+              {summary.alerts.length > 0 && (
+                <Box mb="md">
+                  <Group justify="space-between" mb="sm">
+                    <Text size="md" fw={500}>Active Alerts</Text>
+                    <Button
+                      size="xs"
+                      variant="subtle"
+                      leftSection={<IconX size={14} />}
+                      onClick={clearAlerts}
+                    >
+                      Clear All
+                    </Button>
+                  </Group>
+                  <Stack gap="xs">
+                    {summary.alerts.slice(-5).map((alert, index) => (
+                      <Alert
+                        key={index}
+                        color={getSeverityColor(alert.severity)}
+                        title={alert.message}
+                        icon={
+                          alert.severity === 'error' || alert.severity === 'critical' ? (
+                            <IconAlertCircle size={16} />
+                          ) : (
+                            <IconAlertTriangle size={16} />
+                          )
+                        }
+                      >
+                        {alert.suggestion && (
+                          <Text size="sm">{alert.suggestion}</Text>
+                        )}
+                      </Alert>
+                    ))}
+                  </Stack>
+                </Box>
+              )}
+
+              {/* Recommendations */}
+              {summary.recommendations.length > 0 && (
+                <Box>
+                  <Text size="md" fw={500} mb="sm">
+                    Recommendations
+                  </Text>
+                  <Stack gap="xs">
+                    {summary.recommendations.map((rec, index) => (
+                      <Group key={index} gap="xs">
+                        <IconCircleCheck size={16} color="var(--mantine-color-blue-6)" />
+                        <Text size="sm">{rec}</Text>
+                      </Group>
+                    ))}
+                  </Stack>
+                </Box>
+              )}
+            </>
+          ) : (
+            <Stack align="center" py="xl" gap="md">
+              <Text c="dimmed">
+                Collecting performance data...
+              </Text>
+              <Progress value={100} animated size="sm" w="100%" />
+            </Stack>
+          )}
         </Card>
       )}
 
       {/* Not Monitoring Message */}
       {!isMonitoring && flags.enablePerformanceMonitoring && (
-        <Alert severity="info">
-          <AlertTitle>Performance Monitoring Ready</AlertTitle>
+        <Alert color="blue" title="Performance Monitoring Ready">
           Performance monitoring is enabled but not currently active.
           <Button
-            size="small"
-            startIcon={<Speed />}
+            size="xs"
+            variant="light"
+            leftSection={<IconGauge size={14} />}
             onClick={startMonitoring}
-            sx={{ mt: 1 }}
+            mt="sm"
           >
             Start Monitoring
           </Button>
@@ -340,8 +333,7 @@ export default function PerformanceSettings() {
 
       {/* Disabled Message */}
       {!flags.enablePerformanceMonitoring && (
-        <Alert severity="warning">
-          <AlertTitle>Performance Monitoring Disabled</AlertTitle>
+        <Alert color="yellow" title="Performance Monitoring Disabled">
           Enable performance monitoring to track application metrics and identify optimization
           opportunities.
         </Alert>
