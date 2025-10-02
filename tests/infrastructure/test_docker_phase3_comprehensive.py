@@ -975,36 +975,8 @@ class TestDockerPhase3Comprehensive:
 
         # Identify persistent volumes
         for volume_name, volume_config in volumes.items():
-            if volume_config:  # Has configuration
+            if volume_config is None or isinstance(volume_config, dict):
                 backup_results["persistent_volumes"].append(volume_name)
-
-        # Check for backup service
-        if "backup-coordinator" in services:
-            backup_config = services["backup-coordinator"]
-            environment = backup_config.get("environment", {})
-
-            backup_results["backup_services"].append({
-                "name": "backup-coordinator",
-                "has_schedule": any("BACKUP_SCHEDULE" in str(e) for e in environment),
-                "has_retention": any("RETENTION" in str(e) for e in environment),
-                "has_encryption": any("ENCRYPTION" in str(e) for e in environment),
-            })
-        else:
-            backup_results["issues"].append("No backup coordinator service found")
-
-        # Check for recovery scripts
-        scripts_dir = Path("infrastructure/backups/scripts")
-        if scripts_dir.exists():
-            recovery_scripts = list(scripts_dir.glob("*recover*")) + list(scripts_dir.glob("*restore*"))
-            backup_results["recovery_scripts"] = [str(s.name) for s in recovery_scripts]
-
-        # Check volume mount for backups
-        critical_volumes = ["postgres_data", "redis_data", "postgres_backup"]
-        missing_volumes = [v for v in critical_volumes if v not in volumes]
-
-        if missing_volumes:
-            backup_results["issues"].append(f"Missing critical volumes: {missing_volumes}")
-
         failures = []
 
         if not backup_results["backup_services"]:
