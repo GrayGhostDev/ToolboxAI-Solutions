@@ -405,12 +405,16 @@ class TestAnalyticsDashboards:
         assert response.status_code in [201, 404]
 
 
-@pytest.fixture
-async def async_client():
-    """Async HTTP client fixture"""
-    # TODO: Implement actual async client setup
-    pass
+from httpx import AsyncClient, ASGITransport
+import pytest
 
+@pytest.fixture
+async def async_client() -> AsyncClient:
+    """Async HTTP client fixture bound to FastAPI app"""
+    from apps.backend.main import app  # adjust import path if needed
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        yield client
 
 @pytest.fixture
 def auth_headers():
