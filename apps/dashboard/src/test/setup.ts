@@ -113,38 +113,22 @@ vi.mock('@clerk/clerk-react', () => {
   };
 });
 
-// Mock specific MUI transitions that cause DOM issues in happy-dom
-vi.mock('@mantine/core', () => ({ Transition: ({ children }: any) => children, () => ({
-  default: vi.fn(({ children, in: inProp, timeout, ...props }) => {
-    // Return children immediately for testing, ignore transition
-    return inProp ? React.createElement('div', { ...props }, children) : null;
-  })
-}));
+// ============================================================================
+// MANTINE CORE MOCKING - 2025 Best Practice
+// ============================================================================
 
-vi.mock('@mantine/core', () => ({ Transition: ({ children }: any) => children, () => ({
-  default: vi.fn(({ children, in: inProp, timeout, ...props }) => {
-    return inProp ? React.createElement('div', { ...props }, children) : null;
-  })
-}));
-
-vi.mock('@mantine/core', () => ({ Collapse: ({ children }: any) => children, () => ({
-  default: vi.fn(({ children, in: inProp, collapsedHeight, timeout, ...props }) => {
-    return inProp ? React.createElement('div', { ...props }, children) : null;
-  })
-}));
-
-// Mock MUI transitions and animations for stable testing
-vi.mock('@mantine/core', () => ({ Transition: ({ children }: any) => children, () => ({
-  default: vi.fn(({ children, in: inProp, direction, ...props }) => {
-    return inProp ? React.createElement('div', { ...props }, children) : null;
-  })
-}));
-
-vi.mock('@mantine/core', () => ({ Transition: ({ children }: any) => children, () => ({
-  default: vi.fn(({ children, in: inProp, ...props }) => {
-    return inProp ? React.createElement('div', { ...props }, children) : null;
-  })
-}));
+// Mock Mantine transitions and animations for stable testing
+// Note: Can only mock a module once, so we combine all mocks here
+vi.mock('@mantine/core', async () => {
+  const actual = await vi.importActual<typeof import('@mantine/core')>('@mantine/core');
+  return {
+    ...actual,
+    // Mock transition components to render children immediately
+    Transition: vi.fn(({ children, mounted }: any) => mounted ? children : null),
+    Collapse: vi.fn(({ children, in: inProp }: any) => inProp ? children : null),
+    __esModule: true,
+  };
+});
 
 // Mock React Three Fiber for 3D components
 vi.mock('@react-three/fiber', () => ({
