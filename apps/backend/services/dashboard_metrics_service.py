@@ -258,19 +258,25 @@ class DashboardMetricsService:
             last_24h = now - timedelta(hours=24)
 
             # Build base query filters
-            filters = []
+            lesson_filters = []
+            assessment_filters = []
+            message_filters = []
+            content_filters = []
             if organization_id:
-                filters.append(User.organization_id == organization_id)
+                lesson_filters.append(Lesson.organization_id == organization_id)
+                assessment_filters.append(Assessment.organization_id == organization_id)
+                message_filters.append(Message.organization_id == organization_id)
+                content_filters.append(EducationalContent.organization_id == organization_id)
 
             # Query recent activity
             recent_lessons_query = select(func.count(Lesson.id)).where(
-                and_(Lesson.created_at >= last_24h, *filters)
+                and_(Lesson.created_at >= last_24h, *lesson_filters)
             )
             recent_assessments_query = select(func.count(Assessment.id)).where(
-                and_(Assessment.created_at >= last_24h, *filters)
+                and_(Assessment.created_at >= last_24h, *assessment_filters)
             )
             recent_messages_query = select(func.count(Message.id)).where(
-                and_(Message.created_at >= last_24h, *filters)
+                and_(Message.created_at >= last_24h, *message_filters)
             )
 
             # Execute queries
@@ -285,7 +291,12 @@ class DashboardMetricsService:
             # Get top performing content
             top_content_query = (
                 select(EducationalContent)
-                .where(and_(EducationalContent.status == "published", *filters))
+                .where(
+                    and_(
+                        EducationalContent.status == "published",
+                        *content_filters,
+                    )
+                )
                 .order_by(EducationalContent.created_at.desc())
                 .limit(5)
             )
@@ -301,7 +312,6 @@ class DashboardMetricsService:
                 }
                 for content in top_content
             ]
-
             # Generate hourly activity trend (simplified)
             activity_trend = [
                 recent_lessons + recent_assessments + recent_messages
