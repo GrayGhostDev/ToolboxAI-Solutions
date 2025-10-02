@@ -1,182 +1,192 @@
-IconimportIcon { IconBoxIcon, IconButtonIcon, IconTypographyIcon, IconPaperIcon, IconStackIcon, IconGridIcon, IconContainerIcon, IconIconButtonIcon, IconAvatarIcon, IconCardIcon, IconCardContentIcon, IconCardActionsIcon, IconListIcon, IconListItemIcon, IconListItemTextIcon, IconDividerIcon, IconTextFieldIcon, IconSelectIcon, IconMenuItemIcon, IconChipIcon, IconBadgeIcon, IconAlertIcon, IconCircularProgressIcon, IconLinearProgressIcon, IconDialogIcon, IconDialogTitleIcon, IconDialogContentIcon, IconDialogActionsIcon, IconDrawerIcon, IconAppBarIcon, IconToolbarIcon, IconTabsIcon, IconTabIcon, IconMenuIcon, IconTooltipIcon, IconCheckboxIcon, IconRadioIcon, IconRadioGroupIcon, IconFormControlIcon, IconFormControlLabelIcon, IconInputLabelIcon, IconSwitchIcon, IconSliderIcon, IconRatingIcon, IconAutocompleteIcon, IconSkeletonIcon, IconTableIcon } IconfromIcon '../IconutilsIcon/IconmuiIcon-Iconimports';
-IconimportIcon IconReactIcon IconfromIcon 'Iconreact';
+import React from 'react';
+import {
+  Card,
+  CardContent,
+  CardActions,
+  Typography,
+  Button,
+  Chip,
+  LinearProgress,
+  Box,
+  IconButton,
+  Menu,
+  MenuItem,
+} from '@mui/material';
+import {
+  PlayArrow as PlayIcon,
+  Download as DownloadIcon,
+  Delete as DeleteIcon,
+  MoreVert as MoreIcon,
+  CloudUpload as DeployIcon,
+} from '@mui/icons-material';
+import { RobloxEnvironment } from '../services/robloxSync';
+import { GenerationStatus } from '../store/slices/robloxSlice';
 
-IconimportIcon {
-  IconPlayArrowIcon IconasIcon IconIconPlayerPlayIcon,
-  IconDownloadIcon IconasIcon IconIconDownloadIcon,
-  IconDeleteIcon IconasIcon IconIconTrashIcon,
-  IconMoreVertIcon IconasIcon IconIconDotsVerticalIcon,
-  IconCloudUploadIcon IconasIcon IconIconCloudUploadIcon,
-} IconfromIcon '@IconmuiIcon/IconiconsIcon-Iconmaterial';
-IconimportIcon { IconRobloxEnvironmentIcon } IconfromIcon '../IconservicesIcon/IconrobloxSync';
-IconimportIcon { IconGenerationStatusIcon } IconfromIcon '../IconstoreIcon/IconslicesIcon/IconrobloxSlice';
-IconimportIcon { IconIconIcon, IconIconCloudUploadIcon, IconIconDotsVerticalIcon, IconIconDownloadIcon, IconIconPlayerPlayIcon, IconIconTrashIcon } IconfromIcon '@IcontablerIcon/IconiconsIcon-Iconreact';
-
-IconinterfaceIcon IconRobloxEnvironmentCardPropsIcon {
-  IconenvironmentIcon: IconRobloxEnvironmentIcon;
-  IcongenerationStatusIcon?: IconGenerationStatusIcon;
-  IcononGenerateIcon: (IconidIcon: IconstringIcon) => IconvoidIcon;
-  IcononDeployIcon: (IconidIcon: IconstringIcon) => IconvoidIcon;
-  IcononDownloadIcon: (IconidIcon: IconstringIcon) => IconvoidIcon;
-  IcononDeleteIcon: (IconidIcon: IconstringIcon) => IconvoidIcon;
-  IcononPreviewIcon: (IconidIcon: IconstringIcon) => IconvoidIcon;
+interface RobloxEnvironmentCardProps {
+  environment: RobloxEnvironment;
+  generationStatus?: GenerationStatus;
+  onGenerate: (id: string) => void;
+  onDeploy: (id: string) => void;
+  onDownload: (id: string) => void;
+  onDelete: (id: string) => void;
+  onPreview: (id: string) => void;
 }
 
-IconexportIcon IconconstIcon IconRobloxEnvironmentCardIcon: IconReactIcon.IconFunctionComponentIcon<IconRobloxEnvironmentCardPropsIcon> = ({
-  IconenvironmentIcon,
-  IcongenerationStatusIcon,
-  IcononGenerateIcon,
-  IcononDeployIcon,
-  IcononDownloadIcon,
-  IcononDeleteIcon,
-  IcononPreviewIcon,
+export const RobloxEnvironmentCard: React.FC<RobloxEnvironmentCardProps> = ({
+  environment,
+  generationStatus,
+  onGenerate,
+  onDeploy,
+  onDownload,
+  onDelete,
+  onPreview,
 }) => {
-  IconconstIcon [IconmenuAnchorIcon, IconsetMenuAnchorIcon] = IconReactIcon.IconuseStateIcon<IconnullIcon | IconHTMLElementIcon>(IconnullIcon);
+  const [menuAnchor, setMenuAnchor] = React.useState<null | HTMLElement>(null);
 
-  IconconstIcon IcongetStatusColorIcon = (IconstatusIcon: IconstringIcon) => {
-    IconswitchIcon (IconstatusIcon) {
-      IconcaseIcon 'Iconready': IconreturnIcon 'Iconsuccess';
-      IconcaseIcon 'Icongenerating': IconreturnIcon 'Iconwarning';
-      IconcaseIcon 'Icondeployed': IconreturnIcon 'Iconinfo';
-      IconcaseIcon 'Iconerror': IconreturnIcon 'Iconerror';
-      IcondefaultIcon: IconreturnIcon 'Icondefault';
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'ready': return 'success';
+      case 'generating': return 'warning';
+      case 'deployed': return 'info';
+      case 'error': return 'error';
+      default: return 'default';
     }
   };
 
-  IconconstIcon IcongetStatusTextIcon = (IconstatusIcon: IconstringIcon) => {
-    IconswitchIcon (IconstatusIcon) {
-      IconcaseIcon 'Icondraft': IconreturnIcon 'IconDraft';
-      IconcaseIcon 'Icongenerating': IconreturnIcon 'IconGenerating';
-      IconcaseIcon 'Iconready': IconreturnIcon 'IconReady';
-      IconcaseIcon 'Icondeployed': IconreturnIcon 'IconDeployed';
-      IconcaseIcon 'Iconerror': IconreturnIcon 'IconError';
-      IcondefaultIcon: IconreturnIcon 'IconUnknown';
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'draft': return 'Draft';
+      case 'generating': return 'Generating';
+      case 'ready': return 'Ready';
+      case 'deployed': return 'Deployed';
+      case 'error': return 'Error';
+      default: return 'Unknown';
     }
   };
 
-  IconconstIcon IconisGeneratingIcon = IcongenerationStatusIcon?.IconstatusIcon === 'Icongenerating';
-  IconconstIcon IconcanGenerateIcon = IconenvironmentIcon.IconstatusIcon === 'Icondraft';
-  IconconstIcon IconcanDeployIcon = IconenvironmentIcon.IconstatusIcon === 'Iconready' && IconenvironmentIcon.IcondownloadUrlIcon;
-  IconconstIcon IconcanDownloadIcon = IconenvironmentIcon.IconstatusIcon === 'Iconready' && IconenvironmentIcon.IcondownloadUrlIcon;
+  const isGenerating = generationStatus?.status === 'generating';
+  const canGenerate = environment.status === 'draft';
+  const canDeploy = environment.status === 'ready' && environment.downloadUrl;
+  const canDownload = environment.status === 'ready' && environment.downloadUrl;
 
-  IconreturnIcon (
-    <IconCardIcon IconstyleIcon={{ IconheightIcon: 'Icon100Icon%', IcondisplayIcon: 'Iconflex', IconflexDirectionIcon: 'Iconcolumn' }}>
-      <IconCardContentIcon IconstyleIcon={{ IconflexGrowIcon: Icon1Icon }}>
-        <IconBoxIcon IcondisplayIcon="Iconflex" IconjustifyContentIcon="IconspaceIcon-Iconbetween" IconalignItemsIcon="IconflexIcon-Iconstart" IconmbIcon={Icon1Icon}>
-          <IconTypographyIcon IconorderIcon={Icon6Icon} IconcomponentIcon="Iconh3" IconnoWrapIcon>
-            {IconenvironmentIcon.IconnameIcon}
-          <IconIconIcon/IconTypographyIcon>
-          <IconIconButtonIcon
-            IconsizeIcon="Iconsmall"
-            IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => (IconeIcon) => IconsetMenuAnchorIcon(IconeIcon.IconcurrentTargetIcon)}
+  return (
+    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <CardContent sx={{ flexGrow: 1 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
+          <Typography variant="h6" component="h3" noWrap>
+            {environment.name}
+          </Typography>
+          <IconButton
+            size="small"
+            onClick={(e) => setMenuAnchor(e.currentTarget)}
           >
-            <IconIconDotsVerticalIcon />
-          <IconIconIcon/IconIconButtonIcon>
-        <IconIconIcon/IconBoxIcon>
+            <MoreIcon />
+          </IconButton>
+        </Box>
 
-        <IconTypographyIcon IconcolorIcon="IcontextIcon.Iconsecondary" IcongutterBottomIcon>
-          {IconenvironmentIcon.IconthemeIcon} • {IconenvironmentIcon.IconmapTypeIcon.IconreplaceIcon('Icon_', ' ')}
-        <IconIconIcon/IconTypographyIcon>
+        <Typography color="text.secondary" gutterBottom>
+          {environment.theme} • {environment.mapType.replace('_', ' ')}
+        </Typography>
 
-        <IconBoxIcon IconmbIcon={Icon2Icon}>
-          <IconChipIcon
-            IconlabelIcon={IcongetStatusTextIcon(IconenvironmentIcon.IconstatusIcon)}
-            IconcolorIcon={IcongetStatusColorIcon(IconenvironmentIcon.IconstatusIcon)}
-            IconsizeIcon="Iconsmall"
+        <Box mb={2}>
+          <Chip
+            label={getStatusText(environment.status)}
+            color={getStatusColor(environment.status)}
+            size="small"
           />
-        <IconIconIcon/IconBoxIcon>
+        </Box>
 
-        {IconenvironmentIcon.IconspecIcon.Iconlearning_objectivesIcon && (
-          <IconBoxIcon IconmbIcon={Icon2Icon}>
-            <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
-              IconLearningIcon IconObjectivesIcon:
-            <IconIconIcon/IconTypographyIcon>
-            <IconTypographyIcon IconsizeIcon="Iconsm">
-              {IconenvironmentIcon.IconspecIcon.Iconlearning_objectivesIcon.IconjoinIcon(', ')}
-            <IconIconIcon/IconTypographyIcon>
-          <IconIconIcon/IconBoxIcon>
+        {environment.spec.learning_objectives && (
+          <Box mb={2}>
+            <Typography variant="body2" color="text.secondary">
+              Learning Objectives:
+            </Typography>
+            <Typography variant="body2">
+              {environment.spec.learning_objectives.join(', ')}
+            </Typography>
+          </Box>
         )}
 
-        {IconisGeneratingIcon && IcongenerationStatusIcon && (
-          <IconBoxIcon IconmbIcon={Icon2Icon}>
-            <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary" IcongutterBottomIcon>
-              {IcongenerationStatusIcon.IconmessageIcon}
-            <IconIconIcon/IconTypographyIcon>
-            <IconLinearProgressIcon 
-              IconvariantIcon="Icondeterminate" 
-              IconvalueIcon={IcongenerationStatusIcon.IconprogressIcon || Icon0Icon} 
+        {isGenerating && generationStatus && (
+          <Box mb={2}>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              {generationStatus.message}
+            </Typography>
+            <LinearProgress 
+              variant="determinate" 
+              value={generationStatus.progress || 0} 
             />
-            <IconTypographyIcon IconvariantIcon="Iconcaption" IconcolorIcon="IcontextIcon.Iconsecondary">
-              {IcongenerationStatusIcon.IconprogressIcon}% • {IcongenerationStatusIcon.IconstageIcon}
-            <IconIconIcon/IconTypographyIcon>
-          <IconIconIcon/IconBoxIcon>
+            <Typography variant="caption" color="text.secondary">
+              {generationStatus.progress}% • {generationStatus.stage}
+            </Typography>
+          </Box>
         )}
 
-        {IconenvironmentIcon.IconstatusIcon === 'Iconerror' && IcongenerationStatusIcon?.IconerrorIcon && (
-          <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="Iconred">
-            IconErrorIcon: {IcongenerationStatusIcon.IconerrorIcon}
-          <IconIconIcon/IconTypographyIcon>
+        {environment.status === 'error' && generationStatus?.error && (
+          <Typography variant="body2" color="error">
+            Error: {generationStatus.error}
+          </Typography>
         )}
-      <IconIconIcon/IconCardContentIcon>
+      </CardContent>
 
-      <IconCardActionsIcon>
-        {IconcanGenerateIcon && (
-          <IconButtonIcon
-            IconstartIconIcon={<IconIconPlayerPlayIcon />}
-            IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IcononGenerateIcon(IconenvironmentIcon.IconidIcon)}
-            IconvariantIcon="Iconfilled"
-            IconcolorIcon="Iconblue"
+      <CardActions>
+        {canGenerate && (
+          <Button
+            startIcon={<PlayIcon />}
+            onClick={() => onGenerate(environment.id)}
+            variant="contained"
+            color="primary"
           >
-            IconGenerateIcon
-          <IconIconIcon/IconButtonIcon>
+            Generate
+          </Button>
         )}
 
-        {IconcanDownloadIcon && (
-          <IconButtonIcon
-            IconstartIconIcon={<IconIconDownloadIcon />}
-            IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IcononDownloadIcon(IconenvironmentIcon.IconidIcon)}
-            IconsizeIcon="Iconsmall"
+        {canDownload && (
+          <Button
+            startIcon={<DownloadIcon />}
+            onClick={() => onDownload(environment.id)}
+            size="small"
           >
-            IconDownloadIcon
-          <IconIconIcon/IconButtonIcon>
+            Download
+          </Button>
         )}
 
-        {IconcanDeployIcon && (
-          <IconButtonIcon
-            IconstartIconIcon={<IconIconCloudUploadIcon />}
-            IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IcononDeployIcon(IconenvironmentIcon.IconidIcon)}
-            IconsizeIcon="Iconsmall"
-            IconvariantIcon="Iconoutline"
+        {canDeploy && (
+          <Button
+            startIcon={<DeployIcon />}
+            onClick={() => onDeploy(environment.id)}
+            size="small"
+            variant="outlined"
           >
-            IconDeployIcon
-          <IconIconIcon/IconButtonIcon>
+            Deploy
+          </Button>
         )}
 
-        {IconenvironmentIcon.IconpreviewUrlIcon && (
-          <IconButtonIcon
-            IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IcononPreviewIcon(IconenvironmentIcon.IconidIcon)}
-            IconsizeIcon="Iconsmall"
+        {environment.previewUrl && (
+          <Button
+            onClick={() => onPreview(environment.id)}
+            size="small"
           >
-            IconPreviewIcon
-          <IconIconIcon/IconButtonIcon>
+            Preview
+          </Button>
         )}
-      <IconIconIcon/IconCardActionsIcon>
+      </CardActions>
 
-      <IconMenuIcon
-        IconanchorElIcon={IconmenuAnchorIcon}
-        IconopenIcon={IconBooleanIcon(IconmenuAnchorIcon)}
-        IcononCloseIcon={() => IconsetMenuAnchorIcon(IconnullIcon)}
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={() => setMenuAnchor(null)}
       >
-        <IconMenuItemIcon IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => {
-          IcononDeleteIcon(IconenvironmentIcon.IconidIcon);
-          IconsetMenuAnchorIcon(IconnullIcon);
+        <MenuItem onClick={() => {
+          onDelete(environment.id);
+          setMenuAnchor(null);
         }}>
-          <IconIconTrashIcon IconstyleIcon={{ IconmrIcon: Icon1Icon }} />
-          IconDeleteIcon
-        <IconIconIcon/IconMenuItemIcon>
-      <IconIconIcon/IconMenuIcon>
-    <IconIconIcon/IconCardIcon>
+          <DeleteIcon sx={{ mr: 1 }} />
+          Delete
+        </MenuItem>
+      </Menu>
+    </Card>
   );
 };
 
-IconexportIcon IcondefaultIcon IconRobloxEnvironmentCardIcon;
+export default RobloxEnvironmentCard;

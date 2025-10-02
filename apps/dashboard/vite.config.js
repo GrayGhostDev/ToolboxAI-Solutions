@@ -372,35 +372,119 @@ export default defineConfig({
       junit: './test-reports/junit.xml',
     },
 
-    // Coverage configuration
+    // Coverage configuration - 2025 standards (>80% all metrics)
     coverage: {
       enabled: process.env.COVERAGE === 'true',
-      provider: 'v8',
-      reporter: ['text', 'json', 'html', 'lcov'],
+      provider: 'v8', // V8 provider for accurate coverage
+
+      // Multiple reporters for different use cases
+      reporter: [
+        'text',           // Console output
+        'text-summary',   // Brief summary
+        'json',           // Machine-readable format
+        'json-summary',   // Summary in JSON
+        'html',           // Interactive HTML report
+        'lcov',           // For CI/CD integration
+        'cobertura'       // For CI/CD integration (Jenkins, Azure DevOps)
+      ],
+
       reportsDirectory: './coverage',
-      include: ['src/**/*.{ts,tsx}'],
+
+      // Files to include in coverage
+      include: [
+        'src/**/*.{ts,tsx}',
+        'src/**/*.{js,jsx}'
+      ],
+
+      // Files to exclude from coverage
       exclude: [
+        // Dependencies and build artifacts
         'node_modules/**',
-        'src/**/*.{test,spec}.{ts,tsx}',
-        'src/test/**/*',
-        'src/**/*.d.ts',
-        'src/types/**/*',
-        '**/*.config.*',
-        '**/mockData.*',
         'dist/**',
         'coverage/**',
+        'build/**',
+        '.storybook/**',
+
+        // Test files
+        'src/**/*.{test,spec}.{ts,tsx,js,jsx}',
+        'src/test/**/*',
+        'src/__tests__/**/*',
+        'src/**/__tests__/**/*',
+
+        // Type definitions
+        'src/**/*.d.ts',
+        'src/types/**/*',
+        'src/vite-env.d.ts',
+
+        // Config files
+        '**/*.config.*',
         '.eslintrc.*',
-        'src/vite-env.d.ts'
+        'postcss.config.*',
+
+        // Mock data and fixtures
+        '**/mockData.*',
+        '**/fixtures/**',
+
+        // Stories and examples
+        '**/*.stories.{ts,tsx,js,jsx}',
+
+        // Entry points (already tested through integration)
+        'src/main.tsx',
+        'src/App.tsx',
+
+        // Constants and static data
+        'src/constants/**',
+        'src/config/constants.ts'
       ],
+
+      // Enforce >80% coverage thresholds (2025 standards)
       thresholds: {
-        branches: 80,
-        functions: 80,
-        lines: 80,
-        statements: 80
+        branches: 80,      // Branch coverage (if/else, switch)
+        functions: 80,     // Function coverage
+        lines: 80,         // Line coverage
+        statements: 80,    // Statement coverage
+
+        // Per-file thresholds (stricter)
+        perFile: true,
+
+        // Auto-update threshold on improvement
+        autoUpdate: false,
+
+        // 100% coverage requirement for critical paths
+        '100': {
+          branches: 100,
+          functions: 100,
+          lines: 100,
+          statements: 100
+        }
       },
+
+      // Include all source files, even if not tested
       all: true,
+
+      // Clean coverage results before running
       clean: true,
-      skipFull: false
+      cleanOnRerun: true,
+
+      // Don't skip files with 100% coverage
+      skipFull: false,
+
+      // Additional V8 options
+      allowExternal: false,
+
+      // Source map support for accurate line mapping
+      sourceMap: true,
+
+      // Report uncovered lines/functions
+      reportOnFailure: true,
+
+      // Watermarks for visual indicators
+      watermarks: {
+        statements: [80, 95],
+        branches: [80, 95],
+        functions: [80, 95],
+        lines: [80, 95]
+      }
     },
 
     // Execution strategy

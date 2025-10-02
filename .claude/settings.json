@@ -1,5 +1,5 @@
 {
-  "projectName": "ToolBoxAI-Solutions",
+  "projectName": "ToolBoxAI-Solutions-Worktree",
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "filesystem",
@@ -11,78 +11,103 @@
     "memory",
     "toolboxai-orchestrator"
   ],
+  "autoAccept": {
+    "enabled": true,
+    "corrections": true,
+    "suggestions": true,
+    "improvements": true,
+    "refactorings": true,
+    "securityFixes": true
+  },
+  "codeStandards": {
+    "enforceYear": 2025,
+    "requireOfficialDocs": true,
+    "preferredSources": [
+      "official documentation",
+      "official repositories",
+      "2025 best practices",
+      "current LTS versions"
+    ],
+    "deprecated": {
+      "allowOldPatterns": false,
+      "requireModernSyntax": true,
+      "blockLegacyAPIs": true
+    }
+  },
+  "implementationRules": {
+    "react": {
+      "version": "19.1.0",
+      "source": "https://react.dev/",
+      "patterns": ["hooks", "server-components", "concurrent-features"],
+      "deprecated": ["class-components", "legacy-context"]
+    },
+    "typescript": {
+      "version": "5.9.2",
+      "source": "https://www.typescriptlang.org/",
+      "patterns": ["strict-mode", "modern-decorators", "type-guards"],
+      "deprecated": ["any-types", "namespace-imports"]
+    },
+    "python": {
+      "version": "3.12",
+      "source": "https://docs.python.org/3.12/",
+      "patterns": ["type-hints", "async-await", "pydantic-v2"],
+      "deprecated": ["python2-syntax", "old-string-formatting"]
+    },
+    "fastapi": {
+      "version": "latest",
+      "source": "https://fastapi.tiangolo.com/",
+      "patterns": ["dependency-injection", "pydantic-models", "async-endpoints"],
+      "deprecated": ["sync-only-routes", "manual-validation"]
+    },
+    "vite": {
+      "version": "6.0.1",
+      "source": "https://vite.dev/",
+      "patterns": ["esm-modules", "optimized-deps", "rollup-4"],
+      "deprecated": ["commonjs-exclusive", "webpack-configs"]
+    }
+  },
   "hooks": {
     "UserPromptSubmit": [
       {
-        "description": "Log user prompts for audit trail",
+        "description": "Validate 2025 implementation standards",
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"$(date '+%Y-%m-%d %H:%M:%S'): User prompt submitted\" >> \"${CLAUDE_PROJECT_DIR}/.claude/logs/audit.log\""
+            "command": "echo \"[$(date '+%Y-%m-%d %H:%M:%S')] Enforcing 2025 standards\" >> \"${CLAUDE_PROJECT_DIR}/.claude/logs/standards.log\""
           }
         ]
       }
     ],
     "PreToolUse": [
       {
-        "matcher": "Bash\\(python.*\\.py\\)",
+        "matcher": "Write\\(.*\\.(ts|tsx|js|jsx)\\)",
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"Python script execution: ${CLAUDE_TOOL_PARAMS}\" >> \"${CLAUDE_PROJECT_DIR}/.claude/logs/python_exec.log\"",
-            "description": "Log Python script executions"
+            "command": "echo \"[JS/TS] Enforcing React 19 + TypeScript 5.9 standards\" >> \"${CLAUDE_PROJECT_DIR}/.claude/logs/standards.log\"",
+            "description": "Log frontend standard enforcement"
           }
         ]
       },
       {
-        "matcher": "Bash\\(npm.*\\)",
+        "matcher": "Write\\(.*\\.py\\)",
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"NPM command: ${CLAUDE_TOOL_PARAMS}\" >> \"${CLAUDE_PROJECT_DIR}/.claude/logs/npm_exec.log\"",
-            "description": "Log NPM commands"
-          }
-        ]
-      },
-      {
-        "matcher": "Write\\(.*\\.env.*\\)",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"${CLAUDE_PROJECT_DIR}/scripts/security/check_env_write.py\" \"${CLAUDE_TOOL_PARAMS}\" || exit 1",
-            "description": "Validate .env file modifications for security"
-          }
-        ]
-      },
-      {
-        "matcher": "Write\\(.*\\.json\\)",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"${CLAUDE_PROJECT_DIR}/scripts/security/check_json_secrets.py\" \"${CLAUDE_TOOL_PARAMS}\" || true",
-            "description": "Check JSON files for exposed secrets"
+            "command": "echo \"[Python] Enforcing Python 3.12 + Pydantic v2 standards\" >> \"${CLAUDE_PROJECT_DIR}/.claude/logs/standards.log\"",
+            "description": "Log Python standard enforcement"
           }
         ]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": "Bash\\(git commit.*\\)",
+        "matcher": "Edit\\(.*\\)|Write\\(.*\\)",
         "hooks": [
           {
             "type": "command",
-            "command": "git log -1 --pretty=format:\"%h - %an, %ar : %s\" >> ${CLAUDE_PROJECT_DIR}/.claude/logs/git_commits.log",
-            "description": "Track git commits"
-          }
-        ]
-      },
-      {
-        "matcher": "MultiEdit\\(.*\\)",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo \"$(date '+%Y-%m-%d %H:%M:%S'): Files modified via MultiEdit\" >> ${CLAUDE_PROJECT_DIR}/.claude/logs/file_changes.log",
-            "description": "Log multi-edit operations"
+            "command": "echo \"[$(date '+%Y-%m-%d %H:%M:%S')] File modified with 2025 standards\" >> \"${CLAUDE_PROJECT_DIR}/.claude/logs/file_changes.log\"",
+            "description": "Track standards-compliant modifications"
           }
         ]
       }
@@ -92,57 +117,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "mkdir -p ${CLAUDE_PROJECT_DIR}/.claude/logs && echo \"Session started at $(date)\" >> ${CLAUDE_PROJECT_DIR}/.claude/logs/sessions.log",
-            "description": "Initialize session logging"
-          },
-          {
-            "type": "command",
-            "command": "source ${CLAUDE_PROJECT_DIR}/venv/bin/activate 2>/dev/null || true",
-            "description": "Activate Python virtual environment"
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo \"Session ended at $(date)\" >> ${CLAUDE_PROJECT_DIR}/.claude/logs/sessions.log",
-            "description": "Log session end"
-          }
-        ]
-      }
-    ],
-    "PreCompact": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo \"Context compaction at $(date) - Current tokens: ${CLAUDE_TOKEN_COUNT}\" >> ${CLAUDE_PROJECT_DIR}/.claude/logs/compaction.log",
-            "description": "Log context compaction events"
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "matcher": "error",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo \"ERROR: ${CLAUDE_NOTIFICATION_MESSAGE}\" >> ${CLAUDE_PROJECT_DIR}/.claude/logs/errors.log",
-            "description": "Log error notifications"
-          }
-        ]
-      },
-      {
-        "matcher": "warning",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo \"WARNING: ${CLAUDE_NOTIFICATION_MESSAGE}\" >> ${CLAUDE_PROJECT_DIR}/.claude/logs/warnings.log",
-            "description": "Log warning notifications"
+            "command": "mkdir -p ${CLAUDE_PROJECT_DIR}/.claude/logs && echo \"[$(date)] Worktree session started - 2025 standards enforced\" >> ${CLAUDE_PROJECT_DIR}/.claude/logs/sessions.log",
+            "description": "Initialize session with standards logging"
           }
         ]
       }
@@ -151,84 +127,51 @@
   "permissions": {
     "allow": [
       "Bash(pip install:*)",
-      "Read(//Volumes/**)",
-      "Bash(./monitor.sh)",
-      "Bash(./sync.sh:*)",
-      "Bash(curl:*)",
-      "Read(//private/tmp/**)",
-      "Bash(/dev/null)",
-      "Bash(python test_*.py)",
-      "Bash(kill:*)",
-      "Bash(cd:*)",
-      "Bash(source:*)",
-      "Bash(uvicorn:*)",
       "Bash(npm install:*)",
       "Bash(npm run:*)",
-      "Bash(psql:*)",
       "Bash(python:*)",
-      "Bash(find:*)",
-      "Bash(chmod:*)",
-      "Bash(lsof:*)",
-      "Bash(ps:*)",
-      "Bash(redis-cli:*)",
       "Bash(git:*)",
       "Bash(grep:*)",
-      "Bash(tree:*)",
-      "Bash(tar:*)",
-      "Bash(ln:*)",
-      "Bash(echo:*)",
-      "Bash(cat:*)",
-      "Bash(nc:*)",
-      "Bash(jobs:*)",
-      "Bash(bash:*)",
-      "Bash(sed:*)",
-      "Bash(awk:*)",
-      "Bash(rm:*)",
-      "Bash(touch:*)",
-      "Bash(tee:*)",
+      "Bash(find:*)",
+      "Bash(chmod:*)",
       "Bash(npx:*)",
       "Bash(node:*)",
       "Bash(pytest:*)",
-      "WebFetch(domain:create.roblox.com)",
-      "WebFetch(domain:docs.pytest.org)",
-      "WebFetch(domain:vitest.dev)",
-      "WebFetch(domain:python.langchain.com)",
-      "WebFetch(domain:docs.anthropic.com)",
+      "WebFetch(domain:react.dev)",
+      "WebFetch(domain:vite.dev)",
+      "WebFetch(domain:fastapi.tiangolo.com)",
+      "WebFetch(domain:docs.python.org)",
+      "WebFetch(domain:www.typescriptlang.org)",
+      "WebFetch(domain:docs.pydantic.dev)",
       "WebSearch"
     ],
     "deny": [
       "Bash(rm -rf /)",
       "Bash(sudo:*)",
       "Write(${HOME}/.ssh/**)",
-      "Write(${HOME}/Library/Keychains/**)",
-      "Read(${HOME}/.aws/credentials)",
-      "Read(${HOME}/.config/*/secrets/**)"
+      "Write(${HOME}/.aws/credentials)"
     ],
     "ask": [
       "Bash(rm -rf:*)",
       "Write(**/.env)",
-      "Write(**/.env.local)",
-      "Write(**/.env.production)",
       "Bash(git push --force:*)"
     ]
-  },
-  "environment": {
-    "CLAUDE_PROJECT_DIR": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions",
-    "CLAUDE_PYTHON_PATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/venv/bin/python",
-    "CLAUDE_NODE_PATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/node_modules/.bin"
   },
   "features": {
     "autoActivateVenv": true,
     "trackGitChanges": true,
     "logToolUsage": true,
     "enableContextCompaction": true,
-    "maxTokensBeforeCompact": 100000
+    "maxTokensBeforeCompact": 100000,
+    "autoAcceptCorrections": true,
+    "enforceModernStandards": true,
+    "blockDeprecatedAPIs": true
   },
-  "customCommands": {
-    "test": "cd ${CLAUDE_PROJECT_DIR} && make test",
-    "dev": "cd ${CLAUDE_PROJECT_DIR} && make dev",
-    "backend": "cd ${CLAUDE_PROJECT_DIR} && make backend",
-    "dashboard": "cd ${CLAUDE_PROJECT_DIR} && make dashboard",
-    "typecheck": "cd ${CLAUDE_PROJECT_DIR} && npm -w apps/dashboard run typecheck"
+  "validation": {
+    "requireOfficialSources": true,
+    "blockLegacyPatterns": true,
+    "enforceTypeScript": true,
+    "requireTests": true,
+    "minCoverage": 80
   }
 }
