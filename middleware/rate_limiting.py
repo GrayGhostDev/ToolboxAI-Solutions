@@ -118,7 +118,8 @@ class RateLimiter:
         pipe.zremrangebyscore(key, 0, window_start)
 
         # Add current request
-        pipe.zadd(key, {str(now): now})
+        member = f"{now}:{time.time_ns()}"
+        pipe.zadd(key, {member: now})
 
         # Count requests in window
         pipe.zcard(key)
@@ -136,8 +137,8 @@ class RateLimiter:
             # Calculate when the oldest request in window will expire
             oldest = await self.redis.zrange(key, 0, 0)
             if oldest:
-                retry_after = int(oldest[0]) + window_seconds - now
-
+                oldest_timestamp = int(oldest[0].split(":")[0])
+                retry_after = oldest_timestamp + window_seconds - now
         logger.debug(
             f"Rate limit check: identifier={identifier}, "
             f"count={current_count}, limit={limit}, "
