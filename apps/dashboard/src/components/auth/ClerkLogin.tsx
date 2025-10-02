@@ -1,35 +1,27 @@
 /**
  * Clerk Sign-In Component (2025)
  * Uses Clerk's pre-built sign-in component with custom styling
+ * Migrated to Mantine v8
  */
 
 import React from 'react';
 import { SignIn } from '@clerk/clerk-react';
-import { Box, Container, Paper } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import { Box, Container, Paper } from '@mantine/core';
 
-const StyledPaper = styled(Paper)(({ theme }) => ({
-  marginTop: theme.spacing(8),
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  padding: theme.spacing(4),
-  borderRadius: theme.spacing(2),
-  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-}));
-
-const ClerkLogin= () => {
+const ClerkLogin = () => {
   return (
-    <Container component="main" maxWidth="sm">
-      <StyledPaper>
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            width: '100%',
-          }}
-        >
+    <Container size="sm" style={{ marginTop: '4rem' }}>
+      <Paper
+        shadow="md"
+        p="xl"
+        radius="md"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Box style={{ width: '100%' }}>
           <SignIn
             appearance={{
               elements: {
@@ -50,29 +42,29 @@ const ClerkLogin= () => {
                   color: '#666',
                 },
                 formButtonPrimary: {
-                  backgroundColor: '#1976d2',
+                  backgroundColor: '#00bfff', // Electric blue
                   '&:hover': {
-                    backgroundColor: '#1565c0',
+                    backgroundColor: '#0099cc',
                   },
                 },
                 formFieldInput: {
                   borderRadius: '4px',
                 },
                 footerActionLink: {
-                  color: '#1976d2',
+                  color: '#00bfff',
                   '&:hover': {
                     textDecoration: 'underline',
                   },
                 },
               },
               variables: {
-                colorPrimary: '#1976d2',
+                colorPrimary: '#00bfff', // Electric blue from Roblox theme
                 colorText: '#333',
                 colorTextOnPrimaryBackground: '#fff',
                 colorBackground: '#fff',
                 colorInputBackground: '#f5f5f5',
                 colorInputText: '#333',
-                colorDanger: '#d32f2f',
+                colorDanger: '#ff0055',
                 borderRadius: '4px',
                 fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
               },
@@ -85,7 +77,7 @@ const ClerkLogin= () => {
             signUpUrl={import.meta.env.VITE_CLERK_SIGN_UP_URL}
           />
         </Box>
-      </StyledPaper>
+      </Paper>
     </Container>
   );
 };

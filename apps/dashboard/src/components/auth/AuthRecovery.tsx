@@ -1,5 +1,5 @@
 /**
- * Auth Recovery Component
+ * Auth Recovery Component (Migrated to Mantine v8)
  *
  * Provides UI for automatic token refresh and session recovery
  */
@@ -8,24 +8,22 @@ import React, { useState, useEffect } from 'react';
 import {
   Alert,
   Button,
-  CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  LinearProgress,
-  Typography,
+  Modal,
+  Text,
   Box,
   Stack,
-  Snackbar,
-} from '@mui/material';
+  Progress,
+  Loader,
+  Group,
+} from '@mantine/core';
+import { notifications } from '@mantine/notifications';
 import {
-  Refresh,
-  Lock,
-  CheckCircle,
-  Error as ErrorIcon,
-  Timer,
-} from '@mui/icons-material';
+  IconRefresh,
+  IconLock,
+  IconCircleCheck,
+  IconAlertCircle,
+  IconClock,
+} from '@tabler/icons-react';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { authSync } from '../../services/auth-sync';
 
@@ -133,133 +131,135 @@ export function AuthRecovery({ open, onClose, reason }: AuthRecoveryProps) {
   };
 
   return (
-    <Dialog
-      open={open}
+    <Modal
+      opened={open}
       onClose={() => {
         if (!isRecovering) {
           onClose();
         }
       }}
-      maxWidth="sm"
-      fullWidth
-      disableEscapeKeyDown={isRecovering}
+      title={
+        <Group gap="xs">
+          <IconLock size={20} style={{ color: '#00bfff' }} />
+          <Text size="lg" fw={600}>Session Recovery</Text>
+        </Group>
+      }
+      size="md"
+      closeOnEscape={!isRecovering}
     >
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Lock color="primary" />
-        <Typography variant="h6">Session Recovery</Typography>
-      </DialogTitle>
+      <Stack gap="md">
+        <Text size="sm" c="dimmed">
+          {getReasonMessage()}
+        </Text>
 
-      <DialogContent>
-        <Stack spacing={3} sx={{ mt: 2 }}>
-          <Typography variant="body1" color="text.secondary">
-            {getReasonMessage()}
-          </Typography>
-
-          {/* Recovery Status */}
-          {recoveryStatus === 'recovering' && (
-            <Box>
-              <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
-                <CircularProgress size={24} />
-                <Typography variant="body2">
-                  Refreshing your session...
-                </Typography>
-              </Stack>
-              <LinearProgress variant="determinate" value={progress} />
-            </Box>
-          )}
-
-          {recoveryStatus === 'success' && (
-            <Alert
-              severity="success"
-              icon={<CheckCircle />}
-            >
-              Session recovered successfully!
-            </Alert>
-          )}
-
-          {recoveryStatus === 'failed' && (
-            <>
-              <Alert
-                severity="error"
-                icon={<ErrorIcon />}
-              >
-                {error || 'Failed to recover session'}
-              </Alert>
-
-              {retryCount < 3 && countdown > 0 && (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Timer color="action" />
-                  <Typography variant="body2" color="text.secondary">
-                    Retrying in {countdown} seconds... (Attempt {retryCount}/3)
-                  </Typography>
-                </Box>
-              )}
-            </>
-          )}
-
-          {/* Session Info */}
-          {reason === 'token_expiring' && (
-            <Alert severity="warning">
-              Your session will expire in 5 minutes due to inactivity.
-              Click "Stay Logged In" to continue working.
-            </Alert>
-          )}
-        </Stack>
-      </DialogContent>
-
-      <DialogActions sx={{ p: 2 }}>
-        {reason === 'token_expiring' && recoveryStatus === 'idle' && (
-          <>
-            <Button
-              onClick={handleLogout}
-              color="secondary"
-              disabled={isRecovering}
-            >
-              Logout
-            </Button>
-            <Button
-              onClick={handleExtendSession}
-              variant="contained"
-              startIcon={<Refresh />}
-              disabled={isRecovering}
-            >
-              Stay Logged In
-            </Button>
-          </>
-        )}
-
-        {(recoveryStatus === 'failed' || recoveryStatus === 'recovering') && (
-          <>
-            <Button
-              onClick={handleLogout}
-              color="secondary"
-              disabled={isRecovering}
-            >
-              Logout
-            </Button>
-            <Button
-              onClick={handleRecovery}
-              variant="contained"
-              startIcon={<Refresh />}
-              disabled={isRecovering || countdown > 0}
-            >
-              {countdown > 0 ? `Wait ${countdown}s` : 'Retry'}
-            </Button>
-          </>
+        {/* Recovery Status */}
+        {recoveryStatus === 'recovering' && (
+          <Box>
+            <Group gap="md" mb="sm">
+              <Loader size="sm" />
+              <Text size="sm">
+                Refreshing your session...
+              </Text>
+            </Group>
+            <Progress value={progress} color="blue" size="sm" />
+          </Box>
         )}
 
         {recoveryStatus === 'success' && (
-          <Button
-            onClick={onClose}
-            variant="contained"
-            color="success"
-            startIcon={<CheckCircle />}
+          <Alert
+            icon={<IconCircleCheck size={20} />}
+            color="green"
+            title="Success"
           >
-            Continue
-          </Button>
+            Session recovered successfully!
+          </Alert>
         )}
-      </DialogActions>
-    </Dialog>
+
+        {recoveryStatus === 'failed' && (
+          <>
+            <Alert
+              icon={<IconAlertCircle size={20} />}
+              color="red"
+              title="Error"
+            >
+              {error || 'Failed to recover session'}
+            </Alert>
+
+            {retryCount < 3 && countdown > 0 && (
+              <Group gap="xs">
+                <IconClock size={16} />
+                <Text size="sm" c="dimmed">
+                  Retrying in {countdown} seconds... (Attempt {retryCount}/3)
+                </Text>
+              </Group>
+            )}
+          </>
+        )}
+
+        {/* Session Info */}
+        {reason === 'token_expiring' && (
+          <Alert color="yellow" title="Warning">
+            Your session will expire in 5 minutes due to inactivity.
+            Click "Stay Logged In" to continue working.
+          </Alert>
+        )}
+
+        {/* Actions */}
+        <Group justify="flex-end" mt="md">
+          {reason === 'token_expiring' && recoveryStatus === 'idle' && (
+            <>
+              <Button
+                onClick={handleLogout}
+                variant="subtle"
+                color="gray"
+                disabled={isRecovering}
+              >
+                Logout
+              </Button>
+              <Button
+                onClick={handleExtendSession}
+                leftSection={<IconRefresh size={16} />}
+                disabled={isRecovering}
+                color="blue"
+              >
+                Stay Logged In
+              </Button>
+            </>
+          )}
+
+          {(recoveryStatus === 'failed' || recoveryStatus === 'recovering') && (
+            <>
+              <Button
+                onClick={handleLogout}
+                variant="subtle"
+                color="gray"
+                disabled={isRecovering}
+              >
+                Logout
+              </Button>
+              <Button
+                onClick={handleRecovery}
+                leftSection={<IconRefresh size={16} />}
+                disabled={isRecovering || countdown > 0}
+                color="blue"
+              >
+                {countdown > 0 ? `Wait ${countdown}s` : 'Retry'}
+              </Button>
+            </>
+          )}
+
+          {recoveryStatus === 'success' && (
+            <Button
+              onClick={onClose}
+              color="green"
+              leftSection={<IconCircleCheck size={16} />}
+            >
+              Continue
+            </Button>
+          )}
+        </Group>
+      </Stack>
+    </Modal>
   );
 }
 
@@ -317,33 +317,30 @@ export function SessionMonitor() {
   return (
     <>
       <Box
-        sx={{
+        style={{
           position: 'fixed',
           bottom: 16,
           right: 16,
-          bgcolor: 'background.paper',
-          boxShadow: 1,
-          borderRadius: 1,
-          p: 1,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
+          backgroundColor: 'var(--mantine-color-body)',
+          boxShadow: 'var(--mantine-shadow-sm)',
+          borderRadius: 'var(--mantine-radius-sm)',
+          padding: 'var(--mantine-spacing-sm)',
           opacity: 0.9,
-          '&:hover': {
-            opacity: 1,
-          },
         }}
       >
-        <CheckCircle color="success" fontSize="small" />
-        <Typography variant="caption" color="text.secondary">
-          Session: {getSessionDuration()} | Inactive: {getInactiveTime()}
-        </Typography>
-        <Button
-          size="small"
-          onClick={() => authSync.extendSession()}
-        >
-          Extend
-        </Button>
+        <Group gap="xs">
+          <IconCircleCheck size={16} color="var(--mantine-color-green-6)" />
+          <Text size="xs" c="dimmed">
+            Session: {getSessionDuration()} | Inactive: {getInactiveTime()}
+          </Text>
+          <Button
+            size="xs"
+            variant="subtle"
+            onClick={() => authSync.extendSession()}
+          >
+            Extend
+          </Button>
+        </Group>
       </Box>
 
       <AuthRecovery
@@ -361,18 +358,28 @@ export function SessionMonitor() {
  */
 export function NetworkStatus() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [showAlert, setShowAlert] = useState(false);
 
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
-      setShowAlert(true);
-      setTimeout(() => setShowAlert(false), 3000);
+      notifications.show({
+        title: 'Connection Restored',
+        message: 'Your session is active.',
+        color: 'green',
+        icon: <IconCircleCheck size={16} />,
+        autoClose: 3000,
+      });
     };
 
     const handleOffline = () => {
       setIsOnline(false);
-      setShowAlert(true);
+      notifications.show({
+        title: 'Connection Lost',
+        message: 'Your work will be saved locally.',
+        color: 'red',
+        icon: <IconAlertCircle size={16} />,
+        autoClose: false,
+      });
     };
 
     window.addEventListener('online', handleOnline);
@@ -384,22 +391,7 @@ export function NetworkStatus() {
     };
   }, []);
 
-  return (
-    <Snackbar
-      open={showAlert}
-      anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      onClose={() => setShowAlert(false)}
-    >
-      <Alert
-        severity={isOnline ? 'success' : 'error'}
-        onClose={() => setShowAlert(false)}
-      >
-        {isOnline
-          ? 'Connection restored. Your session is active.'
-          : 'Network connection lost. Your work will be saved locally.'}
-      </Alert>
-    </Snackbar>
-  );
+  return null;
 }
 
 export default {

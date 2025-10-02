@@ -1,12 +1,13 @@
 /**
  * Clerk Protected Route Component (2025)
  * Provides route protection using Clerk authentication
+ * Migrated to Mantine v8
  */
 
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth as useClerkAuth, RedirectToSignIn } from '@clerk/clerk-react';
-import { CircularProgress, Box } from '@mui/material';
+import { Loader, Center } from '@mantine/core';
 import type { UserRole } from '../../types/roles';
 import { useAuth } from '../../contexts/ClerkAuthContext';
 
@@ -30,14 +31,9 @@ export const ClerkProtectedRoute = ({
   // Show loading while Clerk is initializing
   if (!isLoaded) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-      >
-        <CircularProgress />
-      </Box>
+      <Center style={{ minHeight: '100vh' }}>
+        <Loader size="lg" />
+      </Center>
     );
   }
 
