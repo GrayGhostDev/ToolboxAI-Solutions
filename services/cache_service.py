@@ -312,8 +312,13 @@ def cached(
                 key_parts.extend(f"{k}={v}" for k, v in sorted(kwargs.items()))
                 cache_key = ":".join(key_parts)
 
-            # Extract organization_id if present
-            organization_id = kwargs.get("organization_id") or (args[0] if args else None)
+# At the top of services/cache_service.py, add:
+import inspect
+
+            # Extract organization_id from bound arguments safely
+            bound = inspect.signature(func).bind_partial(*args, **kwargs)
+            bound.apply_defaults()
+            organization_id = bound.arguments.get("organization_id") or bound.arguments.get("org_id")
 
             # Try to get from cache
             cached_value = await cache_service.get(
