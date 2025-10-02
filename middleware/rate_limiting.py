@@ -238,16 +238,6 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 limits
             )
 
-            # Add rate limit headers to response
-            response = await call_next(request)
-
-            # Add rate limit info to headers
-            for window, stats in window_stats.items():
-                response.headers[f"X-RateLimit-Limit-{window}"] = str(stats["limit"])
-                response.headers[f"X-RateLimit-Remaining-{window}"] = str(
-                    max(0, stats["limit"] - stats["current"])
-                )
-
             if not is_allowed:
                 # Find the shortest retry time
                 retry_after = min(
@@ -265,6 +255,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                     }
                 )
 
+                # Build headers for the 429 response
+                headers = {"Retry-After": str(retry_after)}
+                for window, stats in window_stats.items():
+                    headers[f"X-RateLimit-Limit-{window}"] = str(stats["limit"])
+                    headers[f"X-RateLimit-Remaining-{window}"] = str(
+                        max(0, stats["limit"] - stats["current"])
+                    )
+
                 return JSONResponse(
                     status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                     content={
@@ -273,11 +271,20 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                         "retry_after": retry_after,
                         "limits": window_stats
                     },
-                    headers={
-                        "Retry-After": str(retry_after)
-                    }
+                    headers=headers
                 )
 
+            # Only call the downstream handler if we're allowed
+            response = await call_next(request)
+
+            # Add rate limit info to the successful response
+            for window, stats in window_stats.items():
+                response.headers[f"X-RateLimit-Limit-{window}"] = str(stats["limit"])
+                response.headers[f"X-RateLimit-Remaining-{window}"] = str(
+                    max(0, stats["limit"] - stats["current"])
+                )
+
+            return response
             return response
 
         except Exception as e:
