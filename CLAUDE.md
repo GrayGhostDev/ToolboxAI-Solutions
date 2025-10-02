@@ -6,6 +6,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a monorepo that underwent significant restructuring in September 2025. The repository is on branch `chore/remove-render-worker-2025-09-20` with main work tracked in `main` branch.
 
+### Latest Updates (2025-10-02)
+- **🧹 FILESYSTEM CLEANUP & ORGANIZATION**: Repository structure refinement and documentation consolidation
+  - **Scripts Organization Enhanced**: Created comprehensive subdirectory structure (development/worktrees, database, docker, deployment)
+  - **Migration Reports Relocated**: Moved 3 summary markdown files from root to docs/11-reports/migration-reports/
+  - **Root Directory Optimized**: Reduced from 18 to 15 files (well under 20 file target)
+  - **Archive Structure Created**: Established Archive/2025-10-02/ with organized subdirectories (completion-reports, guides, old-configs, pre-cleanup-backup)
+  - **Archive Documentation**: Created Archive/README.md explaining archive policy and retention
+  - **Zero Temporary Files**: Confirmed no .tmp, .bak, ~, .DS_Store files in repository
+  - **Zero Python Cache**: Confirmed no __pycache__ directories present
+  - **Gitignore Validated**: Comprehensive .gitignore already includes all necessary patterns
+  - **Directory Structure Updated**: CLAUDE.md reflects current organized state (2025-10-02)
+  - **Documentation Standards**: Established clear file placement guidelines and archive procedures
+
 ### Latest Updates (2025-09-28)
 - **🚀 REACT 19 MIGRATION & DEPENDENCY MODERNIZATION**: Complete frontend modernization
   - **React 19.1.0 Migration**: Successfully updated from React 18.3.1 to React 19.1.0
@@ -152,7 +165,7 @@ This is a monorepo that underwent significant restructuring in September 2025. T
 - .python-version                 # Python version
 ```
 
-### Directory Structure (Updated 2025-09-18)
+### Directory Structure (Updated 2025-10-02)
 - **apps/**
   - `backend/` - FastAPI server (port 8009)
   - `dashboard/` - React frontend (port 5179)
@@ -164,9 +177,15 @@ This is a monorepo that underwent significant restructuring in September 2025. T
   - `src/shared/` - Shared Luau modules
   - `scripts/` - Roblox utility scripts
   - `plugins/` - Roblox Studio plugins
-- **scripts/**
+- **scripts/** - All scripts organized by function
+  - `development/` - Development scripts
+    - `worktrees/` - Worktree session management scripts
   - `maintenance/` - Fix scripts, cleanup tools
   - `testing/` - Test runners and verification
+  - `deployment/` - Deployment and CI/CD scripts
+  - `database/` - Database migration and management scripts
+  - `docker/` - Docker-related utility scripts
+  - `tools/` - Miscellaneous developer tools
 - **config/**
   - `env-templates/` - Environment config examples
 - **tests/** - All test files
@@ -174,7 +193,11 @@ This is a monorepo that underwent significant restructuring in September 2025. T
   - `04-implementation/` - Technical docs
   - `05-features/` - Feature documentation
   - `09-meta/` - Meta documentation
-  - `10-reports/` - Status reports
+  - `11-reports/` - Status reports and summaries
+    - `migration-reports/` - Migration progress and summaries
+- **Archive/** - Historical files and completed project documentation
+  - `2025-10-02/` - Latest cleanup archive
+  - Historical date directories for reference
 - **apps/backend/documentation/** - Backend architecture documentation
   - `ARCHITECTURE.md` - System architecture and components
   - `MIGRATION.md` - Migration procedures and rollback
