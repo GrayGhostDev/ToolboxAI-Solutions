@@ -16,7 +16,7 @@ from fastapi import FastAPI
 from apps.backend.core.config import settings
 from apps.backend.core.monitoring import initialize_sentry
 from apps.backend.core.logging import initialize_logging, logging_manager
-from apps.backend.core.telemetry import telemetry_manager
+from apps.backend.core.observability.telemetry import telemetry_manager
 
 # Will create these modules in subsequent steps
 try:
