@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-config
+  labels:
+    app.kubernetes.io/name: dashboard
+    app.kubernetes.io/instance: dashboard
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: toolboxai-platform
+    app.kubernetes.io/managed-by: kustomize
+data:
+  # Node.js Configuration
+  NODE_ENV: "production"
+  HOST: "0.0.0.0"
+  PORT: "5179"
+
+  # Vite Configuration
+  VITE_API_BASE_URL: "http://backend:8008"
+  VITE_PUSHER_CLUSTER: "us2"
+  VITE_ENABLE_WEBSOCKET: "true"
+  VITE_ENABLE_GAMIFICATION: "true"
+  VITE_ENABLE_ANALYTICS: "true"
+
+  # Performance Configuration
+  NODE_OPTIONS: "--max-old-space-size=2048 --enable-source-maps"
+
+  # Security Configuration
+  NODE_TLS_REJECT_UNAUTHORIZED: "1"
+
+  # Logging Configuration
+  LOG_LEVEL: "info"
+  LOG_FORMAT: "json"
