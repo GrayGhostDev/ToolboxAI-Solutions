@@ -54,6 +54,9 @@ Scope period: October 2025
   - [#38 feat(backend): implement multi-tenancy middleware + tenant endpoints and scripts](https://github.com/GrayGhostDev/ToolboxAI-Solutions/issues/38)
   - [#39 feat(dashboard): finalize Pusher client, event hooks, and status UI](https://github.com/GrayGhostDev/ToolboxAI-Solutions/issues/39)
 
+  Milestone (temporary until Projects v2 is available):
+  - Phase 1 Execution: https://github.com/GrayGhostDev/ToolboxAI-Solutions/milestone/1
+
 - Wave 2 (3–7 days): correctness and missing endpoints/tests
   - Complete uploads/media endpoints, multi-tenancy middleware and endpoints.
   - Fill missing unit/integration tests.
