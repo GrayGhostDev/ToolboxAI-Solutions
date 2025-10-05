@@ -48,6 +48,12 @@ Scope period: October 2025
   - Acceptance gate: valid catalog; plan doc committed; CI green.
 - Wave 1 (2–4 days): quick wins and CI hardening
   - Minor docs/comment fixes, small refactors, non-breaking changes. Tighten CI gates.
+
+  Phase 1 tracked issues:
+  - [#37 feat(backend): complete storage upload and media endpoints](https://github.com/GrayGhostDev/ToolboxAI-Solutions/issues/37)
+  - [#38 feat(backend): implement multi-tenancy middleware + tenant endpoints and scripts](https://github.com/GrayGhostDev/ToolboxAI-Solutions/issues/38)
+  - [#39 feat(dashboard): finalize Pusher client, event hooks, and status UI](https://github.com/GrayGhostDev/ToolboxAI-Solutions/issues/39)
+
 - Wave 2 (3–7 days): correctness and missing endpoints/tests
   - Complete uploads/media endpoints, multi-tenancy middleware and endpoints.
   - Fill missing unit/integration tests.
