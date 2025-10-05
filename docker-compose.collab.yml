@@ -1,0 +1,134 @@
+version: '3.8'
+
+# Docker Compose for Collaboration
+# This configuration exposes services for multi-machine development
+
+services:
+  # PostgreSQL Database - Shared across all machines
+  postgres-collab:
+    image: postgres:15-alpine
+    container_name: toolboxai-postgres-collab
+    environment:
+      POSTGRES_USER: eduplatform
+      POSTGRES_PASSWORD: eduplatform2024
+      POSTGRES_DB: educational_platform_dev
+    ports:
+      - "0.0.0.0:5432:5432"  # Expose to all interfaces
+    volumes:
+      - postgres_collab_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eduplatform"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - toolboxai-collab-network
+
+  # Redis Cache - Shared for sessions and cache
+  redis-collab:
+    image: redis:7-alpine
+    container_name: toolboxai-redis-collab
+    ports:
+      - "0.0.0.0:6379:6379"  # Expose to all interfaces
+    command: redis-server --appendonly yes --requirepass redis2024
+    volumes:
+      - redis_collab_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - toolboxai-collab-network
+
+  # Nginx Reverse Proxy for Services
+  nginx-collab:
+    image: nginx:alpine
+    container_name: toolboxai-nginx-collab
+    ports:
+      - "0.0.0.0:80:80"      # HTTP
+      - "0.0.0.0:443:443"    # HTTPS
+      - "0.0.0.0:8080:8080"  # Alternative HTTP
+    volumes:
+      - ./infrastructure/collaboration/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infrastructure/collaboration/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - postgres-collab
+      - redis-collab
+    networks:
+      - toolboxai-collab-network
+
+  # Syncthing for file synchronization
+  syncthing-collab:
+    image: syncthing/syncthing:latest
+    container_name: toolboxai-syncthing-collab
+    hostname: toolboxai-sync
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - ./:/var/syncthing/ToolBoxAI
+      - syncthing_config:/var/syncthing/config
+    ports:
+      - "0.0.0.0:8384:8384"  # Web UI
+      - "0.0.0.0:22000:22000/tcp"  # TCP file transfers
+      - "0.0.0.0:22000:22000/udp"  # QUIC file transfers
+      - "0.0.0.0:21027:21027/udp"  # Receive local discovery broadcasts
+    networks:
+      - toolboxai-collab-network
+    restart: unless-stopped
+
+  # Grafana for monitoring (optional)
+  grafana-collab:
+    image: grafana/grafana:latest
+    container_name: toolboxai-grafana-collab
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=toolboxai2024
+      - GF_INSTALL_PLUGINS=redis-datasource
+    ports:
+      - "0.0.0.0:3000:3000"
+    volumes:
+      - grafana_collab_data:/var/lib/grafana
+      - ./infrastructure/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./infrastructure/monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - toolboxai-collab-network
+
+  # Collaboration Hub - Custom service for managing collaboration
+  collab-hub:
+    build:
+      context: .
+      dockerfile: ./infrastructure/collaboration/Dockerfile.hub
+    container_name: toolboxai-collab-hub
+    environment:
+      - DATABASE_URL=postgresql://eduplatform:eduplatform2024@postgres-collab:5432/educational_platform_dev
+      - REDIS_URL=redis://:redis2024@redis-collab:6379/0
+      - SYNC_FOLDER=/app
+      - HUB_PORT=9000
+    ports:
+      - "0.0.0.0:9000:9000"
+    volumes:
+      - ./:/app:ro
+      - collab_hub_data:/var/lib/collab-hub
+    depends_on:
+      - postgres-collab
+      - redis-collab
+    networks:
+      - toolboxai-collab-network
+
+networks:
+  toolboxai-collab-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/16
+
+volumes:
+  postgres_collab_data:
+  redis_collab_data:
+  syncthing_config:
+  grafana_collab_data:
+  collab_hub_data:
