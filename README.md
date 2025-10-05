@@ -171,6 +171,22 @@ make redis-cli            # Redis CLI
 - Docker security hardening
 - Secret management via environment variables
 
+### Required Environment Variables for Local Scripts
+
+The dashboard startup scripts require these runtime variables:
+
+- VITE_PUSHER_KEY
+- VITE_CLERK_PUBLISHABLE_KEY
+
+Export them before running:
+
+```bash
+export VITE_PUSHER_KEY={{your_key}}
+export VITE_CLERK_PUBLISHABLE_KEY={{your_key}}
+```
+
+See SECURITY.md for placeholder conventions and details.
+
 ## 📖 Documentation
 
 - [API Documentation](http://localhost:8009/docs) - Interactive Swagger UI
