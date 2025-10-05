@@ -1,11 +1,11 @@
 /**
- * Clerk Error Boundary Component (2025)
+ * Clerk Error Boundary Component (2025 - Migrated to Mantine v8)
  * Handles errors in Clerk authentication components
  */
 
 import React from 'react';
-import { Alert, AlertTitle, Box, Button, Typography } from '@mui/material';
-import { RefreshRounded, ErrorOutlineRounded } from '@mui/icons-material';
+import { Alert, Box, Button, Text, Code } from '@mantine/core';
+import { IconRefresh, IconAlertCircle } from '@tabler/icons-react';
 
 interface ClerkErrorBoundaryState {
   hasError: boolean;
@@ -84,67 +84,66 @@ export class ClerkErrorBoundary extends React.Component<
       // Default fallback UI
       return (
         <Box
-          sx={{
-            p: 3,
+          p="xl"
+          style={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             maxWidth: 500,
-            mx: 'auto',
-            mt: 4
+            margin: '2rem auto',
           }}
         >
           <Alert
-            severity="error"
-            sx={{ width: '100%', mb: 2 }}
-            icon={<ErrorOutlineRounded />}
+            icon={<IconAlertCircle size={20} />}
+            title="Authentication Error"
+            color="red"
+            style={{ width: '100%', marginBottom: '1rem' }}
           >
-            <AlertTitle>Authentication Error</AlertTitle>
-            <Typography variant="body2" sx={{ mb: 2 }}>
+            <Text size="sm" mb="sm">
               {this.state.error?.message || 'An error occurred with the authentication system.'}
-            </Typography>
+            </Text>
 
             {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
               <Box
                 component="details"
-                sx={{
-                  mt: 2,
-                  p: 2,
-                  bgcolor: 'grey.100',
-                  borderRadius: 1,
+                mt="sm"
+                p="sm"
+                style={{
+                  backgroundColor: 'var(--mantine-color-gray-1)',
+                  borderRadius: 'var(--mantine-radius-sm)',
                   fontSize: '0.75rem',
-                  fontFamily: 'monospace'
+                  fontFamily: 'monospace',
                 }}
               >
                 <summary style={{ cursor: 'pointer', marginBottom: '8px' }}>
                   Error Details (Development)
                 </summary>
-                <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
+                <Code block style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
                   {this.state.error?.stack}
                   {'\n\nComponent Stack:'}
                   {this.state.errorInfo.componentStack}
-                </pre>
+                </Code>
               </Box>
             )}
           </Alert>
 
           <Button
-            variant="contained"
-            color="primary"
-            startIcon={<RefreshRounded />}
+            leftSection={<IconRefresh size={16} />}
             onClick={this.handleRetry}
-            sx={{ mt: 2 }}
+            mt="md"
+            color="blue"
           >
             Try Again
           </Button>
 
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ mt: 2, textAlign: 'center' }}
+          <Text
+            size="sm"
+            c="dimmed"
+            mt="md"
+            ta="center"
           >
             If this problem persists, please refresh the page or contact support.
-          </Typography>
+          </Text>
         </Box>
       );
     }

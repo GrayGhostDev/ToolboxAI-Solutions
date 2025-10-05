@@ -1,15 +1,21 @@
+/**
+ * Storybook Preview Configuration
+ * Updated for Mantine v8 and Roblox Theme
+ *
+ * @version 2.0.0
+ * @since 2025-10-01
+ */
+
 import React from 'react';
 import type { Preview } from '@storybook/react';
-import { Box, Button, Text, Container, Paper, Stack, Group, Card, TextInput, Select, Alert, Modal, Table, Tabs, Menu, Tooltip, Checkbox, Radio, Switch, Slider, Badge, Chip, Avatar, Divider, Progress, Skeleton, ActionIcon, Title, Anchor, Notification, ScrollArea, Grid, Space, Center, Flex, SimpleGrid, Loader, RingProgress, Timeline } from '@mantine/core';
-import { Box, Button, Text, Container, Paper, Stack, Group, Card, TextInput, Select, Alert, Modal, Table, Tabs, Menu, Tooltip, Checkbox, Radio, Switch, Slider, Badge, Chip, Avatar, Divider, Progress, Skeleton, ActionIcon, Title, Anchor, Notification, ScrollArea, Grid, Space, Center, Flex, SimpleGrid, Loader, RingProgress, Timeline } from '@mantine/core';
-import { DatePicker, DateTimePicker } from '@mantine/dates';
-import { DatePicker, DateTimePicker } from '@mantine/dates';
+import { MantineProvider } from '@mantine/core';
+import { Notifications } from '@mantine/notifications';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { BrowserRouter } from 'react-router-dom';
 
-// Import your theme
-import { lightTheme } from '../src/theme';
+// Import Mantine theme
+import { mantineTheme } from '../src/theme/mantine-theme';
 
 // Import store slices for mock store
 import uiReducer from '../src/store/slices/uiSlice';
@@ -25,6 +31,11 @@ import classesReducer from '../src/store/slices/classesSlice';
 import lessonsReducer from '../src/store/slices/lessonsSlice';
 import realtimeReducer from '../src/store/slices/realtimeSlice';
 import robloxReducer from '../src/store/slices/robloxSlice';
+
+// Import Mantine styles
+import '@mantine/core/styles.css';
+import '@mantine/notifications/styles.css';
+import '@mantine/dates/styles.css';
 
 // Create a mock store for Storybook
 const mockStore = configureStore({
@@ -54,17 +65,22 @@ const preview: Preview = {
         date: /Date$/i,
       },
     },
+    backgrounds: {
+      default: 'dark',
+      values: [
+        { name: 'dark', value: '#0f0f2e' },
+        { name: 'light', value: '#f0f2ff' },
+      ],
+    },
   },
   decorators: [
     (Story) => (
       <Provider store={mockStore}>
         <BrowserRouter>
-          <ThemeProvider theme={lightTheme}>
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <CssBaseline />
-              <Story />
-            </LocalizationProvider>
-          </ThemeProvider>
+          <MantineProvider theme={mantineTheme}>
+            <Notifications position="top-right" />
+            <Story />
+          </MantineProvider>
         </BrowserRouter>
       </Provider>
     ),

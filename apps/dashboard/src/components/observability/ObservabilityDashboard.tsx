@@ -564,7 +564,7 @@ const ObservabilityDashboard: React.FC = () => {
             color={summaryMetrics.avgLatency > 500 ? 'error' : 'primary'}
             icon={<IconSpeed />}
           />
-        </SimpleGrid>
+        </Box>
         <Box xs={12} sm={6} md={2}>
           <MetricCard
             title="Throughput"
@@ -574,7 +574,7 @@ const ObservabilityDashboard: React.FC = () => {
             color="green"
             icon={<IconTimeline />}
           />
-        </SimpleGrid>
+        </Box>
         <Box xs={12} sm={6} md={2}>
           <MetricCard
             title="IconCircleX Rate"
@@ -584,7 +584,7 @@ const ObservabilityDashboard: React.FC = () => {
             color={parseFloat(summaryMetrics.errorRate as string) > 5 ? 'error' : 'warning'}
             icon={<IconCircleX />}
           />
-        </SimpleGrid>
+        </Box>
         <Box xs={12} sm={6} md={2}>
           <MetricCard
             title="Service Health"
@@ -593,7 +593,7 @@ const ObservabilityDashboard: React.FC = () => {
             color={summaryMetrics.healthyServices === summaryMetrics.totalServices ? 'success' : 'warning'}
             icon={<IconCircleCheck />}
           />
-        </SimpleGrid>
+        </Box>
         <Box xs={12} sm={6} md={2}>
           <MetricCard
             title="Cache Hit Rate"
@@ -603,7 +603,7 @@ const ObservabilityDashboard: React.FC = () => {
             color={cacheHitRate > 80 ? 'success' : 'warning'}
             icon={<IconStorage />}
           />
-        </SimpleGrid>
+        </Box>
         <Box xs={12} sm={6} md={2}>
           <MetricCard
             title="Active Alerts"
@@ -612,7 +612,7 @@ const ObservabilityDashboard: React.FC = () => {
             color={summaryMetrics.activeAlerts > 0 ? 'error' : 'success'}
             icon={<IconBell />}
           />
-        </SimpleGrid>
+        </Box>
       </SimpleGrid>
 
       {/* Streaming Status Indicator */}
@@ -677,7 +677,7 @@ const ObservabilityDashboard: React.FC = () => {
                   </LineChart>
                 </ResponsiveContainer>
               </Paper>
-            </SimpleGrid>
+            </Box>
 
             {/* Throughput Chart */}
             <Box xs={12} md={6}>
@@ -705,7 +705,7 @@ const ObservabilityDashboard: React.FC = () => {
                   </AreaChart>
                 </ResponsiveContainer>
               </Paper>
-            </SimpleGrid>
+            </Box>
 
             {/* IconCircleX Rate Chart */}
             <Box xs={12} md={6}>
@@ -733,7 +733,7 @@ const ObservabilityDashboard: React.FC = () => {
                   </LineChart>
                 </ResponsiveContainer>
               </Paper>
-            </SimpleGrid>
+            </Box>
 
             {/* System Metrics */}
             <Box xs={12} md={6}>
@@ -762,7 +762,7 @@ const ObservabilityDashboard: React.FC = () => {
                   </RadarChart>
                 </ResponsiveContainer>
               </Paper>
-            </SimpleGrid>
+            </Box>
           </SimpleGrid>
         </TabPanel>
 
@@ -801,7 +801,7 @@ const ObservabilityDashboard: React.FC = () => {
                   ))}
                 </List>
               </Paper>
-            </SimpleGrid>
+            </Box>
 
             {/* Rate Limiting */}
             <Box xs={12} md={6}>
@@ -823,7 +823,7 @@ const ObservabilityDashboard: React.FC = () => {
                   </BarChart>
                 </ResponsiveContainer>
               </Paper>
-            </SimpleGrid>
+            </Box>
 
             {/* Database Replicas */}
             <Box xs={12}>
@@ -851,11 +851,11 @@ const ObservabilityDashboard: React.FC = () => {
                           </Box>
                         </CardContent>
                       </Card>
-                    </SimpleGrid>
+                    </Box>
                   ))}
                 </SimpleGrid>
               </Paper>
-            </SimpleGrid>
+            </Box>
           </SimpleGrid>
         </TabPanel>
 
@@ -881,7 +881,7 @@ const ObservabilityDashboard: React.FC = () => {
                       {format(new Date(anomaly.timestamp), 'PPpp')}
                     </Text>
                   </Alert>
-                </SimpleGrid>
+                </Box>
               ))}
             </SimpleGrid>
           </Box>
@@ -917,7 +917,7 @@ const ObservabilityDashboard: React.FC = () => {
                           value={service.metrics.cpu}
                           color={service.metrics.cpu > 80 ? 'error' : 'primary'}
                         />
-                      </SimpleGrid>
+                      </Box>
                       <Box xs={6}>
                         <Text size="sm" color="textSecondary">
                           IconMemory
@@ -927,7 +927,7 @@ const ObservabilityDashboard: React.FC = () => {
                           value={service.metrics.memory}
                           color={service.metrics.memory > 80 ? 'error' : 'primary'}
                         />
-                      </SimpleGrid>
+                      </Box>
                       <Box xs={6}>
                         <Text size="sm" color="textSecondary">
                           Disk
@@ -937,7 +937,7 @@ const ObservabilityDashboard: React.FC = () => {
                           value={service.metrics.disk}
                           color={service.metrics.disk > 80 ? 'error' : 'primary'}
                         />
-                      </SimpleGrid>
+                      </Box>
                       <Box xs={6}>
                         <Text size="sm" color="textSecondary">
                           Network
@@ -947,14 +947,14 @@ const ObservabilityDashboard: React.FC = () => {
                           value={service.metrics.network}
                           color={service.metrics.network > 80 ? 'error' : 'primary'}
                         />
-                      </SimpleGrid>
+                      </Box>
                     </SimpleGrid>
                     <Text variant="caption" color="textSecondary" display="block" mt={2}>
                       Uptime: {Math.floor(service.uptime / 3600)}h {Math.floor((service.uptime % 3600) / 60)}m
                     </Text>
                   </CardContent>
                 </Card>
-              </SimpleGrid>
+              </Box>
             ))}
           </SimpleGrid>
         </TabPanel>

@@ -1,354 +1,401 @@
-IconimportIcon { IconBoxIcon, IconButtonIcon, IconTypographyIcon, IconPaperIcon, IconStackIcon, IconGridIcon, IconContainerIcon, IconIconButtonIcon, IconAvatarIcon, IconCardIcon, IconCardContentIcon, IconCardActionsIcon, IconListIcon, IconListItemIcon, IconListItemTextIcon, IconDividerIcon, IconTextFieldIcon, IconSelectIcon, IconMenuItemIcon, IconChipIcon, IconBadgeIcon, IconAlertIcon, IconCircularProgressIcon, IconLinearProgressIcon, IconDialogIcon, IconDialogTitleIcon, IconDialogContentIcon, IconDialogActionsIcon, IconDrawerIcon, IconAppBarIcon, IconToolbarIcon, IconTabsIcon, IconTabIcon, IconMenuIcon, IconTooltipIcon, IconCheckboxIcon, IconRadioIcon, IconRadioGroupIcon, IconFormControlIcon, IconFormControlLabelIcon, IconInputLabelIcon, IconSwitchIcon, IconSliderIcon, IconRatingIcon, IconAutocompleteIcon, IconSkeletonIcon, IconTableIcon } IconfromIcon '../../IconutilsIcon/IconmuiIcon-Iconimports';
 /**
- * IconAuthIcon IconRecoveryIcon IconComponentIcon
+ * Auth Recovery Component (Migrated to Mantine v8)
  *
- * IconProvidesIcon IconUIIcon IconforIcon IconautomaticIcon IcontokenIcon IconrefreshIcon IconandIcon IconsessionIcon IconrecoveryIcon
+ * Provides UI for automatic token refresh and session recovery
  */
-IconimportIcon { IconuseStateIcon, IconuseEffectIcon } IconfromIcon 'Iconreact';
 
-IconimportIcon {
-  IconIconRefreshIcon,
-  IconIconLockIcon,
-  IconIconCircleCheckIcon,
-  IconErrorIcon IconasIcon IconIconCircleXIcon,
-  IconIconClockIcon,
-} IconfromIcon '@IconmuiIcon/IconiconsIcon-Iconmaterial';
-IconimportIcon { IconuseAppDispatchIcon, IconuseAppSelectorIcon } IconfromIcon '../../Iconstore';
-IconimportIcon { IconauthSyncIcon } IconfromIcon '../../IconservicesIcon/IconauthIcon-Iconsync';
-IconimportIcon { IconIconIcon, IconIconCircleCheckIcon, IconIconCircleXIcon, IconIconClockIcon, IconIconLockIcon, IconIconRefreshIcon } IconfromIcon '@IcontablerIcon/IconiconsIcon-Iconreact';
-IconinterfaceIcon IconAuthRecoveryPropsIcon {
-  IconopenIcon: IconbooleanIcon;
-  IcononCloseIcon: () => IconvoidIcon;
-  IconreasonIcon?: IconstringIcon;
+import React, { useState, useEffect } from 'react';
+import {
+  Alert,
+  Button,
+  Modal,
+  Text,
+  Box,
+  Stack,
+  Progress,
+  Loader,
+  Group,
+} from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import {
+  IconRefresh,
+  IconLock,
+  IconCircleCheck,
+  IconAlertCircle,
+  IconClock,
+} from '@tabler/icons-react';
+import { useAppDispatch, useAppSelector } from '../../store';
+import { authSync } from '../../services/auth-sync';
+
+interface AuthRecoveryProps {
+  open: boolean;
+  onClose: () => void;
+  reason?: string;
 }
-IconexportIcon IconfunctionIcon IconAuthRecoveryIcon({ IconopenIcon, IcononCloseIcon, IconreasonIcon }: IconAuthRecoveryPropsIcon) {
-  IconconstIcon [IconisRecoveringIcon, IconsetIsRecoveringIcon] = IconuseStateIcon(IconfalseIcon);
-  IconconstIcon [IconrecoveryStatusIcon, IconsetRecoveryStatusIcon] = IconuseStateIcon<'Iconidle' | 'Iconrecovering' | 'Iconsuccess' | 'Iconfailed'>('Iconidle');
-  IconconstIcon [IconprogressIcon, IconsetProgressIcon] = IconuseStateIcon(Icon0Icon);
-  IconconstIcon [IconretryCountIcon, IconsetRetryCountIcon] = IconuseStateIcon(Icon0Icon);
-  IconconstIcon [IconcountdownIcon, IconsetCountdownIcon] = IconuseStateIcon(Icon0Icon);
-  IconconstIcon [IconerrorIcon, IconsetErrorIcon] = IconuseStateIcon<IconstringIcon | IconnullIcon>(IconnullIcon);
-  IconconstIcon IconisAuthenticatedIcon = IconuseAppSelectorIcon((IconstateIcon) => IconstateIcon.IconuserIcon.IconisAuthenticatedIcon);
-  IconconstIcon IcondispatchIcon = IconuseAppDispatchIcon();
-  IconuseEffectIcon(() => {
-    IconifIcon (IconopenIcon && IconreasonIcon === 'Icontoken_expiring') {
-      // IconAutoIcon-IconstartIcon IconrecoveryIcon IconforIcon IconexpiringIcon IcontokensIcon
-      IconhandleRecoveryIcon();
+
+export function AuthRecovery({ open, onClose, reason }: AuthRecoveryProps) {
+  const [isRecovering, setIsRecovering] = useState(false);
+  const [recoveryStatus, setRecoveryStatus] = useState<'idle' | 'recovering' | 'success' | 'failed'>('idle');
+  const [progress, setProgress] = useState(0);
+  const [retryCount, setRetryCount] = useState(0);
+  const [countdown, setCountdown] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+
+  const isAuthenticated = useAppSelector((state) => state.user.isAuthenticated);
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    if (open && reason === 'token_expiring') {
+      // Auto-start recovery for expiring tokens
+      handleRecovery();
     }
-  }, [IconopenIcon, IconreasonIcon]);
-  IconuseEffectIcon(() => {
-    IconifIcon (IconcountdownIcon > Icon0Icon) {
-      IconconstIcon IcontimerIcon = IconsetTimeoutIcon(() => {
-        IconsetCountdownIcon(IconcountdownIcon - Icon1Icon);
-      }, Icon1000Icon);
-      IconreturnIcon () => IconclearTimeoutIcon(IcontimerIcon);
-    } IconelseIcon IconifIcon (IconcountdownIcon === Icon0Icon && IconrecoveryStatusIcon === 'Iconfailed' && IconretryCountIcon <IconIconIcon Icon3Icon) {
-      // IconAutoIcon-IconretryIcon IconafterIcon IconcountdownIcon
-      IconhandleRecoveryIcon();
+  }, [open, reason]);
+
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => {
+        setCountdown(countdown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (countdown === 0 && recoveryStatus === 'failed' && retryCount < 3) {
+      // Auto-retry after countdown
+      handleRecovery();
     }
-  }, [IconcountdownIcon, IconrecoveryStatusIcon, IconretryCountIcon]);
-  IconconstIcon IconhandleRecoveryIcon = IconasyncIcon () => {
-    IconsetIsRecoveringIcon(IcontrueIcon);
-    IconsetRecoveryStatusIcon('Iconrecovering');
-    IconsetProgressIcon(Icon0Icon);
-    IconsetErrorIcon(IconnullIcon);
-    IconsetRetryCountIcon(IconprevIcon => IconprevIcon + Icon1Icon);
-    // IconSimulateIcon IconprogressIcon
-    IconconstIcon IconprogressIntervalIcon = IconsetIntervalIcon(() => {
-      IconsetProgressIcon(IconprevIcon => IconMathIcon.IconminIcon(IconprevIcon + Icon10Icon, Icon90Icon));
-    }, Icon200Icon);
-    IcontryIcon {
-      // IconAttemptIcon IcontokenIcon IconrefreshIcon
-      IconawaitIcon IconauthSyncIcon.IconrefreshTokenIcon();
-      IconsetProgressIcon(Icon100Icon);
-      IconsetRecoveryStatusIcon('Iconsuccess');
-      IconclearIntervalIcon(IconprogressIntervalIcon);
-      // IconAutoIcon-IconcloseIcon IconafterIcon IconsuccessIcon
-      IconsetTimeoutIcon(() => {
-        IcononCloseIcon();
-        IconsetRecoveryStatusIcon('Iconidle');
-        IconsetRetryCountIcon(Icon0Icon);
-      }, Icon2000Icon);
-    } IconcatchIcon (IconerrorIcon: IconanyIcon) {
-      IconclearIntervalIcon(IconprogressIntervalIcon);
-      IconsetProgressIcon(Icon0Icon);
-      IconsetRecoveryStatusIcon('Iconfailed');
-      IconsetErrorIcon(IconerrorIcon.IconmessageIcon || 'IconRecoveryIcon Iconfailed');
-      // IconSetIcon IconcountdownIcon IconforIcon IconnextIcon IconretryIcon
-      IconifIcon (IconretryCountIcon <IconIconIcon Icon3Icon) {
-        IconsetCountdownIcon(Icon5Icon * IconretryCountIcon); // IconExponentialIcon IconbackoffIcon
+  }, [countdown, recoveryStatus, retryCount]);
+
+  const handleRecovery = async () => {
+    setIsRecovering(true);
+    setRecoveryStatus('recovering');
+    setProgress(0);
+    setError(null);
+    setRetryCount(prev => prev + 1);
+
+    // Simulate progress
+    const progressInterval = setInterval(() => {
+      setProgress(prev => Math.min(prev + 10, 90));
+    }, 200);
+
+    try {
+      // Attempt token refresh
+      await authSync.refreshToken();
+
+      setProgress(100);
+      setRecoveryStatus('success');
+      clearInterval(progressInterval);
+
+      // Auto-close after success
+      setTimeout(() => {
+        onClose();
+        setRecoveryStatus('idle');
+        setRetryCount(0);
+      }, 2000);
+
+    } catch (error: any) {
+      clearInterval(progressInterval);
+      setProgress(0);
+      setRecoveryStatus('failed');
+      setError(error.message || 'Recovery failed');
+
+      // Set countdown for next retry
+      if (retryCount < 3) {
+        setCountdown(5 * retryCount); // Exponential backoff
       }
-    } IconfinallyIcon {
-      IconsetIsRecoveringIcon(IconfalseIcon);
+    } finally {
+      setIsRecovering(false);
     }
   };
-  IconconstIcon IconhandleExtendSessionIcon = () => {
-    IconauthSyncIcon.IconextendSessionIcon();
-    IcononCloseIcon();
+
+  const handleExtendSession = () => {
+    authSync.extendSession();
+    onClose();
   };
-  IconconstIcon IconhandleLogoutIcon = IconasyncIcon () => {
-    IconawaitIcon IconauthSyncIcon.IconlogoutIcon();
-    IcononCloseIcon();
+
+  const handleLogout = async () => {
+    await authSync.logout();
+    onClose();
   };
-  IconconstIcon IcongetReasonMessageIcon = () => {
-    IconswitchIcon (IconreasonIcon) {
-      IconcaseIcon 'Icontoken_expiring':
-        IconreturnIcon 'IconYourIcon IconsessionIcon IconisIcon IconaboutIcon IcontoIcon IconexpireIcon. IconWouldIcon IconyouIcon IconlikeIcon IcontoIcon IconstayIcon IconloggedIcon IconinIcon?';
-      IconcaseIcon 'Icontoken_expired':
-        IconreturnIcon 'IconYourIcon IconsessionIcon IconhasIcon IconexpiredIcon. IconAttemptingIcon IcontoIcon IconrecoverIcon...';
-      IconcaseIcon 'Iconrefresh_failed':
-        IconreturnIcon 'IconFailedIcon IcontoIcon IconrefreshIcon IconyourIcon IconsessionIcon. IconPleaseIcon IcontryIcon IconagainIcon.';
-      IconcaseIcon 'Iconnetwork_error':
-        IconreturnIcon 'IconNetworkIcon IconconnectionIcon IconlostIcon. IconAttemptingIcon IcontoIcon IconreconnectIcon...';
-      IcondefaultIcon:
-        IconreturnIcon 'IconSessionIcon IconrecoveryIcon IconneededIcon.';
+
+  const getReasonMessage = () => {
+    switch (reason) {
+      case 'token_expiring':
+        return 'Your session is about to expire. Would you like to stay logged in?';
+      case 'token_expired':
+        return 'Your session has expired. Attempting to recover...';
+      case 'refresh_failed':
+        return 'Failed to refresh your session. Please try again.';
+      case 'network_error':
+        return 'Network connection lost. Attempting to reconnect...';
+      default:
+        return 'Session recovery needed.';
     }
   };
-  IconreturnIcon (
-    <IconDialogIcon
-      IconopenIcon={IconopenIcon}
-      IcononCloseIcon={() => {
-        IconifIcon (!IconisRecoveringIcon) {
-          IcononCloseIcon();
+
+  return (
+    <Modal
+      opened={open}
+      onClose={() => {
+        if (!isRecovering) {
+          onClose();
         }
       }}
-      IconmaxWidthIcon="Iconsm"
-      IconfullWidthIcon
-      IcondisableEscapeKeyDownIcon={IconisRecoveringIcon}
+      title={
+        <Group gap="xs">
+          <IconLock size={20} style={{ color: '#00bfff' }} />
+          <Text size="lg" fw={600}>Session Recovery</Text>
+        </Group>
+      }
+      size="md"
+      closeOnEscape={!isRecovering}
     >
-      <IconDialogTitleIcon IconstyleIcon={{ IcondisplayIcon: 'Iconflex', IconalignItemsIcon: 'Iconcenter', IcongapIcon: Icon1Icon }}>
-        <IconIconLockIcon IconcolorIcon="Iconblue" />
-        <IconTypographyIcon IconorderIcon={Icon6Icon}>IconSessionIcon IconRecoveryIcon<IconIconIcon/IconTypographyIcon>
-      <IconIconIcon/IconDialogTitleIcon>
-      <IconDialogContentIcon>
-        <IconStackIcon IconspacingIcon={Icon3Icon} IconstyleIcon={{ IconmtIcon: Icon2Icon }}>
-          <IconTypographyIcon IconsizeIcon="Iconmd" IconcolorIcon="IcontextIcon.Iconsecondary">
-            {IcongetReasonMessageIcon()}
-          <IconIconIcon/IconTypographyIcon>
-          {/* IconRecoveryIcon IconStatusIcon */}
-          {IconrecoveryStatusIcon === 'Iconrecovering' && (
-            <IconBoxIcon>
-              <IconStackIcon IcondirectionIcon="Iconrow" IconalignItemsIcon="Iconcenter" IconspacingIcon={Icon2Icon} IconstyleIcon={{ IconmbIcon: Icon2Icon }}>
-                <IconCircularProgressIcon IconsizeIcon={Icon24Icon} />
-                <IconTypographyIcon IconsizeIcon="Iconsm">
-                  IconRefreshingIcon IconyourIcon IconsessionIcon...
-                <IconIconIcon/IconTypographyIcon>
-              <IconIconIcon/IconStackIcon>
-              <IconLinearProgressIcon IconvariantIcon="Icondeterminate" IconvalueIcon={IconprogressIcon} />
-            <IconIconIcon/IconBoxIcon>
-          )}
-          {IconrecoveryStatusIcon === 'Iconsuccess' && (
-            <IconAlertIcon
-              IconseverityIcon="Iconsuccess"
-              IconiconIcon={<IconIconCircleCheckIcon />}
-            >
-              IconSessionIcon IconrecoveredIcon IconsuccessfullyIcon!
-            <IconIconIcon/IconAlertIcon>
-          )}
-          {IconrecoveryStatusIcon === 'Iconfailed' && (
-            <IconIconIcon>
-              <IconAlertIcon
-                IconseverityIcon="Iconerror"
-                IconiconIcon={<IconIconCircleXIcon />}
-              >
-                {IconerrorIcon || 'IconFailedIcon IcontoIcon IconrecoverIcon Iconsession'}
-              <IconIconIcon/IconAlertIcon>
-              {IconretryCountIcon <IconIconIcon Icon3Icon && IconcountdownIcon > Icon0Icon && (
-                <IconBoxIcon IconstyleIcon={{ IcondisplayIcon: 'Iconflex', IconalignItemsIcon: 'Iconcenter', IcongapIcon: Icon1Icon }}>
-                  <IconIconClockIcon IconcolorIcon="Iconaction" />
-                  <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
-                    IconRetryingIcon IconinIcon {IconcountdownIcon} IconsecondsIcon... (IconAttemptIcon {IconretryCountIcon}/Icon3Icon)
-                  <IconIconIcon/IconTypographyIcon>
-                <IconIconIcon/IconBoxIcon>
-              )}
-            <IconIconIcon/>
-          )}
-          {/* IconSessionIcon IconInfoIcon */}
-          {IconreasonIcon === 'Icontoken_expiring' && (
-            <IconAlertIcon IconseverityIcon="Iconwarning">
-              IconYourIcon IconsessionIcon IconwillIcon IconexpireIcon IconinIcon Icon5Icon IconminutesIcon IcondueIcon IcontoIcon IconinactivityIcon.
-              IconClickIcon "IconStayIcon IconLoggedIcon IconIn" IcontoIcon IconcontinueIcon IconworkingIcon.
-            <IconIconIcon/IconAlertIcon>
-          )}
-        <IconIconIcon/IconStackIcon>
-      <IconIconIcon/IconDialogContentIcon>
-      <IconDialogActionsIcon IconstyleIcon={{ IconpIcon: Icon2Icon }}>
-        {IconreasonIcon === 'Icontoken_expiring' && IconrecoveryStatusIcon === 'Iconidle' && (
-          <IconIconIcon>
-            <IconButtonIcon
-              IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconhandleLogoutIcon}
-              IconcolorIcon="Icongray"
-              IcondisabledIcon={IconisRecoveringIcon}
-            >
-              IconLogoutIcon
-            <IconIconIcon/IconButtonIcon>
-            <IconButtonIcon
-              IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconhandleExtendSessionIcon}
-              IconvariantIcon="Iconfilled"
-              IconstartIconIcon={<IconIconRefreshIcon />}
-              IcondisabledIcon={IconisRecoveringIcon}
-            >
-              IconStayIcon IconLoggedIcon IconInIcon
-            <IconIconIcon/IconButtonIcon>
-          <IconIconIcon/>
+      <Stack gap="md">
+        <Text size="sm" c="dimmed">
+          {getReasonMessage()}
+        </Text>
+
+        {/* Recovery Status */}
+        {recoveryStatus === 'recovering' && (
+          <Box>
+            <Group gap="md" mb="sm">
+              <Loader size="sm" />
+              <Text size="sm">
+                Refreshing your session...
+              </Text>
+            </Group>
+            <Progress value={progress} color="blue" size="sm" />
+          </Box>
         )}
-        {(IconrecoveryStatusIcon === 'Iconfailed' || IconrecoveryStatusIcon === 'Iconrecovering') && (
-          <IconIconIcon>
-            <IconButtonIcon
-              IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconhandleLogoutIcon}
-              IconcolorIcon="Icongray"
-              IcondisabledIcon={IconisRecoveringIcon}
-            >
-              IconLogoutIcon
-            <IconIconIcon/IconButtonIcon>
-            <IconButtonIcon
-              IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconhandleRecoveryIcon}
-              IconvariantIcon="Iconfilled"
-              IconstartIconIcon={<IconIconRefreshIcon />}
-              IcondisabledIcon={IconisRecoveringIcon || IconcountdownIcon > Icon0Icon}
-            >
-              {IconcountdownIcon > Icon0Icon ? `IconWaitIcon ${IconcountdownIcon}IconsIcon` : 'IconRetry'}
-            <IconIconIcon/IconButtonIcon>
-          <IconIconIcon/>
-        )}
-        {IconrecoveryStatusIcon === 'Iconsuccess' && (
-          <IconButtonIcon
-            IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IcononCloseIcon}
-            IconvariantIcon="Iconfilled"
-            IconcolorIcon="Icongreen"
-            IconstartIconIcon={<IconIconCircleCheckIcon />}
+
+        {recoveryStatus === 'success' && (
+          <Alert
+            icon={<IconCircleCheck size={20} />}
+            color="green"
+            title="Success"
           >
-            IconContinueIcon
-          <IconIconIcon/IconButtonIcon>
+            Session recovered successfully!
+          </Alert>
         )}
-      <IconIconIcon/IconDialogActionsIcon>
-    <IconIconIcon/IconDialogIcon>
+
+        {recoveryStatus === 'failed' && (
+          <>
+            <Alert
+              icon={<IconAlertCircle size={20} />}
+              color="red"
+              title="Error"
+            >
+              {error || 'Failed to recover session'}
+            </Alert>
+
+            {retryCount < 3 && countdown > 0 && (
+              <Group gap="xs">
+                <IconClock size={16} />
+                <Text size="sm" c="dimmed">
+                  Retrying in {countdown} seconds... (Attempt {retryCount}/3)
+                </Text>
+              </Group>
+            )}
+          </>
+        )}
+
+        {/* Session Info */}
+        {reason === 'token_expiring' && (
+          <Alert color="yellow" title="Warning">
+            Your session will expire in 5 minutes due to inactivity.
+            Click "Stay Logged In" to continue working.
+          </Alert>
+        )}
+
+        {/* Actions */}
+        <Group justify="flex-end" mt="md">
+          {reason === 'token_expiring' && recoveryStatus === 'idle' && (
+            <>
+              <Button
+                onClick={handleLogout}
+                variant="subtle"
+                color="gray"
+                disabled={isRecovering}
+              >
+                Logout
+              </Button>
+              <Button
+                onClick={handleExtendSession}
+                leftSection={<IconRefresh size={16} />}
+                disabled={isRecovering}
+                color="blue"
+              >
+                Stay Logged In
+              </Button>
+            </>
+          )}
+
+          {(recoveryStatus === 'failed' || recoveryStatus === 'recovering') && (
+            <>
+              <Button
+                onClick={handleLogout}
+                variant="subtle"
+                color="gray"
+                disabled={isRecovering}
+              >
+                Logout
+              </Button>
+              <Button
+                onClick={handleRecovery}
+                leftSection={<IconRefresh size={16} />}
+                disabled={isRecovering || countdown > 0}
+                color="blue"
+              >
+                {countdown > 0 ? `Wait ${countdown}s` : 'Retry'}
+              </Button>
+            </>
+          )}
+
+          {recoveryStatus === 'success' && (
+            <Button
+              onClick={onClose}
+              color="green"
+              leftSection={<IconCircleCheck size={16} />}
+            >
+              Continue
+            </Button>
+          )}
+        </Group>
+      </Stack>
+    </Modal>
   );
 }
+
 /**
- * IconSessionIcon IconMonitorIcon IconComponentIcon
- * IconShowsIcon IconsessionIcon IconstatusIcon IconandIcon IconallowsIcon IconmanualIcon IconrefreshIcon
+ * Session Monitor Component
+ * Shows session status and allows manual refresh
  */
-IconexportIcon IconfunctionIcon IconSessionMonitorIcon() {
-  IconconstIcon [IconsessionInfoIcon, IconsetSessionInfoIcon] = IconuseStateIcon<IconanyIcon>(IconnullIcon);
-  IconconstIcon [IconshowRecoveryIcon, IconsetShowRecoveryIcon] = IconuseStateIcon(IconfalseIcon);
-  IconconstIcon [IconrecoveryReasonIcon, IconsetRecoveryReasonIcon] = IconuseStateIcon<IconstringIcon>('');
-  IconuseEffectIcon(() => {
-    IconconstIcon IconcheckSessionIcon = () => {
-      IconconstIcon IconinfoIcon = IconauthSyncIcon.IcongetSessionInfoIcon();
-      IconsetSessionInfoIcon(IconinfoIcon);
-      IconifIcon (IconinfoIcon && IconinfoIcon.IconisActiveIcon) {
-        IconconstIcon IconnowIcon = IconDateIcon.IconnowIcon();
-        IconconstIcon IconinactiveTimeIcon = IconnowIcon - IconinfoIcon.IconlastActivityIcon;
-        IconconstIcon IconinactiveMinutesIcon = IconMathIcon.IconfloorIcon(IconinactiveTimeIcon / Icon60000Icon);
-        // IconShowIcon IconwarningIcon IconifIcon IconapproachingIcon IcontimeoutIcon
-        IconifIcon (IconinactiveMinutesIcon >= Icon25Icon && IconinactiveMinutesIcon <IconIconIcon Icon30Icon) {
-          IconsetRecoveryReasonIcon('Icontoken_expiring');
-          IconsetShowRecoveryIcon(IcontrueIcon);
+export function SessionMonitor() {
+  const [sessionInfo, setSessionInfo] = useState<any>(null);
+  const [showRecovery, setShowRecovery] = useState(false);
+  const [recoveryReason, setRecoveryReason] = useState<string>('');
+
+  useEffect(() => {
+    const checkSession = () => {
+      const info = authSync.getSessionInfo();
+      setSessionInfo(info);
+
+      if (info && info.isActive) {
+        const now = Date.now();
+        const inactiveTime = now - info.lastActivity;
+        const inactiveMinutes = Math.floor(inactiveTime / 60000);
+
+        // Show warning if approaching timeout
+        if (inactiveMinutes >= 25 && inactiveMinutes < 30) {
+          setRecoveryReason('token_expiring');
+          setShowRecovery(true);
         }
       }
     };
-    // IconCheckIcon IconsessionIcon IconeveryIcon IconminuteIcon
-    IconconstIcon IconintervalIcon = IconsetIntervalIcon(IconcheckSessionIcon, Icon60000Icon);
-    IconcheckSessionIcon(); // IconInitialIcon IconcheckIcon
-    IconreturnIcon () => IconclearIntervalIcon(IconintervalIcon);
+
+    // Check session every minute
+    const interval = setInterval(checkSession, 60000);
+    checkSession(); // Initial check
+
+    return () => clearInterval(interval);
   }, []);
-  IconifIcon (!IconsessionInfoIcon || !IconsessionInfoIcon.IconisActiveIcon) {
-    IconreturnIcon IconnullIcon;
+
+  if (!sessionInfo || !sessionInfo.isActive) {
+    return null;
   }
-  IconconstIcon IcongetSessionDurationIcon = () => {
-    IconconstIcon IcondurationIcon = IconDateIcon.IconnowIcon() - IconsessionInfoIcon.IconstartTimeIcon;
-    IconconstIcon IconhoursIcon = IconMathIcon.IconfloorIcon(IcondurationIcon / Icon3600000Icon);
-    IconconstIcon IconminutesIcon = IconMathIcon.IconfloorIcon((IcondurationIcon % Icon3600000Icon) / Icon60000Icon);
-    IconreturnIcon `${IconhoursIcon}IconhIcon ${IconminutesIcon}IconmIcon`;
+
+  const getSessionDuration = () => {
+    const duration = Date.now() - sessionInfo.startTime;
+    const hours = Math.floor(duration / 3600000);
+    const minutes = Math.floor((duration % 3600000) / 60000);
+    return `${hours}h ${minutes}m`;
   };
-  IconconstIcon IcongetInactiveTimeIcon = () => {
-    IconconstIcon IconinactiveIcon = IconDateIcon.IconnowIcon() - IconsessionInfoIcon.IconlastActivityIcon;
-    IconconstIcon IconminutesIcon = IconMathIcon.IconfloorIcon(IconinactiveIcon / Icon60000Icon);
-    IconreturnIcon `${IconminutesIcon} IconminIcon`;
+
+  const getInactiveTime = () => {
+    const inactive = Date.now() - sessionInfo.lastActivity;
+    const minutes = Math.floor(inactive / 60000);
+    return `${minutes} min`;
   };
-  IconreturnIcon (
-    <IconIconIcon>
-      <IconBoxIcon
-        IconstyleIcon={{
-          IconpositionIcon: 'Iconfixed',
-          IconbottomIcon: Icon16Icon,
-          IconrightIcon: Icon16Icon,
-          IconbgcolorIcon: 'IconbackgroundIcon.Iconpaper',
-          IconboxShadowIcon: Icon1Icon,
-          IconborderRadiusIcon: Icon1Icon,
-          IconpIcon: Icon1Icon,
-          IcondisplayIcon: 'Iconflex',
-          IconalignItemsIcon: 'Iconcenter',
-          IcongapIcon: Icon1Icon,
-          IconopacityIcon: Icon0Icon.Icon9Icon,
-          '&:Iconhover': {
-            IconopacityIcon: Icon1Icon,
-          },
+
+  return (
+    <>
+      <Box
+        style={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+          backgroundColor: 'var(--mantine-color-body)',
+          boxShadow: 'var(--mantine-shadow-sm)',
+          borderRadius: 'var(--mantine-radius-sm)',
+          padding: 'var(--mantine-spacing-sm)',
+          opacity: 0.9,
         }}
       >
-        <IconIconCircleCheckIcon IconcolorIcon="Icongreen" IconfontSizeIcon="Iconsmall" />
-        <IconTypographyIcon IconvariantIcon="Iconcaption" IconcolorIcon="IcontextIcon.Iconsecondary">
-          IconSessionIcon: {IcongetSessionDurationIcon()} | IconInactiveIcon: {IcongetInactiveTimeIcon()}
-        <IconIconIcon/IconTypographyIcon>
-        <IconButtonIcon
-          IconsizeIcon="Iconsmall"
-          IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconauthSyncIcon.IconextendSessionIcon()}
-        >
-          IconExtendIcon
-        <IconIconIcon/IconButtonIcon>
-      <IconIconIcon/IconBoxIcon>
-      <IconAuthRecoveryIcon
-        IconopenIcon={IconshowRecoveryIcon}
-        IcononCloseIcon={() => IconsetShowRecoveryIcon(IconfalseIcon)}
-        IconreasonIcon={IconrecoveryReasonIcon}
+        <Group gap="xs">
+          <IconCircleCheck size={16} color="var(--mantine-color-green-6)" />
+          <Text size="xs" c="dimmed">
+            Session: {getSessionDuration()} | Inactive: {getInactiveTime()}
+          </Text>
+          <Button
+            size="xs"
+            variant="subtle"
+            onClick={() => authSync.extendSession()}
+          >
+            Extend
+          </Button>
+        </Group>
+      </Box>
+
+      <AuthRecovery
+        open={showRecovery}
+        onClose={() => setShowRecovery(false)}
+        reason={recoveryReason}
       />
-    <IconIconIcon/>
+    </>
   );
 }
+
 /**
- * IconNetworkIcon IconStatusIcon IconMonitorIcon
- * IconShowsIcon IconnetworkIcon IconconnectivityIcon IconstatusIcon
+ * Network Status Monitor
+ * Shows network connectivity status
  */
-IconexportIcon IconfunctionIcon IconNetworkStatusIcon() {
-  IconconstIcon [IconisOnlineIcon, IconsetIsOnlineIcon] = IconuseStateIcon(IconnavigatorIcon.IcononLineIcon);
-  IconconstIcon [IconshowAlertIcon, IconsetShowAlertIcon] = IconuseStateIcon(IconfalseIcon);
-  IconuseEffectIcon(() => {
-    IconconstIcon IconhandleOnlineIcon = () => {
-      IconsetIsOnlineIcon(IcontrueIcon);
-      IconsetShowAlertIcon(IcontrueIcon);
-      IconsetTimeoutIcon(() => IconsetShowAlertIcon(IconfalseIcon), Icon3000Icon);
+export function NetworkStatus() {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      notifications.show({
+        title: 'Connection Restored',
+        message: 'Your session is active.',
+        color: 'green',
+        icon: <IconCircleCheck size={16} />,
+        autoClose: 3000,
+      });
     };
-    IconconstIcon IconhandleOfflineIcon = () => {
-      IconsetIsOnlineIcon(IconfalseIcon);
-      IconsetShowAlertIcon(IcontrueIcon);
+
+    const handleOffline = () => {
+      setIsOnline(false);
+      notifications.show({
+        title: 'Connection Lost',
+        message: 'Your work will be saved locally.',
+        color: 'red',
+        icon: <IconAlertCircle size={16} />,
+        autoClose: false,
+      });
     };
-    IconwindowIcon.IconaddEventListenerIcon("Icononline", IconhandleOnlineIcon IconasIcon IconEventListenerIcon);
-    IconwindowIcon.IconaddEventListenerIcon("Iconoffline", IconhandleOfflineIcon IconasIcon IconEventListenerIcon);
-    IconreturnIcon () => {
-      IconwindowIcon.IconremoveEventListenerIcon('Icononline', IconhandleOnlineIcon);
-      IconwindowIcon.IconremoveEventListenerIcon('Iconoffline', IconhandleOfflineIcon);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
     };
   }, []);
-  IconreturnIcon (
-    <IconSnackbarIcon
-      IconopenIcon={IconshowAlertIcon}
-      IconanchorOriginIcon={{ IconverticalIcon: 'Icontop', IconhorizontalIcon: 'Iconcenter' }}
-      IcononCloseIcon={() => IconsetShowAlertIcon(IconfalseIcon)}
-    >
-      <IconAlertIcon
-        IconseverityIcon={IconisOnlineIcon ? 'Iconsuccess' : 'Iconerror'}
-        IcononCloseIcon={() => IconsetShowAlertIcon(IconfalseIcon)}
-      >
-        {IconisOnlineIcon
-          ? 'IconConnectionIcon IconrestoredIcon. IconYourIcon IconsessionIcon IconisIcon IconactiveIcon.'
-          : 'IconNetworkIcon IconconnectionIcon IconlostIcon. IconYourIcon IconworkIcon IconwillIcon IconbeIcon IconsavedIcon IconlocallyIcon.'}
-      <IconIconIcon/IconAlertIcon>
-    <IconIconIcon/IconSnackbarIcon>
-  );
+
+  return null;
 }
-IconexportIcon IcondefaultIcon {
-  IconAuthRecoveryIcon,
-  IconSessionMonitorIcon,
-  IconNetworkStatusIcon,
+
+export default {
+  AuthRecovery,
+  SessionMonitor,
+  NetworkStatus,
 };

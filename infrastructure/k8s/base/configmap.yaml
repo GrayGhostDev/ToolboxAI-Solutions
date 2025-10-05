@@ -1,0 +1,91 @@
+# ============================================
+# TOOLBOXAI KUBERNETES CONFIGMAPS
+# ============================================
+# Application configuration (non-sensitive)
+# Updated: 2025-10-02
+# ============================================
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: toolboxai-config
+  namespace: toolboxai
+  labels:
+    app.kubernetes.io/name: toolboxai
+    app.kubernetes.io/component: config
+data:
+  # Environment
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "WARNING"
+  TZ: "UTC"
+
+  # Backend configuration
+  HOST: "0.0.0.0"
+  PORT: "8009"
+  WORKERS: "8"
+
+  # Features
+  RATE_LIMIT_ENABLED: "true"
+  RATE_LIMIT_PER_MINUTE: "60"
+
+  # Database pool
+  CONNECTION_POOL_SIZE: "20"
+  CONNECTION_MAX_OVERFLOW: "40"
+
+  # Celery
+  CELERY_WORKER_CONCURRENCY: "4"
+  CELERY_WORKER_MAX_TASKS_PER_CHILD: "1000"
+  CELERY_TASK_TIME_LIMIT: "300"
+
+  # MCP
+  MCP_HOST: "0.0.0.0"
+  MCP_PORT: "9877"
+  MAX_TOKENS: "16384"
+  AGENT_DISCOVERY_ENABLED: "true"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: toolboxai
+  labels:
+    app: postgres
+data:
+  POSTGRES_MAX_CONNECTIONS: "500"
+  POSTGRES_SHARED_BUFFERS: "1GB"
+  POSTGRES_EFFECTIVE_CACHE_SIZE: "4GB"
+  POSTGRES_MAINTENANCE_WORK_MEM: "256MB"
+  POSTGRES_WORK_MEM: "16MB"
+  POSTGRES_CHECKPOINT_COMPLETION_TARGET: "0.9"
+  POSTGRES_WAL_BUFFERS: "64MB"
+  POSTGRES_DEFAULT_STATISTICS_TARGET: "100"
+  POSTGRES_RANDOM_PAGE_COST: "1.1"
+  POSTGRES_EFFECTIVE_IO_CONCURRENCY: "200"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-sql
+  namespace: toolboxai
+  labels:
+    app: postgres
+data:
+  init.sql: |
+    -- Create extensions
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+    CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+    CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+
+    -- Create schemas
+    CREATE SCHEMA IF NOT EXISTS toolboxai;
+    CREATE SCHEMA IF NOT EXISTS analytics;
+
+    -- Set default permissions
+    GRANT ALL PRIVILEGES ON SCHEMA toolboxai TO toolboxai;
+    GRANT ALL PRIVILEGES ON SCHEMA analytics TO toolboxai;
+
+    -- Create indexes for common queries
+    -- (Application will create tables)

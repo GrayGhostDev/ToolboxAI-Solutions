@@ -1,795 +1,819 @@
-IconimportIcon { IconBoxIcon, IconButtonIcon, IconTypographyIcon, IconPaperIcon, IconStackIcon, IconGridIcon, IconContainerIcon, IconIconButtonIcon, IconAvatarIcon, IconCardIcon, IconCardContentIcon, IconCardActionsIcon, IconListIcon, IconListItemIcon, IconListItemTextIcon, IconDividerIcon, IconTextFieldIcon, IconSelectIcon, IconMenuItemIcon, IconChipIcon, IconBadgeIcon, IconAlertIcon, IconCircularProgressIcon, IconLinearProgressIcon, IconDialogIcon, IconDialogTitleIcon, IconDialogContentIcon, IconDialogActionsIcon, IconDrawerIcon, IconAppBarIcon, IconToolbarIcon, IconTabsIcon, IconTabIcon, IconMenuIcon, IconTooltipIcon, IconCheckboxIcon, IconRadioIcon, IconRadioGroupIcon, IconFormControlIcon, IconFormControlLabelIcon, IconInputLabelIcon, IconSwitchIcon, IconSliderIcon, IconRatingIcon, IconAutocompleteIcon, IconSkeletonIcon, IconTableIcon } IconfromIcon '../../IconutilsIcon/IconmuiIcon-Iconimports';
-IconimportIcon * IconasIcon IconReactIcon IconfromIcon "Iconreact";
+import * as React from "react";
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  Stack,
+  Chip,
+  IconButton,
+  Skeleton,
+  Alert,
+  Grid,
+  Paper,
+  LinearProgress,
+  Avatar,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Divider,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+} from "@mui/material";
+import {
+  SmartToy,
+  Psychology,
+  School,
+  Quiz,
+  Terrain,
+  Code,
+  RateReview,
+  PlayArrow,
+  Pause,
+  Stop,
+  Refresh,
+  Settings,
+  Memory,
+  Speed,
+  CheckCircle,
+  Error,
+  Warning,
+  Info,
+} from "@mui/icons-material";
+import { useTheme } from "@mui/material/styles";
+import {
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+} from "recharts";
+import { useWebSocketContext } from "../../contexts/WebSocketContext";
+import { useAppDispatch } from "../../store";
+import { addNotification } from "../../store/slices/uiSlice";
 
-IconimportIcon { IconuseStateIcon, IconuseEffectIcon } IconfromIcon "Iconreact";
-IconimportIcon {
-  IconIconSmartToyIcon,
-  IconIconPsychologyIcon,
-  IconIconSchoolIcon,
-  IconIconQuizIcon,
-  IconIconTerrainIcon,
-  IconIconCodeIcon,
-  IconIconRateReviewIcon,
-  IconIconPlayerPlayIcon,
-  IconIconPlayerPauseIcon,
-  IconIconPlayerStopIcon,
-  IconIconRefreshIcon,
-  IconIconSettingsIcon,
-  IconIconMemoryIcon,
-  IconIconSpeedIcon,
-  IconIconCircleCheckIcon,
-  IconIconCircleXIcon,
-  IconIconAlertTriangleIcon,
-  IconIconInfoCircleIcon,
-} IconfromIcon "@IconmuiIcon/IconiconsIcon-Iconmaterial";
-IconimportIcon {
-  IconLineChartIcon,
-  IconLineIcon,
-  IconAreaChartIcon,
-  IconAreaIcon,
-  IconXAxisIcon,
-  IconYAxisIcon,
-  IconCartesianGridIcon,
-  IconTooltipIcon,
-  IconResponsiveContainerIcon,
-  IconBarChartIcon,
-  IconBarIcon,
-} IconfromIcon "Iconrecharts";
-IconimportIcon { IconusePusherContextIcon } IconfromIcon "../../IconcontextsIcon/IconPusherContext";
-IconimportIcon { IconuseAppDispatchIcon } IconfromIcon "../../Iconstore";
-IconimportIcon { IconaddNotificationIcon } IconfromIcon "../../IconstoreIcon/IconslicesIcon/IconuiSlice";
-IconimportIcon { IconIconIcon, IconIconAlertTriangleIcon, IconIconCircleCheckIcon, IconIconCircleXIcon, IconIconCodeIcon, IconIconInfoCircleIcon, IconIconMemoryIcon, IconIconPlayerPauseIcon, IconIconPlayerPlayIcon, IconIconPlayerStopIcon, IconIconPsychologyIcon, IconIconQuizIcon, IconIconRateReviewIcon, IconIconRefreshIcon, IconIconSchoolIcon, IconIconSettingsIcon, IconIconSmartToyIcon, IconIconSpeedIcon, IconIconTerrainIcon } IconfromIcon '@IcontablerIcon/IconiconsIcon-Iconreact';
-
-IconinterfaceIcon IconMCPAgentIcon {
-  IconidIcon: IconstringIcon;
-  IconnameIcon: IconstringIcon;
-  IcontypeIcon: "Iconsupervisor" | "Iconcontent" | "Iconquiz" | "Iconterrain" | "Iconscript" | "Iconreview";
-  IconstatusIcon: "Iconactive" | "Iconidle" | "Iconworking" | "Iconerror" | "Iconoffline";
-  IconlastActivityIcon: IconstringIcon;
-  IcontasksCompletedIcon: IconnumberIcon;
-  IconavgResponseTimeIcon: IconnumberIcon;
-  IconsuccessRateIcon: IconnumberIcon;
-  IconmemoryUsageIcon: IconnumberIcon;
-  IconcpuUsageIcon: IconnumberIcon;
-  IconcurrentTaskIcon?: {
-    IconidIcon: IconstringIcon;
-    IcontypeIcon: IconstringIcon;
-    IconprogressIcon: IconnumberIcon;
-    IconstartedAtIcon: IconstringIcon;
+interface MCPAgent {
+  id: string;
+  name: string;
+  type: "supervisor" | "content" | "quiz" | "terrain" | "script" | "review";
+  status: "active" | "idle" | "working" | "error" | "offline";
+  lastActivity: string;
+  tasksCompleted: number;
+  avgResponseTime: number;
+  successRate: number;
+  memoryUsage: number;
+  cpuUsage: number;
+  currentTask?: {
+    id: string;
+    type: string;
+    progress: number;
+    startedAt: string;
   };
-  IconcapabilitiesIcon: IconstringIcon[];
-  IconmetricsIcon: {
-    IcontimestampIcon: IconstringIcon;
-    IconresponseTimeIcon: IconnumberIcon;
-    IconmemoryUsageIcon: IconnumberIcon;
-    IconcpuUsageIcon: IconnumberIcon;
+  capabilities: string[];
+  metrics: {
+    timestamp: string;
+    responseTime: number;
+    memoryUsage: number;
+    cpuUsage: number;
   }[];
 }
 
-IconinterfaceIcon IconMCPMessageIcon {
-  IconidIcon: IconstringIcon;
-  IcontypeIcon: "Iconrequest" | "Iconresponse" | "Iconnotification" | "Iconerror";
-  IconagentIdIcon: IconstringIcon;
-  IconcontentIcon: IconstringIcon;
-  IcontimestampIcon: IconstringIcon;
-  IcondataIcon?: IconanyIcon;
+interface MCPMessage {
+  id: string;
+  type: "request" | "response" | "notification" | "error";
+  agentId: string;
+  content: string;
+  timestamp: string;
+  data?: any;
 }
 
-IconinterfaceIcon IconMCPAgentDashboardPropsIcon {
-  IconautoRefreshIcon?: IconbooleanIcon;
-  IconshowLogsIcon?: IconbooleanIcon;
+interface MCPAgentDashboardProps {
+  autoRefresh?: boolean;
+  showLogs?: boolean;
 }
 
-IconconstIcon IconAGENT_ICONSIcon: IconRecordIcon<IconstringIcon, IconReactIcon.IconReactElementIcon> = {
-  IconsupervisorIcon: <IconIconSmartToyIcon />,
-  IconcontentIcon: <IconIconPsychologyIcon />,
-  IconquizIcon: <IconIconQuizIcon />,
-  IconterrainIcon: <IconIconTerrainIcon />,
-  IconscriptIcon: <IconIconCodeIcon />,
-  IconreviewIcon: <IconIconRateReviewIcon />,
+const AGENT_ICONS: Record<string, React.ReactElement> = {
+  supervisor: <SmartToy />,
+  content: <Psychology />,
+  quiz: <Quiz />,
+  terrain: <Terrain />,
+  script: <Code />,
+  review: <RateReview />,
 };
 
-IconconstIcon IconAGENT_COLORSIcon: IconRecordIcon<IconstringIcon, IconstringIcon> = {
-  IconsupervisorIcon: "#Icon2563EB",
-  IconcontentIcon: "#Icon22C55E",
-  IconquizIcon: "#IconFACC15",
-  IconterrainIcon: "#Icon9333EA",
-  IconscriptIcon: "#IconEF4444",
-  IconreviewIcon: "#Icon06B6D4",
+const AGENT_COLORS: Record<string, string> = {
+  supervisor: "#2563EB",
+  content: "#22C55E",
+  quiz: "#FACC15",
+  terrain: "#9333EA",
+  script: "#EF4444",
+  review: "#06B6D4",
 };
 
-IconexportIcon IconfunctionIcon IconMCPAgentDashboardIcon({ 
-  IconautoRefreshIcon = IcontrueIcon,
-  IconshowLogsIcon = IcontrueIcon 
-}: IconMCPAgentDashboardPropsIcon) {
-  IconconstIcon IconthemeIcon = IconuseThemeIcon();
-  IconconstIcon IcondispatchIcon = IconuseAppDispatchIcon();
-  IconconstIcon { IconisConnectedIcon, IconsubscribeToChannelIcon, IconunsubscribeFromChannelIcon, IconsendMessageIcon } = IconusePusherContextIcon();
+export function MCPAgentDashboard({ 
+  autoRefresh = true,
+  showLogs = true 
+}: MCPAgentDashboardProps) {
+  const theme = useTheme();
+  const dispatch = useAppDispatch();
+  const { isConnected, subscribe, unsubscribe, sendMessage } = useWebSocketContext();
   
-  IconconstIcon [IconagentsIcon, IconsetAgentsIcon] = IconuseStateIcon<IconMCPAgentIcon[]>([]);
-  IconconstIcon [IconmessagesIcon, IconsetMessagesIcon] = IconuseStateIcon<IconMCPMessageIcon[]>([]);
-  IconconstIcon [IconloadingIcon, IconsetLoadingIcon] = IconuseStateIcon(IcontrueIcon);
-  IconconstIcon [IconerrorIcon, IconsetErrorIcon] = IconuseStateIcon<IconstringIcon | IconnullIcon>(IconnullIcon);
-  IconconstIcon [IconselectedAgentIcon, IconsetSelectedAgentIcon] = IconuseStateIcon<IconMCPAgentIcon | IconnullIcon>(IconnullIcon);
-  IconconstIcon [IconisTaskDialogOpenIcon, IconsetIsTaskDialogOpenIcon] = IconuseStateIcon(IconfalseIcon);
-  IconconstIcon [IcontaskTypeIcon, IconsetTaskTypeIcon] = IconuseStateIcon<IconstringIcon>("");
-  IconconstIcon [IcontaskContentIcon, IconsetTaskContentIcon] = IconuseStateIcon<IconstringIcon>("");
-  IconconstIcon [IconmcpWebSocketIcon, IconsetMcpWebSocketIcon] = IconuseStateIcon<IconWebSocketIcon | IconnullIcon>(IconnullIcon);
-  IconconstIcon [IconreconnectAttemptsIcon, IconsetReconnectAttemptsIcon] = IconuseStateIcon(Icon0Icon);
-  IconconstIcon IconMAX_RECONNECT_ATTEMPTSIcon = Icon3Icon;
-  IconconstIcon IconRECONNECT_DELAY_BASEIcon = Icon5000Icon; // IconBaseIcon IcondelayIcon IconinIcon IconmsIcon
+  const [agents, setAgents] = useState<MCPAgent[]>([]);
+  const [messages, setMessages] = useState<MCPMessage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState<MCPAgent | null>(null);
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [taskType, setTaskType] = useState<string>("");
+  const [taskContent, setTaskContent] = useState<string>("");
+  const [mcpWebSocket, setMcpWebSocket] = useState<WebSocket | null>(null);
+  const [reconnectAttempts, setReconnectAttempts] = useState(0);
+  const MAX_RECONNECT_ATTEMPTS = 3;
+  const RECONNECT_DELAY_BASE = 5000; // Base delay in ms
 
-  // IconConnectIcon IcontoIcon IconMCPIcon IconWebSocketIcon IconserverIcon IcononIcon IconportIcon Icon9876Icon IconwithIcon IconretryIcon IconlogicIcon
-  IconconstIcon IconconnectToMCPIcon = IconReactIcon.IconuseCallbackIcon(IconasyncIcon () => {
-    // IconCheckIcon IconifIcon Iconwe'IconveIcon IconexceededIcon IconmaxIcon IconreconnectionIcon IconattemptsIcon
-    IconifIcon (IconreconnectAttemptsIcon >= IconMAX_RECONNECT_ATTEMPTSIcon) {
-      IconconsoleIcon.IconlogIcon('IconMaxIcon IconreconnectionIcon IconattemptsIcon IconreachedIcon. IconUsingIcon IconmockIcon IcondataIcon.');
-      IconsetErrorIcon('IconMCPIcon IconserverIcon IconunavailableIcon - IconusingIcon IconmockIcon Icondata');
-      IconloadMockDataIcon();
-      IconsetLoadingIcon(IconfalseIcon);
-      IconreturnIcon;
+  // Connect to MCP WebSocket server on port 9876 with retry logic
+  const connectToMCP = React.useCallback(async () => {
+    // Check if we've exceeded max reconnection attempts
+    if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+      console.log('Max reconnection attempts reached. Using mock data.');
+      setError('MCP server unavailable - using mock data');
+      loadMockData();
+      setLoading(false);
+      return;
     }
 
-    // IconCloseIcon IconexistingIcon IconconnectionIcon IconifIcon IconanyIcon
-    IconifIcon (IconmcpWebSocketIcon && IconmcpWebSocketIcon.IconreadyStateIcon !== IconWebSocketIcon.IconCLOSEDIcon) {
-      IconmcpWebSocketIcon.IconcloseIcon();
+    // Close existing connection if any
+    if (mcpWebSocket && mcpWebSocket.readyState !== WebSocket.CLOSED) {
+      mcpWebSocket.close();
     }
 
-    IcontryIcon {
-      IconsetLoadingIcon(IcontrueIcon);
-      IconsetErrorIcon(IconnullIcon);
+    try {
+      setLoading(true);
+      setError(null);
 
-      // IconInitializeIcon IconWebSocketIcon IconconnectionIcon IcontoIcon IconMCPIcon IconserverIcon
-      IconconstIcon IconmcpWsIcon = IconnewIcon IconWebSocketIcon('IconwsIcon://IconlocalhostIcon:Icon9876Icon/Iconmcp');
-      IconsetMcpWebSocketIcon(IconmcpWsIcon);
+      // Initialize WebSocket connection to MCP server
+      const mcpWs = new WebSocket('ws://localhost:9876/mcp');
+      setMcpWebSocket(mcpWs);
       
-      IconmcpWsIcon.IcononopenIcon = () => {
-        IconconsoleIcon.IconlogIcon('IconConnectedIcon IcontoIcon IconMCPIcon Iconserver');
-        IconsetReconnectAttemptsIcon(Icon0Icon); // IconResetIcon IconattemptsIcon IcononIcon IconsuccessfulIcon IconconnectionIcon
-        // IconRequestIcon IconagentIcon IconstatusIcon
-        IconmcpWsIcon.IconsendIcon(IconJSONIcon.IconstringifyIcon({
-          IcontypeIcon: 'Iconget_agents_status',
-          IcontimestampIcon: IconnewIcon IconDateIcon().IcontoISOStringIcon(),
+      mcpWs.onopen = () => {
+        console.log('Connected to MCP server');
+        setReconnectAttempts(0); // Reset attempts on successful connection
+        // Request agent status
+        mcpWs.send(JSON.stringify({
+          type: 'get_agents_status',
+          timestamp: new Date().toISOString(),
         }));
       };
 
-      IconmcpWsIcon.IcononmessageIcon = (IconeventIcon) => {
-        IconconstIcon IconmessageIcon = IconJSONIcon.IconparseIcon(IconeventIcon.IcondataIcon);
-        IconhandleMCPMessageIcon(IconmessageIcon);
+      mcpWs.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        handleMCPMessage(message);
       };
 
-      IconmcpWsIcon.IcononerrorIcon = (IconerrorIcon) => {
-        IconconsoleIcon.IconerrorIcon('IconMCPIcon IconWebSocketIcon IconerrorIcon:', IconerrorIcon);
-        IconsetErrorIcon('IconMCPIcon IconconnectionIcon IconerrorIcon - IconwillIcon Iconretry');
+      mcpWs.onerror = (error) => {
+        console.error('MCP WebSocket error:', error);
+        setError('MCP connection error - will retry');
       };
 
-      IconmcpWsIcon.IcononcloseIcon = (IconeventIcon) => {
-        IconconsoleIcon.IconlogIcon('IconMCPIcon IconWebSocketIcon IconconnectionIcon IconclosedIcon:', IconeventIcon.IconcodeIcon, IconeventIcon.IconreasonIcon);
-        IconsetMcpWebSocketIcon(IconnullIcon);
+      mcpWs.onclose = (event) => {
+        console.log('MCP WebSocket connection closed:', event.code, event.reason);
+        setMcpWebSocket(null);
         
-        // IconOnlyIcon IconretryIcon IconifIcon IconautoRefreshIcon IconisIcon IconenabledIcon IconandIcon IconweIcon Iconhaven'IcontIcon IconexceededIcon IconmaxIcon IconattemptsIcon
-        IconifIcon (IconautoRefreshIcon && IconreconnectAttemptsIcon <IconIconIcon IconMAX_RECONNECT_ATTEMPTSIcon) {
-          IconconstIcon IcondelayIcon = IconRECONNECT_DELAY_BASEIcon * IconMathIcon.IconpowIcon(Icon2Icon, IconreconnectAttemptsIcon); // IconExponentialIcon IconbackoffIcon
-          IconconsoleIcon.IconlogIcon(`IconReconnectingIcon IconinIcon ${IcondelayIcon/Icon1000Icon} IconsecondsIcon... (IconattemptIcon ${IconreconnectAttemptsIcon + Icon1Icon}/${IconMAX_RECONNECT_ATTEMPTSIcon})`);
-          IconsetReconnectAttemptsIcon(IconprevIcon => IconprevIcon + Icon1Icon);
-          IconsetTimeoutIcon(() => {
-            IconconnectToMCPIcon();
-          }, IcondelayIcon);
-        } IconelseIcon IconifIcon (IconreconnectAttemptsIcon >= IconMAX_RECONNECT_ATTEMPTSIcon) {
-          IconsetErrorIcon('IconMCPIcon IconserverIcon IconunavailableIcon - IconusingIcon IconmockIcon Icondata');
-          IconloadMockDataIcon();
+        // Only retry if autoRefresh is enabled and we haven't exceeded max attempts
+        if (autoRefresh && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+          const delay = RECONNECT_DELAY_BASE * Math.pow(2, reconnectAttempts); // Exponential backoff
+          console.log(`Reconnecting in ${delay/1000} seconds... (attempt ${reconnectAttempts + 1}/${MAX_RECONNECT_ATTEMPTS})`);
+          setReconnectAttempts(prev => prev + 1);
+          setTimeout(() => {
+            connectToMCP();
+          }, delay);
+        } else if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+          setError('MCP server unavailable - using mock data');
+          loadMockData();
         }
       };
 
-    } IconcatchIcon (IconerrIcon: IconanyIcon) {
-      IconconsoleIcon.IconerrorIcon('IconFailedIcon IcontoIcon IconcreateIcon IconWebSocketIcon IconconnectionIcon:', IconerrIcon);
-      IconsetErrorIcon(IconerrIcon.IconmessageIcon || 'IconFailedIcon IcontoIcon IconconnectIcon IcontoIcon IconMCPIcon Iconserver');
-      IconsetMcpWebSocketIcon(IconnullIcon);
+    } catch (err: any) {
+      console.error('Failed to create WebSocket connection:', err);
+      setError(err.message || 'Failed to connect to MCP server');
+      setMcpWebSocket(null);
       
-      // IconUseIcon IconmockIcon IcondataIcon IconasIcon IconfallbackIcon
-      IconifIcon (IconreconnectAttemptsIcon >= IconMAX_RECONNECT_ATTEMPTSIcon - Icon1Icon) {
-        IconloadMockDataIcon();
+      // Use mock data as fallback
+      if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS - 1) {
+        loadMockData();
       }
-    } IconfinallyIcon {
-      IconsetLoadingIcon(IconfalseIcon);
+    } finally {
+      setLoading(false);
     }
-  }, [IconautoRefreshIcon, IconreconnectAttemptsIcon, IconmcpWebSocketIcon]);
+  }, [autoRefresh, reconnectAttempts, mcpWebSocket]);
 
-  // IconHandleIcon IconMCPIcon IconmessagesIcon
-  IconconstIcon IconhandleMCPMessageIcon = (IconmessageIcon: IconanyIcon) => {
-    IconswitchIcon (IconmessageIcon.IcontypeIcon) {
-      IconcaseIcon 'Iconagents_status':
-        IconifIcon (IconmessageIcon.IconagentsIcon) {
-          IconsetAgentsIcon(IconmessageIcon.IconagentsIcon);
+  // Handle MCP messages
+  const handleMCPMessage = (message: any) => {
+    switch (message.type) {
+      case 'agents_status':
+        if (message.agents) {
+          setAgents(message.agents);
         }
-        IconbreakIcon;
-      IconcaseIcon 'Iconagent_update':
-        IconsetAgentsIcon(IconprevAgentsIcon =>
-          IconprevAgentsIcon.IconmapIcon(IconagentIcon =>
-            IconagentIcon.IconidIcon === IconmessageIcon.IconagentIdIcon
-              ? { ...IconagentIcon, ...IconmessageIcon.IconupdatesIcon }
-              : IconagentIcon
+        break;
+      case 'agent_update':
+        setAgents(prevAgents =>
+          prevAgents.map(agent =>
+            agent.id === message.agentId
+              ? { ...agent, ...message.updates }
+              : agent
           )
         );
-        IconbreakIcon;
-      IconcaseIcon 'Icontask_progress':
-        IconsetAgentsIcon(IconprevAgentsIcon =>
-          IconprevAgentsIcon.IconmapIcon(IconagentIcon =>
-            IconagentIcon.IconidIcon === IconmessageIcon.IconagentIdIcon
+        break;
+      case 'task_progress':
+        setAgents(prevAgents =>
+          prevAgents.map(agent =>
+            agent.id === message.agentId
               ? { 
-                  ...IconagentIcon, 
-                  IconcurrentTaskIcon: IconmessageIcon.IcontaskIcon,
-                  IconstatusIcon: "Iconworking"
+                  ...agent, 
+                  currentTask: message.task,
+                  status: "working"
                 }
-              : IconagentIcon
+              : agent
           )
         );
-        IconbreakIcon;
-      IconcaseIcon 'Icontask_completed':
-        IconsetAgentsIcon(IconprevAgentsIcon =>
-          IconprevAgentsIcon.IconmapIcon(IconagentIcon =>
-            IconagentIcon.IconidIcon === IconmessageIcon.IconagentIdIcon
+        break;
+      case 'task_completed':
+        setAgents(prevAgents =>
+          prevAgents.map(agent =>
+            agent.id === message.agentId
               ? { 
-                  ...IconagentIcon, 
-                  IconcurrentTaskIcon: IconundefinedIcon,
-                  IconstatusIcon: "Iconactive",
-                  IcontasksCompletedIcon: IconagentIcon.IcontasksCompletedIcon + Icon1Icon,
-                  IconlastActivityIcon: IconnewIcon IconDateIcon().IcontoISOStringIcon(),
+                  ...agent, 
+                  currentTask: undefined,
+                  status: "active",
+                  tasksCompleted: agent.tasksCompleted + 1,
+                  lastActivity: new Date().toISOString(),
                 }
-              : IconagentIcon
+              : agent
           )
         );
-        IconbreakIcon;
-      IconcaseIcon 'Iconerror':
-        IcondispatchIcon(IconaddNotificationIcon({
-          IcontypeIcon: 'Iconerror',
-          IconmessageIcon: `IconMCPIcon IconIconCircleXIcon: ${IconmessageIcon.IconerrorIcon}`,
+        break;
+      case 'error':
+        dispatch(addNotification({
+          type: 'error',
+          message: `MCP Error: ${message.error}`,
         }));
-        IconbreakIcon;
-      IcondefaultIcon:
-        // IconAddIcon IcontoIcon IconmessageIcon IconlogIcon
-        IconsetMessagesIcon(IconprevMessagesIcon => [
+        break;
+      default:
+        // Add to message log
+        setMessages(prevMessages => [
           {
-            IconidIcon: IconDateIcon.IconnowIcon().IcontoStringIcon(),
-            IcontypeIcon: IconmessageIcon.IcontypeIcon,
-            IconagentIdIcon: IconmessageIcon.IconagentIdIcon || 'Iconsystem',
-            IconcontentIcon: IconmessageIcon.IconcontentIcon || IconJSONIcon.IconstringifyIcon(IconmessageIcon),
-            IcontimestampIcon: IconnewIcon IconDateIcon().IcontoISOStringIcon(),
-            IcondataIcon: IconmessageIcon,
+            id: Date.now().toString(),
+            type: message.type,
+            agentId: message.agentId || 'system',
+            content: message.content || JSON.stringify(message),
+            timestamp: new Date().toISOString(),
+            data: message,
           },
-          ...IconprevMessagesIcon.IconsliceIcon(Icon0Icon, Icon99Icon), // IconKeepIcon IconlastIcon Icon100Icon IconmessagesIcon
+          ...prevMessages.slice(0, 99), // Keep last 100 messages
         ]);
-        IconbreakIcon;
+        break;
     }
   };
 
-  // IconLoadIcon IconmockIcon IcondataIcon IconwhenIcon IconMCPIcon IconisIcon IconnotIcon IconavailableIcon
-  IconconstIcon IconloadMockDataIcon = () => {
-    IconconstIcon IconmockAgentsIcon: IconMCPAgentIcon[] = [
+  // Load mock data when MCP is not available
+  const loadMockData = () => {
+    const mockAgents: MCPAgent[] = [
       {
-        IconidIcon: "Iconsupervisor",
-        IconnameIcon: "IconSupervisorIcon IconAgent",
-        IcontypeIcon: "Iconsupervisor",
-        IconstatusIcon: "Iconactive",
-        IconlastActivityIcon: IconnewIcon IconDateIcon().IcontoISOStringIcon(),
-        IcontasksCompletedIcon: Icon156Icon,
-        IconavgResponseTimeIcon: Icon245Icon,
-        IconsuccessRateIcon: Icon98Icon.Icon5Icon,
-        IconmemoryUsageIcon: Icon68Icon,
-        IconcpuUsageIcon: Icon42Icon,
-        IconcapabilitiesIcon: ["Iconorchestration", "Icontask_routing", "Iconerror_handling"],
-        IconmetricsIcon: IconArrayIcon.IconfromIcon({ IconlengthIcon: Icon10Icon }, (Icon_Icon, IconiIcon) => ({
-          IcontimestampIcon: IconnewIcon IconDateIcon(IconDateIcon.IconnowIcon() - IconiIcon * Icon60000Icon).IcontoISOStringIcon(),
-          IconresponseTimeIcon: IconMathIcon.IconfloorIcon(IconMathIcon.IconrandomIcon() * Icon500Icon) + Icon200Icon,
-          IconmemoryUsageIcon: IconMathIcon.IconfloorIcon(IconMathIcon.IconrandomIcon() * Icon20Icon) + Icon60Icon,
-          IconcpuUsageIcon: IconMathIcon.IconfloorIcon(IconMathIcon.IconrandomIcon() * Icon30Icon) + Icon30Icon,
+        id: "supervisor",
+        name: "Supervisor Agent",
+        type: "supervisor",
+        status: "active",
+        lastActivity: new Date().toISOString(),
+        tasksCompleted: 156,
+        avgResponseTime: 245,
+        successRate: 98.5,
+        memoryUsage: 68,
+        cpuUsage: 42,
+        capabilities: ["orchestration", "task_routing", "error_handling"],
+        metrics: Array.from({ length: 10 }, (_, i) => ({
+          timestamp: new Date(Date.now() - i * 60000).toISOString(),
+          responseTime: Math.floor(Math.random() * 500) + 200,
+          memoryUsage: Math.floor(Math.random() * 20) + 60,
+          cpuUsage: Math.floor(Math.random() * 30) + 30,
         })),
       },
       {
-        IconidIcon: "Iconcontent",
-        IconnameIcon: "IconContentIcon IconGenerator",
-        IcontypeIcon: "Iconcontent",
-        IconstatusIcon: "Iconworking",
-        IconlastActivityIcon: IconnewIcon IconDateIcon().IcontoISOStringIcon(),
-        IcontasksCompletedIcon: Icon89Icon,
-        IconavgResponseTimeIcon: Icon1200Icon,
-        IconsuccessRateIcon: Icon94Icon.Icon2Icon,
-        IconmemoryUsageIcon: Icon85Icon,
-        IconcpuUsageIcon: Icon78Icon,
-        IconcurrentTaskIcon: {
-          IconidIcon: "Icontask_001",
-          IcontypeIcon: "Icongenerate_lesson",
-          IconprogressIcon: Icon65Icon,
-          IconstartedAtIcon: IconnewIcon IconDateIcon(IconDateIcon.IconnowIcon() - Icon120000Icon).IcontoISOStringIcon(),
+        id: "content",
+        name: "Content Generator",
+        type: "content",
+        status: "working",
+        lastActivity: new Date().toISOString(),
+        tasksCompleted: 89,
+        avgResponseTime: 1200,
+        successRate: 94.2,
+        memoryUsage: 85,
+        cpuUsage: 78,
+        currentTask: {
+          id: "task_001",
+          type: "generate_lesson",
+          progress: 65,
+          startedAt: new Date(Date.now() - 120000).toISOString(),
         },
-        IconcapabilitiesIcon: ["Iconlesson_generation", "Iconcontent_creation", "Iconcurriculum_design"],
-        IconmetricsIcon: IconArrayIcon.IconfromIcon({ IconlengthIcon: Icon10Icon }, (Icon_Icon, IconiIcon) => ({
-          IcontimestampIcon: IconnewIcon IconDateIcon(IconDateIcon.IconnowIcon() - IconiIcon * Icon60000Icon).IcontoISOStringIcon(),
-          IconresponseTimeIcon: IconMathIcon.IconfloorIcon(IconMathIcon.IconrandomIcon() * Icon1000Icon) + Icon800Icon,
-          IconmemoryUsageIcon: IconMathIcon.IconfloorIcon(IconMathIcon.IconrandomIcon() * Icon25Icon) + Icon70Icon,
-          IconcpuUsageIcon: IconMathIcon.IconfloorIcon(IconMathIcon.IconrandomIcon() * Icon40Icon) + Icon60Icon,
+        capabilities: ["lesson_generation", "content_creation", "curriculum_design"],
+        metrics: Array.from({ length: 10 }, (_, i) => ({
+          timestamp: new Date(Date.now() - i * 60000).toISOString(),
+          responseTime: Math.floor(Math.random() * 1000) + 800,
+          memoryUsage: Math.floor(Math.random() * 25) + 70,
+          cpuUsage: Math.floor(Math.random() * 40) + 60,
         })),
       },
       {
-        IconidIcon: "Iconquiz",
-        IconnameIcon: "IconIconQuizIcon IconAgent",
-        IcontypeIcon: "Iconquiz",
-        IconstatusIcon: "Iconidle",
-        IconlastActivityIcon: IconnewIcon IconDateIcon(IconDateIcon.IconnowIcon() - Icon300000Icon).IcontoISOStringIcon(),
-        IcontasksCompletedIcon: Icon234Icon,
-        IconavgResponseTimeIcon: Icon180Icon,
-        IconsuccessRateIcon: Icon96Icon.Icon8Icon,
-        IconmemoryUsageIcon: Icon45Icon,
-        IconcpuUsageIcon: Icon25Icon,
-        IconcapabilitiesIcon: ["Iconquiz_generation", "Iconassessment_creation", "Icongrading"],
-        IconmetricsIcon: IconArrayIcon.IconfromIcon({ IconlengthIcon: Icon10Icon }, (Icon_Icon, IconiIcon) => ({
-          IcontimestampIcon: IconnewIcon IconDateIcon(IconDateIcon.IconnowIcon() - IconiIcon * Icon60000Icon).IcontoISOStringIcon(),
-          IconresponseTimeIcon: IconMathIcon.IconfloorIcon(IconMathIcon.IconrandomIcon() * Icon300Icon) + Icon150Icon,
-          IconmemoryUsageIcon: IconMathIcon.IconfloorIcon(IconMathIcon.IconrandomIcon() * Icon15Icon) + Icon40Icon,
-          IconcpuUsageIcon: IconMathIcon.IconfloorIcon(IconMathIcon.IconrandomIcon() * Icon20Icon) + Icon20Icon,
+        id: "quiz",
+        name: "Quiz Agent",
+        type: "quiz",
+        status: "idle",
+        lastActivity: new Date(Date.now() - 300000).toISOString(),
+        tasksCompleted: 234,
+        avgResponseTime: 180,
+        successRate: 96.8,
+        memoryUsage: 45,
+        cpuUsage: 25,
+        capabilities: ["quiz_generation", "assessment_creation", "grading"],
+        metrics: Array.from({ length: 10 }, (_, i) => ({
+          timestamp: new Date(Date.now() - i * 60000).toISOString(),
+          responseTime: Math.floor(Math.random() * 300) + 150,
+          memoryUsage: Math.floor(Math.random() * 15) + 40,
+          cpuUsage: Math.floor(Math.random() * 20) + 20,
         })),
       },
       {
-        IconidIcon: "Iconterrain",
-        IconnameIcon: "IconIconTerrainIcon IconBuilder",
-        IcontypeIcon: "Iconterrain",
-        IconstatusIcon: "Iconactive",
-        IconlastActivityIcon: IconnewIcon IconDateIcon(IconDateIcon.IconnowIcon() - Icon60000Icon).IcontoISOStringIcon(),
-        IcontasksCompletedIcon: Icon67Icon,
-        IconavgResponseTimeIcon: Icon3400Icon,
-        IconsuccessRateIcon: Icon91Icon.Icon5Icon,
-        IconmemoryUsageIcon: Icon92Icon,
-        IconcpuUsageIcon: Icon85Icon,
-        IconcapabilitiesIcon: ["Icon3d_modeling", "Iconenvironment_design", "Iconworld_building"],
-        IconmetricsIcon: IconArrayIcon.IconfromIcon({ IconlengthIcon: Icon10Icon }, (Icon_Icon, IconiIcon) => ({
-          IcontimestampIcon: IconnewIcon IconDateIcon(IconDateIcon.IconnowIcon() - IconiIcon * Icon60000Icon).IcontoISOStringIcon(),
-          IconresponseTimeIcon: IconMathIcon.IconfloorIcon(IconMathIcon.IconrandomIcon() * Icon2000Icon) + Icon2500Icon,
-          IconmemoryUsageIcon: IconMathIcon.IconfloorIcon(IconMathIcon.IconrandomIcon() * Icon20Icon) + Icon80Icon,
-          IconcpuUsageIcon: IconMathIcon.IconfloorIcon(IconMathIcon.IconrandomIcon() * Icon30Icon) + Icon70Icon,
+        id: "terrain",
+        name: "Terrain Builder",
+        type: "terrain",
+        status: "active",
+        lastActivity: new Date(Date.now() - 60000).toISOString(),
+        tasksCompleted: 67,
+        avgResponseTime: 3400,
+        successRate: 91.5,
+        memoryUsage: 92,
+        cpuUsage: 85,
+        capabilities: ["3d_modeling", "environment_design", "world_building"],
+        metrics: Array.from({ length: 10 }, (_, i) => ({
+          timestamp: new Date(Date.now() - i * 60000).toISOString(),
+          responseTime: Math.floor(Math.random() * 2000) + 2500,
+          memoryUsage: Math.floor(Math.random() * 20) + 80,
+          cpuUsage: Math.floor(Math.random() * 30) + 70,
         })),
       },
       {
-        IconidIcon: "Iconscript",
-        IconnameIcon: "IconScriptIcon IconAgent",
-        IcontypeIcon: "Iconscript",
-        IconstatusIcon: "Iconerror",
-        IconlastActivityIcon: IconnewIcon IconDateIcon(IconDateIcon.IconnowIcon() - Icon180000Icon).IcontoISOStringIcon(),
-        IcontasksCompletedIcon: Icon145Icon,
-        IconavgResponseTimeIcon: Icon890Icon,
-        IconsuccessRateIcon: Icon89Icon.Icon2Icon,
-        IconmemoryUsageIcon: Icon58Icon,
-        IconcpuUsageIcon: Icon35Icon,
-        IconcapabilitiesIcon: ["Iconlua_scripting", "Iconcode_generation", "Icondebugging"],
-        IconmetricsIcon: IconArrayIcon.IconfromIcon({ IconlengthIcon: Icon10Icon }, (Icon_Icon, IconiIcon) => ({
-          IcontimestampIcon: IconnewIcon IconDateIcon(IconDateIcon.IconnowIcon() - IconiIcon * Icon60000Icon).IcontoISOStringIcon(),
-          IconresponseTimeIcon: IconMathIcon.IconfloorIcon(IconMathIcon.IconrandomIcon() * Icon800Icon) + Icon600Icon,
-          IconmemoryUsageIcon: IconMathIcon.IconfloorIcon(IconMathIcon.IconrandomIcon() * Icon20Icon) + Icon50Icon,
-          IconcpuUsageIcon: IconMathIcon.IconfloorIcon(IconMathIcon.IconrandomIcon() * Icon25Icon) + Icon30Icon,
+        id: "script",
+        name: "Script Agent",
+        type: "script",
+        status: "error",
+        lastActivity: new Date(Date.now() - 180000).toISOString(),
+        tasksCompleted: 145,
+        avgResponseTime: 890,
+        successRate: 89.2,
+        memoryUsage: 58,
+        cpuUsage: 35,
+        capabilities: ["lua_scripting", "code_generation", "debugging"],
+        metrics: Array.from({ length: 10 }, (_, i) => ({
+          timestamp: new Date(Date.now() - i * 60000).toISOString(),
+          responseTime: Math.floor(Math.random() * 800) + 600,
+          memoryUsage: Math.floor(Math.random() * 20) + 50,
+          cpuUsage: Math.floor(Math.random() * 25) + 30,
         })),
       },
       {
-        IconidIcon: "Iconreview",
-        IconnameIcon: "IconReviewIcon IconAgent",
-        IcontypeIcon: "Iconreview",
-        IconstatusIcon: "Iconactive",
-        IconlastActivityIcon: IconnewIcon IconDateIcon(IconDateIcon.IconnowIcon() - Icon30000Icon).IcontoISOStringIcon(),
-        IcontasksCompletedIcon: Icon201Icon,
-        IconavgResponseTimeIcon: Icon320Icon,
-        IconsuccessRateIcon: Icon97Icon.Icon1Icon,
-        IconmemoryUsageIcon: Icon52Icon,
-        IconcpuUsageIcon: Icon28Icon,
-        IconcapabilitiesIcon: ["Iconcontent_review", "Iconquality_assurance", "Iconvalidation"],
-        IconmetricsIcon: IconArrayIcon.IconfromIcon({ IconlengthIcon: Icon10Icon }, (Icon_Icon, IconiIcon) => ({
-          IcontimestampIcon: IconnewIcon IconDateIcon(IconDateIcon.IconnowIcon() - IconiIcon * Icon60000Icon).IcontoISOStringIcon(),
-          IconresponseTimeIcon: IconMathIcon.IconfloorIcon(IconMathIcon.IconrandomIcon() * Icon400Icon) + Icon250Icon,
-          IconmemoryUsageIcon: IconMathIcon.IconfloorIcon(IconMathIcon.IconrandomIcon() * Icon15Icon) + Icon45Icon,
-          IconcpuUsageIcon: IconMathIcon.IconfloorIcon(IconMathIcon.IconrandomIcon() * Icon20Icon) + Icon25Icon,
+        id: "review",
+        name: "Review Agent",
+        type: "review",
+        status: "active",
+        lastActivity: new Date(Date.now() - 30000).toISOString(),
+        tasksCompleted: 201,
+        avgResponseTime: 320,
+        successRate: 97.1,
+        memoryUsage: 52,
+        cpuUsage: 28,
+        capabilities: ["content_review", "quality_assurance", "validation"],
+        metrics: Array.from({ length: 10 }, (_, i) => ({
+          timestamp: new Date(Date.now() - i * 60000).toISOString(),
+          responseTime: Math.floor(Math.random() * 400) + 250,
+          memoryUsage: Math.floor(Math.random() * 15) + 45,
+          cpuUsage: Math.floor(Math.random() * 20) + 25,
         })),
       },
     ];
 
-    IconsetAgentsIcon(IconmockAgentsIcon);
+    setAgents(mockAgents);
   };
 
-  // IconInitialIcon IconconnectionIcon IconwithIcon IconcleanupIcon
-  IconuseEffectIcon(() => {
-    IconletIcon IconmountedIcon = IcontrueIcon;
+  // Initial connection with cleanup
+  useEffect(() => {
+    let mounted = true;
     
-    // IconOnlyIcon IconconnectIcon IconifIcon IconcomponentIcon IconisIcon IconmountedIcon IconandIcon IconnoIcon IconexistingIcon IconconnectionIcon
-    IconifIcon (IconmountedIcon && !IconmcpWebSocketIcon) {
-      IconconnectToMCPIcon();
+    // Only connect if component is mounted and no existing connection
+    if (mounted && !mcpWebSocket) {
+      connectToMCP();
     }
     
-    // IconCleanupIcon IcononIcon IconunmountIcon
-    IconreturnIcon () => {
-      IconmountedIcon = IconfalseIcon;
-      IconifIcon (IconmcpWebSocketIcon && IconmcpWebSocketIcon.IconreadyStateIcon !== IconWebSocketIcon.IconCLOSEDIcon) {
-        IconmcpWebSocketIcon.IconcloseIcon();
+    // Cleanup on unmount
+    return () => {
+      mounted = false;
+      if (mcpWebSocket && mcpWebSocket.readyState !== WebSocket.CLOSED) {
+        mcpWebSocket.close();
       }
     };
-  }, []); // IconRemoveIcon IconconnectToMCPIcon IconfromIcon IcondependenciesIcon IcontoIcon IconavoidIcon IconreconnectionIcon IconloopsIcon
+  }, []); // Remove connectToMCP from dependencies to avoid reconnection loops
 
-  // IconRealIcon-IcontimeIcon IconupdatesIcon IconviaIcon IconregularIcon IconWebSocketIcon
-  IconuseEffectIcon(() => {
-    IconifIcon (!IconisConnectedIcon || !IconautoRefreshIcon) IconreturnIcon;
+  // Real-time updates via regular WebSocket
+  useEffect(() => {
+    if (!isConnected || !autoRefresh) return;
 
-    IconconstIcon IconsubscriptionIdIcon = IconsubscribeToChannelIcon('Iconmcp_agents', {
-      'Iconagents_status': (IconmessageIcon: IconanyIcon) => IconhandleMCPMessageIcon({ IcontypeIcon: 'Iconagents_status', ...IconmessageIcon }),
-      'Iconagent_update': (IconmessageIcon: IconanyIcon) => IconhandleMCPMessageIcon({ IcontypeIcon: 'Iconagent_update', ...IconmessageIcon }),
-      'Icontask_progress': (IconmessageIcon: IconanyIcon) => IconhandleMCPMessageIcon({ IcontypeIcon: 'Icontask_progress', ...IconmessageIcon }),
-      'Icontask_completed': (IconmessageIcon: IconanyIcon) => IconhandleMCPMessageIcon({ IcontypeIcon: 'Icontask_completed', ...IconmessageIcon }),
-      'Iconerror': (IconmessageIcon: IconanyIcon) => IconhandleMCPMessageIcon({ IcontypeIcon: 'Iconerror', ...IconmessageIcon })
+    const subscriptionId = subscribe('mcp_agents', (message: any) => {
+      handleMCPMessage(message);
     });
 
-    IconreturnIcon () => {
-      IconunsubscribeFromChannelIcon(IconsubscriptionIdIcon);
+    return () => {
+      unsubscribe(subscriptionId);
     };
-  }, [IconisConnectedIcon, IconautoRefreshIcon, IconsubscribeToChannelIcon, IconunsubscribeFromChannelIcon]);
+  }, [isConnected, autoRefresh, subscribe, unsubscribe]);
 
-  // IconSendIcon IcontaskIcon IcontoIcon IconagentIcon
-  IconconstIcon IconhandleSendTaskIcon = IconasyncIcon () => {
-    IconifIcon (!IconselectedAgentIcon || !IcontaskTypeIcon || !IcontaskContentIcon) IconreturnIcon;
+  // Send task to agent
+  const handleSendTask = async () => {
+    if (!selectedAgent || !taskType || !taskContent) return;
 
-    IcontryIcon {
-      // IconSendIcon IcontaskIcon IconviaIcon IconWebSocketIcon IconorIcon IconMCPIcon
-      IconconstIcon IconmessageIcon = {
-        IcontypeIcon: 'Iconassign_task',
-        IconagentIdIcon: IconselectedAgentIcon.IconidIcon,
-        IcontaskIcon: {
-          IcontypeIcon: IcontaskTypeIcon,
-          IconcontentIcon: IcontaskContentIcon,
-          IcontimestampIcon: IconnewIcon IconDateIcon().IcontoISOStringIcon(),
+    try {
+      // Send task via WebSocket or MCP
+      const message = {
+        type: 'assign_task',
+        agentId: selectedAgent.id,
+        task: {
+          type: taskType,
+          content: taskContent,
+          timestamp: new Date().toISOString(),
         },
       };
 
-      IconifIcon (IconsendMessageIcon) {
-        (IconsendMessageIcon IconasIcon IconanyIcon)('Iconmcp_agents', IconmessageIcon);
+      if (sendMessage) {
+        (sendMessage as any)('mcp_agents', message);
       }
 
-      IcondispatchIcon(IconaddNotificationIcon({
-        IcontypeIcon: 'Iconsuccess',
-        IconmessageIcon: `IconTaskIcon IconsentIcon IcontoIcon ${IconselectedAgentIcon.IconnameIcon}`,
+      dispatch(addNotification({
+        type: 'success',
+        message: `Task sent to ${selectedAgent.name}`,
       }));
 
-      IconsetIsTaskDialogOpenIcon(IconfalseIcon);
-      IconsetTaskTypeIcon("");
-      IconsetTaskContentIcon("");
-    } IconcatchIcon (IconerrorIcon) {
-      IcondispatchIcon(IconaddNotificationIcon({
-        IcontypeIcon: 'Iconerror',
-        IconmessageIcon: 'IconFailedIcon IcontoIcon IconsendIcon IcontaskIcon IcontoIcon Iconagent',
+      setIsTaskDialogOpen(false);
+      setTaskType("");
+      setTaskContent("");
+    } catch (error) {
+      dispatch(addNotification({
+        type: 'error',
+        message: 'Failed to send task to agent',
       }));
     }
   };
 
-  IconconstIcon IcongetStatusColorIcon = (IconstatusIcon: IconstringIcon) => {
-    IconswitchIcon (IconstatusIcon) {
-      IconcaseIcon "Iconactive":
-        IconreturnIcon "Iconsuccess";
-      IconcaseIcon "Iconworking":
-        IconreturnIcon "Iconwarning";
-      IconcaseIcon "Iconidle":
-        IconreturnIcon "Icondefault";
-      IconcaseIcon "Iconerror":
-        IconreturnIcon "Iconerror";
-      IconcaseIcon "Iconoffline":
-        IconreturnIcon "Iconerror";
-      IcondefaultIcon:
-        IconreturnIcon "Icondefault";
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "active":
+        return "success";
+      case "working":
+        return "warning";
+      case "idle":
+        return "default";
+      case "error":
+        return "error";
+      case "offline":
+        return "error";
+      default:
+        return "default";
     }
   };
 
-  IconconstIcon IcongetStatusIconIcon = (IconstatusIcon: IconstringIcon) => {
-    IconswitchIcon (IconstatusIcon) {
-      IconcaseIcon "Iconactive":
-        IconreturnIcon <IconIconCircleCheckIcon IconcolorIcon="Icongreen" />;
-      IconcaseIcon "Iconworking":
-        IconreturnIcon <IconIconPlayerPlayIcon IconcolorIcon="Iconyellow" />;
-      IconcaseIcon "Iconidle":
-        IconreturnIcon <IconIconPlayerPauseIcon IconcolorIcon="Icondisabled" />;
-      IconcaseIcon "Iconerror":
-        IconreturnIcon <IconIconCircleXIcon IconcolorIcon="Iconred" />;
-      IconcaseIcon "Iconoffline":
-        IconreturnIcon <IconIconPlayerStopIcon IconcolorIcon="Iconred" />;
-      IcondefaultIcon:
-        IconreturnIcon <IconIconInfoCircleIcon />;
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "active":
+        return <CheckCircle color="success" />;
+      case "working":
+        return <PlayArrow color="warning" />;
+      case "idle":
+        return <Pause color="disabled" />;
+      case "error":
+        return <Error color="error" />;
+      case "offline":
+        return <Stop color="error" />;
+      default:
+        return <Info />;
     }
   };
 
-  IconifIcon (IconloadingIcon) {
-    IconreturnIcon (
-      <IconGridIcon IconcontainerIcon IconspacingIcon={Icon3Icon}>
-        {[Icon1Icon, Icon2Icon, Icon3Icon, Icon4Icon].IconmapIcon((IconitemIcon) => (
-          <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconmdIcon={Icon6Icon} IconlgIcon={Icon4Icon} IconkeyIcon={IconitemIcon}>
-            <IconCardIcon>
-              <IconCardContentIcon>
-                <IconSkeletonIcon IconvariantIcon="Icontext" IconheightIcon={Icon40Icon} />
-                <IconSkeletonIcon IconvariantIcon="Iconrectangular" IconheightIcon={Icon200Icon} />
-              <IconIconIcon/IconCardContentIcon>
-            <IconIconIcon/IconCardIcon>
-          <IconIconIcon/IconGridIcon>
+  if (loading) {
+    return (
+      <Grid container spacing={3}>
+        {[1, 2, 3, 4].map((item) => (
+          <Grid item xs={12} md={6} lg={4} key={item}>
+            <Card>
+              <CardContent>
+                <Skeleton variant="text" height={40} />
+                <Skeleton variant="rectangular" height={200} />
+              </CardContent>
+            </Card>
+          </Grid>
         ))}
-      <IconIconIcon/IconGridIcon>
+      </Grid>
     );
   }
 
-  IconreturnIcon (
-    <IconGridIcon IconcontainerIcon IconspacingIcon={Icon3Icon}>
-      {/* IconHeaderIcon */}
-      <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon}>
-        <IconCardIcon>
-          <IconCardContentIcon>
-            <IconStackIcon IcondirectionIcon="Iconrow" IconjustifyContentIcon="IconspaceIcon-Iconbetween" IconalignItemsIcon="Iconcenter" IconmbIcon={Icon2Icon}>
-              <IconTypographyIcon IconorderIcon={Icon5Icon} IconstyleIcon={{ IconfontWeightIcon: Icon600Icon }}>
-                IconMCPIcon IconAgentIcon IconDashboardIcon
-              <IconIconIcon/IconTypographyIcon>
-              <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon2Icon} IconalignItemsIcon="Iconcenter">
-                {IconmcpWebSocketIcon && IconmcpWebSocketIcon.IconreadyStateIcon === IconWebSocketIcon.IconOPENIcon ? (
-                  <IconChipIcon IconlabelIcon="IconMCPIcon IconConnected" IconcolorIcon="Icongreen" IconsizeIcon="Iconsmall" />
-                ) : IconreconnectAttemptsIcon > Icon0Icon ? (
-                  <IconChipIcon 
-                    IconlabelIcon={`IconReconnectingIcon... (${IconreconnectAttemptsIcon}/${IconMAX_RECONNECT_ATTEMPTSIcon})`} 
-                    IconcolorIcon="Iconyellow" 
-                    IconsizeIcon="Iconsmall" 
+  return (
+    <Grid container spacing={3}>
+      {/* Header */}
+      <Grid item xs={12}>
+        <Card>
+          <CardContent>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+              <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                MCP Agent Dashboard
+              </Typography>
+              <Stack direction="row" spacing={2} alignItems="center">
+                {mcpWebSocket && mcpWebSocket.readyState === WebSocket.OPEN ? (
+                  <Chip label="MCP Connected" color="success" size="small" />
+                ) : reconnectAttempts > 0 ? (
+                  <Chip 
+                    label={`Reconnecting... (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`} 
+                    color="warning" 
+                    size="small" 
                   />
                 ) : (
-                  <IconChipIcon IconlabelIcon="IconMCPIcon IconOffline" IconcolorIcon="Icondefault" IconsizeIcon="Iconsmall" />
+                  <Chip label="MCP Offline" color="default" size="small" />
                 )}
-                <IconIconButtonIcon 
-                  IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => {
-                    IconsetReconnectAttemptsIcon(Icon0Icon);
-                    IconconnectToMCPIcon();
+                <IconButton 
+                  onClick={() => {
+                    setReconnectAttempts(0);
+                    connectToMCP();
                   }}
-                  IcondisabledIcon={!!(IconmcpWebSocketIcon && IconmcpWebSocketIcon.IconreadyStateIcon === IconWebSocketIcon.IconCONNECTINGIcon)}
+                  disabled={!!(mcpWebSocket && mcpWebSocket.readyState === WebSocket.CONNECTING)}
                 >
-                  <IconIconRefreshIcon />
-                <IconIconIcon/IconIconButtonIcon>
-              <IconIconIcon/IconStackIcon>
-            <IconIconIcon/IconStackIcon>
+                  <Refresh />
+                </IconButton>
+              </Stack>
+            </Stack>
 
-            {IconerrorIcon && (
-              <IconAlertIcon IconseverityIcon="Iconwarning" IconstyleIcon={{ IconmbIcon: Icon2Icon }}>
-                IconMCPIcon IconConnectionIcon IconIssueIcon: {IconerrorIcon} (IconUsingIcon IconmockIcon IcondataIcon)
-              <IconIconIcon/IconAlertIcon>
+            {error && (
+              <Alert severity="warning" sx={{ mb: 2 }}>
+                MCP Connection Issue: {error} (Using mock data)
+              </Alert>
             )}
 
-            {/* IconQuickIcon IconStatsIcon */}
-            <IconGridIcon IconcontainerIcon IconspacingIcon={Icon2Icon}>
-              <IconGridIcon IconitemIcon IconxsIcon={Icon6Icon} IconmdIcon={Icon3Icon}>
-                <IconPaperIcon IconstyleIcon={{ IconpIcon: Icon2Icon, IcontextAlignIcon: 'Iconcenter' }}>
-                  <IconTypographyIcon IconvariantIcon="Iconcaption" IconcolorIcon="IcontextIcon.Iconsecondary">
-                    IconActiveIcon IconAgentsIcon
-                  <IconIconIcon/IconTypographyIcon>
-                  <IconTypographyIcon IconorderIcon={Icon4Icon} IconstyleIcon={{ IconfontWeightIcon: Icon700Icon, IconcolorIcon: 'IconsuccessIcon.Iconmain' }}>
-                    {IconagentsIcon.IconfilterIcon(IconaIcon => IconaIcon.IconstatusIcon === "Iconactive" || IconaIcon.IconstatusIcon === "Iconworking").IconlengthIcon}
-                  <IconIconIcon/IconTypographyIcon>
-                <IconIconIcon/IconPaperIcon>
-              <IconIconIcon/IconGridIcon>
-              <IconGridIcon IconitemIcon IconxsIcon={Icon6Icon} IconmdIcon={Icon3Icon}>
-                <IconPaperIcon IconstyleIcon={{ IconpIcon: Icon2Icon, IcontextAlignIcon: 'Iconcenter' }}>
-                  <IconTypographyIcon IconvariantIcon="Iconcaption" IconcolorIcon="IcontextIcon.Iconsecondary">
-                    IconTasksIcon IconCompletedIcon
-                  <IconIconIcon/IconTypographyIcon>
-                  <IconTypographyIcon IconorderIcon={Icon4Icon} IconstyleIcon={{ IconfontWeightIcon: Icon700Icon, IconcolorIcon: 'IconprimaryIcon.Iconmain' }}>
-                    {IconagentsIcon.IconreduceIcon((IconsumIcon, IconagentIcon) => IconsumIcon + IconagentIcon.IcontasksCompletedIcon, Icon0Icon)}
-                  <IconIconIcon/IconTypographyIcon>
-                <IconIconIcon/IconPaperIcon>
-              <IconIconIcon/IconGridIcon>
-              <IconGridIcon IconitemIcon IconxsIcon={Icon6Icon} IconmdIcon={Icon3Icon}>
-                <IconPaperIcon IconstyleIcon={{ IconpIcon: Icon2Icon, IcontextAlignIcon: 'Iconcenter' }}>
-                  <IconTypographyIcon IconvariantIcon="Iconcaption" IconcolorIcon="IcontextIcon.Iconsecondary">
-                    IconAvgIcon IconResponseIcon IconTimeIcon
-                  <IconIconIcon/IconTypographyIcon>
-                  <IconTypographyIcon IconorderIcon={Icon4Icon} IconstyleIcon={{ IconfontWeightIcon: Icon700Icon, IconcolorIcon: 'IconinfoIcon.Iconmain' }}>
-                    {IconMathIcon.IconroundIcon(IconagentsIcon.IconreduceIcon((IconsumIcon, IconagentIcon) => IconsumIcon + IconagentIcon.IconavgResponseTimeIcon, Icon0Icon) / IconagentsIcon.IconlengthIcon)}IconmsIcon
-                  <IconIconIcon/IconTypographyIcon>
-                <IconIconIcon/IconPaperIcon>
-              <IconIconIcon/IconGridIcon>
-              <IconGridIcon IconitemIcon IconxsIcon={Icon6Icon} IconmdIcon={Icon3Icon}>
-                <IconPaperIcon IconstyleIcon={{ IconpIcon: Icon2Icon, IcontextAlignIcon: 'Iconcenter' }}>
-                  <IconTypographyIcon IconvariantIcon="Iconcaption" IconcolorIcon="IcontextIcon.Iconsecondary">
-                    IconSuccessIcon IconRateIcon
-                  <IconIconIcon/IconTypographyIcon>
-                  <IconTypographyIcon IconorderIcon={Icon4Icon} IconstyleIcon={{ IconfontWeightIcon: Icon700Icon, IconcolorIcon: 'IconwarningIcon.Iconmain' }}>
-                    {IconMathIcon.IconroundIcon(IconagentsIcon.IconreduceIcon((IconsumIcon, IconagentIcon) => IconsumIcon + IconagentIcon.IconsuccessRateIcon, Icon0Icon) / IconagentsIcon.IconlengthIcon)}%
-                  <IconIconIcon/IconTypographyIcon>
-                <IconIconIcon/IconPaperIcon>
-              <IconIconIcon/IconGridIcon>
-            <IconIconIcon/IconGridIcon>
-          <IconIconIcon/IconCardContentIcon>
-        <IconIconIcon/IconCardIcon>
-      <IconIconIcon/IconGridIcon>
+            {/* Quick Stats */}
+            <Grid container spacing={2}>
+              <Grid item xs={6} md={3}>
+                <Paper sx={{ p: 2, textAlign: 'center' }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Active Agents
+                  </Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 700, color: 'success.main' }}>
+                    {agents.filter(a => a.status === "active" || a.status === "working").length}
+                  </Typography>
+                </Paper>
+              </Grid>
+              <Grid item xs={6} md={3}>
+                <Paper sx={{ p: 2, textAlign: 'center' }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Tasks Completed
+                  </Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                    {agents.reduce((sum, agent) => sum + agent.tasksCompleted, 0)}
+                  </Typography>
+                </Paper>
+              </Grid>
+              <Grid item xs={6} md={3}>
+                <Paper sx={{ p: 2, textAlign: 'center' }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Avg Response Time
+                  </Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 700, color: 'info.main' }}>
+                    {Math.round(agents.reduce((sum, agent) => sum + agent.avgResponseTime, 0) / agents.length)}ms
+                  </Typography>
+                </Paper>
+              </Grid>
+              <Grid item xs={6} md={3}>
+                <Paper sx={{ p: 2, textAlign: 'center' }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Success Rate
+                  </Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 700, color: 'warning.main' }}>
+                    {Math.round(agents.reduce((sum, agent) => sum + agent.successRate, 0) / agents.length)}%
+                  </Typography>
+                </Paper>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+      </Grid>
 
-      {/* IconAgentIcon IconCardsIcon */}
-      {IconagentsIcon.IconmapIcon((IconagentIcon) => (
-        <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon} IconmdIcon={Icon6Icon} IconlgIcon={Icon4Icon} IconkeyIcon={IconagentIcon.IconidIcon}>
-          <IconCardIcon>
-            <IconCardContentIcon>
-              <IconStackIcon IconspacingIcon={Icon2Icon}>
-                {/* IconAgentIcon IconHeaderIcon */}
-                <IconStackIcon IcondirectionIcon="Iconrow" IconjustifyContentIcon="IconspaceIcon-Iconbetween" IconalignItemsIcon="Iconcenter">
-                  <IconStackIcon IcondirectionIcon="Iconrow" IconalignItemsIcon="Iconcenter" IconspacingIcon={Icon2Icon}>
-                    <IconAvatarIcon IconstyleIcon={{ IconbgcolorIcon: IconAGENT_COLORSIcon[IconagentIcon.IcontypeIcon] + 'Icon20', IconcolorIcon: IconAGENT_COLORSIcon[IconagentIcon.IcontypeIcon] }}>
-                      {IconAGENT_ICONSIcon[IconagentIcon.IcontypeIcon]}
-                    <IconIconIcon/IconAvatarIcon>
-                    <IconBoxIcon>
-                      <IconTypographyIcon IconorderIcon={Icon6Icon} IconstyleIcon={{ IconfontWeightIcon: Icon600Icon }}>
-                        {IconagentIcon.IconnameIcon}
-                      <IconIconIcon/IconTypographyIcon>
-                      <IconChipIcon 
-                        IconlabelIcon={IconagentIcon.IconstatusIcon} 
-                        IconsizeIcon="Iconsmall" 
-                        IconcolorIcon={IcongetStatusColorIcon(IconagentIcon.IconstatusIcon) IconasIcon IconanyIcon}
-                        IconiconIcon={IcongetStatusIconIcon(IconagentIcon.IconstatusIcon)}
+      {/* Agent Cards */}
+      {agents.map((agent) => (
+        <Grid item xs={12} md={6} lg={4} key={agent.id}>
+          <Card>
+            <CardContent>
+              <Stack spacing={2}>
+                {/* Agent Header */}
+                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                  <Stack direction="row" alignItems="center" spacing={2}>
+                    <Avatar sx={{ bgcolor: AGENT_COLORS[agent.type] + '20', color: AGENT_COLORS[agent.type] }}>
+                      {AGENT_ICONS[agent.type]}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                        {agent.name}
+                      </Typography>
+                      <Chip 
+                        label={agent.status} 
+                        size="small" 
+                        color={getStatusColor(agent.status) as any}
+                        icon={getStatusIcon(agent.status)}
                       />
-                    <IconIconIcon/IconBoxIcon>
-                  <IconIconIcon/IconStackIcon>
-                  <IconIconButtonIcon 
-                    IconsizeIcon="Iconsmall"
-                    IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => {
-                      IconsetSelectedAgentIcon(IconagentIcon);
-                      IconsetIsTaskDialogOpenIcon(IcontrueIcon);
+                    </Box>
+                  </Stack>
+                  <IconButton 
+                    size="small"
+                    onClick={() => {
+                      setSelectedAgent(agent);
+                      setIsTaskDialogOpen(true);
                     }}
                   >
-                    <IconIconSettingsIcon />
-                  <IconIconIcon/IconIconButtonIcon>
-                <IconIconIcon/IconStackIcon>
+                    <Settings />
+                  </IconButton>
+                </Stack>
 
-                {/* IconCurrentIcon IconTaskIcon */}
-                {IconagentIcon.IconcurrentTaskIcon && (
-                  <IconPaperIcon IconstyleIcon={{ IconpIcon: Icon2Icon, IconbgcolorIcon: 'IconwarningIcon.Iconlight', IconcolorIcon: 'IconwarningIcon.IconcontrastText' }}>
-                    <IconTypographyIcon IconvariantIcon="Iconsubtitle2" IcongutterBottomIcon>
-                      IconCurrentIcon IconTaskIcon: {IconagentIcon.IconcurrentTaskIcon.IcontypeIcon}
-                    <IconIconIcon/IconTypographyIcon>
-                    <IconLinearProgressIcon
-                      IconvariantIcon="Icondeterminate"
-                      IconvalueIcon={IconagentIcon.IconcurrentTaskIcon.IconprogressIcon}
-                      IconstyleIcon={{ IconmbIcon: Icon1Icon }}
+                {/* Current Task */}
+                {agent.currentTask && (
+                  <Paper sx={{ p: 2, bgcolor: 'warning.light', color: 'warning.contrastText' }}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Current Task: {agent.currentTask.type}
+                    </Typography>
+                    <LinearProgress
+                      variant="determinate"
+                      value={agent.currentTask.progress}
+                      sx={{ mb: 1 }}
                     />
-                    <IconTypographyIcon IconvariantIcon="Iconcaption">
-                      {IconagentIcon.IconcurrentTaskIcon.IconprogressIcon}% IconcompleteIcon • IconStartedIcon {IconnewIcon IconDateIcon(IconagentIcon.IconcurrentTaskIcon.IconstartedAtIcon).IcontoLocaleTimeStringIcon()}
-                    <IconIconIcon/IconTypographyIcon>
-                  <IconIconIcon/IconPaperIcon>
+                    <Typography variant="caption">
+                      {agent.currentTask.progress}% complete • Started {new Date(agent.currentTask.startedAt).toLocaleTimeString()}
+                    </Typography>
+                  </Paper>
                 )}
 
-                {/* IconAgentIcon IconStatsIcon */}
-                <IconGridIcon IconcontainerIcon IconspacingIcon={Icon2Icon}>
-                  <IconGridIcon IconitemIcon IconxsIcon={Icon6Icon}>
-                    <IconTypographyIcon IconvariantIcon="Iconcaption" IconcolorIcon="IcontextIcon.Iconsecondary">
-                      IconTasksIcon IconCompletedIcon
-                    <IconIconIcon/IconTypographyIcon>
-                    <IconTypographyIcon IconorderIcon={Icon6Icon} IconstyleIcon={{ IconfontWeightIcon: Icon600Icon }}>
-                      {IconagentIcon.IcontasksCompletedIcon}
-                    <IconIconIcon/IconTypographyIcon>
-                  <IconIconIcon/IconGridIcon>
-                  <IconGridIcon IconitemIcon IconxsIcon={Icon6Icon}>
-                    <IconTypographyIcon IconvariantIcon="Iconcaption" IconcolorIcon="IcontextIcon.Iconsecondary">
-                      IconSuccessIcon IconRateIcon
-                    <IconIconIcon/IconTypographyIcon>
-                    <IconTypographyIcon IconorderIcon={Icon6Icon} IconstyleIcon={{ IconfontWeightIcon: Icon600Icon }}>
-                      {IconagentIcon.IconsuccessRateIcon.IcontoFixedIcon(Icon1Icon)}%
-                    <IconIconIcon/IconTypographyIcon>
-                  <IconIconIcon/IconGridIcon>
-                  <IconGridIcon IconitemIcon IconxsIcon={Icon6Icon}>
-                    <IconTypographyIcon IconvariantIcon="Iconcaption" IconcolorIcon="IcontextIcon.Iconsecondary">
-                      IconResponseIcon IconTimeIcon
-                    <IconIconIcon/IconTypographyIcon>
-                    <IconTypographyIcon IconorderIcon={Icon6Icon} IconstyleIcon={{ IconfontWeightIcon: Icon600Icon }}>
-                      {IconagentIcon.IconavgResponseTimeIcon}IconmsIcon
-                    <IconIconIcon/IconTypographyIcon>
-                  <IconIconIcon/IconGridIcon>
-                  <IconGridIcon IconitemIcon IconxsIcon={Icon6Icon}>
-                    <IconTypographyIcon IconvariantIcon="Iconcaption" IconcolorIcon="IcontextIcon.Iconsecondary">
-                      IconIconMemoryIcon IconUsageIcon
-                    <IconIconIcon/IconTypographyIcon>
-                    <IconTypographyIcon IconorderIcon={Icon6Icon} IconstyleIcon={{ IconfontWeightIcon: Icon600Icon }}>
-                      {IconagentIcon.IconmemoryUsageIcon}%
-                    <IconIconIcon/IconTypographyIcon>
-                  <IconIconIcon/IconGridIcon>
-                <IconIconIcon/IconGridIcon>
+                {/* Agent Stats */}
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <Typography variant="caption" color="text.secondary">
+                      Tasks Completed
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      {agent.tasksCompleted}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography variant="caption" color="text.secondary">
+                      Success Rate
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      {agent.successRate.toFixed(1)}%
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography variant="caption" color="text.secondary">
+                      Response Time
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      {agent.avgResponseTime}ms
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography variant="caption" color="text.secondary">
+                      Memory Usage
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      {agent.memoryUsage}%
+                    </Typography>
+                  </Grid>
+                </Grid>
 
-                {/* IconPerformanceIcon IconChartIcon */}
-                <IconBoxIcon IconstyleIcon={{ IconheightIcon: Icon100Icon }}>
-                  <IconResponsiveContainerIcon>
-                    <IconLineChartIcon IcondataIcon={IconagentIcon.IconmetricsIcon.IconsliceIcon(-Icon10Icon)}>
-                      <IconLineIcon
-                        IcontypeIcon="Iconmonotone"
-                        IcondataKeyIcon="IconresponseTime"
-                        IconstrokeIcon={IconAGENT_COLORSIcon[IconagentIcon.IcontypeIcon]}
-                        IconstrokeWidthIcon={Icon2Icon}
-                        IcondotIcon={IconfalseIcon}
+                {/* Performance Chart */}
+                <Box sx={{ height: 100 }}>
+                  <ResponsiveContainer>
+                    <LineChart data={agent.metrics.slice(-10)}>
+                      <Line
+                        type="monotone"
+                        dataKey="responseTime"
+                        stroke={AGENT_COLORS[agent.type]}
+                        strokeWidth={2}
+                        dot={false}
                       />
-                      <IconTooltipIcon />
-                    <IconIconIcon/IconLineChartIcon>
-                  <IconIconIcon/IconResponsiveContainerIcon>
-                <IconIconIcon/IconBoxIcon>
+                      <Tooltip />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </Box>
 
-                {/* IconCapabilitiesIcon */}
-                <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon1Icon} IconflexWrapIcon="Iconwrap">
-                  {IconagentIcon.IconcapabilitiesIcon.IconsliceIcon(Icon0Icon, Icon3Icon).IconmapIcon((IconcapabilityIcon) => (
-                    <IconChipIcon
-                      IconkeyIcon={IconcapabilityIcon}
-                      IconlabelIcon={IconcapabilityIcon}
-                      IconsizeIcon="Iconsmall"
-                      IconvariantIcon="Iconoutline"
-                      IconstyleIcon={{ IconfontSizeIcon: 'Icon0Icon.Icon7rem' }}
+                {/* Capabilities */}
+                <Stack direction="row" spacing={1} flexWrap="wrap">
+                  {agent.capabilities.slice(0, 3).map((capability) => (
+                    <Chip
+                      key={capability}
+                      label={capability}
+                      size="small"
+                      variant="outlined"
+                      sx={{ fontSize: '0.7rem' }}
                     />
                   ))}
-                <IconIconIcon/IconStackIcon>
-              <IconIconIcon/IconStackIcon>
-            <IconIconIcon/IconCardContentIcon>
-          <IconIconIcon/IconCardIcon>
-        <IconIconIcon/IconGridIcon>
+                </Stack>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid>
       ))}
 
-      {/* IconMessageIcon IconLogIcon */}
-      {IconshowLogsIcon && (
-        <IconGridIcon IconitemIcon IconxsIcon={Icon12Icon}>
-          <IconCardIcon>
-            <IconCardContentIcon>
-              <IconTypographyIcon IconorderIcon={Icon6Icon} IconstyleIcon={{ IconfontWeightIcon: Icon600Icon, IconmbIcon: Icon2Icon }}>
-                IconMCPIcon IconMessageIcon IconLogIcon
-              <IconIconIcon/IconTypographyIcon>
-              <IconListIcon IconstyleIcon={{ IconmaxHeightIcon: Icon300Icon, IconoverflowIcon: 'Iconauto' }}>
-                {IconmessagesIcon.IconsliceIcon(Icon0Icon, Icon20Icon).IconmapIcon((IconmessageIcon, IconindexIcon) => (
-                  <IconReactIcon.IconFragmentIcon IconkeyIcon={IconmessageIcon.IconidIcon}>
-                    <IconListItemIcon>
-                      <IconListItemIconIcon>
-                        {IconAGENT_ICONSIcon[IconagentsIcon.IconfindIcon(IconaIcon => IconaIcon.IconidIcon === IconmessageIcon.IconagentIdIcon)?.IcontypeIcon || 'Iconsupervisor']}
-                      <IconIconIcon/IconListItemIconIcon>
-                      <IconListItemTextIcon
-                        IconprimaryIcon={IconmessageIcon.IconcontentIcon}
-                        IconsecondaryIcon={`${IconmessageIcon.IcontypeIcon} • ${IconnewIcon IconDateIcon(IconmessageIcon.IcontimestampIcon).IcontoLocaleTimeStringIcon()}`}
+      {/* Message Log */}
+      {showLogs && (
+        <Grid item xs={12}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                MCP Message Log
+              </Typography>
+              <List sx={{ maxHeight: 300, overflow: 'auto' }}>
+                {messages.slice(0, 20).map((message, index) => (
+                  <React.Fragment key={message.id}>
+                    <ListItem>
+                      <ListItemIcon>
+                        {AGENT_ICONS[agents.find(a => a.id === message.agentId)?.type || 'supervisor']}
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={message.content}
+                        secondary={`${message.type} • ${new Date(message.timestamp).toLocaleTimeString()}`}
                       />
-                    <IconIconIcon/IconListItemIcon>
-                    {IconindexIcon <IconIconIcon IconmessagesIcon.IconlengthIcon - Icon1Icon && <IconDividerIcon />}
-                  <IconIconIcon/IconReactIcon.IconFragmentIcon>
+                    </ListItem>
+                    {index < messages.length - 1 && <Divider />}
+                  </React.Fragment>
                 ))}
-              <IconIconIcon/IconListIcon>
-            <IconIconIcon/IconCardContentIcon>
-          <IconIconIcon/IconCardIcon>
-        <IconIconIcon/IconGridIcon>
+              </List>
+            </CardContent>
+          </Card>
+        </Grid>
       )}
 
-      {/* IconTaskIcon IconAssignmentIcon IconDialogIcon */}
-      <IconDialogIcon IconopenIcon={IconisTaskDialogOpenIcon} IcononCloseIcon={() => IconsetIsTaskDialogOpenIcon(IconfalseIcon)} IconmaxWidthIcon="Iconmd" IconfullWidthIcon>
-        <IconDialogTitleIcon>
-          IconAssignIcon IconTaskIcon IcontoIcon {IconselectedAgentIcon?.IconnameIcon}
-        <IconIconIcon/IconDialogTitleIcon>
-        <IconDialogContentIcon>
-          <IconStackIcon IconspacingIcon={Icon3Icon} IconstyleIcon={{ IconmtIcon: Icon1Icon }}>
-            <IconFormControlIcon IconfullWidthIcon>
-              <IconInputLabelIcon>IconTaskIcon IconTypeIcon<IconIconIcon/IconInputLabelIcon>
-              <IconSelectIcon
-                IconvalueIcon={IcontaskTypeIcon}
-                IconlabelIcon="IconTaskIcon IconType"
-                IcononChangeIcon={(IconeIcon) => IconsetTaskTypeIcon(IconeIcon.IcontargetIcon.IconvalueIcon)}
+      {/* Task Assignment Dialog */}
+      <Dialog open={isTaskDialogOpen} onClose={() => setIsTaskDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          Assign Task to {selectedAgent?.name}
+        </DialogTitle>
+        <DialogContent>
+          <Stack spacing={3} sx={{ mt: 1 }}>
+            <FormControl fullWidth>
+              <InputLabel>Task Type</InputLabel>
+              <Select
+                value={taskType}
+                label="Task Type"
+                onChange={(e) => setTaskType(e.target.value)}
               >
-                <IconMenuItemIcon IconvalueIcon="Icongenerate_content">IconGenerateIcon IconContentIcon<IconIconIcon/IconMenuItemIcon>
-                <IconMenuItemIcon IconvalueIcon="Iconcreate_quiz">IconCreateIcon IconIconQuizIcon<IconIconIcon/IconMenuItemIcon>
-                <IconMenuItemIcon IconvalueIcon="Iconbuild_terrain">IconBuildIcon IconIconTerrainIcon<IconIconIcon/IconMenuItemIcon>
-                <IconMenuItemIcon IconvalueIcon="Iconwrite_script">IconWriteIcon IconScriptIcon<IconIconIcon/IconMenuItemIcon>
-                <IconMenuItemIcon IconvalueIcon="Iconreview_content">IconReviewIcon IconContentIcon<IconIconIcon/IconMenuItemIcon>
-              <IconIconIcon/IconSelectIcon>
-            <IconIconIcon/IconFormControlIcon>
-            <IconTextFieldIcon
-              IconfullWidthIcon
-              IconmultilineIcon
-              IconrowsIcon={Icon4Icon}
-              IconlabelIcon="IconTaskIcon IconContent"
-              IconvalueIcon={IcontaskContentIcon}
-              IcononChangeIcon={(IconeIcon) => IconsetTaskContentIcon(IconeIcon.IcontargetIcon.IconvalueIcon)}
-              IconplaceholderIcon="IconDescribeIcon IcontheIcon IcontaskIcon IcondetailsIcon..."
+                <MenuItem value="generate_content">Generate Content</MenuItem>
+                <MenuItem value="create_quiz">Create Quiz</MenuItem>
+                <MenuItem value="build_terrain">Build Terrain</MenuItem>
+                <MenuItem value="write_script">Write Script</MenuItem>
+                <MenuItem value="review_content">Review Content</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              label="Task Content"
+              value={taskContent}
+              onChange={(e) => setTaskContent(e.target.value)}
+              placeholder="Describe the task details..."
             />
-          <IconIconIcon/IconStackIcon>
-        <IconIconIcon/IconDialogContentIcon>
-        <IconDialogActionsIcon>
-          <IconButtonIcon IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconsetIsTaskDialogOpenIcon(IconfalseIcon)}>IconCancelIcon<IconIconIcon/IconButtonIcon>
-          <IconButtonIcon IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconhandleSendTaskIcon} IconvariantIcon="Iconfilled">IconAssignIcon IconTaskIcon<IconIconIcon/IconButtonIcon>
-        <IconIconIcon/IconDialogActionsIcon>
-      <IconIconIcon/IconDialogIcon>
-    <IconIconIcon/IconGridIcon>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsTaskDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleSendTask} variant="contained">Assign Task</Button>
+        </DialogActions>
+      </Dialog>
+    </Grid>
   );
 }
 
-IconexportIcon IcondefaultIcon IconMCPAgentDashboardIcon;
+export default MCPAgentDashboard;

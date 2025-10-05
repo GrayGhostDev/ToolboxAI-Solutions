@@ -1,345 +1,322 @@
-IconimportIcon { IconBoxIcon, IconButtonIcon, IconTypographyIcon, IconPaperIcon, IconStackIcon, IconGridIcon, IconContainerIcon, IconIconButtonIcon, IconAvatarIcon, IconCardIcon, IconCardContentIcon, IconCardActionsIcon, IconListIcon, IconListItemIcon, IconListItemTextIcon, IconDividerIcon, IconTextFieldIcon, IconSelectIcon, IconMenuItemIcon, IconChipIcon, IconBadgeIcon, IconAlertIcon, IconCircularProgressIcon, IconLinearProgressIcon, IconDialogIcon, IconDialogTitleIcon, IconDialogContentIcon, IconDialogActionsIcon, IconDrawerIcon, IconAppBarIcon, IconToolbarIcon, IconTabsIcon, IconTabIcon, IconMenuIcon, IconTooltipIcon, IconCheckboxIcon, IconRadioIcon, IconRadioGroupIcon, IconFormControlIcon, IconFormControlLabelIcon, IconInputLabelIcon, IconSwitchIcon, IconSliderIcon, IconRatingIcon, IconAutocompleteIcon, IconSkeletonIcon, IconTableIcon } IconfromIcon '../../IconutilsIcon/IconmuiIcon-Iconimports';
-IconimportIcon IconReactIcon, { IconuseStateIcon, IconuseEffectIcon } IconfromIcon 'Iconreact';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import {
+  Box,
+  Container,
+  Paper,
+  Text,
+  Tabs,
+  Button,
+  Loader,
+  Alert,
+  Breadcrumbs,
+  Anchor,
+  Badge,
+} from '@mantine/core';
+import {
+  IconArrowLeft,
+  IconSchool,
+  IconFileText,
+  IconUsers,
+  IconChartBar,
+  IconSettings,
+} from '@tabler/icons-react';
+import { apiClient } from '../../services/api';
+import { StudentManagement } from '../StudentManagement';
+import { notifications } from '@mantine/notifications';
+import { useAuth } from '../../hooks/useAuth';
 
-IconimportIcon { IconuseParamsIcon, IconuseNavigateIcon } IconfromIcon 'IconreactIcon-IconrouterIcon-Icondom';
-IconimportIcon {
-  IconArrowBackIcon IconasIcon IconIconArrowLeftIcon,
-  IconSchoolIcon IconasIcon IconIconSchoolIcon,
-  IconAssignmentIcon IconasIcon IconIconClipboardIcon,
-  IconPeopleIcon IconasIcon IconIconUsersIcon,
-  IconAnalyticsIcon IconasIcon IconIconAnalyticsIcon,
-  IconSettingsIcon IconasIcon IconIconSettingsIcon,
-} IconfromIcon '@IconmuiIcon/IconiconsIcon-Iconmaterial';
-IconimportIcon { IconapiClientIcon } IconfromIcon '../../IconservicesIcon/Iconapi';
-IconimportIcon { IconStudentManagementIcon } IconfromIcon '../IconStudentManagement';
-IconimportIcon { IconuseSnackbarIcon } IconfromIcon 'Iconnotistack';
-IconimportIcon { IconuseAuthIcon } IconfromIcon '../../IconhooksIcon/IconuseAuth';
-IconimportIcon { IconIconIcon, IconIconAnalyticsIcon, IconIconArrowLeftIcon, IconIconClipboardIcon, IconIconSchoolIcon, IconIconSettingsIcon, IconIconUsersIcon } IconfromIcon '@IcontablerIcon/IconiconsIcon-Iconreact';
 
-IconinterfaceIcon IconTabPanelPropsIcon {
-  IconchildrenIcon?: IconReactIcon.IconReactNodeIcon;
-  IconindexIcon: IconnumberIcon;
-  IconvalueIcon: IconnumberIcon;
+interface ClassData {
+  id: string;
+  name: string;
+  subject: string;
+  teacher_id: string;
+  teacher_name?: string;
+  description?: string;
+  schedule?: string;
+  room?: string;
+  max_students: number;
+  student_count?: number;
+  created_at: string;
+  updated_at?: string;
+  status: 'active' | 'inactive' | 'archived';
 }
 
-IconfunctionIcon IconTabPanelIcon(IconpropsIcon: IconTabPanelPropsIcon) {
-  IconconstIcon { IconchildrenIcon, IconvalueIcon, IconindexIcon, ...IconotherIcon } = IconpropsIcon;
+export const ClassDetail: React.FC = () => {
+  const { classId } = useParams<{ classId: string }>();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [classData, setClassData] = useState<ClassData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [tabValue, setTabValue] = useState<string | null>('0');
+  const [studentCount, setStudentCount] = useState(0);
 
-  IconreturnIcon (
-    <IcondivIcon
-      IconroleIcon="Icontabpanel"
-      IconhiddenIcon={IconvalueIcon !== IconindexIcon}
-      IconidIcon={`IconclassIcon-IcontabpanelIcon-${IconindexIcon}`}
-      IconariaIcon-IconlabelledbyIcon={`IconclassIcon-IcontabIcon-${IconindexIcon}`}
-      {...IconotherIcon}
-    >
-      {IconvalueIcon === IconindexIcon && (
-        <IconBoxIcon IconstyleIcon={{ IconpyIcon: Icon3Icon }}>
-          {IconchildrenIcon}
-        <IconIconIcon/IconBoxIcon>
-      )}
-    <IconIconIcon/IcondivIcon>
-  );
-}
-
-IconfunctionIcon Icona11yPropsIcon(IconindexIcon: IconnumberIcon) {
-  IconreturnIcon {
-    IconidIcon: `IconclassIcon-IcontabIcon-${IconindexIcon}`,
-    'IconariaIcon-Iconcontrols': `IconclassIcon-IcontabpanelIcon-${IconindexIcon}`,
-  };
-}
-
-IconinterfaceIcon IconClassDataIcon {
-  IconidIcon: IconstringIcon;
-  IconnameIcon: IconstringIcon;
-  IconsubjectIcon: IconstringIcon;
-  Iconteacher_idIcon: IconstringIcon;
-  Iconteacher_nameIcon?: IconstringIcon;
-  IcondescriptionIcon?: IconstringIcon;
-  IconscheduleIcon?: IconstringIcon;
-  IconroomIcon?: IconstringIcon;
-  Iconmax_studentsIcon: IconnumberIcon;
-  Iconstudent_countIcon?: IconnumberIcon;
-  Iconcreated_atIcon: IconstringIcon;
-  Iconupdated_atIcon?: IconstringIcon;
-  IconstatusIcon: 'Iconactive' | 'Iconinactive' | 'Iconarchived';
-}
-
-IconexportIcon IconconstIcon IconClassDetailIcon: IconReactIcon.IconFunctionComponentIcon<IconRecordIcon<IconstringIcon, IconanyIcon>> = () => {
-  IconconstIcon { IconclassIdIcon } = IconuseParamsIcon<{ IconclassIdIcon: IconstringIcon }>();
-  IconconstIcon IconnavigateIcon = IconuseNavigateIcon();
-  IconconstIcon { IconuserIcon } = IconuseAuthIcon();
-  IconconstIcon { IconenqueueSnackbarIcon } = IconuseSnackbarIcon();
-  IconconstIcon [IconclassDataIcon, IconsetClassDataIcon] = IconuseStateIcon<IconClassDataIcon | IconnullIcon>(IconnullIcon);
-  IconconstIcon [IconloadingIcon, IconsetLoadingIcon] = IconuseStateIcon(IcontrueIcon);
-  IconconstIcon [IcontabValueIcon, IconsetTabValueIcon] = IconuseStateIcon(Icon0Icon);
-  IconconstIcon [IconstudentCountIcon, IconsetStudentCountIcon] = IconuseStateIcon(Icon0Icon);
-
-  IconuseEffectIcon(() => {
-    IconifIcon (IconclassIdIcon) {
-      IconloadClassDataIcon();
+  useEffect(() => {
+    if (classId) {
+      loadClassData();
     }
-  }, [IconclassIdIcon]);
+  }, [classId]);
 
-  IconconstIcon IconloadClassDataIcon = IconasyncIcon () => {
-    IcontryIcon {
-      IconsetLoadingIcon(IcontrueIcon);
-      IconconstIcon IconresponseIcon = IconawaitIcon IconapiClientIcon.IcongetIcon(`/IconapiIcon/Iconv1Icon/IconclassesIcon/${IconclassIdIcon}`);
-      IconsetClassDataIcon(IconresponseIcon.IcondataIcon.IcondataIcon);
-      IconsetStudentCountIcon(IconresponseIcon.IcondataIcon.IcondataIcon.Iconstudent_countIcon || Icon0Icon);
-    } IconcatchIcon (IconerrorIcon: IconanyIcon) {
-      IconenqueueSnackbarIcon(
-        IconerrorIcon.IconresponseIcon?.IcondataIcon?.IconmessageIcon || 'IconFailedIcon IcontoIcon IconloadIcon IconclassIcon Icondetails',
-        { IconvariantIcon: 'Iconerror' }
-      );
-      IconnavigateIcon('/Iconclasses');
-    } IconfinallyIcon {
-      IconsetLoadingIcon(IconfalseIcon);
+  const loadClassData = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.get(`/api/v1/classes/${classId}`);
+      setClassData(response.data.data);
+      setStudentCount(response.data.data.student_count || 0);
+    } catch (error: any) {
+      notifications.show({
+        title: 'Error',
+        message: error.response?.data?.message || 'Failed to load class details',
+        color: 'red',
+      });
+      navigate('/classes');
+    } finally {
+      setLoading(false);
     }
   };
 
-  IconconstIcon IconhandleTabChangeIcon = (IconeventIcon: IconReactIcon.IconSyntheticEventIcon, IconnewValueIcon: IconnumberIcon) => {
-    IconsetTabValueIcon(IconnewValueIcon);
-  };
-
-  IconconstIcon IconhandleStudentCountChangeIcon = (IconcountIcon: IconnumberIcon) => {
-    IconsetStudentCountIcon(IconcountIcon);
-    IconifIcon (IconclassDataIcon) {
-      IconsetClassDataIcon({ ...IconclassDataIcon, Iconstudent_countIcon: IconcountIcon });
+  const handleStudentCountChange = (count: number) => {
+    setStudentCount(count);
+    if (classData) {
+      setClassData({ ...classData, student_count: count });
     }
   };
 
-  IconifIcon (IconloadingIcon) {
-    IconreturnIcon (
-      <IconContainerIcon>
-        <IconBoxIcon IcondisplayIcon="Iconflex" IconjustifyContentIcon="Iconcenter" IconalignItemsIcon="Iconcenter" IconminHeightIcon="Icon400px">
-          <IconCircularProgressIcon />
-        <IconIconIcon/IconBoxIcon>
-      <IconIconIcon/IconContainerIcon>
+  if (loading) {
+    return (
+      <Container>
+        <Box style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+          <Loader />
+        </Box>
+      </Container>
     );
   }
 
-  IconifIcon (!IconclassDataIcon) {
-    IconreturnIcon (
-      <IconContainerIcon>
-        <IconAlertIcon IconseverityIcon="Iconerror">IconClassIcon IconnotIcon IconfoundIcon<IconIconIcon/IconAlertIcon>
-      <IconIconIcon/IconContainerIcon>
+  if (!classData) {
+    return (
+      <Container>
+        <Alert color="red">Class not found</Alert>
+      </Container>
     );
   }
 
-  IconconstIcon IconisTeacherIcon = IconuserIcon?.IconidIcon === IconclassDataIcon.Iconteacher_idIcon;
-  IconconstIcon IconisAdminIcon = IconuserIcon?.IconroleIcon === 'Iconadmin';
-  IconconstIcon IconcanManageIcon = IconisTeacherIcon || IconisAdminIcon;
+  const isTeacher = user?.id === classData.teacher_id;
+  const isAdmin = user?.role === 'admin';
+  const canManage = isTeacher || isAdmin;
 
-  IconreturnIcon (
-    <IconContainerIcon IconmaxWidthIcon="Iconlg">
-      {/* IconBreadcrumbsIcon */}
-      <IconBoxIcon IconmbIcon={Icon3Icon}>
-        <IconBreadcrumbsIcon IconariaIcon-IconlabelIcon="Iconbreadcrumb">
-          <IconLinkIcon
-            IconcolorIcon="Iconinherit"
-            IconhrefIcon="#"
-            IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => (IconeIcon) => {
-              IconeIcon.IconpreventDefaultIcon();
-              IconnavigateIcon('/Icondashboard');
+  return (
+    <Container size="lg">
+      {/* Breadcrumbs */}
+      <Box mb="md">
+        <Breadcrumbs>
+          <Anchor
+            onClick={(e) => {
+              e.preventDefault();
+              navigate('/dashboard');
             }}
           >
-            IconDashboardIcon
-          <IconIconIcon/IconLinkIcon>
-          <IconLinkIcon
-            IconcolorIcon="Iconinherit"
-            IconhrefIcon="#"
-            IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => (IconeIcon) => {
-              IconeIcon.IconpreventDefaultIcon();
-              IconnavigateIcon('/Iconclasses');
+            Dashboard
+          </Anchor>
+          <Anchor
+            onClick={(e) => {
+              e.preventDefault();
+              navigate('/classes');
             }}
           >
-            IconClassesIcon
-          <IconIconIcon/IconLinkIcon>
-          <IconTypographyIcon IconcolorIcon="IcontextIcon.Iconprimary">{IconclassDataIcon.IconnameIcon}<IconIconIcon/IconTypographyIcon>
-        <IconIconIcon/IconBreadcrumbsIcon>
-      <IconIconIcon/IconBoxIcon>
+            Classes
+          </Anchor>
+          <Text>{classData.name}</Text>
+        </Breadcrumbs>
+      </Box>
 
-      {/* IconHeaderIcon */}
-      <IconPaperIcon IconstyleIcon={{ IconpIcon: Icon3Icon, IconmbIcon: Icon3Icon }}>
-        <IconBoxIcon IcondisplayIcon="Iconflex" IconjustifyContentIcon="IconspaceIcon-Iconbetween" IconalignItemsIcon="IconflexIcon-Iconstart">
-          <IconBoxIcon>
-            <IconBoxIcon IcondisplayIcon="Iconflex" IconalignItemsIcon="Iconcenter" IcongapIcon={Icon1Icon} IconmbIcon={Icon2Icon}>
-              <IconButtonIcon
-                IconstartIconIcon={<IconIconArrowLeftIcon />}
-                IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconnavigateIcon('/Iconclasses')}
-                IconvariantIcon="Icontext"
+      {/* Header */}
+      <Paper p="lg" mb="md">
+        <Box style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <Box>
+            <Box style={{ display: 'flex', alignItems: 'center', gap: 8 }} mb="md">
+              <Button
+                leftSection={<IconArrowLeft size={16} />}
+                onClick={() => navigate('/classes')}
+                variant="subtle"
               >
-                IconBackIcon IcontoIcon IconClassesIcon
-              <IconIconIcon/IconButtonIcon>
-            <IconIconIcon/IconBoxIcon>
-            <IconTypographyIcon IconorderIcon={Icon4Icon} IcongutterBottomIcon>
-              {IconclassDataIcon.IconnameIcon}
-            <IconIconIcon/IconTypographyIcon>
-            <IconBoxIcon IcondisplayIcon="Iconflex" IcongapIcon={Icon2Icon} IconalignItemsIcon="Iconcenter">
-              <IconChipIcon
-                IconlabelIcon={IconclassDataIcon.IconsubjectIcon}
-                IconcolorIcon="Iconblue"
-                IconiconIcon={<IconIconSchoolIcon />}
-              />
-              <IconChipIcon
-                IconlabelIcon={`${IconstudentCountIcon} / ${IconclassDataIcon.Iconmax_studentsIcon} IconStudentsIcon`}
-                IconcolorIcon={IconstudentCountIcon >= IconclassDataIcon.Iconmax_studentsIcon ? 'Iconerror' : 'Icondefault'}
-              />
-              <IconChipIcon
-                IconlabelIcon={IconclassDataIcon.IconstatusIcon}
-                IconcolorIcon={IconclassDataIcon.IconstatusIcon === 'Iconactive' ? 'Iconsuccess' : 'Icondefault'}
-                IconsizeIcon="Iconsmall"
-              />
-              {IconclassDataIcon.IconroomIcon && (
-                <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">
-                  IconRoomIcon: {IconclassDataIcon.IconroomIcon}
-                <IconIconIcon/IconTypographyIcon>
+                Back to Classes
+              </Button>
+            </Box>
+            <Text size="xl" fw={600} mb="md">
+              {classData.name}
+            </Text>
+            <Box style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+              <Badge
+                leftSection={<IconSchool size={14} />}
+                color="blue"
+              >
+                {classData.subject}
+              </Badge>
+              <Badge
+                color={studentCount >= classData.max_students ? 'red' : 'gray'}
+              >
+                {studentCount} / {classData.max_students} Students
+              </Badge>
+              <Badge
+                color={classData.status === 'active' ? 'green' : 'gray'}
+                size="sm"
+              >
+                {classData.status}
+              </Badge>
+              {classData.room && (
+                <Text size="sm" c="dimmed">
+                  Room: {classData.room}
+                </Text>
               )}
-            <IconIconIcon/IconBoxIcon>
-            {IconclassDataIcon.IcondescriptionIcon && (
-              <IconTypographyIcon IconsizeIcon="Iconmd" IconcolorIcon="IcontextIcon.Iconsecondary" IconstyleIcon={{ IconmtIcon: Icon2Icon }}>
-                {IconclassDataIcon.IcondescriptionIcon}
-              <IconIconIcon/IconTypographyIcon>
+            </Box>
+            {classData.description && (
+              <Text c="dimmed" mt="md">
+                {classData.description}
+              </Text>
             )}
-            {IconclassDataIcon.IconscheduleIcon && (
-              <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary" IconstyleIcon={{ IconmtIcon: Icon1Icon }}>
-                IconScheduleIcon: {IconclassDataIcon.IconscheduleIcon}
-              <IconIconIcon/IconTypographyIcon>
+            {classData.schedule && (
+              <Text size="sm" c="dimmed" mt="xs">
+                Schedule: {classData.schedule}
+              </Text>
             )}
-          <IconIconIcon/IconBoxIcon>
-          {IconcanManageIcon && (
-            <IconBoxIcon>
-              <IconButtonIcon
-                IconvariantIcon="Iconfilled"
-                IconstartIconIcon={<IconIconSettingsIcon />}
-                IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconnavigateIcon(`/IconclassesIcon/${IconclassIdIcon}/IconsettingsIcon`)}
+          </Box>
+          {canManage && (
+            <Box>
+              <Button
+                leftSection={<IconSettings size={16} />}
+                onClick={() => navigate(`/classes/${classId}/settings`)}
               >
-                IconSettingsIcon
-              <IconIconIcon/IconButtonIcon>
-            <IconIconIcon/IconBoxIcon>
+                Settings
+              </Button>
+            </Box>
           )}
-        <IconIconIcon/IconBoxIcon>
-      <IconIconIcon/IconPaperIcon>
+        </Box>
+      </Paper>
 
-      {/* IconTabsIcon */}
-      <IconPaperIcon IconstyleIcon={{ IconmbIcon: Icon3Icon }}>
-        <IconTabsIcon
-          IconvalueIcon={IcontabValueIcon}
-          IcononChangeIcon={IconhandleTabChangeIcon}
-          IconariaIcon-IconlabelIcon="IconclassIcon IcondetailIcon Icontabs"
-          IconvariantIcon="Iconscrollable"
-          IconscrollButtonsIcon="Iconauto"
-        >
-          <IconTabIcon IconiconIcon={<IconIconSchoolIcon />} IconlabelIcon="IconOverview" {...Icona11yPropsIcon(Icon0Icon)} />
-          {IconcanManageIcon && (
-            <IconTabIcon IconiconIcon={<IconIconUsersIcon />} IconlabelIcon="IconStudents" {...Icona11yPropsIcon(Icon1Icon)} />
+      {/* Tabs */}
+      <Paper mb="md">
+        <Tabs value={tabValue} onChange={setTabValue}>
+          <Tabs.List>
+            <Tabs.Tab value="0" leftSection={<IconSchool size={16} />}>
+              Overview
+            </Tabs.Tab>
+            {canManage && (
+              <Tabs.Tab value="1" leftSection={<IconUsers size={16} />}>
+                Students
+              </Tabs.Tab>
+            )}
+            <Tabs.Tab value={canManage ? "2" : "1"} leftSection={<IconFileText size={16} />}>
+              Assignments
+            </Tabs.Tab>
+            <Tabs.Tab value={canManage ? "3" : "2"} leftSection={<IconChartBar size={16} />}>
+              Analytics
+            </Tabs.Tab>
+          </Tabs.List>
+        </Tabs>
+      </Paper>
+
+      {/* Tab Panels */}
+      <Tabs.Panel value="0">
+        <Paper p="lg">
+          <Text size="lg" fw={500} mb="md">
+            Class Overview
+          </Text>
+          <Box style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 24 }}>
+            <Box>
+              <Text size="sm" fw={500} c="dimmed">
+                Subject
+              </Text>
+              <Text>{classData.subject}</Text>
+            </Box>
+            <Box>
+              <Text size="sm" fw={500} c="dimmed">
+                Teacher
+              </Text>
+              <Text>
+                {classData.teacher_name || 'Loading...'}
+              </Text>
+            </Box>
+            <Box>
+              <Text size="sm" fw={500} c="dimmed">
+                Schedule
+              </Text>
+              <Text>
+                {classData.schedule || 'Not set'}
+              </Text>
+            </Box>
+            <Box>
+              <Text size="sm" fw={500} c="dimmed">
+                Room
+              </Text>
+              <Text>{classData.room || 'Not set'}</Text>
+            </Box>
+            <Box>
+              <Text size="sm" fw={500} c="dimmed">
+                Created
+              </Text>
+              <Text>
+                {new Date(classData.created_at).toLocaleDateString()}
+              </Text>
+            </Box>
+            <Box>
+              <Text size="sm" fw={500} c="dimmed">
+                Status
+              </Text>
+              <Badge
+                color={classData.status === 'active' ? 'green' : 'gray'}
+                size="sm"
+              >
+                {classData.status}
+              </Badge>
+            </Box>
+          </Box>
+          {classData.description && (
+            <Box mt="lg">
+              <Text size="sm" fw={500} c="dimmed" mb="xs">
+                Description
+              </Text>
+              <Text>{classData.description}</Text>
+            </Box>
           )}
-          <IconTabIcon IconiconIcon={<IconIconClipboardIcon />} IconlabelIcon="IconAssignments" {...Icona11yPropsIcon(Icon2Icon)} />
-          <IconTabIcon IconiconIcon={<IconIconAnalyticsIcon />} IconlabelIcon="IconAnalytics" {...Icona11yPropsIcon(Icon3Icon)} />
-        <IconIconIcon/IconTabsIcon>
-      <IconIconIcon/IconPaperIcon>
+        </Paper>
+      </Tabs.Panel>
 
-      {/* IconTabIcon IconPanelsIcon */}
-      <IconTabPanelIcon IconvalueIcon={IcontabValueIcon} IconindexIcon={Icon0Icon}>
-        <IconPaperIcon IconstyleIcon={{ IconpIcon: Icon3Icon }}>
-          <IconTypographyIcon IconorderIcon={Icon6Icon} IcongutterBottomIcon>
-            IconClassIcon IconOverviewIcon
-          <IconIconIcon/IconTypographyIcon>
-          <IconBoxIcon IcondisplayIcon="Icongrid" IcongridTemplateColumnsIcon="IconrepeatIcon(IconautoIcon-IconfitIcon, IconminmaxIcon(Icon250pxIcon, Icon1frIcon))" IcongapIcon={Icon3Icon}>
-            <IconBoxIcon>
-              <IconTypographyIcon IconvariantIcon="Iconsubtitle2" IconcolorIcon="IcontextIcon.Iconsecondary">
-                IconSubjectIcon
-              <IconIconIcon/IconTypographyIcon>
-              <IconTypographyIcon IconsizeIcon="Iconmd">{IconclassDataIcon.IconsubjectIcon}<IconIconIcon/IconTypographyIcon>
-            <IconIconIcon/IconBoxIcon>
-            <IconBoxIcon>
-              <IconTypographyIcon IconvariantIcon="Iconsubtitle2" IconcolorIcon="IcontextIcon.Iconsecondary">
-                IconTeacherIcon
-              <IconIconIcon/IconTypographyIcon>
-              <IconTypographyIcon IconsizeIcon="Iconmd">
-                {IconclassDataIcon.Iconteacher_nameIcon || 'IconLoadingIcon...'}
-              <IconIconIcon/IconTypographyIcon>
-            <IconIconIcon/IconBoxIcon>
-            <IconBoxIcon>
-              <IconTypographyIcon IconvariantIcon="Iconsubtitle2" IconcolorIcon="IcontextIcon.Iconsecondary">
-                IconScheduleIcon
-              <IconIconIcon/IconTypographyIcon>
-              <IconTypographyIcon IconsizeIcon="Iconmd">
-                {IconclassDataIcon.IconscheduleIcon || 'IconNotIcon Iconset'}
-              <IconIconIcon/IconTypographyIcon>
-            <IconIconIcon/IconBoxIcon>
-            <IconBoxIcon>
-              <IconTypographyIcon IconvariantIcon="Iconsubtitle2" IconcolorIcon="IcontextIcon.Iconsecondary">
-                IconRoomIcon
-              <IconIconIcon/IconTypographyIcon>
-              <IconTypographyIcon IconsizeIcon="Iconmd">{IconclassDataIcon.IconroomIcon || 'IconNotIcon Iconset'}<IconIconIcon/IconTypographyIcon>
-            <IconIconIcon/IconBoxIcon>
-            <IconBoxIcon>
-              <IconTypographyIcon IconvariantIcon="Iconsubtitle2" IconcolorIcon="IcontextIcon.Iconsecondary">
-                IconCreatedIcon
-              <IconIconIcon/IconTypographyIcon>
-              <IconTypographyIcon IconsizeIcon="Iconmd">
-                {IconnewIcon IconDateIcon(IconclassDataIcon.Iconcreated_atIcon).IcontoLocaleDateStringIcon()}
-              <IconIconIcon/IconTypographyIcon>
-            <IconIconIcon/IconBoxIcon>
-            <IconBoxIcon>
-              <IconTypographyIcon IconvariantIcon="Iconsubtitle2" IconcolorIcon="IcontextIcon.Iconsecondary">
-                IconStatusIcon
-              <IconIconIcon/IconTypographyIcon>
-              <IconChipIcon
-                IconlabelIcon={IconclassDataIcon.IconstatusIcon}
-                IconcolorIcon={IconclassDataIcon.IconstatusIcon === 'Iconactive' ? 'Iconsuccess' : 'Icondefault'}
-                IconsizeIcon="Iconsmall"
-              />
-            <IconIconIcon/IconBoxIcon>
-          <IconIconIcon/IconBoxIcon>
-          {IconclassDataIcon.IcondescriptionIcon && (
-            <IconBoxIcon IconmtIcon={Icon3Icon}>
-              <IconTypographyIcon IconvariantIcon="Iconsubtitle2" IconcolorIcon="IcontextIcon.Iconsecondary" IcongutterBottomIcon>
-                IconDescriptionIcon
-              <IconIconIcon/IconTypographyIcon>
-              <IconTypographyIcon IconsizeIcon="Iconmd">{IconclassDataIcon.IcondescriptionIcon}<IconIconIcon/IconTypographyIcon>
-            <IconIconIcon/IconBoxIcon>
-          )}
-        <IconIconIcon/IconPaperIcon>
-      <IconIconIcon/IconTabPanelIcon>
-
-      {IconcanManageIcon && (
-        <IconTabPanelIcon IconvalueIcon={IcontabValueIcon} IconindexIcon={Icon1Icon}>
-          <IconStudentManagementIcon
-            IconclassIdIcon={IconclassDataIcon.IconidIcon}
-            IconclassNameIcon={IconclassDataIcon.IconnameIcon}
-            IconteacherIdIcon={IconclassDataIcon.Iconteacher_idIcon}
-            IconmaxStudentsIcon={IconclassDataIcon.Iconmax_studentsIcon}
-            IcononStudentCountChangeIcon={IconhandleStudentCountChangeIcon}
+      {canManage && (
+        <Tabs.Panel value="1">
+          <StudentManagement
+            classId={classData.id}
+            className={classData.name}
+            teacherId={classData.teacher_id}
+            maxStudents={classData.max_students}
+            onStudentCountChange={handleStudentCountChange}
           />
-        <IconIconIcon/IconTabPanelIcon>
+        </Tabs.Panel>
       )}
 
-      <IconTabPanelIcon IconvalueIcon={IcontabValueIcon} IconindexIcon={IconcanManageIcon ? Icon2Icon : Icon1Icon}>
-        <IconPaperIcon IconstyleIcon={{ IconpIcon: Icon3Icon }}>
-          <IconTypographyIcon IconorderIcon={Icon6Icon} IcongutterBottomIcon>
-            IconAssignmentsIcon
-          <IconIconIcon/IconTypographyIcon>
-          <IconAlertIcon IconseverityIcon="Iconinfo">
-            IconAssignmentIcon IconmanagementIcon IconcomingIcon IconsoonIcon. IconTeachersIcon IconwillIcon IconbeIcon IconableIcon IcontoIcon IconcreateIcon, IcondistributeIcon, IconandIcon
-            IcongradeIcon IconassignmentsIcon IconhereIcon.
-          <IconIconIcon/IconAlertIcon>
-        <IconIconIcon/IconPaperIcon>
-      <IconIconIcon/IconTabPanelIcon>
+      <Tabs.Panel value={canManage ? "2" : "1"}>
+        <Paper p="lg">
+          <Text size="lg" fw={500} mb="md">
+            Assignments
+          </Text>
+          <Alert color="blue">
+            Assignment management coming soon. Teachers will be able to create, distribute, and
+            grade assignments here.
+          </Alert>
+        </Paper>
+      </Tabs.Panel>
 
-      <IconTabPanelIcon IconvalueIcon={IcontabValueIcon} IconindexIcon={IconcanManageIcon ? Icon3Icon : Icon2Icon}>
-        <IconPaperIcon IconstyleIcon={{ IconpIcon: Icon3Icon }}>
-          <IconTypographyIcon IconorderIcon={Icon6Icon} IcongutterBottomIcon>
-            IconAnalyticsIcon
-          <IconIconIcon/IconTypographyIcon>
-          <IconAlertIcon IconseverityIcon="Iconinfo">
-            IconClassIcon IconanalyticsIcon IconandIcon IconperformanceIcon IconmetricsIcon IconwillIcon IconbeIcon IcondisplayedIcon IconhereIcon, IconincludingIcon IconstudentIcon
-            IconprogressIcon, IconattendanceIcon, IconandIcon IconassignmentIcon IconcompletionIcon IconratesIcon.
-          <IconIconIcon/IconAlertIcon>
-        <IconIconIcon/IconPaperIcon>
-      <IconIconIcon/IconTabPanelIcon>
-    <IconIconIcon/IconContainerIcon>
+      <Tabs.Panel value={canManage ? "3" : "2"}>
+        <Paper p="lg">
+          <Text size="lg" fw={500} mb="md">
+            Analytics
+          </Text>
+          <Alert color="blue">
+            Class analytics and performance metrics will be displayed here, including student
+            progress, attendance, and assignment completion rates.
+          </Alert>
+        </Paper>
+      </Tabs.Panel>
+    </Container>
   );
 };

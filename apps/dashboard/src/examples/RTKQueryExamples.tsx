@@ -1,614 +1,693 @@
-IconimportIcon { IconBoxIcon, IconButtonIcon, IconTypographyIcon, IconPaperIcon, IconStackIcon, IconGridIcon, IconContainerIcon, IconIconButtonIcon, IconAvatarIcon, IconCardIcon, IconCardContentIcon, IconCardActionsIcon, IconListIcon, IconListItemIcon, IconListItemTextIcon, IconDividerIcon, IconTextFieldIcon, IconSelectIcon, IconMenuItemIcon, IconChipIcon, IconBadgeIcon, IconAlertIcon, IconCircularProgressIcon, IconLinearProgressIcon, IconDialogIcon, IconDialogTitleIcon, IconDialogContentIcon, IconDialogActionsIcon, IconDrawerIcon, IconAppBarIcon, IconToolbarIcon, IconTabsIcon, IconTabIcon, IconMenuIcon, IconTooltipIcon, IconCheckboxIcon, IconRadioIcon, IconRadioGroupIcon, IconFormControlIcon, IconFormControlLabelIcon, IconInputLabelIcon, IconSwitchIcon, IconSliderIcon, IconRatingIcon, IconAutocompleteIcon, IconSkeletonIcon, IconTableIcon } IconfromIcon '../IconutilsIcon/IconmuiIcon-Iconimports';
 /**
- * IconRTKIcon IconQueryIcon IconImplementationIcon IconExamplesIcon
+ * RTK Query Implementation Examples
  *
- * IconThisIcon IconfileIcon IcondemonstratesIcon IconadvancedIcon IconRTKIcon IconQueryIcon IconpatternsIcon IconandIcon IconbestIcon IconpracticesIcon
- * IconforIcon IcontheIcon IconToolBoxAIIcon IcondashboardIcon, IconincludingIcon:
- * - IconOptimisticIcon IconupdatesIcon
- * - IconCacheIcon IconinvalidationIcon IconstrategiesIcon
- * - IconRealIcon-IcontimeIcon IconsynchronizationIcon
- * - IconErrorIcon IconhandlingIcon IconandIcon IconrecoveryIcon
- * - IconPerformanceIcon IconmonitoringIcon
+ * This file demonstrates advanced RTK Query patterns and best practices
+ * for the ToolBoxAI dashboard, including:
+ * - Optimistic updates
+ * - Cache invalidation strategies
+ * - Real-time synchronization
+ * - Error handling and recovery
+ * - Performance monitoring
  */
-IconimportIcon IconReactIcon, { IconuseStateIcon, IconuseCallbackIcon } IconfromIcon 'Iconreact';
 
-IconimportIcon {
-  IconRefreshIcon IconasIcon IconIconRefreshIcon,
-  IconAddIcon IconasIcon IconIconPlusIcon,
-  IconEditIcon IconasIcon IconIconEditIcon,
-  IconDeleteIcon IconasIcon IconIconTrashIcon,
-  IconAnalyticsIcon IconasIcon IconIconAnalyticsIcon,
-  IconSpeedIcon IconasIcon IconIconSpeedIcon,
-  IconCheckCircleIcon IconasIcon IconIconCircleCheckIcon,
-  IconErrorIcon IconasIcon IconIconCircleXIcon,
-} IconfromIcon '@IconmuiIcon/IconiconsIcon-Iconmaterial';
-// IconRTKIcon IconQueryIcon IconhooksIcon IconandIcon IconutilitiesIcon
-IconimportIcon {
-  IconuseGetClassesQueryIcon,
-  IconuseCreateClassMutationIcon,
-  IconuseUpdateClassMutationIcon,
-  IconuseDeleteClassMutationIcon,
-  IconuseGetDashboardOverviewQueryIcon,
-  IconuseGetMessagesQueryIcon,
-  IconuseSendMessageMutationIcon,
-  IconapiIcon,
-} IconfromIcon '../IconstoreIcon/Iconapi';
-// IconEnhancedIcon IconselectorsIcon
-IconimportIcon {
-  IconselectClassesWithStatsIcon,
-  IconselectActiveClassesIcon,
-  IconselectCachePerformanceIcon,
-  IconselectUnreadMessageCountIcon,
-} IconfromIcon '../IconstoreIcon/IconapiIcon/Iconselectors';
-// IconMigrationIcon IconutilitiesIcon
-IconimportIcon { IconuseMigrationProgressIcon, IconuseCacheMetricsIcon } IconfromIcon '../IconstoreIcon/IconapiIcon/Iconhooks';
-// IconTypesIcon
-IconimportIcon { IconClassSummaryIcon } IconfromIcon '../Icontypes';
-IconimportIcon { IconuseAppSelectorIcon } IconfromIcon '../Iconstore';
-IconimportIcon { IconIconIcon, IconIconAnalyticsIcon, IconIconCircleCheckIcon, IconIconCircleXIcon, IconIconEditIcon, IconIconPlusIcon, IconIconRefreshIcon, IconIconSpeedIcon, IconIconTrashIcon } IconfromIcon '@IcontablerIcon/IconiconsIcon-Iconreact';
-IconinterfaceIcon IconTabPanelPropsIcon {
-  IconchildrenIcon?: IconReactIcon.IconReactNodeIcon;
-  IconindexIcon: IconnumberIcon;
-  IconvalueIcon: IconnumberIcon;
+import React, { useState, useCallback, useEffect } from 'react';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Stack,
+  Chip,
+  Alert,
+  LinearProgress,
+  CircularProgress,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemAvatar,
+  Avatar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Tab,
+  Tabs,
+  TabPanel,
+  Divider,
+} from '@mui/material';
+import {
+  Refresh as RefreshIcon,
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Analytics as AnalyticsIcon,
+  Speed as SpeedIcon,
+  CheckCircle as CheckCircleIcon,
+  Error as ErrorIcon,
+} from '@mui/icons-material';
+
+// RTK Query hooks and utilities
+import {
+  useGetClassesQuery,
+  useCreateClassMutation,
+  useUpdateClassMutation,
+  useDeleteClassMutation,
+  useGetDashboardOverviewQuery,
+  useGetMessagesQuery,
+  useSendMessageMutation,
+  api,
+} from '../store/api';
+
+// Enhanced selectors
+import {
+  selectClassesWithStats,
+  selectActiveClasses,
+  selectCachePerformance,
+  selectUnreadMessageCount,
+} from '../store/api/selectors';
+
+// Migration utilities
+import { useMigrationProgress, useCacheMetrics } from '../store/api/hooks';
+
+// Types
+import { ClassSummary } from '../types';
+import { useAppSelector } from '../store';
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
 }
-IconfunctionIcon IconTabPanelIcon(IconpropsIcon: IconTabPanelPropsIcon) {
-  IconconstIcon { IconchildrenIcon, IconvalueIcon, IconindexIcon, ...IconotherIcon } = IconpropsIcon;
-  IconreturnIcon (
-    <IcondivIcon
-      IconroleIcon="Icontabpanel"
-      IconhiddenIcon={IconvalueIcon !== IconindexIcon}
-      IconidIcon={`IcontabpanelIcon-${IconindexIcon}`}
-      IconariaIcon-IconlabelledbyIcon={`IcontabIcon-${IconindexIcon}`}
-      {...IconotherIcon}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`tabpanel-${index}`}
+      aria-labelledby={`tab-${index}`}
+      {...other}
     >
-      {IconvalueIcon === IconindexIcon && <IconBoxIcon IconstyleIcon={{ IconpIcon: Icon3Icon }}>{IconchildrenIcon}<IconIconIcon/IconBoxIcon>}
-    <IconIconIcon/IcondivIcon>
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+    </div>
   );
 }
-// IconExampleIcon Icon1Icon: IconOptimisticIcon IconClassIcon IconManagementIcon
-IconfunctionIcon IconOptimisticClassManagementIcon() {
-  IconconstIcon [IconcreateDialogOpenIcon, IconsetCreateDialogOpenIcon] = IconuseStateIcon(IconfalseIcon);
-  IconconstIcon [IconeditDialogOpenIcon, IconsetEditDialogOpenIcon] = IconuseStateIcon(IconfalseIcon);
-  IconconstIcon [IconselectedClassIcon, IconsetSelectedClassIcon] = IconuseStateIcon<IconClassSummaryIcon | IconnullIcon>(IconnullIcon);
-  IconconstIcon [IconformDataIcon, IconsetFormDataIcon] = IconuseStateIcon({
-    IconnameIcon: '',
-    IconsubjectIcon: '',
-    Icongrade_levelIcon: Icon1Icon,
-    Iconmax_studentsIcon: Icon30Icon,
+
+// Example 1: Optimistic Class Management
+function OptimisticClassManagement() {
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedClass, setSelectedClass] = useState<ClassSummary | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    subject: '',
+    grade_level: 1,
+    max_students: 30,
   });
-  // IconRTKIcon IconQueryIcon IconhooksIcon
-  IconconstIcon {
-    IcondataIcon: IconclassesIcon,
-    IconisLoadingIcon,
-    IconisFetchingIcon,
-    IconerrorIcon,
-    IconrefetchIcon,
-  } = IconuseGetClassesQueryIcon(IconundefinedIcon, {
-    // IconAdvancedIcon IconpollingIcon IconwithIcon IconsmartIcon IconintervalsIcon
-    IconpollingIntervalIcon: Icon30000Icon,
-    // IconOnlyIcon IconpollIcon IconwhenIcon IconwindowIcon IconisIcon IconfocusedIcon
-    IconrefetchOnFocusIcon: IcontrueIcon,
-    // IconRefetchIcon IconwhenIcon IconreconnectingIcon
-    IconrefetchOnReconnectIcon: IcontrueIcon,
+
+  // RTK Query hooks
+  const {
+    data: classes,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  } = useGetClassesQuery(undefined, {
+    // Advanced polling with smart intervals
+    pollingInterval: 30000,
+    // Only poll when window is focused
+    refetchOnFocus: true,
+    // Refetch when reconnecting
+    refetchOnReconnect: true,
   });
-  IconconstIcon [IconcreateClassIcon, { IconisLoadingIcon: IconisCreatingIcon, IconerrorIcon: IconcreateErrorIcon }] = IconuseCreateClassMutationIcon();
-  IconconstIcon [IconupdateClassIcon, { IconisLoadingIcon: IconisUpdatingIcon }] = IconuseUpdateClassMutationIcon();
-  IconconstIcon [IcondeleteClassIcon, { IconisLoadingIcon: IconisDeletingIcon }] = IconuseDeleteClassMutationIcon();
-  // IconEnhancedIcon IconselectorsIcon
-  IconconstIcon IconclassesWithStatsIcon = IconuseAppSelectorIcon(IconselectClassesWithStatsIcon);
-  IconconstIcon IconactiveClassesIcon = IconuseAppSelectorIcon(IconselectActiveClassesIcon);
-  IconconstIcon IconhandleCreateClassIcon = IconuseCallbackIcon(IconasyncIcon () => {
-    IcontryIcon {
-      IconconstIcon IconresultIcon = IconawaitIcon IconcreateClassIcon(IconformDataIcon).IconunwrapIcon();
-      IconconsoleIcon.IconlogIcon('IconClassIcon IconcreatedIcon:', IconresultIcon);
-      IconsetCreateDialogOpenIcon(IconfalseIcon);
-      IconsetFormDataIcon({ IconnameIcon: '', IconsubjectIcon: '', Icongrade_levelIcon: Icon1Icon, Iconmax_studentsIcon: Icon30Icon });
-    } IconcatchIcon (IconerrorIcon) {
-      IconconsoleIcon.IconerrorIcon('IconFailedIcon IcontoIcon IconcreateIcon IconclassIcon:', IconerrorIcon);
-      // IconErrorIcon IconisIcon IconautomaticallyIcon IconhandledIcon IconbyIcon IconRTKIcon IconQueryIcon IconmiddlewareIcon
+
+  const [createClass, { isLoading: isCreating, error: createError }] = useCreateClassMutation();
+  const [updateClass, { isLoading: isUpdating }] = useUpdateClassMutation();
+  const [deleteClass, { isLoading: isDeleting }] = useDeleteClassMutation();
+
+  // Enhanced selectors
+  const classesWithStats = useAppSelector(selectClassesWithStats);
+  const activeClasses = useAppSelector(selectActiveClasses);
+
+  const handleCreateClass = useCallback(async () => {
+    try {
+      const result = await createClass(formData).unwrap();
+      console.log('Class created:', result);
+      setCreateDialogOpen(false);
+      setFormData({ name: '', subject: '', grade_level: 1, max_students: 30 });
+    } catch (error) {
+      console.error('Failed to create class:', error);
+      // Error is automatically handled by RTK Query middleware
     }
-  }, [IconcreateClassIcon, IconformDataIcon]);
-  IconconstIcon IconhandleUpdateClassIcon = IconuseCallbackIcon(IconasyncIcon () => {
-    IconifIcon (!IconselectedClassIcon) IconreturnIcon;
-    IcontryIcon {
-      IconawaitIcon IconupdateClassIcon({
-        IconidIcon: IconselectedClassIcon.IconidIcon,
-        IcondataIcon: IconformDataIcon,
-      }).IconunwrapIcon();
-      IconsetEditDialogOpenIcon(IconfalseIcon);
-      IconsetSelectedClassIcon(IconnullIcon);
-    } IconcatchIcon (IconerrorIcon) {
-      IconconsoleIcon.IconerrorIcon('IconFailedIcon IcontoIcon IconupdateIcon IconclassIcon:', IconerrorIcon);
+  }, [createClass, formData]);
+
+  const handleUpdateClass = useCallback(async () => {
+    if (!selectedClass) return;
+
+    try {
+      await updateClass({
+        id: selectedClass.id,
+        data: formData,
+      }).unwrap();
+      setEditDialogOpen(false);
+      setSelectedClass(null);
+    } catch (error) {
+      console.error('Failed to update class:', error);
     }
-  }, [IconupdateClassIcon, IconselectedClassIcon, IconformDataIcon]);
-  IconconstIcon IconhandleDeleteClassIcon = IconuseCallbackIcon(IconasyncIcon (IconclassIdIcon: IconstringIcon) => {
-    IconifIcon (!IconwindowIcon.IconconfirmIcon('IconAreIcon IconyouIcon IconsureIcon IconyouIcon IconwantIcon IcontoIcon IcondeleteIcon IconthisIcon IconclassIcon?')) IconreturnIcon;
-    IcontryIcon {
-      IconawaitIcon IcondeleteClassIcon(IconclassIdIcon).IconunwrapIcon();
-    } IconcatchIcon (IconerrorIcon) {
-      IconconsoleIcon.IconerrorIcon('IconFailedIcon IcontoIcon IcondeleteIcon IconclassIcon:', IconerrorIcon);
+  }, [updateClass, selectedClass, formData]);
+
+  const handleDeleteClass = useCallback(async (classId: string) => {
+    if (!window.confirm('Are you sure you want to delete this class?')) return;
+
+    try {
+      await deleteClass(classId).unwrap();
+    } catch (error) {
+      console.error('Failed to delete class:', error);
     }
-  }, [IcondeleteClassIcon]);
-  IconconstIcon IconopenEditDialogIcon = IconuseCallbackIcon((IconclassItemIcon: IconClassSummaryIcon) => {
-    IconsetSelectedClassIcon(IconclassItemIcon);
-    IconsetFormDataIcon({
-      IconnameIcon: IconclassItemIcon.IconnameIcon,
-      IconsubjectIcon: IconclassItemIcon.IconsubjectIcon,
-      Icongrade_levelIcon: IconclassItemIcon.Icongrade_levelIcon,
-      Iconmax_studentsIcon: IconclassItemIcon.Iconmax_studentsIcon,
+  }, [deleteClass]);
+
+  const openEditDialog = useCallback((classItem: ClassSummary) => {
+    setSelectedClass(classItem);
+    setFormData({
+      name: classItem.name,
+      subject: classItem.subject,
+      grade_level: classItem.grade_level,
+      max_students: classItem.max_students,
     });
-    IconsetEditDialogOpenIcon(IcontrueIcon);
+    setEditDialogOpen(true);
   }, []);
-  IconreturnIcon (
-    <IconCardIcon>
-      <IconCardContentIcon>
-        <IconBoxIcon IcondisplayIcon="Iconflex" IconjustifyContentIcon="IconspaceIcon-Iconbetween" IconalignItemsIcon="Iconcenter" IconmbIcon={Icon2Icon}>
-          <IconTypographyIcon IconorderIcon={Icon6Icon}>
-            IconClassIcon IconManagementIcon (IconOptimisticIcon IconUpdatesIcon)
-            {IconisFetchingIcon && <IconCircularProgressIcon IconsizeIcon={Icon20Icon} IconstyleIcon={{ IconmlIcon: Icon1Icon }} />}
-          <IconIconIcon/IconTypographyIcon>
-          <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon1Icon}>
-            <IconButtonIcon
-              IconstartIconIcon={<IconIconPlusIcon />}
-              IconvariantIcon="Iconfilled"
-              IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconsetCreateDialogOpenIcon(IcontrueIcon)}
-              IcondisabledIcon={IconisCreatingIcon}
+
+  return (
+    <Card>
+      <CardContent>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Typography variant="h6">
+            Class Management (Optimistic Updates)
+            {isFetching && <CircularProgress size={20} sx={{ ml: 1 }} />}
+          </Typography>
+          <Stack direction="row" spacing={1}>
+            <Button
+              startIcon={<AddIcon />}
+              variant="contained"
+              onClick={() => setCreateDialogOpen(true)}
+              disabled={isCreating}
             >
-              IconCreateIcon IconClassIcon
-            <IconIconIcon/IconButtonIcon>
-            <IconButtonIcon
-              IconstartIconIcon={<IconIconRefreshIcon />}
-              IconvariantIcon="Iconoutline"
-              IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconrefetchIcon()}
-              IcondisabledIcon={IconisFetchingIcon}
+              Create Class
+            </Button>
+            <Button
+              startIcon={<RefreshIcon />}
+              variant="outlined"
+              onClick={() => refetch()}
+              disabled={isFetching}
             >
-              IconRefreshIcon
-            <IconIconIcon/IconButtonIcon>
-          <IconIconIcon/IconStackIcon>
-        <IconIconIcon/IconBoxIcon>
-        {IconerrorIcon && (
-          <IconAlertIcon IconseverityIcon="Iconerror" IconstyleIcon={{ IconmbIcon: Icon2Icon }}>
-            IconFailedIcon IcontoIcon IconloadIcon IconclassesIcon: {IconerrorIcon.IcontoStringIcon()}
-          <IconIconIcon/IconAlertIcon>
+              Refresh
+            </Button>
+          </Stack>
+        </Box>
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            Failed to load classes: {error.toString()}
+          </Alert>
         )}
-        <IconBoxIcon IcondisplayIcon="Iconflex" IcongapIcon={Icon2Icon} IconmbIcon={Icon2Icon}>
-          <IconChipIcon IconlabelIcon={`IconTotalIcon: ${IconclassesIcon?.IconlengthIcon || Icon0Icon}`} />
-          <IconChipIcon IconlabelIcon={`IconActiveIcon: ${IconactiveClassesIcon.IconlengthIcon}`} IconcolorIcon="Icongreen" />
-          <IconChipIcon IconlabelIcon={`IconLowIcon IconEnrollmentIcon: ${IconclassesWithStatsIcon.IconfilterIcon(IconcIcon => IconcIcon.IconutilizationIcon <IconIconIcon Icon50Icon).IconlengthIcon}`} IconcolorIcon="Iconyellow" />
-        <IconIconIcon/IconBoxIcon>
-        <IconListIcon>
-          {IconclassesWithStatsIcon.IconmapIcon((IconclassItemIcon) => (
-            <IconListItemIcon
-              IconkeyIcon={IconclassItemIcon.IconidIcon}
-              IconsecondaryActionIcon={
-                <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon1Icon}>
-                  <IconButtonIcon
-                    IconsizeIcon="Iconsmall"
-                    IconstartIconIcon={<IconIconEditIcon />}
-                    IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconopenEditDialogIcon(IconclassItemIcon)}
-                    IcondisabledIcon={IconisUpdatingIcon}
+
+        <Box display="flex" gap={2} mb={2}>
+          <Chip label={`Total: ${classes?.length || 0}`} />
+          <Chip label={`Active: ${activeClasses.length}`} color="success" />
+          <Chip label={`Low Enrollment: ${classesWithStats.filter(c => c.utilization < 50).length}`} color="warning" />
+        </Box>
+
+        <List>
+          {classesWithStats.map((classItem) => (
+            <ListItem
+              key={classItem.id}
+              secondaryAction={
+                <Stack direction="row" spacing={1}>
+                  <Button
+                    size="small"
+                    startIcon={<EditIcon />}
+                    onClick={() => openEditDialog(classItem)}
+                    disabled={isUpdating}
                   >
-                    IconEditIcon
-                  <IconIconIcon/IconButtonIcon>
-                  <IconButtonIcon
-                    IconsizeIcon="Iconsmall"
-                    IconcolorIcon="Iconred"
-                    IconstartIconIcon={<IconIconTrashIcon />}
-                    IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconhandleDeleteClassIcon(IconclassItemIcon.IconidIcon)}
-                    IcondisabledIcon={IconisDeletingIcon}
+                    Edit
+                  </Button>
+                  <Button
+                    size="small"
+                    color="error"
+                    startIcon={<DeleteIcon />}
+                    onClick={() => handleDeleteClass(classItem.id)}
+                    disabled={isDeleting}
                   >
-                    IconDeleteIcon
-                  <IconIconIcon/IconButtonIcon>
-                <IconIconIcon/IconStackIcon>
+                    Delete
+                  </Button>
+                </Stack>
               }
             >
-              <IconListItemAvatarIcon>
-                <IconAvatarIcon IconstyleIcon={{ IconbgcolorIcon: IconclassItemIcon.Iconis_onlineIcon ? 'IconsuccessIcon.Iconmain' : 'IcongreyIcon.Icon500' }}>
-                  {IconclassItemIcon.IconsubjectIcon.IconcharAtIcon(Icon0Icon)}
-                <IconIconIcon/IconAvatarIcon>
-              <IconIconIcon/IconListItemAvatarIcon>
-              <IconListItemTextIcon
-                IconprimaryIcon={
-                  <IconBoxIcon IcondisplayIcon="Iconflex" IconalignItemsIcon="Iconcenter" IcongapIcon={Icon1Icon}>
-                    <IconTypographyIcon IconvariantIcon="Iconsubtitle1">{IconclassItemIcon.IconnameIcon}<IconIconIcon/IconTypographyIcon>
-                    <IconChipIcon
-                      IconlabelIcon={IconclassItemIcon.IconstatusIcon}
-                      IconsizeIcon="Iconsmall"
-                      IconcolorIcon={IconclassItemIcon.IconstatusIcon === 'Icononline' ? 'Iconsuccess' : 'Icondefault'}
+              <ListItemAvatar>
+                <Avatar sx={{ bgcolor: classItem.is_online ? 'success.main' : 'grey.500' }}>
+                  {classItem.subject.charAt(0)}
+                </Avatar>
+              </ListItemAvatar>
+              <ListItemText
+                primary={
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <Typography variant="subtitle1">{classItem.name}</Typography>
+                    <Chip
+                      label={classItem.status}
+                      size="small"
+                      color={classItem.status === 'online' ? 'success' : 'default'}
                     />
-                    <IconChipIcon
-                      IconlabelIcon={`${IconclassItemIcon.IconutilizationIcon.IcontoFixedIcon(Icon0Icon)}% IconfullIcon`}
-                      IconsizeIcon="Iconsmall"
-                      IconcolorIcon={IconclassItemIcon.IconutilizationIcon > Icon80Icon ? 'Iconerror' : IconclassItemIcon.IconutilizationIcon > Icon60Icon ? 'Iconwarning' : 'Iconsuccess'}
+                    <Chip
+                      label={`${classItem.utilization.toFixed(0)}% full`}
+                      size="small"
+                      color={classItem.utilization > 80 ? 'error' : classItem.utilization > 60 ? 'warning' : 'success'}
                     />
-                  <IconIconIcon/IconBoxIcon>
+                  </Box>
                 }
-                IconsecondaryIcon={
-                  <IconIconIcon>
-                    {IconclassItemIcon.IconsubjectIcon} • IconGradeIcon {IconclassItemIcon.Icongrade_levelIcon} • {IconclassItemIcon.Iconstudent_countIcon}/{IconclassItemIcon.Iconmax_studentsIcon} IconstudentsIcon
-                    <IconbrIcon />
-                    IconTeacherIcon: {IconclassItemIcon.Iconteacher_nameIcon} • IconProgressIcon: {IconclassItemIcon.Iconaverage_progressIcon}%
-                  <IconIconIcon/>
+                secondary={
+                  <>
+                    {classItem.subject} • Grade {classItem.grade_level} • {classItem.student_count}/{classItem.max_students} students
+                    <br />
+                    Teacher: {classItem.teacher_name} • Progress: {classItem.average_progress}%
+                  </>
                 }
               />
-            <IconIconIcon/IconListItemIcon>
+            </ListItem>
           ))}
-        <IconIconIcon/IconListIcon>
-        {/* IconCreateIcon IconClassIcon IconDialogIcon */}
-        <IconDialogIcon IconopenIcon={IconcreateDialogOpenIcon} IcononCloseIcon={() => IconsetCreateDialogOpenIcon(IconfalseIcon)} IconmaxWidthIcon="Iconsm" IconfullWidthIcon>
-          <IconDialogTitleIcon>IconCreateIcon IconNewIcon IconClassIcon<IconIconIcon/IconDialogTitleIcon>
-          <IconDialogContentIcon>
-            <IconStackIcon IconspacingIcon={Icon2Icon} IconstyleIcon={{ IconmtIcon: Icon1Icon }}>
-              <IconTextFieldIcon
-                IconlabelIcon="IconClassIcon IconName"
-                IconvalueIcon={IconformDataIcon.IconnameIcon}
-                IcononChangeIcon={(IconeIcon) => IconsetFormDataIcon(IconprevIcon => ({ ...IconprevIcon, IconnameIcon: IconeIcon.IcontargetIcon.IconvalueIcon }))}
-                IconfullWidthIcon
+        </List>
+
+        {/* Create Class Dialog */}
+        <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>Create New Class</DialogTitle>
+          <DialogContent>
+            <Stack spacing={2} sx={{ mt: 1 }}>
+              <TextField
+                label="Class Name"
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                fullWidth
               />
-              <IconTextFieldIcon
-                IconlabelIcon="IconSubject"
-                IconvalueIcon={IconformDataIcon.IconsubjectIcon}
-                IcononChangeIcon={(IconeIcon) => IconsetFormDataIcon(IconprevIcon => ({ ...IconprevIcon, IconsubjectIcon: IconeIcon.IcontargetIcon.IconvalueIcon }))}
-                IconfullWidthIcon
+              <TextField
+                label="Subject"
+                value={formData.subject}
+                onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
+                fullWidth
               />
-              <IconTextFieldIcon
-                IconlabelIcon="IconGradeIcon IconLevel"
-                IcontypeIcon="Iconnumber"
-                IconvalueIcon={IconformDataIcon.Icongrade_levelIcon}
-                IcononChangeIcon={(IconeIcon) => IconsetFormDataIcon(IconprevIcon => ({ ...IconprevIcon, Icongrade_levelIcon: IconparseIntIcon(IconeIcon.IcontargetIcon.IconvalueIcon) }))}
-                IconfullWidthIcon
+              <TextField
+                label="Grade Level"
+                type="number"
+                value={formData.grade_level}
+                onChange={(e) => setFormData(prev => ({ ...prev, grade_level: parseInt(e.target.value) }))}
+                fullWidth
               />
-              <IconTextFieldIcon
-                IconlabelIcon="IconMaxIcon IconStudents"
-                IcontypeIcon="Iconnumber"
-                IconvalueIcon={IconformDataIcon.Iconmax_studentsIcon}
-                IcononChangeIcon={(IconeIcon) => IconsetFormDataIcon(IconprevIcon => ({ ...IconprevIcon, Iconmax_studentsIcon: IconparseIntIcon(IconeIcon.IcontargetIcon.IconvalueIcon) }))}
-                IconfullWidthIcon
+              <TextField
+                label="Max Students"
+                type="number"
+                value={formData.max_students}
+                onChange={(e) => setFormData(prev => ({ ...prev, max_students: parseInt(e.target.value) }))}
+                fullWidth
               />
-            <IconIconIcon/IconStackIcon>
-            {IconcreateErrorIcon && (
-              <IconAlertIcon IconseverityIcon="Iconerror" IconstyleIcon={{ IconmtIcon: Icon2Icon }}>
-                IconFailedIcon IcontoIcon IconcreateIcon IconclassIcon: {IconcreateErrorIcon.IcontoStringIcon()}
-              <IconIconIcon/IconAlertIcon>
+            </Stack>
+            {createError && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                Failed to create class: {createError.toString()}
+              </Alert>
             )}
-          <IconIconIcon/IconDialogContentIcon>
-          <IconDialogActionsIcon>
-            <IconButtonIcon IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconsetCreateDialogOpenIcon(IconfalseIcon)}>IconCancelIcon<IconIconIcon/IconButtonIcon>
-            <IconButtonIcon
-              IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconhandleCreateClassIcon}
-              IconvariantIcon="Iconfilled"
-              IcondisabledIcon={IconisCreatingIcon || !IconformDataIcon.IconnameIcon || !IconformDataIcon.IconsubjectIcon}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
+            <Button
+              onClick={handleCreateClass}
+              variant="contained"
+              disabled={isCreating || !formData.name || !formData.subject}
             >
-              {IconisCreatingIcon ? 'IconCreatingIcon...' : 'IconCreate'}
-            <IconIconIcon/IconButtonIcon>
-          <IconIconIcon/IconDialogActionsIcon>
-        <IconIconIcon/IconDialogIcon>
-        {/* IconEditIcon IconClassIcon IconDialogIcon */}
-        <IconDialogIcon IconopenIcon={IconeditDialogOpenIcon} IcononCloseIcon={() => IconsetEditDialogOpenIcon(IconfalseIcon)} IconmaxWidthIcon="Iconsm" IconfullWidthIcon>
-          <IconDialogTitleIcon>IconEditIcon IconClassIcon<IconIconIcon/IconDialogTitleIcon>
-          <IconDialogContentIcon>
-            <IconStackIcon IconspacingIcon={Icon2Icon} IconstyleIcon={{ IconmtIcon: Icon1Icon }}>
-              <IconTextFieldIcon
-                IconlabelIcon="IconClassIcon IconName"
-                IconvalueIcon={IconformDataIcon.IconnameIcon}
-                IcononChangeIcon={(IconeIcon) => IconsetFormDataIcon(IconprevIcon => ({ ...IconprevIcon, IconnameIcon: IconeIcon.IcontargetIcon.IconvalueIcon }))}
-                IconfullWidthIcon
+              {isCreating ? 'Creating...' : 'Create'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Edit Class Dialog */}
+        <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>Edit Class</DialogTitle>
+          <DialogContent>
+            <Stack spacing={2} sx={{ mt: 1 }}>
+              <TextField
+                label="Class Name"
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                fullWidth
               />
-              <IconTextFieldIcon
-                IconlabelIcon="IconSubject"
-                IconvalueIcon={IconformDataIcon.IconsubjectIcon}
-                IcononChangeIcon={(IconeIcon) => IconsetFormDataIcon(IconprevIcon => ({ ...IconprevIcon, IconsubjectIcon: IconeIcon.IcontargetIcon.IconvalueIcon }))}
-                IconfullWidthIcon
+              <TextField
+                label="Subject"
+                value={formData.subject}
+                onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
+                fullWidth
               />
-              <IconTextFieldIcon
-                IconlabelIcon="IconGradeIcon IconLevel"
-                IcontypeIcon="Iconnumber"
-                IconvalueIcon={IconformDataIcon.Icongrade_levelIcon}
-                IcononChangeIcon={(IconeIcon) => IconsetFormDataIcon(IconprevIcon => ({ ...IconprevIcon, Icongrade_levelIcon: IconparseIntIcon(IconeIcon.IcontargetIcon.IconvalueIcon) }))}
-                IconfullWidthIcon
+              <TextField
+                label="Grade Level"
+                type="number"
+                value={formData.grade_level}
+                onChange={(e) => setFormData(prev => ({ ...prev, grade_level: parseInt(e.target.value) }))}
+                fullWidth
               />
-              <IconTextFieldIcon
-                IconlabelIcon="IconMaxIcon IconStudents"
-                IcontypeIcon="Iconnumber"
-                IconvalueIcon={IconformDataIcon.Iconmax_studentsIcon}
-                IcononChangeIcon={(IconeIcon) => IconsetFormDataIcon(IconprevIcon => ({ ...IconprevIcon, Iconmax_studentsIcon: IconparseIntIcon(IconeIcon.IcontargetIcon.IconvalueIcon) }))}
-                IconfullWidthIcon
+              <TextField
+                label="Max Students"
+                type="number"
+                value={formData.max_students}
+                onChange={(e) => setFormData(prev => ({ ...prev, max_students: parseInt(e.target.value) }))}
+                fullWidth
               />
-            <IconIconIcon/IconStackIcon>
-          <IconIconIcon/IconDialogContentIcon>
-          <IconDialogActionsIcon>
-            <IconButtonIcon IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconsetEditDialogOpenIcon(IconfalseIcon)}>IconCancelIcon<IconIconIcon/IconButtonIcon>
-            <IconButtonIcon
-              IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconhandleUpdateClassIcon}
-              IconvariantIcon="Iconfilled"
-              IcondisabledIcon={IconisUpdatingIcon || !IconformDataIcon.IconnameIcon || !IconformDataIcon.IconsubjectIcon}
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+            <Button
+              onClick={handleUpdateClass}
+              variant="contained"
+              disabled={isUpdating || !formData.name || !formData.subject}
             >
-              {IconisUpdatingIcon ? 'IconUpdatingIcon...' : 'IconUpdate'}
-            <IconIconIcon/IconButtonIcon>
-          <IconIconIcon/IconDialogActionsIcon>
-        <IconIconIcon/IconDialogIcon>
-      <IconIconIcon/IconCardContentIcon>
-    <IconIconIcon/IconCardIcon>
+              {isUpdating ? 'Updating...' : 'Update'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </CardContent>
+    </Card>
   );
 }
-// IconExampleIcon Icon2Icon: IconCacheIcon IconPerformanceIcon IconMonitorIcon
-IconfunctionIcon IconCachePerformanceMonitorIcon() {
-  IconconstIcon IconcacheMetricsIcon = IconuseCacheMetricsIcon();
-  IconconstIcon IconmigrationProgressIcon = IconuseMigrationProgressIcon();
-  IconconstIcon IconcachePerformanceIcon = IconuseAppSelectorIcon(IconselectCachePerformanceIcon);
-  // IconManualIcon IconcacheIcon IconoperationsIcon
-  IconconstIcon IconhandleInvalidateAllIcon = IconuseCallbackIcon(() => {
-    IconapiIcon.IconutilIcon.IconresetApiStateIcon();
+
+// Example 2: Cache Performance Monitor
+function CachePerformanceMonitor() {
+  const cacheMetrics = useCacheMetrics();
+  const migrationProgress = useMigrationProgress();
+  const cachePerformance = useAppSelector(selectCachePerformance);
+
+  // Manual cache operations
+  const handleInvalidateAll = useCallback(() => {
+    api.util.resetApiState();
   }, []);
-  IconconstIcon IconhandleInvalidateTagsIcon = IconuseCallbackIcon((IcontagsIcon: IconstringIcon[]) => {
-    IcontagsIcon.IconforEachIcon(IcontagIcon => {
-      IconapiIcon.IconutilIcon.IconinvalidateTagsIcon([IcontagIcon]);
+
+  const handleInvalidateTags = useCallback((tags: string[]) => {
+    tags.forEach(tag => {
+      api.util.invalidateTags([tag]);
     });
   }, []);
-  IconconstIcon IconhandlePrefetchDataIcon = IconuseCallbackIcon(() => {
-    IconapiIcon.IconutilIcon.IconprefetchIcon('IcongetDashboardOverview', IconundefinedIcon, { IconforceIcon: IcontrueIcon });
-    IconapiIcon.IconutilIcon.IconprefetchIcon('IcongetClasses', IconundefinedIcon, { IconforceIcon: IcontrueIcon });
+
+  const handlePrefetchData = useCallback(() => {
+    api.util.prefetch('getDashboardOverview', undefined, { force: true });
+    api.util.prefetch('getClasses', undefined, { force: true });
   }, []);
-  IconreturnIcon (
-    <IconCardIcon>
-      <IconCardContentIcon>
-        <IconTypographyIcon IconorderIcon={Icon6Icon} IcongutterBottomIcon>
-          IconCacheIcon IconPerformanceIcon IconMonitorIcon
-        <IconIconIcon/IconTypographyIcon>
-        <IconStackIcon IconspacingIcon={Icon3Icon}>
-          {/* IconPerformanceIcon IconMetricsIcon */}
-          <IconBoxIcon>
-            <IconTypographyIcon IconvariantIcon="Iconsubtitle1" IcongutterBottomIcon>IconPerformanceIcon IconMetricsIcon<IconIconIcon/IconTypographyIcon>
-            <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon2Icon}>
-              <IconChipIcon
-                IconiconIcon={<IconIconSpeedIcon />}
-                IconlabelIcon={`IconCacheIcon IconHitIcon IconRatioIcon: ${IconcacheMetricsIcon.IconformattedHitRatioIcon}`}
-                IconcolorIcon={IconcacheMetricsIcon.IconcacheHitRatioIcon > Icon0Icon.Icon7Icon ? 'Iconsuccess' : IconcacheMetricsIcon.IconcacheHitRatioIcon > Icon0Icon.Icon5Icon ? 'Iconwarning' : 'Iconerror'}
+
+  return (
+    <Card>
+      <CardContent>
+        <Typography variant="h6" gutterBottom>
+          Cache Performance Monitor
+        </Typography>
+
+        <Stack spacing={3}>
+          {/* Performance Metrics */}
+          <Box>
+            <Typography variant="subtitle1" gutterBottom>Performance Metrics</Typography>
+            <Stack direction="row" spacing={2}>
+              <Chip
+                icon={<SpeedIcon />}
+                label={`Cache Hit Ratio: ${cacheMetrics.formattedHitRatio}`}
+                color={cacheMetrics.cacheHitRatio > 0.7 ? 'success' : cacheMetrics.cacheHitRatio > 0.5 ? 'warning' : 'error'}
               />
-              <IconChipIcon
-                IconiconIcon={<IconIconAnalyticsIcon />}
-                IconlabelIcon={`IconTotalIcon IconQueriesIcon: ${IconcacheMetricsIcon.IconcacheSizeIcon}`}
-                IconcolorIcon="Iconcyan"
+              <Chip
+                icon={<AnalyticsIcon />}
+                label={`Total Queries: ${cacheMetrics.cacheSize}`}
+                color="info"
               />
-              <IconChipIcon
-                IconiconIcon={IconmigrationProgressIcon.IconmigrationCompleteIcon ? <IconIconCircleCheckIcon /> : <IconIconCircleXIcon />}
-                IconlabelIcon={IconmigrationProgressIcon.IconmigrationCompleteIcon ? 'IconMigrationIcon IconComplete' : 'IconMigrationIcon IconinIcon IconProgress'}
-                IconcolorIcon={IconmigrationProgressIcon.IconmigrationCompleteIcon ? 'Iconsuccess' : 'Iconwarning'}
+              <Chip
+                icon={migrationProgress.migrationComplete ? <CheckCircleIcon /> : <ErrorIcon />}
+                label={migrationProgress.migrationComplete ? 'Migration Complete' : 'Migration in Progress'}
+                color={migrationProgress.migrationComplete ? 'success' : 'warning'}
               />
-            <IconIconIcon/IconStackIcon>
-          <IconIconIcon/IconBoxIcon>
-          {/* IconDetailedIcon IconStatisticsIcon */}
-          <IconBoxIcon>
-            <IconTypographyIcon IconvariantIcon="Iconsubtitle1" IcongutterBottomIcon>IconDetailedIcon IconStatisticsIcon<IconIconIcon/IconTypographyIcon>
-            <IconStackIcon IconspacingIcon={Icon2Icon}>
-              <IconBoxIcon>
-                <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">IconQueryIcon IconSuccessIcon IconRateIcon<IconIconIcon/IconTypographyIcon>
-                <IconBoxIcon IcondisplayIcon="Iconflex" IconalignItemsIcon="Iconcenter" IcongapIcon={Icon1Icon}>
-                  <IconLinearProgressIcon
-                    IconvariantIcon="Icondeterminate"
-                    IconvalueIcon={IconcachePerformanceIcon.IconqueriesIcon.IconsuccessRateIcon}
-                    IconstyleIcon={{ IconflexIcon: Icon1Icon, IconheightIcon: Icon8Icon, IconborderRadiusIcon: Icon4Icon }}
+            </Stack>
+          </Box>
+
+          {/* Detailed Statistics */}
+          <Box>
+            <Typography variant="subtitle1" gutterBottom>Detailed Statistics</Typography>
+            <Stack spacing={2}>
+              <Box>
+                <Typography variant="body2" color="text.secondary">Query Success Rate</Typography>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <LinearProgress
+                    variant="determinate"
+                    value={cachePerformance.queries.successRate}
+                    sx={{ flex: 1, height: 8, borderRadius: 4 }}
                   />
-                  <IconTypographyIcon IconsizeIcon="Iconsm">{IconcachePerformanceIcon.IconqueriesIcon.IconsuccessRateIcon.IcontoFixedIcon(Icon1Icon)}%<IconIconIcon/IconTypographyIcon>
-                <IconIconIcon/IconBoxIcon>
-              <IconIconIcon/IconBoxIcon>
-              <IconBoxIcon>
-                <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconsecondary">IconMutationIcon IconSuccessIcon IconRateIcon<IconIconIcon/IconTypographyIcon>
-                <IconBoxIcon IcondisplayIcon="Iconflex" IconalignItemsIcon="Iconcenter" IcongapIcon={Icon1Icon}>
-                  <IconLinearProgressIcon
-                    IconvariantIcon="Icondeterminate"
-                    IconvalueIcon={IconcachePerformanceIcon.IconmutationsIcon.IconsuccessRateIcon}
-                    IconstyleIcon={{ IconflexIcon: Icon1Icon, IconheightIcon: Icon8Icon, IconborderRadiusIcon: Icon4Icon }}
-                    IconcolorIcon="Icongray"
+                  <Typography variant="body2">{cachePerformance.queries.successRate.toFixed(1)}%</Typography>
+                </Box>
+              </Box>
+
+              <Box>
+                <Typography variant="body2" color="text.secondary">Mutation Success Rate</Typography>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <LinearProgress
+                    variant="determinate"
+                    value={cachePerformance.mutations.successRate}
+                    sx={{ flex: 1, height: 8, borderRadius: 4 }}
+                    color="secondary"
                   />
-                  <IconTypographyIcon IconsizeIcon="Iconsm">{IconcachePerformanceIcon.IconmutationsIcon.IconsuccessRateIcon.IcontoFixedIcon(Icon1Icon)}%<IconIconIcon/IconTypographyIcon>
-                <IconIconIcon/IconBoxIcon>
-              <IconIconIcon/IconBoxIcon>
-            <IconIconIcon/IconStackIcon>
-          <IconIconIcon/IconBoxIcon>
-          {/* IconCacheIcon IconOperationsIcon */}
-          <IconBoxIcon>
-            <IconTypographyIcon IconvariantIcon="Iconsubtitle1" IcongutterBottomIcon>IconCacheIcon IconOperationsIcon<IconIconIcon/IconTypographyIcon>
-            <IconStackIcon IcondirectionIcon="Iconrow" IconspacingIcon={Icon1Icon} IconflexWrapIcon="Iconwrap">
-              <IconButtonIcon
-                IconsizeIcon="Iconsmall"
-                IconvariantIcon="Iconoutline"
-                IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconhandlePrefetchDataIcon}
-                IconstartIconIcon={<IconIconRefreshIcon />}
+                  <Typography variant="body2">{cachePerformance.mutations.successRate.toFixed(1)}%</Typography>
+                </Box>
+              </Box>
+            </Stack>
+          </Box>
+
+          {/* Cache Operations */}
+          <Box>
+            <Typography variant="subtitle1" gutterBottom>Cache Operations</Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap">
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={handlePrefetchData}
+                startIcon={<RefreshIcon />}
               >
-                IconPrefetchIcon IconDataIcon
-              <IconIconIcon/IconButtonIcon>
-              <IconButtonIcon
-                IconsizeIcon="Iconsmall"
-                IconvariantIcon="Iconoutline"
-                IconcolorIcon="Iconyellow"
-                IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => () => IconhandleInvalidateTagsIcon(['IconDashboard', 'IconClass'])}
+                Prefetch Data
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                color="warning"
+                onClick={() => handleInvalidateTags(['Dashboard', 'Class'])}
               >
-                IconInvalidateIcon IconMainIcon IconTagsIcon
-              <IconIconIcon/IconButtonIcon>
-              <IconButtonIcon
-                IconsizeIcon="Iconsmall"
-                IconvariantIcon="Iconoutline"
-                IconcolorIcon="Iconred"
-                IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconhandleInvalidateAllIcon}
+                Invalidate Main Tags
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                color="error"
+                onClick={handleInvalidateAll}
               >
-                IconResetIcon IconAllIcon IconCacheIcon
-              <IconIconIcon/IconButtonIcon>
-            <IconIconIcon/IconStackIcon>
-          <IconIconIcon/IconBoxIcon>
-          {/* IconMigrationIcon IconStatusIcon */}
-          <IconBoxIcon>
-            <IconTypographyIcon IconvariantIcon="Iconsubtitle1" IcongutterBottomIcon>IconMigrationIcon IconStatusIcon<IconIconIcon/IconTypographyIcon>
-            <IconAlertIcon IconseverityIcon={IconmigrationProgressIcon.IconmigrationCompleteIcon ? "Iconsuccess" : "Iconinfo"}>
-              <IconTypographyIcon IconsizeIcon="Iconsm">
-                <IconstrongIcon>IconStatusIcon:<IconIconIcon/IconstrongIcon> {IconmigrationProgressIcon.IconmigrationCompleteIcon ? 'IconComplete' : 'IconInIcon IconProgress'}<IconbrIcon />
-                <IconstrongIcon>IconRTKIcon IconQueriesIcon:<IconIconIcon/IconstrongIcon> {IconmigrationProgressIcon.IconrtkQueriesIcon}<IconbrIcon />
-                <IconstrongIcon>IconRTKIcon IconMutationsIcon:<IconIconIcon/IconstrongIcon> {IconmigrationProgressIcon.IconrtkMutationsIcon}<IconbrIcon />
-                <IconstrongIcon>IconActiveIcon IconLegacyIcon IconSlicesIcon:<IconIconIcon/IconstrongIcon> {IconmigrationProgressIcon.IconlegacySlicesActiveIcon}<IconbrIcon />
-                <IconstrongIcon>IconCacheIcon IconEfficiencyIcon:<IconIconIcon/IconstrongIcon> {IconmigrationProgressIcon.IconcacheEfficiencyIcon}
-              <IconIconIcon/IconTypographyIcon>
-            <IconIconIcon/IconAlertIcon>
-          <IconIconIcon/IconBoxIcon>
-        <IconIconIcon/IconStackIcon>
-      <IconIconIcon/IconCardContentIcon>
-    <IconIconIcon/IconCardIcon>
+                Reset All Cache
+              </Button>
+            </Stack>
+          </Box>
+
+          {/* Migration Status */}
+          <Box>
+            <Typography variant="subtitle1" gutterBottom>Migration Status</Typography>
+            <Alert severity={migrationProgress.migrationComplete ? "success" : "info"}>
+              <Typography variant="body2">
+                <strong>Status:</strong> {migrationProgress.migrationComplete ? 'Complete' : 'In Progress'}<br />
+                <strong>RTK Queries:</strong> {migrationProgress.rtkQueries}<br />
+                <strong>RTK Mutations:</strong> {migrationProgress.rtkMutations}<br />
+                <strong>Active Legacy Slices:</strong> {migrationProgress.legacySlicesActive}<br />
+                <strong>Cache Efficiency:</strong> {migrationProgress.cacheEfficiency}
+              </Typography>
+            </Alert>
+          </Box>
+        </Stack>
+      </CardContent>
+    </Card>
   );
 }
-// IconExampleIcon Icon3Icon: IconRealIcon-IcontimeIcon IconMessageIcon IconSystemIcon
-IconfunctionIcon IconRealtimeMessageSystemIcon() {
-  IconconstIcon [IconmessageTextIcon, IconsetMessageTextIcon] = IconuseStateIcon('');
-  IconconstIcon [IconrecipientIdsIcon, IconsetRecipientIdsIcon] = IconuseStateIcon<IconstringIcon[]>([]);
-  // IconRTKIcon IconQueryIcon IconhooksIcon IconwithIcon IconrealIcon-IcontimeIcon IconupdatesIcon
-  IconconstIcon {
-    IcondataIcon: IconmessagesIcon,
-    IconisLoadingIcon,
-    IconisFetchingIcon,
-  } = IconuseGetMessagesQueryIcon({
-    Iconunread_onlyIcon: IconfalseIcon,
+
+// Example 3: Real-time Message System
+function RealtimeMessageSystem() {
+  const [messageText, setMessageText] = useState('');
+  const [recipientIds, setRecipientIds] = useState<string[]>([]);
+
+  // RTK Query hooks with real-time updates
+  const {
+    data: messages,
+    isLoading,
+    isFetching,
+  } = useGetMessagesQuery({
+    unread_only: false,
   }, {
-    IconpollingIntervalIcon: Icon5000Icon, // IconPollIcon IconeveryIcon Icon5Icon IconsecondsIcon IconforIcon IconnewIcon IconmessagesIcon
+    pollingInterval: 5000, // Poll every 5 seconds for new messages
   });
-  IconconstIcon [IconsendMessageIcon, { IconisLoadingIcon: IconisSendingIcon }] = IconuseSendMessageMutationIcon();
-  IconconstIcon IconunreadCountIcon = IconuseAppSelectorIcon(IconselectUnreadMessageCountIcon);
-  IconconstIcon IconhandleSendMessageIcon = IconuseCallbackIcon(IconasyncIcon () => {
-    IconifIcon (!IconmessageTextIcon.IcontrimIcon() || IconrecipientIdsIcon.IconlengthIcon === Icon0Icon) IconreturnIcon;
-    IcontryIcon {
-      IconawaitIcon IconsendMessageIcon({
-        IconsubjectIcon: 'IconQuickIcon IconMessage',
-        IconbodyIcon: IconmessageTextIcon,
-        Iconrecipient_idsIcon: IconrecipientIdsIcon,
-      }).IconunwrapIcon();
-      IconsetMessageTextIcon('');
-      IconsetRecipientIdsIcon([]);
-    } IconcatchIcon (IconerrorIcon) {
-      IconconsoleIcon.IconerrorIcon('IconFailedIcon IcontoIcon IconsendIcon IconmessageIcon:', IconerrorIcon);
+
+  const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
+
+  const unreadCount = useAppSelector(selectUnreadMessageCount);
+
+  const handleSendMessage = useCallback(async () => {
+    if (!messageText.trim() || recipientIds.length === 0) return;
+
+    try {
+      await sendMessage({
+        subject: 'Quick Message',
+        body: messageText,
+        recipient_ids: recipientIds,
+      }).unwrap();
+
+      setMessageText('');
+      setRecipientIds([]);
+    } catch (error) {
+      console.error('Failed to send message:', error);
     }
-  }, [IconsendMessageIcon, IconmessageTextIcon, IconrecipientIdsIcon]);
-  IconreturnIcon (
-    <IconCardIcon>
-      <IconCardContentIcon>
-        <IconBoxIcon IcondisplayIcon="Iconflex" IconjustifyContentIcon="IconspaceIcon-Iconbetween" IconalignItemsIcon="Iconcenter" IconmbIcon={Icon2Icon}>
-          <IconTypographyIcon IconorderIcon={Icon6Icon}>
-            IconRealIcon-IcontimeIcon IconMessagesIcon
-            {IconisFetchingIcon && <IconCircularProgressIcon IconsizeIcon={Icon16Icon} IconstyleIcon={{ IconmlIcon: Icon1Icon }} />}
-          <IconIconIcon/IconTypographyIcon>
-          <IconChipIcon
-            IconlabelIcon={`${IconunreadCountIcon} IconunreadIcon`}
-            IconcolorIcon={IconunreadCountIcon > Icon0Icon ? 'Iconerror' : 'Icondefault'}
-            IconsizeIcon="Iconsmall"
+  }, [sendMessage, messageText, recipientIds]);
+
+  return (
+    <Card>
+      <CardContent>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Typography variant="h6">
+            Real-time Messages
+            {isFetching && <CircularProgress size={16} sx={{ ml: 1 }} />}
+          </Typography>
+          <Chip
+            label={`${unreadCount} unread`}
+            color={unreadCount > 0 ? 'error' : 'default'}
+            size="small"
           />
-        <IconIconIcon/IconBoxIcon>
-        {/* IconSendIcon IconMessageIcon IconFormIcon */}
-        <IconBoxIcon IconmbIcon={Icon3Icon}>
-          <IconTypographyIcon IconvariantIcon="Iconsubtitle2" IcongutterBottomIcon>IconSendIcon IconQuickIcon IconMessageIcon<IconIconIcon/IconTypographyIcon>
-          <IconStackIcon IconspacingIcon={Icon2Icon}>
-            <IconTextFieldIcon
-              IconlabelIcon="IconMessage"
-              IconmultilineIcon
-              IconrowsIcon={Icon3Icon}
-              IconvalueIcon={IconmessageTextIcon}
-              IcononChangeIcon={(IconeIcon) => IconsetMessageTextIcon(IconeIcon.IcontargetIcon.IconvalueIcon)}
-              IconfullWidthIcon
-              IconplaceholderIcon="IconTypeIcon IconyourIcon IconmessageIcon IconhereIcon..."
+        </Box>
+
+        {/* Send Message Form */}
+        <Box mb={3}>
+          <Typography variant="subtitle2" gutterBottom>Send Quick Message</Typography>
+          <Stack spacing={2}>
+            <TextField
+              label="Message"
+              multiline
+              rows={3}
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
+              fullWidth
+              placeholder="Type your message here..."
             />
-            <IconFormControlIcon IconfullWidthIcon>
-              <IconInputLabelIcon>IconRecipientsIcon<IconIconIcon/IconInputLabelIcon>
-              <IconSelectIcon
-                IconmultipleIcon
-                IconvalueIcon={IconrecipientIdsIcon}
-                IcononChangeIcon={(IconeIcon) => IconsetRecipientIdsIcon(IcontypeofIcon IconeIcon.IcontargetIcon.IconvalueIcon === 'Iconstring' ? [IconeIcon.IcontargetIcon.IconvalueIcon] : IconeIcon.IcontargetIcon.IconvalueIcon)}
-                IconlabelIcon="IconRecipients"
+            <FormControl fullWidth>
+              <InputLabel>Recipients</InputLabel>
+              <Select
+                multiple
+                value={recipientIds}
+                onChange={(e) => setRecipientIds(typeof e.target.value === 'string' ? [e.target.value] : e.target.value)}
+                label="Recipients"
               >
-                <IconMenuItemIcon IconvalueIcon="Iconteacher1">IconMathIcon IconTeacherIcon<IconIconIcon/IconMenuItemIcon>
-                <IconMenuItemIcon IconvalueIcon="Iconteacher2">IconScienceIcon IconTeacherIcon<IconIconIcon/IconMenuItemIcon>
-                <IconMenuItemIcon IconvalueIcon="Iconadmin1">IconSchoolIcon IconAdminIcon<IconIconIcon/IconMenuItemIcon>
-              <IconIconIcon/IconSelectIcon>
-            <IconIconIcon/IconFormControlIcon>
-            <IconButtonIcon
-              IconvariantIcon="Iconfilled"
-              IcononClickIcon={(IconeIcon: IconReactIcon.IconMouseEventIcon) => IconhandleSendMessageIcon}
-              IcondisabledIcon={IconisSendingIcon || !IconmessageTextIcon.IcontrimIcon() || IconrecipientIdsIcon.IconlengthIcon === Icon0Icon}
-              IconstartIconIcon={IconisSendingIcon ? <IconCircularProgressIcon IconsizeIcon={Icon16Icon} /> : IconundefinedIcon}
+                <MenuItem value="teacher1">Math Teacher</MenuItem>
+                <MenuItem value="teacher2">Science Teacher</MenuItem>
+                <MenuItem value="admin1">School Admin</MenuItem>
+              </Select>
+            </FormControl>
+            <Button
+              variant="contained"
+              onClick={handleSendMessage}
+              disabled={isSending || !messageText.trim() || recipientIds.length === 0}
+              startIcon={isSending ? <CircularProgress size={16} /> : undefined}
             >
-              {IconisSendingIcon ? 'IconSendingIcon...' : 'IconSendIcon IconMessage'}
-            <IconIconIcon/IconButtonIcon>
-          <IconIconIcon/IconStackIcon>
-        <IconIconIcon/IconBoxIcon>
-        <IconDividerIcon IconstyleIcon={{ IconmbIcon: Icon2Icon }} />
-        {/* IconMessageIcon IconListIcon */}
-        <IconTypographyIcon IconvariantIcon="Iconsubtitle2" IcongutterBottomIcon>IconRecentIcon IconMessagesIcon<IconIconIcon/IconTypographyIcon>
-        {IconisLoadingIcon ? (
-          <IconBoxIcon IcondisplayIcon="Iconflex" IconjustifyContentIcon="Iconcenter" IconpIcon={Icon2Icon}>
-            <IconCircularProgressIcon />
-          <IconIconIcon/IconBoxIcon>
+              {isSending ? 'Sending...' : 'Send Message'}
+            </Button>
+          </Stack>
+        </Box>
+
+        <Divider sx={{ mb: 2 }} />
+
+        {/* Message List */}
+        <Typography variant="subtitle2" gutterBottom>Recent Messages</Typography>
+        {isLoading ? (
+          <Box display="flex" justifyContent="center" p={2}>
+            <CircularProgress />
+          </Box>
         ) : (
-          <IconListIcon>
-            {(IconmessagesIcon || []).IconsliceIcon(Icon0Icon, Icon5Icon).IconmapIcon((IconmessageIcon) => (
-              <IconListItemIcon IconkeyIcon={IconmessageIcon.IconidIcon} IconalignItemsIcon="IconflexIcon-Iconstart">
-                <IconListItemAvatarIcon>
-                  <IconAvatarIcon IconstyleIcon={{ IconbgcolorIcon: IconmessageIcon.Iconis_readIcon ? 'IcongreyIcon.Icon300' : 'IconprimaryIcon.Iconmain' }}>
+          <List>
+            {(messages || []).slice(0, 5).map((message) => (
+              <ListItem key={message.id} alignItems="flex-start">
+                <ListItemAvatar>
+                  <Avatar sx={{ bgcolor: message.is_read ? 'grey.300' : 'primary.main' }}>
                     📧
-                  <IconIconIcon/IconAvatarIcon>
-                <IconIconIcon/IconListItemAvatarIcon>
-                <IconListItemTextIcon
-                  IconprimaryIcon={
-                    <IconBoxIcon IcondisplayIcon="Iconflex" IconalignItemsIcon="Iconcenter" IcongapIcon={Icon1Icon}>
-                      <IconTypographyIcon IconvariantIcon="Iconsubtitle2">{IconmessageIcon.IconsubjectIcon}<IconIconIcon/IconTypographyIcon>
-                      {!IconmessageIcon.Iconis_readIcon && <IconChipIcon IconlabelIcon="IconNew" IconsizeIcon="Iconsmall" IconcolorIcon="Iconblue" />}
-                      {IconmessageIcon.IconpriorityIcon === 'Iconhigh' && <IconChipIcon IconlabelIcon="IconPriority" IconsizeIcon="Iconsmall" IconcolorIcon="Iconred" />}
-                    <IconIconIcon/IconBoxIcon>
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Typography variant="subtitle2">{message.subject}</Typography>
+                      {!message.is_read && <Chip label="New" size="small" color="primary" />}
+                      {message.priority === 'high' && <Chip label="Priority" size="small" color="error" />}
+                    </Box>
                   }
-                  IconsecondaryIcon={
-                    <IconIconIcon>
-                      <IconTypographyIcon IconsizeIcon="Iconsm" IconcolorIcon="IcontextIcon.Iconprimary" IconstyleIcon={{ IconmtIcon: Icon0Icon.Icon5Icon }}>
-                        {IconmessageIcon.IconbodyIcon.IconsubstringIcon(Icon0Icon, Icon100Icon)}...
-                      <IconIconIcon/IconTypographyIcon>
-                      <IconTypographyIcon IconvariantIcon="Iconcaption" IconcolorIcon="IcontextIcon.Iconsecondary">
-                        {IconnewIcon IconDateIcon(IconmessageIcon.Iconcreated_atIcon).IcontoLocaleStringIcon()}
-                      <IconIconIcon/IconTypographyIcon>
-                    <IconIconIcon/>
+                  secondary={
+                    <>
+                      <Typography variant="body2" color="text.primary" sx={{ mt: 0.5 }}>
+                        {message.body.substring(0, 100)}...
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {new Date(message.created_at).toLocaleString()}
+                      </Typography>
+                    </>
                   }
                 />
-              <IconIconIcon/IconListItemIcon>
+              </ListItem>
             ))}
-          <IconIconIcon/IconListIcon>
+          </List>
         )}
-      <IconIconIcon/IconCardContentIcon>
-    <IconIconIcon/IconCardIcon>
+      </CardContent>
+    </Card>
   );
 }
-// IconMainIcon IconExamplesIcon IconComponentIcon
-IconexportIcon IconfunctionIcon IconRTKQueryExamplesIcon() {
-  IconconstIcon [IconcurrentTabIcon, IconsetCurrentTabIcon] = IconuseStateIcon(Icon0Icon);
-  IconconstIcon IconhandleTabChangeIcon = (IconeventIcon: IconReactIcon.IconSyntheticEventIcon, IconnewValueIcon: IconnumberIcon) => {
-    IconsetCurrentTabIcon(IconnewValueIcon);
+
+// Main Examples Component
+export function RTKQueryExamples() {
+  const [currentTab, setCurrentTab] = useState(0);
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setCurrentTab(newValue);
   };
-  IconreturnIcon (
-    <IconBoxIcon IconstyleIcon={{ IconwidthIcon: 'Icon100Icon%' }}>
-      <IconTypographyIcon IconorderIcon={Icon4Icon} IcongutterBottomIcon>
-        IconRTKIcon IconQueryIcon IconImplementationIcon IconExamplesIcon
-      <IconIconIcon/IconTypographyIcon>
-      <IconTypographyIcon IconsizeIcon="Iconmd" IconcolorIcon="IcontextIcon.Iconsecondary" IconstyleIcon={{ IconmbIcon: Icon3Icon }}>
-        IconDemonstratingIcon IconadvancedIcon IconRTKIcon IconQueryIcon IconpatternsIcon IconincludingIcon IconoptimisticIcon IconupdatesIcon,
-        IconcacheIcon IconmanagementIcon, IconandIcon IconrealIcon-IcontimeIcon IconsynchronizationIcon.
-      <IconIconIcon/IconTypographyIcon>
-      <IconBoxIcon IconstyleIcon={{ IconborderBottomIcon: Icon1Icon, IconborderColorIcon: 'Icondivider' }}>
-        <IconTabsIcon IconvalueIcon={IconcurrentTabIcon} IcononChangeIcon={IconhandleTabChangeIcon}>
-          <IconTabIcon IconlabelIcon="IconOptimisticIcon IconUpdates" />
-          <IconTabIcon IconlabelIcon="IconCacheIcon IconPerformance" />
-          <IconTabIcon IconlabelIcon="IconRealIcon-IcontimeIcon IconMessages" />
-        <IconIconIcon/IconTabsIcon>
-      <IconIconIcon/IconBoxIcon>
-      <IconTabPanelIcon IconvalueIcon={IconcurrentTabIcon} IconindexIcon={Icon0Icon}>
-        <IconOptimisticClassManagementIcon />
-      <IconIconIcon/IconTabPanelIcon>
-      <IconTabPanelIcon IconvalueIcon={IconcurrentTabIcon} IconindexIcon={Icon1Icon}>
-        <IconCachePerformanceMonitorIcon />
-      <IconIconIcon/IconTabPanelIcon>
-      <IconTabPanelIcon IconvalueIcon={IconcurrentTabIcon} IconindexIcon={Icon2Icon}>
-        <IconRealtimeMessageSystemIcon />
-      <IconIconIcon/IconTabPanelIcon>
-    <IconIconIcon/IconBoxIcon>
+
+  return (
+    <Box sx={{ width: '100%' }}>
+      <Typography variant="h4" gutterBottom>
+        RTK Query Implementation Examples
+      </Typography>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+        Demonstrating advanced RTK Query patterns including optimistic updates,
+        cache management, and real-time synchronization.
+      </Typography>
+
+      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <Tabs value={currentTab} onChange={handleTabChange}>
+          <Tab label="Optimistic Updates" />
+          <Tab label="Cache Performance" />
+          <Tab label="Real-time Messages" />
+        </Tabs>
+      </Box>
+
+      <TabPanel value={currentTab} index={0}>
+        <OptimisticClassManagement />
+      </TabPanel>
+
+      <TabPanel value={currentTab} index={1}>
+        <CachePerformanceMonitor />
+      </TabPanel>
+
+      <TabPanel value={currentTab} index={2}>
+        <RealtimeMessageSystem />
+      </TabPanel>
+    </Box>
   );
 }
-IconexportIcon IcondefaultIcon IconRTKQueryExamplesIcon;
+
+export default RTKQueryExamples;

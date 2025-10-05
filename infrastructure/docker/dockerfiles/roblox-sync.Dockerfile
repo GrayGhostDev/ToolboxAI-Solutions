@@ -10,7 +10,8 @@
 # ============================================
 # BASE STAGE - Rust environment for Rojo
 # ============================================
-FROM rust:1.75-slim AS base
+# Updated to Rust 1.81 (required for rojo v7.4.1)
+FROM rust:1.81-slim AS base
 
 # Install system dependencies
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -24,7 +25,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         pkg-config \
         libssl-dev \
         netcat-traditional \
-        tini && \
+        tini \
+        unzip && \
     rm -rf /var/lib/apt/lists/* && \
     # Create non-root user for Rojo
     groupadd -r -g 1007 rojo && \
@@ -54,17 +56,18 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         cmake && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Rojo from crates.io
+# Install Rojo from cargo for ARM64 compatibility
+# Pre-built binaries have download issues, build from source instead
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/usr/local/cargo/git \
-    cargo install rojo --version ${ROJO_VERSION} --locked
+    cargo install rojo --version 7.4.4 --locked
 
 # Install additional Roblox development tools
+# Remove --locked flag for wildcard versions
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/usr/local/cargo/git \
-    cargo install \
-        selene --version 0.26.* --locked \
-        stylua --version 0.20.* --locked
+    cargo install selene --version 0.26.1 && \
+    cargo install stylua --version 0.20.0
 
 # Install Rokit (Roblox toolchain manager)
 RUN curl -sSf https://raw.githubusercontent.com/roblox/rokit/main/install.sh | bash
