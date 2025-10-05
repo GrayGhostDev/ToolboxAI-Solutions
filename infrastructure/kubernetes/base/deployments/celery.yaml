@@ -1,0 +1,396 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-worker
+  labels:
+    app.kubernetes.io/name: celery-worker
+    app.kubernetes.io/instance: celery
+    app.kubernetes.io/version: "latest"
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: toolboxai-platform
+    app.kubernetes.io/managed-by: kustomize
+    tier: backend
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: celery-worker
+      app.kubernetes.io/instance: celery
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: celery-worker
+        app.kubernetes.io/instance: celery
+        app.kubernetes.io/version: "latest"
+        app.kubernetes.io/component: worker
+        app.kubernetes.io/part-of: toolboxai-platform
+        tier: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9540"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: celery
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1003
+        runAsGroup: 1003
+        fsGroup: 1003
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                  - celery-worker
+              topologyKey: kubernetes.io/hostname
+      containers:
+      - name: worker
+        image: ghcr.io/toolboxai-solutions/celery-worker:latest
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1003
+          capabilities:
+            drop:
+            - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        env:
+        - name: CELERY_BROKER_URL
+          valueFrom:
+            secretKeyRef:
+              name: celery-secrets
+              key: broker-url
+        - name: CELERY_RESULT_BACKEND
+          valueFrom:
+            secretKeyRef:
+              name: celery-secrets
+              key: result-backend
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        envFrom:
+        - configMapRef:
+            name: celery-config
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+            ephemeral-storage: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+            ephemeral-storage: 1Gi
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - celery -A apps.backend.workers.celery_app inspect ping
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - celery -A apps.backend.workers.celery_app inspect ping
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: var-log
+          mountPath: /var/log/celery
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: var-log
+        emptyDir:
+          sizeLimit: 512Mi
+      imagePullSecrets:
+      - name: ghcr-credentials
+      terminationGracePeriodSeconds: 60
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-beat
+  labels:
+    app.kubernetes.io/name: celery-beat
+    app.kubernetes.io/instance: celery
+    app.kubernetes.io/version: "latest"
+    app.kubernetes.io/component: scheduler
+    app.kubernetes.io/part-of: toolboxai-platform
+    app.kubernetes.io/managed-by: kustomize
+    tier: backend
+spec:
+  replicas: 1  # Beat scheduler should only have 1 replica
+  strategy:
+    type: Recreate  # Ensure only one beat scheduler runs
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: celery-beat
+      app.kubernetes.io/instance: celery
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: celery-beat
+        app.kubernetes.io/instance: celery
+        app.kubernetes.io/version: "latest"
+        app.kubernetes.io/component: scheduler
+        app.kubernetes.io/part-of: toolboxai-platform
+        tier: backend
+    spec:
+      serviceAccountName: celery
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1003
+        runAsGroup: 1003
+        fsGroup: 1003
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: beat
+        image: ghcr.io/toolboxai-solutions/celery-beat:latest
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1003
+          capabilities:
+            drop:
+            - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        env:
+        - name: CELERY_BROKER_URL
+          valueFrom:
+            secretKeyRef:
+              name: celery-secrets
+              key: broker-url
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        envFrom:
+        - configMapRef:
+            name: celery-config
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+            ephemeral-storage: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+            ephemeral-storage: 512Mi
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - pgrep -f "celery.*beat"
+          initialDelaySeconds: 60
+          periodSeconds: 60
+          timeoutSeconds: 10
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: celerybeat-schedule
+          mountPath: /app/celerybeat-schedule
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: celerybeat-schedule
+        persistentVolumeClaim:
+          claimName: celerybeat-schedule
+      imagePullSecrets:
+      - name: ghcr-credentials
+      terminationGracePeriodSeconds: 30
+      restartPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flower
+  labels:
+    app.kubernetes.io/name: flower
+    app.kubernetes.io/instance: flower
+    app.kubernetes.io/version: "latest"
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: toolboxai-platform
+    app.kubernetes.io/managed-by: kustomize
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: flower
+      app.kubernetes.io/instance: flower
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: flower
+        app.kubernetes.io/instance: flower
+        app.kubernetes.io/version: "latest"
+        app.kubernetes.io/component: monitoring
+        app.kubernetes.io/part-of: toolboxai-platform
+        tier: backend
+    spec:
+      serviceAccountName: celery
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1004
+        runAsGroup: 1004
+        fsGroup: 1004
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: flower
+        image: ghcr.io/toolboxai-solutions/flower:latest
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1004
+          capabilities:
+            drop:
+            - ALL
+        ports:
+        - name: http
+          containerPort: 5555
+          protocol: TCP
+        env:
+        - name: CELERY_BROKER_URL
+          valueFrom:
+            secretKeyRef:
+              name: celery-secrets
+              key: broker-url
+        - name: FLOWER_BASIC_AUTH
+          valueFrom:
+            secretKeyRef:
+              name: flower-secrets
+              key: basic-auth
+        envFrom:
+        - configMapRef:
+            name: celery-config
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /api/workers
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /api/workers
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      imagePullSecrets:
+      - name: ghcr-credentials
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: celery-worker-pdb
+  labels:
+    app.kubernetes.io/name: celery-worker
+    app.kubernetes.io/instance: celery
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: celery-worker
+      app.kubernetes.io/instance: celery
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: celery-worker-hpa
+  labels:
+    app.kubernetes.io/name: celery-worker-hpa
+    app.kubernetes.io/instance: celery
+    app.kubernetes.io/component: autoscaling
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: celery-worker
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 120
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+      - type: Pods
+        value: 2
+        periodSeconds: 60
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+      - type: Pods
+        value: 1
+        periodSeconds: 120
+      selectPolicy: Min

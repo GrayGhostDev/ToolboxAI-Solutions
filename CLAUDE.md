@@ -6,15 +6,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a monorepo that underwent significant restructuring in September 2025. The repository is on branch `chore/remove-render-worker-2025-09-20` with main work tracked in `main` branch.
 
+### Latest Updates (2025-10-02)
+- **🧹 FILESYSTEM CLEANUP & ORGANIZATION**: Repository structure refinement and documentation consolidation
+  - **Scripts Organization Enhanced**: Created comprehensive subdirectory structure (development/worktrees, database, docker, deployment)
+  - **Migration Reports Relocated**: Moved 3 summary markdown files from root to docs/11-reports/migration-reports/
+  - **Root Directory Optimized**: Reduced from 18 to 15 files (well under 20 file target)
+  - **Archive Structure Created**: Established Archive/2025-10-02/ with organized subdirectories (completion-reports, guides, old-configs, pre-cleanup-backup)
+  - **Archive Documentation**: Created Archive/README.md explaining archive policy and retention
+  - **Zero Temporary Files**: Confirmed no .tmp, .bak, ~, .DS_Store files in repository
+  - **Zero Python Cache**: Confirmed no __pycache__ directories present
+  - **Gitignore Validated**: Comprehensive .gitignore already includes all necessary patterns
+  - **Directory Structure Updated**: CLAUDE.md reflects current organized state (2025-10-02)
+  - **Documentation Standards**: Established clear file placement guidelines and archive procedures
+
 ### Latest Updates (2025-09-28)
 - **🚀 REACT 19 MIGRATION & DEPENDENCY MODERNIZATION**: Complete frontend modernization
   - **React 19.1.0 Migration**: Successfully updated from React 18.3.1 to React 19.1.0
   - **All Dependencies Updated**: Updated to 2025 versions including Vite 6, TypeScript 5.9.2, Vitest 3.2.4
   - **ESLint 9 Flat Config**: Implemented modern ESLint v9 with flat config system for React 19
-  - **External Drive NPM Issues Identified**: System error -88 prevents native binary execution on external drives
-  - **Docker Recommended Solution**: Docker containers solve all external drive issues with full Linux filesystem support
-  - **Package Count**: Successfully installed 692-799 packages despite external drive limitations
-  - **Configuration Converted**: vite.config.ts converted to vite.config.js to bypass esbuild transpilation requirement
+  - **Package Count**: Successfully installed 692-799 packages
+  - **Configuration**: Using vite.config.js for optimal compatibility
 
 ### Latest Deep Clean (2025-09-18)
 - **Root Directory Optimized**: Only essential config files remain in root
@@ -112,10 +123,10 @@ This is a monorepo that underwent significant restructuring in September 2025. T
   - No WebSocket fallback - Pusher is the sole real-time solution
   - Authentication: Backend Pusher service in `services/roblox_pusher.py`
   - 46+ components using Pusher hooks for real-time updates
-- **External Drive Development**: Special considerations for `/Volumes/G-DRIVE ArmorATD/`
-  - Issue: Native binaries (esbuild, Rollup) fail with system error -88
-  - Solution: Use Docker for development (full Linux filesystem support)
-  - NPM Flag: Always use `--no-bin-links` when installing on external drive
+- **Development Environment**: Standard local development setup
+  - Location: `/Users/grayghostdataconsultants/Development/projects/clients/Toolbox014/ToolboxAI-Solutions/`
+  - Virtual Environment: `venv/` for Python dependencies
+  - Node Modules: Standard npm installation
 - **Database System**: Dual strategy with PostgreSQL (primary) and Supabase (optional)
   - Supabase configured for database, storage, and auth (if enabled)
   - Extensive Supabase settings in `toolboxai_settings/settings.py`
@@ -152,7 +163,7 @@ This is a monorepo that underwent significant restructuring in September 2025. T
 - .python-version                 # Python version
 ```
 
-### Directory Structure (Updated 2025-09-18)
+### Directory Structure (Updated 2025-10-02)
 - **apps/**
   - `backend/` - FastAPI server (port 8009)
   - `dashboard/` - React frontend (port 5179)
@@ -164,9 +175,15 @@ This is a monorepo that underwent significant restructuring in September 2025. T
   - `src/shared/` - Shared Luau modules
   - `scripts/` - Roblox utility scripts
   - `plugins/` - Roblox Studio plugins
-- **scripts/**
+- **scripts/** - All scripts organized by function
+  - `development/` - Development scripts
+    - `worktrees/` - Worktree session management scripts
   - `maintenance/` - Fix scripts, cleanup tools
   - `testing/` - Test runners and verification
+  - `deployment/` - Deployment and CI/CD scripts
+  - `database/` - Database migration and management scripts
+  - `docker/` - Docker-related utility scripts
+  - `tools/` - Miscellaneous developer tools
 - **config/**
   - `env-templates/` - Environment config examples
 - **tests/** - All test files
@@ -174,7 +191,11 @@ This is a monorepo that underwent significant restructuring in September 2025. T
   - `04-implementation/` - Technical docs
   - `05-features/` - Feature documentation
   - `09-meta/` - Meta documentation
-  - `10-reports/` - Status reports
+  - `11-reports/` - Status reports and summaries
+    - `migration-reports/` - Migration progress and summaries
+- **Archive/** - Historical files and completed project documentation
+  - `2025-10-02/` - Latest cleanup archive
+  - Historical date directories for reference
 - **apps/backend/documentation/** - Backend architecture documentation
   - `ARCHITECTURE.md` - System architecture and components
   - `MIGRATION.md` - Migration procedures and rollback
@@ -193,7 +214,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Point VS Code/Cursor Python interpreter to:
-/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/venv/bin/python
+/Users/grayghostdataconsultants/Development/projects/clients/Toolbox014/ToolboxAI-Solutions/venv/bin/python
 
 # Reload window after changing interpreter for pyright to pick up packages
 ```
@@ -202,10 +223,10 @@ pip install -r requirements.txt
 
 ### Quick Start
 
-#### Docker Development (Recommended for External Drive)
+#### Docker Development (Recommended)
 ```bash
-# IMPORTANT: Docker is the recommended approach for external drive development
-# as it provides full Linux filesystem support for native binaries
+# Docker provides a consistent development environment across all platforms
+# with full container isolation and reproducible builds
 
 # Start all services with new consolidated Docker structure
 docker compose -f infrastructure/docker/compose/docker-compose.yml -f infrastructure/docker/compose/docker-compose.dev.yml up -d
@@ -220,39 +241,23 @@ docker compose -f infrastructure/docker/compose/docker-compose.yml -f infrastruc
 docker compose -f infrastructure/docker/compose/docker-compose.yml -f infrastructure/docker/compose/docker-compose.dev.yml down
 ```
 
-#### Native Development (Alternative - Issues on External Drive)
+#### Native Development (Alternative)
 ```bash
-# WARNING: Native development on external drives (/Volumes/) has limitations:
-# - Native binaries (esbuild, Rollup) fail with system error -88
-# - Must use --no-bin-links flag for npm installations
-# - Consider Docker development instead for external drives
+# Native development for local testing and quick iterations
 
-# For external drive npm installations:
-cd apps/dashboard && npm install --no-bin-links
+# Install dashboard dependencies
+cd apps/dashboard && npm install
 
 # Start both backend and frontend natively
 make dev
 
 # Or run separately:
 make backend   # FastAPI on localhost:8009
-make dashboard # React dashboard on localhost:5179 (may fail on external drive)
+make dashboard # React dashboard on localhost:5179
 
 # Alternative: Run from specific directories
 cd apps/backend && uvicorn main:app --host 127.0.0.1 --port 8009 --reload
-cd apps/dashboard && npm run dev  # Will fail on external drive without workarounds
-```
-
-#### External Drive NPM Workarounds
-```bash
-# Install packages on external drive (required flags):
-npm install --no-bin-links --legacy-peer-deps
-
-# Clean install for external drive:
-rm -rf node_modules package-lock.json
-npm install --no-bin-links --legacy-peer-deps
-
-# Use JavaScript config instead of TypeScript (avoids esbuild):
-# vite.config.js instead of vite.config.ts
+cd apps/dashboard && npm run dev
 ```
 
 ### Type System & Configuration
@@ -331,18 +336,11 @@ mypy apps/backend
 
 ### Dashboard-specific Commands
 ```bash
-# IMPORTANT: For external drive development, use Docker instead
-# Native npm run dev will fail with error -88 on external drives
-
-# Development server with hot reload (works on internal drive only)
+# Development server with hot reload
 cd apps/dashboard && npm run dev
 
 # Run on different port to avoid conflicts
 PORT=5180 npm run dev
-
-# External drive installation scripts (added in package.json)
-npm run install:external    # Uses --no-bin-links flag
-npm run install:clean       # Clean reinstall for external drive
 
 # Check Socket.IO connectivity (legacy, now using Pusher)
 npm run socketio:check:env
@@ -791,15 +789,11 @@ usePusherEvent('content-progress', (data) => {
 - **Current State**: Database models properly imported and functional
 - **Status**: Fixed 2025-09-20 - database connectivity and models working correctly
 
-#### 4. External Drive Native Binary Execution (NEW - 2025-09-28)
-- **Issue**: Native binaries (esbuild, Rollup) fail with "spawn Unknown system error -88" on external drives
-- **Root Cause**: macOS external drives cannot execute native binaries properly
-- **Workarounds**:
-  - Use Docker for development (recommended)
-  - Convert vite.config.ts to vite.config.js to avoid esbuild transpilation
-  - Install with `npm install --no-bin-links --legacy-peer-deps`
-  - Consider WASM-based alternatives (experimental)
-- **Status**: Docker is the recommended solution for external drive development
+#### 4. NPM Package Installation (RESOLVED - 2025-10-02)
+- **Previous Issue**: Some npm commands were failing with Invalid Version errors
+- **Root Cause**: Corrupted package-lock.json or cache issues
+- **Solution**: Clean reinstall resolves most npm issues
+- **Status**: Standard npm operations working correctly
 
 #### 5. Port Conflicts
 - **Issue**: Multiple services trying to use same ports
@@ -1007,9 +1001,9 @@ Consider adding for:
 
 1. **Dashboard path is `apps/dashboard/`**: Documentation corrected 2025-09-16
 2. **React 19.1.0 Migration (2025-09-28)**: Dashboard updated from React 18.3.1 to 19.1.0
-3. **External Drive Development**: Use Docker for `/Volumes/` drives - native binaries fail with error -88
-4. **Vite Config**: Use `vite.config.js` (not .ts) on external drives to avoid esbuild transpilation
-5. **NPM on External Drive**: Always use `--no-bin-links --legacy-peer-deps` flags
+3. **Development Location**: `/Users/grayghostdataconsultants/Development/projects/clients/Toolbox014/ToolboxAI-Solutions/`
+4. **Vite Config**: Using `vite.config.js` for optimal compatibility
+5. **NPM Installation**: Standard npm install for all packages
 6. **Docker structure modernized (2025-09-24)**: Use consolidated files in `infrastructure/docker/compose/`
 7. **Security-first approach**: Copy `.env.example` to `.env` and generate secure secrets
 8. **Check venv activation**: Use standard `venv/` virtual environment
@@ -1045,7 +1039,7 @@ Consider adding for:
 - **TypeScript strict**: Maintain type safety with TypeScript 5.9.2, avoid `any` types
 - **Pusher integration**: Real-time features use Pusher, not Socket.IO
 - **Vite configuration**: Vite 6.0.1, development server on port 5179 with API proxy to 8009
-- **External Drive**: Use Docker for development, or vite.config.js (not .ts) to avoid esbuild issues
+- **Development**: Use Docker for containerized development, or native setup for local development
 - **ESLint**: Using ESLint 9 with flat config system (eslint.config.js)
 
 ### Testing Guidelines

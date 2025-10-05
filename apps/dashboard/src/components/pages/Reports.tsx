@@ -765,9 +765,6 @@ export default function Reports() {
                 </CardContent>
               </Card>
             </Grid2>
-          </>
-        );
-      
             </Grid>
           </Tabs.Panel>
         );

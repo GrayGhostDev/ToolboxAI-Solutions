@@ -18,7 +18,6 @@ import {
   useMantineTheme,
   rem
 } from '@mantine/core';
-import { createStyles, keyframes } from '@mantine/emotion';
 import {
   IconRocket,
   IconStar,
@@ -45,41 +44,32 @@ interface RobloxCharacterAvatarProps {
   onClick?: () => void;
 }
 
-// Animations
-const floatAnimation = keyframes({
-  '0%, 100%': { transform: 'translateY(0px)' },
-  '50%': { transform: 'translateY(-10px)' }
-});
-
-const pulseAnimation = keyframes({
-  '0%': { transform: 'scale(1)', opacity: 1 },
-  '50%': { transform: 'scale(1.2)', opacity: 0.7 },
-  '100%': { transform: 'scale(1)', opacity: 1 }
-});
-
-const useStyles = createStyles((theme, { isHovered, isActive }: { isHovered: boolean; isActive: boolean }) => ({
-  container: {
-    position: 'relative',
-    display: 'inline-block',
-    cursor: 'pointer',
-    transform: isHovered ? 'scale(1.1)' : 'scale(1)',
-    transition: 'transform 0.3s ease'
-  },
-  activeIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: '50%',
-    background: 'linear-gradient(135deg, #4caf50, #8bc34a)',
-    boxShadow: '0 0 10px #4caf50',
-    animation: isActive ? `${pulseAnimation} 1s ease-in-out infinite` : 'none'
-  },
-  floatingIcon: {
-    position: 'absolute',
-    top: -10,
-    right: -10,
-    animation: `${floatAnimation} 2s ease-in-out infinite`
+// Keyframe animations defined as string (CSS-in-JS)
+const floatAnimation = `
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
   }
-}));
+`;
+
+const pulseAnimation = `
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+`;
+
+// Inject animations into document head
+if (typeof document !== 'undefined') {
+  const styleId = 'roblox-character-animations';
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = floatAnimation + pulseAnimation;
+    document.head.appendChild(style);
+  }
+}
 
 // Character images will be loaded dynamically from design_files
 
@@ -94,7 +84,6 @@ export const RobloxCharacterAvatar: React.FunctionComponent<RobloxCharacterAvata
   const theme = useMantineTheme();
   const [isHovered, setIsHovered] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  const { classes } = useStyles({ isHovered, isActive: character.isActive });
 
   const sizeMap = {
     small: 40,
@@ -110,9 +99,36 @@ export const RobloxCharacterAvatar: React.FunctionComponent<RobloxCharacterAvata
     }
   };
 
+  // Container styles
+  const containerStyle: React.CSSProperties = {
+    position: 'relative',
+    display: 'inline-block',
+    cursor: 'pointer',
+    transform: isHovered ? 'scale(1.1)' : 'scale(1)',
+    transition: 'transform 0.3s ease'
+  };
+
+  // Active indicator styles
+  const activeIndicatorStyle: React.CSSProperties = {
+    width: 12,
+    height: 12,
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #4caf50, #8bc34a)',
+    boxShadow: '0 0 10px #4caf50',
+    animation: character.isActive ? 'pulse 1s ease-in-out infinite' : 'none'
+  };
+
+  // Floating icon styles
+  const floatingIconStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: -10,
+    right: -10,
+    animation: 'float 2s ease-in-out infinite'
+  };
+
   return (
     <Box
-      className={classes.container}
+      style={containerStyle}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleClick}
@@ -134,7 +150,7 @@ export const RobloxCharacterAvatar: React.FunctionComponent<RobloxCharacterAvata
               </Text>
             )}
             {character.achievements.length > 0 && (
-              <Group spacing="xs" mt="xs">
+              <Group gap="xs" mt="xs">
                 {character.achievements.slice(0, 3).map((achievement, index) => (
                   <Badge
                     key={index}
@@ -154,19 +170,18 @@ export const RobloxCharacterAvatar: React.FunctionComponent<RobloxCharacterAvata
         withArrow
         position="top"
       >
-        <Badge
-          variant="dot"
-          color={character.isActive ? 'green' : 'gray'}
-          size="lg"
-          style={{
-            position: 'relative'
-          }}
-          styles={{
-            indicator: {
-              ...classes.activeIndicator
-            }
-          }}
-        >
+        <Box style={{ position: 'relative' }}>
+          {character.isActive && (
+            <Box
+              style={{
+                position: 'absolute',
+                top: -2,
+                right: -2,
+                zIndex: 1,
+                ...activeIndicatorStyle
+              }}
+            />
+          )}
           <Procedural3DCharacter
             characterType={character.type}
             size={size}
@@ -174,30 +189,23 @@ export const RobloxCharacterAvatar: React.FunctionComponent<RobloxCharacterAvata
             style={{
               width: avatarSize,
               height: avatarSize,
-              boxShadow: `0 4px 20px ${theme.fn.rgba(theme.colors.blue[6], 0.3)}`,
+              boxShadow: `0 4px 20px rgba(66, 153, 225, 0.3)`,
               transition: 'all 0.3s ease',
               borderRadius: '50%'
             }}
           />
-        </Badge>
+        </Box>
       </Tooltip>
 
       {/* Floating icons for active characters */}
       {character.isActive && animated && (
-        <Box className={classes.floatingIcon}>
+        <Box style={floatingIconStyle}>
           <ActionIcon
             size="sm"
             variant="light"
             color="yellow"
             style={{
-              background: theme.fn.rgba(theme.colors.yellow[6], 0.1)
-            }}
-            styles={{
-              root: {
-                '&:hover': {
-                  background: theme.fn.rgba(theme.colors.yellow[6], 0.2)
-                }
-              }
+              background: 'rgba(250, 204, 21, 0.1)'
             }}
           >
             <IconStar size={16} />

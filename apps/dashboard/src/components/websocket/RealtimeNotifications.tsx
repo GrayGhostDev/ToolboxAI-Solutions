@@ -1,36 +1,36 @@
 /**
- * Real-time Notifications Component
+ * Real-time Notifications Component (Migrated to Mantine v8)
  * Displays system notifications from WebSocket
  */
 
 import React, { useEffect, useState } from 'react';
-import Box from '@mui/material/Box';
-import Badge from '@mui/material/Badge';
-import IconButton from '@mui/material/IconButton';
-import Popover from '@mui/material/Popover';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Divider from '@mui/material/Divider';
-import Chip from '@mui/material/Chip';
-import Paper from '@mui/material/Paper';
-import Alert from '@mui/material/Alert';
 import {
-  Notifications as NotificationsIcon,
-  NotificationsActive as ActiveNotificationsIcon,
-  CheckCircle as SuccessIcon,
-  Error as ErrorIcon,
-  Warning as WarningIcon,
-  Info as InfoIcon,
-  EmojiEvents as AchievementIcon,
-  Quiz as QuizIcon,
-  School as LessonIcon,
-  Clear as ClearIcon,
-  DoneAll as MarkAllReadIcon
-} from '@mui/icons-material';
+  Box,
+  Badge,
+  ActionIcon,
+  Popover,
+  Text,
+  Button,
+  Divider,
+  Paper,
+  Alert,
+  Group,
+  Stack,
+  Indicator,
+} from '@mantine/core';
+import {
+  IconBell,
+  IconBellRinging,
+  IconCircleCheck,
+  IconAlertCircle,
+  IconAlertTriangle,
+  IconInfoCircle,
+  IconTrophy,
+  IconFileText,
+  IconSchool,
+  IconX,
+  IconChecks,
+} from '@tabler/icons-react';
 import { useAppSelector, useAppDispatch } from '../../store';
 import {
   selectNotifications,
@@ -54,51 +54,50 @@ export const RealtimeNotifications: React.FunctionComponent<RealtimeNotification
   const dispatch = useAppDispatch();
   const notifications = useAppSelector(selectNotifications);
   const unreadCount = useAppSelector(selectUnreadNotificationCount);
-  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+  const [opened, setOpened] = useState(false);
   const [autoMarkReadTimer, setAutoMarkReadTimer] = useState<number | null>(null);
 
   const visibleNotifications = notifications.slice(0, maxNotifications);
-  const open = Boolean(anchorEl);
 
   // Get icon for notification type
   const getNotificationIcon = (notification: SystemNotification) => {
-    if (notification.type === 'achievement') return <AchievementIcon color="warning" />;
-    if (notification.type === 'quiz') return <QuizIcon color="primary" />;
-    if (notification.type === 'lesson') return <LessonIcon color="secondary" />;
+    if (notification.type === 'achievement') return <IconTrophy size={20} color="var(--mantine-color-yellow-6)" />;
+    if (notification.type === 'quiz') return <IconFileText size={20} color="var(--mantine-color-blue-6)" />;
+    if (notification.type === 'lesson') return <IconSchool size={20} color="var(--mantine-color-grape-6)" />;
 
     switch (notification.severity) {
       case 'success':
-        return <SuccessIcon color="success" />;
+        return <IconCircleCheck size={20} color="var(--mantine-color-green-6)" />;
       case 'error':
-        return <ErrorIcon color="error" />;
+        return <IconAlertCircle size={20} color="var(--mantine-color-red-6)" />;
       case 'warning':
-        return <WarningIcon color="warning" />;
+        return <IconAlertTriangle size={20} color="var(--mantine-color-yellow-6)" />;
       default:
-        return <InfoIcon color="info" />;
+        return <IconInfoCircle size={20} color="var(--mantine-color-blue-6)" />;
     }
   };
 
   // Get severity color
-  const getSeverityColor = (severity?: string): 'success' | 'error' | 'warning' | 'info' => {
+  const getSeverityColor = (severity?: string): 'green' | 'red' | 'yellow' | 'blue' => {
     switch (severity) {
       case 'success':
-        return 'success';
+        return 'green';
       case 'error':
-        return 'error';
+        return 'red';
       case 'warning':
-        return 'warning';
+        return 'yellow';
       default:
-        return 'info';
+        return 'blue';
     }
   };
 
   // Handle popover open
-  const handleOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
+  const handleOpen = () => {
+    setOpened(true);
 
     // Auto mark as read after delay
     if (autoMarkReadDelay > 0 && unreadCount > 0) {
-      const timer = setTimeout(() => {
+      const timer = window.setTimeout(() => {
         dispatch(markAllNotificationsRead());
       }, autoMarkReadDelay);
       setAutoMarkReadTimer(timer);
@@ -107,7 +106,7 @@ export const RealtimeNotifications: React.FunctionComponent<RealtimeNotification
 
   // Handle popover close
   const handleClose = () => {
-    setAnchorEl(null);
+    setOpened(false);
 
     // Clear auto-read timer
     if (autoMarkReadTimer) {
@@ -142,167 +141,165 @@ export const RealtimeNotifications: React.FunctionComponent<RealtimeNotification
   }, [autoMarkReadTimer]);
 
   return (
-    <>
-      <IconButton
-        color="inherit"
-        onClick={(e: React.MouseEvent) => handleOpen}
-        sx={{
-          animation: unreadCount > 0 ? 'shake 0.5s' : 'none',
-          '@keyframes shake': {
-            '0%, 100%': { transform: 'translateX(0)' },
-            '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-2px)' },
-            '20%, 40%, 60%, 80%': { transform: 'translateX(2px)' }
-          }
-        }}
-      >
-        <Badge badgeContent={unreadCount} color="error">
-          {unreadCount > 0 ? <ActiveNotificationsIcon /> : <NotificationsIcon />}
-        </Badge>
-      </IconButton>
-
-      <Popover
-        open={open}
-        anchorEl={anchorEl}
-        onClose={handleClose}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-      >
-        <Paper sx={{ width: 400, maxHeight: 600 }}>
-          {/* Header */}
-          <Box
-            sx={{
-              p: 2,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              borderBottom: 1,
-              borderColor: 'divider'
+    <Popover
+      width={400}
+      position="bottom-end"
+      shadow="md"
+      opened={opened}
+      onChange={setOpened}
+    >
+      <Popover.Target>
+        <Indicator
+          inline
+          label={unreadCount}
+          size={16}
+          color="red"
+          disabled={unreadCount === 0}
+        >
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            size="lg"
+            onClick={() => (opened ? handleClose() : handleOpen())}
+            style={{
+              animation: unreadCount > 0 ? 'shake 0.5s' : 'none',
             }}
           >
-            <Typography variant="h6">
-              Notifications
-              {unreadCount > 0 && (
-                <Chip
-                  label={unreadCount}
-                  size="small"
-                  color="error"
-                  sx={{ ml: 1 }}
-                />
-              )}
-            </Typography>
-            <Box>
-              {unreadCount > 0 && (
-                <IconButton size="small" onClick={(e: React.MouseEvent) => handleMarkAllRead}>
-                  <MarkAllReadIcon />
-                </IconButton>
-              )}
-              <IconButton size="small" onClick={(e: React.MouseEvent) => handleClearAll}>
-                <ClearIcon />
-              </IconButton>
-            </Box>
+            {unreadCount > 0 ? <IconBellRinging size={20} /> : <IconBell size={20} />}
+          </ActionIcon>
+        </Indicator>
+      </Popover.Target>
+
+      <Popover.Dropdown p={0}>
+        <Paper style={{ maxHeight: 600, overflow: 'hidden' }}>
+          {/* Header */}
+          <Box
+            p="md"
+            style={{
+              borderBottom: '1px solid var(--mantine-color-gray-3)',
+            }}
+          >
+            <Group justify="space-between">
+              <Group gap="xs">
+                <Text size="lg" fw={600}>
+                  Notifications
+                </Text>
+                {unreadCount > 0 && (
+                  <Badge color="red" size="sm">
+                    {unreadCount}
+                  </Badge>
+                )}
+              </Group>
+              <Group gap="xs">
+                {unreadCount > 0 && (
+                  <ActionIcon
+                    variant="subtle"
+                    size="sm"
+                    onClick={handleMarkAllRead}
+                    title="Mark all as read"
+                  >
+                    <IconChecks size={16} />
+                  </ActionIcon>
+                )}
+                <ActionIcon
+                  variant="subtle"
+                  size="sm"
+                  onClick={handleClearAll}
+                  title="Clear all"
+                >
+                  <IconX size={16} />
+                </ActionIcon>
+              </Group>
+            </Group>
           </Box>
 
           {/* Notification List */}
           {visibleNotifications.length === 0 ? (
-            <Box sx={{ p: 4, textAlign: 'center' }}>
-              <NotificationsIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
-              <Typography color="text.secondary">
+            <Stack align="center" py="xl" gap="md">
+              <IconBell size={48} color="var(--mantine-color-gray-4)" />
+              <Text c="dimmed">
                 No notifications
-              </Typography>
-            </Box>
+              </Text>
+            </Stack>
           ) : (
-            <List sx={{ py: 0, maxHeight: 480, overflow: 'auto' }}>
+            <Box style={{ maxHeight: 480, overflowY: 'auto' }}>
               {visibleNotifications.map((notification, index) => (
                 <React.Fragment key={notification.id}>
-                  <ListItem
-                    onClick={(e: React.MouseEvent) => () => !notification.read && handleMarkRead(notification.id)}
-                    sx={{
-                      bgcolor: notification.read ? 'transparent' : 'action.hover',
+                  <Box
+                    p="sm"
+                    onClick={() => !notification.read && handleMarkRead(notification.id)}
+                    style={{
+                      backgroundColor: notification.read ? 'transparent' : 'var(--mantine-color-gray-0)',
                       cursor: notification.read ? 'default' : 'pointer',
-                      '&:hover': {
-                        bgcolor: notification.read ? 'action.hover' : 'action.selected'
-                      }
                     }}
                   >
-                    <ListItemIcon>
-                      {getNotificationIcon(notification)}
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={
-                        <Box display="flex" justifyContent="space-between" alignItems="center">
-                          <Typography
-                            variant="subtitle2"
-                            sx={{
-                              fontWeight: notification.read ? 'normal' : 'bold'
-                            }}
+                    <Group align="flex-start" wrap="nowrap">
+                      <Box mt={4}>
+                        {getNotificationIcon(notification)}
+                      </Box>
+                      <Stack gap={4} style={{ flex: 1 }}>
+                        <Group justify="space-between" wrap="nowrap">
+                          <Text
+                            size="sm"
+                            fw={notification.read ? 400 : 600}
                           >
                             {notification.title}
-                          </Typography>
+                          </Text>
                           {!notification.read && (
                             <Box
-                              sx={{
+                              style={{
                                 width: 8,
                                 height: 8,
                                 borderRadius: '50%',
-                                bgcolor: 'primary.main'
+                                backgroundColor: 'var(--mantine-color-blue-6)',
+                                flexShrink: 0,
                               }}
                             />
                           )}
-                        </Box>
-                      }
-                      secondary={
-                        <>
-                          <Typography variant="body2" color="text.secondary">
-                            {notification.message}
-                          </Typography>
-                          <Typography variant="caption" color="text.disabled">
-                            {formatDistanceToNow(new Date(notification.timestamp), {
-                              addSuffix: true
-                            })}
-                          </Typography>
-                        </>
-                      }
-                    />
-                  </ListItem>
+                        </Group>
+                        <Text size="xs" c="dimmed">
+                          {notification.message}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          {formatDistanceToNow(new Date(notification.timestamp), {
+                            addSuffix: true
+                          })}
+                        </Text>
+                      </Stack>
+                    </Group>
+                  </Box>
                   {index < visibleNotifications.length - 1 && <Divider />}
                 </React.Fragment>
               ))}
-            </List>
+            </Box>
           )}
 
           {/* Footer */}
           {notifications.length > 0 && (
             <Box
-              sx={{
-                p: 1,
+              p="xs"
+              style={{
+                borderTop: '1px solid var(--mantine-color-gray-3)',
                 textAlign: 'center',
-                borderTop: 1,
-                borderColor: 'divider'
               }}
             >
               {notifications.length > maxNotifications && (
-                <Typography variant="caption" color="text.secondary" display="block" mb={1}>
+                <Text size="xs" c="dimmed" mb="xs">
                   Showing {maxNotifications} of {notifications.length} notifications
-                </Typography>
+                </Text>
               )}
               <Button
-                size="small"
+                size="xs"
+                variant="subtle"
                 onClick={handleClearAll}
-                sx={{ textTransform: 'none' }}
               >
                 Clear All
               </Button>
             </Box>
           )}
         </Paper>
-      </Popover>
-    </>
+      </Popover.Dropdown>
+    </Popover>
   );
 };
 
@@ -310,7 +307,7 @@ export const RealtimeNotifications: React.FunctionComponent<RealtimeNotification
 export const RealtimeNotificationToast: React.FunctionComponent<Record<string, any>> = () => {
   const notifications = useAppSelector(selectNotifications);
   const [latestNotification, setLatestNotification] = useState<SystemNotification | null>(null);
-  const [open, setOpen] = useState(false);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     // Show toast for new unread notifications
@@ -319,32 +316,33 @@ export const RealtimeNotificationToast: React.FunctionComponent<Record<string, a
       const latest = unreadNotifications[0];
       if (latest.id !== latestNotification?.id) {
         setLatestNotification(latest);
-        setOpen(true);
+        setVisible(true);
 
         // Auto-hide after 5 seconds
-        setTimeout(() => setOpen(false), 5000);
+        setTimeout(() => setVisible(false), 5000);
       }
     }
   }, [notifications, latestNotification]);
 
-  if (!latestNotification || !open) return null;
+  if (!latestNotification || !visible) return null;
 
   return (
     <Alert
-      severity={latestNotification.severity || 'info'}
-      onClose={() => setOpen(false)}
-      sx={{
+      color={getSeverityColor(latestNotification.severity)}
+      withCloseButton
+      onClose={() => setVisible(false)}
+      style={{
         position: 'fixed',
         bottom: 20,
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 9999,
         minWidth: 300,
-        maxWidth: 500
+        maxWidth: 500,
       }}
     >
-      <Typography variant="subtitle2">{latestNotification.title}</Typography>
-      <Typography variant="body2">{latestNotification.message}</Typography>
+      <Text size="sm" fw={600}>{latestNotification.title}</Text>
+      <Text size="sm">{latestNotification.message}</Text>
     </Alert>
   );
 };
