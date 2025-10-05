@@ -192,7 +192,7 @@ curl http://localhost:8019/metrics/health
 
 ### Performance Metrics
 ```bash
-curl -H "Authorization: Bearer YOUR_TOKEN" \
+curl -H "Authorization: Bearer {{TOKEN}}" \
   http://localhost:8019/metrics/performance
 ```
 

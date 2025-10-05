@@ -25,10 +25,10 @@ Authenticate user and return JWT access token.
 **Response:**
 ```json
 {
-  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "access_token": "{{ACCESS_TOKEN}}",
   "token_type": "bearer",
   "expires_in": 3600,
-  "refresh_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "refresh_token": "{{REFRESH_TOKEN}}",
   "user": {
     "id": "string",
     "username": "string",
@@ -92,7 +92,7 @@ Refresh JWT access token using refresh token.
 
 **Request Headers (Option 2 - Header):**
 ```
-Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
+Authorization: Bearer {{ACCESS_TOKEN}}
 ```
 
 **Response:**
@@ -148,7 +148,7 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
 ### 2. Making Authenticated Requests
 Include the access token in the Authorization header:
 ```
-Authorization: Bearer YOUR_ACCESS_TOKEN
+Authorization: Bearer {{REFRESH_TOKEN}}
 ```
 
 ### 3. Token Refresh

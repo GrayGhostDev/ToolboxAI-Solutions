@@ -1,0 +1,9 @@
+title = "ToolBoxAI-Solutions gitleaks configuration"
+
+[allowlist]
+  description = "Allow non-sensitive example values in documentation and tests"
+  paths = [
+    "docs/",
+    "Archive/",
+    "tests/"
+  ]

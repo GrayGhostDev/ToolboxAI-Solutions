@@ -25,17 +25,17 @@ make backend
 ### 1. Dashboard Metrics
 ```bash
 curl -X GET "http://localhost:8011/api/v1/metrics/dashboard" \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "Authorization: Bearer {{TOKEN}}"
 
 # Force refresh cache
 curl -X GET "http://localhost:8011/api/v1/metrics/dashboard?force_refresh=true" \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "Authorization: Bearer {{TOKEN}}"
 ```
 
 ### 2. Activity Metrics (Recent 24h)
 ```bash
 curl -X GET "http://localhost:8011/api/v1/metrics/activity" \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "Authorization: Bearer {{TOKEN}}"
 ```
 
 ### 3. Statistics
@@ -48,7 +48,7 @@ curl -X GET "http://localhost:8011/api/v1/metrics/statistics?period=7d" \
 ### 4. Export Metrics
 ```bash
 curl -X POST "http://localhost:8011/api/v1/metrics/export" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Authorization: Bearer {{TOKEN}}" \
   -H "Content-Type: application/json" \
   -d '{
     "format": "json",
@@ -60,7 +60,7 @@ curl -X POST "http://localhost:8011/api/v1/metrics/export" \
 ### 5. Invalidate Cache (Admin Only)
 ```bash
 curl -X POST "http://localhost:8011/api/v1/metrics/invalidate-cache" \
-  -H "Authorization: Bearer ADMIN_TOKEN"
+  -H "Authorization: Bearer {{ADMIN_TOKEN}}"
 ```
 
 ---
@@ -95,7 +95,7 @@ All requests now include correlation IDs:
 ```bash
 # Check response headers
 curl -I -X GET "http://localhost:8011/api/v1/metrics/dashboard" \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "Authorization: Bearer {{TOKEN}}"
 
 # Headers you'll see:
 # X-Correlation-ID: 550e8400-e29b-41d4-a716-446655440000
@@ -216,7 +216,7 @@ open http://localhost:8011/docs
 
 # Test endpoint
 curl -X GET "http://localhost:8011/api/v1/metrics/dashboard" \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "Authorization: Bearer {{TOKEN}}"
 ```
 
 ---

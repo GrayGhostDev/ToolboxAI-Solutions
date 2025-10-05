@@ -313,20 +313,20 @@ async with httpx.AsyncClient() as client:
 ```bash
 # cURL
 curl -X GET "http://localhost:8011/api/v1/metrics/dashboard" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Authorization: Bearer {{TOKEN}}" \
   -H "Content-Type: application/json"
 ```
 
 ### 2. Force Cache Refresh
 ```bash
 curl -X GET "http://localhost:8011/api/v1/metrics/dashboard?force_refresh=true" \
-  -H "Authorization: Bearer YOUR_TOKEN"
+  -H "Authorization: Bearer {{TOKEN}}"
 ```
 
 ### 3. Export Metrics
 ```bash
 curl -X POST "http://localhost:8011/api/v1/metrics/export" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Authorization: Bearer {{TOKEN}}" \
   -H "Content-Type: application/json" \
   -d '{
     "format": "csv",
@@ -338,7 +338,7 @@ curl -X POST "http://localhost:8011/api/v1/metrics/export" \
 ### 4. Admin Cache Invalidation
 ```bash
 curl -X POST "http://localhost:8011/api/v1/metrics/invalidate-cache" \
-  -H "Authorization: Bearer ADMIN_TOKEN"
+  -H "Authorization: Bearer {{ADMIN_TOKEN}}"
 ```
 
 ---
