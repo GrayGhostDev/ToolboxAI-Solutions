@@ -303,15 +303,15 @@ setExportFormat('pdf');
           Report Generator
         </Text>
 
-        <SimpleGrid spacing={3}>
+        <Grid container spacing={3}>
           {/* Report Type Selection */}
-          <Box xs={12} md={8}>
+          <Grid item xs={12} md={8}>
             <Card>
               <CardHeader title="Select Report Type" />
               <CardContent>
-                <SimpleGrid spacing={2}>
+                <Grid container spacing={2}>
                   {reportTypes.map((report) => (
-                    <Box xs={12} sm={6} key={report.type}>
+                    <Grid item xs={12} sm={6} key={report.type}>
                       <Paper
                         style={{
                           p: 2,
@@ -322,7 +322,7 @@ setExportFormat('pdf');
                             bgcolor: 'action.hover',
                           },
                         }}
-                        onClick={(e: React.MouseEvent) => () => setSelectedReport(report)}
+                        onClick={() => setSelectedReport(report)}
                       >
                         <Stack direction="row" spacing={2} alignItems="center">
                           {report.icon}
@@ -339,9 +339,9 @@ setExportFormat('pdf');
                           )}
                         </Stack>
                       </Paper>
-                    </SimpleGrid>
+                    </Grid>
                   ))}
-                </SimpleGrid>
+                </Grid>
 
                 {selectedReport && (
                   <>
@@ -352,9 +352,9 @@ setExportFormat('pdf');
                       Report Parameters
                     </Text>
                     
-                    <SimpleGrid spacing={2} style={{ mt: 1 }}>
+                    <Grid container spacing={2} style={{ mt: 1 }}>
                       {/* Format Selection */}
-                      <Box xs={12} sm={6}>
+                      <Grid item xs={12} sm={6}>
                         <FormControl fullWidth>
                           <InputLabel>Export Format</InputLabel>
                           <Select
@@ -372,12 +372,12 @@ setExportFormat('pdf');
                             ))}
                           </Select>
                         </FormControl>
-                      </SimpleGrid>
+                      </Grid>
 
                       {/* Date Range */}
                       {selectedReport.parameters.includes('dateRange') && (
                         <>
-                          <Box xs={12} sm={3}>
+                          <Grid item xs={12} sm={3}>
                             <DatePicker
                               label="Start Date"
                               value={dateRange.start}
@@ -386,8 +386,8 @@ setExportFormat('pdf');
                                 textField: { fullWidth: true },
                               }}
                             />
-                          </SimpleGrid>
-                          <Box xs={12} sm={3}>
+                          </Grid>
+                          <Grid item xs={12} sm={3}>
                             <DatePicker
                               label="End Date"
                               value={dateRange.end}
@@ -396,13 +396,13 @@ setExportFormat('pdf');
                                 textField: { fullWidth: true },
                               }}
                             />
-                          </SimpleGrid>
+                          </Grid>
                         </>
                       )}
 
                       {/* Student Selection */}
                       {selectedReport.parameters.includes('student') && (
-                        <Box xs={12} sm={6}>
+                        <Grid item xs={12} sm={6}>
                           <FormControl fullWidth>
                             <InputLabel>Student</InputLabel>
                             <Select
@@ -417,12 +417,12 @@ setExportFormat('pdf');
                               ))}
                             </Select>
                           </FormControl>
-                        </SimpleGrid>
+                        </Grid>
                       )}
 
                       {/* Class Selection */}
                       {selectedReport.parameters.includes('class') && (
-                        <Box xs={12} sm={6}>
+                        <Grid item xs={12} sm={6}>
                           <FormControl fullWidth>
                             <InputLabel>Class</InputLabel>
                             <Select
@@ -437,12 +437,12 @@ setExportFormat('pdf');
                               ))}
                             </Select>
                           </FormControl>
-                        </SimpleGrid>
+                        </Grid>
                       )}
 
                       {/* Subject Selection */}
                       {selectedReport.parameters.includes('subjects') && (
-                        <Box xs={12}>
+                        <Grid item xs={12}>
                           <Text variant="subtitle2" gutterBottom>
                             Select Subjects
                           </Text>
@@ -451,7 +451,7 @@ setExportFormat('pdf');
                               <Chip
                                 key={subject}
                                 label={subject}
-                                onClick={(e: React.MouseEvent) => () => {
+                                onClick={() => {
                                   if (selectedSubjects.includes(subject)) {
                                     setSelectedSubjects(selectedSubjects.filter((s) => s !== subject));
                                   } else {
@@ -463,18 +463,18 @@ setExportFormat('pdf');
                               />
                             ))}
                           </Stack>
-                        </SimpleGrid>
+                        </Grid>
                       )}
 
                       {/* Delivery Options */}
-                      <Box xs={12}>
+                      <Grid item xs={12}>
                         <Divider style={{ my: 2 }} />
                         <Text order={6} gutterBottom>
                           Delivery Options
                         </Text>
-                      </SimpleGrid>
+                      </Grid>
 
-                      <Box xs={12} sm={6}>
+                      <Grid item xs={12} sm={6}>
                         <TextField
                           fullWidth
                           label="Email Report To (Optional)"
@@ -485,9 +485,9 @@ setExportFormat('pdf');
                             startAdornment: <Email style={{ mr: 1, color: 'action.active' }} />,
                           }}
                         />
-                      </SimpleGrid>
+                      </Grid>
 
-                      <Box xs={12} sm={6}>
+                      <Grid item xs={12} sm={6}>
                         <FormControl fullWidth>
                           <InputLabel>Schedule</InputLabel>
                           <Select
@@ -501,14 +501,14 @@ setExportFormat('pdf');
                             <MenuItem value="monthly">Monthly</MenuItem>
                           </Select>
                         </FormControl>
-                      </SimpleGrid>
+                      </Grid>
 
                       {/* Generate Button */}
-                      <Box xs={12}>
+                      <Grid item xs={12}>
                         <Box display="flex" justifyContent="flex-end" gap={2}>
                           <Button
                             variant="outline"
-                            onClick={(e: React.MouseEvent) => () => {
+                            onClick={() => {
                               setSelectedReport(null);
                               setExportFormat('pdf');
                               setSelectedStudent('all');
@@ -521,14 +521,14 @@ setExportFormat('pdf');
                           <Button
                             variant="filled"
                             startIcon={<Download />}
-                            onClick={(e: React.MouseEvent) => handleGenerateReport}
+                            onClick={handleGenerateReport}
                             disabled={generating}
                           >
                             {generating ? 'Generating...' : 'Generate Report'}
                           </Button>
                         </Box>
-                      </SimpleGrid>
-                    </SimpleGrid>
+                      </Grid>
+                    </Grid>
                   </>
                 )}
 
@@ -540,15 +540,15 @@ setExportFormat('pdf');
                 )}
               </CardContent>
             </Card>
-          </SimpleGrid>
+          </Grid>
 
           {/* Recent Reports */}
-          <Box xs={12} md={4}>
+          <Grid item xs={12} md={4}>
             <Card>
               <CardHeader
                 title="Recent Reports"
                 action={
-                  <IconButton onClick={(e: React.MouseEvent) => loadRecentReports}>
+                  <IconButton onClick={loadRecentReports}>
                     <Refresh />
                   </IconButton>
                 }
@@ -597,11 +597,12 @@ setExportFormat('pdf');
                 )}
               </CardContent>
             </Card>
-          </SimpleGrid>
-        </SimpleGrid>
+          </Grid>
+        </Grid>
       </Box>
     </DatesProvider>
   );
 };
 
 export default ReportGenerator;
+

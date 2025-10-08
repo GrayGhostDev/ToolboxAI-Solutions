@@ -179,8 +179,8 @@ export const RobloxThemedDashboard: React.FunctionComponent<RobloxThemedDashboar
                 }}
               >
                 <CardContent style={{ p: 4 }}>
-                  <SimpleGrid spacing={4} alignItems="center">
-                    <Box xs={12} md={8}>
+                  <SimpleGrid cols={{ base: 1, md: 2 }} spacing={4}>
+                    <Box>
                       <Text
                         order={3}
                         style={{
@@ -234,8 +234,8 @@ export const RobloxThemedDashboard: React.FunctionComponent<RobloxThemedDashboar
                           }}
                         />
                       </Stack>
-                    </SimpleGrid>
-                    <Box xs={12} md={4}>
+                    </Box>
+                    <Box>
                       <Box style={{ display: 'flex', justifyContent: 'center' }}>
                         <RobloxCharacterAvatar
                           character={{
@@ -249,10 +249,10 @@ export const RobloxThemedDashboard: React.FunctionComponent<RobloxThemedDashboar
                           }}
                           size="large"
                           animated={true}
-                          onClick={(e: React.MouseEvent) => () => console.log('Character clicked')}
+                          onClick={(_e: React.MouseEvent) => console.log('Character clicked')}
                         />
                       </Box>
-                    </SimpleGrid>
+                    </Box>
                   </SimpleGrid>
                 </CardContent>
               </Card>
