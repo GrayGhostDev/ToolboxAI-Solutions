@@ -10,6 +10,12 @@
 > **AI-Powered Educational Platform with Roblox Integration**
 > Educational content generation and learning management system with real-time features
 
+---
+
+**📢 Recent Update (October 2025)**: Project structure has been reorganized for better maintainability. See [CLEANUP_SUMMARY_2025.md](docs/CLEANUP_SUMMARY_2025.md) for details.
+
+---
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -47,23 +53,84 @@ make dev        # Start backend and frontend natively
 - **API**: http://localhost:8009
 - **API Docs**: http://localhost:8009/docs
 
-## 🏗️ Architecture
+## 📁 Project Structure
 
-### Project Structure
 ```
 ToolBoxAI-Solutions/
 ├── apps/
-│   ├── backend/         # FastAPI server (350+ endpoints)
-│   └── dashboard/       # React 19 frontend
-├── core/               # AI agents & orchestration
-│   ├── agents/         # Content generation agents
-│   ├── mcp/           # Model Context Protocol
-│   └── sparc/         # SPARC reasoning framework
-├── database/          # PostgreSQL models & migrations
-├── roblox/           # Roblox integration
-├── infrastructure/   # Docker & deployment configs
-└── tests/           # Test suites
+│   ├── backend/              # FastAPI server (350+ endpoints)
+│   │   ├── api/             # API routes and routers
+│   │   ├── core/            # Core functionality
+│   │   ├── middleware/      # Request/response middleware
+│   │   ├── models/          # Data models
+│   │   ├── routers/         # API endpoints
+│   │   ├── schemas/         # Pydantic schemas
+│   │   └── services/        # Business logic services
+│   └── dashboard/           # React 19 frontend
+│       ├── src/
+│       │   ├── components/  # React components
+│       │   ├── hooks/       # Custom hooks
+│       │   ├── services/    # API services
+│       │   ├── types/       # TypeScript types
+│       │   └── utils/       # Utility functions
+│       └── public/          # Static assets
+├── core/                    # AI agents & orchestration
+│   ├── agents/              # Content generation agents
+│   ├── mcp/                 # Model Context Protocol
+│   ├── orchestration/       # Agent orchestration
+│   ├── sparc/               # SPARC reasoning framework
+│   └── swarm/               # Agent swarm coordination
+├── database/                # Database layer
+│   ├── alembic/             # Migration framework
+│   ├── migrations/          # Database migrations
+│   ├── models/              # SQLAlchemy models
+│   └── schemas/             # Database schemas
+├── infrastructure/          # Deployment & infrastructure
+│   ├── docker/              # Docker configurations
+│   │   ├── compose/         # Docker Compose files
+│   │   ├── config/          # Service configurations
+│   │   └── Dockerfile.*     # Container definitions
+│   ├── kubernetes/          # K8s manifests
+│   └── nginx/               # Nginx configurations
+├── docs/                    # Documentation (reorganized)
+│   ├── guides/              # User & developer guides
+│   ├── setup/               # Setup instructions
+│   └── Archive/             # Historical documentation
+├── tests/                   # Test suites (centralized)
+│   ├── backend/             # Backend tests
+│   ├── integration/         # Integration tests
+│   └── *.py                 # Test scripts
+├── config/                  # Configuration files
+├── scripts/                 # Utility scripts
+├── monitoring/              # Monitoring configs
+├── roblox/                  # Roblox integration
+└── supabase/                # Supabase integration
 ```
+
+## 📚 Documentation
+
+### Getting Started
+- [Quick Start Guide](docs/setup/QUICK_START_GUIDE.md) - Fast setup for new developers
+- [Docker Services Guide](docs/setup/DOCKER_SERVICES_GUIDE.md) - Docker setup and usage
+- [Manual Startup Instructions](docs/setup/MANUAL_STARTUP_INSTRUCTIONS.md) - Native setup without Docker
+- [Supabase Setup](docs/setup/SUPABASE_SETUP_GUIDE.md) - Database configuration
+
+### Development Guides
+- [2025 Implementation Standards](docs/guides/2025-IMPLEMENTATION-STANDARDS.md) - Coding standards
+- [Deployment Guide](docs/guides/DEPLOYMENT_GUIDE.md) - Production deployment
+- [Collaboration Guide](docs/guides/COLLABORATION.md) - Team workflows
+- [Roblox Quick Start](docs/guides/ROBLOX_QUICK_START.md) - Roblox integration
+
+### Architecture & Design
+- [Accessibility Guide](docs/guides/ACCESSIBILITY_GUIDE.md) - Accessibility standards
+- [Responsive Design Guide](docs/guides/RESPONSIVE_DESIGN_GUIDE.md) - UI/UX guidelines
+
+### Additional Resources
+- [API Documentation](openapi.yaml) - OpenAPI specification
+- [Cleanup Summary](docs/CLEANUP_SUMMARY_2025.md) - Recent reorganization details
+- [Changelog](CHANGELOG.md) - Version history
+
+## 🏗️ Architecture
 
 ### Tech Stack
 
