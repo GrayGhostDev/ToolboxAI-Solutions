@@ -350,3 +350,4 @@ apps/dashboard/node_modules.backup.*/
 # API documentation (generated)
 docs/api/
 openapi.json
+.claude/settings.local.json
