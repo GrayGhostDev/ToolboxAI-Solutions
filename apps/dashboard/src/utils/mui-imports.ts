@@ -42,6 +42,7 @@ export {
   ScrollArea,
   useMantineTheme,
   MantineProvider,
+  SimpleGrid,
 } from '@mantine/core';
 
 // Aliases for MUI compatibility
@@ -52,57 +53,64 @@ export { Progress as LinearProgress } from '@mantine/core';
 export { Modal as Dialog } from '@mantine/core';
 export { TextInput as TextField } from '@mantine/core';
 
-// Component sub-parts as simple exports
-export const CardContent = 'div' as const;
-export const CardActions = 'div' as const;
-export const CardMedia = 'div' as const;
-export const CardHeader = 'div' as const;
+// Component sub-parts using proper Mantine components
+export { Card as CardContent } from '@mantine/core';
+export { Box as CardActions } from '@mantine/core';
+export { Box as CardMedia } from '@mantine/core';
+export { Box as CardHeader } from '@mantine/core';
 
-export const ListItem = 'li' as const;
-export const ListItemText = 'span' as const;
-export const ListItemAvatar = 'div' as const;
-export const ListItemIcon = 'div' as const;
-export const ListItemButton = 'div' as const;
+export { List as ListItem } from '@mantine/core';
+export { Text as ListItemText } from '@mantine/core';
+export { Box as ListItemAvatar } from '@mantine/core';
+export { Box as ListItemIcon } from '@mantine/core';
+export { Box as ListItemButton } from '@mantine/core';
 
-export const DialogTitle = 'h2' as const;
-export const DialogContent = 'div' as const;
-export const DialogActions = 'div' as const;
-export const DialogContentText = 'p' as const;
+export { Title as DialogTitle } from '@mantine/core';
+export { Box as DialogContent } from '@mantine/core';
+export { Box as DialogActions } from '@mantine/core';
+export { Text as DialogContentText } from '@mantine/core';
 
-export const FormControl = 'div' as const;
-export const InputLabel = 'label' as const;
-export const InputAdornment = 'div' as const;
-export const FormControlLabel = 'label' as const;
+export { Box as FormControl } from '@mantine/core';
+export { Text as InputLabel } from '@mantine/core';
+export { Box as InputAdornment } from '@mantine/core';
+export { Box as FormControlLabel } from '@mantine/core';
 
-export const TableBody = 'tbody' as const;
-export const TableCell = 'td' as const;
-export const TableContainer = 'div' as const;
-export const TableHead = 'thead' as const;
-export const TableRow = 'tr' as const;
-export const TablePagination = 'div' as const;
+export { Table as TableBody } from '@mantine/core';
+export { Table as TableCell } from '@mantine/core';
+export { Box as TableContainer } from '@mantine/core';
+export { Table as TableHead } from '@mantine/core';
+export { Table as TableRow } from '@mantine/core';
+export { Box as TablePagination } from '@mantine/core';
 
-export const AppBar = 'header' as const;
-export const Toolbar = 'div' as const;
+export { Box as AppBar } from '@mantine/core';
+export { Box as Toolbar } from '@mantine/core';
 
-export const MenuItem = 'li' as const;
-export const RadioGroup = 'div' as const;
-export const Tab = 'button' as const;
-export const AlertTitle = 'h3' as const;
+export { Menu as MenuItem } from '@mantine/core';
+export { Box as RadioGroup } from '@mantine/core';
+export { Tabs as Tab } from '@mantine/core';
+export { Title as AlertTitle } from '@mantine/core';
 
-export const ToggleButton = 'button' as const;
-export const ToggleButtonGroup = 'div' as const;
+export { Button as ToggleButton } from '@mantine/core';
+export { Box as ToggleButtonGroup } from '@mantine/core';
 
 // Theme-related exports
 export { useMantineTheme as useTheme } from '@mantine/core';
 export { MantineProvider as ThemeProvider } from '@mantine/core';
 
-// Missing components exported as stubs
-export const Chip = 'span' as const;
-export const Pagination = 'div' as const;
-export const Autocomplete = 'input' as const;
-export const SegmentedControl = 'div' as const;
+// Missing components exported properly
+export { Badge as Chip } from '@mantine/core';
+export { Pagination } from '@mantine/core';
+export { Autocomplete } from '@mantine/core';
+export { SegmentedControl } from '@mantine/core';
 
 // Stub functions to prevent errors
 export const createTheme = (options: any) => options;
-export const alpha = (color: string, _opacity: number) => color;
+export const alpha = (color: string, opacity: number) => {
+  // Simple alpha implementation for color transparency
+  const hex = color.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+};
 export const styled = (component: any) => component;

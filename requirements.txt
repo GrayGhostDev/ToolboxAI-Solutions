@@ -66,19 +66,22 @@ structlog==25.4.0
 colorama==0.4.6
 sentry-sdk[fastapi,pure_eval,sqlalchemy]==2.37.1
 
-# OpenTelemetry (Observability)
-opentelemetry-api>=1.21.0,<2.0.0
-opentelemetry-sdk>=1.21.0,<2.0.0
-opentelemetry-instrumentation>=0.42b0,<1.0.0
-opentelemetry-instrumentation-fastapi>=0.42b0,<1.0.0
-opentelemetry-instrumentation-httpx>=0.42b0,<1.0.0
-opentelemetry-instrumentation-sqlalchemy>=0.42b0,<1.0.0
-opentelemetry-instrumentation-redis>=0.42b0,<1.0.0
-opentelemetry-instrumentation-psycopg2>=0.42b0,<1.0.0
-opentelemetry-instrumentation-logging>=0.42b0,<1.0.0
-# Using only OTLP HTTP exporter to avoid gRPC conflicts
-opentelemetry-exporter-otlp-proto-http>=1.21.0,<2.0.0
-opentelemetry-propagator-b3>=1.21.0,<2.0.0
+# OpenTelemetry (Observability) - Pinned versions for faster builds
+opentelemetry-api==1.21.0
+opentelemetry-sdk==1.21.0
+opentelemetry-instrumentation==0.42b0
+opentelemetry-instrumentation-fastapi==0.42b0
+opentelemetry-instrumentation-httpx==0.42b0
+opentelemetry-instrumentation-sqlalchemy==0.42b0
+opentelemetry-instrumentation-redis==0.42b0
+opentelemetry-instrumentation-psycopg2==0.42b0
+opentelemetry-instrumentation-logging==0.42b0
+# OTLP exporters (both HTTP and gRPC)
+opentelemetry-exporter-otlp-proto-http==1.21.0
+opentelemetry-exporter-otlp-proto-grpc==1.21.0
+# Jaeger exporter (deprecated but available if needed)
+opentelemetry-exporter-jaeger==1.21.0
+opentelemetry-propagator-b3==1.21.0
 
 # Testing
 pytest==8.4.2

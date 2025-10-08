@@ -72,6 +72,8 @@ services:
       # Enable detailed logging
       LOG_LEVEL: DEBUG
       PYTHONDEBUG: 1
+      HTTP_PROXY: ${HTTP_PROXY}
+      HTTPS_PROXY: ${HTTPS_PROXY}
     secrets: []
     volumes:
       # Mount source code for hot reload
@@ -246,6 +248,8 @@ services:
       CELERY_LOG_LEVEL: DEBUG
       CELERY_SEND_TASK_EVENTS: true  # For Flower monitoring
       PYTHONDEBUG: 1
+      HTTP_PROXY: ${HTTP_PROXY}
+      HTTPS_PROXY: ${HTTPS_PROXY}
     secrets: []
     volumes:
       # Mount source code for hot reload
@@ -291,6 +295,8 @@ services:
       CELERY_BEAT_LOG_LEVEL: DEBUG
       CELERY_BEAT_MAX_LOOP_INTERVAL: 5  # More frequent in dev
       TZ: ${TZ:-UTC}
+      HTTP_PROXY: ${HTTP_PROXY}
+      HTTPS_PROXY: ${HTTPS_PROXY}
     secrets: []
     volumes:
       # Mount source code for development

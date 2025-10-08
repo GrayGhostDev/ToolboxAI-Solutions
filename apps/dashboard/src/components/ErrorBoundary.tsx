@@ -5,7 +5,7 @@
  * logs errors, and displays a fallback UI
  */
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 import {
   Box,
   Container,
@@ -14,14 +14,11 @@ import {
   Button,
   Paper,
   Alert,
-  Stack,
   Collapse,
   ActionIcon,
-  Divider,
   Group,
   useMantineTheme,
   ScrollArea,
-  Badge,
   Center,
 } from '@mantine/core';
 import {
@@ -30,7 +27,6 @@ import {
   IconChevronDown,
   IconChevronUp,
   IconHome,
-  IconBug,
   IconCopy,
   IconCheck,
 } from '@tabler/icons-react';
@@ -248,6 +244,16 @@ interface ErrorFallbackProps {
   errorCount: number;
 }
 
+// Safe theme hook that doesn't throw when provider is missing
+function useSafeMantineTheme() {
+  try {
+    return { hasMantine: true, theme: useMantineTheme() };
+  } catch (error) {
+    // MantineProvider is not available
+    return { hasMantine: false, theme: null };
+  }
+}
+
 function ErrorFallback({
   error,
   errorInfo,
@@ -262,9 +268,210 @@ function ErrorFallback({
   isRecovering,
   errorCount,
 }: ErrorFallbackProps) {
-  const theme = useMantineTheme();
+  const { hasMantine, theme } = useSafeMantineTheme();
 
-  // Different layouts based on error level
+  // Fallback UI without Mantine components
+  if (!hasMantine) {
+    if (level === 'page') {
+      return (
+        <div style={{
+          maxWidth: '800px',
+          margin: '0 auto',
+          padding: '3rem 1rem',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '2rem',
+            borderRadius: '8px',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+            borderTop: '4px solid #fa5252',
+            textAlign: 'center'
+          }}>
+            <div style={{ marginBottom: '1.5rem', color: '#fa5252', fontSize: '4rem' }}>⚠️</div>
+
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#212529' }}>
+              Oops! Something went wrong
+            </h2>
+
+            <p style={{ color: '#868e96', marginBottom: '2rem' }}>
+              We're sorry, but something unexpected happened. The error has been logged and we'll look into it.
+            </p>
+
+            {errorCount >= 3 && (
+              <div style={{
+                backgroundColor: '#fff3bf',
+                border: '1px solid #fcc419',
+                borderRadius: '4px',
+                padding: '1rem',
+                marginBottom: '1.5rem',
+                color: '#f08c00'
+              }}>
+                ⚠️ Multiple errors detected. The page may be unstable.
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+              <button
+                onClick={onReset}
+                disabled={isRecovering}
+                style={{
+                  backgroundColor: '#228be6',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '4px',
+                  cursor: isRecovering ? 'not-allowed' : 'pointer',
+                  fontSize: '1rem',
+                  opacity: isRecovering ? 0.6 : 1
+                }}
+              >
+                {isRecovering ? 'Recovering...' : '🔄 Try Again'}
+              </button>
+
+              <button
+                onClick={onGoHome}
+                style={{
+                  backgroundColor: 'transparent',
+                  color: '#228be6',
+                  border: '1px solid #228be6',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '1rem'
+                }}
+              >
+                🏠 Go to Homepage
+              </button>
+            </div>
+
+            {showDetailsProp && (
+              <>
+                <button
+                  onClick={onToggleDetails}
+                  style={{
+                    backgroundColor: 'transparent',
+                    color: '#495057',
+                    border: 'none',
+                    padding: '0.5rem 1rem',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem'
+                  }}
+                >
+                  {showDetails ? '▲ Hide' : '▼ Show'} Technical Details
+                </button>
+
+                {showDetails && (
+                  <div style={{ marginTop: '1.5rem', textAlign: 'left' }}>
+                    <div style={{
+                      backgroundColor: '#ffe3e3',
+                      border: '1px solid #fa5252',
+                      borderRadius: '4px',
+                      padding: '1rem',
+                      marginBottom: '1rem'
+                    }}>
+                      <strong style={{ color: '#c92a2a' }}>Error Message</strong>
+                      <pre style={{
+                        fontFamily: 'monospace',
+                        fontSize: '0.875rem',
+                        margin: '0.5rem 0 0 0',
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word'
+                      }}>
+                        {error.message}
+                      </pre>
+                    </div>
+
+                    {error.stack && (
+                      <div style={{
+                        backgroundColor: '#f8f9fa',
+                        border: '1px solid #dee2e6',
+                        borderRadius: '4px',
+                        padding: '1rem'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                          <strong>Stack Trace</strong>
+                          <button
+                            onClick={onCopy}
+                            style={{
+                              backgroundColor: 'transparent',
+                              border: 'none',
+                              cursor: 'pointer',
+                              fontSize: '1rem'
+                            }}
+                          >
+                            {copied ? '✅' : '📋'}
+                          </button>
+                        </div>
+                        <div style={{
+                          maxHeight: '200px',
+                          overflow: 'auto',
+                          backgroundColor: 'white',
+                          padding: '0.5rem',
+                          borderRadius: '4px'
+                        }}>
+                          <pre style={{
+                            fontFamily: 'monospace',
+                            fontSize: '0.75rem',
+                            margin: 0,
+                            whiteSpace: 'pre-wrap',
+                            wordBreak: 'break-word'
+                          }}>
+                            {error.stack}
+                          </pre>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Inline error without Mantine
+    return (
+      <div style={{
+        border: '1px solid #fa5252',
+        borderRadius: '4px',
+        backgroundColor: '#fff5f5',
+        padding: level === 'section' ? '1.5rem' : '1rem',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1rem'
+      }}>
+        <span style={{ color: '#fa5252', fontSize: '1.5rem' }}>⚠️</span>
+        <div style={{ flex: 1 }}>
+          <strong style={{ color: '#fa5252' }}>
+            {level === 'section' ? 'Section Error' : 'Component Error'}
+          </strong>
+          <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.875rem', color: '#868e96' }}>
+            {error.message}
+          </p>
+        </div>
+        <button
+          onClick={onReset}
+          disabled={isRecovering}
+          style={{
+            backgroundColor: 'transparent',
+            color: '#228be6',
+            border: '1px solid #228be6',
+            padding: '0.5rem 1rem',
+            borderRadius: '4px',
+            cursor: isRecovering ? 'not-allowed' : 'pointer',
+            fontSize: '0.875rem',
+            opacity: isRecovering ? 0.6 : 1
+          }}
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  // Use Mantine components when provider is available
   if (level === 'page') {
     return (
       <Container size="md" py="xl">

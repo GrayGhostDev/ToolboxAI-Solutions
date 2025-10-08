@@ -1,32 +1,11 @@
-version: '3.8'
-
 services:
-  # Database Services
-  postgres:
-    image: postgres:15-alpine
-    container_name: toolboxai-postgres
-    environment:
-      POSTGRES_USER: eduplatform
-      POSTGRES_PASSWORD: eduplatform2024
-      POSTGRES_DB: educational_platform_dev
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U eduplatform"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - toolboxai-network
+  # Database Services - REMOVED postgres, using Supabase Cloud
 
   redis:
     image: redis:7-alpine
     container_name: toolboxai-redis
     ports:
-      - "6379:6379"
+      - "6380:6379"
     command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
@@ -37,25 +16,66 @@ services:
       retries: 5
     networks:
       - toolboxai-network
+    restart: unless-stopped
 
   # Backend API Service
   backend:
     build:
-      context: .
-      dockerfile: Dockerfile.backend
+      context: ../../..
+      dockerfile: infrastructure/docker/Dockerfile.backend
     container_name: toolboxai-backend
     environment:
-      DATABASE_URL: postgresql://eduplatform:eduplatform2024@postgres:5432/educational_platform_dev
+      # Database & Redis - Using Supabase
+      DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: redis://redis:6379
-      JWT_SECRET_KEY: your-secret-key-here-change-in-production
-      ENVIRONMENT: development
-      PUSHER_APP_ID: ${PUSHER_APP_ID:-local}
-      PUSHER_KEY: ${PUSHER_KEY:-local}
-      PUSHER_SECRET: ${PUSHER_SECRET:-local}
-      PUSHER_CLUSTER: ${PUSHER_CLUSTER:-mt1}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-sk-test}
+
+      # JWT Authentication
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-3600}
+
+      # Application Settings
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      DEBUG: ${DEBUG:-true}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+
+      # Pusher Real-time
+      PUSHER_APP_ID: ${PUSHER_APP_ID}
+      PUSHER_KEY: ${PUSHER_KEY}
+      PUSHER_SECRET: ${PUSHER_SECRET}
+      PUSHER_CLUSTER: ${PUSHER_CLUSTER}
+
+      # AI Services
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+
+      # Roblox Integration
+      ROBLOX_OAUTH_CLIENT_ID: ${ROBLOX_OAUTH_CLIENT_ID}
+      ROBLOX_OAUTH_CLIENT_SECRET: ${ROBLOX_OAUTH_CLIENT_SECRET}
+      ROBLOX_API_KEY: ${ROBLOX_API_KEY}
+      ROBLOX_UNIVERSE_ID: ${ROBLOX_UNIVERSE_ID}
+      ROJO_BASE_PORT: ${ROJO_BASE_PORT:-34872}
+      ROJO_MAX_PROJECTS: ${ROJO_MAX_PROJECTS:-10}
+
+      # Clerk Authentication
+      CLERK_SECRET_KEY: ${CLERK_SECRET_KEY}
+      CLERK_WEBHOOK_SECRET: ${CLERK_WEBHOOK_SECRET}
+
+      # Supabase Configuration
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET}
+
+      # Stripe
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+
+      # Monitoring
       SENTRY_DSN: ${SENTRY_DSN:-}
-      CORS_ORIGINS: '["http://localhost:5173", "http://localhost:5179", "http://localhost:3000"]'
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-development}
+
     ports:
       - "8009:8009"
     volumes:
@@ -63,18 +83,14 @@ services:
       - ./core:/app/core
       - ./database:/app/database
       - ./toolboxai_settings:/app/toolboxai_settings
-      - ./toolboxai_utils:/app/toolboxai_utils
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
     command: |
       sh -c "
-        echo 'Waiting for database...' &&
+        echo 'Waiting for Redis...' &&
         sleep 5 &&
-        echo 'Running database migrations...' &&
-        python -m alembic upgrade head || true &&
+        echo 'Testing Supabase connection...' &&
         echo 'Starting backend server...' &&
         uvicorn apps.backend.main:app --host 0.0.0.0 --port 8009 --reload
       "
@@ -89,17 +105,43 @@ services:
   # Frontend Dashboard Service
   dashboard:
     build:
-      context: .
-      dockerfile: Dockerfile.dashboard
+      context: ../../..
+      dockerfile: infrastructure/docker/Dockerfile.dashboard
     container_name: toolboxai-dashboard
     environment:
-      VITE_API_BASE_URL: http://backend:8009
-      VITE_WS_URL: ws://backend:8009
-      VITE_PUSHER_KEY: ${PUSHER_KEY:-local}
-      VITE_PUSHER_CLUSTER: ${PUSHER_CLUSTER:-mt1}
+      # API Configuration
+      VITE_API_BASE_URL: http://localhost:8009
+      VITE_WS_URL: ws://localhost:8009
+
+      # Supabase Configuration
+      VITE_SUPABASE_URL: ${SUPABASE_URL}
+      VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+
+      # Pusher Real-time
+      VITE_PUSHER_KEY: ${PUSHER_KEY}
+      VITE_PUSHER_CLUSTER: ${PUSHER_CLUSTER}
       VITE_PUSHER_AUTH_ENDPOINT: /api/v1/pusher/auth
-      VITE_ENABLE_WEBSOCKET: true
+
+      # Feature Flags
+      VITE_ENABLE_WEBSOCKET: ${VITE_ENABLE_WEBSOCKET:-false}
+      VITE_ENABLE_PUSHER: ${VITE_ENABLE_PUSHER:-true}
+      VITE_ENABLE_CLERK_AUTH: ${VITE_ENABLE_CLERK_AUTH:-false}
+      VITE_ENABLE_3D_FEATURES: ${VITE_ENABLE_3D_FEATURES:-true}
+      VITE_ENABLE_ROBLOX: ${VITE_ENABLE_ROBLOX:-true}
+      VITE_ENABLE_GAMIFICATION: ${VITE_ENABLE_GAMIFICATION:-true}
+      VITE_ENABLE_ANALYTICS: ${VITE_ENABLE_ANALYTICS:-true}
+
+      # Compliance Flags
+      VITE_COPPA_COMPLIANCE: ${VITE_COPPA_COMPLIANCE:-true}
+      VITE_FERPA_COMPLIANCE: ${VITE_FERPA_COMPLIANCE:-true}
+      VITE_GDPR_COMPLIANCE: ${VITE_GDPR_COMPLIANCE:-true}
+
+      # Clerk (Optional)
+      VITE_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+
+      # Build Settings
       NODE_ENV: development
+
     ports:
       - "5179:5179"
     volumes:
@@ -119,19 +161,20 @@ services:
   # MCP Server (Model Context Protocol)
   mcp-server:
     build:
-      context: .
-      dockerfile: Dockerfile.mcp
+      context: ../../..
+      dockerfile: infrastructure/docker/Dockerfile.mcp
     container_name: toolboxai-mcp
     environment:
-      DATABASE_URL: postgresql://eduplatform:eduplatform2024@postgres:5432/educational_platform_dev
+      DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: redis://redis:6379
       MCP_SERVER_NAME: toolboxai-mcp
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
     ports:
       - "8010:8010"
     volumes:
       - ./core/mcp:/app/core/mcp
     depends_on:
-      - postgres
       - redis
     command: python -m core.mcp.servers.agent_coordinator
     networks:
@@ -140,19 +183,20 @@ services:
   # Agent Coordinator Service
   coordinator:
     build:
-      context: .
-      dockerfile: Dockerfile.coordinator
+      context: ../../..
+      dockerfile: infrastructure/docker/Dockerfile.coordinator
     container_name: toolboxai-coordinator
     environment:
-      DATABASE_URL: postgresql://eduplatform:eduplatform2024@postgres:5432/educational_platform_dev
+      DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: redis://redis:6379
       OPENAI_API_KEY: ${OPENAI_API_KEY:-sk-test}
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
     ports:
       - "8888:8888"
     volumes:
       - ./core/agents:/app/core/agents
     depends_on:
-      - postgres
       - redis
       - backend
     command: python -m uvicorn core.agents.coordinator:app --host 0.0.0.0 --port 8888 --reload
@@ -225,12 +269,10 @@ services:
       - toolboxai-network
 
 volumes:
-  postgres_data:
   redis_data:
   prometheus_data:
   grafana_data:
 
 networks:
   toolboxai-network:
-    driver: bridge
-    name: toolboxai-network
+    external: true

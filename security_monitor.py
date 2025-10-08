@@ -1,1 +1,0 @@
-scripts/python/security_monitor.py

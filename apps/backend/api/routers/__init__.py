@@ -53,6 +53,16 @@ def _register_core_routers(app: FastAPI) -> None:
         except ImportError as e:
             logger.warning(f"Could not load health check endpoints: {e}")
 
+        # Educational Platform - Courses Router (NEW)
+        try:
+            from apps.backend.routers.courses import router as courses_router
+            app.include_router(courses_router)
+            logger.info("✅ Courses API endpoints loaded successfully at /api/v1/courses")
+        except ImportError as e:
+            logger.warning(f"Could not load courses endpoints: {e}")
+        except Exception as e:
+            logger.error(f"Error loading courses endpoints: {e}")
+
         # Secure Roblox Integration Router (Priority - loads first)
         try:
             from apps.backend.routers.roblox import router as secure_roblox_router

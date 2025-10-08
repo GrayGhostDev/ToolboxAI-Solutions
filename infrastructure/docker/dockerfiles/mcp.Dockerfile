@@ -166,50 +166,40 @@ ENV MCP_HOST=0.0.0.0 \
     AGENT_TIMEOUT=300
 
 # Create health check script
-RUN cat > /app/healthcheck.py << 'EOF'
-#!/usr/bin/env python3
-import asyncio
-import json
-import sys
-import websockets
-from urllib.parse import urljoin
-
-async def check_health():
-    """Check MCP server health via WebSocket connection."""
-    try:
-        # Try to connect to the MCP server
-        uri = f"ws://localhost:9877/health"
-
-        async with websockets.connect(uri, timeout=5) as websocket:
-            # Send health check message
-            health_request = {
-                "jsonrpc": "2.0",
-                "id": "health-check",
-                "method": "server.health",
-                "params": {}
-            }
-            await websocket.send(json.dumps(health_request))
-
-            # Wait for response
-            response = await asyncio.wait_for(websocket.recv(), timeout=3)
-            result = json.loads(response)
-
-            # Check if response indicates healthy state
-            if result.get("result", {}).get("status") == "healthy":
-                print("✅ MCP Server is healthy")
-                return True
-            else:
-                print(f"❌ MCP Server unhealthy: {result}")
-                return False
-
-    except Exception as e:
-        print(f"❌ Health check failed: {e}")
-        return False
-
-if __name__ == "__main__":
-    result = asyncio.run(check_health())
-    sys.exit(0 if result else 1)
-EOF
+RUN echo '#!/usr/bin/env python3' > /app/healthcheck.py && \
+    echo 'import asyncio' >> /app/healthcheck.py && \
+    echo 'import json' >> /app/healthcheck.py && \
+    echo 'import sys' >> /app/healthcheck.py && \
+    echo 'import websockets' >> /app/healthcheck.py && \
+    echo 'from urllib.parse import urljoin' >> /app/healthcheck.py && \
+    echo '' >> /app/healthcheck.py && \
+    echo 'async def check_health():' >> /app/healthcheck.py && \
+    echo '    """Check MCP server health via WebSocket connection."""' >> /app/healthcheck.py && \
+    echo '    try:' >> /app/healthcheck.py && \
+    echo '        uri = f"ws://localhost:9877/health"' >> /app/healthcheck.py && \
+    echo '        async with websockets.connect(uri, timeout=5) as websocket:' >> /app/healthcheck.py && \
+    echo '            health_request = {' >> /app/healthcheck.py && \
+    echo '                "jsonrpc": "2.0",' >> /app/healthcheck.py && \
+    echo '                "id": "health-check",' >> /app/healthcheck.py && \
+    echo '                "method": "server.health",' >> /app/healthcheck.py && \
+    echo '                "params": {}' >> /app/healthcheck.py && \
+    echo '            }' >> /app/healthcheck.py && \
+    echo '            await websocket.send(json.dumps(health_request))' >> /app/healthcheck.py && \
+    echo '            response = await asyncio.wait_for(websocket.recv(), timeout=3)' >> /app/healthcheck.py && \
+    echo '            result = json.loads(response)' >> /app/healthcheck.py && \
+    echo '            if result.get("result", {}).get("status") == "healthy":' >> /app/healthcheck.py && \
+    echo '                print("✅ MCP Server is healthy")' >> /app/healthcheck.py && \
+    echo '                return True' >> /app/healthcheck.py && \
+    echo '            else:' >> /app/healthcheck.py && \
+    echo '                print(f"❌ MCP Server unhealthy: {result}")' >> /app/healthcheck.py && \
+    echo '                return False' >> /app/healthcheck.py && \
+    echo '    except Exception as e:' >> /app/healthcheck.py && \
+    echo '        print(f"❌ Health check failed: {e}")' >> /app/healthcheck.py && \
+    echo '        return False' >> /app/healthcheck.py && \
+    echo '' >> /app/healthcheck.py && \
+    echo 'if __name__ == "__main__":' >> /app/healthcheck.py && \
+    echo '    result = asyncio.run(check_health())' >> /app/healthcheck.py && \
+    echo '    sys.exit(0 if result else 1)' >> /app/healthcheck.py
 
 RUN chmod +x /app/healthcheck.py
 

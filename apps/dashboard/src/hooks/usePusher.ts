@@ -1,18 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Channel, PresenceChannel } from 'pusher-js';
-import { pusherService, PusherService } from '../services/pusher';
+import type { PresenceChannel } from 'pusher-js';
+import { pusherService } from '../services/pusher';
+import type { PusherService } from '../services/pusher';
 import { WebSocketState } from '../types/websocket';
 import {
   PusherChannelType,
-  PusherChannels,
-  PusherConnectionState,
+  formatChannelName,
+} from '../types/pusher';
+import type {
   PusherEventHandler,
   PusherHookConfig,
   PusherMember,
   PusherPresenceChannelData,
-  formatChannelName,
-  isPusherMember,
-  isPresenceChannel
 } from '../types/pusher';
 import { logger } from '../utils/logger';
 
@@ -33,7 +32,7 @@ export function usePusher(config: PusherHookConfig = {}) {
 
   // Handle connection state changes
   useEffect(() => {
-    const unsubscribe = serviceRef.current.onStateChange((newState) => {
+    return serviceRef.current.onStateChange((newState) => {
       setConnectionState(newState);
       setIsReady(newState === WebSocketState.CONNECTED);
 
@@ -41,8 +40,6 @@ export function usePusher(config: PusherHookConfig = {}) {
         logger.debug('Pusher connection state changed:', newState);
       }
     });
-
-    return unsubscribe;
   }, [debugMode]);
 
   // Auto-connect on mount
@@ -90,7 +87,7 @@ export function usePusherChannel(
     enabled?: boolean;
     channelType?: PusherChannelType;
     autoSubscribe?: boolean;
-    dependencies?: any[];
+    dependencies?: unknown[];
   } = {}
 ) {
   const {
@@ -104,6 +101,12 @@ export function usePusherChannel(
   const subscriptionIdsRef = useRef<string[]>([]);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [subscriptionError, setSubscriptionError] = useState<Error | null>(null);
+  const eventHandlersRef = useRef(eventHandlers);
+
+  // Update event handlers ref when they change
+  useEffect(() => {
+    eventHandlersRef.current = eventHandlers;
+  }, [eventHandlers]);
 
   // Format channel name based on type
   const formattedChannelName = formatChannelName(channelName, channelType);
@@ -119,7 +122,7 @@ export function usePusherChannel(
       // Subscribe to events
       const subscriptionIds: string[] = [];
 
-      Object.entries(eventHandlers).forEach(([eventType, handler]) => {
+      Object.entries(eventHandlersRef.current).forEach(([eventType, handler]) => {
         const subscriptionId = service.subscribe(formattedChannelName, (message) => {
           if (message.type === eventType) {
             handler(message.payload, { channel: formattedChannelName, event: eventType });
@@ -145,13 +148,14 @@ export function usePusherChannel(
       subscriptionIdsRef.current = [];
       setIsSubscribed(false);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formattedChannelName, enabled, isReady, autoSubscribe, service, ...dependencies]);
 
   const manualSubscribe = useCallback(() => {
     if (!enabled || !isReady || isSubscribed) return;
 
     const subscriptionIds: string[] = [];
-    Object.entries(eventHandlers).forEach(([eventType, handler]) => {
+    Object.entries(eventHandlersRef.current).forEach(([eventType, handler]) => {
       const subscriptionId = service.subscribe(formattedChannelName, (message) => {
         if (message.type === eventType) {
           handler(message.payload, { channel: formattedChannelName, event: eventType });
@@ -161,7 +165,7 @@ export function usePusherChannel(
     });
     subscriptionIdsRef.current = subscriptionIds;
     setIsSubscribed(true);
-  }, [enabled, isReady, isSubscribed, eventHandlers, service, formattedChannelName]);
+  }, [enabled, isReady, isSubscribed, service, formattedChannelName]);
 
   const manualUnsubscribe = useCallback(() => {
     subscriptionIdsRef.current.forEach(id => {
@@ -201,11 +205,10 @@ export function usePusherConnection() {
 
   // Listen for errors
   useEffect(() => {
-    const unsubscribe = service.onError((error) => {
-      setLastError(error);
+    return service.onError((error) => {
+      // Convert WebSocketError to Error
+      setLastError(error as unknown as Error);
     });
-
-    return unsubscribe;
   }, [service]);
 
   const reconnect = useCallback(() => {
@@ -239,10 +242,18 @@ export function usePusherPresence(
   } = {}
 ) {
   const { enabled = true, onMemberAdded, onMemberRemoved } = options;
-  const { service, isReady } = usePusher();
+  const { isReady } = usePusher();
   const [members, setMembers] = useState<PusherMember[]>([]);
   const [isJoined, setIsJoined] = useState(false);
   const presenceChannelRef = useRef<PresenceChannel | null>(null);
+  const onMemberAddedRef = useRef(onMemberAdded);
+  const onMemberRemovedRef = useRef(onMemberRemoved);
+
+  // Update callback refs
+  useEffect(() => {
+    onMemberAddedRef.current = onMemberAdded;
+    onMemberRemovedRef.current = onMemberRemoved;
+  }, [onMemberAdded, onMemberRemoved]);
 
   const formattedChannelName = formatChannelName(channelName, PusherChannelType.PRESENCE);
 
@@ -253,6 +264,13 @@ export function usePusherPresence(
     // This is a simplified implementation - the actual implementation would
     // need to integrate with the service's Pusher instance
 
+    // TODO: Implement presence channel logic with member tracking
+    // This would involve:
+    // 1. Subscribing to the presence channel
+    // 2. Listening for member_added events
+    // 3. Listening for member_removed events
+    // 4. Updating the members list
+
     // Cleanup function
     return () => {
       if (presenceChannelRef.current) {
@@ -262,7 +280,7 @@ export function usePusherPresence(
         presenceChannelRef.current = null;
       }
     };
-  }, [enabled, isReady, formattedChannelName]);
+  }, [enabled, isReady, formattedChannelName, userInfo]);
 
   const joinChannel = useCallback(async () => {
     if (!enabled || !isReady || isJoined) return;
@@ -296,13 +314,13 @@ export function usePusherPresence(
 /**
  * Hook for listening to specific Pusher events with automatic cleanup
  */
-export function usePusherEvent<T = any>(
+export function usePusherEvent<T = unknown>(
   eventType: string,
   handler: PusherEventHandler<T>,
   options: {
     enabled?: boolean;
     channel?: string;
-    dependencies?: any[];
+    dependencies?: unknown[];
   } = {}
 ) {
   const { enabled = true, channel, dependencies = [] } = options;
@@ -340,6 +358,7 @@ export function usePusherEvent<T = any>(
         service.off(eventType, handlerRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, isReady, eventType, channel, service, ...dependencies]);
 }
 
@@ -353,7 +372,7 @@ export function usePusherSend() {
 
   const sendMessage = useCallback(async (
     type: string,
-    payload?: any,
+    payload?: unknown,
     options?: {
       channel?: string;
       awaitAcknowledgment?: boolean;
@@ -368,7 +387,9 @@ export function usePusherSend() {
     setLastError(null);
 
     try {
-      await service.send(type, payload, options);
+      // Note: The service.send method signature may need to be updated
+      // to properly type the message type parameter
+      await (service.send as (type: string, payload?: unknown, options?: any) => Promise<void>)(type, payload, options);
     } catch (error) {
       setLastError(error as Error);
       throw error;
@@ -384,7 +405,3 @@ export function usePusherSend() {
     isReady
   };
 }
-
-// Legacy compatibility - keep original hooks
-export const usePusherChannel_Legacy = usePusherChannel;
-export const usePusherConnection_Legacy = usePusherConnection;

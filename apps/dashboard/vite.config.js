@@ -53,8 +53,61 @@ export default defineConfig({
       // Exclude any MUI packages to prevent resolution attempts
       '@mui/*',
       '@material-ui/*',
-      '@emotion/*'
-    ]
+      '@emotion/*',
+      // Exclude problematic syntax highlighter packages entirely
+      'react-syntax-highlighter',
+      'lowlight',
+      'refractor',
+      'refractor/core',
+      // Exclude problematic highlight.js language modules
+      'highlight.js/lib/languages/htmlbars',
+      'highlight.js/lib/languages/sql_more',
+      'highlight.js/lib/languages/c-like',
+      'highlight.js/es/languages/htmlbars',
+      'highlight.js/es/languages/sql_more',
+      'highlight.js/es/languages/c-like'
+    ],
+    // Add esbuild options to handle missing modules
+    esbuildOptions: {
+      plugins: [
+        {
+          name: 'ignore-missing-modules',
+          setup(build) {
+            // Ignore missing highlight.js language modules with proper namespace
+            build.onResolve({ filter: /highlight\.js\/(lib|es)\/languages\/(htmlbars|sql_more|c-like)/ }, args => {
+              return {
+                path: args.path,
+                namespace: 'ignore-module'
+              }
+            });
+
+            // Ignore missing refractor modules
+            build.onResolve({ filter: /refractor\/core/ }, args => {
+              return {
+                path: args.path,
+                namespace: 'ignore-module'
+              }
+            });
+
+            // Ignore problematic react-syntax-highlighter paths
+            build.onResolve({ filter: /react-syntax-highlighter\/dist\/esm\/(prism|async)/ }, args => {
+              return {
+                path: args.path,
+                namespace: 'ignore-module'
+              }
+            });
+
+            // Return empty module for all ignored modules
+            build.onLoad({ filter: /.*/, namespace: 'ignore-module' }, () => {
+              return {
+                contents: 'export default {};',
+                loader: 'js'
+              }
+            });
+          }
+        }
+      ]
+    }
   },
 
   // Path resolution
@@ -71,7 +124,14 @@ export default defineConfig({
       // Enhanced aliases for 2025
       '@assets': path.resolve(__dirname, './src/assets'),
       '@styles': path.resolve(__dirname, './src/styles'),
-      '@config': path.resolve(__dirname, './src/config')
+      '@config': path.resolve(__dirname, './src/config'),
+      // Map missing highlight.js language modules to empty stub
+      'highlight.js/lib/languages/htmlbars': path.resolve(__dirname, './src/utils/highlight-stub.js'),
+      'highlight.js/lib/languages/sql_more': path.resolve(__dirname, './src/utils/highlight-stub.js'),
+      'highlight.js/lib/languages/c-like': path.resolve(__dirname, './src/utils/highlight-stub.js'),
+      'highlight.js/es/languages/htmlbars': path.resolve(__dirname, './src/utils/highlight-stub.js'),
+      'highlight.js/es/languages/sql_more': path.resolve(__dirname, './src/utils/highlight-stub.js'),
+      'highlight.js/es/languages/c-like': path.resolve(__dirname, './src/utils/highlight-stub.js')
     },
     dedupe: [
       'react',
@@ -212,6 +272,8 @@ export default defineConfig({
     rollupOptions: {
       // Handle problematic module resolution
       external: [
+        // Mark missing highlight.js language modules as external to prevent build errors
+        /highlight\.js\/lib\/languages\/(htmlbars|sql_more)/,
         // Uncomment to load from CDN in production
         // 'react',
         // 'react-dom'
@@ -219,6 +281,18 @@ export default defineConfig({
 
       // Enhanced module resolution
       plugins: [
+        // Custom plugin to handle missing highlight.js language modules
+        {
+          name: 'ignore-missing-highlightjs-languages',
+          resolveId(id) {
+            // Ignore missing highlight.js language modules
+            if (id.includes('highlight.js/lib/languages/htmlbars') ||
+                id.includes('highlight.js/lib/languages/sql_more')) {
+              return { id, external: true };
+            }
+            return null;
+          }
+        },
         // Custom plugin to handle react-syntax-highlighter ESM/CJS issues
         {
           name: 'resolve-syntax-highlighter',
@@ -607,3 +681,4 @@ export default defineConfig({
     __ENABLE_DEBUG_TOOLS__: JSON.stringify(process.env.NODE_ENV === 'development')
   }
 });
+

@@ -32,49 +32,46 @@ globalThis._interopRequireWildcard = window._interopRequireWildcard;
 (function() {
   'use strict';
 
-  // Make sure functions persist
+  // Additional helpers for module compatibility
+  window.__createBinding = window.__createBinding || function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+  };
 
-    // Additional helpers for module compatibility
-    window.__createBinding = window.__createBinding || function(o, m, k, k2) {
-      if (k2 === undefined) k2 = k;
-      Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+  window.__exportStar = window.__exportStar || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) exports[p] = m[p];
+  };
+
+  window.__values = window.__values || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+      next: function() {
+        if (o && i >= o.length) o = void 0;
+        return { value: o && o[i++], done: !o };
+      }
     };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+  };
 
-    window.__exportStar = window.__exportStar || function(m, exports) {
-      for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) exports[p] = m[p];
-    };
+  // Webpack compatibility helpers
+  window.__webpack_require__ = window.__webpack_require__ || function(id) {
+    return window[id] || {};
+  };
 
-    window.__values = window.__values || function(o) {
-      var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
-      if (m) return m.call(o);
-      if (o && typeof o.length === "number") return {
-        next: function() {
-          if (o && i >= o.length) o = void 0;
-          return { value: o && o[i++], done: !o };
-        }
-      };
-      throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
-    };
+  // ES6 module helpers
+  window.__esModule = true;
 
-    // Webpack compatibility helpers
-    window.__webpack_require__ = window.__webpack_require__ || function(id) {
-      return window[id] || {};
-    };
-
-    // ES6 module helpers
-    window.__esModule = true;
-
-    // Support for different module systems
-    if (typeof module !== 'undefined' && module.exports) {
-      module.exports._interopRequireDefault = window._interopRequireDefault;
-      module.exports._interopRequireWildcard = window._interopRequireWildcard;
-    }
+  // Support for different module systems
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports._interopRequireDefault = window._interopRequireDefault;
+    module.exports._interopRequireWildcard = window._interopRequireWildcard;
   }
 
   // Node.js environment support
   if (typeof global !== 'undefined') {
-    global._interopRequireDefault = createInteropFunction();
-    global._interopRequireWildcard = createWildcardFunction();
+    global._interopRequireDefault = window._interopRequireDefault;
+    global._interopRequireWildcard = window._interopRequireWildcard;
   }
 
   console.log('[Polyfills] Enhanced CommonJS interop helpers loaded successfully');

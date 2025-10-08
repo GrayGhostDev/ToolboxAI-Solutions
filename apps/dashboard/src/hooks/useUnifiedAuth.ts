@@ -1,5 +1,5 @@
-import { useAuth as useClerkAuth } from "../contexts/ClerkAuthContext";
-import { useAuth as useLegacyAuth } from "../contexts/AuthContext";
+import { useAuth as useClerkAuth } from '../contexts/ClerkAuthContext';
+import { useAuth as useLegacyAuth } from '../contexts/AuthContext';
 
 /**
  * Unified auth hook that conditionally uses either Clerk or Legacy auth
@@ -14,9 +14,11 @@ export function useUnifiedAuth() {
 
   const isClerkEnabled = import.meta.env.VITE_ENABLE_CLERK_AUTH === 'true';
 
+  // Use Clerk auth if enabled and available
   if (isClerkEnabled && clerkResult) {
     return clerkResult;
   }
 
+  // Fall back to legacy auth
   return legacyResult;
 }

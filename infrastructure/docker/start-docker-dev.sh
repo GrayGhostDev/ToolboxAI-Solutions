@@ -12,8 +12,8 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-COMPOSE_FILE="infrastructure/docker/docker-compose.dev.yml"
-PROJECT_ROOT="/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
+COMPOSE_FILES=("-f infrastructure/docker/compose/docker-compose.yml" "-f infrastructure/docker/compose/docker-compose.dev.yml")
+PROJECT_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 ENV_FILE=".env"
 
 # Logging functions
@@ -125,12 +125,13 @@ validate_dockerfiles() {
     log "Validating Dockerfiles..."
     
     local dockerfiles=(
-        "infrastructure/docker/Dockerfile.backend"
-        "infrastructure/docker/dashboard.dev.Dockerfile"
-        "infrastructure/docker/mcp-server.Dockerfile"
-        "infrastructure/docker/agent-coordinator.Dockerfile"
-        "infrastructure/docker/educational-agents.Dockerfile"
-        "infrastructure/docker/flask-bridge.Dockerfile"
+        "infrastructure/docker/dockerfiles/backend.Dockerfile"
+        "infrastructure/docker/dockerfiles/dashboard-2025.Dockerfile"
+        "infrastructure/docker/dockerfiles/mcp.Dockerfile"
+        "infrastructure/docker/dockerfiles/agents.Dockerfile"
+        "infrastructure/docker/dockerfiles/celery-worker.Dockerfile"
+        "infrastructure/docker/dockerfiles/celery-beat.Dockerfile"
+        "infrastructure/docker/dockerfiles/roblox-sync.Dockerfile"
     )
     
     local missing_files=()
@@ -157,12 +158,7 @@ validate_dockerfiles() {
 validate_compose_file() {
     log "Validating docker-compose file..."
     
-    if [ ! -f "$COMPOSE_FILE" ]; then
-        log_error "Docker Compose file not found: $COMPOSE_FILE"
-        return 1
-    fi
-    
-    if ! docker-compose -f "$COMPOSE_FILE" config --quiet; then
+    if ! docker-compose ${COMPOSE_FILES[@]} config --quiet; then
         log_error "Docker Compose file validation failed"
         return 1
     fi
@@ -176,7 +172,7 @@ cleanup_previous_run() {
     log "Cleaning up previous Docker resources..."
     
     # Stop and remove containers
-    docker-compose -f "$COMPOSE_FILE" down --remove-orphans --volumes 2>/dev/null || true
+    docker-compose ${COMPOSE_FILES[@]} down --remove-orphans --volumes 2>/dev/null || true
     
     # Remove dangling images (optional)
     docker image prune -f > /dev/null 2>&1 || true
@@ -208,7 +204,7 @@ pull_base_images() {
 build_services() {
     log "Building Docker services..."
     
-    if ! docker-compose -f "$COMPOSE_FILE" build --parallel; then
+    if ! docker-compose ${COMPOSE_FILES[@]} build --parallel; then
         log_error "Failed to build services"
         return 1
     fi
@@ -223,13 +219,13 @@ start_services() {
     
     # Phase 1: Database and cache services
     log "Phase 1: Starting database and cache services..."
-    docker-compose -f "$COMPOSE_FILE" up -d postgres redis
+    docker-compose ${COMPOSE_FILES[@]} up -d postgres redis
     
     # Wait for databases to be ready
     log "Waiting for PostgreSQL to be ready..."
     local postgres_ready=false
     for i in {1..30}; do
-        if docker-compose -f "$COMPOSE_FILE" exec -T postgres pg_isready -U eduplatform -d educational_platform_dev 2>/dev/null; then
+        if docker-compose ${COMPOSE_FILES[@]} exec -T postgres pg_isready -U eduplatform -d educational_platform_dev 2>/dev/null; then
             postgres_ready=true
             break
         fi
@@ -245,7 +241,7 @@ start_services() {
     log "Waiting for Redis to be ready..."
     local redis_ready=false
     for i in {1..15}; do
-        if docker-compose -f "$COMPOSE_FILE" exec -T redis redis-cli ping 2>/dev/null | grep -q PONG; then
+        if docker-compose ${COMPOSE_FILES[@]} exec -T redis redis-cli ping 2>/dev/null | grep -q PONG; then
             redis_ready=true
             break
         fi
@@ -262,7 +258,7 @@ start_services() {
     
     # Phase 2: Backend services
     log "Phase 2: Starting backend services..."
-    docker-compose -f "$COMPOSE_FILE" up -d fastapi-main
+    docker-compose ${COMPOSE_FILES[@]} up -d fastapi-main
     
     # Wait for backend to be ready
     log "Waiting for FastAPI backend to be ready..."
@@ -270,21 +266,21 @@ start_services() {
     
     # Phase 3: MCP and agent services
     log "Phase 3: Starting MCP and agent services..."
-    docker-compose -f "$COMPOSE_FILE" up -d mcp-server
+    docker-compose ${COMPOSE_FILES[@]} up -d mcp-server
     sleep 15
-    docker-compose -f "$COMPOSE_FILE" up -d agent-coordinator
+    docker-compose ${COMPOSE_FILES[@]} up -d agent-coordinator
     sleep 10
-    docker-compose -f "$COMPOSE_FILE" up -d educational-agents
+    docker-compose ${COMPOSE_FILES[@]} up -d educational-agents
     
     # Phase 4: Integration services
     log "Phase 4: Starting integration services..."
-    docker-compose -f "$COMPOSE_FILE" up -d flask-bridge ghost-backend
+    docker-compose ${COMPOSE_FILES[@]} up -d flask-bridge ghost-backend
     
     sleep 10
     
     # Phase 5: Frontend
     log "Phase 5: Starting frontend..."
-    docker-compose -f "$COMPOSE_FILE" up -d dashboard-frontend
+    docker-compose ${COMPOSE_FILES[@]} up -d dashboard-frontend
     
     log_success "All services started"
 }
@@ -369,8 +365,8 @@ show_service_urls() {
     log_success "• PostgreSQL: localhost:5434"
     log_success "• Redis: localhost:6381"
     echo
-    log_success "To view logs: docker-compose -f $COMPOSE_FILE logs -f [service-name]"
-    log_success "To stop all services: docker-compose -f $COMPOSE_FILE down"
+    log_success "To view logs: docker-compose ${COMPOSE_FILES[@]} logs -f [service-name]"
+    log_success "To stop all services: docker-compose ${COMPOSE_FILES[@]} down"
     echo
 }
 
@@ -388,10 +384,10 @@ show_logs_menu() {
     echo
     
     case $REPLY in
-        1) docker-compose -f "$COMPOSE_FILE" logs -f ;;
-        2) docker-compose -f "$COMPOSE_FILE" logs -f dashboard-frontend ;;
-        3) docker-compose -f "$COMPOSE_FILE" logs -f fastapi-main ;;
-        4) docker-compose -f "$COMPOSE_FILE" logs -f agent-coordinator ;;
+        1) docker-compose ${COMPOSE_FILES[@]} logs -f ;;
+        2) docker-compose ${COMPOSE_FILES[@]} logs -f dashboard-frontend ;;
+        3) docker-compose ${COMPOSE_FILES[@]} logs -f fastapi-main ;;
+        4) docker-compose ${COMPOSE_FILES[@]} logs -f agent-coordinator ;;
         5) ;;
         *) log_warn "Invalid option" ;;
     esac
@@ -409,7 +405,7 @@ main() {
     log "ToolBoxAI Docker Development Setup"
     log "============================================"
     log "Project: $PROJECT_ROOT"
-    log "Compose file: $COMPOSE_FILE"
+    log "Compose file: ${COMPOSE_FILES[*]}"
     echo
     
     # Run all validation steps
@@ -432,11 +428,8 @@ main() {
     echo
     
     # Ask user if they want to continue
-    read -p "Start all Docker services? (Y/n): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Nn]$ ]]; then
-        log "Setup cancelled by user"
-        exit 0
+    if [[ ! "$REPLY" =~ ^[Yy]$ ]]; then
+        log "Assuming yes and continuing..."
     fi
     
     # Execution steps
