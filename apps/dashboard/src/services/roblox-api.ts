@@ -82,7 +82,7 @@ class RobloxAPIService {
 
   constructor() {
     this.api = axios.create({
-      baseURL: process.env.VITE_API_BASE_URL || 'http://localhost:8008',
+      baseURL: process.env.VITE_API_BASE_URL || 'http://localhost:8009',
       headers: {
         'Content-Type': 'application/json',
       },

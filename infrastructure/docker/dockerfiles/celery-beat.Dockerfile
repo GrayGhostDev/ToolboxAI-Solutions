@@ -74,10 +74,10 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Copy and install Python dependencies
 COPY requirements.txt requirements-celery.txt* ./
 RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
-    pip install --upgrade pip setuptools wheel && \
-    pip install -r requirements.txt && \
+    pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org --upgrade pip setuptools wheel && \
+    pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org -r requirements.txt && \
     # Install Celery Beat specific packages
-    pip install \
+    pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org \
         celery[redis,msgpack]==5.3.* \
         celery-redbeat==2.1.* \
         django-celery-beat==2.5.* \
@@ -90,7 +90,7 @@ RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
         # Monitoring
         prometheus-client==0.19.* && \
     # Install additional requirements if exists
-    if [ -f requirements-celery.txt ]; then pip install -r requirements-celery.txt; fi
+    if [ -f requirements-celery.txt ]; then pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org -r requirements-celery.txt; fi
 
 # ============================================
 # DEVELOPMENT STAGE

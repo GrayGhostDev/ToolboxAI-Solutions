@@ -109,7 +109,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 # Install development dependencies
 RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
-    pip install --no-deps \
+    pip install --no-deps --trusted-host pypi.org --trusted-host files.pythonhosted.org \
         ipython \
         ipdb \
         pytest \

@@ -476,7 +476,7 @@ Generate a shareable link with configurable permissions and expiration.
   "status": "success",
   "data": {
     "share_id": "share_789123456",
-    "share_token": "abc123def456ghi789",
+    "share_token": "{{SHARE_TOKEN}}",
     "share_url": "https://share.toolboxai.com/s/abc123def456ghi789",
     "share_type": "public_link",
     "password_protected": true,

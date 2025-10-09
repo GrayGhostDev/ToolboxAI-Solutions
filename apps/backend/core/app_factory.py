@@ -186,6 +186,15 @@ def create_app(
     if FACTORY_COMPONENTS_AVAILABLE:
         register_middleware(app)
         register_routers(app)
+
+        # Setup Swagger UI for API documentation
+        try:
+            from apps.backend.api.swagger import setup_swagger
+            setup_swagger(app)
+            logger.info("Swagger UI configured successfully at /docs")
+        except ImportError as e:
+            logger.warning(f"Could not setup Swagger UI: {e}")
+
         logger.info("Middleware and routers registered successfully")
     else:
         logger.warning(

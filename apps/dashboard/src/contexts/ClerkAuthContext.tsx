@@ -48,10 +48,9 @@ export { ClerkAuthContext };
 
 export const useAuth = () => {
   const context = useContext(ClerkAuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within a ClerkAuthProvider');
-  }
-  return context;
+  // Don't throw error - return null if provider is missing
+  // This allows useUnifiedAuth to conditionally use the correct auth provider
+  return context || null;
 };
 
 export const ClerkAuthProvider: React.FunctionComponent<{ children: React.ReactNode }> = ({ children }) => {

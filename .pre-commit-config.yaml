@@ -1,0 +1,327 @@
+# Pre-commit hooks for security and code quality - 2025 Configuration
+# Install with: pip install pre-commit && pre-commit install
+# Requires Python 3.12+ for optimal compatibility
+
+default_language_version:
+  python: python3.12
+  node: 20.11.0  # LTS version for 2025
+
+# Set environment for consistent behavior
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
+minimum_pre_commit_version: 3.5.0
+
+repos:
+  # Security - Detect secrets in code (2025 version)
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args:
+          - '--baseline'
+          - '.secrets.baseline'
+          - '--exclude-files'
+          - '.*\.(lock|sum|svg|ico)$'
+          - '--exclude-lines'
+          - '.*pragma: allowlist secret.*'
+        exclude: '^(.*\.lock|package-lock\.json|poetry\.lock|Pipfile\.lock)$'
+
+  # Security - Python security linting with 2025 rules
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.6
+    hooks:
+      - id: bandit
+        args:
+          - '-r'
+          - '--severity-level=low'  # More strict for 2025
+          - '--confidence-level=medium'
+          - '--format=json'
+          - '--output=.bandit-report.json'
+        exclude: '^tests/|^scripts/test|^migrations/'
+        files: '\.py$'
+
+  # Security - Check for vulnerable dependencies (2025 enhanced)
+  - repo: https://github.com/pyupio/safety
+    rev: v3.0.1
+    hooks:
+      - id: safety
+        args:
+          - 'check'
+          - '--json'
+          - '--policy-file=.safety-policy.json'
+        files: 'requirements.*\.txt$|Pipfile\.lock$|poetry\.lock$'
+
+  # Security - YAML/JSON validation (2025 enhanced)
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-yaml
+        args: ['--safe', '--allow-multiple-documents']
+      - id: check-json
+      - id: check-xml
+      - id: check-toml
+      - id: check-added-large-files
+        args: ['--maxkb=500']  # Stricter for 2025
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+      - id: check-symlinks
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: destroyed-symlinks
+      - id: fix-byte-order-marker
+
+  # Python - Type checking with Python 3.12 support
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        args:
+          - '--python-version=3.12'
+          - '--ignore-missing-imports'
+          - '--strict-optional'
+          - '--warn-redundant-casts'
+          - '--warn-unused-ignores'
+          - '--no-implicit-reexport'
+          - '--check-untyped-defs'
+        additional_dependencies:
+          - 'types-requests'
+          - 'types-PyYAML'
+          - 'types-redis'
+          - 'types-python-dateutil'
+        exclude: '^(migrations/|tests/|docs/)'
+
+  # Python - Code formatting with Python 3.12
+  - repo: https://github.com/psf/black
+    rev: 24.1.1
+    hooks:
+      - id: black
+        language_version: python3.12
+        args:
+          - '--line-length=100'
+          - '--target-version=py312'
+          - '--preview'  # Enable 2025 preview features
+
+  # Python - Import sorting with Python 3.12
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args:
+          - '--profile=black'
+          - '--line-length=100'
+          - '--py=312'
+          - '--float-to-top'
+          - '--force-alphabetical-sort-within-sections'
+
+  # Python - Ruff (2025 replacement for flake8, faster and more comprehensive)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.13
+    hooks:
+      - id: ruff
+        args:
+          - '--target-version=py312'
+          - '--line-length=100'
+          - '--select=ALL'
+          - '--ignore=E501,D203,D212,D213,D214,D215,D404,D405,D406,D407,D408,D409,D410,D411,ANN101,ANN102'
+          - '--fix'
+          - '--unsafe-fixes'
+      - id: ruff-format
+        args: ['--line-length=100']
+
+  # Python - Docstring checking (2025 enhanced)
+  - repo: https://github.com/PyCQA/pydocstyle
+    rev: 6.3.0
+    hooks:
+      - id: pydocstyle
+        exclude: '^(tests/|migrations/|scripts/test|docs/)'
+        args:
+          - '--convention=google'
+          - '--add-ignore=D100,D101,D102,D103,D104'  # Allow missing docstrings in some cases
+
+  # JavaScript/TypeScript - ESLint (2025 version)
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v8.56.0
+    hooks:
+      - id: eslint
+        files: \.(js|jsx|ts|tsx|mjs|cjs)$
+        types: [file]
+        additional_dependencies:
+          - eslint@8.56.0
+          - eslint-config-prettier@9.1.0
+          - eslint-plugin-react@7.33.2
+          - eslint-plugin-react-hooks@4.6.0
+          - eslint-plugin-security@2.1.0
+          - '@typescript-eslint/eslint-plugin@6.19.0'
+          - '@typescript-eslint/parser@6.19.0'
+        args:
+          - '--fix'
+          - '--max-warnings=0'
+
+  # Prettier - Code formatting for JS/TS/CSS (2025)
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+      - id: prettier
+        files: \.(js|jsx|ts|tsx|mjs|cjs|css|scss|json|md|mdx|yml|yaml)$
+        exclude: '^(package-lock\.json|yarn\.lock|pnpm-lock\.yaml)$'
+        args:
+          - '--write'
+          - '--tab-width=2'
+          - '--print-width=100'
+
+  # Dockerfile linting with 2025 best practices
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint-docker
+        args:
+          - '--ignore=DL3008'
+          - '--ignore=DL3009'
+          - '--ignore=DL3059'  # Multiple consecutive RUN
+          - '--trusted-registry=docker.io'
+          - '--trusted-registry=ghcr.io'
+          - '--format=json'
+
+  # Shell script linting (2025 enhanced)
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        args:
+          - '--severity=warning'
+          - '--shell=bash'
+          - '--external-sources'
+
+
+  # Git commit message linting (2025 conventional commits)
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.13.0
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+      - id: commitizen-branch
+        stages: [push]
+        args:
+          - '--pattern=^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)\/.*$'
+
+# Custom local hooks (2025 Enhanced Security)
+  - repo: local
+    hooks:
+      # Check for hardcoded secrets in Python (2025 enhanced)
+      - id: check-secrets-python
+        name: Check for hardcoded secrets in Python
+        entry: python scripts/security/check_secrets.py
+        language: python
+        files: '\.py$'
+        pass_filenames: true
+        require_serial: false
+        additional_dependencies: ['pyyaml>=6.0']
+
+      # Check for SQL injection vulnerabilities (2025)
+      - id: check-sql-injection
+        name: Check for SQL injection vulnerabilities
+        entry: python scripts/security/check_sql_injection.py
+        language: python
+        files: '\.py$'
+        pass_filenames: true
+        require_serial: false
+
+      # Check for insecure random usage (2025)
+      - id: check-insecure-random
+        name: Check for insecure random number generation
+        entry: python scripts/security/check_insecure_random.py
+        language: python
+        files: '\.py$'
+        pass_filenames: true
+        require_serial: false
+
+      # Check for PII exposure (2025 new)
+      - id: check-pii-exposure
+        name: Check for PII data exposure
+        entry: python scripts/security/check_pii.py
+        language: python
+        files: '\.(py|js|ts|jsx|tsx)$'
+        pass_filenames: true
+        require_serial: false
+
+      # Validate environment variables (2025)
+      - id: validate-env-vars
+        name: Validate environment variables
+        entry: python scripts/security/validate_env.py
+        language: python
+        files: '\.env.*'
+        pass_filenames: false
+        require_serial: true
+
+      # Check for vulnerable npm packages (2025)
+      - id: npm-audit
+        name: Check for vulnerable npm packages
+        entry: bash -c 'if [ -f apps/dashboard/package.json ]; then cd apps/dashboard && npm audit --audit-level=moderate; fi'
+        language: system
+        files: 'apps/dashboard/package\.json$'
+        pass_filenames: false
+        require_serial: true
+
+      # Python dependency security check (2025 new)
+      - id: pip-audit
+        name: Check Python dependencies for vulnerabilities
+        entry: bash -c 'pip-audit --desc --fix --require-hashes || true'
+        language: system
+        files: 'requirements.*\.txt$|Pipfile$|pyproject\.toml$'
+        pass_filenames: false
+        require_serial: true
+
+      # License compliance check (2025)
+      - id: license-check
+        name: Check license compliance
+        entry: python scripts/security/check_licenses.py
+        language: python
+        pass_filenames: false
+        always_run: false  # Run only on push
+        stages: [push]
+
+      # GDPR compliance check (2025 new)
+      - id: gdpr-compliance
+        name: Check GDPR compliance in code
+        entry: python scripts/security/check_gdpr.py
+        language: python
+        files: '\.(py|js|ts)$'
+        pass_filenames: true
+        require_serial: false
+
+      # Security headers check (2025 new)
+      - id: security-headers
+        name: Verify security headers configuration
+        entry: python scripts/security/check_headers.py
+        language: python
+        files: '(middleware|config).*\.(py|js|ts)$'
+        pass_filenames: true
+        require_serial: false
+
+# Configuration for specific hooks
+exclude: |
+  (?x)^(
+    .*\.(pyc|pyo|egg-info)|
+    \.git|
+    \.mypy_cache|
+    \.pytest_cache|
+    \.tox|
+    \.venv|
+    _build|
+    build|
+    dist|
+    node_modules|
+    venv|
+    .*\.min\.(js|css)|
+    .*\.bundle\.(js|css)
+  )/
+
+# Fail fast on first error
+fail_fast: false
+
+# Run hooks in parallel for speed
+default_stages: [commit]

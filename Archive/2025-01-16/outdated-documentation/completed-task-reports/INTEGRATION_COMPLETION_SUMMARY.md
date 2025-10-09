@@ -8,7 +8,7 @@
 
 ## 🔗 Complete Integration Chain
 
-```
+```text
 Dashboard User → Frontend → Backend → Database → Roblox Studio → Frontend → Database → Backend
      ↓              ↓         ↓         ↓           ↓            ↓         ↓         ↓
   Natural      React UI   FastAPI   PostgreSQL   Rojo API    Real-time   Redis   WebSocket
@@ -129,7 +129,7 @@ const EnvironmentCreator = () => {
 ```
 
 ### API Flow
-```
+```text
 POST /api/v1/roblox/environment/create
 ├── Validate request
 ├── Check Rojo connection

@@ -57,7 +57,7 @@ Content-Type: application/json
 **Response:**
 ```json
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "access_token": "{{ACCESS_TOKEN}}",
   "token_type": "bearer",
   "expires_in": 3600
 }
@@ -68,7 +68,7 @@ Content-Type: application/json
 Include the token in the Authorization header for all requests:
 
 ```bash
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Authorization: Bearer {{ACCESS_TOKEN}}
 ```
 
 ### Token Refresh

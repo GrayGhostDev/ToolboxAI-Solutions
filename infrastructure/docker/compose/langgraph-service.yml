@@ -1,0 +1,117 @@
+# ============================================
+# LANGGRAPH API SERVICE CONFIGURATION
+# ============================================
+# LangGraph API server with proper LangChain integration
+# Updated: 2025-09-28
+# ============================================
+
+version: '3.8'
+
+services:
+  # ----------------------------------------
+  # LangGraph API Server
+  # ----------------------------------------
+  langgraph-api:
+    image: langchain/langgraph-api:3.12-7cf63c6
+    container_name: langgraph-api
+
+    environment:
+      # Database Configuration (CRITICAL - was missing)
+      DATABASE_URI: "postgresql://${POSTGRES_USER:-toolboxai}:${POSTGRES_PASSWORD:-devpass2024}@postgres:5432/${POSTGRES_DB:-toolboxai}"
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-toolboxai}:${POSTGRES_PASSWORD:-devpass2024}@postgres:5432/${POSTGRES_DB:-toolboxai}"
+
+      # Redis Configuration (using running redis-toolboxai)
+      REDIS_URL: "redis://host.docker.internal:55007/3"
+      REDIS_HOST: "host.docker.internal"
+      REDIS_PORT: "55007"
+      REDIS_DB: "3"
+
+      # LangChain Configuration (loaded from .env)
+      LANGCHAIN_API_KEY: "${LANGCHAIN_API_KEY}"
+      LANGCHAIN_PROJECT_ID: "${LANGCHAIN_PROJECT_ID}"
+      LANGCHAIN_PROJECT: "${LANGCHAIN_PROJECT:-ToolboxAI-Solutions}"
+      LANGCHAIN_TRACING_V2: "true"
+      LANGCHAIN_ENDPOINT: "https://api.smith.langchain.com"
+      LANGSMITH_API_KEY: "${LANGCHAIN_API_KEY}"
+
+      # AI Model Configuration
+      OPENAI_API_KEY: "${OPENAI_API_KEY}"
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY}"
+
+      # Pusher Configuration for Real-time
+      PUSHER_APP_ID: "${PUSHER_APP_ID}"
+      PUSHER_KEY: "${PUSHER_KEY}"
+      PUSHER_SECRET: "${PUSHER_SECRET}"
+      PUSHER_CLUSTER: "${PUSHER_CLUSTER:-us2}"
+      USE_PUSHER: "true"
+      USE_WEBSOCKET: "false"
+
+      # MCP Integration
+      MCP_SERVER_URL: "http://mcp-server:9877"
+      AGENT_COORDINATOR_URL: "http://agent-coordinator:8888"
+
+      # Service Configuration
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+      ENVIRONMENT: "${ENVIRONMENT:-development}"
+      PORT: "8000"
+      HOST: "0.0.0.0"
+
+    ports:
+      - "8123:8000"
+
+    networks:
+      - backend
+      - database
+
+    # Link to external Redis container
+    external_links:
+      - redis-toolboxai:redis
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    restart: unless-stopped
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        tag: "langgraph/{{.ID}}"
+
+    # Security settings (can be adjusted for dev)
+    security_opt:
+      - no-new-privileges:true
+
+    volumes:
+      # Mount for persistence if needed
+      - langgraph_data:/data
+      - langgraph_logs:/logs
+
+# ============================================
+# VOLUMES
+# ============================================
+volumes:
+  langgraph_data:
+    driver: local
+  langgraph_logs:
+    driver: local
+
+# ============================================
+# NETWORKS
+# ============================================
+networks:
+  backend:
+    external: true
+    name: toolboxai-backend
+  database:
+    external: true
+    name: toolboxai-database

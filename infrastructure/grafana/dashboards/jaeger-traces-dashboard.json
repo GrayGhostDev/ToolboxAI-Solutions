@@ -1,0 +1,292 @@
+{
+  "dashboard": {
+    "title": "ToolboxAI Distributed Tracing (Jaeger)",
+    "uid": "toolboxai-jaeger-traces",
+    "version": 1,
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Trace Timeline",
+        "type": "traces",
+        "gridPos": {"h": 10, "w": 24, "x": 0, "y": 0},
+        "targets": [
+          {
+            "queryType": "search",
+            "refId": "A",
+            "service": "toolboxai-backend",
+            "operation": "",
+            "tags": "",
+            "minDuration": "",
+            "maxDuration": "",
+            "limit": 20
+          }
+        ],
+        "datasource": {
+          "type": "jaeger",
+          "uid": "jaeger"
+        }
+      },
+      {
+        "id": 2,
+        "title": "Service Map",
+        "type": "nodeGraph",
+        "gridPos": {"h": 10, "w": 12, "x": 0, "y": 10},
+        "targets": [
+          {
+            "queryType": "serviceMap",
+            "refId": "A"
+          }
+        ],
+        "datasource": {
+          "type": "jaeger",
+          "uid": "jaeger"
+        }
+      },
+      {
+        "id": 3,
+        "title": "Operation Latency Distribution",
+        "type": "heatmap",
+        "gridPos": {"h": 10, "w": 12, "x": 12, "y": 10},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(duration_milliseconds_bucket{service=\"toolboxai-backend\"}[5m])) by (le, operation))",
+            "refId": "A"
+          }
+        ],
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "options": {
+          "calculate": false,
+          "cellGap": 1,
+          "cellValues": {},
+          "color": {
+            "exponent": 0.5,
+            "fill": "dark-orange",
+            "mode": "scheme",
+            "reverse": false,
+            "scale": "exponential",
+            "scheme": "Oranges",
+            "steps": 64
+          },
+          "exemplars": {
+            "color": "rgba(255,0,255,0.7)"
+          },
+          "filterValues": {
+            "le": 1e-09
+          },
+          "legend": {
+            "show": true
+          },
+          "rowsFrame": {
+            "layout": "auto"
+          },
+          "showValue": "never",
+          "tooltip": {
+            "show": true,
+            "yHistogram": false
+          },
+          "yAxis": {
+            "axisPlacement": "left",
+            "reverse": false,
+            "unit": "ms"
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Trace Error Rate",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 20},
+        "targets": [
+          {
+            "expr": "sum(rate(traces_sampled_total{sampled=\"true\", error=\"true\"}[5m])) / sum(rate(traces_sampled_total{sampled=\"true\"}[5m]))",
+            "refId": "A"
+          }
+        ],
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "options": {
+          "colorMode": "background",
+          "graphMode": "area",
+          "orientation": "auto"
+        },
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {"color": "green", "value": null},
+            {"color": "yellow", "value": 0.01},
+            {"color": "red", "value": 0.05}
+          ]
+        }
+      },
+      {
+        "id": 5,
+        "title": "Active Spans",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 20},
+        "targets": [
+          {
+            "expr": "sum(active_spans{service=\"toolboxai-backend\"})",
+            "refId": "A"
+          }
+        ],
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "options": {
+          "colorMode": "background",
+          "graphMode": "area",
+          "orientation": "auto"
+        }
+      },
+      {
+        "id": 6,
+        "title": "Traces Per Second",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+        "targets": [
+          {
+            "expr": "sum(rate(traces_received_total[5m])) by (service)",
+            "legendFormat": "{{service}}",
+            "refId": "A"
+          }
+        ],
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "yaxes": [
+          {"format": "ops", "label": "Traces/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Top Slow Operations",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+        "targets": [
+          {
+            "expr": "topk(10, histogram_quantile(0.95, sum(rate(duration_milliseconds_bucket[5m])) by (le, operation)))",
+            "format": "table",
+            "instant": true,
+            "refId": "A"
+          }
+        ],
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        }
+      },
+      {
+        "id": 8,
+        "title": "Database Query Traces",
+        "type": "traces",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 32},
+        "targets": [
+          {
+            "queryType": "search",
+            "refId": "A",
+            "service": "toolboxai-backend",
+            "operation": "",
+            "tags": "db.type=sql",
+            "minDuration": "",
+            "maxDuration": "",
+            "limit": 10
+          }
+        ],
+        "datasource": {
+          "type": "jaeger",
+          "uid": "jaeger"
+        }
+      },
+      {
+        "id": 9,
+        "title": "HTTP Request Traces",
+        "type": "traces",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 40},
+        "targets": [
+          {
+            "queryType": "search",
+            "refId": "A",
+            "service": "toolboxai-backend",
+            "operation": "",
+            "tags": "http.method",
+            "minDuration": "",
+            "maxDuration": "",
+            "limit": 10
+          }
+        ],
+        "datasource": {
+          "type": "jaeger",
+          "uid": "jaeger"
+        }
+      },
+      {
+        "id": 10,
+        "title": "Agent Task Traces",
+        "type": "traces",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 48},
+        "targets": [
+          {
+            "queryType": "search",
+            "refId": "A",
+            "service": "toolboxai-backend",
+            "operation": "",
+            "tags": "agent.type",
+            "minDuration": "",
+            "maxDuration": "",
+            "limit": 10
+          }
+        ],
+        "datasource": {
+          "type": "jaeger",
+          "uid": "jaeger"
+        }
+      }
+    ],
+    "refresh": "10s",
+    "schemaVersion": 38,
+    "style": "dark",
+    "tags": ["jaeger", "tracing", "toolboxai", "distributed"],
+    "templating": {
+      "list": [
+        {
+          "name": "service",
+          "type": "datasource",
+          "query": "jaeger",
+          "current": {
+            "text": "toolboxai-backend",
+            "value": "toolboxai-backend"
+          }
+        },
+        {
+          "name": "operation",
+          "type": "query",
+          "datasource": {
+            "type": "jaeger",
+            "uid": "jaeger"
+          },
+          "definition": "operations($service)",
+          "query": {
+            "service": "$service"
+          }
+        }
+      ]
+    },
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"]
+    }
+  },
+  "overwrite": true
+}

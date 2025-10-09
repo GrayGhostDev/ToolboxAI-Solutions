@@ -10,7 +10,7 @@ Obtain your API key from the admin dashboard. Include it in the `x-api-key` head
 
 ```http
 GET /api/users
-x-api-key: YOUR_API_KEY
+x-api-key: {{API_KEY}}
 ```text
 ### 2. Bearer Token (OAuth2)
 
@@ -18,13 +18,13 @@ Authenticate using OAuth2 and include the token in the `Authorization` header:
 
 ```http
 GET /api/data
-Authorization: Bearer YOUR_ACCESS_TOKEN
+Authorization: Bearer {{ACCESS_TOKEN}}
 ```text
 ## Example Request
 
 ```http
 GET /api/users/123
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
+Authorization: Bearer {{ACCESS_TOKEN}}
 ```text
 ## Token Expiry
 

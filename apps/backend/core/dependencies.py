@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apps.backend.core.config import settings
 from apps.backend.core.logging import logging_manager
 from apps.backend.services.database import db_service
-from apps.backend.api.auth.auth import get_current_user
+from apps.backend.core.auth import get_current_user  # Use unified auth
 from apps.backend.models.schemas import User
 
 # Initialize logger

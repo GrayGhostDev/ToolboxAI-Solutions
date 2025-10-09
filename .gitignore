@@ -345,3 +345,9 @@ node_modules.old.*
 
 # TeamCity local server (too large for git)
 TeamCity/
+apps/dashboard/node_modules.backup.*/
+
+# API documentation (generated)
+docs/api/
+openapi.json
+.claude/settings.local.json

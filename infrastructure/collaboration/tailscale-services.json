@@ -1,0 +1,34 @@
+{
+  "services": {
+    "postgres": {
+      "host": "Error: CLI credentials are not available BadResponse",
+      "port": 5432,
+      "description": "PostgreSQL Database"
+    },
+    "redis": {
+      "host": "Error: CLI credentials are not available BadResponse",
+      "port": 6379,
+      "description": "Redis Cache"
+    },
+    "backend": {
+      "host": "Error: CLI credentials are not available BadResponse",
+      "port": 8009,
+      "description": "FastAPI Backend"
+    },
+    "frontend": {
+      "host": "Error: CLI credentials are not available BadResponse",
+      "port": 5179,
+      "description": "React Dashboard"
+    },
+    "syncthing": {
+      "host": "Error: CLI credentials are not available BadResponse",
+      "port": 8384,
+      "description": "Syncthing Web UI"
+    }
+  },
+  "machine": {
+    "hostname": "Curtiss-Mac-Studio.local",
+    "tailscale_ip": "Error: CLI credentials are not available BadResponse",
+    "role": "development"
+  }
+}

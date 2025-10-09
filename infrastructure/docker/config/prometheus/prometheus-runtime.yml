@@ -1,0 +1,112 @@
+# ============================================
+# TOOLBOXAI PROMETHEUS RUNTIME CONFIGURATION
+# ============================================
+# Configuration for existing Prometheus container
+# Updated: 2025-09-28
+# ============================================
+
+global:
+  # How frequently to scrape targets
+  scrape_interval: 30s
+  # How frequently to evaluate rules
+  evaluation_interval: 30s
+  # Attach these labels to any time series
+  external_labels:
+    environment: 'development'
+    project: 'toolboxai-solutions'
+    monitor: 'prometheus-runtime'
+
+# Alertmanager configuration (using Grafana instead)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - grafana-toolboxai:3000
+      timeout: 10s
+
+# Scrape configurations
+scrape_configs:
+  # ----------------------------------------
+  # Prometheus Self-Monitoring
+  # ----------------------------------------
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    metrics_path: /metrics
+    scrape_interval: 15s
+
+  # ----------------------------------------
+  # FastAPI Backend Metrics
+  # ----------------------------------------
+  - job_name: 'fastapi-backend'
+    static_configs:
+      - targets: ['host.docker.internal:8009']
+    metrics_path: /metrics
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # ----------------------------------------
+  # Grafana Metrics
+  # ----------------------------------------
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana-toolboxai:3000']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  # ----------------------------------------
+  # Loki Metrics
+  # ----------------------------------------
+  - job_name: 'loki'
+    static_configs:
+      - targets: ['grafana-loki-toolboxai:3100']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  # ----------------------------------------
+  # Jaeger Metrics
+  # ----------------------------------------
+  - job_name: 'jaeger'
+    static_configs:
+      - targets: ['jaegertracing-toolboxai:14269']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  # ----------------------------------------
+  # OpenTelemetry Collector Metrics
+  # ----------------------------------------
+  - job_name: 'otel-collector'
+    static_configs:
+      - targets: ['opentelemetry-toolboxai:8888']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  # ----------------------------------------
+  # Redis Metrics (via Redis Exporter - to be added)
+  # ----------------------------------------
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  # ----------------------------------------
+  # Additional Application Endpoints
+  # ----------------------------------------
+  - job_name: 'app-health'
+    static_configs:
+      - targets: ['host.docker.internal:8009']
+    metrics_path: /api/v1/health/metrics
+    scrape_interval: 60s
+
+  - job_name: 'business-metrics'
+    static_configs:
+      - targets: ['host.docker.internal:8009']
+    metrics_path: /metrics/business
+    scrape_interval: 60s
+
+  - job_name: 'performance-metrics'
+    static_configs:
+      - targets: ['host.docker.internal:8009']
+    metrics_path: /metrics/performance
+    scrape_interval: 30s

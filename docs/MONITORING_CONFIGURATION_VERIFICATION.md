@@ -427,10 +427,10 @@ curl -s 'http://localhost:9090/api/v1/query?query=up' | jq '.'
 curl -f http://localhost:3000/api/health
 
 # List datasources
-curl -u admin:admin http://localhost:3000/api/datasources | jq '.[].name'
+curl -u {{GRAFANA_USER}}:{{GRAFANA_PASSWORD}} http://localhost:3000/api/datasources | jq '.[].name'
 
 # List dashboards
-curl -u admin:admin http://localhost:3000/api/search | jq '.[].title'
+curl -u {{GRAFANA_USER}}:{{GRAFANA_PASSWORD}} http://localhost:3000/api/search | jq '.[].title'
 ```
 
 ### Loki
@@ -562,7 +562,7 @@ stress-ng --cpu 8 --timeout 60s
 curl -s http://localhost:9090/api/v1/alerts | jq '.data.alerts[] | select(.labels.alertname=="HighCPUUsage")'
 
 # Check Grafana alerts
-curl -u admin:admin http://localhost:3000/api/alerts | jq '.'
+curl -u {{GRAFANA_USER}}:{{GRAFANA_PASSWORD}} http://localhost:3000/api/alerts | jq '.'
 ```
 
 ---
@@ -605,7 +605,7 @@ curl http://localhost:8009/api/v1/health
 curl -s 'http://localhost:9090/api/v1/query?query=http_requests_total' | jq '.data.result[0].value'
 
 # 3. Verify visualization in Grafana
-curl -u admin:admin 'http://localhost:3000/api/datasources/proxy/1/api/v1/query?query=up' | jq '.'
+curl -u {{GRAFANA_USER}}:{{GRAFANA_PASSWORD}} 'http://localhost:3000/api/datasources/proxy/1/api/v1/query?query=up' | jq '.'
 
 # 4. Generate application logs
 docker compose logs backend | tail -10

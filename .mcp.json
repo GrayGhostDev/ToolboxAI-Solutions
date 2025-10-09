@@ -1,0 +1,211 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
+      ],
+      "disabled": [
+        "**/node_modules/**",
+        "**/.git/**",
+        "**/venv/**",
+        "**/__pycache__/**",
+        "**/dist/**",
+        "**/build/**",
+        "**/coverage/**",
+        "**/data/**"
+      ]
+    },
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github",
+        "GrayGhostDev/ToolBoxAI-Solutions"
+      ],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://eduplatform:eduplatform2024@localhost:5432/educational_platform_dev"
+      ]
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ]
+    },
+    "docker": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-docker"
+      ]
+    },
+    "toolboxai-mcp": {
+      "command": "python",
+      "args": [
+        "-m",
+        "core.mcp.server"
+      ],
+      "env": {
+        "MCP_HOST": "localhost",
+        "MCP_PORT": "9877",
+        "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions",
+        "DATABASE_URL": "postgresql://eduplatform:eduplatform2024@localhost:5432/educational_platform_dev",
+        "REDIS_URL": "redis://localhost:55007",
+        "JWT_SECRET_KEY": "${JWT_SECRET_KEY}"
+      },
+      "cwd": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
+    },
+    "toolboxai-docker-mcp": {
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "toolboxai-mcp",
+        "python",
+        "-m",
+        "core.mcp.server"
+      ],
+      "env": {
+        "DOCKER_HOST": "unix:///var/run/docker.sock"
+      }
+    },
+    "toolboxai-docker-coordinator": {
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "toolboxai-agent-coordinator",
+        "python",
+        "-m",
+        "core.mcp.servers.agent_coordinator"
+      ],
+      "env": {
+        "DOCKER_HOST": "unix:///var/run/docker.sock"
+      }
+    },
+    "toolboxai-orchestrator": {
+      "command": "python",
+      "args": [
+        "-m",
+        "core.mcp.servers.orchestrator_server"
+      ],
+      "env": {
+        "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions",
+        "REDIS_URL": "redis://localhost:55007"
+      },
+      "cwd": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
+    },
+    "toolboxai-monitor": {
+      "command": "python",
+      "args": [
+        "-m",
+        "core.mcp.servers.monitor_server"
+      ],
+      "env": {
+        "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions",
+        "REDIS_URL": "redis://localhost:55007"
+      },
+      "cwd": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
+    },
+    "toolboxai-doc-updater": {
+      "command": "python",
+      "args": [
+        "-m",
+        "core.mcp.servers.doc_updater_server"
+      ],
+      "env": {
+        "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
+      },
+      "cwd": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
+    },
+    "toolboxai-file-cleaner": {
+      "command": "python",
+      "args": [
+        "-m",
+        "core.mcp.servers.file_cleaner_server"
+      ],
+      "env": {
+        "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
+      },
+      "cwd": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
+    },
+    "toolboxai-review-gate": {
+      "command": "python",
+      "args": [
+        "-m",
+        "core.mcp.servers.review_gate_server"
+      ],
+      "env": {
+        "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
+      },
+      "cwd": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
+    },
+    "toolboxai-educational": {
+      "command": "python",
+      "args": [
+        "-m",
+        "core.mcp.servers.educational_content"
+      ],
+      "env": {
+        "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions",
+        "DATABASE_URL": "postgresql://eduplatform:eduplatform2024@localhost:5432/educational_platform_dev",
+        "REDIS_URL": "redis://localhost:55007",
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}"
+      },
+      "cwd": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
+    },
+    "toolboxai-analytics": {
+      "command": "python",
+      "args": [
+        "-m",
+        "core.mcp.servers.analytics"
+      ],
+      "env": {
+        "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions",
+        "DATABASE_URL": "postgresql://eduplatform:eduplatform2024@localhost:5432/educational_platform_dev",
+        "REDIS_URL": "redis://localhost:55007"
+      },
+      "cwd": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
+    },
+    "toolboxai-roblox": {
+      "command": "python",
+      "args": [
+        "-m",
+        "core.mcp.servers.roblox"
+      ],
+      "env": {
+        "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions",
+        "DATABASE_URL": "postgresql://eduplatform:eduplatform2024@localhost:5432/educational_platform_dev",
+        "REDIS_URL": "redis://localhost:55007",
+        "ROBLOX_API_KEY": "${ROBLOX_API_KEY}"
+      },
+      "cwd": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
+    },
+    "toolboxai-agent-coordinator": {
+      "command": "python",
+      "args": [
+        "-m",
+        "core.mcp.servers.agent_coordinator"
+      ],
+      "env": {
+        "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions",
+        "DATABASE_URL": "postgresql://eduplatform:eduplatform2024@localhost:5432/educational_platform_dev",
+        "REDIS_URL": "redis://localhost:55007",
+        "COORDINATOR_PORT": "8888"
+      },
+      "cwd": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
+    }
+  }
+}

@@ -11,7 +11,7 @@
 # BASE STAGE - Rust environment for Rojo
 # ============================================
 # Updated to Rust 1.81 (required for rojo v7.4.1)
-FROM rust:1.81-slim AS base
+FROM rust:1.82-slim AS base
 
 # Install system dependencies
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \

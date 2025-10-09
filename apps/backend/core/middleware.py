@@ -282,7 +282,15 @@ def configure_all_middleware(app: FastAPI) -> None:
     except ImportError as e:
         logger.warning(f"Request Validator middleware not available: {e}")
 
-    # 4. CORS (early in chain for preflight requests)
+    # 4. Tenant Middleware
+    try:
+        from apps.backend.middleware.tenant_middleware import TenantMiddleware
+        app.add_middleware(TenantMiddleware)
+        logger.info("Tenant middleware configured")
+    except ImportError as e:
+        logger.warning(f"Tenant middleware not available: {e}")
+
+    # 5. CORS (early in chain for preflight requests)
     configure_cors_middleware(app)
 
     # 5. Security middleware

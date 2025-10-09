@@ -37,12 +37,20 @@ from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry.instrumentation.redis import RedisInstrumentor
 from opentelemetry.instrumentation.psycopg2 import Psycopg2Instrumentor
 from opentelemetry.instrumentation.logging import LoggingInstrumentor
-from opentelemetry.exporter.jaeger.thrift import JaegerExporter
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
 logger = logging.getLogger(__name__)
+
+# Optional Jaeger exporter (deprecated but still supported)
+try:
+    from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+    JAEGER_AVAILABLE = True
+except ImportError:
+    JAEGER_AVAILABLE = False
+    JaegerExporter = None
+    logger.warning("Jaeger exporter not available. Install 'opentelemetry-exporter-jaeger' if needed.")
 
 T = TypeVar("T")
 
@@ -214,7 +222,7 @@ class TelemetryManager:
         tracer_provider = TracerProvider(resource=self.resource, sampler=sampler)
 
         # Add exporters
-        if self.config.jaeger_endpoint:
+        if self.config.jaeger_endpoint and JAEGER_AVAILABLE:
             jaeger_exporter = JaegerExporter(
                 agent_host_name=self.config.jaeger_endpoint.split(":")[0],
                 agent_port=(
@@ -740,8 +748,28 @@ class LoadBalancerInstrumentor:
         cache.set = traced_set
 
 
+# Metrics Collector for backward compatibility
+class MetricsCollector:
+    """Legacy metrics collector for backward compatibility"""
+
+    def __init__(self):
+        self._metrics = {}
+        logger.info("MetricsCollector initialized (compatibility mode)")
+
+    def record_metric(self, name: str, value: float, labels: Dict[str, str] = None):
+        """Record a metric"""
+        if name not in self._metrics:
+            self._metrics[name] = []
+        self._metrics[name].append({"value": value, "labels": labels or {}, "timestamp": time.time()})
+
+    def get_metrics(self) -> Dict[str, Any]:
+        """Get all collected metrics"""
+        return self._metrics
+
+
 # Global telemetry instance
 _telemetry_manager: Optional[TelemetryManager] = None
+_metrics_collector: Optional[MetricsCollector] = None
 
 
 def init_telemetry(config: TelemetryConfig) -> TelemetryManager:
@@ -761,3 +789,44 @@ def shutdown_telemetry():
     """Shutdown global telemetry manager"""
     if _telemetry_manager:
         _telemetry_manager.shutdown()
+
+
+# Create default instances for backward compatibility
+try:
+    # Initialize with minimal config if environment variables are available
+    import os
+
+    default_config = TelemetryConfig(
+        service_name=os.getenv("SERVICE_NAME", "toolboxai-backend"),
+        service_version=os.getenv("SERVICE_VERSION", "1.0.0"),
+        environment=os.getenv("ENVIRONMENT", "development"),
+        enable_tracing=os.getenv("ENABLE_TRACING", "true").lower() == "true",
+        enable_metrics=os.getenv("ENABLE_METRICS", "true").lower() == "true",
+        jaeger_endpoint=os.getenv("JAEGER_ENDPOINT"),
+        otlp_endpoint=os.getenv("OTLP_ENDPOINT"),
+    )
+
+    telemetry_manager = TelemetryManager(default_config)
+    metrics_collector = MetricsCollector()
+
+    logger.info("Default telemetry instances created (not initialized until explicitly called)")
+
+except Exception as e:
+    logger.warning(f"Could not create default telemetry instances: {e}")
+    telemetry_manager = None
+    metrics_collector = MetricsCollector()
+
+
+# Export all public APIs
+__all__ = [
+    "TelemetryConfig",
+    "TelemetryManager",
+    "MetricsCollector",
+    "LoadBalancerInstrumentor",
+    "AdaptiveSampler",
+    "init_telemetry",
+    "get_telemetry",
+    "shutdown_telemetry",
+    "telemetry_manager",
+    "metrics_collector",
+]

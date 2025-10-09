@@ -1,0 +1,235 @@
+apiVersion: 1
+
+groups:
+  - name: "FastAPI Application Alerts"
+    interval: 1m
+    rules:
+      - uid: high-error-rate
+        title: "High Error Rate"
+        condition: threshold
+        data:
+          - refId: A
+            queryType: ""
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: 'sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m])) > 0.05'
+              refId: A
+        noDataState: NoData
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          description: "Error rate is above 5% for the last 5 minutes"
+          summary: "High error rate detected"
+        labels:
+          severity: critical
+          team: backend
+
+      - uid: high-response-time
+        title: "High Response Time"
+        condition: threshold
+        data:
+          - refId: A
+            queryType: ""
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: 'histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2'
+              refId: A
+        noDataState: NoData
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          description: "P95 response time is above 2 seconds"
+          summary: "API response time degradation"
+        labels:
+          severity: warning
+          team: backend
+
+      - uid: high-memory-usage
+        title: "High Memory Usage"
+        condition: threshold
+        data:
+          - refId: A
+            queryType: ""
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: 'process_resident_memory_bytes / (1024 * 1024 * 1024) > 2'
+              refId: A
+        noDataState: NoData
+        execErrState: Alerting
+        for: 10m
+        annotations:
+          description: "Memory usage is above 2GB"
+          summary: "High memory consumption detected"
+        labels:
+          severity: warning
+          team: backend
+
+      - uid: service-down
+        title: "Service Down"
+        condition: threshold
+        data:
+          - refId: A
+            queryType: ""
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: 'up{job="fastapi-backend"} == 0'
+              refId: A
+        noDataState: Alerting
+        execErrState: Alerting
+        for: 2m
+        annotations:
+          description: "FastAPI backend service is down"
+          summary: "Service unavailable"
+        labels:
+          severity: critical
+          team: backend
+
+      - uid: database-slow-queries
+        title: "Database Slow Queries"
+        condition: threshold
+        data:
+          - refId: A
+            queryType: ""
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: 'histogram_quantile(0.95, rate(db_query_duration_seconds_bucket[5m])) > 1'
+              refId: A
+        noDataState: NoData
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          description: "Database P95 query time is above 1 second"
+          summary: "Database performance degradation"
+        labels:
+          severity: warning
+          team: database
+
+      - uid: redis-connection-issues
+        title: "Redis Connection Issues"
+        condition: threshold
+        data:
+          - refId: A
+            queryType: ""
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: 'redis_up == 0'
+              refId: A
+        noDataState: Alerting
+        execErrState: Alerting
+        for: 2m
+        annotations:
+          description: "Redis connection is down"
+          summary: "Cache service unavailable"
+        labels:
+          severity: critical
+          team: infrastructure
+
+      - uid: high-agent-error-rate
+        title: "High Agent Error Rate"
+        condition: threshold
+        data:
+          - refId: A
+            queryType: ""
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: 'rate(agent_errors_total[5m]) > 0.1'
+              refId: A
+        noDataState: NoData
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          description: "Agent error rate is above threshold"
+          summary: "AI agents experiencing errors"
+        labels:
+          severity: warning
+          team: ai
+
+      - uid: pusher-connection-failures
+        title: "Pusher Connection Failures"
+        condition: threshold
+        data:
+          - refId: A
+            queryType: ""
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: 'rate(pusher_connection_errors_total[5m]) > 0.05'
+              refId: A
+        noDataState: NoData
+        execErrState: Alerting
+        for: 5m
+        annotations:
+          description: "Pusher real-time connection failures detected"
+          summary: "Real-time communication issues"
+        labels:
+          severity: warning
+          team: backend
+
+      - uid: disk-space-warning
+        title: "Low Disk Space"
+        condition: threshold
+        data:
+          - refId: A
+            queryType: ""
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: 'node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"} < 0.1'
+              refId: A
+        noDataState: NoData
+        execErrState: Alerting
+        for: 10m
+        annotations:
+          description: "Less than 10% disk space remaining"
+          summary: "Disk space running low"
+        labels:
+          severity: warning
+          team: infrastructure
+
+      - uid: certificate-expiry
+        title: "SSL Certificate Expiring Soon"
+        condition: threshold
+        data:
+          - refId: A
+            queryType: ""
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: 'ssl_cert_expiry_days < 7'
+              refId: A
+        noDataState: NoData
+        execErrState: Alerting
+        for: 1h
+        annotations:
+          description: "SSL certificate expires in less than 7 days"
+          summary: "Certificate renewal required"
+        labels:
+          severity: warning
+          team: infrastructure
