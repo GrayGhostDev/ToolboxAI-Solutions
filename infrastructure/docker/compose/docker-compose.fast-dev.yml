@@ -85,7 +85,7 @@ services:
     command: >
       sh -c "
         echo '🔧 Installing build dependencies...' &&
-        apt-get update && apt-get install -y gcc python3-dev &&
+        apt-get update && apt-get install -y gcc g++ python3-dev &&
         echo '🔧 Installing Python dependencies...' &&
         pip install --no-cache-dir -q -r requirements.txt &&
         echo '✅ Dependencies installed' &&

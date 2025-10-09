@@ -1,0 +1,307 @@
+{
+  "config": {
+    "configFile": "/Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard/playwright.config.ts",
+    "rootDir": "/Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard/e2e",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 600000,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "html",
+        {
+          "outputFolder": "playwright-report"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results.json"
+        }
+      ],
+      [
+        "junit",
+        {
+          "outputFile": "test-results.xml"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "/Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "/Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "mobile-chrome",
+        "name": "mobile-chrome",
+        "testDir": "/Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "mobile-safari",
+        "name": "mobile-safari",
+        "testDir": "/Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "accessibility",
+        "name": "accessibility",
+        "testDir": "/Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "api",
+        "name": "api",
+        "testDir": "/Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.55.1",
+    "workers": 14,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "components/test-all-pages.spec.ts",
+      "file": "components/test-all-pages.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "All Dashboard Pages - Comprehensive Rendering Tests",
+          "file": "components/test-all-pages.spec.ts",
+          "line": 9,
+          "column": 6,
+          "specs": [],
+          "suites": [
+            {
+              "title": "Page Rendering Tests",
+              "file": "components/test-all-pages.spec.ts",
+              "line": 162,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "should render Progress page without errors",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "failed",
+                          "duration": 1787,
+                          "error": {
+                            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoHaveLength\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected length: \u001b[32m0\u001b[39m\nReceived length: \u001b[31m4\u001b[39m\nReceived array:  \u001b[31m[\"Global error: TypeError: Cannot assign to read only property 'position' of object '#<Mesh>'\", \"Global error: TypeError: Cannot convert undefined or null to object\", \"Global error: TypeError: Cannot assign to read only property 'position' of object '#<Mesh>'\", \"Global error: TypeError: Cannot convert undefined or null to object\"]\u001b[39m",
+                            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoHaveLength\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected length: \u001b[32m0\u001b[39m\nReceived length: \u001b[31m4\u001b[39m\nReceived array:  \u001b[31m[\"Global error: TypeError: Cannot assign to read only property 'position' of object '#<Mesh>'\", \"Global error: TypeError: Cannot convert undefined or null to object\", \"Global error: TypeError: Cannot assign to read only property 'position' of object '#<Mesh>'\", \"Global error: TypeError: Cannot convert undefined or null to object\"]\u001b[39m\n    at /Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard/e2e/components/test-all-pages.spec.ts:204:32",
+                            "location": {
+                              "file": "/Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard/e2e/components/test-all-pages.spec.ts",
+                              "column": 32,
+                              "line": 204
+                            },
+                            "snippet": "  202 |         });\n  203 |\n> 204 |         expect(criticalErrors).toHaveLength(0);\n      |                                ^\n  205 |       });\n  206 |\n  207 |       test(`should have proper page title and metadata for ${pageConfig.name}`, async () => {"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard/e2e/components/test-all-pages.spec.ts",
+                                "column": 32,
+                                "line": 204
+                              },
+                              "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoHaveLength\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected length: \u001b[32m0\u001b[39m\nReceived length: \u001b[31m4\u001b[39m\nReceived array:  \u001b[31m[\"Global error: TypeError: Cannot assign to read only property 'position' of object '#<Mesh>'\", \"Global error: TypeError: Cannot convert undefined or null to object\", \"Global error: TypeError: Cannot assign to read only property 'position' of object '#<Mesh>'\", \"Global error: TypeError: Cannot convert undefined or null to object\"]\u001b[39m\n\n  202 |         });\n  203 |\n> 204 |         expect(criticalErrors).toHaveLength(0);\n      |                                ^\n  205 |       });\n  206 |\n  207 |       test(`should have proper page title and metadata for ${pageConfig.name}`, async () => {\n    at /Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard/e2e/components/test-all-pages.spec.ts:204:32"
+                            }
+                          ],
+                          "stdout": [
+                            {
+                              "text": "Page error: Unexpected token 'if'\n"
+                            },
+                            {
+                              "text": "Console error: Failed to load resource: net::ERR_CONNECTION_REFUSED\n"
+                            },
+                            {
+                              "text": "Console error: Failed to load resource: net::ERR_CONNECTION_REFUSED\n"
+                            },
+                            {
+                              "text": "Console error: Global error: TypeError: Cannot assign to read only property 'position' of object '#<Mesh>'\n    at applyProps (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:54394:17)\n    at handleContainerEffects (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55089:3)\n    at handleContainerEffects (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55115:47)\n    at appendChild (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55122:3)\n    at appendChildToContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55249:5)\n    at insertOrAppendPlacementNodeIntoContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7079:91)\n    at insertOrAppendPlacementNodeIntoContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7081:16)\n    at insertOrAppendPlacementNodeIntoContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7082:13)\n    at insertOrAppendPlacementNodeIntoContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7081:16)\n    at insertOrAppendPlacementNodeIntoContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7081:16)\n"
+                            },
+                            {
+                              "text": "Page error: Cannot assign to read only property 'position' of object '#<Mesh>'\n"
+                            },
+                            {
+                              "text": "Console error: Global error: TypeError: Cannot convert undefined or null to object\n    at removeChild (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55161:16)\n    at removeChild (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55158:5)\n    at removeChild (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55158:5)\n    at removeChildFromContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55254:5)\n    at runWithFiberInDEV (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:740:18)\n    at commitDeletionEffectsOnFiber (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7416:21)\n    at recursivelyTraverseDeletionEffects (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7362:11)\n    at commitDeletionEffectsOnFiber (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7486:13)\n    at recursivelyTraverseDeletionEffects (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7362:11)\n    at commitDeletionEffectsOnFiber (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7514:13)\n"
+                            },
+                            {
+                              "text": "Page error: Cannot convert undefined or null to object\n"
+                            },
+                            {
+                              "text": "Console error: Global error: TypeError: Cannot assign to read only property 'position' of object '#<Mesh>'\n    at applyProps (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:54394:17)\n    at handleContainerEffects (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55089:3)\n    at handleContainerEffects (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55115:47)\n    at appendChild (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55122:3)\n    at appendChildToContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55249:5)\n    at insertOrAppendPlacementNodeIntoContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7079:91)\n    at insertOrAppendPlacementNodeIntoContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7081:16)\n    at insertOrAppendPlacementNodeIntoContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7082:13)\n    at insertOrAppendPlacementNodeIntoContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7081:16)\n    at insertOrAppendPlacementNodeIntoContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7081:16)\n"
+                            },
+                            {
+                              "text": "Page error: Cannot assign to read only property 'position' of object '#<Mesh>'\n"
+                            },
+                            {
+                              "text": "Console error: Global error: TypeError: Cannot convert undefined or null to object\n    at removeChild (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55161:16)\n    at removeChild (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55158:5)\n    at removeChild (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55158:5)\n    at removeChildFromContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55254:5)\n    at runWithFiberInDEV (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:740:18)\n    at commitDeletionEffectsOnFiber (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7416:21)\n    at recursivelyTraverseDeletionEffects (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7362:11)\n    at commitDeletionEffectsOnFiber (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7486:13)\n    at recursivelyTraverseDeletionEffects (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7362:11)\n    at commitDeletionEffectsOnFiber (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7514:13)\n"
+                            },
+                            {
+                              "text": "Page error: Cannot convert undefined or null to object\n"
+                            }
+                          ],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-10-05T15:27:53.081Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard/test-results/components-test-all-pages--aad7e-rogress-page-without-errors-chromium/test-failed-1.png"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard/test-results/components-test-all-pages--aad7e-rogress-page-without-errors-chromium/error-context.md"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard/e2e/components/test-all-pages.spec.ts",
+                            "column": 32,
+                            "line": 204
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "4fc777a10cff5c4cd94e-89919d45c4e862384b34",
+                  "file": "components/test-all-pages.spec.ts",
+                  "line": 164,
+                  "column": 7
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-10-05T15:27:51.896Z",
+    "duration": 3156.8489999999997,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

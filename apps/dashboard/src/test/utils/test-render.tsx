@@ -1,16 +1,17 @@
-import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 /**
- * Custom render function for React 18 compatibility
+ * Custom render function for React 19 compatibility
  *
  * This render function wraps components with necessary providers
- * and handles React 18 concurrent features properly
+ * and handles React 19 concurrent features properly
  */
 
 import React from 'react';
-import { render as rtlRender, RenderOptions } from '@testing-library/react';
+import { render as rtlRender, type RenderOptions } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 import { configureStore } from '@reduxjs/toolkit';
+import { MantineProvider, createTheme } from '@mantine/core';
+import { Notifications } from '@mantine/notifications';
 import userSlice from '@/store/slices/userSlice';
 import uiSlice from '@/store/slices/uiSlice';
 import dashboardSlice from '@/store/slices/dashboardSlice';
@@ -27,9 +28,8 @@ import robloxSlice from '@/store/slices/robloxSlice';
 
 // Create a simple theme for testing
 const testTheme = createTheme({
-  palette: {
-    mode: 'light',
-  },
+  primaryColor: 'blue',
+  fontFamily: 'Arial, sans-serif',
 });
 
 // Create test store
@@ -79,10 +79,10 @@ export function renderWithProviders(
     return (
       <Provider store={store}>
         <BrowserRouter>
-          <ThemeProvider theme={testTheme}>
-            <CssBaseline />
+          <MantineProvider theme={testTheme}>
+            <Notifications />
             {children}
-          </ThemeProvider>
+          </MantineProvider>
         </BrowserRouter>
       </Provider>
     );

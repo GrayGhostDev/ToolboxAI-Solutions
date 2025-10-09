@@ -1,4 +1,4 @@
-import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
+import { Box, Loader, Text, Title } from '@mantine/core';
 /**
  * Lazy loading wrapper for Three.js components
  *
@@ -14,46 +14,49 @@ const ThreeProvider = lazy(() => import('../three/ThreeProvider'));
 
 // Loading fallback component
 const ThreeLoadingFallback = ({
-  message = "Loading 3D environment..."
+  message = 'Loading 3D environment...'
 }: { message?: string }) => (
   <Box
-    display="flex"
-    flexDirection="column"
-    alignItems="center"
-    justifyContent="center"
-    minHeight={300}
-    gap={2}
-    bgcolor="background.paper"
-    borderRadius={1}
-    border="1px solid"
-    borderColor="divider"
+    style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 300,
+      gap: 16,
+      backgroundColor: 'var(--mantine-color-gray-0)',
+      borderRadius: 'var(--mantine-radius-md)',
+      border: '1px solid var(--mantine-color-gray-3)',
+    }}
   >
-    <CircularProgress size={40} />
-    <Typography size="sm" color="text.secondary">
+    <Loader size="lg" />
+    <Text size="sm" c="dimmed">
       {message}
-    </Typography>
+    </Text>
   </Box>
 );
 
 // Error fallback component
 const ThreeErrorFallback = ({ error }: { error?: Error }) => (
   <Box
-    display="flex"
-    flexDirection="column"
-    alignItems="center"
-    justifyContent="center"
-    minHeight={300}
-    gap={2}
-    bgcolor="error.light"
-    borderRadius={1}
-    p={3}
+    style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 300,
+      gap: 16,
+      backgroundColor: 'var(--mantine-color-red-0)',
+      borderRadius: 'var(--mantine-radius-md)',
+      padding: 24,
+    }}
   >
-    <Typography order={6} color="error.main">
+    <Title order={6} c="red">
       3D Environment Unavailable
-    </Typography>
-    <Typography size="sm" color="text.secondary" textAlign="center">
-      {error?.message || "Unable to load 3D components. Please try refreshing the page."}
-    </Typography>
+    </Title>
+    <Text size="sm" c="dimmed" ta="center">
+      {error?.message || 'Unable to load 3D components. Please try refreshing the page.'}
+    </Text>
   </Box>
 );
 
@@ -102,11 +105,11 @@ interface LazyThreeProviderProps {
 
 // Lazy Scene3D component with error handling
 export const LazyScene3D = ({
-  width = "100%",
+  width = '100%',
   height = 400,
   children,
   fallback,
-  loadingMessage = "Loading 3D scene..."
+  loadingMessage = 'Loading 3D scene...'
 }: LazyScene3DProps) => {
   return (
     <ThreeErrorBoundary fallback={fallback}>
@@ -123,7 +126,7 @@ export const LazyScene3D = ({
 export const LazyThreeProvider = ({
   children,
   fallback,
-  loadingMessage = "Initializing 3D environment..."
+  loadingMessage = 'Initializing 3D environment...'
 }: LazyThreeProviderProps) => {
   return (
     <ThreeErrorBoundary fallback={fallback}>

@@ -5,7 +5,7 @@
  * Includes circuit breaker pattern and request deduplication
  */
 
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { type AxiosError, type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios';
 
 /**
  * Retry configuration options

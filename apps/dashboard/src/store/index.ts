@@ -1,22 +1,22 @@
-import { configureStore } from "@reduxjs/toolkit";
-import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
+import { configureStore } from '@reduxjs/toolkit';
+import { type TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import { setupListeners } from '@reduxjs/toolkit/query';
 import { api } from './api';
-import uiReducer from "./slices/uiSlice";
-import userReducer from "./slices/userSlice";
-import gamificationReducer from "./slices/gamificationSlice";
-import dashboardReducer from "./slices/dashboardSlice";
-import classesReducer from "./slices/classesSlice";
-import lessonsReducer from "./slices/lessonsSlice";
-import assessmentsReducer from "./slices/assessmentsSlice";
-import messagesReducer from "./slices/messagesSlice";
-import progressReducer from "./slices/progressSlice";
-import analyticsReducer from "./slices/analyticsSlice";
-import complianceReducer from "./slices/complianceSlice";
-import realtimeReducer from "./slices/realtimeSlice";
-import robloxReducer from "./slices/robloxSlice";
-import { createWebSocketMiddleware, setupWebSocketListeners } from "./middleware/websocketMiddleware";
-import { PusherService } from "../services/pusher";
+import uiReducer from './slices/uiSlice';
+import userReducer from './slices/userSlice';
+import gamificationReducer from './slices/gamificationSlice';
+import dashboardReducer from './slices/dashboardSlice';
+import classesReducer from './slices/classesSlice';
+import lessonsReducer from './slices/lessonsSlice';
+import assessmentsReducer from './slices/assessmentsSlice';
+import messagesReducer from './slices/messagesSlice';
+import progressReducer from './slices/progressSlice';
+import analyticsReducer from './slices/analyticsSlice';
+import complianceReducer from './slices/complianceSlice';
+import realtimeReducer from './slices/realtimeSlice';
+import robloxReducer from './slices/robloxSlice';
+import { createWebSocketMiddleware, setupWebSocketListeners } from './middleware/websocketMiddleware';
+import { PusherService } from '../services/pusher';
 
 // Create Pusher service instance (using WebSocket name for backward compatibility)
 const webSocketService = PusherService.getInstance();
@@ -45,35 +45,35 @@ export const store = configureStore({
       serializableCheck: {
         // Ignore these action types
         ignoredActions: [
-          "ui/addNotification",
-          "realtime/setWebSocketState",
-          "realtime/setWebSocketError",
-          "realtime/addRealtimeMessage",
-          "realtime/addSystemNotification",
-          "realtime/updateContentProgress",
-          "realtime/setContentComplete",
+          'ui/addNotification',
+          'realtime/setWebSocketState',
+          'realtime/setWebSocketError',
+          'realtime/addRealtimeMessage',
+          'realtime/addSystemNotification',
+          'realtime/updateContentProgress',
+          'realtime/setContentComplete',
           // RTK Query actions
           'persist/PERSIST',
           'persist/REHYDRATE',
         ],
         // Ignore these field paths in all actions
         ignoredActionPaths: [
-          "payload.timestamp",
-          "payload.lastSeen",
-          "payload.startedAt",
+          'payload.timestamp',
+          'payload.lastSeen',
+          'payload.startedAt',
           // RTK Query meta fields
-          "meta.arg",
-          "meta.baseQueryMeta",
+          'meta.arg',
+          'meta.baseQueryMeta',
         ],
         // Ignore these paths in the state
         ignoredPaths: [
-          "ui.notifications",
-          "realtime.websocket.error.timestamp",
-          "realtime.messages",
-          "realtime.notifications",
-          "realtime.userPresence",
-          "realtime.classrooms",
-          "realtime.leaderboard.lastUpdated",
+          'ui.notifications',
+          'realtime.websocket.error.timestamp',
+          'realtime.messages',
+          'realtime.notifications',
+          'realtime.userPresence',
+          'realtime.classrooms',
+          'realtime.leaderboard.lastUpdated',
           // RTK Query cache paths
           `${api.reducerPath}.queries`,
           `${api.reducerPath}.mutations`,

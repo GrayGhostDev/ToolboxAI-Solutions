@@ -3,27 +3,27 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
   Card,
-  CardContent,
-  Typography,
+  Text,
   Button,
   Grid,
-  Chip,
-  IconButton,
-  LinearProgress,
+  Badge,
+  ActionIcon,
+  Loader,
   List,
-  ListItem,
-  ListItemText,
-} from '@mui/material';
+  Group,
+  Stack,
+  Flex,
+} from '@mantine/core';
 import {
-  ArrowBack,
-  Edit,
-  Delete,
-  School,
-  Schedule,
-  People,
-  Assignment,
-  RocketLaunch,
-} from '@mui/icons-material';
+  IconArrowLeft,
+  IconEdit,
+  IconTrash,
+  IconSchool,
+  IconClock,
+  IconUsers,
+  IconClipboard,
+  IconRocket,
+} from '@tabler/icons-react';
 import { useAppDispatch } from '@/store';
 import { getClass } from '@/services/api';
 import { addNotification } from '@/store/slices/uiSlice';
@@ -134,17 +134,19 @@ const ClassDetails: React.FC = () => {
 
   if (loading) {
     return (
-      <Box sx={{ width: '100%' }}>
-        <LinearProgress />
+      <Box w="100%" p="md">
+        <Flex justify="center" align="center" h={200}>
+          <Loader size="lg" />
+        </Flex>
       </Box>
     );
   }
 
   if (!classData) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Typography>Class not found</Typography>
-        <Button onClick={() => navigate('/classes')} startIcon={<ArrowBack />}>
+      <Box p="lg">
+        <Text size="lg" mb="md">Class not found</Text>
+        <Button leftSection={<IconArrowLeft size={16} />} onClick={() => navigate('/classes')}>
           Back to Classes
         </Button>
       </Box>
@@ -152,157 +154,150 @@ const ClassDetails: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box p="lg">
       {/* Header */}
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <IconButton onClick={() => navigate('/classes')}>
-            <ArrowBack />
-          </IconButton>
-          <Typography variant="h4">{classData.name}</Typography>
-          <Chip 
-            label={classData.status || 'Active'} 
-            color={classData.status === 'active' ? 'success' : 'default'}
-            size="small"
-          />
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
+      <Flex justify="space-between" align="center" mb="xl">
+        <Group gap="md">
+          <ActionIcon size="lg" variant="subtle" onClick={() => navigate('/classes')}>
+            <IconArrowLeft size={20} />
+          </ActionIcon>
+          <Text size="xl" fw={600}>{classData.name}</Text>
+          <Badge
+            color={classData.status === 'active' ? 'green' : 'gray'}
+            size="sm"
+          >
+            {classData.status || 'Active'}
+          </Badge>
+        </Group>
+        <Group gap="xs">
           <Button
-            variant="contained"
-            color="primary"
-            startIcon={<RocketLaunch />}
+            leftSection={<IconRocket size={16} />}
             onClick={handlePushToRoblox}
           >
             Push to Roblox
           </Button>
-          <IconButton onClick={handleEdit}>
-            <Edit />
-          </IconButton>
-          <IconButton onClick={handleDelete} color="error">
-            <Delete />
-          </IconButton>
-        </Box>
-      </Box>
+          <ActionIcon size="lg" variant="subtle" onClick={handleEdit}>
+            <IconEdit size={18} />
+          </ActionIcon>
+          <ActionIcon size="lg" variant="subtle" color="red" onClick={handleDelete}>
+            <IconTrash size={18} />
+          </ActionIcon>
+        </Group>
+      </Flex>
 
-      <Grid container spacing={3}>
+      <Grid>
         {/* Main Info Card */}
-        <Grid item xs={12} md={8}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Class Information
-              </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <School color="action" />
-                    <Box>
-                      <Typography variant="caption" color="textSecondary">
-                        Subject
-                      </Typography>
-                      <Typography>{classData.subject || 'Not specified'}</Typography>
-                    </Box>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <People color="action" />
-                    <Box>
-                      <Typography variant="caption" color="textSecondary">
-                        Students
-                      </Typography>
-                      <Typography>{classData.student_count || 0} enrolled</Typography>
-                    </Box>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <Schedule color="action" />
-                    <Box>
-                      <Typography variant="caption" color="textSecondary">
-                        Schedule
-                      </Typography>
-                      <Typography>{classData.schedule || 'Not set'}</Typography>
-                    </Box>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <Assignment color="action" />
-                    <Box>
-                      <Typography variant="caption" color="textSecondary">
-                        Grade Level
-                      </Typography>
-                      <Typography>
-                        {classData.grade_level ? `Grade ${classData.grade_level}` : 'All grades'}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Grid>
-                <Grid item xs={12}>
-                  <Typography variant="caption" color="textSecondary">
+        <Grid.Col span={{ base: 12, md: 8 }}>
+          <Card p="lg" radius="md">
+            <Text size="lg" fw={600} mb="md">
+              Class Information
+            </Text>
+            <Grid>
+              <Grid.Col span={{ base: 12, sm: 6 }}>
+                <Group gap="sm" mb="md">
+                  <IconSchool size={20} color="var(--mantine-color-dimmed)" />
+                  <Stack gap={2}>
+                    <Text size="xs" c="dimmed" tt="uppercase" fw={500}>
+                      Subject
+                    </Text>
+                    <Text>{classData.subject || 'Not specified'}</Text>
+                  </Stack>
+                </Group>
+              </Grid.Col>
+              <Grid.Col span={{ base: 12, sm: 6 }}>
+                <Group gap="sm" mb="md">
+                  <IconUsers size={20} color="var(--mantine-color-dimmed)" />
+                  <Stack gap={2}>
+                    <Text size="xs" c="dimmed" tt="uppercase" fw={500}>
+                      Students
+                    </Text>
+                    <Text>{classData.student_count || 0} enrolled</Text>
+                  </Stack>
+                </Group>
+              </Grid.Col>
+              <Grid.Col span={{ base: 12, sm: 6 }}>
+                <Group gap="sm" mb="md">
+                  <IconClock size={20} color="var(--mantine-color-dimmed)" />
+                  <Stack gap={2}>
+                    <Text size="xs" c="dimmed" tt="uppercase" fw={500}>
+                      Schedule
+                    </Text>
+                    <Text>{classData.schedule || 'Not set'}</Text>
+                  </Stack>
+                </Group>
+              </Grid.Col>
+              <Grid.Col span={{ base: 12, sm: 6 }}>
+                <Group gap="sm" mb="md">
+                  <IconClipboard size={20} color="var(--mantine-color-dimmed)" />
+                  <Stack gap={2}>
+                    <Text size="xs" c="dimmed" tt="uppercase" fw={500}>
+                      Grade Level
+                    </Text>
+                    <Text>
+                      {classData.grade_level ? `Grade ${classData.grade_level}` : 'All grades'}
+                    </Text>
+                  </Stack>
+                </Group>
+              </Grid.Col>
+              <Grid.Col span={12}>
+                <Stack gap={4}>
+                  <Text size="xs" c="dimmed" tt="uppercase" fw={500}>
                     Description
-                  </Typography>
-                  <Typography>
+                  </Text>
+                  <Text>
                     {classData.description || 'No description provided'}
-                  </Typography>
-                </Grid>
-              </Grid>
-            </CardContent>
+                  </Text>
+                </Stack>
+              </Grid.Col>
+            </Grid>
           </Card>
-        </Grid>
+        </Grid.Col>
 
         {/* Side Info Cards */}
-        <Grid item xs={12} md={4}>
-          <Card sx={{ mb: 2 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
+        <Grid.Col span={{ base: 12, md: 4 }}>
+          <Stack gap="md">
+            <Card p="lg" radius="md">
+              <Text size="md" fw={600} mb="sm">
                 Teacher
-              </Typography>
-              <Typography>{classData.teacher_name || 'Not assigned'}</Typography>
-            </CardContent>
-          </Card>
+              </Text>
+              <Text>{classData.teacher_name || 'Not assigned'}</Text>
+            </Card>
 
-          <Card sx={{ mb: 2 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
+            <Card p="lg" radius="md">
+              <Text size="md" fw={600} mb="sm">
                 Room
-              </Typography>
-              <Typography>{classData.room || 'Virtual'}</Typography>
-            </CardContent>
-          </Card>
+              </Text>
+              <Text>{classData.room || 'Virtual'}</Text>
+            </Card>
 
-          {classData.resources && classData.resources.length > 0 && (
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
+            {classData.resources && classData.resources.length > 0 && (
+              <Card p="lg" radius="md">
+                <Text size="md" fw={600} mb="sm">
                   Resources
-                </Typography>
-                <List dense>
+                </Text>
+                <List size="sm" spacing="xs">
                   {classData.resources.map((resource, index) => (
-                    <ListItem key={index}>
-                      <ListItemText primary={resource.name} />
-                    </ListItem>
+                    <List.Item key={index}>
+                      {resource.name}
+                    </List.Item>
                   ))}
                 </List>
-              </CardContent>
-            </Card>
-          )}
-        </Grid>
+              </Card>
+            )}
+          </Stack>
+        </Grid.Col>
 
         {/* Recent Activity */}
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Recent Activity
-              </Typography>
-              <Typography color="textSecondary">
-                No recent activity to display
-              </Typography>
-            </CardContent>
+        <Grid.Col span={12}>
+          <Card p="lg" radius="md">
+            <Text size="lg" fw={600} mb="md">
+              Recent Activity
+            </Text>
+            <Text c="dimmed">
+              No recent activity to display
+            </Text>
           </Card>
-        </Grid>
+        </Grid.Col>
       </Grid>
     </Box>
   );

@@ -51,7 +51,16 @@ export default defineConfig({
       // Exclude any MUI packages to prevent resolution attempts
       '@mui/*',
       '@material-ui/*',
-      '@emotion/*'
+      '@emotion/*',
+      // Exclude highlight.js to prevent pre-bundling issues with missing language files
+      'highlight.js',
+      'lowlight',
+      // Exclude refractor to avoid default export issues
+      'refractor',
+      'refractor/core',
+      // Exclude react-syntax-highlighter to prevent pre-bundling attempts that fail on refractor/core imports
+      'react-syntax-highlighter',
+      'react-syntax-highlighter/*'
     ]
   },
 
@@ -69,7 +78,13 @@ export default defineConfig({
       // Enhanced aliases for 2025
       '@assets': path.resolve(__dirname, './src/assets'),
       '@styles': path.resolve(__dirname, './src/styles'),
-      '@config': path.resolve(__dirname, './src/config')
+      '@config': path.resolve(__dirname, './src/config'),
+      // Force react-syntax-highlighter to use CJS versions (better compatibility)
+      'react-syntax-highlighter/dist/esm/prism': 'react-syntax-highlighter/dist/cjs/prism',
+      'react-syntax-highlighter/dist/esm/prism-light': 'react-syntax-highlighter/dist/cjs/prism-light',
+      'react-syntax-highlighter/dist/esm/prism-async-light': 'react-syntax-highlighter/dist/cjs/prism-async-light',
+      'react-syntax-highlighter/dist/esm/light': 'react-syntax-highlighter/dist/cjs/light',
+      'react-syntax-highlighter/dist/esm/light-async': 'react-syntax-highlighter/dist/cjs/light-async'
     },
     dedupe: [
       'react',
@@ -92,21 +107,14 @@ export default defineConfig({
     strictPort: true,
     open: false,
     cors: true,
-    // Configure HMR for Docker environment
-    hmr: process.env.DOCKER_ENV === 'true' ? {
-      // Docker HMR configuration
-      clientPort: 5179,
+    // Configure HMR for all environments
+    hmr: {
+      // Use dynamic host detection for better compatibility
       host: 'localhost',
+      port: 24678, // Use different port to avoid conflicts with main server
+      clientPort: 24678,
       protocol: 'ws',
-      port: 5179,
-      overlay: false // Disable overlay in Docker to prevent connection errors
-    } : {
-      // Local development HMR
-      overlay: true,
-      clientPort: 5179,
-      host: 'localhost',
-      port: 5179,
-      protocol: 'ws'
+      overlay: process.env.DOCKER_ENV !== 'true', // Disable overlay only in Docker
     },
     watch: {
       // Use polling in Docker for file watching
@@ -169,10 +177,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false
       },
-      '/ws': {
+      '/api/ws': {
         target: (process.env.VITE_PROXY_TARGET || 'http://127.0.0.1:8009').replace('http://', 'ws://'),
         ws: true,
-        changeOrigin: true
+        changeOrigin: true,
+        // Rewrite to remove /api prefix for backend WebSocket endpoints
+        rewrite: (path) => path.replace(/^\/api\/ws/, '/ws')
       },
       '/pusher': {
         target: process.env.VITE_PROXY_TARGET || 'http://127.0.0.1:8009',
@@ -182,13 +192,19 @@ export default defineConfig({
     }
   },
 
-  // Enhanced build configuration for 2025
+  // Enhanced build configuration for 2025 with performance focus - optimized for test performance
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: process.env.NODE_ENV !== 'production', // Only in dev for debugging
     minify: 'terser',
     target: 'es2022', // Updated for 2025 - better browser support
-    chunkSizeWarningLimit: 500, // Enforce smaller chunks for better caching
+    chunkSizeWarningLimit: 200, // Even stricter limit for faster loading in tests
+
+    // Performance-focused build settings
+    cssCodeSplit: true,
+    cssMinify: true,
+    assetsInlineLimit: 2048, // Reduced from 4096 for faster initial load
+    reportCompressedSize: false, // Disable for faster builds
 
     // Terser options for better minification
     terserOptions: {
@@ -213,67 +229,163 @@ export default defineConfig({
         // Uncomment to load from CDN in production
         // 'react',
         // 'react-dom'
+        // Externalize refractor to avoid default export issues
+        'refractor',
+        'refractor/core'
       ],
 
       // Enhanced module resolution
       plugins: [
-        // Custom plugin to handle react-syntax-highlighter ESM/CJS issues
+        // Custom plugin to handle missing highlight.js language files and refractor/core
         {
-          name: 'resolve-syntax-highlighter',
-          resolveId(id) {
+          name: 'ignore-missing-highlight-langs',
+          enforce: 'pre', // Run this plugin before others
+          resolveId(id, importer) {
+            // Externalize missing highlight.js language files that were removed in v11+
+            if (id.includes('highlight.js/lib/languages/c-like') ||
+                id.includes('highlight.js/lib/languages/htmlbars') ||
+                id.includes('highlight.js/lib/languages/sql_more') ||
+                id.includes('highlight.js/es/languages/c-like') ||
+                id.includes('highlight.js/es/languages/htmlbars') ||
+                id.includes('highlight.js/es/languages/sql_more')) {
+              // Return as external to prevent bundling errors
+              return { id, external: true };
+            }
+            // Handle refractor/core imports - refractor v4+ removed /core export
+            if (id === 'refractor/core' || id === 'refractor/core.js') {
+              return '\0virtual:refractor-core';
+            }
+            // Handle direct refractor imports - refractor doesn't have default export
+            // Only intercept when imported from react-syntax-highlighter
+            if (id === 'refractor' && importer && importer.includes('react-syntax-highlighter')) {
+              return '\0virtual:refractor-main';
+            }
             // Redirect problematic ESM imports to CJS versions
             if (id.includes('react-syntax-highlighter/dist/esm')) {
-              return id.replace('/dist/esm/', '/dist/cjs/')
+              return id.replace('/dist/esm/', '/dist/cjs/');
             }
-            return null
+            return null;
+          },
+          load(id) {
+            // Provide empty module for externalized missing language files
+            if (id.includes('highlight.js/lib/languages/c-like') ||
+                id.includes('highlight.js/lib/languages/htmlbars') ||
+                id.includes('highlight.js/lib/languages/sql_more') ||
+                id.includes('highlight.js/es/languages/c-like') ||
+                id.includes('highlight.js/es/languages/htmlbars') ||
+                id.includes('highlight.js/es/languages/sql_more')) {
+              return 'export default function() {}';
+            }
+            // Provide stub for refractor/core that mimics the old API
+            if (id === '\0virtual:refractor-core') {
+              const refractorPath = path.resolve(__dirname, 'node_modules/refractor/index.js');
+              return `
+                import { refractor } from '${refractorPath}';
+                export default refractor;
+              `;
+            }
+            // Provide default export wrapper for main refractor package
+            if (id === '\0virtual:refractor-main') {
+              const refractorPath = path.resolve(__dirname, 'node_modules/refractor/index.js');
+              return `
+                import { refractor } from '${refractorPath}';
+                export default refractor;
+                export * from '${refractorPath}';
+              `;
+            }
+            return null;
           }
         }
       ],
 
       output: {
-        // Simplified manual chunks for actual dependencies
+        // Enhanced manual chunks for better performance - optimized for sub-2-second initial load
         manualChunks: (id) => {
-          // Core React ecosystem
-          if (id.includes('react') && !id.includes('react-router') && !id.includes('react-redux')) {
-            return 'vendor-react';
+          // Critical path - load immediately (smallest chunks for fastest initial load)
+          if (id.includes('react') && !id.includes('react-router') && !id.includes('react-redux') && !id.includes('react-dom')) {
+            return 'critical-react';
+          }
+          if (id.includes('react-dom')) {
+            return 'critical-react-dom';
           }
           if (id.includes('react-router')) {
-            return 'vendor-react-router';
+            return 'essential-router';
           }
 
-          // State management
+          // Essential UI - load with first interaction
+          if (id.includes('@mantine/core')) {
+            return 'essential-mantine-core';
+          }
+          if (id.includes('@mantine/hooks')) {
+            return 'essential-mantine-hooks';
+          }
+
+          // State management - load after initial render
           if (id.includes('@reduxjs/toolkit') || id.includes('react-redux')) {
-            return 'vendor-redux';
+            return 'state-redux';
           }
 
-          // Mantine UI Framework
-          if (id.includes('@mantine/') || id.includes('@tabler/icons-react')) {
-            return 'vendor-mantine';
+          // Icons and extras - defer until needed
+          if (id.includes('@tabler/icons-react')) {
+            return 'defer-icons';
+          }
+          if (id.includes('@mantine/') && !id.includes('@mantine/core') && !id.includes('@mantine/hooks')) {
+            return 'defer-mantine-extras';
           }
 
-          // Charts and visualization
+          // Heavy components - lazy load only when needed
           if (id.includes('recharts') || id.includes('chart.js') || id.includes('react-chartjs-2')) {
-            return 'vendor-charts';
+            return 'lazy-charts';
           }
 
-          // 3D libraries - only if actually used
-          if (id.includes('three') || id.includes('@react-three/')) {
-            return 'vendor-3d';
+          // 3D libraries - separate chunks for progressive loading
+          if (id.includes('three') && !id.includes('@react-three')) {
+            return 'lazy-three-core';
+          }
+          if (id.includes('@react-three/fiber')) {
+            return 'lazy-three-fiber';
+          }
+          if (id.includes('@react-three/drei')) {
+            return 'lazy-three-drei';
           }
 
-          // HTTP and realtime
-          if (id.includes('axios') || id.includes('pusher-js')) {
-            return 'vendor-communication';
+          // Network layer - essential but can be deferred slightly
+          if (id.includes('axios')) {
+            return 'network-http';
+          }
+          if (id.includes('pusher-js')) {
+            return 'network-pusher';
           }
 
-          // Utilities
-          if (id.includes('date-fns') || id.includes('lodash') || id.includes('zod')) {
-            return 'vendor-utils';
+          // Utilities - group by loading priority
+          if (id.includes('date-fns') || id.includes('dayjs')) {
+            return 'utils-dates';
+          }
+          if (id.includes('zod')) {
+            return 'utils-validation';
+          }
+          if (id.includes('lodash')) {
+            return 'utils-lodash';
           }
 
-          // Large vendor packages
+          // Development and monitoring - lowest priority
+          if (id.includes('sentry') || id.includes('@sentry/')) {
+            return 'dev-monitoring';
+          }
+
+          // Vendor fallback - split into smaller chunks
           if (id.includes('node_modules')) {
-            return 'vendor';
+            // Create smaller vendor chunks based on package name hash
+            const packageMatch = id.match(/node_modules\/([^\/]+)/);
+            if (packageMatch) {
+              const packageName = packageMatch[1];
+              const hashCode = packageName.split('').reduce((a, b) => {
+                a = ((a << 5) - a) + b.charCodeAt(0);
+                return a & a;
+              }, 0);
+              return `vendor-${Math.abs(hashCode) % 4}`; // Split into 4 vendor chunks
+            }
+            return 'vendor-misc';
           }
         },
 
@@ -328,12 +440,7 @@ export default defineConfig({
       }
     },
 
-    // CSS configuration
-    cssCodeSplit: true,
-    cssMinify: true,
-
     // Asset handling
-    assetsInlineLimit: 4096, // 4kb
     assetsInclude: ['**/*.gltf', '**/*.glb', '**/*.hdr'],
 
     // Enable build watch in development
@@ -345,11 +452,26 @@ export default defineConfig({
     // SSR options (if needed in future)
     ssrManifest: false,
 
-    // Report compressed size
-    reportCompressedSize: true,
+    // Enhanced module preload for better performance - prioritize critical chunks
+    modulePreload: {
+      polyfill: true,
+      resolveDependencies: (filename, deps) => {
+        // Prioritize loading order based on chunk names
+        const criticalChunks = deps.filter(dep =>
+          dep.includes('critical-') ||
+          dep.includes('essential-') ||
+          dep.includes('app.')
+        );
+        const deferredChunks = deps.filter(dep =>
+          dep.includes('defer-') ||
+          dep.includes('lazy-') ||
+          dep.includes('vendor-')
+        );
 
-    // Module preload for better performance
-    modulePreload: true
+        // Load critical chunks first, then others
+        return [...criticalChunks, ...deferredChunks];
+      }
+    }
   },
 
   // Test configuration (consolidated from vitest.config.ts)
@@ -556,7 +678,17 @@ export default defineConfig({
 
   // ESBuild configuration (will be replaced with SWC WASM)
   esbuild: {
-    logOverride: { 'this-is-undefined-in-esm': 'silent' },
+    logOverride: {
+      'this-is-undefined-in-esm': 'silent',
+      // Silence warnings for missing highlight.js language files
+      // These were removed in highlight.js v11+ but lowlight/react-syntax-highlighter still try to import them
+      'Could not resolve "highlight.js/lib/languages/c-like"': 'silent',
+      'Could not resolve "highlight.js/lib/languages/htmlbars"': 'silent',
+      'Could not resolve "highlight.js/lib/languages/sql_more"': 'silent',
+      'Could not resolve "highlight.js/es/languages/c-like"': 'silent',
+      'Could not resolve "highlight.js/es/languages/htmlbars"': 'silent',
+      'Could not resolve "highlight.js/es/languages/sql_more"': 'silent'
+    },
     tsconfigRaw: {
       compilerOptions: {
         useDefineForClassFields: true

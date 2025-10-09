@@ -6,7 +6,7 @@
  */
 
 import React, { forwardRef } from 'react';
-import { Box, BoxProps } from '@mantine/core';
+import { Box, type BoxProps } from '@mantine/core';
 import { designTokens } from '../../../theme/designTokens';
 
 export interface IconProps extends Omit<BoxProps, 'color'> {

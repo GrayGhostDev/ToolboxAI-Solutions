@@ -62,7 +62,7 @@ import {
 } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { RootState } from '@/store';
+import { type RootState } from '@/store';
 import { useAuth } from '@/hooks/useAuth';
 import { orchestratorApi } from '@/services/orchestratorApi';
 import { pusherService } from '@/services/pusher';

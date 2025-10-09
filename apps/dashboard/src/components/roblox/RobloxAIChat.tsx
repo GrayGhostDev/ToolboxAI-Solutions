@@ -27,15 +27,15 @@ import { pusherService } from '../../services/pusher';
 import { api } from '../../services/api';
 import {
   WebSocketMessageType,
-  AgentChatUserMessage,
-  AgentChatTokenMessage,
-  AgentChatCompleteMessage,
-  AgentFollowupMessage,
-  RobloxAgentRequest,
-  RobloxEnvProgressMessage,
-  RobloxEnvReadyMessage,
-  RobloxEnvErrorMessage,
-  FollowupFieldType
+  type AgentChatUserMessage,
+  type AgentChatTokenMessage,
+  type AgentChatCompleteMessage,
+  type AgentFollowupMessage,
+  type RobloxAgentRequest,
+  type RobloxEnvProgressMessage,
+  type RobloxEnvReadyMessage,
+  type RobloxEnvErrorMessage,
+  type FollowupFieldType
 } from '../../types/websocket';
 
 interface ChatMessage {
@@ -72,23 +72,23 @@ interface RobloxSpec {
 const SUGGESTED_PROMPTS = [
   {
     icon: <IconSchool />,
-    text: "Create a math classroom for grade 5 students",
-    category: "education"
+    text: 'Create a math classroom for grade 5 students',
+    category: 'education'
   },
   {
     icon: <IconMountain />,
-    text: "Build a space station for science experiments",
-    category: "environment"
+    text: 'Build a space station for science experiments',
+    category: 'environment'
   },
   {
     icon: <IconQuestionMark />,
-    text: "Design a history quiz adventure in ancient Rome",
-    category: "quiz"
+    text: 'Design a history quiz adventure in ancient Rome',
+    category: 'quiz'
   },
   {
     icon: <IconCode />,
-    text: "Make an interactive coding playground",
-    category: "programming"
+    text: 'Make an interactive coding playground',
+    category: 'programming'
   }
 ];
 
@@ -281,7 +281,7 @@ export const RobloxAIChat: React.FunctionComponent<Record<string, any>> = () => 
 
     addMessage({
       type: 'ai',
-      content: `🎉 Your Roblox environment is ready! You can now preview, download, or share your creation.`,
+      content: '🎉 Your Roblox environment is ready! You can now preview, download, or share your creation.',
     });
   }, []);
 
@@ -633,10 +633,10 @@ export const RobloxAIChat: React.FunctionComponent<Record<string, any>> = () => 
               size="sm"
             />
 
-            <Tooltip label={isRecording ? "Stop recording" : "Voice input"}>
+            <Tooltip label={isRecording ? 'Stop recording' : 'Voice input'}>
               <ActionIcon
                 onClick={toggleRecording}
-                color={isRecording ? "red" : "gray"}
+                color={isRecording ? 'red' : 'gray'}
                 disabled={isLoading}
               >
                 {isRecording ? <IconMicrophoneOff /> : <IconMicrophone />}

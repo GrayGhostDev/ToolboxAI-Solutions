@@ -1,4 +1,4 @@
-import { Box, Button, Text, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../utils/mui-imports';
+import { Box, Text, Paper, Stack, Grid, Avatar, Divider, Group } from '@mantine/core';
 /**
  * Theme Showcase Component
  *
@@ -7,7 +7,7 @@ import { Box, Button, Text, Paper, Stack, Grid, Container, IconButton, Avatar, C
  */
 
 import React from 'react';
-import { IconBell, IconEmojiEvents, IconSchool, IconSettings, IconSpeed, IconStar, IconVideogameAsset } from '@tabler/icons-react';
+import { IconBell, IconTrophy, IconSchool, IconSettings, IconSpeed, IconStar, IconDeviceGamepad } from '@tabler/icons-react';
 import {
   IconHome, IconUser, IconSettings, IconLogout, IconChevronDown,
   IconChevronUp, IconChevronLeft, IconChevronRight, IconMenu,
@@ -17,7 +17,7 @@ import {
   IconShare, IconRefresh, IconLogin, IconSchool, IconBook,
   IconChartBar, IconPalette, IconMoon, IconSun, IconPlayerPlay,
   IconPlayerPause, IconPlayerStop, IconVolume, IconVolumeOff,
-  IconInfoCircle, IconAlertTriangle, IconCircleX, IconCircleCheck,
+  IconInfoCircle, IconAlertTriangle, IconX, IconCircleCheck,
   IconArrowLeft, IconArrowRight, IconSend, IconDeviceFloppy,
   IconPrinter, IconHelp, IconHelpCircle, IconLock, IconLockOpen,
   IconMail, IconPhone, IconMapPin, IconMap, IconCalendar, IconClock,
@@ -53,30 +53,30 @@ const ThemeShowcase: React.FunctionComponent<Record<string, any>> = () => {
   const { isDark, mode } = useThemeContext();
 
   return (
-    <Box style={{ p: 4, maxWidth: 1200, mx: 'auto' }}>
+    <Box style={{ padding: 32, maxWidth: 1200, margin: '0 auto' }}>
       {/* Header */}
-      <Box style={{ mb: 6, textAlign: 'center' }}>
-        <Text order={2} component="h1" gutterBottom>
+      <Box style={{ marginBottom: 48, textAlign: 'center' }}>
+        <Text size="xl" fw={600} mb="md">
           Roblox Theme Showcase
         </Text>
-        <Text order={6} color="text.secondary" gutterBottom>
+        <Text size="md" c="dimmed" mb="md">
           Current theme: {mode} mode ({isDark ? 'dark' : 'light'})
         </Text>
-        <Box style={{ mt: 2 }}>
+        <Box style={{ marginTop: 16 }}>
           <ThemeSwitcher variant="menu" showLabel />
         </Box>
       </Box>
 
-      <SimpleGrid spacing={4}>
+      <Grid>
         {/* Buttons Section */}
-        <Box xs={12} md={6}>
+        <Grid.Col span={{ xs: 12, md: 6 }}>
           <RobloxCard>
-            <Box style={{ p: 3 }}>
-              <Text order={5} gutterBottom>
+            <Box style={{ padding: 16 }}>
+              <Text size="lg" mb="md">
                 Buttons
               </Text>
-              <Stack gap={2}>
-                <RobloxButton variant="filled" size="large">
+              <Stack gap="sm">
+                <RobloxButton variant="filled" size="lg">
                   Primary Button
                 </RobloxButton>
                 <RobloxButton variant="outline">
@@ -91,60 +91,60 @@ const ThemeShowcase: React.FunctionComponent<Record<string, any>> = () => {
               </Stack>
             </Box>
           </RobloxCard>
-        </SimpleGrid>
+        </Grid.Col>
 
         {/* Chips Section */}
-        <Box xs={12} md={6}>
+        <Grid.Col span={{ xs: 12, md: 6 }}>
           <RobloxCard>
-            <Box style={{ p: 3 }}>
-              <Text order={5} gutterBottom>
+            <Box style={{ padding: 16 }}>
+              <Text size="lg" mb="md">
                 Gamification Chips
               </Text>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              <Group gap="sm" style={{ flexWrap: 'wrap' }}>
                 <RobloxChip label="Common" rarity="common" />
                 <RobloxChip label="Rare" rarity="rare" />
                 <RobloxChip label="Epic" rarity="epic" />
                 <RobloxChip label="Legendary" rarity="legendary" />
-              </Stack>
-              <Box style={{ mt: 2 }}>
+              </Group>
+              <Box mt="sm">
                 <RobloxChip
                   label="Level 25"
-                  icon={<IconEmojiEvents />}
+                  icon={<IconTrophy />}
                   variant="filled"
                 />
                 <RobloxChip
                   label="Pro Player"
                   icon={<IconStar />}
                   variant="outline"
-                  style={{ ml: 1 }}
+                  style={{ marginLeft: 8 }}
                 />
               </Box>
             </Box>
           </RobloxCard>
-        </SimpleGrid>
+        </Grid.Col>
 
         {/* Progress Bars */}
-        <Box xs={12}>
+        <Grid.Col span={12}>
           <RobloxCard>
-            <Box style={{ p: 3 }}>
-              <Text order={5} gutterBottom>
+            <Box style={{ padding: 16 }}>
+              <Text size="lg" mb="md">
                 XP Progress Bars
               </Text>
-              <Stack gap={3}>
+              <Stack gap="lg">
                 <Box>
-                  <Text size="sm" gutterBottom>
+                  <Text size="sm" mb="xs">
                     Level 1 - Beginner (25% XP)
                   </Text>
                   <XPProgressBar value={25} level={1} />
                 </Box>
                 <Box>
-                  <Text size="sm" gutterBottom>
+                  <Text size="sm" mb="xs">
                     Level 15 - Intermediate (65% XP)
                   </Text>
                   <XPProgressBar value={65} level={15} />
                 </Box>
                 <Box>
-                  <Text size="sm" gutterBottom>
+                  <Text size="sm" mb="xs">
                     Level 50 - Expert (90% XP)
                   </Text>
                   <XPProgressBar value={90} level={50} />
@@ -152,44 +152,44 @@ const ThemeShowcase: React.FunctionComponent<Record<string, any>> = () => {
               </Stack>
             </Box>
           </RobloxCard>
-        </SimpleGrid>
+        </Grid.Col>
 
         {/* Avatars Section */}
-        <Box xs={12} md={6}>
+        <Grid.Col span={{ xs: 12, md: 6 }}>
           <RobloxCard>
-            <Box style={{ p: 3 }}>
-              <Text order={5} gutterBottom>
+            <Box style={{ padding: 16 }}>
+              <Text size="lg" mb="md">
                 Gaming Avatars
               </Text>
-              <Stack direction="row" spacing={3} alignItems="center">
+              <Group gap="lg" align="center">
                 <RobloxAvatar level={1} isOnline>
-                  <Avatar style={{ width: 56, height: 56 }}>
-                    <IconVideogameAsset />
+                  <Avatar size="lg">
+                    <IconDeviceGamepad />
                   </Avatar>
                 </RobloxAvatar>
                 <RobloxAvatar level={25} isOnline={false}>
-                  <Avatar style={{ width: 56, height: 56 }}>
+                  <Avatar size="lg">
                     <IconSchool />
                   </Avatar>
                 </RobloxAvatar>
                 <AchievementBadge badgeContent="!" achievement="gold">
                   <RobloxAvatar level={100} isOnline>
-                    <Avatar style={{ width: 56, height: 56 }}>
+                    <Avatar size="lg">
                       <IconStar />
                     </Avatar>
                   </RobloxAvatar>
                 </AchievementBadge>
-              </Stack>
+              </Group>
             </Box>
           </RobloxCard>
-        </SimpleGrid>
+        </Grid.Col>
 
-        {/* IconBell */}
-        <Box xs={12} md={6}>
-          <Stack gap={2}>
+        {/* Notifications */}
+        <Grid.Col span={{ xs: 12, md: 6 }}>
+          <Stack gap="sm">
             <RobloxNotificationCard severity="success">
-              <Box style={{ p: 2 }}>
-                <Text order={6} gutterBottom>
+              <Box style={{ padding: 8 }}>
+                <Text size="md" mb="xs">
                   Achievement Unlocked!
                 </Text>
                 <Text size="sm">
@@ -197,10 +197,10 @@ const ThemeShowcase: React.FunctionComponent<Record<string, any>> = () => {
                 </Text>
               </Box>
             </RobloxNotificationCard>
-            
+
             <RobloxNotificationCard severity="info">
-              <Box style={{ p: 2 }}>
-                <Text order={6} gutterBottom>
+              <Box style={{ padding: 8 }}>
+                <Text size="md" mb="xs">
                   New Content Available
                 </Text>
                 <Text size="sm">
@@ -208,10 +208,10 @@ const ThemeShowcase: React.FunctionComponent<Record<string, any>> = () => {
                 </Text>
               </Box>
             </RobloxNotificationCard>
-            
+
             <RobloxNotificationCard severity="warning">
-              <Box style={{ p: 2 }}>
-                <Text order={6} gutterBottom>
+              <Box style={{ padding: 8 }}>
+                <Text size="md" mb="xs">
                   Assignment Due Soon
                 </Text>
                 <Text size="sm">
@@ -220,61 +220,55 @@ const ThemeShowcase: React.FunctionComponent<Record<string, any>> = () => {
               </Box>
             </RobloxNotificationCard>
           </Stack>
-        </SimpleGrid>
+        </Grid.Col>
 
         {/* Game Container */}
-        <Box xs={12}>
+        <Grid.Col span={12}>
           <GameContainer>
-            <Text order={4} component="h2" gutterBottom align="center">
+            <Text size="xl" ta="center" mb="md">
               Welcome to the Learning Arena!
             </Text>
-            <Text size="md" align="center" style={{ mb: 4 }}>
+            <Text size="md" ta="center" mb="xl">
               Embark on your educational journey with gamified learning experiences.
             </Text>
-            
-            <SimpleGrid spacing={3} justifyContent="center">
-              <Box>
-                <Box style={{ textAlign: 'center' }}>
-                  <RobloxFAB>
-                    <IconSpeed />
-                  </RobloxFAB>
-                  <Text size="sm" style={{ mt: 1 }}>
-                    Quick Start
-                  </Text>
-                </Box>
-              </SimpleGrid>
-              <Box>
-                <Box style={{ textAlign: 'center' }}>
-                  <RobloxFAB>
-                    <IconEmojiEvents />
-                  </RobloxFAB>
-                  <Text size="sm" style={{ mt: 1 }}>
-                    Achievements
-                  </Text>
-                </Box>
-              </SimpleGrid>
-              <Box>
-                <Box style={{ textAlign: 'center' }}>
-                  <RobloxFAB>
-                    <IconSchool />
-                  </RobloxFAB>
-                  <Text size="sm" style={{ mt: 1 }}>
-                    Courses
-                  </Text>
-                </Box>
-              </SimpleGrid>
-            </SimpleGrid>
+
+            <Group justify="center" gap="xl">
+              <Box ta="center">
+                <RobloxFAB>
+                  <IconSpeed />
+                </RobloxFAB>
+                <Text size="sm" mt="xs">
+                  Quick Start
+                </Text>
+              </Box>
+              <Box ta="center">
+                <RobloxFAB>
+                  <IconTrophy />
+                </RobloxFAB>
+                <Text size="sm" mt="xs">
+                  Achievements
+                </Text>
+              </Box>
+              <Box ta="center">
+                <RobloxFAB>
+                  <IconSchool />
+                </RobloxFAB>
+                <Text size="sm" mt="xs">
+                  Courses
+                </Text>
+              </Box>
+            </Group>
           </GameContainer>
-        </SimpleGrid>
+        </Grid.Col>
 
         {/* Loading States */}
-        <Box xs={12} md={6}>
+        <Grid.Col span={{ xs: 12, md: 6 }}>
           <RobloxCard>
-            <Box style={{ p: 3 }}>
-              <Text order={5} gutterBottom>
+            <Box style={{ padding: 16 }}>
+              <Text size="lg" mb="md">
                 Loading States
               </Text>
-              <Stack gap={2}>
+              <Stack gap="sm">
                 <RobloxSkeleton width="60%" height={32} />
                 <RobloxSkeleton width="80%" height={24} />
                 <RobloxSkeleton width="40%" height={24} />
@@ -282,86 +276,78 @@ const ThemeShowcase: React.FunctionComponent<Record<string, any>> = () => {
               </Stack>
             </Box>
           </RobloxCard>
-        </SimpleGrid>
+        </Grid.Col>
 
         {/* Text */}
-        <Box xs={12} md={6}>
+        <Grid.Col span={{ xs: 12, md: 6 }}>
           <RobloxCard>
-            <Box style={{ p: 3 }}>
-              <Text order={5} gutterBottom>
+            <Box style={{ padding: 16 }}>
+              <Text size="lg" mb="md">
                 Text
               </Text>
-              <Stack gap={1}>
-                <Text order={1}>Heading 1</Text>
-                <Text order={2}>Heading 2</Text>
-                <Text order={3}>Heading 3</Text>
-                <Text order={4}>Heading 4</Text>
-                <Text order={5}>Heading 5</Text>
-                <Text order={6}>Heading 6</Text>
+              <Stack gap="xs">
+                <Text size="2.5rem" fw={700}>Heading 1</Text>
+                <Text size="2rem" fw={600}>Heading 2</Text>
+                <Text size="1.75rem" fw={600}>Heading 3</Text>
+                <Text size="1.5rem" fw={500}>Heading 4</Text>
+                <Text size="1.25rem" fw={500}>Heading 5</Text>
+                <Text size="1rem" fw={500}>Heading 6</Text>
                 <Text size="md">
                   Body 1: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
                 </Text>
-                <Text size="sm" color="text.secondary">
+                <Text size="sm" c="dimmed">
                   Body 2: Secondary text with proper contrast.
                 </Text>
               </Stack>
             </Box>
           </RobloxCard>
-        </SimpleGrid>
+        </Grid.Col>
 
         {/* Animation Classes */}
-        <Box xs={12}>
+        <Grid.Col span={12}>
           <RobloxCard>
-            <Box style={{ p: 3 }}>
-              <Text order={5} gutterBottom>
+            <Box style={{ padding: 16 }}>
+              <Text size="lg" mb="md">
                 Animation Classes
               </Text>
-              <Text size="sm" color="text.secondary" gutterBottom>
+              <Text size="sm" c="dimmed" mb="md">
                 Hover over elements to see animations in action.
               </Text>
-              <SimpleGrid spacing={2} style={{ mt: 2 }}>
-                <Box>
-                  <Paper 
-                    className="roblox-pulse"
-                    style={{ p: 2, textAlign: 'center', minWidth: 100 }}
-                  >
-                    <Text size="sm">Pulse</Text>
-                  </Paper>
-                </SimpleGrid>
-                <Box>
-                  <Paper 
-                    className="roblox-float"
-                    style={{ p: 2, textAlign: 'center', minWidth: 100 }}
-                  >
-                    <Text size="sm">Float</Text>
-                  </Paper>
-                </SimpleGrid>
-                <Box>
-                  <Paper 
-                    className="roblox-glow"
-                    style={{ p: 2, textAlign: 'center', minWidth: 100 }}
-                  >
-                    <Text size="sm">Glow</Text>
-                  </Paper>
-                </SimpleGrid>
-                <Box>
-                  <Paper 
-                    className="roblox-shimmer"
-                    style={{ p: 2, textAlign: 'center', minWidth: 100 }}
-                  >
-                    <Text size="sm">Shimmer</Text>
-                  </Paper>
-                </SimpleGrid>
-              </SimpleGrid>
+              <Group gap="sm" mt="sm">
+                <Paper
+                  className="roblox-pulse"
+                  style={{ padding: 8, textAlign: 'center', minWidth: 100 }}
+                >
+                  <Text size="sm">Pulse</Text>
+                </Paper>
+                <Paper
+                  className="roblox-float"
+                  style={{ padding: 8, textAlign: 'center', minWidth: 100 }}
+                >
+                  <Text size="sm">Float</Text>
+                </Paper>
+                <Paper
+                  className="roblox-glow"
+                  style={{ padding: 8, textAlign: 'center', minWidth: 100 }}
+                >
+                  <Text size="sm">Glow</Text>
+                </Paper>
+                <Paper
+                  className="roblox-shimmer"
+                  style={{ padding: 8, textAlign: 'center', minWidth: 100 }}
+                >
+                  <Text size="sm">Shimmer</Text>
+                </Paper>
+              </Group>
             </Box>
           </RobloxCard>
-        </SimpleGrid>
-      </SimpleGrid>
+        </Grid.Col>
+      </Grid>
 
       {/* Footer */}
-      <Box style={{ mt: 6, textAlign: 'center' }}>
-        <Divider style={{ mb: 3 }} />
-        <Text size="sm" color="text.secondary">
+      <Box style={{ marginTop: 48, textAlign: 'center' }}>
+        <Divider style={{ marginBottom: 24 }} />
+        <Text size="sm" c="dimmed">
           Roblox-Inspired Design System for ToolBoxAI Educational Platform
         </Text>
       </Box>

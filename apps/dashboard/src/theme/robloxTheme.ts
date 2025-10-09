@@ -14,96 +14,96 @@
 // ULTRA WILD Roblox-inspired color palette - Maximum energy!
 export const robloxColors = {
   // Standard color shortcuts (for compatibility)
-  primary: "#00ffff",
-  secondary: "#ff00ff",
-  accent: "#00ff00",
-  success: "#00ff00",
-  error: "#ff0066",
-  warning: "#ff8800",
-  info: "#00aaff",
-  gray: "#b0b0b0",
-  lightGray: "#ffffff",
-  darkGray: "#3a3a3a",
-  darkBase: "#0a0a0a",
-  white: "#ffffff",
-  gold: "#ffff00",
-  silver: "#c0c0c0",
-  bronze: "#cd7f32",
-  yellow: "#ffff00",
+  primary: '#00ffff',
+  secondary: '#ff00ff',
+  accent: '#00ff00',
+  success: '#00ff00',
+  error: '#ff0066',
+  warning: '#ff8800',
+  info: '#00aaff',
+  gray: '#b0b0b0',
+  lightGray: '#ffffff',
+  darkGray: '#3a3a3a',
+  darkBase: '#0a0a0a',
+  white: '#ffffff',
+  gold: '#ffff00',
+  silver: '#c0c0c0',
+  bronze: '#cd7f32',
+  yellow: '#ffff00',
 
   // Brand colors for Roblox
   brand: {
     red: {
-      primary: "#ee0000",
-      light: "#ff3333",
-      dark: "#cc0000"
+      primary: '#ee0000',
+      light: '#ff3333',
+      dark: '#cc0000'
     },
     gray: {
-      primary: "#474747",
-      light: "#707070",
-      dark: "#2b2b2b"
+      primary: '#474747',
+      light: '#707070',
+      dark: '#2b2b2b'
     }
   },
 
   // Semantic colors
   semantic: {
-    success: "#00ff00",
-    error: "#ff0066",
-    warning: "#ff8800",
-    info: "#00aaff"
+    success: '#00ff00',
+    error: '#ff0066',
+    warning: '#ff8800',
+    info: '#00aaff'
   },
 
   // WILD Neon colors for maximum visual impact
   neon: {
-    electricBlue: "#00ffff",
-    hotPink: "#ff00ff",
-    toxicGreen: "#00ff00",
-    laserOrange: "#ff8800",
-    plasmaYellow: "#ffff00",
-    deepPurple: "#9945ff",
-    ultraViolet: "#7b00ff",
-    cherryRed: "#ff0066",
-    mintGreen: "#00ffaa",
-    skyBlue: "#00aaff",
+    electricBlue: '#00ffff',
+    hotPink: '#ff00ff',
+    toxicGreen: '#00ff00',
+    laserOrange: '#ff8800',
+    plasmaYellow: '#ffff00',
+    deepPurple: '#9945ff',
+    ultraViolet: '#7b00ff',
+    cherryRed: '#ff0066',
+    mintGreen: '#00ffaa',
+    skyBlue: '#00aaff',
     // Compatibility aliases
-    blue: "#00ffff",
-    pink: "#ff00ff",
-    green: "#00ff00",
-    orange: "#ff8800",
-    purple: "#9945ff",
+    blue: '#00ffff',
+    pink: '#ff00ff',
+    green: '#00ff00',
+    orange: '#ff8800',
+    purple: '#9945ff',
   },
 
   // Dark theme colors for space/tech feel
   darkTheme: {
-    background: "#0a0a0a",
-    surface: "#1a1a1a",
-    card: "#2a2a2a",
-    border: "#3a3a3a",
-    text: "#ffffff",
-    textSecondary: "#b0b0b0",
+    background: '#0a0a0a',
+    surface: '#1a1a1a',
+    card: '#2a2a2a',
+    border: '#3a3a3a',
+    text: '#ffffff',
+    textSecondary: '#b0b0b0',
   },
 
   // Gamification colors - DOPAMINE TRIGGERS!
   gamification: {
-    xp: "#ff00ff", // Hot magenta for XP
-    badge: "#00ff00", // Toxic green for badges
-    level: "#ff8800", // Laser orange for levels
-    achievement: "#ffff00", // Plasma yellow for achievements
-    power: "#00ffff", // Electric cyan for power-ups
-    legendary: "#9945ff", // Deep purple for legendary items
-    epic: "#7b00ff", // Ultra violet for epic rewards
-    rare: "#00aaff", // Sky blue for rare finds
-    common: "#00ffaa", // Mint green for common items
+    xp: '#ff00ff', // Hot magenta for XP
+    badge: '#00ff00', // Toxic green for badges
+    level: '#ff8800', // Laser orange for levels
+    achievement: '#ffff00', // Plasma yellow for achievements
+    power: '#00ffff', // Electric cyan for power-ups
+    legendary: '#9945ff', // Deep purple for legendary items
+    epic: '#7b00ff', // Ultra violet for epic rewards
+    rare: '#00aaff', // Sky blue for rare finds
+    common: '#00ffaa', // Mint green for common items
   },
 
   // Effects and gradients
   effects: {
-    rainbowGradient: "linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00ff00, #00ffff, #0088ff, #8800ff, #ff00ff)",
-    electricGradient: "linear-gradient(135deg, #00ffff, #ff00ff, #ffff00)",
-    fireGradient: "linear-gradient(135deg, #ff0000, #ff8800, #ffff00)",
-    iceGradient: "linear-gradient(135deg, #00ffff, #00aaff, #0066ff)",
-    toxicGradient: "linear-gradient(135deg, #00ff00, #00ff88, #88ff00)",
-    cosmicGradient: "linear-gradient(135deg, #9945ff, #ff00ff, #00ffff)",
+    rainbowGradient: 'linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00ff00, #00ffff, #0088ff, #8800ff, #ff00ff)',
+    electricGradient: 'linear-gradient(135deg, #00ffff, #ff00ff, #ffff00)',
+    fireGradient: 'linear-gradient(135deg, #ff0000, #ff8800, #ffff00)',
+    iceGradient: 'linear-gradient(135deg, #00ffff, #00aaff, #0066ff)',
+    toxicGradient: 'linear-gradient(135deg, #00ff00, #00ff88, #88ff00)',
+    cosmicGradient: 'linear-gradient(135deg, #9945ff, #ff00ff, #00ffff)',
   },
 };
 
@@ -225,14 +225,14 @@ const baseThemeConfig = {
 // The actual Mantine theme is defined in config/mantine-theme.ts
 // This theme object is kept for compatibility but should be migrated
 export const robloxTheme = {
-  mode: "dark",
+  mode: 'dark',
   colors: {
     primary: robloxColors.primary,
     secondary: robloxColors.secondary,
     background: robloxColors.darkBase,
-    surface: "#1a1a1a",
-    text: "#ffffff",
-    textSecondary: "#b0b0b0",
+    surface: '#1a1a1a',
+    text: '#ffffff',
+    textSecondary: '#b0b0b0',
     success: robloxColors.success,
     error: robloxColors.error,
     warning: robloxColors.warning,
@@ -334,7 +334,7 @@ export const animationStyles = `
 
 // Light theme version for compatibility
 export const robloxLightTheme = {
-  mode: "light",
+  mode: 'light',
   colors: {
     primary: robloxColors.brand.red.primary,
     secondary: robloxColors.brand.gray.primary,

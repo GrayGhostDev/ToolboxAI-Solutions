@@ -191,6 +191,8 @@ export default defineConfig({
         VITE_API_BASE_URL: apiURL,
         VITE_ENABLE_CLERK_AUTH: 'false',  // Disable Clerk for tests - use custom Login
         VITE_ENABLE_WEBSOCKET: 'false',   // Disable WebSocket - use Pusher
+        VITE_BYPASS_AUTH: 'true',         // Enable bypass mode for tests
+        VITE_USE_MOCK_DATA: 'true',       // Enable mock data for tests
         VITE_PUSHER_KEY: process.env.VITE_PUSHER_KEY || 'test-key',
         VITE_PUSHER_CLUSTER: process.env.VITE_PUSHER_CLUSTER || 'us2',
         VITE_PUSHER_AUTH_ENDPOINT: '/pusher/auth',

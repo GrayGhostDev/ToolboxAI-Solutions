@@ -85,7 +85,7 @@ export const RobloxThemeProvider: React.FunctionComponent<ThemeProviderProps> = 
       }
     };
 
-    mediaQuery.addEventListener("change", handleChange as EventListener);
+    mediaQuery.addEventListener('change', handleChange as EventListener);
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [mode, dispatch]);
 

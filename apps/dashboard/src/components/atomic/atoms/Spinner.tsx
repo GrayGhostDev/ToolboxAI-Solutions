@@ -5,7 +5,7 @@
  */
 
 import React, { forwardRef } from 'react';
-import { Loader, LoaderProps, Box } from '@mantine/core';
+import { Loader, type LoaderProps, Box } from '@mantine/core';
 import { designTokens } from '../../../theme/designTokens';
 
 export interface SpinnerProps extends Omit<LoaderProps, 'size' | 'variant'> {
@@ -108,7 +108,7 @@ const AtomicSpinner = forwardRef<HTMLDivElement, SpinnerProps>(
                     borderRadius: '50%',
                     display: 'inline-block',
                     margin: `0 ${currentSize / 8}px`,
-                    animation: `dots-bounce 1.4s ease-in-out infinite both`,
+                    animation: 'dots-bounce 1.4s ease-in-out infinite both',
                     animationDelay: `${-0.32 + (i * 0.16)}s`
                   }}
                 />

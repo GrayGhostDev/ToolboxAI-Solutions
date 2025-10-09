@@ -1,8 +1,8 @@
-import * as React from "react";
+import * as React from 'react';
 import { Card, Text, Title, Box, Grid, Paper, Stack, Badge, Progress, ActionIcon, Skeleton, Alert, Tooltip, Table } from '@mantine/core';
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import {
   IconTrendingUp,
   IconTrendingDown,
@@ -12,7 +12,7 @@ import {
   IconStar,
   IconRefresh,
   IconInfoCircle,
-} from "@tabler/icons-react";
+} from '@tabler/icons-react';
 import {
   PieChart,
   Pie,
@@ -26,25 +26,25 @@ import {
   ResponsiveContainer,
   LineChart,
   Line,
-} from "recharts";
-import { useMantineTheme } from "@mantine/core";
-import { usePusherContext } from "../../contexts/PusherContext";
-import { apiClient } from "../../services/api";
+} from 'recharts';
+import { useMantineTheme } from '@mantine/core';
+import { usePusherContext } from '../../contexts/PusherContext';
+import { apiClient } from '../../services/api';
 
 interface ContentMetric {
   id: string;
   title: string;
-  type: "lesson" | "quiz" | "game" | "assessment";
+  type: 'lesson' | 'quiz' | 'game' | 'assessment';
   views: number;
   completions: number;
   completionRate: number;
   averageScore: number;
   timeSpent: number; // in minutes
   rating: number;
-  difficulty: "easy" | "medium" | "hard";
+  difficulty: 'easy' | 'medium' | 'hard';
   subject: string;
   lastAccessed: string;
-  trend: "up" | "down" | "stable";
+  trend: 'up' | 'down' | 'stable';
   trendValue: number;
 }
 
@@ -58,14 +58,14 @@ interface SubjectPerformance {
 }
 
 interface ContentMetricsProps {
-  timeRange?: "24h" | "7d" | "30d" | "90d";
+  timeRange?: '24h' | '7d' | '30d' | '90d';
   autoRefresh?: boolean;
 }
 
 const COLORS = ['#2563EB', '#22C55E', '#FACC15', '#9333EA', '#EF4444', '#06B6D4', '#F97316'];
 
 export function ContentMetrics({
-  timeRange = "30d",
+  timeRange = '30d',
   autoRefresh = true
 }: ContentMetricsProps) {
   const theme = useMantineTheme();
@@ -75,7 +75,7 @@ export function ContentMetrics({
   const [subjectData, setSubjectData] = useState<SubjectPerformance[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedView, setSelectedView] = useState<"overview" | "detailed">("overview");
+  const [selectedView, setSelectedView] = useState<'overview' | 'detailed'>('overview');
 
   // Fetch content metrics from real backend
   const fetchData = React.useCallback(async () => {
@@ -88,13 +88,13 @@ export function ContentMetrics({
       
       // Calculate start date based on time range
       switch (timeRange) {
-        case "7d":
+        case '7d':
           startDate.setDate(startDate.getDate() - 7);
           break;
-        case "30d":
+        case '30d':
           startDate.setDate(startDate.getDate() - 30);
           break;
-        case "90d":
+        case '90d':
           startDate.setDate(startDate.getDate() - 90);
           break;
       }
@@ -122,17 +122,17 @@ export function ContentMetrics({
       const transformedContent: ContentMetric[] = contentResponse.content_metrics?.map((item: any, index: number) => ({
         id: item.id || `content_${index}`,
         title: item.title || `Content ${index + 1}`,
-        type: item.type || "lesson",
+        type: item.type || 'lesson',
         views: item.views || Math.floor(Math.random() * 1000) + 100,
         completions: item.completions || Math.floor(Math.random() * 200) + 50,
         completionRate: item.completion_rate || Math.floor(Math.random() * 40) + 60,
         averageScore: item.average_score || Math.floor(Math.random() * 30) + 70,
         timeSpent: item.avg_time_spent || Math.floor(Math.random() * 30) + 15,
         rating: item.rating || Math.random() * 2 + 3,
-        difficulty: item.difficulty || ["easy", "medium", "hard"][Math.floor(Math.random() * 3)],
-        subject: item.subject || ["Math", "Science", "Language", "Arts"][Math.floor(Math.random() * 4)],
+        difficulty: item.difficulty || ['easy', 'medium', 'hard'][Math.floor(Math.random() * 3)],
+        subject: item.subject || ['Math', 'Science', 'Language', 'Arts'][Math.floor(Math.random() * 4)],
         lastAccessed: item.last_accessed || new Date().toISOString(),
-        trend: item.trend || ["up", "down", "stable"][Math.floor(Math.random() * 3)],
+        trend: item.trend || ['up', 'down', 'stable'][Math.floor(Math.random() * 3)],
         trendValue: item.trend_value || Math.floor(Math.random() * 20) + 1,
       })) || [];
 
@@ -150,83 +150,83 @@ export function ContentMetrics({
       if (transformedContent.length === 0) {
         const mockContentData: ContentMetric[] = [
           {
-            id: "1",
-            title: "Introduction to Algebra",
-            type: "lesson",
+            id: '1',
+            title: 'Introduction to Algebra',
+            type: 'lesson',
             views: 1247,
             completions: 892,
             completionRate: 71.5,
             averageScore: 84.2,
             timeSpent: 25,
             rating: 4.3,
-            difficulty: "medium",
-            subject: "Math",
+            difficulty: 'medium',
+            subject: 'Math',
             lastAccessed: new Date().toISOString(),
-            trend: "up",
+            trend: 'up',
             trendValue: 12.3,
           },
           {
-            id: "2",
-            title: "Solar System Quiz",
-            type: "quiz",
+            id: '2',
+            title: 'Solar System Quiz',
+            type: 'quiz',
             views: 934,
             completions: 756,
             completionRate: 80.9,
             averageScore: 78.6,
             timeSpent: 15,
             rating: 4.1,
-            difficulty: "easy",
-            subject: "Science",
+            difficulty: 'easy',
+            subject: 'Science',
             lastAccessed: new Date().toISOString(),
-            trend: "stable",
+            trend: 'stable',
             trendValue: 2.1,
           },
           {
-            id: "3",
-            title: "Grammar Adventure Game",
-            type: "game",
+            id: '3',
+            title: 'Grammar Adventure Game',
+            type: 'game',
             views: 2156,
             completions: 1834,
             completionRate: 85.1,
             averageScore: 91.3,
             timeSpent: 32,
             rating: 4.7,
-            difficulty: "medium",
-            subject: "Language",
+            difficulty: 'medium',
+            subject: 'Language',
             lastAccessed: new Date().toISOString(),
-            trend: "up",
+            trend: 'up',
             trendValue: 18.7,
           },
           {
-            id: "4",
-            title: "Art History Assessment",
-            type: "assessment",
+            id: '4',
+            title: 'Art History Assessment',
+            type: 'assessment',
             views: 623,
             completions: 487,
             completionRate: 78.2,
             averageScore: 76.4,
             timeSpent: 28,
             rating: 3.9,
-            difficulty: "hard",
-            subject: "Arts",
+            difficulty: 'hard',
+            subject: 'Arts',
             lastAccessed: new Date().toISOString(),
-            trend: "down",
+            trend: 'down',
             trendValue: -5.2,
           },
           {
-            id: "5",
-            title: "Chemical Reactions Lab",
-            type: "lesson",
+            id: '5',
+            title: 'Chemical Reactions Lab',
+            type: 'lesson',
             views: 1089,
             completions: 743,
             completionRate: 68.2,
             averageScore: 82.1,
             timeSpent: 35,
             rating: 4.2,
-            difficulty: "hard",
-            subject: "Science",
+            difficulty: 'hard',
+            subject: 'Science',
             lastAccessed: new Date().toISOString(),
-            trend: "up",
+            trend: 'up',
             trendValue: 9.1,
           },
         ];
@@ -237,11 +237,11 @@ export function ContentMetrics({
 
       if (transformedSubjects.length === 0) {
         const mockSubjectData: SubjectPerformance[] = [
-          { subject: "Math", totalContent: 42, averageCompletion: 74.2, averageScore: 81.5, totalViews: 8943, color: COLORS[0] || '#2563EB' },
-          { subject: "Science", totalContent: 38, averageCompletion: 78.9, averageScore: 79.3, totalViews: 7621, color: COLORS[1] || '#22C55E' },
-          { subject: "Language", totalContent: 35, averageCompletion: 82.1, averageScore: 86.7, totalViews: 6834, color: COLORS[2] || '#FACC15' },
-          { subject: "Arts", totalContent: 28, averageCompletion: 69.5, averageScore: 77.2, totalViews: 4567, color: COLORS[3] || '#9333EA' },
-          { subject: "Technology", totalContent: 25, averageCompletion: 85.3, averageScore: 88.9, totalViews: 5432, color: COLORS[4] || '#EF4444' },
+          { subject: 'Math', totalContent: 42, averageCompletion: 74.2, averageScore: 81.5, totalViews: 8943, color: COLORS[0] || '#2563EB' },
+          { subject: 'Science', totalContent: 38, averageCompletion: 78.9, averageScore: 79.3, totalViews: 7621, color: COLORS[1] || '#22C55E' },
+          { subject: 'Language', totalContent: 35, averageCompletion: 82.1, averageScore: 86.7, totalViews: 6834, color: COLORS[2] || '#FACC15' },
+          { subject: 'Arts', totalContent: 28, averageCompletion: 69.5, averageScore: 77.2, totalViews: 4567, color: COLORS[3] || '#9333EA' },
+          { subject: 'Technology', totalContent: 25, averageCompletion: 85.3, averageScore: 88.9, totalViews: 5432, color: COLORS[4] || '#EF4444' },
         ];
         setSubjectData(mockSubjectData);
       } else {
@@ -255,19 +255,19 @@ export function ContentMetrics({
       // Use mock data as fallback
       const mockContentData: ContentMetric[] = [
         {
-          id: "1",
-          title: "Introduction to Algebra",
-          type: "lesson",
+          id: '1',
+          title: 'Introduction to Algebra',
+          type: 'lesson',
           views: 1247,
           completions: 892,
           completionRate: 71.5,
           averageScore: 84.2,
           timeSpent: 25,
           rating: 4.3,
-          difficulty: "medium",
-          subject: "Math",
+          difficulty: 'medium',
+          subject: 'Math',
           lastAccessed: new Date().toISOString(),
-          trend: "up",
+          trend: 'up',
           trendValue: 12.3,
         },
         // ... more mock data
@@ -275,9 +275,9 @@ export function ContentMetrics({
       setContentData(mockContentData);
 
       const mockSubjectData: SubjectPerformance[] = [
-        { subject: "Math", totalContent: 42, averageCompletion: 74.2, averageScore: 81.5, totalViews: 8943, color: COLORS[0] || '#2563EB' },
-        { subject: "Science", totalContent: 38, averageCompletion: 78.9, averageScore: 79.3, totalViews: 7621, color: COLORS[1] || '#22C55E' },
-        { subject: "Language", totalContent: 35, averageCompletion: 82.1, averageScore: 86.7, totalViews: 6834, color: COLORS[2] || '#FACC15' },
+        { subject: 'Math', totalContent: 42, averageCompletion: 74.2, averageScore: 81.5, totalViews: 8943, color: COLORS[0] || '#2563EB' },
+        { subject: 'Science', totalContent: 38, averageCompletion: 78.9, averageScore: 79.3, totalViews: 7621, color: COLORS[1] || '#22C55E' },
+        { subject: 'Language', totalContent: 35, averageCompletion: 82.1, averageScore: 86.7, totalViews: 6834, color: COLORS[2] || '#FACC15' },
       ];
       setSubjectData(mockSubjectData);
     } finally {
@@ -312,9 +312,9 @@ export function ContentMetrics({
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
-      case "up":
+      case 'up':
         return <IconTrendingUp size={16} color={theme.colors.green[6]} />;
-      case "down":
+      case 'down':
         return <IconTrendingDown size={16} color={theme.colors.red[6]} />;
       default:
         return <IconTrendingUp size={16} color={theme.colors.gray[6]} />;
@@ -323,11 +323,11 @@ export function ContentMetrics({
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case "lesson":
+      case 'lesson':
         return <IconSchool size={16} />;
-      case "quiz":
+      case 'quiz':
         return <IconClipboardCheck size={16} />;
-      case "game":
+      case 'game':
         return <IconPlayerPlay size={16} />;
       default:
         return <IconClipboardCheck size={16} />;
@@ -336,14 +336,14 @@ export function ContentMetrics({
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case "easy":
-        return "green";
-      case "medium":
-        return "yellow";
-      case "hard":
-        return "red";
+      case 'easy':
+        return 'green';
+      case 'medium':
+        return 'yellow';
+      case 'hard':
+        return 'red';
       default:
-        return "gray";
+        return 'gray';
     }
   };
 
@@ -456,9 +456,9 @@ export function ContentMetrics({
                       {getTrendIcon(content.trend)}
                       <Text
                         size="xs"
-                        c={content.trend === "up" ? "green" : content.trend === "down" ? "red" : "dimmed"}
+                        c={content.trend === 'up' ? 'green' : content.trend === 'down' ? 'red' : 'dimmed'}
                       >
-                        {content.trendValue > 0 ? "+" : ""}{content.trendValue.toFixed(1)}%
+                        {content.trendValue > 0 ? '+' : ''}{content.trendValue.toFixed(1)}%
                       </Text>
                     </Stack>
                   </Table.Td>

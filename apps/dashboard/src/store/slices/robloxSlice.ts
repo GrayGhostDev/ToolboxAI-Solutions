@@ -11,7 +11,7 @@
  * - Environment management (creation, generation, deployment)
  */
 
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 // Import types from sync service
 export interface RobloxEnvironment {

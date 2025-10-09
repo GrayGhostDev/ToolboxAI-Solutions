@@ -3,50 +3,53 @@
  *
  * This file replaces the MUI theme system with Mantine's theming.
  * It provides the same Roblox-inspired design system but using Mantine components.
+ * Updated for Mantine v8 compatibility.
  */
 
-import { MantineTheme, MantineThemeOverride, createTheme } from '@mantine/core';
+import { createTheme, type MantineColorsTuple } from '@mantine/core';
 
-// Roblox Brand Colors
+// Roblox Brand Colors - Updated for Mantine v8 MantineColorsTuple
 export const robloxColors = {
   // Primary colors
   red: [
     '#ffe5e5', '#ffcccc', '#ff9999', '#ff6666', '#ff3333',
     '#e60000', '#cc0000', '#b30000', '#990000', '#800000'
-  ],
+  ] as MantineColorsTuple,
   gray: [
     '#f8f9fa', '#f1f3f5', '#e9ecef', '#dee2e6', '#ced4da',
     '#adb5bd', '#6c757d', '#495057', '#343a40', '#212529'
-  ],
+  ] as MantineColorsTuple,
   // Roblox colors
   brand: [
     '#ffebeb', '#ffd6d6', '#ffb3b3', '#ff8080', '#ff4d4d',
     '#ff1a1a', '#e60000', '#cc0000', '#990000', '#660000'
-  ],
+  ] as MantineColorsTuple,
   // Game-like colors
   neon: [
     '#e6ffff', '#ccffff', '#99ffff', '#66ffff', '#33ffff',
     '#00ffff', '#00e6e6', '#00cccc', '#00b3b3', '#009999'
-  ],
+  ] as MantineColorsTuple,
   purple: [
     '#f3e5ff', '#e6ccff', '#d9b3ff', '#cc99ff', '#bf80ff',
     '#b366ff', '#a64dff', '#9933ff', '#8c1aff', '#7f00ff'
-  ],
+  ] as MantineColorsTuple,
   orange: [
     '#fff4e6', '#ffe8cc', '#ffd8a8', '#ffc284', '#ffaa60',
     '#ff9940', '#ff8800', '#e67700', '#cc6600', '#b35500'
-  ],
+  ] as MantineColorsTuple,
   green: [
     '#e6ffe6', '#ccffcc', '#99ff99', '#66ff66', '#33ff33',
     '#00ff00', '#00e600', '#00cc00', '#00b300', '#009900'
-  ],
+  ] as MantineColorsTuple,
 };
 
-// Mantine Theme Configuration
-export const mantineTheme: MantineThemeOverride = createTheme({
-  // Color scheme
+// Mantine Theme Configuration - Updated for v8
+export const mantineTheme = createTheme({
+  // Primary color
   primaryColor: 'brand',
   colors: robloxColors,
+
+  // Note: defaultColorScheme is set via MantineProvider, not in theme
 
   // Typography
   fontFamily: 'Rubik, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -91,14 +94,14 @@ export const mantineTheme: MantineThemeOverride = createTheme({
     xl: '0 16px 48px rgba(0, 0, 0, 0.24)',
   },
 
-  // Component defaults
+  // Component defaults - Updated for Mantine v8
   components: {
     Button: {
       defaultProps: {
         radius: 'md',
         size: 'md',
       },
-      styles: (theme: MantineTheme) => ({
+      styles: (theme) => ({
         root: {
           fontWeight: 600,
           textTransform: 'uppercase',
@@ -117,13 +120,11 @@ export const mantineTheme: MantineThemeOverride = createTheme({
         shadow: 'sm',
         padding: 'lg',
       },
-      styles: (theme: MantineTheme) => ({
+      styles: (theme) => ({
         root: {
           backdropFilter: 'blur(10px)',
-          background: theme.colorScheme === 'dark'
-            ? 'rgba(26, 26, 26, 0.8)'
-            : 'rgba(255, 255, 255, 0.9)',
-          border: `1px solid ${theme.colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'}`,
+          background: 'light-dark(rgba(255, 255, 255, 0.9), rgba(26, 26, 26, 0.8))',
+          border: '1px solid light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.1))',
         },
       }),
     },
@@ -132,7 +133,7 @@ export const mantineTheme: MantineThemeOverride = createTheme({
         radius: 'md',
         shadow: 'sm',
       },
-      styles: (theme: MantineTheme) => ({
+      styles: () => ({
         root: {
           backdropFilter: 'blur(8px)',
         },
@@ -142,37 +143,35 @@ export const mantineTheme: MantineThemeOverride = createTheme({
       defaultProps: {
         radius: 'xl',
       },
-      styles: {
+      styles: () => ({
         root: {
           fontWeight: 600,
           textTransform: 'uppercase',
           letterSpacing: '0.05em',
         },
-      },
+      }),
     },
     ActionIcon: {
       defaultProps: {
         radius: 'md',
       },
-      styles: {
+      styles: () => ({
         root: {
           transition: 'all 0.2s ease',
           '&:hover': {
             transform: 'scale(1.1)',
           },
         },
-      },
+      }),
     },
     TextInput: {
       defaultProps: {
         radius: 'md',
       },
-      styles: (theme: MantineTheme) => ({
+      styles: (theme) => ({
         input: {
-          backgroundColor: theme.colorScheme === 'dark'
-            ? 'rgba(255, 255, 255, 0.05)'
-            : 'rgba(0, 0, 0, 0.02)',
-          border: `1px solid ${theme.colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+          backgroundColor: 'light-dark(rgba(0, 0, 0, 0.02), rgba(255, 255, 255, 0.05))',
+          border: '1px solid light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1))',
           '&:focus': {
             borderColor: theme.colors.brand[5],
             boxShadow: `0 0 0 2px ${theme.colors.brand[1]}`,
@@ -184,12 +183,10 @@ export const mantineTheme: MantineThemeOverride = createTheme({
       defaultProps: {
         radius: 'md',
       },
-      styles: (theme: MantineTheme) => ({
+      styles: () => ({
         input: {
-          backgroundColor: theme.colorScheme === 'dark'
-            ? 'rgba(255, 255, 255, 0.05)'
-            : 'rgba(0, 0, 0, 0.02)',
-          border: `1px solid ${theme.colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+          backgroundColor: 'light-dark(rgba(0, 0, 0, 0.02), rgba(255, 255, 255, 0.05))',
+          border: '1px solid light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1))',
         },
       }),
     },
@@ -198,12 +195,10 @@ export const mantineTheme: MantineThemeOverride = createTheme({
         radius: 'lg',
         centered: true,
       },
-      styles: (theme: MantineTheme) => ({
-        modal: {
+      styles: () => ({
+        content: {
           backdropFilter: 'blur(10px)',
-          background: theme.colorScheme === 'dark'
-            ? 'rgba(26, 26, 26, 0.95)'
-            : 'rgba(255, 255, 255, 0.98)',
+          background: 'light-dark(rgba(255, 255, 255, 0.98), rgba(26, 26, 26, 0.95))',
         },
         overlay: {
           backgroundColor: 'rgba(0, 0, 0, 0.7)',
@@ -221,64 +216,34 @@ export const mantineTheme: MantineThemeOverride = createTheme({
         radius: 'xl',
         size: 'md',
       },
-      styles: {
+      styles: () => ({
         root: {
           backgroundColor: 'rgba(0, 0, 0, 0.1)',
         },
-      },
+      }),
     },
     Alert: {
       defaultProps: {
         radius: 'md',
       },
-      styles: {
+      styles: () => ({
         root: {
           backdropFilter: 'blur(8px)',
         },
-      },
+      }),
     },
     Notification: {
       defaultProps: {
         radius: 'md',
       },
-      styles: {
+      styles: () => ({
         root: {
           backdropFilter: 'blur(10px)',
           boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
         },
-      },
+      }),
     },
   },
-
-  // Global styles
-  globalStyles: (theme: MantineTheme) => ({
-    body: {
-      backgroundColor: theme.colorScheme === 'dark' ? '#0f0f2e' : '#f0f2ff',
-      backgroundImage: theme.colorScheme === 'dark'
-        ? 'radial-gradient(circle at 20% 50%, rgba(120, 0, 255, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(255, 0, 128, 0.15) 0%, transparent 50%)'
-        : 'radial-gradient(circle at 20% 50%, rgba(120, 0, 255, 0.05) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(255, 0, 128, 0.05) 0%, transparent 50%)',
-      minHeight: '100vh',
-    },
-    '::selection': {
-      backgroundColor: theme.colors.brand[3],
-      color: theme.white,
-    },
-    '::-webkit-scrollbar': {
-      width: '12px',
-      height: '12px',
-    },
-    '::-webkit-scrollbar-track': {
-      background: theme.colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-      borderRadius: '6px',
-    },
-    '::-webkit-scrollbar-thumb': {
-      background: theme.colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
-      borderRadius: '6px',
-      '&:hover': {
-        background: theme.colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
-      },
-    },
-  }),
 
   // Other theme properties
   other: {
@@ -356,8 +321,8 @@ export const themeUtils = {
   },
 };
 
-// Export themed components helpers
-export const getThemedStyles = (theme: MantineTheme) => ({
+// Export themed components helpers - Updated for Mantine v8
+export const getThemedStyles = (theme: any) => ({
   glowEffect: (color: string = theme.colors.brand[5]) => ({
     boxShadow: `0 0 20px ${themeUtils.hexToRgba(color, 0.5)}`,
     '&:hover': {
@@ -366,9 +331,7 @@ export const getThemedStyles = (theme: MantineTheme) => ({
   }),
 
   gameCard: {
-    background: theme.colorScheme === 'dark'
-      ? 'linear-gradient(135deg, rgba(26, 26, 26, 0.9) 0%, rgba(10, 10, 10, 0.9) 100%)'
-      : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(245, 245, 255, 0.9) 100%)',
+    background: 'light-dark(linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(245, 245, 255, 0.9) 100%), linear-gradient(135deg, rgba(26, 26, 26, 0.9) 0%, rgba(10, 10, 10, 0.9) 100%))',
     backdropFilter: 'blur(10px)',
     border: `2px solid ${theme.colors.brand[5]}`,
     borderRadius: theme.radius.lg,
@@ -391,6 +354,75 @@ export const getThemedStyles = (theme: MantineTheme) => ({
     borderImageSource: `linear-gradient(45deg, ${theme.colors.brand[5]} 0%, ${theme.colors.neon[5]} 50%, ${theme.colors.purple[5]} 100%)`,
   },
 });
+
+// Global styles for Mantine v8 - Use with CSS-in-JS or import in your App
+export const globalStyles = {
+  body: {
+    backgroundColor: 'light-dark(#f0f2ff, #0f0f2e)',
+    backgroundImage: 'light-dark(radial-gradient(circle at 20% 50%, rgba(120, 0, 255, 0.05) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(255, 0, 128, 0.05) 0%, transparent 50%), radial-gradient(circle at 20% 50%, rgba(120, 0, 255, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(255, 0, 128, 0.15) 0%, transparent 50%))',
+    minHeight: '100vh',
+  },
+  '::selection': {
+    backgroundColor: 'var(--mantine-color-brand-3)',
+    color: 'var(--mantine-color-white)',
+  },
+  '::-webkit-scrollbar': {
+    width: '12px',
+    height: '12px',
+  },
+  '::-webkit-scrollbar-track': {
+    background: 'light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.05))',
+    borderRadius: '6px',
+  },
+  '::-webkit-scrollbar-thumb': {
+    background: 'light-dark(rgba(0, 0, 0, 0.2), rgba(255, 255, 255, 0.2))',
+    borderRadius: '6px',
+    '&:hover': {
+      background: 'light-dark(rgba(0, 0, 0, 0.3), rgba(255, 255, 255, 0.3))',
+    },
+  },
+} as const;
+
+// CSS string version for easy injection
+export const globalStylesCSS = `
+  body {
+    background-color: light-dark(#f0f2ff, #0f0f2e);
+    background-image: light-dark(
+      radial-gradient(circle at 20% 50%, rgba(120, 0, 255, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(255, 0, 128, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 20% 50%, rgba(120, 0, 255, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(255, 0, 128, 0.15) 0%, transparent 50%)
+    );
+    min-height: 100vh;
+  }
+
+  ::selection {
+    background-color: var(--mantine-color-brand-3);
+    color: var(--mantine-color-white);
+  }
+
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.05));
+    border-radius: 6px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: light-dark(rgba(0, 0, 0, 0.2), rgba(255, 255, 255, 0.2));
+    border-radius: 6px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: light-dark(rgba(0, 0, 0, 0.3), rgba(255, 255, 255, 0.3));
+  }
+`;
+
+// Named export for the theme
+export const theme = mantineTheme;
 
 // Export default theme
 export default mantineTheme;

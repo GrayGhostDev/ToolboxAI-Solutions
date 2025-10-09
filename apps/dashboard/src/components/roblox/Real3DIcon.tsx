@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Box, Text, useMantineTheme } from '@mantine/core';
-import { keyframes } from '@mantine/core';
 import { Procedural3DIcon } from './Procedural3DIcon';
 
 interface Real3DIconProps {
@@ -11,22 +10,24 @@ interface Real3DIconProps {
   description?: string;
 }
 
-// Animations
-const floatAnimation = keyframes`
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-3px) rotate(2deg); }
-`;
+// CSS animations defined in a style tag
+const animationStyles = `
+  @keyframes float-animation {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-3px) rotate(2deg); }
+  }
 
-const pulseAnimation = keyframes`
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-`;
+  @keyframes pulse-animation {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
 
-const glowAnimation = keyframes`
-  0% { box-shadow: 0 0 5px currentColor; }
-  50% { box-shadow: 0 0 20px currentColor, 0 0 30px currentColor; }
-  100% { box-shadow: 0 0 5px currentColor; }
+  @keyframes glow-animation {
+    0% { box-shadow: 0 0 5px currentColor; }
+    50% { box-shadow: 0 0 20px currentColor, 0 0 30px currentColor; }
+    100% { box-shadow: 0 0 5px currentColor; }
+  }
 `;
 
 // Mantine-compatible styled component approach
@@ -50,7 +51,7 @@ const getIconContainerStyles = (theme: any, size: string) => {
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     position: 'relative',
     overflow: 'hidden',
-    animation: `${floatAnimation} 3s ease-in-out infinite`,
+    animation: 'float-animation 3s ease-in-out infinite',
     ...sizeStyles[size as keyof typeof sizeStyles]
   };
 };
@@ -71,7 +72,7 @@ function createParticleEffect(x: number, y: number, type: string) {
     particle.style.borderRadius = type === 'confetti' ? '2px' : '50%';
     particle.style.pointerEvents = 'none';
     particle.style.zIndex = '9999';
-    particle.style.boxShadow = `0 0 10px currentColor`;
+    particle.style.boxShadow = '0 0 10px currentColor';
 
     const angle = (i / particleCount) * Math.PI * 2;
     const velocity = 5 + Math.random() * 5;
@@ -297,7 +298,7 @@ const iconMap: { [key: string]: {
   },
 };
 
-export const Real3DIcon: React.FunctionComponent<Real3DIconProps> = ({
+export const Real3DIcon: React.FunctionComponent<Real3DIconProps> = memo(({
   iconName,
   size = 'medium',
   animated = true,
@@ -306,6 +307,17 @@ export const Real3DIcon: React.FunctionComponent<Real3DIconProps> = ({
 }) => {
   const theme = useMantineTheme();
   const [isHovered, setIsHovered] = useState(false);
+
+  // Inject animation styles once
+  React.useEffect(() => {
+    const styleId = 'real3d-icon-animations';
+    if (!document.getElementById(styleId)) {
+      const styleElement = document.createElement('style');
+      styleElement.id = styleId;
+      styleElement.innerHTML = animationStyles;
+      document.head.appendChild(styleElement);
+    }
+  }, []);
 
   // Map icon names like ROCKET_1 to ROCKET
   const cleanIconName = iconName.replace(/_\d+$/, '');
@@ -373,4 +385,12 @@ export const Real3DIcon: React.FunctionComponent<Real3DIconProps> = ({
       )}
     </Box>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison for memo optimization
+  return (
+    prevProps.iconName === nextProps.iconName &&
+    prevProps.size === nextProps.size &&
+    prevProps.animated === nextProps.animated &&
+    prevProps.description === nextProps.description
+  );
+});

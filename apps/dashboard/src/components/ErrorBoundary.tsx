@@ -5,7 +5,7 @@
  * logs errors, and displays a fallback UI
  */
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 import {
   Box,
   Container,
@@ -262,7 +262,21 @@ function ErrorFallback({
   isRecovering,
   errorCount,
 }: ErrorFallbackProps) {
-  const theme = useMantineTheme();
+  // Use a safe theme access that doesn't depend on Mantine context
+  let theme: any;
+  try {
+    theme = useMantineTheme();
+  } catch {
+    // Fallback theme when Mantine context is not available
+    theme = {
+      colors: {
+        red: ['#fff5f5', '#fed7d7', '#feb2b2', '#fc8181', '#f56565', '#e53e3e', '#c53030', '#9b2c2c', '#742a2a', '#2d1b1b'],
+        gray: ['#f7fafc', '#edf2f7', '#e2e8f0', '#cbd5e0', '#a0aec0', '#718096', '#4a5568', '#2d3748', '#1a202c', '#171923'],
+        green: ['#f0fff4', '#c6f6d5', '#9ae6b4', '#68d391', '#48bb78', '#38a169', '#2f855a', '#276749', '#22543d', '#1c4532']
+      },
+      radius: { sm: 4 }
+    };
+  }
 
   // Different layouts based on error level
   if (level === 'page') {

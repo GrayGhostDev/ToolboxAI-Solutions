@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from 'react';
 import {
   Card,
   Text,
@@ -18,7 +18,7 @@ import {
   Loader
 } from '@mantine/core';
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
 import {
   IconPlus,
   IconSearch,
@@ -28,14 +28,15 @@ import {
   IconEdit,
   IconTrash,
   IconEye
-} from "@tabler/icons-react";
-import { useAppDispatch, useAppSelector } from "../../store";
-import { addNotification } from "../../store/slices/uiSlice";
-import { setClasses, removeClass, setClassOnlineStatus } from "../../store/slices/classesSlice";
-import { listClasses, createClass, updateClass, deleteClass } from "../../services/api";
-import { getClassDetailsRoute } from "../../config/routes";
-import CreateClassDialog from "../dialogs/CreateClassDialog";
-import StudentProgressTracker from "../widgets/StudentProgressTracker";
+} from '@tabler/icons-react';
+import { useAppDispatch, useAppSelector } from '../../store';
+import { addNotification } from '../../store/slices/uiSlice';
+import { setClasses, removeClass, setClassOnlineStatus } from '../../store/slices/classesSlice';
+import { listClasses, createClass, updateClass, deleteClass } from '../../services/api';
+import { getClassDetailsRoute } from '../../config/routes';
+import CreateClassDialog from '../dialogs/CreateClassDialog';
+import StudentProgressTracker from '../widgets/StudentProgressTracker';
+import { useApiCallOnMount } from '../../hooks/useApiCall';
 interface ClassCardData {
   id: string;
   name: string;
@@ -53,22 +54,128 @@ export default function Classes() {
   const navigate = useNavigate();
   const role = useAppSelector((s) => s.user.role);
   const [classes, setClasses] = React.useState<ClassCardData[]>([]);
-  const [loading, setLoading] = React.useState(false);
-  const [searchTerm, setSearchTerm] = React.useState("");
+  const [searchTerm, setSearchTerm] = React.useState('');
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [selectedClass, setSelectedClass] = React.useState<ClassCardData | null>(null);
   const [createClassOpen, setCreateClassOpen] = React.useState(false);
   const [editClassOpen, setEditClassOpen] = React.useState(false);
   const [editingClass, setEditingClass] = React.useState<ClassCardData | null>(null);
   // Filter states
-  const [filterGrade, setFilterGrade] = React.useState<string>("all");
-  const [filterStatus, setFilterStatus] = React.useState<string>("all");
-  const [sortBy, setSortBy] = React.useState<string>("name");
+  const [filterGrade, setFilterGrade] = React.useState<string>('all');
+  const [filterStatus, setFilterStatus] = React.useState<string>('all');
+  const [sortBy, setSortBy] = React.useState<string>('name');
+
+  // Use the API hook for fetching classes
+  const { data: classesData, loading, error } = useApiCallOnMount(
+    listClasses,
+    { mockEndpoint: '/classes', showNotification: false }
+  );
+
   React.useEffect(() => {
-    fetchClasses();
-  }, []);
+    if (classesData) {
+      transformAndSetClasses(classesData);
+    }
+  }, [classesData]);
+
+  const transformAndSetClasses = (data: any) => {
+    // Handle both mock data format and API response format
+    const transformedClasses: ClassCardData[] = data.classes?.map((classItem: any) => ({
+      id: classItem.id,
+      name: classItem.name,
+      grade: classItem.grade || classItem.grade_level || 0,
+      studentCount: classItem.students || classItem.student_count || classItem.studentCount || 0,
+      schedule: classItem.schedule || classItem.teacher || 'Schedule not set',
+      averageXP: classItem.averageXP || Math.round((classItem.progress || classItem.average_progress || 0.75) * 100),
+      completionRate: classItem.progress || classItem.completion_rate || 75,
+      nextLesson: classItem.next_lesson || classItem.next_session || 'No upcoming lessons',
+      isOnline: classItem.is_online || classItem.status === 'active' || false,
+      studentAvatars: classItem.student_avatars || [],
+    })) || [];
+
+    setClasses(transformedClasses);
+    dispatch(setClasses(transformedClasses));
+  };
+
+  // Show error notification if there's an error
+  React.useEffect(() => {
+    if (error) {
+      dispatch(
+        addNotification({
+          type: 'error',
+          message: 'Failed to load classes. Please try again.',
+        })
+      );
+    }
+  }, [error, dispatch]);
+
   const fetchClasses = async () => {
     setLoading(true);
+
+    // Check if we're in bypass mode
+    const bypassAuth = import.meta.env.VITE_BYPASS_AUTH === 'true';
+    const useMockData = import.meta.env.VITE_USE_MOCK_DATA === 'true';
+
+    if (bypassAuth || useMockData) {
+      // Use mock data in bypass mode
+      const mockClasses = [
+        {
+          id: 'class-001',
+          name: 'Introduction to Programming',
+          grade: 6,
+          student_count: 24,
+          schedule: 'Mon/Wed/Fri 10:00 AM',
+          average_progress: 0.78,
+          completion_rate: 0.85,
+          next_session: 'Variables & Data Types',
+          is_online: true,
+          student_avatars: ['/avatars/1.png', '/avatars/2.png', '/avatars/3.png']
+        },
+        {
+          id: 'class-002',
+          name: 'Advanced Robotics',
+          grade: 8,
+          student_count: 18,
+          schedule: 'Tue/Thu 2:00 PM',
+          average_progress: 0.65,
+          completion_rate: 0.72,
+          next_session: 'Servo Motor Control',
+          is_online: false,
+          student_avatars: ['/avatars/4.png', '/avatars/5.png']
+        },
+        {
+          id: 'class-003',
+          name: 'Game Design Basics',
+          grade: 7,
+          student_count: 30,
+          schedule: 'Mon/Wed 1:00 PM',
+          average_progress: 0.92,
+          completion_rate: 0.88,
+          next_session: 'Level Design Principles',
+          is_online: true,
+          student_avatars: ['/avatars/1.png', '/avatars/3.png', '/avatars/5.png']
+        }
+      ];
+
+      // Transform mock data to match component interface
+      const transformedClasses: ClassCardData[] = mockClasses.map((classItem: any) => ({
+        id: classItem.id,
+        name: classItem.name,
+        grade: classItem.grade,
+        studentCount: classItem.student_count,
+        schedule: classItem.schedule,
+        averageXP: Math.round(classItem.average_progress * 1000),
+        completionRate: classItem.completion_rate * 100,
+        nextLesson: classItem.next_session,
+        isOnline: classItem.is_online,
+        studentAvatars: classItem.student_avatars
+      }));
+
+      setClasses(transformedClasses);
+      dispatch(setClasses(transformedClasses));
+      setLoading(false);
+      return;
+    }
+
     try {
       const data = await listClasses();
       // Transform API response to match component interface
@@ -76,7 +183,7 @@ export default function Classes() {
         // Calculate progress based on available data or use defaults
         const progressValue = classItem.average_progress || classItem.progress || 0.75; // Default 75% progress
         // Format next session into readable lesson string
-        let nextLessonText = "No upcoming lessons";
+        let nextLessonText = 'No upcoming lessons';
         if (classItem.next_session) {
           const nextDate = new Date(classItem.next_session);
           nextLessonText = `Next: ${nextDate.toLocaleDateString()} at ${nextDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
@@ -88,19 +195,19 @@ export default function Classes() {
           name: classItem.name,
           grade: classItem.grade_level || classItem.grade || 0,
           studentCount: classItem.student_count || classItem.studentCount || 0,
-          schedule: classItem.schedule || "Schedule not set",
+          schedule: classItem.schedule || 'Schedule not set',
           averageXP: Math.round(progressValue * 100),
           completionRate: progressValue * 100,
           nextLesson: nextLessonText,
-          isOnline: classItem.is_online || classItem.status === "active" || false,
+          isOnline: classItem.is_online || classItem.status === 'active' || false,
           studentAvatars: classItem.student_avatars || [], // Will be populated when we have student endpoints
         };
       });
       setClasses(transformedClasses);
     } catch (error: any) {
-      console.error("Failed to fetch classes:", error);
+      console.error('Failed to fetch classes:', error);
       const errorDetail = error.response?.data?.detail;
-      let errorMessage = "Failed to load classes. Please try again.";
+      let errorMessage = 'Failed to load classes. Please try again.';
       if (typeof errorDetail === 'string') {
         errorMessage = errorDetail;
       } else if (Array.isArray(errorDetail)) {
@@ -111,7 +218,7 @@ export default function Classes() {
       }
       dispatch(
         addNotification({
-          type: "error",
+          type: 'error',
           message: errorMessage,
         })
       );
@@ -132,7 +239,7 @@ export default function Classes() {
     console.log('Pushing to Roblox:', classData);
     dispatch(
       addNotification({
-        type: "info",
+        type: 'info',
         message: `Preparing Roblox environment for "${classData.name}"...`,
       })
     );
@@ -140,7 +247,7 @@ export default function Classes() {
     setTimeout(() => {
       dispatch(
         addNotification({
-          type: "success",
+          type: 'success',
           message: `Class "${classData.name}" is ready in Roblox!`,
         })
       );
@@ -160,7 +267,7 @@ export default function Classes() {
         await deleteClass(classData.id);
         dispatch(
           addNotification({
-            type: "success",
+            type: 'success',
             message: `Class "${classData.name}" deleted successfully`,
           })
         );
@@ -169,7 +276,7 @@ export default function Classes() {
         console.error('Error deleting class:', error);
         dispatch(
           addNotification({
-            type: "error",
+            type: 'error',
             message: error.response?.data?.detail || 'Failed to delete class',
           })
         );
@@ -179,32 +286,32 @@ export default function Classes() {
   };
   // Apply filters
   const filteredClasses = React.useMemo(() => {
-    let filtered = classes.filter((c) => {
+    const filtered = classes.filter((c) => {
       // Search filter
       if (searchTerm && !c.name.toLowerCase().includes(searchTerm.toLowerCase())) {
         return false;
       }
       // Grade filter
-      if (filterGrade !== "all" && c.grade.toString() !== filterGrade) {
+      if (filterGrade !== 'all' && c.grade.toString() !== filterGrade) {
         return false;
       }
       // Status filter
-      if (filterStatus !== "all") {
-        if (filterStatus === "online" && !c.isOnline) return false;
-        if (filterStatus === "offline" && c.isOnline) return false;
+      if (filterStatus !== 'all') {
+        if (filterStatus === 'online' && !c.isOnline) return false;
+        if (filterStatus === 'offline' && c.isOnline) return false;
       }
       return true;
     });
     // Apply sorting
     filtered.sort((a, b) => {
       switch (sortBy) {
-        case "name":
+        case 'name':
           return a.name.localeCompare(b.name);
-        case "grade":
+        case 'grade':
           return a.grade - b.grade;
-        case "students":
+        case 'students':
           return b.studentCount - a.studentCount;
-        case "progress":
+        case 'progress':
           return b.completionRate - a.completionRate;
         default:
           return 0;
@@ -219,14 +326,14 @@ export default function Classes() {
         <Card>
           <Stack
             justify="space-between"
-            align={{ base: "flex-start", md: "center" }}
+            align={{ base: 'flex-start', md: 'center' }}
             gap="md"
-            style={{ flexDirection: "row", flexWrap: "wrap" }}
+            style={{ flexDirection: 'row', flexWrap: 'wrap' }}
           >
             <Text size="xl" fw={600}>
               My Classes
             </Text>
-            <Group gap="md" style={{ flexWrap: "wrap" }}>
+            <Group gap="md" style={{ flexWrap: 'wrap' }}>
               <TextInput
                 size="sm"
                 placeholder="Search classes..."
@@ -240,21 +347,21 @@ export default function Classes() {
                 size="sm"
                 placeholder="Grade"
                 value={filterGrade}
-                onChange={(value) => setFilterGrade(value || "all")}
+                onChange={(value) => setFilterGrade(value || 'all')}
                 data={[
-                  { value: "all", label: "All Grades" },
-                  { value: "1", label: "Grade 1" },
-                  { value: "2", label: "Grade 2" },
-                  { value: "3", label: "Grade 3" },
-                  { value: "4", label: "Grade 4" },
-                  { value: "5", label: "Grade 5" },
-                  { value: "6", label: "Grade 6" },
-                  { value: "7", label: "Grade 7" },
-                  { value: "8", label: "Grade 8" },
-                  { value: "9", label: "Grade 9" },
-                  { value: "10", label: "Grade 10" },
-                  { value: "11", label: "Grade 11" },
-                  { value: "12", label: "Grade 12" },
+                  { value: 'all', label: 'All Grades' },
+                  { value: '1', label: 'Grade 1' },
+                  { value: '2', label: 'Grade 2' },
+                  { value: '3', label: 'Grade 3' },
+                  { value: '4', label: 'Grade 4' },
+                  { value: '5', label: 'Grade 5' },
+                  { value: '6', label: 'Grade 6' },
+                  { value: '7', label: 'Grade 7' },
+                  { value: '8', label: 'Grade 8' },
+                  { value: '9', label: 'Grade 9' },
+                  { value: '10', label: 'Grade 10' },
+                  { value: '11', label: 'Grade 11' },
+                  { value: '12', label: 'Grade 12' },
                 ]}
                 style={{ minWidth: 120 }}
                 data-testid="grade-filter"
@@ -263,11 +370,11 @@ export default function Classes() {
                 size="sm"
                 placeholder="Status"
                 value={filterStatus}
-                onChange={(value) => setFilterStatus(value || "all")}
+                onChange={(value) => setFilterStatus(value || 'all')}
                 data={[
-                  { value: "all", label: "All Status" },
-                  { value: "online", label: "Online" },
-                  { value: "offline", label: "Offline" },
+                  { value: 'all', label: 'All Status' },
+                  { value: 'online', label: 'Online' },
+                  { value: 'offline', label: 'Offline' },
                 ]}
                 style={{ minWidth: 120 }}
                 data-testid="status-filter"
@@ -276,17 +383,17 @@ export default function Classes() {
                 size="sm"
                 placeholder="Sort By"
                 value={sortBy}
-                onChange={(value) => setSortBy(value || "name")}
+                onChange={(value) => setSortBy(value || 'name')}
                 data={[
-                  { value: "name", label: "Name" },
-                  { value: "grade", label: "Grade" },
-                  { value: "students", label: "Students" },
-                  { value: "progress", label: "Progress" },
+                  { value: 'name', label: 'Name' },
+                  { value: 'grade', label: 'Grade' },
+                  { value: 'students', label: 'Students' },
+                  { value: 'progress', label: 'Progress' },
                 ]}
                 style={{ minWidth: 120 }}
                 data-testid="sort-by"
               />
-              {role === "teacher" && (
+              {role === 'teacher' && (
                 <Button
                   leftSection={<IconPlus size={16} />}
                   onClick={() => setCreateClassOpen(true)}
@@ -385,14 +492,14 @@ export default function Classes() {
             <Card
               data-testid="class-card"
               style={{
-                height: "100%",
-                transition: "all 0.3s ease",
-                cursor: "pointer",
+                height: '100%',
+                transition: 'all 0.3s ease',
+                cursor: 'pointer',
               }}
               onClick={() => navigate(`/classes/${classData.id}`)}
               __hover={{
-                transform: "translateY(-4px)",
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                transform: 'translateY(-4px)',
+                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
               }}
             >
               <Stack gap="md">
@@ -473,7 +580,7 @@ export default function Classes() {
                   style={{
                     padding: 12,
                     borderRadius: 8,
-                    backgroundColor: "var(--mantine-color-gray-0)",
+                    backgroundColor: 'var(--mantine-color-gray-0)',
                   }}
                 >
                   <Text size="xs" c="dimmed">
@@ -587,7 +694,7 @@ export default function Classes() {
             // Calculate progress based on available data or use defaults
             const progressValue = newClassAny.average_progress || newClassAny.progress || 0.0; // New class starts at 0%
             // Format next session into readable lesson string
-            let nextLessonText = "No upcoming lessons";
+            let nextLessonText = 'No upcoming lessons';
             if (newClassAny.next_session) {
               const nextDate = new Date(newClassAny.next_session);
               nextLessonText = `Next: ${nextDate.toLocaleDateString()} at ${nextDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
@@ -600,17 +707,17 @@ export default function Classes() {
               name: newClassAny.name,
               grade: newClassAny.grade_level ?? newClassAny.grade ?? 0,
               studentCount: newClassAny.student_count ?? newClassAny.studentCount ?? 0,
-              schedule: newClassAny.schedule || "Schedule not set",
+              schedule: newClassAny.schedule || 'Schedule not set',
               averageXP: Math.round(progressValue * 100),
               completionRate: progressValue * 100,
               nextLesson: nextLessonText,
-              isOnline: newClassAny.is_online ?? newClassAny.status === "active" ?? false,
+              isOnline: newClassAny.is_online ?? newClassAny.status === 'active' ?? false,
               studentAvatars: newClassAny.student_avatars || [],
             };
             setClasses(prev => [transformedClass, ...prev]);
             dispatch(
               addNotification({
-                type: "success",
+                type: 'success',
                 message: `Class "${classData.name}" created successfully!`,
               })
             );
@@ -622,7 +729,7 @@ export default function Classes() {
             const errorMessage = error.response?.data?.detail || 'Failed to create class';
             dispatch(
               addNotification({
-                type: "error",
+                type: 'error',
                 message: errorMessage,
               })
             );
@@ -678,7 +785,7 @@ export default function Classes() {
               setClasses(prev => prev.map(c => c.id === editingClass.id ? transformedClass : c));
               dispatch(
                 addNotification({
-                  type: "success",
+                  type: 'success',
                   message: `Class "${classData.name}" updated successfully!`,
                 })
               );
@@ -691,7 +798,7 @@ export default function Classes() {
               const errorMessage = error.response?.data?.detail || 'Failed to update class';
               dispatch(
                 addNotification({
-                  type: "error",
+                  type: 'error',
                   message: errorMessage,
                 })
               );
@@ -702,7 +809,7 @@ export default function Classes() {
         />
       )}
       {/* Student Progress Tracker for Teachers */}
-      {role === "teacher" && (
+      {role === 'teacher' && (
         <Grid.Col span={12}>
           <Text size="lg" mb="md" fw={600}>
             Student Progress Tracker

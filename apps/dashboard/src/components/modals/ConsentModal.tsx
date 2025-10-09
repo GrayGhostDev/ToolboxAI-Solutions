@@ -1,14 +1,14 @@
-import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
-import * as React from "react";
-import { recordConsent } from "../../services/api";
-import { useAppSelector } from "../../store";
+import { Modal, Button, Text, Stack, Group, Checkbox, Alert } from '@mantine/core';
+import * as React from 'react';
+import { recordConsent } from '../../services/api';
+import { useAppSelector } from '../../store';
 
 interface Props {
-  open: boolean;
+  opened: boolean;
   onClose: (accepted: boolean) => void;
 }
 
-export function ConsentModal({ open, onClose }: Props) {
+export function ConsentModal({ opened, onClose }: Props) {
   const [coppaChecked, setCoppaChecked] = React.useState(false);
   const [ferpaChecked, setFerpaChecked] = React.useState(false);
   const [gdprChecked, setGdprChecked] = React.useState(false);
@@ -23,114 +23,106 @@ export function ConsentModal({ open, onClose }: Props) {
     setLoading(true);
     try {
       await Promise.all([
-        recordConsent("coppa", userId),
-        recordConsent("ferpa", userId),
-        recordConsent("gdpr", userId),
+        recordConsent('coppa', userId),
+        recordConsent('ferpa', userId),
+        recordConsent('gdpr', userId),
       ]);
       onClose(true);
     } catch (error) {
-      console.error("Failed to record consent:", error);
+      console.error('Failed to record consent:', error);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Dialog
-      open={open}
+    <Modal
+      opened={opened}
       onClose={() => onClose(false)}
-      aria-labelledby="consent-title"
-      maxWidth="sm"
-      fullWidth
+      title="Parental Consent & Privacy Agreement"
+      size="md"
     >
-      <DialogTitle id="consent-title">Parental Consent & Privacy Agreement</DialogTitle>
-      <DialogContent>
-        <Alert severity="info" style={{ mb: 3 }}>
+      <Stack gap="md">
+        <Alert color="blue">
           To ensure the safety and privacy of students, we require parental consent in compliance
           with educational privacy laws.
         </Alert>
 
-        <Stack spacing={2}>
-          <Typography size="sm" style={{ fontWeight: 600 }}>
-            Please review and accept the following:
-          </Typography>
+        <Text size="sm" fw={600}>
+          Please review and accept the following:
+        </Text>
 
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={coppaChecked}
-                onChange={(e) => setCoppaChecked(e.target.checked)}
-              />
-            }
+        <Stack gap="sm">
+          <Checkbox
+            checked={coppaChecked}
+            onChange={(event) => setCoppaChecked(event.currentTarget.checked)}
             label={
-              <Stack>
-                <Typography size="sm" style={{ fontWeight: 500 }}>
+              <Stack gap="xs">
+                <Text size="sm" fw={500}>
                   COPPA Compliance (Children's Online Privacy Protection Act)
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
+                </Text>
+                <Text size="xs" c="dimmed">
                   I am a parent/guardian and consent to my child's participation in accordance with
                   COPPA regulations for children under 13.
-                </Typography>
+                </Text>
               </Stack>
             }
           />
 
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={ferpaChecked}
-                onChange={(e) => setFerpaChecked(e.target.checked)}
-              />
-            }
+          <Checkbox
+            checked={ferpaChecked}
+            onChange={(event) => setFerpaChecked(event.currentTarget.checked)}
             label={
-              <Stack>
-                <Typography size="sm" style={{ fontWeight: 500 }}>
+              <Stack gap="xs">
+                <Text size="sm" fw={500}>
                   FERPA Compliance (Family Educational Rights and Privacy Act)
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
+                </Text>
+                <Text size="xs" c="dimmed">
                   I understand and consent to the educational record keeping and sharing practices
                   as outlined in our FERPA policy.
-                </Typography>
+                </Text>
               </Stack>
             }
           />
 
-          <FormControlLabel
-            control={
-              <Checkbox checked={gdprChecked} onChange={(e) => setGdprChecked(e.target.checked)} />
-            }
+          <Checkbox
+            checked={gdprChecked}
+            onChange={(event) => setGdprChecked(event.currentTarget.checked)}
             label={
-              <Stack>
-                <Typography size="sm" style={{ fontWeight: 500 }}>
+              <Stack gap="xs">
+                <Text size="sm" fw={500}>
                   GDPR Compliance (General Data Protection Regulation)
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
+                </Text>
+                <Text size="xs" c="dimmed">
                   I consent to the processing of personal data in accordance with GDPR requirements
                   and understand my rights regarding data protection.
-                </Typography>
+                </Text>
               </Stack>
             }
           />
         </Stack>
 
-        <Typography variant="caption" color="text.secondary" style={{ mt: 3, display: "block" }}>
+        <Text size="xs" c="dimmed">
           By accepting, you confirm that you have read and understood our
           <a href="/privacy.html" target="_blank" rel="noopener noreferrer"> Privacy Policy</a>
           &nbsp;and
           <a href="/terms.html" target="_blank" rel="noopener noreferrer"> Terms of Service</a>.
           You can withdraw consent at any time through your account settings.
-        </Typography>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={(e: React.MouseEvent) => () => onClose(false)}>Cancel</Button>
-        <Button
-          disabled={!allChecked || loading}
-          variant="filled"
-          onClick={(e: React.MouseEvent) => handleAccept}
-        >
-          {loading ? "Processing..." : "Accept & Continue"}
-        </Button>
-      </DialogActions>
-    </Dialog>
+        </Text>
+
+        <Group justify="flex-end" gap="sm">
+          <Button variant="outline" onClick={() => onClose(false)}>
+            Cancel
+          </Button>
+          <Button
+            disabled={!allChecked || loading}
+            loading={loading}
+            onClick={handleAccept}
+          >
+            {loading ? 'Processing...' : 'Accept & Continue'}
+          </Button>
+        </Group>
+      </Stack>
+    </Modal>
   );
 }

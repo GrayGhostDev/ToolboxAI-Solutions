@@ -1,16 +1,16 @@
-import * as React from "react";
-import { notifications } from "@mantine/notifications";
-import { PUSHER_ENABLED } from "../../config";
-import { usePusherChannel } from "../../hooks/usePusherEvents";
-import { IconSchool, IconTrophy, IconAlertCircle } from "@tabler/icons-react";
+import * as React from 'react';
+import { notifications } from '@mantine/notifications';
+import { PUSHER_ENABLED } from '../../config';
+import { usePusherChannel } from '../../hooks/usePusherEvents';
+import { IconSchool, IconTrophy, IconAlertCircle } from '@tabler/icons-react';
 
 export default function RealtimeToast() {
   // Pusher event handlers
   const handleClassOnline = React.useCallback((data: any) => {
     notifications.show({
-      title: "Class Online",
+      title: 'Class Online',
       message: `Class "${data?.className || 'Unknown'}" is now online!`,
-      color: "blue",
+      color: 'blue',
       icon: <IconSchool size={20} />,
       autoClose: 6000,
     });
@@ -18,9 +18,9 @@ export default function RealtimeToast() {
 
   const handleAchievementUnlocked = React.useCallback((data: any) => {
     notifications.show({
-      title: "Achievement Unlocked",
+      title: 'Achievement Unlocked',
       message: data?.message || 'Achievement unlocked!',
-      color: "green",
+      color: 'green',
       icon: <IconTrophy size={20} />,
       autoClose: 6000,
     });
@@ -28,9 +28,9 @@ export default function RealtimeToast() {
 
   const handleAssignmentReminder = React.useCallback((data: any) => {
     notifications.show({
-      title: "Assignment Reminder",
+      title: 'Assignment Reminder',
       message: data?.message || 'Assignment due soon',
-      color: "yellow",
+      color: 'yellow',
       icon: <IconAlertCircle size={20} />,
       autoClose: 6000,
     });

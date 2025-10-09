@@ -187,5 +187,74 @@ async def logout():
     # For now, just return success
     return {"message": "Successfully logged out"}
 
+@auth_router.post("/demo-login")
+async def demo_login(role: str = "teacher"):
+    """
+    Demo login endpoint for development - bypasses authentication.
+
+    Args:
+        role (str): The role to use for the demo user (admin, teacher, student, parent)
+
+    Returns:
+        dict: Authentication response with demo token
+
+    Example:
+        POST /api/v1/auth/demo-login?role=teacher
+    """
+    # Map role to demo user
+    role_to_user = {
+        "admin": {
+            "username": "admin_demo",
+            "email": "admin@demo.com",
+            "displayName": "Demo Admin",
+            "role": "admin",
+            "id": 1
+        },
+        "teacher": {
+            "username": "teacher_demo",
+            "email": "teacher@demo.com",
+            "displayName": "Demo Teacher",
+            "role": "teacher",
+            "id": 2
+        },
+        "student": {
+            "username": "student_demo",
+            "email": "student@demo.com",
+            "displayName": "Demo Student",
+            "role": "student",
+            "id": 3
+        },
+        "parent": {
+            "username": "parent_demo",
+            "email": "parent@demo.com",
+            "displayName": "Demo Parent",
+            "role": "parent",
+            "id": 4
+        }
+    }
+
+    # Get the demo user based on role
+    demo_user = role_to_user.get(role, role_to_user["teacher"])
+
+    # Create access token for demo user
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={
+            "sub": demo_user["username"],
+            "role": demo_user["role"],
+            "user_id": demo_user["id"]
+        },
+        expires_delta=access_token_expires
+    )
+
+    # Return token with user information
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        "role": demo_user["role"],
+        "user": demo_user
+    }
+
 # Export router with the expected name
 router = auth_router

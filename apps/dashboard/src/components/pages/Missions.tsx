@@ -66,6 +66,7 @@ import {
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../store";
 import { Mission, MissionProgress, Challenge } from "../../types/api";
+import { useApiCall, useApiCallOnMount } from "../../hooks/useApiCall";
 const categoryIcons = {
   academic: <IconSchool />,
   social: <IconUsers />,
@@ -98,10 +99,28 @@ const Missions: React.FunctionComponent<Record<string, any>> = () => {
   const { role, userId } = useSelector((state: RootState) => state.user);
   const { xp, level } = useSelector((state: RootState) => state.gamification);
   const [activeTab, setActiveTab] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [missions, setMissions] = useState<Mission[]>([]);
   const [missionProgress, setMissionProgress] = useState<Map<string, MissionProgress>>(new Map());
-  const [challenges, setChallenges] = useState<Challenge[]>([]);
+
+  // Fetch missions from API
+  const { data: missionsData, loading: missionsLoading, error: missionsError, refetch: refetchMissions } = useApiCallOnMount(
+    null,
+    { mockEndpoint: '/student/missions', showNotification: false }
+  );
+
+  // Fetch challenges from API
+  const { data: challengesData, loading: challengesLoading, error: challengesError, refetch: refetchChallenges } = useApiCallOnMount(
+    null,
+    { mockEndpoint: '/student/challenges', showNotification: false }
+  );
+
+  // API hooks for mutations
+  const { execute: startMissionApi } = useApiCall();
+  const { execute: claimRewardApi } = useApiCall();
+  const { execute: joinChallengeApi } = useApiCall();
+
+  const missions: Mission[] = (missionsData as Mission[]) || [];
+  const challenges: Challenge[] = (challengesData as Challenge[]) || [];
+  const loading = missionsLoading || challengesLoading;
   const [challengeFilter, setChallengeFilter] = useState<"all" | "upcoming" | "active" | "completed">("active");
   const [missionFilter, setMissionFilter] = useState<"all" | "daily" | "weekly" | "monthly" | "special">("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -110,288 +129,51 @@ const Missions: React.FunctionComponent<Record<string, any>> = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [missionDetailsOpen, setMissionDetailsOpen] = useState(false);
   const [challengeDetailsOpen, setChallengeDetailsOpen] = useState(false);
-  // Mock data for development
-  const mockMissions: Mission[] = [
-    {
-      id: "1",
-      title: "Daily Reading Quest",
-      description: "Complete today's reading lesson and answer all comprehension questions",
-      type: "daily",
-      category: "academic",
-      xpReward: 50,
-      requirements: [
-        {
-          id: "r1",
-          type: "lesson_complete",
-          target: 1,
-          current: 0,
-          description: "Complete 1 reading lesson",
-        },
-        {
-          id: "r2",
-          type: "assessment_score",
-          target: 80,
-          current: 0,
-          description: "Score at least 80% on comprehension quiz",
-        },
-      ],
-      isActive: true,
-      isRepeatable: true,
-      difficulty: "easy",
-      imageUrl: "/images/missions/reading.png",
-      createdBy: "system",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "2",
-      title: "Math Master Challenge",
-      description: "Solve 20 math problems correctly this week",
-      type: "weekly",
-      category: "academic",
-      xpReward: 200,
-      badgeReward: "math-master",
-      requirements: [
-        {
-          id: "r3",
-          type: "custom",
-          target: 20,
-          current: 12,
-          description: "Solve 20 math problems",
-        },
-      ],
-      isActive: true,
-      isRepeatable: true,
-      difficulty: "medium",
-      imageUrl: "/images/missions/math.png",
-      createdBy: "system",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "3",
-      title: "Creative Writer",
-      description: "Write and submit an original story of at least 500 words",
-      type: "monthly",
-      category: "creativity",
-      xpReward: 500,
-      badgeReward: "creative-writer",
-      requirements: [
-        {
-          id: "r4",
-          type: "custom",
-          target: 1,
-          current: 0,
-          description: "Submit an original story",
-        },
-      ],
-      isActive: true,
-      isRepeatable: false,
-      difficulty: "hard",
-      imageUrl: "/images/missions/writing.png",
-      createdBy: "teacher1",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "4",
-      title: "Team Player",
-      description: "Participate in 3 group activities this week",
-      type: "weekly",
-      category: "social",
-      xpReward: 150,
-      requirements: [
-        {
-          id: "r5",
-          type: "social_interaction",
-          target: 3,
-          current: 1,
-          description: "Join 3 group activities",
-        },
-      ],
-      isActive: true,
-      isRepeatable: true,
-      difficulty: "easy",
-      imageUrl: "/images/missions/team.png",
-      createdBy: "system",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "5",
-      title: "Halloween Special: Spooky Scholar",
-      description: "Complete all Halloween-themed lessons and earn the special badge!",
-      type: "special",
-      category: "academic",
-      xpReward: 1000,
-      badgeReward: "halloween-2024",
-      requirements: [
-        {
-          id: "r6",
-          type: "lesson_complete",
-          target: 5,
-          current: 3,
-          description: "Complete 5 Halloween lessons",
-        },
-      ],
-      startDate: "2024-10-25",
-      endDate: "2024-11-01",
-      isActive: true,
-      isRepeatable: false,
-      difficulty: "expert",
-      imageUrl: "/images/missions/halloween.png",
-      createdBy: "system",
-      createdAt: new Date().toISOString(),
-    },
-  ];
-  const mockProgress: MissionProgress[] = [
-    {
-      id: "p1",
-      missionId: "2",
-      studentId: userId || "",
-      status: "in_progress",
-      startedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      progress: 60,
-      requirementsProgress: [
-        {
-          requirementId: "r3",
-          current: 12,
-          target: 20,
-          completed: false,
-        },
-      ],
-      completionCount: 0,
-    },
-    {
-      id: "p2",
-      missionId: "4",
-      studentId: userId || "",
-      status: "in_progress",
-      startedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      progress: 33,
-      requirementsProgress: [
-        {
-          requirementId: "r5",
-          current: 1,
-          target: 3,
-          completed: false,
-        },
-      ],
-      completionCount: 0,
-    },
-    {
-      id: "p3",
-      missionId: "5",
-      studentId: userId || "",
-      status: "in_progress",
-      startedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      progress: 60,
-      requirementsProgress: [
-        {
-          requirementId: "r6",
-          current: 3,
-          target: 5,
-          completed: false,
-        },
-      ],
-      completionCount: 0,
-    },
-  ];
-  const mockChallenges: Challenge[] = [
-    {
-      id: "c1",
-      title: "Speed Math Championship",
-      description: "Solve as many math problems as possible in 5 minutes!",
-      type: "speed",
-      participants: ["user1", "user2", "user3"],
-      startTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-      endTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-      rules: [
-        "5 minutes time limit",
-        "No calculators allowed",
-        "Points based on speed and accuracy",
-      ],
-      prizes: [
-        { position: 1, xpReward: 500, badgeId: "speed-champion" },
-        { position: 2, xpReward: 300 },
-        { position: 3, xpReward: 100 },
-      ],
-      status: "upcoming",
-      createdBy: "teacher1",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "c2",
-      title: "Creative Story Contest",
-      description: "Write the most creative story based on the weekly theme",
-      type: "creativity",
-      participants: ["user1", "user4", "user5", "user6"],
-      startTime: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      endTime: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString(),
-      rules: [
-        "Story must be 300-1000 words",
-        "Must include this week's vocabulary words",
-        "Original work only",
-      ],
-      prizes: [
-        { position: 1, xpReward: 1000, badgeId: "creative-master", customReward: "Feature in school newsletter" },
-        { position: 2, xpReward: 500, customReward: "Extra library time" },
-        { position: 3, xpReward: 250 },
-      ],
-      leaderboard: [
-        { rank: 1, studentId: "user4", displayName: "Alice", score: 95, submittedAt: new Date().toISOString() },
-        { rank: 2, studentId: "user1", displayName: "You", score: 88, submittedAt: new Date().toISOString() },
-        { rank: 3, studentId: "user5", displayName: "Bob", score: 82, submittedAt: new Date().toISOString() },
-      ],
-      status: "active",
-      createdBy: "teacher2",
-      createdAt: new Date().toISOString(),
-    },
-  ];
+
+  // Load mission progress when missions data is available
   useEffect(() => {
-    loadMissionsAndChallenges();
-  }, []);
-  const loadMissionsAndChallenges = async () => {
-    setLoading(true);
-    try {
-      // In production, these would be API calls
-      setMissions(mockMissions);
+    if (missionsData && Array.isArray(missionsData)) {
+      // Extract progress from missions if it's embedded
       const progressMap = new Map<string, MissionProgress>();
-      mockProgress.forEach(p => progressMap.set(p.missionId, p));
+      // If progress is separate, we'd fetch it here
+      // For now, we'll check if missions have embedded progress
+      (missionsData as any[]).forEach(mission => {
+        if (mission.progress) {
+          progressMap.set(mission.id, mission.progress);
+        }
+      });
       setMissionProgress(progressMap);
-      setChallenges(mockChallenges);
-    } catch (error) {
-      console.error("Failed to load missions and challenges:", error);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [missionsData]);
   const handleStartMission = async (mission: Mission) => {
     try {
-      // API call to start mission
-      const newProgress: MissionProgress = {
-        id: `p${Date.now()}`,
+      const response = await startMissionApi('POST', `/student/missions/${mission.id}/start`, {
         missionId: mission.id,
-        studentId: userId || "",
-        status: "in_progress",
-        startedAt: new Date().toISOString(),
-        progress: 0,
-        requirementsProgress: mission.requirements.map(req => ({
-          requirementId: req.id,
-          current: 0,
-          target: req.target,
-          completed: false,
-        })),
-        completionCount: 0,
-      };
-      setMissionProgress(prev => new Map(prev).set(mission.id, newProgress));
+        studentId: userId,
+      });
+
+      if (response) {
+        const newProgress: MissionProgress = response as MissionProgress;
+        setMissionProgress(prev => new Map(prev).set(mission.id, newProgress));
+        // Optionally refetch missions to get updated state
+        refetchMissions();
+      }
     } catch (error) {
       console.error("Failed to start mission:", error);
     }
   };
   const handleClaimReward = async (mission: Mission) => {
     try {
-      // API call to claim reward
-      const progress = missionProgress.get(mission.id);
-      if (progress) {
-        const updatedProgress = { ...progress, status: "claimed" as const, claimedAt: new Date().toISOString() };
+      const response = await claimRewardApi('POST', `/student/missions/${mission.id}/claim`, {
+        missionId: mission.id,
+        studentId: userId,
+      });
+
+      if (response) {
+        const updatedProgress = response as MissionProgress;
         setMissionProgress(prev => new Map(prev).set(mission.id, updatedProgress));
+        // Optionally refetch to get updated XP/level
+        refetchMissions();
       }
     } catch (error) {
       console.error("Failed to claim reward:", error);
@@ -399,12 +181,15 @@ const Missions: React.FunctionComponent<Record<string, any>> = () => {
   };
   const handleJoinChallenge = async (challenge: Challenge) => {
     try {
-      // API call to join challenge
-      const updatedChallenge = {
-        ...challenge,
-        participants: [...challenge.participants, userId || ""],
-      };
-      setChallenges(prev => prev.map(c => c.id === challenge.id ? updatedChallenge : c));
+      const response = await joinChallengeApi('POST', `/student/challenges/${challenge.id}/join`, {
+        challengeId: challenge.id,
+        studentId: userId,
+      });
+
+      if (response) {
+        // Refetch challenges to get updated participant list
+        refetchChallenges();
+      }
     } catch (error) {
       console.error("Failed to join challenge:", error);
     }

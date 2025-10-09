@@ -1,15 +1,5 @@
-import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../../utils/mui-imports';
-import React from 'react';
-
-// Optimized skeleton with reduced animation for better performance
-const OptimizedSkeleton = styled(Skeleton)(({ theme }) => ({
-  '&::after': {
-    animationDuration: '2s', // Slower animation for better performance
-  },
-  backgroundColor: theme.palette.mode === 'dark'
-    ? 'rgba(255, 255, 255, 0.08)'
-    : 'rgba(0, 0, 0, 0.08)',
-}));
+import { Box, Skeleton, useMantineTheme } from '@mantine/core';
+import React, { useEffect, useState } from 'react';
 
 interface PerformanceSkeletonProps {
   variant: 'dashboard' | 'card' | 'list' | 'chart' | 'navigation' | 'form';
@@ -24,87 +14,110 @@ export const PerformanceSkeleton = ({
   count = 1,
   animate = true
 }: PerformanceSkeletonProps) => {
-  const SkeletonComponent = animate ? OptimizedSkeleton : Skeleton;
-  const animationProps = animate ? {} : { animation: false as const };
+  const theme = useMantineTheme();
+  const [loaded, setLoaded] = useState(false);
+
+  // Progressive enhancement - start showing content immediately
+  useEffect(() => {
+    const timer = setTimeout(() => setLoaded(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Optimized skeleton styles for faster rendering
+  const skeletonStyles = {
+    '--skeleton-animation-duration': animate ? '1.5s' : '0s',
+    backgroundColor: theme.colorScheme === 'dark'
+      ? 'rgba(255, 255, 255, 0.08)'
+      : 'rgba(0, 0, 0, 0.06)',
+    borderRadius: '6px',
+    transform: loaded ? 'scale(1)' : 'scale(0.98)',
+    transition: 'transform 0.2s ease',
+  };
+
+  const SkeletonComponent = ({ children, ...props }: any) => (
+    <Skeleton animate={animate} style={skeletonStyles} {...props}>
+      {children}
+    </Skeleton>
+  );
 
   const renderDashboardSkeleton = () => (
-    <Box style={{ p: 3 }}>
-      {/* Header */}
-      <Box style={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <SkeletonComponent variant="text" width={200} height={40} {...animationProps} />
-        <SkeletonComponent variant="rectangular" width={120} height={36} {...animationProps} />
+    <Box p="md" style={{ opacity: loaded ? 1 : 0.7, transition: 'opacity 0.3s ease' }}>
+      {/* Header - faster loading with simplified structure */}
+      <Box style={{ display: 'flex', justifyContent: 'space-between', marginBottom: theme.spacing.md }}>
+        <SkeletonComponent width={200} height={32} />
+        <SkeletonComponent width={100} height={32} />
       </Box>
 
-      {/* Metrics cards */}
-      <Box style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2, mb: 3 }}>
-        {Array.from({ length: 4 }).map((_, i) => (
-          <SkeletonComponent key={i} variant="rectangular" height={100} {...animationProps} />
+      {/* Metrics cards - fewer items for faster perception */}
+      <Box style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: theme.spacing.sm, marginBottom: theme.spacing.md }}>
+        {Array.from({ length: 3 }).map((_, i) => (
+          <SkeletonComponent key={i} height={80} />
         ))}
       </Box>
 
-      {/* Main content */}
-      <SkeletonComponent variant="rectangular" height={height} {...animationProps} />
+      {/* Main content - reduced height for faster perception */}
+      <SkeletonComponent height={Math.min(height, 300)} />
     </Box>
   );
 
   const renderCardSkeleton = () => (
-    <Box style={{ p: 2 }}>
-      <SkeletonComponent variant="text" width="60%" height={24} style={{ mb: 1 }} {...animationProps} />
-      <SkeletonComponent variant="text" width="40%" height={16} style={{ mb: 2 }} {...animationProps} />
-      <SkeletonComponent variant="rectangular" height={height - 80} {...animationProps} />
+    <Box p="xs">
+      <SkeletonComponent width="60%" height={24} style={{ marginBottom: theme.spacing.xs }} />
+      <SkeletonComponent width="40%" height={16} style={{ marginBottom: theme.spacing.sm }} />
+      <SkeletonComponent height={height - 80} />
     </Box>
   );
 
   const renderListSkeleton = () => (
     <Box>
       {Array.from({ length: count }).map((_, i) => (
-        <Box key={i} style={{ display: 'flex', alignItems: 'center', p: 2, borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
-          <SkeletonComponent variant="circular" width={40} height={40} style={{ mr: 2 }} {...animationProps} />
+        <Box key={i} style={{ display: 'flex', alignItems: 'center', padding: theme.spacing.sm, borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
+          <SkeletonComponent circle width={40} height={40} style={{ marginRight: theme.spacing.sm }} />
           <Box style={{ flex: 1 }}>
-            <SkeletonComponent variant="text" width="70%" height={20} {...animationProps} />
-            <SkeletonComponent variant="text" width="50%" height={16} {...animationProps} />
+            <SkeletonComponent width="70%" height={20} />
+            <SkeletonComponent width="50%" height={16} />
           </Box>
-          <SkeletonComponent variant="rectangular" width={60} height={24} {...animationProps} />
+          <SkeletonComponent width={60} height={24} />
         </Box>
       ))}
     </Box>
   );
 
   const renderChartSkeleton = () => (
-    <Box style={{ p: 2 }}>
-      <Box style={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-        <SkeletonComponent variant="text" width={150} height={24} {...animationProps} />
-        <Box style={{ display: 'flex', gap: 1 }}>
-          <SkeletonComponent variant="rectangular" width={80} height={32} {...animationProps} />
-          <SkeletonComponent variant="rectangular" width={80} height={32} {...animationProps} />
+    <Box p="xs">
+      <Box style={{ display: 'flex', justifyContent: 'space-between', marginBottom: theme.spacing.sm }}>
+        <SkeletonComponent width={150} height={24} />
+        <Box style={{ display: 'flex', gap: theme.spacing.xs }}>
+          <SkeletonComponent width={80} height={32} />
+          <SkeletonComponent width={80} height={32} />
         </Box>
       </Box>
-      <SkeletonComponent variant="rectangular" height={height - 80} {...animationProps} />
+      <SkeletonComponent height={height - 80} />
     </Box>
   );
 
   const renderNavigationSkeleton = () => (
-    <Box style={{ p: 1 }}>
+    <Box p="xs">
       {Array.from({ length: count || 6 }).map((_, i) => (
-        <Box key={i} style={{ display: 'flex', alignItems: 'center', p: 1.5, mb: 0.5 }}>
-          <SkeletonComponent variant="rectangular" width={20} height={20} style={{ mr: 2 }} {...animationProps} />
-          <SkeletonComponent variant="text" width="80%" height={20} {...animationProps} />
+        <Box key={i} style={{ display: 'flex', alignItems: 'center', padding: theme.spacing.xs, marginBottom: theme.spacing.xs }}>
+          <SkeletonComponent width={20} height={20} style={{ marginRight: theme.spacing.sm }} />
+          <SkeletonComponent width="80%" height={20} />
         </Box>
       ))}
     </Box>
   );
 
   const renderFormSkeleton = () => (
-    <Box style={{ p: 2 }}>
+    <Box p="xs">
       {Array.from({ length: count || 4 }).map((_, i) => (
-        <Box key={i} style={{ mb: 3 }}>
-          <SkeletonComponent variant="text" width="30%" height={20} style={{ mb: 1 }} {...animationProps} />
-          <SkeletonComponent variant="rectangular" height={56} {...animationProps} />
+        <Box key={i} style={{ marginBottom: theme.spacing.md }}>
+          <SkeletonComponent width="30%" height={20} style={{ marginBottom: theme.spacing.xs }} />
+          <SkeletonComponent height={56} />
         </Box>
       ))}
-      <Box style={{ display: 'flex', gap: 2, mt: 3 }}>
-        <SkeletonComponent variant="rectangular" width={120} height={36} {...animationProps} />
-        <SkeletonComponent variant="rectangular" width={100} height={36} {...animationProps} />
+      <Box style={{ display: 'flex', gap: theme.spacing.sm, marginTop: theme.spacing.md }}>
+        <SkeletonComponent width={120} height={36} />
+        <SkeletonComponent width={100} height={36} />
       </Box>
     </Box>
   );
@@ -123,7 +136,7 @@ export const PerformanceSkeleton = ({
     case 'form':
       return renderFormSkeleton();
     default:
-      return <SkeletonComponent variant="rectangular" height={height} {...animationProps} />;
+      return <SkeletonComponent height={height} />;
   }
 };
 

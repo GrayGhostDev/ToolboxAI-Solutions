@@ -15,7 +15,7 @@ backend:
 	$(UVICORN) apps.backend.main:app --host $(API_HOST) --port $(API_PORT) --reload
 
 dashboard:
-	npm run dashboard:dev
+	npm -w apps/dashboard run dev
 
 dev:
 	@echo "Starting backend (FastAPI) and dashboard (Vite)"

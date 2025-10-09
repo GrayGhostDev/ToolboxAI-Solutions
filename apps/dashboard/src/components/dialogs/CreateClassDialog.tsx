@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   Modal,
   Button,
@@ -9,9 +9,9 @@ import {
   Group,
   NumberInput,
 } from '@mantine/core';
-import { usePusherChannel } from "../../hooks/usePusherEvents";
-import { useAppDispatch } from "../../store";
-import { addNotification } from "../../store/slices/uiSlice";
+import { usePusherChannel } from '../../hooks/usePusherEvents';
+import { useAppDispatch } from '../../store';
+import { addNotification } from '../../store/slices/uiSlice';
 
 
 interface CreateClassDialogProps {
@@ -30,12 +30,12 @@ const CreateClassDialog: React.FunctionComponent<CreateClassDialogProps> = ({
   initialData = null,
 }) => {
   const dispatch = useAppDispatch();
-  const [className, setClassName] = useState(initialData?.name || "");
-  const [grade, setGrade] = useState(initialData?.grade || "");
-  const [schedule, setSchedule] = useState(initialData?.schedule || "");
-  const [subject, setSubject] = useState(initialData?.subject || "Mathematics");
-  const [room, setRoom] = useState(initialData?.room || "");
-  const [description, setDescription] = useState(initialData?.description || "");
+  const [className, setClassName] = useState(initialData?.name || '');
+  const [grade, setGrade] = useState(initialData?.grade || '');
+  const [schedule, setSchedule] = useState(initialData?.schedule || '');
+  const [subject, setSubject] = useState(initialData?.subject || 'Mathematics');
+  const [room, setRoom] = useState(initialData?.room || '');
+  const [description, setDescription] = useState(initialData?.description || '');
 
   // Pusher real-time updates for class management
   usePusherChannel(
@@ -44,7 +44,7 @@ const CreateClassDialog: React.FunctionComponent<CreateClassDialogProps> = ({
       'class-created': (data: { classId: string; name: string; creator: string }) => {
         dispatch(
           addNotification({
-            type: "success",
+            type: 'success',
             message: `New class "${data.name}" created by ${data.creator}`,
           })
         );
@@ -52,7 +52,7 @@ const CreateClassDialog: React.FunctionComponent<CreateClassDialogProps> = ({
       'class-updated': (data: { classId: string; name: string; changes: string[] }) => {
         dispatch(
           addNotification({
-            type: "info",
+            type: 'info',
             message: `Class "${data.name}" has been updated`,
           })
         );
@@ -60,7 +60,7 @@ const CreateClassDialog: React.FunctionComponent<CreateClassDialogProps> = ({
       'class-enrollment-changed': (data: { classId: string; name: string; studentCount: number }) => {
         dispatch(
           addNotification({
-            type: "info",
+            type: 'info',
             message: `Class "${data.name}" now has ${data.studentCount} students enrolled`,
           })
         );
@@ -71,12 +71,12 @@ const CreateClassDialog: React.FunctionComponent<CreateClassDialogProps> = ({
 
   React.useEffect(() => {
     if (initialData) {
-      setClassName(initialData.name || "");
-      setGrade(initialData.grade || initialData.grade_level || "");
-      setSchedule(initialData.schedule || "");
-      setSubject(initialData.subject || "Mathematics");
-      setRoom(initialData.room || "");
-      setDescription(initialData.description || "");
+      setClassName(initialData.name || '');
+      setGrade(initialData.grade || initialData.grade_level || '');
+      setSchedule(initialData.schedule || '');
+      setSubject(initialData.subject || 'Mathematics');
+      setRoom(initialData.room || '');
+      setDescription(initialData.description || '');
     }
   }, [initialData]);
 
@@ -93,12 +93,12 @@ const CreateClassDialog: React.FunctionComponent<CreateClassDialogProps> = ({
       });
       // Reset form
       if (!editMode) {
-        setClassName("");
-        setGrade("");
-        setSchedule("");
-        setSubject("Mathematics");
-        setRoom("");
-        setDescription("");
+        setClassName('');
+        setGrade('');
+        setSchedule('');
+        setSubject('Mathematics');
+        setRoom('');
+        setDescription('');
       }
     }
   };
@@ -106,32 +106,32 @@ const CreateClassDialog: React.FunctionComponent<CreateClassDialogProps> = ({
   const handleClose = () => {
     // Reset form if not in edit mode
     if (!editMode) {
-      setClassName("");
-      setGrade("");
-      setSchedule("");
-      setSubject("Mathematics");
-      setRoom("");
-      setDescription("");
+      setClassName('');
+      setGrade('');
+      setSchedule('');
+      setSubject('Mathematics');
+      setRoom('');
+      setDescription('');
     }
     onClose();
   };
 
   const subjects = [
-    "Mathematics",
-    "Science",
-    "English",
-    "History",
-    "Computer Science",
-    "Art",
-    "Music",
-    "Physical Education",
+    'Mathematics',
+    'Science',
+    'English',
+    'History',
+    'Computer Science',
+    'Art',
+    'Music',
+    'Physical Education',
   ];
 
   return (
     <Modal
       opened={open}
       onClose={handleClose}
-      title={editMode ? "Edit Class" : "Create New Class"}
+      title={editMode ? 'Edit Class' : 'Create New Class'}
       size="lg"
       styles={{
         title: {
@@ -163,7 +163,7 @@ const CreateClassDialog: React.FunctionComponent<CreateClassDialogProps> = ({
           label="Subject"
           required
           value={subject}
-          onChange={(value) => setSubject(value || "Mathematics")}
+          onChange={(value) => setSubject(value || 'Mathematics')}
           data={subjects.map(sub => ({ value: sub, label: sub }))}
           styles={{
             label: { fontWeight: 600 }
@@ -175,7 +175,7 @@ const CreateClassDialog: React.FunctionComponent<CreateClassDialogProps> = ({
           label="Grade Level"
           required
           value={grade ? parseInt(grade) : undefined}
-          onChange={(value) => setGrade(value?.toString() || "")}
+          onChange={(value) => setGrade(value?.toString() || '')}
           placeholder="Enter grade level"
           min={1}
           max={12}
@@ -239,7 +239,7 @@ const CreateClassDialog: React.FunctionComponent<CreateClassDialogProps> = ({
             }}
             data-testid="save-class-button"
           >
-            {editMode ? "Update" : "Create"} Class
+            {editMode ? 'Update' : 'Create'} Class
           </Button>
         </Group>
       </Stack>

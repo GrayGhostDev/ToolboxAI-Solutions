@@ -5,7 +5,7 @@
  */
 
 import React, { forwardRef } from 'react';
-import { Text, TextProps } from '@mantine/core';
+import { Text, type TextProps } from '@mantine/core';
 import { designTokens } from '../../../theme/designTokens';
 
 export interface LabelProps extends Omit<TextProps, 'size' | 'component'> {

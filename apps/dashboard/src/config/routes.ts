@@ -5,7 +5,7 @@
  * @version 2025
  */
 
-import React from 'react';
+import type React from 'react';
 
 // Enhanced route parameter types
 export interface DashboardParams extends Record<string, never> {

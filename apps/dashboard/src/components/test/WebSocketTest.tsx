@@ -42,7 +42,7 @@ import {
   WebSocketState,
   WebSocketMessageType,
   WebSocketChannel,
-  ContentGenerationRequest
+  type ContentGenerationRequest
 } from '../../types/websocket';
 
 interface Message {

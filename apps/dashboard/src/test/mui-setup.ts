@@ -158,12 +158,12 @@ export const mockMuiComponents = () => {
   }));
 
   // Mock MUI Grid2 (Unstable_Grid2)
-  vi.mock('@mantine/core', () => ({ Grid: ({ children }: any) => children, () => ({
+  vi.mock('@mantine/core/Grid2', () => ({
     default: createMockComponent('Grid2'),
   }));
 
   // Mock MUI Grid default export
-  vi.mock('@mantine/core', () => ({ Grid: ({ children }: any) => children, () => ({
+  vi.mock('@mantine/core/Grid', () => ({
     default: createMockComponent('Grid'),
   }));
 
@@ -204,7 +204,7 @@ export const mockMuiComponents = () => {
     Favorite: createMockComponent('IconHeart'),
     Star: createMockComponent('IconStar'),
     Warning: createMockComponent('IconAlertTriangle'),
-    Error: createMockComponent('IconCircleX'),
+    Error: createMockComponent('IconX'),
     Info: createMockComponent('IconInfoCircle'),
     Help: createMockComponent('HelpIcon'),
     Notifications: createMockComponent('IconBell'),

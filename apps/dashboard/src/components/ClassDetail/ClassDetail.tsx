@@ -206,10 +206,10 @@ export const ClassDetail: React.FC = () => {
                 Students
               </Tabs.Tab>
             )}
-            <Tabs.Tab value={canManage ? "2" : "1"} leftSection={<IconFileText size={16} />}>
+            <Tabs.Tab value={canManage ? '2' : '1'} leftSection={<IconFileText size={16} />}>
               Assignments
             </Tabs.Tab>
-            <Tabs.Tab value={canManage ? "3" : "2"} leftSection={<IconChartBar size={16} />}>
+            <Tabs.Tab value={canManage ? '3' : '2'} leftSection={<IconChartBar size={16} />}>
               Analytics
             </Tabs.Tab>
           </Tabs.List>
@@ -294,7 +294,7 @@ export const ClassDetail: React.FC = () => {
         </Tabs.Panel>
       )}
 
-      <Tabs.Panel value={canManage ? "2" : "1"}>
+      <Tabs.Panel value={canManage ? '2' : '1'}>
         <Paper p="lg">
           <Text size="lg" fw={500} mb="md">
             Assignments
@@ -306,7 +306,7 @@ export const ClassDetail: React.FC = () => {
         </Paper>
       </Tabs.Panel>
 
-      <Tabs.Panel value={canManage ? "3" : "2"}>
+      <Tabs.Panel value={canManage ? '3' : '2'}>
         <Paper p="lg">
           <Text size="lg" fw={500} mb="md">
             Analytics

@@ -1,4 +1,4 @@
-import { Box, Button, Text, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
+import { Box, Button, Text, Paper, Stack, Container, ActionIcon, Card, Alert, Progress, Modal, Tooltip, Select, RingProgress, SimpleGrid, FloatingButton } from '@mantine/core';
 /**
  * GPT-4.1 Migration Monitoring Dashboard
  *
@@ -17,7 +17,7 @@ import {
   IconShare, IconRefresh, IconLogin, IconSchool, IconBook,
   IconChartBar, IconPalette, IconMoon, IconSun, IconPlayerPlay,
   IconPlayerPause, IconPlayerStop, IconVolume, IconVolumeOff,
-  IconInfoCircle, IconAlertTriangle, IconCircleX, IconCircleCheck,
+  IconInfoCircle, IconAlertTriangle, IconX, IconCircleCheck,
   IconArrowLeft, IconArrowRight, IconSend, IconDeviceFloppy,
   IconPrinter, IconHelp, IconHelpCircle, IconLock, IconLockOpen,
   IconMail, IconPhone, IconMapPin, IconMap, IconCalendar, IconClock,
@@ -35,7 +35,7 @@ import {
   IconReportAnalytics
 } from '@tabler/icons-react';
 import { Line, Doughnut, Bar } from 'react-chartjs-2';
-import { IconAlertTriangle, IconAttachMoney, IconCircleCheck, IconCircleX, IconClipboard, IconInfoCircle, IconRefresh, IconSettings, IconSpeed, IconTimeline, IconTrendingDown, IconTrendingUp } from '@tabler/icons-react';
+import { IconAlertTriangle, IconCoin, IconCircleCheck, IconX, IconClipboard, IconInfoCircle, IconRefresh, IconSettings, IconSpeed, IconTimeline, IconTrendingDown, IconTrendingUp } from '@tabler/icons-react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -120,8 +120,7 @@ interface DashboardData {
   };
 }
 
-const GPT4MigrationDashboard= () => {
-  const theme = useTheme();
+const GPT4MigrationDashboard = () => {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -201,8 +200,8 @@ const GPT4MigrationDashboard= () => {
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
-      case 'emergency': return <IconCircleX />;
-      case 'critical': return <IconCircleX />;
+      case 'emergency': return <IconX />;
+      case 'critical': return <IconX />;
       case 'warning': return <IconAlertTriangle />;
       case 'info': return <IconInfoCircle />;
       default: return <IconCircleCheck />;
@@ -217,53 +216,43 @@ const GPT4MigrationDashboard= () => {
     const progress: MigrationMetrics = widget.data;
 
     return (
-      <Card>
-        <CardContent>
-          <Text order={6} gutterBottom>
+      <Card withBorder>
+        <Card.Section p="md">
+          <Text size="lg" fw={600} mb="md">
             Migration Progress
           </Text>
-          <Box display="flex" alignItems="center" mb={2}>
-            <Box position="relative" display="inline-flex">
-              <CircularProgress
-                variant="determinate"
-                value={progress.progress_percentage}
-                size={80}
-                thickness={4}
-                color={progress.on_track ? 'primary' : 'warning'}
-              />
-              <Box
-                position="absolute"
-                top={0}
-                left={0}
-                bottom={0}
-                right={0}
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-              >
-                <Text order={6} component="div" color="text.secondary">
+          <Stack align="center" gap="md">
+            <RingProgress
+              size={120}
+              thickness={8}
+              sections={[
+                { value: progress.progress_percentage, color: progress.on_track ? 'blue' : 'orange' }
+              ]}
+              label={
+                <Text ta="center" fw={700} size="lg">
                   {formatPercentage(progress.progress_percentage)}
                 </Text>
-              </Box>
-            </Box>
-            <Box ml={2}>
-              <Text size="sm" color="text.secondary">
+              }
+            />
+            <Box>
+              <Text size="sm" c="dimmed">
                 Phase: {progress.current_phase}
               </Text>
-              <Text size="sm" color="text.secondary">
+              <Text size="sm" c="dimmed">
                 Days remaining: {progress.days_remaining}
               </Text>
               <Chip
-                label={progress.urgency_level}
-                color={progress.urgency_level === 'low' ? 'success' : 'warning'}
-                size="small"
-              />
+                color={progress.urgency_level === 'low' ? 'green' : 'orange'}
+                size="sm"
+              >
+                {progress.urgency_level}
+              </Chip>
             </Box>
-          </Box>
-          <Text size="sm" color="text.secondary">
+          </Stack>
+          <Text size="sm" c="dimmed" mt="md">
             Deadline: {new Date(progress.deadline).toLocaleDateString()}
           </Text>
-        </CardContent>
+        </Card.Section>
       </Card>
     );
   };
@@ -541,7 +530,7 @@ const GPT4MigrationDashboard= () => {
           </Text>
           <Box display="flex" alignItems="center">
             <Button
-              variant={autoRefresh ? "contained" : "outlined"}
+              variant={autoRefresh ? 'contained' : 'outlined'}
               onClick={() => setAutoRefresh(!autoRefresh)}
               size="small"
             >

@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import * as api from '../../services/api';
 import type { Message } from '../../types/api';
 
@@ -70,6 +70,27 @@ export const fetchMessages = createAsyncThunk(
     classId?: string;
     search?: string;
   }) => {
+    // Check if we're in bypass mode
+    const bypassAuth = import.meta.env.VITE_BYPASS_AUTH === 'true';
+    const useMockData = import.meta.env.VITE_USE_MOCK_DATA === 'true';
+
+    if (bypassAuth || useMockData) {
+      // Import mock data
+      const { mockMessages } = await import('../../services/mock-data');
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Filter messages based on folder
+      let filteredMessages = mockMessages;
+      if (filters?.folder === 'starred') {
+        filteredMessages = mockMessages.filter(m => m.starred);
+      } else if (filters?.unreadOnly) {
+        filteredMessages = mockMessages.filter(m => !m.read);
+      }
+
+      return { messages: filteredMessages, folder: filters?.folder || 'inbox' };
+    }
+
     const response = await api.listMessages(
       filters?.folder,
       {
@@ -128,7 +149,7 @@ export const forwardMessage = createAsyncThunk(
     comment?: string;
   }) => {
     const response = await api.forwardMessage(messageId, {
-      subject: `FWD`,
+      subject: 'FWD',
       body: comment || '',
       recipient_ids: Array.isArray(toUserId) ? toUserId : [toUserId],
     });

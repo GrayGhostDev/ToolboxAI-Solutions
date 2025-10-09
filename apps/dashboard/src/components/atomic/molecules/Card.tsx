@@ -6,7 +6,7 @@
  */
 
 import React, { forwardRef } from 'react';
-import { Card as MantineCard, CardProps as MantineCardProps, Box } from '@mantine/core';
+import { Card as MantineCard, type CardProps as MantineCardProps, Box } from '@mantine/core';
 import { AtomicText } from '../atoms';
 import { designTokens } from '../../../theme/designTokens';
 

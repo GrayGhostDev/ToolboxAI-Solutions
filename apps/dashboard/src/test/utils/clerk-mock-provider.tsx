@@ -5,7 +5,7 @@
  * and provide deterministic authentication scenarios.
  */
 
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, type ReactNode } from 'react';
 import { ClerkProvider, useAuth, useUser, useSession } from '@clerk/nextjs/server';
 import { SignIn, SignUp, UserButton, SignOutButton } from '@clerk/nextjs/server';
 

@@ -11,7 +11,7 @@ if (typeof window !== 'undefined') {
     if (obj && obj.__esModule) {
       return obj;
     }
-    if (obj === null || (typeof obj !== "object" && typeof obj !== "function")) {
+    if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function')) {
       return { default: obj };
     }
     var cache = {};

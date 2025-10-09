@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Text, Paper, Stack, useMantineTheme, createStyles, keyframes } from '@mantine/core';
+import { Box, Text, Paper, Stack, useMantineTheme } from '@mantine/core';
 import { Roblox3DButton } from './Roblox3DButton';
 import { Roblox3DTabs } from './Roblox3DTabs';
 
@@ -26,18 +26,14 @@ interface Roblox3DNavigationProps {
   compact?: boolean;
 }
 
-// Animations
-const slideInAnimation = keyframes({
-  '0%': { transform: 'translateX(-100%)', opacity: 0 },
-  '100%': { transform: 'translateX(0)', opacity: 1 }
-});
+// Removed animations for Mantine v8 compatibility
 
-const fadeInAnimation = keyframes({
-  '0%': { opacity: 0, transform: 'scale(0.9)' },
-  '100%': { opacity: 1, transform: 'scale(1)' }
-});
+const useStyles = (params: { orientation: string; variant: string }) => {
+  const theme = useMantineTheme();
+  const { orientation, variant } = params;
 
-const useStyles = createStyles((theme, { orientation, variant }: any) => ({
+  return {
+    classes: {
   styledNavigation: {
     background: `linear-gradient(145deg, ${theme.colors.gray[0]}, ${theme.colors.blue[0]})`,
     border: `1px solid ${theme.colors.blue[2]}`,
@@ -45,8 +41,7 @@ const useStyles = createStyles((theme, { orientation, variant }: any) => ({
     padding: theme.spacing.md,
     boxShadow: `0 8px 32px ${theme.colors.blue[1]}`,
     backdropFilter: 'blur(10px)',
-    animation: `${slideInAnimation} 0.5s ease-out`,
-
+    
     ...(orientation === 'vertical' && {
       display: 'flex',
       flexDirection: 'column',
@@ -92,9 +87,10 @@ const useStyles = createStyles((theme, { orientation, variant }: any) => ({
     display: 'flex',
     flexDirection: 'column',
     gap: theme.spacing.xs,
-    animation: `${fadeInAnimation} 0.3s ease-out`,
-  }
-}));
+        }
+    }
+  };
+};
 
 export const Roblox3DNavigation: React.FunctionComponent<Roblox3DNavigationProps> = ({
   items,

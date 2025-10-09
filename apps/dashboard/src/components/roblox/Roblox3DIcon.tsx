@@ -19,7 +19,7 @@ import {
 } from '@mantine/core';
 import {
   IconSchool,
-  IconDeviceGamepad2,
+  IconDeviceGamepad,
   IconQuestionMark,
   IconMountain,
   IconBrain,
@@ -70,7 +70,7 @@ const ICON_MAPPINGS = {
   'ABC_CUBE': { icon: IconSchool, color: '#4caf50' },
   'BACKPACK': { icon: IconUsers, color: '#2196f3' },
   'BADGE': { icon: IconSparkles, color: '#ff9800' },
-  'BASKETBALL': { icon: IconDeviceGamepad2, color: '#f44336' },
+  'BASKETBALL': { icon: IconDeviceGamepad, color: '#f44336' },
   'BOARD': { icon: IconMountain, color: '#9c27b0' },
   'BOOKS': { icon: IconSchool, color: '#4caf50' },
   'CRAYON': { icon: IconSchool, color: '#ff5722' },
@@ -82,7 +82,7 @@ const ICON_MAPPINGS = {
   'PAPER': { icon: IconSchool, color: '#e0e0e0' },
   'PENCIL': { icon: IconSchool, color: '#ff5722' },
   'RULER': { icon: IconSchool, color: '#9e9e9e' },
-  'SOCCER_BALL': { icon: IconDeviceGamepad2, color: '#4caf50' },
+  'SOCCER_BALL': { icon: IconDeviceGamepad, color: '#4caf50' },
   'TROPHY': { icon: IconSparkles, color: '#ffc107' }
 };
 

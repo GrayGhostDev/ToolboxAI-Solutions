@@ -15,7 +15,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Channel, PresenceChannel } from 'pusher-js';
+import { Channel, type PresenceChannel } from 'pusher-js';
 
 import { pusherService as websocketService } from '../services/pusher';
 import { useAppDispatch, useAppSelector } from '../store';
@@ -26,12 +26,12 @@ import {
   PusherChannelType,
   PusherChannels,
   PusherConnectionState,
-  PusherEventHandler,
-  PusherMember,
+  type PusherEventHandler,
+  type PusherMember,
   PusherMessage,
-  PusherPresenceChannelData,
+  type PusherPresenceChannelData,
   PusherServiceState,
-  PusherSubscription,
+  type PusherSubscription,
   formatChannelName,
   isPusherMember,
   isPresenceChannel
@@ -39,8 +39,8 @@ import {
 
 import {
   WebSocketState,
-  WebSocketStats,
-  WebSocketError,
+  type WebSocketStats,
+  type WebSocketError,
   WebSocketMessage,
   WebSocketMessageType
 } from '../types/websocket';
@@ -159,6 +159,23 @@ export const PusherProvider: React.FunctionComponent<PusherProviderProps> = ({
   // Connection management
   const connectFunc = useCallback(
     async (token?: string) => {
+      // Skip Pusher connection in bypass mode
+      const bypassAuth = import.meta.env.VITE_BYPASS_AUTH === 'true';
+      const useMockData = import.meta.env.VITE_USE_MOCK_DATA === 'true';
+      const enablePusher = import.meta.env.VITE_ENABLE_PUSHER !== 'false';
+
+      if (bypassAuth || useMockData || !enablePusher) {
+        if (debug) {
+          logger.debug('Pusher connection skipped', {
+            bypassAuth,
+            useMockData,
+            enablePusher
+          });
+        }
+        setConnectionState(PusherConnectionState.DISCONNECTED);
+        return;
+      }
+
       if (isConnecting.current || connectionState === PusherConnectionState.CONNECTED) {
         return;
       }

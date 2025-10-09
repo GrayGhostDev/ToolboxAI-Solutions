@@ -150,7 +150,7 @@ export const ThreeProvider: React.FunctionComponent<ThreeProviderProps> = ({ chi
       }
     };
 
-    window.addEventListener("resize", handleResize as EventListener);
+    window.addEventListener('resize', handleResize as EventListener);
 
     return () => {
       window.removeEventListener('resize', handleResize);

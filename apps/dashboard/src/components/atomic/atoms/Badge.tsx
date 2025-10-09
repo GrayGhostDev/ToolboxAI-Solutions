@@ -6,7 +6,7 @@
  */
 
 import React, { forwardRef } from 'react';
-import { Badge as MantineBadge, Indicator, BadgeProps as MantineBadgeProps, IndicatorProps } from '@mantine/core';
+import { Badge as MantineBadge, Indicator, type BadgeProps as MantineBadgeProps, type IndicatorProps } from '@mantine/core';
 import { designTokens } from '../../../theme/designTokens';
 
 // Custom props for our Badge component
@@ -163,7 +163,7 @@ const AtomicBadge = forwardRef<HTMLDivElement, AtomicBadgeProps>(
     if (variant === 'achievement' && robloxTheme) {
       customStyles.background = `linear-gradient(135deg, var(--mantine-color-${badgeColor}-6), var(--mantine-color-${badgeColor}-8))`;
       customStyles.border = withBorder ? '2px solid var(--mantine-color-white)' : undefined;
-      customStyles.boxShadow = `0 2px 8px rgba(0, 0, 0, 0.15)`;
+      customStyles.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.15)';
     }
 
     // Add notification styles

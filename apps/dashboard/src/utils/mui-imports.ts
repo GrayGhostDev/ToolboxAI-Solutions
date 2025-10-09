@@ -1,108 +1,160 @@
-// Mantine Component Bridge - Pure Mantine exports with MUI-compatible names
-// This file provides compatibility for legacy code still using MUI-style imports
-// All components are from @mantine/core ONLY - no MUI dependencies
+/**
+ * MUI to Mantine Migration Compatibility Layer
+ *
+ * This file provides a compatibility layer for components that haven't been
+ * fully migrated from MUI to Mantine yet. It re-exports Mantine components
+ * with MUI-compatible names to minimize breaking changes during migration.
+ */
 
-// Re-export everything directly from Mantine
-export {
-  // Core components
+import React from 'react';
+
+// Import all necessary Mantine components
+import {
   Box,
   Button,
-  Text,
-  Title,
+  Text as Typography,
   Paper,
   Stack,
   Grid,
   Container,
-  ActionIcon,
+  ActionIcon as IconButton,
   Avatar,
   Card,
-  Group,
-  Image,
   List,
   Divider,
-  TextInput,
+  TextInput as TextField,
   Select,
-  Menu,
+  Badge as Chip,
   Badge,
   Alert,
-  Loader,
-  Progress,
-  Skeleton,
-  Modal,
+  Loader as CircularProgress,
+  Progress as LinearProgress,
+  Modal as Dialog,
   Drawer,
-  AppShell,
-  Table,
   Tabs,
+  Menu,
   Tooltip,
   Checkbox,
   Radio,
   Switch,
   Slider,
-  Rating,
-  ScrollArea,
-  useMantineTheme,
-  MantineProvider,
+  Skeleton
 } from '@mantine/core';
 
-// Aliases for MUI compatibility
-export { Text as Typography } from '@mantine/core';
-export { ActionIcon as IconButton } from '@mantine/core';
-export { Loader as CircularProgress } from '@mantine/core';
-export { Progress as LinearProgress } from '@mantine/core';
-export { Modal as Dialog } from '@mantine/core';
-export { TextInput as TextField } from '@mantine/core';
+// Additional components that might be needed
+import { Text } from '@mantine/core';
 
-// Component sub-parts as simple exports
-export const CardContent = 'div' as const;
-export const CardActions = 'div' as const;
-export const CardMedia = 'div' as const;
-export const CardHeader = 'div' as const;
+// Export with MUI-compatible names for backward compatibility
+export {
+  Box,
+  Button,
+  Typography,
+  Text,
+  Paper,
+  Stack,
+  Grid,
+  Container,
+  IconButton,
+  Avatar,
+  Card,
+  List,
+  Divider,
+  TextField,
+  Select,
+  Chip,
+  Badge,
+  Alert,
+  CircularProgress,
+  LinearProgress,
+  Dialog,
+  Drawer,
+  Tabs,
+  Menu,
+  Tooltip,
+  Checkbox,
+  Radio,
+  Switch,
+  Slider,
+  Skeleton
+};
 
-export const ListItem = 'li' as const;
-export const ListItemText = 'span' as const;
-export const ListItemAvatar = 'div' as const;
-export const ListItemIcon = 'div' as const;
-export const ListItemButton = 'div' as const;
+// MUI-specific components that don't have direct Mantine equivalents
+// Export as simple function components without JSX
+export const CardContent = ({ children, ...props }: any) => React.createElement(Box, { p: 'md', ...props }, children);
+export const CardActions = ({ children, ...props }: any) => React.createElement(Box, { p: 'md', pt: 0, ...props }, children);
+export const ListItem = ({ children, ...props }: any) => React.createElement(List.Item, props, children);
+export const ListItemText = ({ primary, secondary, ...props }: any) =>
+  React.createElement(Box, props,
+    React.createElement(Text, null, primary),
+    secondary && React.createElement(Text, { size: 'sm', c: 'dimmed' }, secondary)
+  );
+export const DialogTitle = ({ children, ...props }: any) => React.createElement(Text, { size: 'lg', fw: 600, ...props }, children);
+export const DialogContent = ({ children, ...props }: any) => React.createElement(Box, { p: 'md', ...props }, children);
+export const DialogActions = ({ children, ...props }: any) => React.createElement(Box, { p: 'md', pt: 0, ...props }, children);
+export const AppBar = ({ children, ...props }: any) => React.createElement(Box, props, children);
+export const Toolbar = ({ children, ...props }: any) => React.createElement(Box, { p: 'md', ...props }, children);
+export const Tab = ({ children, ...props }: any) => React.createElement(Tabs.Tab, props, children);
+export const MenuItem = ({ children, ...props }: any) => React.createElement(Menu.Item, props, children);
+export const RadioGroup = ({ children, ...props }: any) => React.createElement(Radio.Group, props, children);
+export const FormControl = ({ children, ...props }: any) => React.createElement(Box, props, children);
+export const FormControlLabel = ({ label, control, ...props }: any) =>
+  React.createElement(Box, props,
+    control,
+    React.createElement(Text, { ml: 'xs' }, label)
+  );
+export const InputLabel = ({ children, ...props }: any) => React.createElement(Text, { size: 'sm', fw: 500, ...props }, children);
+export const Rating = ({ ...props }) => React.createElement(Box, props, 'Rating Component'); // Placeholder
+export const Autocomplete = ({ ...props }) => React.createElement(Select, props); // Use Select as fallback
+export const Table = ({ children, ...props }: any) => React.createElement('table', props, children);
 
-export const DialogTitle = 'h2' as const;
-export const DialogContent = 'div' as const;
-export const DialogActions = 'div' as const;
-export const DialogContentText = 'p' as const;
-
-export const FormControl = 'div' as const;
-export const InputLabel = 'label' as const;
-export const InputAdornment = 'div' as const;
-export const FormControlLabel = 'label' as const;
-
-export const TableBody = 'tbody' as const;
-export const TableCell = 'td' as const;
-export const TableContainer = 'div' as const;
-export const TableHead = 'thead' as const;
-export const TableRow = 'tr' as const;
-export const TablePagination = 'div' as const;
-
-export const AppBar = 'header' as const;
-export const Toolbar = 'div' as const;
-
-export const MenuItem = 'li' as const;
-export const RadioGroup = 'div' as const;
-export const Tab = 'button' as const;
-export const AlertTitle = 'h3' as const;
-
-export const ToggleButton = 'button' as const;
-export const ToggleButtonGroup = 'div' as const;
-
-// Theme-related exports
-export { useMantineTheme as useTheme } from '@mantine/core';
-export { MantineProvider as ThemeProvider } from '@mantine/core';
-
-// Missing components exported as stubs
-export const Chip = 'span' as const;
-export const Pagination = 'div' as const;
-export const Autocomplete = 'input' as const;
-export const SegmentedControl = 'div' as const;
-
-// Stub functions to prevent errors
-export const createTheme = (options: any) => options;
-export const alpha = (color: string, _opacity: number) => color;
-export const styled = (component: any) => component;
+// Default export for backward compatibility
+export default {
+  Box,
+  Button,
+  Typography,
+  Text,
+  Paper,
+  Stack,
+  Grid,
+  Container,
+  IconButton,
+  Avatar,
+  Card,
+  CardContent,
+  CardActions,
+  List,
+  ListItem,
+  ListItemText,
+  Divider,
+  TextField,
+  Select,
+  MenuItem,
+  Chip,
+  Badge,
+  Alert,
+  CircularProgress,
+  LinearProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Drawer,
+  AppBar,
+  Toolbar,
+  Tabs,
+  Tab,
+  Menu,
+  Tooltip,
+  Checkbox,
+  Radio,
+  RadioGroup,
+  FormControl,
+  FormControlLabel,
+  InputLabel,
+  Switch,
+  Slider,
+  Rating,
+  Autocomplete,
+  Skeleton,
+  Table
+};

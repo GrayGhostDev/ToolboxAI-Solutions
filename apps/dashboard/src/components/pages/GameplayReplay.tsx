@@ -1,5 +1,5 @@
-import * as React from "react";
-import { useState, useEffect } from "react";
+import * as React from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Card,
@@ -19,8 +19,8 @@ import {
   Avatar,
   Grid,
   Group,
-} from "@mantine/core";
-import { DatePickerInput } from "@mantine/dates";
+} from '@mantine/core';
+import { DatePickerInput } from '@mantine/dates';
 import {
   IconPlayerPlay,
   IconPlayerPause,
@@ -34,13 +34,13 @@ import {
   IconSchool,
   IconCircleCheck,
   IconAlertTriangle,
-  IconDeviceGamepad2,
+  IconDeviceGamepad,
   IconBulb,
   IconDownload,
   IconShare,
   IconCalendar,
-} from "@tabler/icons-react";
-import { useAppSelector } from "../../store";
+} from '@tabler/icons-react';
+import { useAppSelector } from '../../store';
 
 interface GameplaySession {
   id: string;
@@ -62,11 +62,11 @@ interface GameplaySession {
 interface Highlight {
   id: string;
   timestamp: number; // seconds from start
-  type: "achievement" | "milestone" | "struggle" | "breakthrough" | "collaboration";
+  type: 'achievement' | 'milestone' | 'struggle' | 'breakthrough' | 'collaboration';
   title: string;
   description: string;
   thumbnailUrl?: string;
-  importance: "low" | "medium" | "high";
+  importance: 'low' | 'medium' | 'high';
 }
 
 interface Achievement {
@@ -79,10 +79,10 @@ interface Achievement {
 
 interface Interaction {
   id: string;
-  type: "npc_dialogue" | "puzzle_solve" | "quiz_complete" | "peer_help";
+  type: 'npc_dialogue' | 'puzzle_solve' | 'quiz_complete' | 'peer_help';
   timestamp: number;
   details: string;
-  outcome: "success" | "partial" | "retry";
+  outcome: 'success' | 'partial' | 'retry';
 }
 
 interface ProgressPoint {
@@ -93,7 +93,7 @@ interface ProgressPoint {
 
 export default function GameplayReplay() {
   const user = useAppSelector((s) => s.user);
-  const [selectedChild, setSelectedChild] = useState<string>("");
+  const [selectedChild, setSelectedChild] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [sessions, setSessions] = useState<GameplaySession[]>([]);
   const [currentSession, setCurrentSession] = useState<GameplaySession | null>(null);
@@ -105,8 +105,8 @@ export default function GameplayReplay() {
 
   // Mock data for children (in real app, fetch from API)
   const children = [
-    { id: "1", name: "Emma Johnson", avatar: "", grade: 5 },
-    { id: "2", name: "Alex Johnson", avatar: "", grade: 3 },
+    { id: '1', name: 'Emma Johnson', avatar: '', grade: 5 },
+    { id: '2', name: 'Alex Johnson', avatar: '', grade: 3 },
   ];
 
   // Load mock sessions
@@ -114,139 +114,139 @@ export default function GameplayReplay() {
     // Mock gameplay sessions
     const mockSessions: GameplaySession[] = [
       {
-        id: "1",
-        studentName: "Emma Johnson",
-        studentAvatar: "",
-        worldName: "Math Adventure Island",
-        worldThumbnail: "",
+        id: '1',
+        studentName: 'Emma Johnson',
+        studentAvatar: '',
+        worldName: 'Math Adventure Island',
+        worldThumbnail: '',
         date: new Date(),
         duration: 1800, // 30 minutes
         highlights: [
           {
-            id: "h1",
+            id: 'h1',
             timestamp: 120,
-            type: "achievement",
-            title: "First Puzzle Solved!",
-            description: "Emma solved the fraction puzzle on her first try",
-            importance: "high",
+            type: 'achievement',
+            title: 'First Puzzle Solved!',
+            description: 'Emma solved the fraction puzzle on her first try',
+            importance: 'high',
           },
           {
-            id: "h2",
+            id: 'h2',
             timestamp: 450,
-            type: "breakthrough",
-            title: "Mastered Multiplication",
-            description: "Completed all multiplication challenges with 100% accuracy",
-            importance: "high",
+            type: 'breakthrough',
+            title: 'Mastered Multiplication',
+            description: 'Completed all multiplication challenges with 100% accuracy',
+            importance: 'high',
           },
           {
-            id: "h3",
+            id: 'h3',
             timestamp: 780,
-            type: "collaboration",
-            title: "Helped a Classmate",
-            description: "Emma assisted another student with a difficult problem",
-            importance: "medium",
+            type: 'collaboration',
+            title: 'Helped a Classmate',
+            description: 'Emma assisted another student with a difficult problem',
+            importance: 'medium',
           },
           {
-            id: "h4",
+            id: 'h4',
             timestamp: 1200,
-            type: "struggle",
-            title: "Division Challenge",
-            description: "Took 3 attempts but persevered through the division section",
-            importance: "medium",
+            type: 'struggle',
+            title: 'Division Challenge',
+            description: 'Took 3 attempts but persevered through the division section',
+            importance: 'medium',
           },
           {
-            id: "h5",
+            id: 'h5',
             timestamp: 1650,
-            type: "milestone",
-            title: "Level Complete!",
-            description: "Finished Level 3 with a score of 95%",
-            importance: "high",
+            type: 'milestone',
+            title: 'Level Complete!',
+            description: 'Finished Level 3 with a score of 95%',
+            importance: 'high',
           },
         ],
         achievements: [
-          { id: "a1", name: "Problem Solver", icon: "🧩", timestamp: 120, xpReward: 50 },
-          { id: "a2", name: "Math Master", icon: "🎓", timestamp: 450, xpReward: 100 },
-          { id: "a3", name: "Team Player", icon: "🤝", timestamp: 780, xpReward: 75 },
+          { id: 'a1', name: 'Problem Solver', icon: '🧩', timestamp: 120, xpReward: 50 },
+          { id: 'a2', name: 'Math Master', icon: '🎓', timestamp: 450, xpReward: 100 },
+          { id: 'a3', name: 'Team Player', icon: '🤝', timestamp: 780, xpReward: 75 },
         ],
         interactions: [
           {
-            id: "i1",
-            type: "npc_dialogue",
+            id: 'i1',
+            type: 'npc_dialogue',
             timestamp: 60,
-            details: "Spoke with Professor Math about fractions",
-            outcome: "success",
+            details: 'Spoke with Professor Math about fractions',
+            outcome: 'success',
           },
           {
-            id: "i2",
-            type: "puzzle_solve",
+            id: 'i2',
+            type: 'puzzle_solve',
             timestamp: 120,
-            details: "Fraction puzzle completed",
-            outcome: "success",
+            details: 'Fraction puzzle completed',
+            outcome: 'success',
           },
           {
-            id: "i3",
-            type: "quiz_complete",
+            id: 'i3',
+            type: 'quiz_complete',
             timestamp: 900,
-            details: "Mid-level quiz: 9/10 correct",
-            outcome: "success",
+            details: 'Mid-level quiz: 9/10 correct',
+            outcome: 'success',
           },
           {
-            id: "i4",
-            type: "peer_help",
+            id: 'i4',
+            type: 'peer_help',
             timestamp: 780,
-            details: "Helped Alex with multiplication",
-            outcome: "success",
+            details: 'Helped Alex with multiplication',
+            outcome: 'success',
           },
         ],
         progress: [
-          { timestamp: 0, concept: "Fractions", mastery: 60 },
-          { timestamp: 300, concept: "Fractions", mastery: 75 },
-          { timestamp: 600, concept: "Multiplication", mastery: 80 },
-          { timestamp: 900, concept: "Multiplication", mastery: 95 },
-          { timestamp: 1200, concept: "Division", mastery: 70 },
-          { timestamp: 1500, concept: "Division", mastery: 85 },
+          { timestamp: 0, concept: 'Fractions', mastery: 60 },
+          { timestamp: 300, concept: 'Fractions', mastery: 75 },
+          { timestamp: 600, concept: 'Multiplication', mastery: 80 },
+          { timestamp: 900, concept: 'Multiplication', mastery: 95 },
+          { timestamp: 1200, concept: 'Division', mastery: 70 },
+          { timestamp: 1500, concept: 'Division', mastery: 85 },
         ],
         overallScore: 95,
         xpEarned: 225,
-        masteryConcepts: ["Fractions", "Multiplication", "Problem Solving"],
+        masteryConcepts: ['Fractions', 'Multiplication', 'Problem Solving'],
       },
       {
-        id: "2",
-        studentName: "Emma Johnson",
-        studentAvatar: "",
-        worldName: "Science Laboratory",
-        worldThumbnail: "",
+        id: '2',
+        studentName: 'Emma Johnson',
+        studentAvatar: '',
+        worldName: 'Science Laboratory',
+        worldThumbnail: '',
         date: new Date(Date.now() - 86400000), // Yesterday
         duration: 2400, // 40 minutes
         highlights: [
           {
-            id: "h6",
+            id: 'h6',
             timestamp: 180,
-            type: "achievement",
-            title: "Experiment Success!",
-            description: "Completed the chemical reaction experiment perfectly",
-            importance: "high",
+            type: 'achievement',
+            title: 'Experiment Success!',
+            description: 'Completed the chemical reaction experiment perfectly',
+            importance: 'high',
           },
         ],
         achievements: [
-          { id: "a4", name: "Scientist", icon: "🔬", timestamp: 180, xpReward: 75 },
+          { id: 'a4', name: 'Scientist', icon: '🔬', timestamp: 180, xpReward: 75 },
         ],
         interactions: [
           {
-            id: "i5",
-            type: "npc_dialogue",
+            id: 'i5',
+            type: 'npc_dialogue',
             timestamp: 100,
-            details: "Learned about chemical reactions from Dr. Science",
-            outcome: "success",
+            details: 'Learned about chemical reactions from Dr. Science',
+            outcome: 'success',
           },
         ],
         progress: [
-          { timestamp: 0, concept: "Chemistry", mastery: 50 },
-          { timestamp: 1200, concept: "Chemistry", mastery: 85 },
+          { timestamp: 0, concept: 'Chemistry', mastery: 50 },
+          { timestamp: 1200, concept: 'Chemistry', mastery: 85 },
         ],
         overallScore: 88,
         xpEarned: 175,
-        masteryConcepts: ["Chemistry", "Scientific Method"],
+        masteryConcepts: ['Chemistry', 'Scientific Method'],
       },
     ];
 
@@ -259,7 +259,7 @@ export default function GameplayReplay() {
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const handlePlayPause = () => {
@@ -275,17 +275,17 @@ export default function GameplayReplay() {
     setIsPlaying(true);
   };
 
-  const getHighlightIcon = (type: Highlight["type"]) => {
+  const getHighlightIcon = (type: Highlight['type']) => {
     switch (type) {
-      case "achievement":
+      case 'achievement':
         return <IconTrophy size={20} color="var(--mantine-color-yellow-6)" />;
-      case "milestone":
+      case 'milestone':
         return <IconStarFilled size={20} color="var(--mantine-color-blue-6)" />;
-      case "breakthrough":
+      case 'breakthrough':
         return <IconTrendingUp size={20} color="var(--mantine-color-green-6)" />;
-      case "struggle":
+      case 'struggle':
         return <IconAlertTriangle size={20} color="var(--mantine-color-red-6)" />;
-      case "collaboration":
+      case 'collaboration':
         return <IconSchool size={20} color="var(--mantine-color-grape-6)" />;
       default:
         return <IconCircleCheck size={20} />;
@@ -351,29 +351,29 @@ export default function GameplayReplay() {
           <Card>
             <Box
               style={{
-                position: "relative",
-                paddingTop: "56.25%", // 16:9 aspect ratio
-                backgroundColor: "black",
+                position: 'relative',
+                paddingTop: '56.25%', // 16:9 aspect ratio
+                backgroundColor: 'black',
                 borderRadius: 4,
-                overflow: "hidden",
+                overflow: 'hidden',
               }}
             >
               {/* Replay Visualization */}
               <Box
                 style={{
-                  position: "absolute",
+                  position: 'absolute',
                   top: 0,
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: `linear-gradient(135deg, #667eea 0%, #764ba2 100%)`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 }}
               >
                 <Stack align="center" gap="sm">
-                  <IconDeviceGamepad2 size={80} color="white" style={{ opacity: 0.8 }} />
+                  <IconDeviceGamepad size={80} color="white" style={{ opacity: 0.8 }} />
                   <Text size="lg" c="white">
                     {currentSession.worldName}
                   </Text>
@@ -386,36 +386,36 @@ export default function GameplayReplay() {
               {/* Highlight Markers on Timeline */}
               <Box
                 style={{
-                  position: "absolute",
+                  position: 'absolute',
                   bottom: 80,
                   left: 0,
                   right: 0,
                   height: 4,
-                  backgroundColor: "rgba(255,255,255,0.3)",
+                  backgroundColor: 'rgba(255,255,255,0.3)',
                 }}
               >
                 {currentSession.highlights.map((highlight) => (
                   <Box
                     key={highlight.id}
                     style={{
-                      position: "absolute",
+                      position: 'absolute',
                       left: `${(highlight.timestamp / currentSession.duration) * 100}%`,
                       top: -6,
                       width: 16,
                       height: 16,
-                      borderRadius: "50%",
+                      borderRadius: '50%',
                       backgroundColor:
-                        highlight.importance === "high"
-                          ? "var(--mantine-color-yellow-6)"
-                          : highlight.importance === "medium"
-                          ? "var(--mantine-color-blue-6)"
-                          : "var(--mantine-color-gray-6)",
-                      cursor: "pointer",
-                      transition: "transform 0.2s",
+                        highlight.importance === 'high'
+                          ? 'var(--mantine-color-yellow-6)'
+                          : highlight.importance === 'medium'
+                          ? 'var(--mantine-color-blue-6)'
+                          : 'var(--mantine-color-gray-6)',
+                      cursor: 'pointer',
+                      transition: 'transform 0.2s',
                     }}
                     onClick={() => jumpToHighlight(highlight.timestamp)}
-                    onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.3)"}
-                    onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.3)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                   />
                 ))}
               </Box>
@@ -428,7 +428,7 @@ export default function GameplayReplay() {
                   value={currentTime}
                   max={currentSession.duration}
                   onChange={handleSeek}
-                  style={{ width: "100%" }}
+                  style={{ width: '100%' }}
                 />
                 <Group justify="center" gap="sm">
                   <ActionIcon onClick={() => handleSeek(Math.max(0, currentTime - 30))} size="lg">
@@ -455,10 +455,10 @@ export default function GameplayReplay() {
                     value={playbackSpeed.toString()}
                     onChange={(value) => setPlaybackSpeed(Number(value))}
                     data={[
-                      { value: "0.5", label: "0.5x" },
-                      { value: "1", label: "1x" },
-                      { value: "1.5", label: "1.5x" },
-                      { value: "2", label: "2x" },
+                      { value: '0.5', label: '0.5x' },
+                      { value: '1', label: '1x' },
+                      { value: '1.5', label: '1.5x' },
+                      { value: '2', label: '2x' },
                     ]}
                     size="sm"
                     style={{ width: 80, marginLeft: 'auto' }}
@@ -514,11 +514,11 @@ export default function GameplayReplay() {
                           <Badge
                             size="sm"
                             color={
-                              highlight.importance === "high"
-                                ? "red"
-                                : highlight.importance === "medium"
-                                ? "yellow"
-                                : "gray"
+                              highlight.importance === 'high'
+                                ? 'red'
+                                : highlight.importance === 'medium'
+                                ? 'yellow'
+                                : 'gray'
                             }
                           >
                             {highlight.importance}
@@ -552,7 +552,7 @@ export default function GameplayReplay() {
                             <Group gap="xs">
                               <Badge
                                 size="sm"
-                                color={final >= 80 ? "green" : "gray"}
+                                color={final >= 80 ? 'green' : 'gray'}
                               >
                                 {final}%
                               </Badge>
@@ -586,7 +586,7 @@ export default function GameplayReplay() {
                             <Text size="xs">{formatTime(interaction.timestamp)}</Text>
                             <Badge
                               size="sm"
-                              color={interaction.outcome === "success" ? "green" : "yellow"}
+                              color={interaction.outcome === 'success' ? 'green' : 'yellow'}
                             >
                               {interaction.outcome}
                             </Badge>
@@ -663,7 +663,7 @@ export default function GameplayReplay() {
                   </Text>
                   <Badge
                     size="sm"
-                    color={currentSession.overallScore >= 90 ? "green" : "blue"}
+                    color={currentSession.overallScore >= 90 ? 'green' : 'blue'}
                   >
                     {currentSession.overallScore}%
                   </Badge>
@@ -718,7 +718,7 @@ export default function GameplayReplay() {
                     padding: '12px',
                     backgroundColor: session.id === currentSession.id ? 'var(--mantine-color-gray-1)' : undefined,
                   }}
-                  icon={<IconDeviceGamepad2 size={20} />}
+                  icon={<IconDeviceGamepad size={20} />}
                 >
                   <Box>
                     <Text fw={500}>{session.worldName}</Text>

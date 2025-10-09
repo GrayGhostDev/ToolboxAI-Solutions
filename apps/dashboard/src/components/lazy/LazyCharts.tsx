@@ -1,4 +1,4 @@
-import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
+import { Box, Loader, Text, Title, Skeleton, Group } from '@mantine/core';
 /**
  * Lazy loading wrapper for chart components
  *
@@ -19,24 +19,25 @@ const ChartSkeleton = ({
   variant = 'line'
 }: { height?: number; variant?: 'line' | 'bar' | 'pie' }) => (
   <Box
-    display="flex"
-    flexDirection="column"
-    gap={1}
-    p={2}
-    height={height}
-    border="1px solid"
-    borderColor="divider"
-    borderRadius={1}
-    bgcolor="background.paper"
+    style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 8,
+      padding: 16,
+      height,
+      border: '1px solid var(--mantine-color-gray-3)',
+      borderRadius: 'var(--mantine-radius-md)',
+      backgroundColor: 'var(--mantine-color-gray-0)',
+    }}
   >
     {/* Chart title skeleton */}
-    <Skeleton variant="text" width="60%" height={24} />
+    <Skeleton height={24} width="60%" />
 
     {/* Chart area skeleton */}
-    <Box flex={1} display="flex" alignItems="flex-end" gap={1}>
+    <Box style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: 8 }}>
       {variant === 'line' && (
         <>
-          <Skeleton variant="rectangular" width="100%" height="80%" />
+          <Skeleton height="80%" width="100%" />
         </>
       )}
       {variant === 'bar' && (
@@ -44,35 +45,34 @@ const ChartSkeleton = ({
           {Array.from({ length: 8 }, (_, i) => (
             <Skeleton
               key={i}
-              variant="rectangular"
-              width="10%"
               height={`${Math.random() * 60 + 20}%`}
+              width="10%"
             />
           ))}
         </>
       )}
       {variant === 'pie' && (
-        <Box display="flex" alignItems="center" justifyContent="center" width="100%">
-          <Skeleton variant="circular" width={200} height={200} />
+        <Box style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+          <Skeleton height={200} width={200} circle />
         </Box>
       )}
     </Box>
 
     {/* Legend skeleton */}
-    <Box display="flex" gap={2} justifyContent="center">
+    <Group justify="center" spacing="md">
       {Array.from({ length: 3 }, (_, i) => (
-        <Box key={i} display="flex" alignItems="center" gap={1}>
-          <Skeleton variant="rectangular" width={12} height={12} />
-          <Skeleton variant="text" width={60} />
-        </Box>
+        <Group key={i} spacing="xs" align="center">
+          <Skeleton height={12} width={12} />
+          <Skeleton height={16} width={60} />
+        </Group>
       ))}
-    </Box>
+    </Group>
   </Box>
 );
 
 // Loading fallback component
 const ChartLoadingFallback = ({
-  message = "Loading chart...",
+  message = 'Loading chart...',
   height = 300,
   variant = 'line'
 }: {
@@ -80,25 +80,34 @@ const ChartLoadingFallback = ({
   height?: number;
   variant?: 'line' | 'bar' | 'pie';
 }) => (
-  <Box position="relative">
+  <Box style={{ position: 'relative' }}>
     <ChartSkeleton height={height} variant={variant} />
     <Box
-      position="absolute"
-      top={0}
-      left={0}
-      right={0}
-      bottom={0}
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-      bgcolor="rgba(255, 255, 255, 0.8)"
-      backdropFilter="blur(2px)"
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        backdropFilter: 'blur(2px)',
+      }}
     >
-      <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
-        <CircularProgress size={24} />
-        <Typography variant="caption" color="text.secondary">
+      <Box
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 8,
+        }}
+      >
+        <Loader size="sm" />
+        <Text size="xs" c="dimmed">
           {message}
-        </Typography>
+        </Text>
       </Box>
     </Box>
   </Box>
@@ -107,24 +116,25 @@ const ChartLoadingFallback = ({
 // Error fallback component
 const ChartErrorFallback = ({ error }: { error?: Error }) => (
   <Box
-    display="flex"
-    flexDirection="column"
-    alignItems="center"
-    justifyContent="center"
-    minHeight={300}
-    gap={2}
-    bgcolor="warning.light"
-    borderRadius={1}
-    p={3}
-    border="1px solid"
-    borderColor="warning.main"
+    style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 300,
+      gap: 16,
+      backgroundColor: 'var(--mantine-color-yellow-0)',
+      borderRadius: 'var(--mantine-radius-md)',
+      padding: 24,
+      border: '1px solid var(--mantine-color-yellow-3)',
+    }}
   >
-    <Typography order={6} color="warning.dark">
+    <Title order={6} c="orange">
       Chart Unavailable
-    </Typography>
-    <Typography size="sm" color="text.secondary" textAlign="center">
-      {error?.message || "Unable to load chart. Please try refreshing the page."}
-    </Typography>
+    </Title>
+    <Text size="sm" c="dimmed" ta="center">
+      {error?.message || 'Unable to load chart. Please try refreshing the page.'}
+    </Text>
   </Box>
 );
 
@@ -165,7 +175,7 @@ interface LazyChartProps {
 }
 
 interface LazyUserActivityChartProps extends LazyChartProps {
-  timeRange?: "30d" | "24h" | "7d" | "90d";
+  timeRange?: '30d' | '24h' | '7d' | '90d';
 }
 
 interface LazyPerformanceIndicatorProps extends LazyChartProps {
@@ -175,7 +185,7 @@ interface LazyPerformanceIndicatorProps extends LazyChartProps {
 }
 
 interface LazyContentMetricsProps extends LazyChartProps {
-  timeRange?: "24h" | "7d" | "30d" | "90d";
+  timeRange?: '24h' | '7d' | '30d' | '90d';
   autoRefresh?: boolean;
 }
 
@@ -183,14 +193,14 @@ interface LazyContentMetricsProps extends LazyChartProps {
 export const LazyUserActivityChart = ({
   timeRange,
   fallback,
-  loadingMessage = "Loading activity chart...",
+  loadingMessage = 'Loading activity chart...',
   height = 300,
   variant = 'line'
 }: LazyUserActivityChartProps) => {
   return (
     <ChartErrorBoundary fallback={fallback}>
       <Suspense fallback={<ChartLoadingFallback message={loadingMessage} height={height} variant={variant} />}>
-        <UserActivityChart timeRange={timeRange as "30d" | "24h" | "7d" | "90d"} />
+        <UserActivityChart timeRange={timeRange as '30d' | '24h' | '7d' | '90d'} />
       </Suspense>
     </ChartErrorBoundary>
   );
@@ -202,7 +212,7 @@ export const LazyPerformanceIndicator = ({
   autoRefresh,
   refreshInterval,
   fallback,
-  loadingMessage = "Loading performance metrics...",
+  loadingMessage = 'Loading performance metrics...',
   height = 300,
   variant = 'bar'
 }: LazyPerformanceIndicatorProps) => {
@@ -224,7 +234,7 @@ export const LazyContentMetrics = ({
   timeRange,
   autoRefresh,
   fallback,
-  loadingMessage = "Loading content metrics...",
+  loadingMessage = 'Loading content metrics...',
   height = 300,
   variant = 'pie'
 }: LazyContentMetricsProps) => {
@@ -263,7 +273,7 @@ export const useChartsPreloader = (shouldPreload: boolean = false) => {
 export const LazyChart = ({
   children,
   fallback,
-  loadingMessage = "Loading chart...",
+  loadingMessage = 'Loading chart...',
   height = 300,
   variant = 'line'
 }: {

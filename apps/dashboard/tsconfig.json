@@ -1,13 +1,14 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    // Target and output configuration for modern browsers and React 19
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable", "WebWorker"],
     "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
 
-    /* Module resolution */
-    "moduleResolution": "node",
+    /* Enhanced Module Resolution for Vite 6 and Mantine v8 */
+    "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -16,32 +17,29 @@
     "jsxImportSource": "react",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
+    "verbatimModuleSyntax": false,
 
-    /* Strict Type-Checking Options - Temporarily Relaxed for Gradual Migration */
-    "strict": false,
-    "noImplicitAny": false,
-    "strictNullChecks": false,
-    "strictFunctionTypes": false,
-    "strictBindCallApply": false,
-    "strictPropertyInitialization": false,
-    "noImplicitThis": false,
-    "alwaysStrict": false,
+    /* Gradual Strict Mode Implementation - Phase 3 (Production Ready) */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
 
-    /* Additional Checks */
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noImplicitReturns": false,
-    "noFallthroughCasesInSwitch": false,
-    "noUncheckedIndexedAccess": false,
-    "noImplicitOverride": false,
-    "exactOptionalPropertyTypes": false,
+    /* Enhanced Type Safety for Mantine Components */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "exactOptionalPropertyTypes": true,
 
-    /* Path mapping */
+    /* Path mapping with enhanced alias support */
     "baseUrl": ".",
-    "typeRoots": [
-      "../../node_modules/@types",
-      "./node_modules/@types"
-    ],
     "paths": {
       "@/*": ["src/*"],
       "@components/*": ["src/components/*"],
@@ -50,20 +48,54 @@
       "@hooks/*": ["src/hooks/*"],
       "@types/*": ["src/types/*"],
       "@utils/*": ["src/utils/*"],
+      "@theme/*": ["src/theme/*"],
+      "@contexts/*": ["src/contexts/*"],
+      "@assets/*": ["src/assets/*"],
+      "@config/*": ["src/config/*"]
+    },
 
-    }
+    /* Type support for Mantine v8 and related libraries */
+    "types": [
+      "vite/client"
+    ],
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ],
+
+    /* Advanced compiler options for modern development */
+    "forceConsistentCasingInFileNames": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": true,
+    "removeComments": false,
+    "noEmitOnError": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./node_modules/.cache/typescript/tsbuildinfo"
   },
   "include": [
-    "src",
-    "src/types/**/*.d.ts"
+    "src/**/*",
+    "src/types/**/*.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "vite-env.d.ts"
   ],
   "exclude": [
-    "src/__tests__",
+    "node_modules",
+    "dist",
+    "coverage",
+    "build",
+    "src/__tests__/**/*",
     "**/*.test.ts",
     "**/*.test.tsx",
-    "src/components/atomic/**/*",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
     "src/components/examples/**/*",
-    "src/components/test/**/*"
+    "src/components/test/**/*",
+    "storybook-static",
+    ".storybook/main.ts"
   ],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "references": [
+    { "path": "./tsconfig.node.json" }
+  ]
 }

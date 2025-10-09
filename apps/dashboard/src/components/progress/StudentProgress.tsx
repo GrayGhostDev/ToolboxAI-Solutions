@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from 'react';
 import {
   Card,
   Text,
@@ -17,7 +17,7 @@ import {
   useMantineTheme,
 } from '@mantine/core';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import {
   IconTrophy as EmojiEvents,
   IconTrendingUp,
@@ -26,7 +26,7 @@ import {
   IconClipboard as Assignment,
   IconPlayerPlay as PlayArrow,
   IconCircleCheck as CheckCircle,
-} from "@tabler/icons-react";
+} from '@tabler/icons-react';
 import {
   ResponsiveContainer,
   XAxis,
@@ -35,9 +35,9 @@ import {
   Tooltip as RechartsTooltip,
   BarChart,
   Bar,
-} from "recharts";
-import { usePusherContext } from "../../contexts/PusherContext";
-import { getStudentProgress, getWeeklyXP, getSubjectMastery } from "../../services/api";
+} from 'recharts';
+import { usePusherContext } from '../../contexts/PusherContext';
+import { getStudentProgress, getWeeklyXP, getSubjectMastery } from '../../services/api';
 
 interface StudentData {
   id: string;
@@ -63,7 +63,7 @@ interface StudentData {
     color: string;
   }[];
   recentActivity: {
-    type: "lesson" | "quiz" | "game" | "achievement";
+    type: 'lesson' | 'quiz' | 'game' | 'achievement';
     title: string;
     score?: number;
     completedAt: string;
@@ -106,16 +106,16 @@ export function StudentProgress({
       if (!studentId) {
         // If no specific student ID, fetch current user's progress
         const [progressResponse, weeklyResponse, subjectResponse] = await Promise.all([
-          getStudentProgress("me"),
+          getStudentProgress('me'),
           getWeeklyXP(),
           getSubjectMastery(),
         ]);
 
         // Transform progress data (align with StudentProgress API)
         const transformedStudent: StudentData = {
-          id: progressResponse.studentId || "current_user",
-          name: "Current Student",
-          email: "student@example.com",
+          id: progressResponse.studentId || 'current_user',
+          name: 'Current Student',
+          email: 'student@example.com',
           avatar: undefined,
           level: 0,
           totalXP: 0,
@@ -161,7 +161,7 @@ export function StudentProgress({
         const transformedStudent: StudentData = {
           id: studentId,
           name: `Student ${studentId}`,
-          email: "student@example.com",
+          email: 'student@example.com',
           avatar: undefined,
           level: 0,
           totalXP: 0,
@@ -197,9 +197,9 @@ export function StudentProgress({
       // Use mock data if no real data available
       if (!studentData || Object.keys(studentData).length === 0) {
         const mockStudent: StudentData = {
-          id: studentId || "current_user",
-          name: "Alex Johnson",
-          email: "alex.johnson@school.edu",
+          id: studentId || 'current_user',
+          name: 'Alex Johnson',
+          email: 'alex.johnson@school.edu',
           avatar: undefined,
           level: 12,
           totalXP: 2847,
@@ -214,30 +214,30 @@ export function StudentProgress({
           rank: 127,
           classRank: 5,
           subjects: [
-            { name: "Mathematics", mastery: 88, progress: 92, color: "#2563EB" },
-            { name: "Science", mastery: 76, progress: 82, color: "#22C55E" },
-            { name: "Language Arts", mastery: 91, progress: 88, color: "#FACC15" },
-            { name: "History", mastery: 72, progress: 76, color: "#9333EA" },
-            { name: "Art", mastery: 84, progress: 90, color: "#EF4444" },
+            { name: 'Mathematics', mastery: 88, progress: 92, color: '#2563EB' },
+            { name: 'Science', mastery: 76, progress: 82, color: '#22C55E' },
+            { name: 'Language Arts', mastery: 91, progress: 88, color: '#FACC15' },
+            { name: 'History', mastery: 72, progress: 76, color: '#9333EA' },
+            { name: 'Art', mastery: 84, progress: 90, color: '#EF4444' },
           ],
           recentActivity: [
             {
-              type: "lesson",
-              title: "Algebra Basics",
+              type: 'lesson',
+              title: 'Algebra Basics',
               score: 92,
               completedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
               xpEarned: 150,
             },
             {
-              type: "quiz",
-              title: "Science Quiz #5",
+              type: 'quiz',
+              title: 'Science Quiz #5',
               score: 88,
               completedAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
               xpEarned: 120,
             },
             {
-              type: "achievement",
-              title: "Week Warrior",
+              type: 'achievement',
+              title: 'Week Warrior',
               completedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
               xpEarned: 500,
             },
@@ -246,13 +246,13 @@ export function StudentProgress({
         setStudentData(mockStudent);
 
         const mockWeekly: WeeklyProgress[] = [
-          { day: "Mon", xp: 240, timeSpent: 2.5, completions: 3 },
-          { day: "Tue", xp: 380, timeSpent: 3.2, completions: 4 },
-          { day: "Wed", xp: 290, timeSpent: 2.8, completions: 2 },
-          { day: "Thu", xp: 450, timeSpent: 4.1, completions: 5 },
-          { day: "Fri", xp: 320, timeSpent: 3.5, completions: 3 },
-          { day: "Sat", xp: 180, timeSpent: 1.2, completions: 1 },
-          { day: "Sun", xp: 120, timeSpent: 0.8, completions: 1 },
+          { day: 'Mon', xp: 240, timeSpent: 2.5, completions: 3 },
+          { day: 'Tue', xp: 380, timeSpent: 3.2, completions: 4 },
+          { day: 'Wed', xp: 290, timeSpent: 2.8, completions: 2 },
+          { day: 'Thu', xp: 450, timeSpent: 4.1, completions: 5 },
+          { day: 'Fri', xp: 320, timeSpent: 3.5, completions: 3 },
+          { day: 'Sat', xp: 180, timeSpent: 1.2, completions: 1 },
+          { day: 'Sun', xp: 120, timeSpent: 0.8, completions: 1 },
         ];
         setWeeklyProgress(mockWeekly);
       }
@@ -263,9 +263,9 @@ export function StudentProgress({
       
       // Use mock data as fallback
       const mockStudent: StudentData = {
-        id: studentId || "current_user",
-        name: "Alex Johnson",
-        email: "alex.johnson@school.edu",
+        id: studentId || 'current_user',
+        name: 'Alex Johnson',
+        email: 'alex.johnson@school.edu',
         avatar: undefined,
         level: 12,
         totalXP: 2847,
@@ -280,16 +280,16 @@ export function StudentProgress({
         rank: 127,
         classRank: 5,
         subjects: [
-          { name: "Mathematics", mastery: 88, progress: 92, color: "#2563EB" },
-          { name: "Science", mastery: 76, progress: 82, color: "#22C55E" },
-          { name: "Language Arts", mastery: 91, progress: 88, color: "#FACC15" },
-          { name: "History", mastery: 72, progress: 76, color: "#9333EA" },
-          { name: "Art", mastery: 84, progress: 90, color: "#EF4444" },
+          { name: 'Mathematics', mastery: 88, progress: 92, color: '#2563EB' },
+          { name: 'Science', mastery: 76, progress: 82, color: '#22C55E' },
+          { name: 'Language Arts', mastery: 91, progress: 88, color: '#FACC15' },
+          { name: 'History', mastery: 72, progress: 76, color: '#9333EA' },
+          { name: 'Art', mastery: 84, progress: 90, color: '#EF4444' },
         ],
         recentActivity: [
           {
-            type: "lesson",
-            title: "Algebra Basics",
+            type: 'lesson',
+            title: 'Algebra Basics',
             score: 92,
             completedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
             xpEarned: 150,
@@ -299,13 +299,13 @@ export function StudentProgress({
       setStudentData(mockStudent);
 
       const mockWeekly: WeeklyProgress[] = [
-        { day: "Mon", xp: 240, timeSpent: 2.5, completions: 3 },
-        { day: "Tue", xp: 380, timeSpent: 3.2, completions: 4 },
-        { day: "Wed", xp: 290, timeSpent: 2.8, completions: 2 },
-        { day: "Thu", xp: 450, timeSpent: 4.1, completions: 5 },
-        { day: "Fri", xp: 320, timeSpent: 3.5, completions: 3 },
-        { day: "Sat", xp: 180, timeSpent: 1.2, completions: 1 },
-        { day: "Sun", xp: 120, timeSpent: 0.8, completions: 1 },
+        { day: 'Mon', xp: 240, timeSpent: 2.5, completions: 3 },
+        { day: 'Tue', xp: 380, timeSpent: 3.2, completions: 4 },
+        { day: 'Wed', xp: 290, timeSpent: 2.8, completions: 2 },
+        { day: 'Thu', xp: 450, timeSpent: 4.1, completions: 5 },
+        { day: 'Fri', xp: 320, timeSpent: 3.5, completions: 3 },
+        { day: 'Sat', xp: 180, timeSpent: 1.2, completions: 1 },
+        { day: 'Sun', xp: 120, timeSpent: 0.8, completions: 1 },
       ];
       setWeeklyProgress(mockWeekly);
     } finally {
@@ -344,13 +344,13 @@ export function StudentProgress({
 
   const getActivityIcon = (type: string) => {
     switch (type) {
-      case "lesson":
+      case 'lesson':
         return <School size={16} />;
-      case "quiz":
+      case 'quiz':
         return <Assignment size={16} />;
-      case "game":
+      case 'game':
         return <PlayArrow size={16} />;
-      case "achievement":
+      case 'achievement':
         return <EmojiEvents size={16} />;
       default:
         return <CheckCircle size={16} />;
@@ -359,16 +359,16 @@ export function StudentProgress({
 
   const getActivityColor = (type: string) => {
     switch (type) {
-      case "lesson":
-        return "blue";
-      case "quiz":
-        return "cyan";
-      case "game":
-        return "green";
-      case "achievement":
-        return "yellow";
+      case 'lesson':
+        return 'blue';
+      case 'quiz':
+        return 'cyan';
+      case 'game':
+        return 'green';
+      case 'achievement':
+        return 'yellow';
       default:
-        return "gray";
+        return 'gray';
     }
   };
 

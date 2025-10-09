@@ -1,5 +1,5 @@
-import React from "react";
-import LoginMantine from "./LoginMantine";
+import React from 'react';
+import LoginMantine from './LoginMantine';
 
 /**
  * Login Component - Main entry point for authentication

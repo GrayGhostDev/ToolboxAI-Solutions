@@ -1,8 +1,30 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Box as ThreeBox, Sphere, Cylinder, Cone } from '@react-three/drei';
-import { Box } from '@mantine/core';
-import * as THREE from 'three';
+import {
+  Box,
+  Text,
+  Button,
+  Select,
+  Slider,
+  Checkbox,
+  Paper,
+  Stack,
+  Group,
+  ColorInput,
+  ActionIcon,
+  Tooltip
+} from '@mantine/core';
+import {
+  IconRefresh,
+  IconDownload,
+  IconSettings,
+  IconPalette,
+  IconPlayerPlay,
+  IconPlayerPause
+} from '@tabler/icons-react';
+import { useMantineTheme } from '@mantine/core';
+import type * as THREE from 'three';
 
 // Character type definitions
 const characterTypes: Record<string, React.FunctionComponent<any>> = {
@@ -270,6 +292,15 @@ interface Procedural3DCharacterProps {
   color?: string;
   animated?: boolean;
   style?: React.CSSProperties;
+  showControls?: boolean;
+  onCharacterChange?: (character: CharacterConfig) => void;
+}
+
+interface CharacterConfig {
+  type: string;
+  color: string;
+  animated: boolean;
+  size: 'small' | 'medium' | 'large';
 }
 
 export const Procedural3DCharacter: React.FunctionComponent<Procedural3DCharacterProps> = ({
@@ -278,27 +309,81 @@ export const Procedural3DCharacter: React.FunctionComponent<Procedural3DCharacte
   color,
   animated = true,
   style,
+  showControls = false,
+  onCharacterChange,
 }) => {
+  const theme = useMantineTheme();
+
+  // Internal state for character configuration
+  const [config, setConfig] = useState<CharacterConfig>({
+    type: characterType,
+    color: color || theme.colors.brand[5],
+    animated,
+    size,
+  });
+
   const sizeMap = {
     small: 100,
     medium: 150,
     large: 200,
   };
 
-  const characterSize = sizeMap[size];
+  const characterSize = sizeMap[config.size];
 
   // Clean up character type (remove _1, _2 suffixes)
-  const cleanType = characterType.replace(/_\d+$/, '').toLowerCase();
+  const cleanType = config.type.replace(/_\d+$/, '').toLowerCase();
 
-  return (
+  // Character type options for Select component
+  const characterTypeOptions = [
+    { value: 'default', label: 'Default Character' },
+    { value: 'astronaut', label: 'Astronaut' },
+    { value: 'robot', label: 'Robot' },
+    { value: 'wizard', label: 'Wizard' },
+    { value: 'pirate', label: 'Pirate' },
+    { value: 'ninja', label: 'Ninja' },
+  ];
+
+  const sizeOptions = [
+    { value: 'small', label: 'Small (100px)' },
+    { value: 'medium', label: 'Medium (150px)' },
+    { value: 'large', label: 'Large (200px)' },
+  ];
+
+  // Handle configuration changes
+  const handleConfigChange = (newConfig: Partial<CharacterConfig>) => {
+    const updatedConfig = { ...config, ...newConfig };
+    setConfig(updatedConfig);
+    onCharacterChange?.(updatedConfig);
+  };
+
+  // Export character function (placeholder)
+  const handleExportCharacter = () => {
+    console.log('Exporting character:', config);
+    // Implement export functionality
+  };
+
+  // Reset to default character
+  const handleResetCharacter = () => {
+    const defaultConfig = {
+      type: 'default',
+      color: theme.colors.brand[5],
+      animated: true,
+      size: 'medium' as const,
+    };
+    setConfig(defaultConfig);
+    onCharacterChange?.(defaultConfig);
+  };
+
+  const renderCharacterViewer = () => (
     <Box
       style={{
         width: characterSize,
         height: characterSize,
-        borderRadius: '50%',
+        borderRadius: theme.radius.lg,
         overflow: 'hidden',
-        background: 'radial-gradient(circle, rgba(0,255,255,0.1) 0%, rgba(255,0,255,0.1) 100%)',
-        border: '3px solid rgba(255,255,255,0.2)',
+        background: `radial-gradient(circle, ${theme.colors.neon[1]} 0%, ${theme.colors.purple[1]} 100%)`,
+        border: `3px solid ${theme.colors.brand[3]}`,
+        boxShadow: theme.shadows.lg,
         ...style,
       }}
     >
@@ -308,20 +393,129 @@ export const Procedural3DCharacter: React.FunctionComponent<Procedural3DCharacte
       >
         <ambientLight intensity={0.6} />
         <directionalLight position={[5, 5, 5]} intensity={1} />
-        <pointLight position={[-5, 5, -5]} intensity={0.5} color="#00ffff" />
-        <pointLight position={[5, -5, 5]} intensity={0.3} color="#ff00ff" />
+        <pointLight position={[-5, 5, -5]} intensity={0.5} color={theme.colors.neon[5]} />
+        <pointLight position={[5, -5, 5]} intensity={0.3} color={theme.colors.purple[5]} />
 
-        {animated ? (
-          <AnimatedCharacter type={cleanType} color={color} />
+        {config.animated ? (
+          <AnimatedCharacter type={cleanType} color={config.color} />
         ) : (
           (() => {
             const CharacterModel = characterTypes[cleanType] || characterTypes.default;
-            return <CharacterModel color={color} />;
+            return <CharacterModel color={config.color} />;
           })()
         )}
       </Canvas>
     </Box>
   );
+
+  const renderControls = () => (
+    <Paper p="md" radius="lg" withBorder>
+      <Stack gap="md">
+        <Group justify="space-between" align="center">
+          <Text size="lg" fw={600} c={theme.colors.brand[6]}>
+            Character Customization
+          </Text>
+          <Group gap="xs">
+            <Tooltip label="Reset Character">
+              <ActionIcon
+                variant="outline"
+                color="gray"
+                onClick={handleResetCharacter}
+                size="md"
+              >
+                <IconRefresh size={16} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="Export Character">
+              <ActionIcon
+                variant="outline"
+                color={theme.primaryColor}
+                onClick={handleExportCharacter}
+                size="md"
+              >
+                <IconDownload size={16} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+        </Group>
+
+        <Select
+          label="Character Type"
+          placeholder="Select character type"
+          data={characterTypeOptions}
+          value={config.type}
+          onChange={(value: string | null) => value && handleConfigChange({ type: value })}
+          leftSection={<IconSettings size={16} />}
+        />
+
+        <Select
+          label="Size"
+          placeholder="Select size"
+          data={sizeOptions}
+          value={config.size}
+          onChange={(value: string | null) => value && handleConfigChange({ size: value as 'small' | 'medium' | 'large' })}
+        />
+
+        <ColorInput
+          label="Character Color"
+          placeholder="Choose character color"
+          value={config.color}
+          onChange={(value: string) => handleConfigChange({ color: value })}
+          leftSection={<IconPalette size={16} />}
+          format="hex"
+          withEyeDropper
+        />
+
+        <Checkbox
+          label={
+            <Group gap="xs">
+              {config.animated ? <IconPlayerPause size={16} /> : <IconPlayerPlay size={16} />}
+              <Text size="sm">Enable Animation</Text>
+            </Group>
+          }
+          checked={config.animated}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleConfigChange({ animated: event.currentTarget.checked })}
+        />
+
+        <Box>
+          <Text size="sm" fw={500} mb="xs">
+            Character Preview Size: {characterSize}px
+          </Text>
+          <Slider
+            value={characterSize}
+            onChange={(value: number) => {
+              const newSize = value <= 110 ? 'small' : value <= 170 ? 'medium' : 'large';
+              handleConfigChange({ size: newSize });
+            }}
+            min={100}
+            max={200}
+            step={25}
+            marks={[
+              { value: 100, label: 'S' },
+              { value: 150, label: 'M' },
+              { value: 200, label: 'L' },
+            ]}
+            color={theme.primaryColor}
+          />
+        </Box>
+      </Stack>
+    </Paper>
+  );
+
+  if (showControls) {
+    return (
+      <Box style={style}>
+        <Stack gap="lg">
+          <Group justify="center">
+            {renderCharacterViewer()}
+          </Group>
+          {renderControls()}
+        </Stack>
+      </Box>
+    );
+  }
+
+  return renderCharacterViewer();
 };
 
 export default Procedural3DCharacter;

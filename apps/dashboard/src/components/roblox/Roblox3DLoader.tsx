@@ -1,13 +1,13 @@
 /**
  * Roblox3DLoader Component
  *
- * A fun, animated 3D loading spinner for the dashboard
+ * A fun, animated 3D loading spinner for the dashboard using Mantine v8
  */
 
 import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Text, RoundedBox, Float } from '@react-three/drei';
-import { Box, Text as MantineText } from '@mantine/core';
+import { Text as ThreeText, RoundedBox, Float } from '@react-three/drei';
+import { Box, Text } from '@mantine/core';
 import * as THREE from 'three';
 import { robloxColors } from '../../theme/robloxTheme';
 
@@ -162,7 +162,7 @@ export const Roblox3DLoader: React.FunctionComponent<Roblox3DLoaderProps> = ({
         justifyContent: 'center',
         borderRadius: 12,
         background: showBackground
-          ? `linear-gradient(135deg, rgba(15, 15, 46, 0.9), rgba(46, 11, 46, 0.9))`
+          ? 'linear-gradient(135deg, rgba(15, 15, 46, 0.9), rgba(46, 11, 46, 0.9))'
           : 'transparent',
         backdropFilter: showBackground ? 'blur(10px)' : 'none',
         border: showBackground ? `2px solid ${robloxColors.neon.electricBlue}20` : 'none',
@@ -205,7 +205,7 @@ export const Roblox3DLoader: React.FunctionComponent<Roblox3DLoaderProps> = ({
         )}
 
         {message && (
-          <Text
+          <ThreeText
             position={[0, -2, 0]}
             fontSize={0.3}
             color={robloxColors.neon.electricBlue}
@@ -214,12 +214,12 @@ export const Roblox3DLoader: React.FunctionComponent<Roblox3DLoaderProps> = ({
             font="/fonts/bold.woff"
           >
             {message}
-          </Text>
+          </ThreeText>
         )}
       </Canvas>
 
       {message && (
-        <MantineText
+        <Text
           size="sm"
           style={{
             position: 'absolute',
@@ -231,7 +231,7 @@ export const Roblox3DLoader: React.FunctionComponent<Roblox3DLoaderProps> = ({
           }}
         >
           {message}
-        </MantineText>
+        </Text>
       )}
 
       <style>

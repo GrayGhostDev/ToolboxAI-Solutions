@@ -26,9 +26,10 @@ import {
   Menu,
   Title,
   Textarea,
-  notifications
+  notifications,
+  useMantineTheme
 } from '@mantine/core';
-import { useMantineTheme, useMediaQuery } from '@mantine/hooks';
+import { useMediaQuery } from '@mantine/hooks';
 
 import {
   IconSend,

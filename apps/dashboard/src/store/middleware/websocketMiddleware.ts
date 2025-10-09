@@ -3,14 +3,14 @@
  * Bridges WebSocket events with Redux actions
  */
 
-import { Middleware } from '@reduxjs/toolkit';
-import { PusherService as WebSocketService } from '../../services/pusher';
+import { type Middleware } from '@reduxjs/toolkit';
+import { type PusherService as WebSocketService } from '../../services/pusher';
 import { 
   WebSocketMessageType, 
-  WebSocketChannel,
-  ContentGenerationProgress,
-  ContentGenerationResponse,
-  SystemNotification,
+  type WebSocketChannel,
+  type ContentGenerationProgress,
+  type ContentGenerationResponse,
+  type SystemNotification,
   WebSocketState
 } from '../../types/websocket';
 import { 

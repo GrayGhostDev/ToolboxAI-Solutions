@@ -6,7 +6,7 @@
 
 import { useEffect, useCallback, useState } from 'react';
 import { pusherService } from '../../services/pusher';
-import { WebSocketChannel, WebSocketEventHandler, WebSocketMessage } from '../../types/websocket';
+import { type WebSocketChannel, type WebSocketEventHandler, type WebSocketMessage } from '../../types/websocket';
 
 export interface UseWebSocketChannelOptions {
   autoSubscribe?: boolean;

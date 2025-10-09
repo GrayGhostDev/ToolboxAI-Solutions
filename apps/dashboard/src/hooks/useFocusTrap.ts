@@ -8,7 +8,7 @@
  * @since 2025-10-01
  */
 
-import { useEffect, useRef, RefObject } from 'react';
+import { useEffect, useRef, type RefObject } from 'react';
 
 export interface FocusTrapOptions {
   /** Whether the focus trap is active */

@@ -1,94 +1,60 @@
-import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../utils/mui-imports';
 /**
- * Emotion Test Setup - 2025 Best Practices
+ * Mantine Test Setup - 2025 Best Practices
  *
- * Proper Emotion cache configuration for MUI v5 testing
+ * Proper Mantine configuration for testing
  * Based on 2025 testing recommendations
  */
 
 import React from 'react';
-import { CacheProvider } from '@mantine/core';
-import createCache from '@mantine/core';
+import { MantineProvider, createTheme } from '@mantine/core';
+import { Notifications } from '@mantine/notifications';
 
-// Create a test-specific emotion cache with proper configuration
-// This prevents style injection issues in jsdom/happy-dom
-export const createTestEmotionCache = () => {
-  return createCache({
-    key: 'mui-test',
-    prepend: true, // Ensures proper style injection order
-    speedy: false, // Disable speedy mode for better compatibility
-  });
-};
-
-// Create a default test theme
+// Create a default test theme for Mantine
 export const createTestTheme = () => {
   return createTheme({
-    // Disable transitions for testing
-    transitions: {
-      create: () => 'none',
-      duration: {
-        shortest: 0,
-        shorter: 0,
-        short: 0,
-        standard: 0,
-        complex: 0,
-        enteringScreen: 0,
-        leavingScreen: 0,
-      },
-    },
-    // Disable animations
-    components: {
-      MuiCssBaseline: {
-        styleOverrides: {
-          '*, *::before, *::after': {
-            transition: 'none !important',
-            animation: 'none !important',
-          },
-        },
-      },
-      // Disable ripple effects
-      MuiButtonBase: {
-        defaultProps: {
-          disableRipple: true,
-        },
-      },
-    },
+    // Disable animations for testing
+    respectReducedMotion: false,
+    // Basic theme configuration for tests
+    primaryColor: 'blue',
+    fontFamily: 'Arial, sans-serif',
   });
 };
 
-interface EmotionTestProviderProps {
+interface MantineTestProviderProps {
   children: React.ReactNode;
-  cache?: ReturnType<typeof createCache>;
   theme?: ReturnType<typeof createTheme>;
 }
 
 /**
- * EmotionTestProvider - Wraps components with proper Emotion/MUI configuration
+ * MantineTestProvider - Wraps components with proper Mantine configuration
  *
  * Usage in tests:
  * ```tsx
  * render(
- *   <EmotionTestProvider>
+ *   <MantineTestProvider>
  *     <YourComponent />
- *   </EmotionTestProvider>
+ *   </MantineTestProvider>
  * );
  * ```
  */
-export const EmotionTestProvider: React.FunctionComponent<EmotionTestProviderProps> = ({
+export const MantineTestProvider: React.FunctionComponent<MantineTestProviderProps> = ({
   children,
-  cache = createTestEmotionCache(),
   theme = createTestTheme(),
 }) => {
   return (
-    <CacheProvider value={cache}>
-      <ThemeProvider theme={theme}>
-        {children}
-      </ThemeProvider>
-    </CacheProvider>
+    <MantineProvider theme={theme}>
+      <Notifications />
+      {children}
+    </MantineProvider>
   );
 };
 
 // Export convenience function for custom render
-export const wrapWithEmotionProviders = (ui: React.ReactElement) => {
-  return <EmotionTestProvider>{ui}</EmotionTestProvider>;
+export const wrapWithMantineProviders = (ui: React.ReactElement) => {
+  return <MantineTestProvider>{ui}</MantineTestProvider>;
 };
+
+// Legacy export for backwards compatibility
+export const EmotionTestProvider = MantineTestProvider;
+export const wrapWithEmotionProviders = wrapWithMantineProviders;
+export const createTestEmotionCache = () => null; // No-op for compatibility

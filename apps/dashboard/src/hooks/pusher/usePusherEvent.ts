@@ -7,7 +7,7 @@
 
 import { useEffect, useCallback, useRef } from 'react';
 import { usePusherContext } from '../../contexts/PusherContext';
-import { PusherEventHandler } from '../../types/pusher';
+import { type PusherEventHandler } from '../../types/pusher';
 import { logger } from '../../utils/logger';
 
 export interface UsePusherEventOptions {

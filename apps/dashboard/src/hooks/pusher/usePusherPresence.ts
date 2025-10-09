@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePusherContext } from '../../contexts/PusherContext';
-import { PusherMember, PusherPresenceChannelData } from '../../types/pusher';
+import { type PusherMember, type PusherPresenceChannelData } from '../../types/pusher';
 import { logger } from '../../utils/logger';
 
 export interface UsePresenceOptions {

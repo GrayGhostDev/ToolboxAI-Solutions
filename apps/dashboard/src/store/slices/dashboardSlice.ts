@@ -1,5 +1,5 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { DashboardMetrics, Activity, Event } from "../../types/api";
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { type DashboardMetrics, type Activity, type Event } from '../../types/api';
 
 interface DashboardState {
   loading: boolean;
@@ -20,7 +20,7 @@ const initialState: DashboardState = {
 };
 
 export const dashboardSlice = createSlice({
-  name: "dashboard",
+  name: 'dashboard',
   initialState,
   reducers: {
     setLoading(state, action: PayloadAction<boolean>) {

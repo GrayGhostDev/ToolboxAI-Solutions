@@ -1,16 +1,17 @@
-import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../../utils/mui-imports';
 /**
  * Atomic Button Component - React 19 Version
  *
- * Refactored to use React 19 features:
- * - Noneeded (components can accept ref prop directly)
+ * Refactored to use React 19 features and Mantine:
+ * - Direct ref prop support
  * - Using new Actions API for async operations
- * - Improved TypeScript types
+ * - Mantine Button as base component
  */
 
 import React from 'react';
+import { Button as MantineButton, Loader, useMantineTheme } from '@mantine/core';
+import type { ButtonProps as MantineButtonProps } from '@mantine/core';
 import { designTokens } from '../../../theme/designTokens';
-import { useAction } from '../../../config/react19.ts';
+import { useAction } from '../../../config/react19';
 
 // Custom props for our Button component
 export interface AtomicButtonProps {
@@ -22,15 +23,16 @@ export interface AtomicButtonProps {
   iconPosition?: 'left' | 'right';
   fullWidth?: boolean;
   robloxTheme?: boolean;
+  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
   // React 19: Support async actions
   action?: (...args: any[]) => Promise<any>;
   onSuccess?: (result: any) => void;
   onError?: (error: Error) => void;
 }
 
-// Combine with MUI button props and React 19 ref support
+// Combine with Mantine button props and React 19 ref support
 export type ButtonProps = AtomicButtonProps &
-  Omit<MuiButtonProps, keyof AtomicButtonProps | 'variant' | 'size'> & {
+  Omit<MantineButtonProps, keyof AtomicButtonProps | 'variant' | 'size'> & {
     ref?: React.Ref<HTMLButtonElement>;
   };
 
@@ -39,145 +41,73 @@ const ROBLOX_RED = '#E2231A';
 const ROBLOX_RED_DARK = '#B71C15';
 const ROBLOX_WHITE = '#FFFFFF';
 
-const StyledButton = styled(MuiButton)<AtomicButtonProps>(({
-  theme,
-  variant = 'primary',
-  size = 'md',
-  robloxTheme = true,
-  loading
-}) => {
-  // Size configurations
-  const sizeMap = {
-    xs: {
-      padding: `${designTokens.spacing[1]} ${designTokens.spacing[2]}`,
-      fontSize: designTokens.typography.fontSize.xs[0],
-      minHeight: '24px'
-    },
-    sm: {
-      padding: `${designTokens.spacing[1.5]} ${designTokens.spacing[3]}`,
-      fontSize: designTokens.typography.fontSize.sm[0],
-      minHeight: '32px'
-    },
-    md: {
-      padding: `${designTokens.spacing[2]} ${designTokens.spacing[4]}`,
-      fontSize: designTokens.typography.fontSize.sm[0],
-      minHeight: '40px'
-    },
-    lg: {
-      padding: `${designTokens.spacing[2.5]} ${designTokens.spacing[6]}`,
-      fontSize: designTokens.typography.fontSize.base[0],
-      minHeight: '48px'
-    },
-    xl: {
-      padding: `${designTokens.spacing[3]} ${designTokens.spacing[8]}`,
-      fontSize: designTokens.typography.fontSize.lg[0],
-      minHeight: '56px'
-    }
-  };
+// Variant mapping for Mantine
+const getMantineVariant = (variant?: string) => {
+  switch (variant) {
+    case 'primary':
+      return 'filled';
+    case 'secondary':
+      return 'light';
+    case 'outlined':
+      return 'outline';
+    case 'text':
+    case 'ghost':
+      return 'subtle';
+    case 'danger':
+      return 'filled';
+    default:
+      return 'filled';
+  }
+};
 
-  // Variant configurations
-  const getVariantStyles = () => {
-    const baseStyles = {
-      borderRadius: designTokens.borderRadius.lg,
-      fontWeight: designTokens.typography.fontWeight.semibold,
-      textTransform: 'none' as const,
-      position: 'relative' as const,
-      overflow: 'hidden' as const,
-      transition: `all ${designTokens.animation.duration.normal} ${designTokens.animation.easing.inOut}`,
-      ...sizeMap[size as keyof typeof sizeMap]
-    };
+// Size mapping for Mantine
+const getMantineSize = (size?: string) => {
+  switch (size) {
+    case 'xs':
+      return 'xs';
+    case 'sm':
+      return 'sm';
+    case 'md':
+      return 'md';
+    case 'lg':
+      return 'lg';
+    case 'xl':
+      return 'xl';
+    default:
+      return 'md';
+  }
+};
 
-    if (!robloxTheme) {
-      return baseStyles;
-    }
+// Color mapping for Mantine
+const getMantineColor = (variant?: string, robloxTheme?: boolean) => {
+  if (!robloxTheme) {
+    return 'blue';
+  }
 
-    switch (variant) {
-      case 'primary':
-        return {
-          ...baseStyles,
-          backgroundColor: ROBLOX_RED,
-          color: ROBLOX_WHITE,
-          '&:hover': {
-            backgroundColor: ROBLOX_RED_DARK,
-            transform: 'translateY(-1px)',
-            boxShadow: designTokens.shadows.lg,
-          },
-          '&:active': {
-            transform: 'translateY(0)',
-          },
-          '&:disabled': {
-            backgroundColor: alpha(ROBLOX_RED, 0.4),
-            color: alpha(ROBLOX_WHITE, 0.6),
-          },
-        };
-
-      case 'secondary':
-        return {
-          ...baseStyles,
-          backgroundColor: designTokens.colors.gray[100],
-          color: designTokens.colors.gray[900],
-          '&:hover': {
-            backgroundColor: designTokens.colors.gray[200],
-            transform: 'translateY(-1px)',
-          },
-        };
-
-      case 'outlined':
-        return {
-          ...baseStyles,
-          backgroundColor: 'transparent',
-          border: `2px solid ${ROBLOX_RED}`,
-          color: ROBLOX_RED,
-          '&:hover': {
-            backgroundColor: alpha(ROBLOX_RED, 0.1),
-            borderColor: ROBLOX_RED_DARK,
-          },
-        };
-
-      case 'ghost':
-        return {
-          ...baseStyles,
-          backgroundColor: 'transparent',
-          color: designTokens.colors.gray[700],
-          '&:hover': {
-            backgroundColor: alpha(designTokens.colors.gray[500], 0.1),
-          },
-        };
-
-      case 'danger':
-        return {
-          ...baseStyles,
-          backgroundColor: designTokens.colors.red[600],
-          color: ROBLOX_WHITE,
-          '&:hover': {
-            backgroundColor: designTokens.colors.red[700],
-          },
-        };
-
-      default:
-        return baseStyles;
-    }
-  };
-
-  return {
-    ...getVariantStyles(),
-    ...(loading && {
-      pointerEvents: 'none',
-      opacity: 0.7,
-    }),
-  };
-});
+  switch (variant) {
+    case 'danger':
+      return 'red';
+    case 'secondary':
+      return 'gray';
+    default:
+      return 'red'; // Roblox red
+  }
+};
 
 /**
- * React 19 Button Component
- * Noneeded - ref is handled as a regular prop
+ * React 19 Button Component using Mantine
+ * Direct ref prop support
  */
 export const Button = ({
   children,
+  variant = 'primary',
+  size = 'md',
   loading = false,
   loadingText,
   icon,
   iconPosition = 'left',
+  fullWidth = false,
+  robloxTheme = true,
   disabled,
   onClick,
   action,
@@ -186,6 +116,8 @@ export const Button = ({
   ref,
   ...props
 }: ButtonProps) => {
+  const theme = useMantineTheme();
+
   // React 19: Use the Actions API for async operations
   const actionHandler = action ? useAction(action, onSuccess, onError) : null;
 
@@ -201,46 +133,42 @@ export const Button = ({
   const isLoading = loading || (actionHandler?.isPending ?? false);
   const isDisabled = disabled || isLoading;
 
-  const content = (
-    <>
-      {isLoading ? (
-        <>
-          <CircularProgress
-            size={16}
-            style={{
-              color: 'inherit',
-              marginRight: loadingText ? 1 : 0,
-            }}
-          />
-          {loadingText && <span>{loadingText}</span>}
-        </>
-      ) : (
-        <>
-          {icon && iconPosition === 'left' && (
-            <span style={{ marginRight: '8px', display: 'inline-flex' }}>
-              {icon}
-            </span>
-          )}
-          {children}
-          {icon && iconPosition === 'right' && (
-            <span style={{ marginLeft: '8px', display: 'inline-flex' }}>
-              {icon}
-            </span>
-          )}
-        </>
-      )}
-    </>
-  );
+  // Map our custom props to Mantine props
+  const mantineVariant = getMantineVariant(variant);
+  const mantineSize = getMantineSize(size);
+  const mantineColor = getMantineColor(variant, robloxTheme);
+
+  // Custom styles for Roblox theme
+  const customStyles = robloxTheme ? {
+    root: {
+      backgroundColor: variant === 'primary' ? ROBLOX_RED : undefined,
+      '&:hover': {
+        backgroundColor: variant === 'primary' ? ROBLOX_RED_DARK : undefined,
+        transform: 'translateY(-1px)',
+      },
+      '&:active': {
+        transform: 'translateY(0)',
+      },
+    }
+  } : undefined;
 
   return (
-    <StyledButton
+    <MantineButton
       ref={ref}
+      variant={mantineVariant}
+      size={mantineSize}
+      color={mantineColor}
+      fullWidth={fullWidth}
+      loading={isLoading}
       disabled={isDisabled}
       onClick={handleClick}
+      leftSection={icon && iconPosition === 'left' ? icon : undefined}
+      rightSection={icon && iconPosition === 'right' ? icon : undefined}
+      styles={customStyles}
       {...props}
     >
-      {content}
-    </StyledButton>
+      {isLoading && loadingText ? loadingText : children}
+    </MantineButton>
   );
 };
 

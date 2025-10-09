@@ -1,4 +1,4 @@
-import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
+import { Box, Button, Text, Paper, Stack, Container, Card, Tabs } from '@mantine/core';
 import React from 'react';
 import { ButtonMigrationExample } from '../migration/examples/ButtonMigration';
 import { CardMigrationExample } from '../migration/examples/CardMigration';
@@ -22,7 +22,7 @@ function TabPanel(props: TabPanelProps) {
       aria-labelledby={`migration-tab-${index}`}
       {...other}
     >
-      {value === index && <Box style={{ p: 3 }}>{children}</Box>}
+      {value === index && <Box p="md">{children}</Box>}
     </div>
   );
 }
@@ -47,207 +47,191 @@ export default function MigrationDemo() {
   };
 
   return (
-    <Container maxWidth="lg" style={{ py: 4 }}>
-      <Typography order={3} component="h1" gutterBottom>
+    <Container size="lg" py="xl">
+      <Text size="xl" fw={700} mb="md">
         Mantine Migration Demo
-      </Typography>
+      </Text>
 
-      <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+      <Text size="md" c="dimmed" mb="xl">
         Interactive demonstration of the MUI to Mantine migration process
-      </Typography>
+      </Text>
 
       {/* Migration Progress Summary */}
-      <Box style={{
-        mt: 3,
-        p: 2,
-        bgcolor: 'background.paper',
-        borderRadius: 2,
-        border: '1px solid',
-        borderColor: 'divider'
-      }}>
-        <Typography order={6} gutterBottom>
+      <Paper withBorder p="md" mb="xl">
+        <Text size="lg" fw={600} mb="md">
           Migration Progress
-        </Typography>
-        <Box style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+        </Text>
+        <Box style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
           <Box>
-            <Typography size="sm" color="text.secondary">
+            <Text size="sm" c="dimmed">
               Total Components
-            </Typography>
-            <Typography order={4} color="primary.main">
+            </Text>
+            <Text size="xl" fw={700} c="blue">
               {progress.total}
-            </Typography>
+            </Text>
           </Box>
           <Box>
-            <Typography size="sm" color="text.secondary">
+            <Text size="sm" c="dimmed">
               Completed
-            </Typography>
-            <Typography order={4} color="success.main">
+            </Text>
+            <Text size="xl" fw={700} c="green">
               {progress.completed}
-            </Typography>
+            </Text>
           </Box>
           <Box>
-            <Typography size="sm" color="text.secondary">
+            <Text size="sm" c="dimmed">
               In Progress
-            </Typography>
-            <Typography order={4} color="warning.main">
+            </Text>
+            <Text size="xl" fw={700} c="orange">
               {progress.inProgress}
-            </Typography>
+            </Text>
           </Box>
           <Box>
-            <Typography size="sm" color="text.secondary">
+            <Text size="sm" c="dimmed">
               Progress
-            </Typography>
-            <Typography order={4} color="info.main">
+            </Text>
+            <Text size="xl" fw={700} c="cyan">
               {progress.completionPercentage.toFixed(1)}%
-            </Typography>
+            </Text>
           </Box>
         </Box>
-      </Box>
+      </Paper>
 
-      <Box style={{ borderBottom: 1, borderColor: 'divider', mt: 4 }}>
-        <Tabs value={value} onChange={handleChange} aria-label="migration demo tabs">
-          <Tab label="Component Examples" {...a11yProps(0)} />
-          <Tab label="Migration Guide" {...a11yProps(1)} />
-          <Tab label="Migration Plan" {...a11yProps(2)} />
-          <Tab label="Next Steps" {...a11yProps(3)} />
-        </Tabs>
-      </Box>
+      <Tabs value={value.toString()} onChange={(val) => handleChange({} as React.SyntheticEvent, parseInt(val || '0'))}>
+        <Tabs.List>
+          <Tabs.Tab value="0">Component Examples</Tabs.Tab>
+          <Tabs.Tab value="1">Migration Guide</Tabs.Tab>
+          <Tabs.Tab value="2">Migration Plan</Tabs.Tab>
+          <Tabs.Tab value="3">Next Steps</Tabs.Tab>
+        </Tabs.List>
 
-      <TabPanel value={value} index={0}>
-        <Typography order={5} gutterBottom>
-          Interactive Component Examples
-        </Typography>
-        <Typography size="md" color="text.secondary" paragraph>
-          See side-by-side comparisons of MUI and Mantine components. Use the Migration Control Panel
-          (bottom right) to switch between versions or enable comparison mode.
-        </Typography>
+        <Tabs.Panel value="0">
+          <Text size="lg" fw={600} mb="md">
+            Interactive Component Examples
+          </Text>
+          <Text size="md" c="dimmed" mb="xl">
+            See side-by-side comparisons of MUI and Mantine components. Use the Migration Control Panel
+            (bottom right) to switch between versions or enable comparison mode.
+          </Text>
 
-        <Box style={{ mt: 4 }}>
-          <Typography order={6} gutterBottom>
-            Button Migration
-          </Typography>
-          <ButtonMigrationExample />
-        </Box>
+          <Box mt="xl">
+            <Text size="md" fw={600} mb="md">
+              Button Migration
+            </Text>
+            <ButtonMigrationExample />
+          </Box>
 
-        <Box style={{ mt: 4 }}>
-          <Typography order={6} gutterBottom>
-            Card Migration
-          </Typography>
-          <CardMigrationExample />
-        </Box>
-      </TabPanel>
+          <Box mt="xl">
+            <Text size="md" fw={600} mb="md">
+              Card Migration
+            </Text>
+            <CardMigrationExample />
+          </Box>
+        </Tabs.Panel>
 
-      <TabPanel value={value} index={1}>
-        <MantineMigrationGuide />
-      </TabPanel>
+        <Tabs.Panel value="1">
+          <MantineMigrationGuide />
+        </Tabs.Panel>
 
-      <TabPanel value={value} index={2}>
-        <Typography order={5} gutterBottom>
-          Migration Plan Overview
-        </Typography>
-        <Typography size="md" color="text.secondary" paragraph>
-          Comprehensive plan for migrating all components from MUI to Mantine.
-        </Typography>
+        <Tabs.Panel value="2">
+          <Text size="lg" fw={600} mb="md">
+            Migration Plan Overview
+          </Text>
+          <Text size="md" c="dimmed" mb="xl">
+            Comprehensive plan for migrating all components from MUI to Mantine.
+          </Text>
 
-        <Box style={{ mt: 3 }}>
-          <Typography order={6} gutterBottom>
-            Component Status
-          </Typography>
-          <Box style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 2 }}>
-            {plan.map((component: any) => (
-              <Box
+          <Box mt="md">
+            <Text size="md" fw={600} mb="md">
+              Component Status
+            </Text>
+            <Box style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
+              {plan.map((component: any) => (
+                <Paper
+                  key={component.id}
+                  p="md"
+                  withBorder
+                  bg={component.phase === 'complete' ? 'green.1' :
+                      component.phase === 'development' ? 'orange.1' :
+                      'gray.0'}
+                >
+                  <Text size="md" fw={700}>
+                    {component.name}
+                  </Text>
+                  <Text size="sm" c="dimmed">
+                    Phase: {component.phase} | Priority: {component.priority}
+                  </Text>
+                  {component.notes && (
+                    <Text size="xs" c="dimmed" mt="xs">
+                      {component.notes}
+                    </Text>
+                  )}
+                </Paper>
+              ))}
+            </Box>
+          </Box>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="3">
+          <Text size="lg" fw={600} mb="md">
+            Next Components to Migrate
+          </Text>
+          <Text size="md" c="dimmed" mb="xl">
+            These are the highest priority components ready for migration.
+          </Text>
+
+          <Box style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16 }}>
+            {nextComponents.map((component: any) => (
+              <Paper
                 key={component.id}
-                style={{
-                  p: 2,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: 1,
-                  bgcolor: component.phase === 'complete' ? 'success.light' :
-                          component.phase === 'development' ? 'warning.light' :
-                          'background.paper'
-                }}
+                p="lg"
+                withBorder
+                style={{ borderWidth: 2, borderColor: 'var(--mantine-color-blue-4)' }}
+                bg="blue.1"
               >
-                <Typography variant="subtitle1" fontWeight="bold">
+                <Text size="md" fw={600} mb="xs">
                   {component.name}
-                </Typography>
-                <Typography size="sm" color="text.secondary">
-                  Phase: {component.phase} | Priority: {component.priority}
-                </Typography>
+                </Text>
+                <Text size="sm" style={{ opacity: 0.9 }}>
+                  Priority: {component.priority}
+                </Text>
                 {component.notes && (
-                  <Typography variant="caption" display="block" style={{ mt: 1 }}>
+                  <Text size="sm" mt="xs" style={{ opacity: 0.8 }}>
                     {component.notes}
-                  </Typography>
+                  </Text>
                 )}
-              </Box>
+              </Paper>
             ))}
           </Box>
-        </Box>
-      </TabPanel>
 
-      <TabPanel value={value} index={3}>
-        <Typography order={5} gutterBottom>
-          Next Components to Migrate
-        </Typography>
-        <Typography size="md" color="text.secondary" paragraph>
-          These are the highest priority components ready for migration.
-        </Typography>
-
-        <Box style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 2 }}>
-          {nextComponents.map((component: any) => (
-            <Box
-              key={component.id}
-              style={{
-                p: 3,
-                border: '2px solid',
-                borderColor: 'primary.main',
-                borderRadius: 2,
-                bgcolor: 'primary.light',
-                color: 'primary.contrastText'
-              }}
+          {nextComponents.length === 0 && (
+            <Paper
+              p="xl"
+              withBorder
+              ta="center"
+              bg="green.1"
             >
-              <Typography order={6} gutterBottom>
-                {component.name}
-              </Typography>
-              <Typography size="sm" style={{ opacity: 0.9 }}>
-                Priority: {component.priority}
-              </Typography>
-              {component.notes && (
-                <Typography size="sm" style={{ mt: 1, opacity: 0.8 }}>
-                  {component.notes}
-                </Typography>
-              )}
-            </Box>
-          ))}
-        </Box>
+              <Text size="md" fw={600} mb="xs">
+                🎉 All Components Migrated!
+              </Text>
+              <Text size="md">
+                Congratulations! You've successfully migrated all planned components to Mantine.
+              </Text>
+            </Paper>
+          )}
 
-        {nextComponents.length === 0 && (
-          <Box style={{
-            textAlign: 'center',
-            py: 4,
-            bgcolor: 'success.light',
-            borderRadius: 2,
-            color: 'success.contrastText'
-          }}>
-            <Typography order={6} gutterBottom>
-              🎉 All Components Migrated!
-            </Typography>
-            <Typography size="md">
-              Congratulations! You've successfully migrated all planned components to Mantine.
-            </Typography>
-          </Box>
-        )}
-
-        <Box style={{ mt: 4, p: 2, bgcolor: 'info.light', borderRadius: 2 }}>
-          <Typography order={6} gutterBottom>
-            Development Tools
-          </Typography>
-          <Typography size="sm" color="text.secondary">
-            • Use the Migration Control Panel (bottom right) to test different versions
-            • Set localStorage flag 'enableMantineMigration' to 'true' for global migration
-            • Individual components can be controlled with 'migration-[component-id]' flags
-          </Typography>
-        </Box>
-      </TabPanel>
+          <Paper p="md" mt="xl" bg="cyan.1" withBorder>
+            <Text size="md" fw={600} mb="xs">
+              Development Tools
+            </Text>
+            <Text size="sm" c="dimmed">
+              • Use the Migration Control Panel (bottom right) to test different versions
+              • Set localStorage flag 'enableMantineMigration' to 'true' for global migration
+              • Individual components can be controlled with 'migration-[component-id]' flags
+            </Text>
+          </Paper>
+        </Tabs.Panel>
+      </Tabs>
     </Container>
   );
 }

@@ -165,8 +165,8 @@ const withLoading = <P extends object>(
           />
         </AtomicBox>
       );
-    }
-  );
+    };
+
 
   ComponentWithLoading.displayName = `withLoading(${
     WrappedComponent.displayName || WrappedComponent.name || 'Component'

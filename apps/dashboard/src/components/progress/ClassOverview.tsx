@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from 'react';
 import {
   Card,
   Text,
@@ -35,9 +35,9 @@ import {
   IconUsers,
   IconTarget
 } from '@tabler/icons-react';
-import { useState, useEffect } from "react";
-import { useAppSelector, useAppDispatch } from "../../store";
-import { fetchClassOverview, fetchStudentProgress } from "../../store/slices/progressSlice";
+import { useState, useEffect } from 'react';
+import { useAppSelector, useAppDispatch } from '../../store';
+import { fetchClassOverview, fetchStudentProgress } from '../../store/slices/progressSlice';
 
 interface ClassOverviewProps {
   classId: string;
@@ -71,9 +71,9 @@ export default function ClassOverview({ classId }: ClassOverviewProps) {
   const dispatch = useAppDispatch();
   const { classOverview, loading, error } = useAppSelector((s) => s.progress);
 
-  const [timeRange, setTimeRange] = useState<"week" | "month" | "quarter">("week");
-  const [sortBy, setSortBy] = useState<"progress" | "xp" | "activity">("progress");
-  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "struggling">("all");
+  const [timeRange, setTimeRange] = useState<'week' | 'month' | 'quarter'>('week');
+  const [sortBy, setSortBy] = useState<'progress' | 'xp' | 'activity'>('progress');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'struggling'>('all');
 
   // Sample data for demonstration
   const [students] = useState<StudentProgressSummary[]>([

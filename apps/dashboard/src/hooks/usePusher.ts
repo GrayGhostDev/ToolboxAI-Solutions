@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Channel, PresenceChannel } from 'pusher-js';
-import { pusherService, PusherService } from '../services/pusher';
+import { Channel, type PresenceChannel } from 'pusher-js';
+import { pusherService, type PusherService } from '../services/pusher';
 import { WebSocketState } from '../types/websocket';
 import {
   PusherChannelType,
   PusherChannels,
   PusherConnectionState,
-  PusherEventHandler,
-  PusherHookConfig,
-  PusherMember,
-  PusherPresenceChannelData,
+  type PusherEventHandler,
+  type PusherHookConfig,
+  type PusherMember,
+  type PusherPresenceChannelData,
   formatChannelName,
   isPusherMember,
   isPresenceChannel

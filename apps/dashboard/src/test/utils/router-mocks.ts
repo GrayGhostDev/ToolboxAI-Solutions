@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { vi } from 'vitest';
+import { vi, expect } from 'vitest';
 
 // Global router mocks that work across all tests
 export const mockNavigate = vi.fn();

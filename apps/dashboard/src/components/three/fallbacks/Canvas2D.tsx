@@ -1,4 +1,4 @@
-import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../../utils/mui-imports';
+import { Box, Button, Text, Paper, Stack, Grid, Container, ActionIcon, Avatar, Card, List, Divider, TextInput, Select, Badge, Alert, Loader, Progress, Modal, Drawer, Tabs, Menu, Tooltip, Checkbox, Radio, Switch, Slider, Skeleton } from '@mantine/core';
 import React, { useEffect, useRef } from 'react';
 
 interface Canvas2DProps {
@@ -9,15 +9,21 @@ interface Canvas2DProps {
 }
 
 export const Canvas2D: React.FunctionComponent<Canvas2DProps> = ({
-  width = window.innerWidth,
-  height = window.innerHeight,
+  width = typeof window !== 'undefined' ? window.innerWidth : 800,
+  height = typeof window !== 'undefined' ? window.innerHeight : 600,
   animate = true,
   particleCount = 50
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationIdRef = useRef<number>();
 
+  // Test environment detection
+  const isTestEnvironment = process.env.NODE_ENV === 'test' || typeof window === 'undefined';
+
   useEffect(() => {
+    // Skip animation in test environment
+    if (isTestEnvironment) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -127,21 +133,27 @@ export const Canvas2D: React.FunctionComponent<Canvas2DProps> = ({
     // Start animation
     draw();
 
-    // Handle resize
+    // Handle resize (only in browser environment)
     const handleResize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      if (typeof window !== 'undefined') {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
     };
 
-    window.addEventListener("resize", handleResize as EventListener);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', handleResize as EventListener);
+    }
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('resize', handleResize);
+      }
       if (animationIdRef.current) {
         cancelAnimationFrame(animationIdRef.current);
       }
     };
-  }, [width, height, animate, particleCount]);
+  }, [width, height, animate, particleCount, isTestEnvironment]);
 
   return (
     <Box
@@ -152,7 +164,8 @@ export const Canvas2D: React.FunctionComponent<Canvas2DProps> = ({
         width: '100%',
         height: '100vh',
         zIndex: -1,
-        background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)'
+        background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)',
+        pointerEvents: 'none'
       }}
     >
       <canvas
@@ -164,7 +177,8 @@ export const Canvas2D: React.FunctionComponent<Canvas2DProps> = ({
           top: 0,
           left: 0,
           width: '100%',
-          height: '100%'
+          height: '100%',
+          pointerEvents: 'none'
         }}
       />
     </Box>

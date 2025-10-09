@@ -7,7 +7,7 @@ import {
   rem,
   Progress
 } from '@mantine/core';
-import { IconTrophy, IconStar, IconFlame, IconSchool, IconDeviceGamepad2 } from '@tabler/icons-react';
+import { IconTrophy, IconStar, IconFlame, IconSchool, IconDeviceGamepad } from '@tabler/icons-react';
 
 interface Achievement {
   id: string;
@@ -105,7 +105,7 @@ const getIconComponent = (iconName: string) => {
     'star': IconStar,
     'fire': IconFlame,
     'school': IconSchool,
-    'game': IconDeviceGamepad2,
+    'game': IconDeviceGamepad,
   };
   return iconMap[iconName] || IconTrophy;
 };

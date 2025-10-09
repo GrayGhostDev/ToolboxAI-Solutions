@@ -1,4 +1,9 @@
-import { Box, Button, Text, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
+import {
+  Box, Button, Text, Paper, Stack, Grid, Container, ActionIcon, Avatar, Card,
+  List, Divider, TextInput, Select, Chip, Badge, Alert, Loader, Progress,
+  Modal, Menu, Tooltip, Checkbox, Switch, Slider, Autocomplete, Skeleton,
+  Table, Group, Fade
+} from '@mantine/core';
 /**
  * Roblox Themed Dashboard
  * 
@@ -15,7 +20,7 @@ import {
   IconShare, IconRefresh, IconLogin, IconSchool, IconBook,
   IconChartBar, IconPalette, IconMoon, IconSun, IconPlayerPlay,
   IconPlayerPause, IconPlayerStop, IconVolume, IconVolumeOff,
-  IconInfoCircle, IconAlertTriangle, IconCircleX, IconCircleCheck,
+  IconInfoCircle, IconAlertTriangle, IconX, IconCircleCheck,
   IconArrowLeft, IconArrowRight, IconSend, IconDeviceFloppy,
   IconPrinter, IconHelp, IconHelpCircle, IconLock, IconLockOpen,
   IconMail, IconPhone, IconMapPin, IconMap, IconCalendar, IconClock,
@@ -32,11 +37,12 @@ import {
   IconDashboard, IconUsers, IconDotsVertical, IconDots,
   IconReportAnalytics
 } from '@tabler/icons-react';
-import { robloxTheme } from '../..//robloxTheme';
+import { useMantineTheme } from '@mantine/core';
+import { robloxTheme } from '../../theme/robloxTheme';
 import RobloxDashboardHeader from '../roblox/RobloxDashboardHeader';
 import RobloxDashboardGrid from '../roblox/RobloxDashboardGrid';
 import RobloxCharacterAvatar from '../roblox/RobloxCharacterAvatar';
-import { IconAutoAwesome, IconEmojiEvents, IconGames, IconGroups, IconPlayerPause, IconPlayerPlay, IconPsychology, IconRefresh, IconRocketLaunch, IconSchool, IconSportsEsports, IconStar, IconTrendingUp } from '@tabler/icons-react';
+import { IconSparkles, IconTrophy, IconDeviceGamepad, IconUsers, IconPlayerPause, IconPlayerPlay, IconBrain, IconRefresh, IconRocketLaunch, IconSchool, IconDeviceGamepad as IconSportsEsports, IconStar, IconTrendingUp } from '@tabler/icons-react';
 interface RobloxThemedDashboardProps {
   onNavigate?: (path: string) => void;
   onItemClick?: (item: any) => void;
@@ -45,7 +51,7 @@ export const RobloxThemedDashboard: React.FunctionComponent<RobloxThemedDashboar
   onNavigate,
   onItemClick
 }) => {
-  const theme = useTheme();
+  const theme = useMantineTheme();
   const [isLoading, setIsLoading] = useState(true);
   const [activeItems, setActiveItems] = useState<Set<string>>(new Set());
   useEffect(() => {
@@ -76,251 +82,228 @@ export const RobloxThemedDashboard: React.FunctionComponent<RobloxThemedDashboar
   };
   if (isLoading) {
     return (
-      <ThemeProvider theme={robloxTheme}>
-        <Box
-          style={{
-            minHeight: '100vh',
-            background: `linear-gradient(135deg, ${robloxTheme.palette.background.default}, ${alpha(robloxTheme.palette.primary.main, 0.1)})`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexDirection: 'column',
-            gap: 3
-          }}
-        >
-          <Box
-            style={{
-              width: 80,
-              height: 80,
-              borderRadius: '50%',
-              background: `linear-gradient(135deg, ${robloxTheme.palette.primary.main}, ${robloxTheme.palette.secondary.main})`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              animation: 'spin 2s linear infinite',
-              '@keyframes spin': {
-                '0%': { transform: 'rotate(0deg)' },
-                '100%': { transform: 'rotate(360deg)' }
-              }
-            }}
-          >
-            <IconRocketLaunch style={{ fontSize: 40, color: 'white' }} />
-          </Box>
-          <Text
-            order={4}
-            style={{
-              fontWeight: 700,
-              background: `linear-gradient(135deg, ${robloxTheme.palette.primary.main}, ${robloxTheme.palette.secondary.main})`,
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}
-          >
-            Loading Space Station...
-          </Text>
-        </Box>
-      </ThemeProvider>
-    );
-  }
-  return (
-    <ThemeProvider theme={robloxTheme}>
       <Box
         style={{
           minHeight: '100vh',
-          background: `linear-gradient(135deg, ${robloxTheme.palette.background.default}, ${alpha(robloxTheme.palette.primary.main, 0.05)})`,
-          position: 'relative',
-          overflow: 'hidden'
+          background: `linear-gradient(135deg, ${theme.colors.gray[9]}, ${theme.colors.blue[9]})`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'column',
+          gap: 24
         }}
       >
-        {/* Animated background elements */}
         <Box
           style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: `
-              radial-gradient(circle at 20% 80%, ${alpha(robloxTheme.palette.primary.main, 0.1)} 0%, transparent 50%),
-              radial-gradient(circle at 80% 20%, ${alpha(robloxTheme.palette.secondary.main, 0.1)} 0%, transparent 50%),
-              radial-gradient(circle at 40% 40%, ${alpha(robloxTheme.palette.info.main, 0.05)} 0%, transparent 50%)
-            `,
-            animation: 'float 20s ease-in-out infinite',
-            '@keyframes float': {
-              '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
-              '50%': { transform: 'translateY(-20px) rotate(180deg)' }
-            }
+            width: 80,
+            height: 80,
+            borderRadius: '50%',
+            background: `linear-gradient(135deg, ${theme.colors.blue[6]}, ${theme.colors.violet[6]})`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            animation: 'spin 2s linear infinite'
           }}
+        >
+          <IconRocketLaunch size={40} color="white" />
+        </Box>
+        <Text
+          size="xl"
+          fw={700}
+          style={{
+            background: `linear-gradient(135deg, ${theme.colors.blue[6]}, ${theme.colors.violet[6]})`,
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+          }}
+        >
+          Loading Space Station...
+        </Text>
+      </Box>
+    );
+  }
+  return (
+    <Box
+      style={{
+        minHeight: '100vh',
+        background: `linear-gradient(135deg, ${theme.colors.gray[9]}, ${theme.colors.blue[9]})`,
+        position: 'relative',
+        overflow: 'hidden'
+      }}
+    >
+      {/* Animated background elements */}
+      <Box
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: `
+            radial-gradient(circle at 20% 80%, ${theme.colors.blue[6]}20 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, ${theme.colors.violet[6]}20 0%, transparent 50%),
+            radial-gradient(circle at 40% 40%, ${theme.colors.cyan[6]}10 0%, transparent 50%)
+          `,
+          animation: 'float 20s ease-in-out infinite'
+        }}
+      />
+      {/* Main content */}
+      <Box style={{ position: 'relative', zIndex: 1 }}>
+        {/* Header */}
+        <RobloxDashboardHeader
+          title="ToolBoxAI Space Station"
+          subtitle="Your Learning Adventure Awaits!"
+          onMenuClick={() => console.log('Menu clicked')}
+          onNotificationClick={(notification) => console.log('Notification clicked:', notification)}
+          onSettingsClick={() => console.log('Settings clicked')}
+          onHelpClick={() => console.log('Help clicked')}
+          onProfileClick={() => console.log('Profile clicked')}
         />
-        {/* Main content */}
-        <Box style={{ position: 'relative', zIndex: 1 }}>
-          {/* Header */}
-          <RobloxDashboardHeader
-            title="ToolBoxAI Space Station"
-            subtitle="Your Learning Adventure Awaits!"
-            onMenuClick={() => console.log('Menu clicked')}
-            onNotificationClick={(e: React.MouseEvent) => (notification) => console.log('Notification clicked:', notification)}
-            onSettingsClick={() => console.log('Settings clicked')}
-            onHelpClick={() => console.log('Help clicked')}
-            onProfileClick={() => console.log('Profile clicked')}
+        {/* Main dashboard content */}
+        <Container size="xl" py="xl">
+          {/* Welcome section */}
+          <Card
+            withBorder
+            radius="lg"
+            mb="xl"
+            style={{
+              background: `linear-gradient(145deg, ${theme.colors.dark[7]}, ${theme.colors.blue[9]})`,
+              border: `2px solid ${theme.colors.blue[6]}`,
+              position: 'relative'
+            }}
+          >
+            <Grid align="center" p="xl">
+              <Grid.Col span={{ base: 12, md: 8 }}>
+                <Text
+                  size="2rem"
+                  fw={800}
+                  mb="md"
+                  style={{
+                    background: `linear-gradient(135deg, ${theme.colors.blue[4]}, ${theme.colors.violet[4]})`,
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                  }}
+                >
+                  Welcome to Your Learning Universe! 🚀
+                </Text>
+                <Text
+                  size="md"
+                  c="dimmed"
+                  mb="lg"
+                  style={{ lineHeight: 1.6 }}
+                >
+                  Explore, learn, and grow with our interactive 3D tools and characters.
+                  Your space adventure begins here!
+                </Text>
+                <Group gap="md">
+                  <Chip
+                    variant="filled"
+                    color="yellow"
+                    size="md"
+                  >
+                    <Group gap="xs">
+                      <IconStar size={16} />
+                      Level 5 Explorer
+                    </Group>
+                  </Chip>
+                  <Chip
+                    variant="filled"
+                    color="violet"
+                    size="md"
+                  >
+                    <Group gap="xs">
+                      <IconTrophy size={16} />
+                      12 Achievements
+                    </Group>
+                  </Chip>
+                  <Chip
+                    variant="filled"
+                    color="green"
+                    size="md"
+                  >
+                    <Group gap="xs">
+                      <IconTrendingUp size={16} />
+                      85% Progress
+                    </Group>
+                  </Chip>
+                </Group>
+              </Grid.Col>
+              <Grid.Col span={{ base: 12, md: 4 }}>
+                <Group justify="center">
+                  <RobloxCharacterAvatar
+                    character={{
+                      name: 'Astro Explorer',
+                      type: 'astronaut',
+                      level: 5,
+                      xp: 1250,
+                      achievements: ['Space Walker', 'Quiz Master', 'Art Creator'],
+                      isActive: true,
+                      imagePath: '/images/characters/PNG/Astronauto (variation)/01.png'
+                    }}
+                    size="large"
+                    animated={true}
+                    onClick={() => console.log('Character clicked')}
+                  />
+                </Group>
+              </Grid.Col>
+            </Grid>
+          </Card>
+
+          {/* Dashboard Grid */}
+          <RobloxDashboardGrid
+            onItemClick={handleItemClick}
+            onItemPlay={handleItemPlay}
+            onItemPause={handleItemPause}
+            onItemRefresh={handleItemRefresh}
           />
-          {/* Main dashboard content */}
-          <Container maxWidth="xl" style={{ py: 4 }}>
-            {/* Welcome section */}
-            <Fade in={true} timeout={1000}>
-              <Card
-                style={{
-                  mb: 4,
-                  background: `linear-gradient(145deg, ${robloxTheme.palette.background.paper}, ${alpha(robloxTheme.palette.primary.main, 0.05)})`,
-                  border: `2px solid ${alpha(robloxTheme.palette.primary.main, 0.2)}`,
-                  borderRadius: 3,
-                  overflow: 'hidden',
-                  position: 'relative'
-                }}
-              >
-                <CardContent style={{ p: 4 }}>
-                  <SimpleGrid spacing={4} alignItems="center">
-                    <Box xs={12} md={8}>
-                      <Text
-                        order={3}
-                        style={{
-                          fontWeight: 800,
-                          mb: 2,
-                          background: `linear-gradient(135deg, ${robloxTheme.palette.primary.main}, ${robloxTheme.palette.secondary.main})`,
-                          backgroundClip: 'text',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                        }}
-                      >
-                        Welcome to Your Learning Universe! 🚀
-                      </Text>
-                      <Text
-                        order={6}
-                        style={{
-                          color: robloxTheme.palette.text.secondary,
-                          mb: 3,
-                          lineHeight: 1.6
-                        }}
-                      >
-                        Explore, learn, and grow with our interactive 3D tools and characters. 
-                        Your space adventure begins here!
-                      </Text>
-                      <Stack direction="row" spacing={2} flexWrap="wrap">
-                        <Chip
-                          icon={<IconStar />}
-                          label="Level 5 Explorer"
-                          style={{
-                            background: `linear-gradient(135deg, ${robloxTheme.palette.warning.main}, ${alpha(robloxTheme.palette.warning.main, 0.7)})`,
-                            color: 'white',
-                            fontWeight: 600
-                          }}
-                        />
-                        <Chip
-                          icon={<IconEmojiEvents />}
-                          label="12 Achievements"
-                          style={{
-                            background: `linear-gradient(135deg, ${robloxTheme.palette.secondary.main}, ${alpha(robloxTheme.palette.secondary.main, 0.7)})`,
-                            color: 'white',
-                            fontWeight: 600
-                          }}
-                        />
-                        <Chip
-                          icon={<IconTrendingUp />}
-                          label="85% Progress"
-                          style={{
-                            background: `linear-gradient(135deg, ${robloxTheme.palette.success.main}, ${alpha(robloxTheme.palette.success.main, 0.7)})`,
-                            color: 'white',
-                            fontWeight: 600
-                          }}
-                        />
-                      </Stack>
-                    </SimpleGrid>
-                    <Box xs={12} md={4}>
-                      <Box style={{ display: 'flex', justifyContent: 'center' }}>
-                        <RobloxCharacterAvatar
-                          character={{
-                            name: 'Astro Explorer',
-                            type: 'astronaut',
-                            level: 5,
-                            xp: 1250,
-                            achievements: ['Space Walker', 'Quiz Master', 'Art Creator'],
-                            isActive: true,
-                            imagePath: '/images/characters/PNG/Astronauto (variation)/01.png'
-                          }}
-                          size="large"
-                          animated={true}
-                          onClick={(e: React.MouseEvent) => () => console.log('Character clicked')}
-                        />
-                      </Box>
-                    </SimpleGrid>
-                  </SimpleGrid>
-                </CardContent>
-              </Card>
-            </Fade>
-            {/* Dashboard Grid */}
-            <RobloxDashboardGrid
-              onItemClick={handleItemClick}
-              onItemPlay={handleItemPlay}
-              onItemPause={handleItemPause}
-              onItemRefresh={handleItemRefresh}
-            />
-            {/* Quick Actions */}
-            <Fade in={true} timeout={2000}>
-              <Card
-                style={{
-                  mt: 4,
-                  background: `linear-gradient(145deg, ${robloxTheme.palette.background.paper}, ${alpha(robloxTheme.palette.secondary.main, 0.05)})`,
-                  border: `2px solid ${alpha(robloxTheme.palette.secondary.main, 0.2)}`,
-                  borderRadius: 3,
-                  overflow: 'hidden'
-                }}
-              >
-                <CardContent style={{ p: 4 }}>
-                  <Text
-                    order={5}
+
+          {/* Quick Actions */}
+          <Card
+            withBorder
+            radius="lg"
+            mt="xl"
+            style={{
+              background: `linear-gradient(145deg, ${theme.colors.dark[7]}, ${theme.colors.violet[9]})`,
+              border: `2px solid ${theme.colors.violet[6]}`
+            }}
+          >
+            <Text
+              size="lg"
+              fw={700}
+              mb="lg"
+              c={theme.colors.violet[4]}
+              ta="center"
+              p="md"
+            >
+              Quick Actions
+            </Text>
+            <Grid p="md">
+              {[
+                { icon: IconSchool, label: 'Start Learning', color: theme.colors.blue[6] },
+                { icon: IconSportsEsports, label: 'Play Games', color: theme.colors.violet[6] },
+                { icon: IconBrain, label: 'AI Assistant', color: theme.colors.cyan[6] },
+                { icon: IconUsers, label: 'Join Class', color: theme.colors.yellow[6] }
+              ].map((action, index) => (
+                <Grid.Col span={{ base: 6, md: 3 }} key={index}>
+                  <Button
+                    fullWidth
+                    leftSection={<action.icon />}
+                    size="lg"
                     style={{
-                      fontWeight: 700,
-                      mb: 3,
-                      color: robloxTheme.palette.secondary.main,
-                      textAlign: 'center'
+                      background: `linear-gradient(135deg, ${action.color}, ${action.color}BB)`,
+                      transition: 'all 0.3s ease'
                     }}
                   >
-                    Quick Actions
-                  </Text>
-                  <SimpleGrid spacing={3}>
-                    {[
-                      { icon: IconSchool, label: 'Start Learning', color: robloxTheme.palette.primary.main },
-                      { icon: IconSportsEsports, label: 'Play Games', color: robloxTheme.palette.secondary.main },
-                      { icon: IconPsychology, label: 'AI Assistant', color: robloxTheme.palette.info.main },
-                      { icon: IconGroups, label: 'Join Class', color: robloxTheme.palette.warning.main }
-                    ].map((action, index) => (
-                      <Box xs={6} md={3} key={index}>
-                        <Button
-                          fullWidth
-                          variant="filled"
-                          startIcon={<action.icon />}
-                          style={{
-                            py: 2,
-                            background: `linear-gradient(135deg, ${action.color}, ${alpha(action.color, 0.7)})`,
-                            '&:hover': {
-                              background: `linear-gradient(135deg, ${action.color}, ${alpha(action.color, 0.8)})`,
-                              transform: 'translateY(-2px)',
-                            },
-                            transition: 'all 0.3s ease'
-                          }}
-                        >
-                          {action.label}
-                        </Button>
-                      </SimpleGrid>
-                    ))}
-                  </SimpleGrid>
-                </CardContent>
-              </Card>
-            </Fade>
-          </Container>
-        </Box>
+                    {action.label}
+                  </Button>
+                </Grid.Col>
+              ))}
+            </Grid>
+          </Card>
+        </Container>
       </Box>
-    </ThemeProvider>
+    </Box>
   );
 };
 export default RobloxThemedDashboard;

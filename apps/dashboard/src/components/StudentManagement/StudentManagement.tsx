@@ -2,45 +2,35 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Card,
-  CardContent,
-  Typography,
+  Text,
   Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Paper,
-  IconButton,
+  ActionIcon,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
+  Modal,
+  TextInput,
   Checkbox,
   Avatar,
-  Chip,
+  Badge,
   Alert,
-  CircularProgress,
+  Loader,
   Tooltip,
-  InputAdornment,
   Grid,
-  FormControlLabel,
   Switch,
-} from '@mui/material';
+  Group,
+  Stack,
+  Flex,
+  Center,
+} from '@mantine/core';
 import {
-  Delete as DeleteIcon,
-  PersonAdd as PersonAddIcon,
-  PersonRemove as PersonRemoveIcon,
-  Search as SearchIcon,
-  GroupAdd as GroupAddIcon,
-  School as SchoolIcon,
-  Check as CheckIcon,
-  Close as CloseIcon,
-  FilterList as FilterListIcon,
-} from '@mui/icons-material';
-import { useSnackbar } from 'notistack';
+  IconTrash,
+  IconUserPlus,
+  IconUserMinus,
+  IconSearch,
+  IconUsersGroup,
+  IconSchool,
+} from '@tabler/icons-react';
+import { notifications } from '@mantine/notifications';
 import { apiClient } from '../../services/api';
 import { usePusher } from '../../hooks/usePusher';
 
@@ -66,7 +56,6 @@ interface StudentManagementProps {
 export const StudentManagement: React.FC<StudentManagementProps> = ({
   classId,
   className,
-  teacherId,
   maxStudents = 30,
   onStudentCountChange,
 }) => {
@@ -80,33 +69,41 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
   const [studentToRemove, setStudentToRemove] = useState<Student | null>(null);
   const [batchMode, setBatchMode] = useState(false);
   const [filterActive, setFilterActive] = useState(true);
-  const { enqueueSnackbar } = useSnackbar();
 
   // Set up Pusher for real-time updates
-  const pusherClient = usePusher();
+  const { service: pusherService } = usePusher();
 
   useEffect(() => {
-    if (pusherClient && classId) {
-      const channel = pusherClient.subscribe(`class-${classId}`);
+    if (pusherService && classId) {
+      const subscriptionIds: string[] = [];
 
-      channel.bind('student-enrolled', (data: any) => {
-        handleStudentEnrolled(data);
+      // Subscribe to student enrollment events
+      const enrolledSubscription = pusherService.subscribe(`class-${classId}`, (message) => {
+        if (message.type === 'student-enrolled') {
+          handleStudentEnrolled(message.payload);
+        }
       });
+      subscriptionIds.push(enrolledSubscription);
 
-      channel.bind('student-unenrolled', (data: any) => {
-        handleStudentUnenrolled(data);
+      const unenrolledSubscription = pusherService.subscribe(`class-${classId}`, (message) => {
+        if (message.type === 'student-unenrolled') {
+          handleStudentUnenrolled(message.payload);
+        }
       });
+      subscriptionIds.push(unenrolledSubscription);
 
-      channel.bind('batch-enrollment', (data: any) => {
-        handleBatchEnrollment(data);
+      const batchSubscription = pusherService.subscribe(`class-${classId}`, (message) => {
+        if (message.type === 'batch-enrollment') {
+          handleBatchEnrollment(message.payload);
+        }
       });
+      subscriptionIds.push(batchSubscription);
 
       return () => {
-        channel.unbind_all();
-        pusherClient.unsubscribe(`class-${classId}`);
+        subscriptionIds.forEach(id => pusherService.unsubscribe(id));
       };
     }
-  }, [pusherClient, classId]);
+  }, [pusherService, classId]);
 
   // Load enrolled students
   const loadStudents = useCallback(async () => {
@@ -116,13 +113,15 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
       setStudents(response.data.data || []);
       onStudentCountChange?.(response.data.data?.length || 0);
     } catch (error: any) {
-      enqueueSnackbar(error.response?.data?.message || 'Failed to load students', {
-        variant: 'error',
+      notifications.show({
+        title: 'Error',
+        message: error.response?.data?.message || 'Failed to load students',
+        color: 'red',
       });
     } finally {
       setLoading(false);
     }
-  }, [classId, enqueueSnackbar, onStudentCountChange]);
+  }, [classId, onStudentCountChange]);
 
   // Load available students for enrollment
   const loadAvailableStudents = useCallback(async () => {
@@ -134,25 +133,32 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
       });
       setAvailableStudents(response.data.data || []);
     } catch (error: any) {
-      enqueueSnackbar('Failed to load available students', { variant: 'error' });
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to load available students',
+        color: 'red',
+      });
     }
-  }, [classId, enqueueSnackbar]);
+  }, [classId]);
 
   useEffect(() => {
     loadStudents();
   }, [loadStudents]);
 
   // Handle real-time updates
-  const handleStudentEnrolled = (data: any) => {
+  const handleStudentEnrolled = (data: { student?: Student }) => {
     if (data.student) {
       setStudents(prev => [...prev, data.student]);
       setAvailableStudents(prev => prev.filter(s => s.id !== data.student.id));
       onStudentCountChange?.(students.length + 1);
-      enqueueSnackbar(`${data.student.name} has been enrolled`, { variant: 'info' });
+      notifications.show({
+        message: `${data.student.name} has been enrolled`,
+        color: 'blue',
+      });
     }
   };
 
-  const handleStudentUnenrolled = (data: any) => {
+  const handleStudentUnenrolled = (data: { studentId?: string }) => {
     if (data.studentId) {
       const removedStudent = students.find(s => s.id === data.studentId);
       setStudents(prev => prev.filter(s => s.id !== data.studentId));
@@ -160,16 +166,20 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
         setAvailableStudents(prev => [...prev, removedStudent]);
       }
       onStudentCountChange?.(students.length - 1);
-      enqueueSnackbar(`Student has been unenrolled`, { variant: 'info' });
+      notifications.show({
+        message: 'Student has been unenrolled',
+        color: 'blue',
+      });
     }
   };
 
-  const handleBatchEnrollment = (data: any) => {
+  const handleBatchEnrollment = (data: { enrolled?: Student[] }) => {
     if (data.enrolled) {
       loadStudents();
       loadAvailableStudents();
-      enqueueSnackbar(`${data.enrolled.length} students have been enrolled`, {
-        variant: 'info'
+      notifications.show({
+        message: `${data.enrolled.length} students have been enrolled`,
+        color: 'blue',
       });
     }
   };
@@ -180,10 +190,15 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
       await apiClient.post(`/api/v1/classes/${classId}/students/${studentId}`);
       await loadStudents();
       await loadAvailableStudents();
-      enqueueSnackbar('Student enrolled successfully', { variant: 'success' });
+      notifications.show({
+        message: 'Student enrolled successfully',
+        color: 'green',
+      });
     } catch (error: any) {
-      enqueueSnackbar(error.response?.data?.message || 'Failed to enroll student', {
-        variant: 'error',
+      notifications.show({
+        title: 'Error',
+        message: error.response?.data?.message || 'Failed to enroll student',
+        color: 'red',
       });
     }
   };
@@ -196,10 +211,15 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
       await loadAvailableStudents();
       setStudentToRemove(null);
       setRemoveDialogOpen(false);
-      enqueueSnackbar('Student unenrolled successfully', { variant: 'success' });
+      notifications.show({
+        message: 'Student unenrolled successfully',
+        color: 'green',
+      });
     } catch (error: any) {
-      enqueueSnackbar(error.response?.data?.message || 'Failed to unenroll student', {
-        variant: 'error',
+      notifications.show({
+        title: 'Error',
+        message: error.response?.data?.message || 'Failed to unenroll student',
+        color: 'red',
       });
     }
   };
@@ -207,7 +227,10 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
   // Batch enroll students
   const batchEnrollStudents = async () => {
     if (selectedStudents.size === 0) {
-      enqueueSnackbar('Please select students to enroll', { variant: 'warning' });
+      notifications.show({
+        message: 'Please select students to enroll',
+        color: 'yellow',
+      });
       return;
     }
 
@@ -221,12 +244,15 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
       setSelectedStudents(new Set());
       setAddDialogOpen(false);
       setBatchMode(false);
-      enqueueSnackbar(`${selectedStudents.size} students enrolled successfully`, {
-        variant: 'success',
+      notifications.show({
+        message: `${selectedStudents.size} students enrolled successfully`,
+        color: 'green',
       });
     } catch (error: any) {
-      enqueueSnackbar(error.response?.data?.message || 'Failed to enroll students', {
-        variant: 'error',
+      notifications.show({
+        title: 'Error',
+        message: error.response?.data?.message || 'Failed to enroll students',
+        color: 'red',
       });
     }
   };
@@ -259,32 +285,32 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
   return (
     <Box data-testid="student-management">
       <Card>
-        <CardContent>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            <Box display="flex" alignItems="center" gap={2}>
-              <SchoolIcon color="primary" />
-              <Typography variant="h6">
+        <Card.Section>
+          <Flex justify="space-between" align="center" mb="md" p="lg">
+            <Group>
+              <IconSchool size={24} color="var(--mantine-color-blue-6)" />
+              <Text size="lg" fw={600}>
                 Student Management - {className}
-              </Typography>
-              <Chip
-                label={`${students.length} / ${maxStudents}`}
-                color={students.length >= maxStudents ? 'error' : 'primary'}
-                size="small"
-              />
-            </Box>
-            <Box display="flex" gap={1}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={filterActive}
-                    onChange={(e) => setFilterActive(e.target.checked)}
-                  />
-                }
-                label="Active Only"
-              />
+              </Text>
+              <Badge
+                color={students.length >= maxStudents ? 'red' : 'blue'}
+                size="sm"
+              >
+                {students.length} / {maxStudents}
+              </Badge>
+            </Group>
+            <Group>
+              <Group gap="xs">
+                <Switch
+                  checked={filterActive}
+                  onChange={(event) => setFilterActive(event.currentTarget.checked)}
+                  label="Active Only"
+                  size="sm"
+                />
+              </Group>
               <Button
-                variant="contained"
-                startIcon={<PersonAddIcon />}
+                variant="filled"
+                leftSection={<IconUserPlus size={16} />}
                 onClick={() => {
                   loadAvailableStudents();
                   setAddDialogOpen(true);
@@ -294,152 +320,144 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
               >
                 Add Students
               </Button>
-            </Box>
-          </Box>
+            </Group>
+          </Flex>
+        </Card.Section>
 
-          <TextField
-            fullWidth
+        <Card.Section p="lg" pt={0}>
+          <TextInput
             placeholder="Search students..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            sx={{ mb: 2 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
+            onChange={(event) => setSearchTerm(event.currentTarget.value)}
+            leftSection={<IconSearch size={16} />}
+            mb="md"
             data-testid="search-students"
           />
 
           {loading ? (
-            <Box display="flex" justifyContent="center" py={4}>
-              <CircularProgress />
-            </Box>
+            <Center py="xl">
+              <Loader />
+            </Center>
           ) : filteredStudents.length === 0 ? (
-            <Alert severity="info">
+            <Alert variant="light" color="blue">
               {searchTerm
                 ? 'No students match your search criteria'
                 : 'No students enrolled in this class yet'}
             </Alert>
           ) : (
-            <TableContainer component={Paper} elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
+            <Paper withBorder>
               <Table data-testid="enrolled-students-table">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Student</TableCell>
-                    <TableCell>Email</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Enrolled Date</TableCell>
-                    <TableCell align="right">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>Student</Table.Th>
+                    <Table.Th>Email</Table.Th>
+                    <Table.Th>Status</Table.Th>
+                    <Table.Th>Enrolled Date</Table.Th>
+                    <Table.Th style={{ textAlign: 'right' }}>Actions</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
                   {filteredStudents.map((student) => (
-                    <TableRow key={student.id} data-testid={`student-row-${student.id}`}>
-                      <TableCell>
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <Avatar src={student.avatar} alt={student.name}>
+                    <Table.Tr key={student.id} data-testid={`student-row-${student.id}`}>
+                      <Table.Td>
+                        <Group gap="xs">
+                          <Avatar src={student.avatar} alt={student.name} size="sm">
                             {student.name.charAt(0)}
                           </Avatar>
-                          <Typography>{student.name}</Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>{student.email}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={student.status}
-                          color={student.status === 'active' ? 'success' : 'default'}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {student.enrollmentDate
-                          ? new Date(student.enrollmentDate).toLocaleDateString()
-                          : 'N/A'}
-                      </TableCell>
-                      <TableCell align="right">
-                        <Tooltip title="Remove from class">
-                          <IconButton
-                            color="error"
+                          <Text>{student.name}</Text>
+                        </Group>
+                      </Table.Td>
+                      <Table.Td>
+                        <Text>{student.email}</Text>
+                      </Table.Td>
+                      <Table.Td>
+                        <Badge
+                          color={student.status === 'active' ? 'green' : 'gray'}
+                          size="sm"
+                        >
+                          {student.status}
+                        </Badge>
+                      </Table.Td>
+                      <Table.Td>
+                        <Text>
+                          {student.enrollmentDate
+                            ? new Date(student.enrollmentDate).toLocaleDateString()
+                            : 'N/A'}
+                        </Text>
+                      </Table.Td>
+                      <Table.Td style={{ textAlign: 'right' }}>
+                        <Tooltip label="Remove from class">
+                          <ActionIcon
+                            color="red"
+                            variant="subtle"
                             onClick={() => {
                               setStudentToRemove(student);
                               setRemoveDialogOpen(true);
                             }}
                             data-testid={`remove-student-${student.id}`}
                           >
-                            <PersonRemoveIcon />
-                          </IconButton>
+                            <IconUserMinus size={16} />
+                          </ActionIcon>
                         </Tooltip>
-                      </TableCell>
-                    </TableRow>
+                      </Table.Td>
+                    </Table.Tr>
                   ))}
-                </TableBody>
+                </Table.Tbody>
               </Table>
-            </TableContainer>
+            </Paper>
           )}
-        </CardContent>
+        </Card.Section>
       </Card>
 
-      {/* Add Students Dialog */}
-      <Dialog
-        open={addDialogOpen}
+      {/* Add Students Modal */}
+      <Modal
+        opened={addDialogOpen}
         onClose={() => {
           setAddDialogOpen(false);
           setSelectedStudents(new Set());
           setBatchMode(false);
           setSearchTerm('');
         }}
-        maxWidth="md"
-        fullWidth
+        size="lg"
+        title={
+          <Flex justify="space-between" align="center" w="100%">
+            <Text size="lg" fw={600}>Add Students to {className}</Text>
+            <Group gap="xs">
+              <Switch
+                checked={batchMode}
+                onChange={(event) => {
+                  setBatchMode(event.currentTarget.checked);
+                  setSelectedStudents(new Set());
+                }}
+                label="Batch Mode"
+                size="sm"
+              />
+            </Group>
+          </Flex>
+        }
         data-testid="add-students-dialog"
       >
-        <DialogTitle>
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography variant="h6">Add Students to {className}</Typography>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={batchMode}
-                  onChange={(e) => {
-                    setBatchMode(e.target.checked);
-                    setSelectedStudents(new Set());
-                  }}
-                />
-              }
-              label="Batch Mode"
-            />
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          <TextField
-            fullWidth
+        <Stack>
+          <TextInput
             placeholder="Search available students..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            sx={{ mb: 2 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
+            onChange={(event) => setSearchTerm(event.currentTarget.value)}
+            leftSection={<IconSearch size={16} />}
           />
 
           {filteredAvailableStudents.length === 0 ? (
-            <Alert severity="info">No available students to add</Alert>
+            <Alert variant="light" color="blue">No available students to add</Alert>
           ) : (
-            <Grid container spacing={2}>
+            <Grid>
               {filteredAvailableStudents.map((student) => (
-                <Grid item xs={12} sm={6} key={student.id}>
+                <Grid.Col span={{ base: 12, sm: 6 }} key={student.id}>
                   <Card
-                    variant="outlined"
-                    sx={{
+                    withBorder
+                    style={{
                       cursor: 'pointer',
-                      bgcolor: selectedStudents.has(student.id) ? 'action.selected' : 'background.paper',
-                      '&:hover': { bgcolor: 'action.hover' },
+                      backgroundColor: selectedStudents.has(student.id)
+                        ? 'var(--mantine-color-blue-0)'
+                        : undefined,
                     }}
                     onClick={() => {
                       if (batchMode) {
@@ -451,96 +469,102 @@ export const StudentManagement: React.FC<StudentManagementProps> = ({
                     }}
                     data-testid={`available-student-${student.id}`}
                   >
-                    <CardContent>
-                      <Box display="flex" alignItems="center" justifyContent="space-between">
-                        <Box display="flex" alignItems="center" gap={1}>
-                          {batchMode && (
-                            <Checkbox
-                              checked={selectedStudents.has(student.id)}
-                              onClick={(e) => e.stopPropagation()}
-                              onChange={() => toggleStudentSelection(student.id)}
-                            />
-                          )}
-                          <Avatar src={student.avatar} alt={student.name}>
-                            {student.name.charAt(0)}
-                          </Avatar>
-                          <Box>
-                            <Typography variant="body1">{student.name}</Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {student.email}
-                            </Typography>
-                          </Box>
-                        </Box>
-                        {!batchMode && (
-                          <PersonAddIcon color="action" />
+                    <Flex justify="space-between" align="center">
+                      <Group>
+                        {batchMode && (
+                          <Checkbox
+                            checked={selectedStudents.has(student.id)}
+                            onClick={(event) => event.stopPropagation()}
+                            onChange={() => toggleStudentSelection(student.id)}
+                          />
                         )}
-                      </Box>
-                    </CardContent>
+                        <Avatar src={student.avatar} alt={student.name} size="sm">
+                          {student.name.charAt(0)}
+                        </Avatar>
+                        <Stack gap={0}>
+                          <Text fw={500}>{student.name}</Text>
+                          <Text size="xs" c="dimmed">
+                            {student.email}
+                          </Text>
+                        </Stack>
+                      </Group>
+                      {!batchMode && (
+                        <IconUserPlus size={20} color="var(--mantine-color-gray-6)" />
+                      )}
+                    </Flex>
                   </Card>
-                </Grid>
+                </Grid.Col>
               ))}
             </Grid>
           )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => {
-            setAddDialogOpen(false);
-            setSelectedStudents(new Set());
-            setBatchMode(false);
-            setSearchTerm('');
-          }}>
-            Cancel
-          </Button>
-          {batchMode && (
-            <Button
-              variant="contained"
-              startIcon={<GroupAddIcon />}
-              onClick={batchEnrollStudents}
-              disabled={selectedStudents.size === 0}
-            >
-              Add {selectedStudents.size} Students
-            </Button>
-          )}
-        </DialogActions>
-      </Dialog>
 
-      {/* Remove Student Confirmation Dialog */}
-      <Dialog
-        open={removeDialogOpen}
+          <Group justify="flex-end" mt="md">
+            <Button
+              variant="subtle"
+              onClick={() => {
+                setAddDialogOpen(false);
+                setSelectedStudents(new Set());
+                setBatchMode(false);
+                setSearchTerm('');
+              }}
+            >
+              Cancel
+            </Button>
+            {batchMode && (
+              <Button
+                variant="filled"
+                leftSection={<IconUsersGroup size={16} />}
+                onClick={batchEnrollStudents}
+                disabled={selectedStudents.size === 0}
+              >
+                Add {selectedStudents.size} Students
+              </Button>
+            )}
+          </Group>
+        </Stack>
+      </Modal>
+
+      {/* Remove Student Confirmation Modal */}
+      <Modal
+        opened={removeDialogOpen}
         onClose={() => {
           setRemoveDialogOpen(false);
           setStudentToRemove(null);
         }}
+        title="Confirm Removal"
         data-testid="remove-student-dialog"
       >
-        <DialogTitle>Confirm Removal</DialogTitle>
-        <DialogContent>
-          <Alert severity="warning" sx={{ mb: 2 }}>
+        <Stack>
+          <Alert variant="light" color="orange">
             This action will remove the student from the class. They can be re-enrolled later if needed.
           </Alert>
           {studentToRemove && (
-            <Typography>
-              Are you sure you want to remove <strong>{studentToRemove.name}</strong> from {className}?
-            </Typography>
+            <Text>
+              Are you sure you want to remove <Text component="span" fw={600}>{studentToRemove.name}</Text> from {className}?
+            </Text>
           )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => {
-            setRemoveDialogOpen(false);
-            setStudentToRemove(null);
-          }}>
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            color="error"
-            startIcon={<DeleteIcon />}
-            onClick={() => studentToRemove && unenrollStudent(studentToRemove.id)}
-          >
-            Remove Student
-          </Button>
-        </DialogActions>
-      </Dialog>
+
+          <Group justify="flex-end" mt="md">
+            <Button
+              variant="subtle"
+              onClick={() => {
+                setRemoveDialogOpen(false);
+                setStudentToRemove(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="filled"
+              color="red"
+              leftSection={<IconTrash size={16} />}
+              onClick={() => studentToRemove && unenrollStudent(studentToRemove.id)}
+            >
+              Remove Student
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Box>
   );
 };

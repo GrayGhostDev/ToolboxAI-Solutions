@@ -1,0 +1,89 @@
+<testsuites id="" name="" tests="1" failures="1" skipped="0" errors="0" time="3.156849">
+<testsuite name="components/test-all-pages.spec.ts" timestamp="2025-10-05T15:27:52.785Z" hostname="chromium" tests="1" failures="1" skipped="0" time="1.787" errors="0">
+<testcase name="All Dashboard Pages - Comprehensive Rendering Tests › Page Rendering Tests › should render Progress page without errors" classname="components/test-all-pages.spec.ts" time="1.787">
+<failure message="test-all-pages.spec.ts:164:7 should render Progress page without errors" type="FAILURE">
+<![CDATA[  [chromium] › components/test-all-pages.spec.ts:164:7 › All Dashboard Pages - Comprehensive Rendering Tests › Page Rendering Tests › should render Progress page without errors 
+
+    Error: expect(received).toHaveLength(expected)
+
+    Expected length: 0
+    Received length: 4
+    Received array:  ["Global error: TypeError: Cannot assign to read only property 'position' of object '#<Mesh>'", "Global error: TypeError: Cannot convert undefined or null to object", "Global error: TypeError: Cannot assign to read only property 'position' of object '#<Mesh>'", "Global error: TypeError: Cannot convert undefined or null to object"]
+
+      202 |         });
+      203 |
+    > 204 |         expect(criticalErrors).toHaveLength(0);
+          |                                ^
+      205 |       });
+      206 |
+      207 |       test(`should have proper page title and metadata for ${pageConfig.name}`, async () => {
+        at /Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard/e2e/components/test-all-pages.spec.ts:204:32
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/components-test-all-pages--aad7e-rogress-page-without-errors-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/components-test-all-pages--aad7e-rogress-page-without-errors-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[Page error: Unexpected token 'if'
+Console error: Failed to load resource: net::ERR_CONNECTION_REFUSED
+Console error: Failed to load resource: net::ERR_CONNECTION_REFUSED
+Console error: Global error: TypeError: Cannot assign to read only property 'position' of object '#<Mesh>'
+    at applyProps (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:54394:17)
+    at handleContainerEffects (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55089:3)
+    at handleContainerEffects (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55115:47)
+    at appendChild (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55122:3)
+    at appendChildToContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55249:5)
+    at insertOrAppendPlacementNodeIntoContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7079:91)
+    at insertOrAppendPlacementNodeIntoContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7081:16)
+    at insertOrAppendPlacementNodeIntoContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7082:13)
+    at insertOrAppendPlacementNodeIntoContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7081:16)
+    at insertOrAppendPlacementNodeIntoContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7081:16)
+Page error: Cannot assign to read only property 'position' of object '#<Mesh>'
+Console error: Global error: TypeError: Cannot convert undefined or null to object
+    at removeChild (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55161:16)
+    at removeChild (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55158:5)
+    at removeChild (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55158:5)
+    at removeChildFromContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55254:5)
+    at runWithFiberInDEV (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:740:18)
+    at commitDeletionEffectsOnFiber (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7416:21)
+    at recursivelyTraverseDeletionEffects (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7362:11)
+    at commitDeletionEffectsOnFiber (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7486:13)
+    at recursivelyTraverseDeletionEffects (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7362:11)
+    at commitDeletionEffectsOnFiber (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7514:13)
+Page error: Cannot convert undefined or null to object
+Console error: Global error: TypeError: Cannot assign to read only property 'position' of object '#<Mesh>'
+    at applyProps (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:54394:17)
+    at handleContainerEffects (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55089:3)
+    at handleContainerEffects (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55115:47)
+    at appendChild (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55122:3)
+    at appendChildToContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55249:5)
+    at insertOrAppendPlacementNodeIntoContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7079:91)
+    at insertOrAppendPlacementNodeIntoContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7081:16)
+    at insertOrAppendPlacementNodeIntoContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7082:13)
+    at insertOrAppendPlacementNodeIntoContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7081:16)
+    at insertOrAppendPlacementNodeIntoContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7081:16)
+Page error: Cannot assign to read only property 'position' of object '#<Mesh>'
+Console error: Global error: TypeError: Cannot convert undefined or null to object
+    at removeChild (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55161:16)
+    at removeChild (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55158:5)
+    at removeChild (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55158:5)
+    at removeChildFromContainer (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:55254:5)
+    at runWithFiberInDEV (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:740:18)
+    at commitDeletionEffectsOnFiber (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7416:21)
+    at recursivelyTraverseDeletionEffects (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7362:11)
+    at commitDeletionEffectsOnFiber (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7486:13)
+    at recursivelyTraverseDeletionEffects (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7362:11)
+    at commitDeletionEffectsOnFiber (http://localhost:5179/node_modules/.vite/deps/chunk-FQ6HK767.js?v=b3ad1dd9:7514:13)
+Page error: Cannot convert undefined or null to object
+
+[[ATTACHMENT|test-results/components-test-all-pages--aad7e-rogress-page-without-errors-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/components-test-all-pages--aad7e-rogress-page-without-errors-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>

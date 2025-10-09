@@ -9,10 +9,10 @@ export interface SearchBarProps {
   onSearch?: (query: string) => void;
 }
 
-const SearchBar = (({ ...props, ref }: HTMLDivElement, SearchBarProps & { ref?: React.Ref<any> }) => (
+const AtomicSearchBar = React.forwardRef<HTMLDivElement, SearchBarProps>((props, ref) => (
   <div ref={ref} {...props}>SearchBar Component</div>
 ));
 
-SearchBar.displayName = 'SearchBar';
+AtomicSearchBar.displayName = 'AtomicSearchBar';
 
-export default SearchBar;
+export default AtomicSearchBar;

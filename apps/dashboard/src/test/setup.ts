@@ -130,20 +130,56 @@ vi.mock('@mantine/core', async () => {
   };
 });
 
-// Mock React Three Fiber for 3D components
+// Mock React Three Fiber for 3D components with comprehensive mocking
 vi.mock('@react-three/fiber', () => ({
-  Canvas: vi.fn().mockImplementation(({ children, ...props }) => {
+  Canvas: vi.fn().mockImplementation(({ children, onCreated, gl, ...props }) => {
+    // Simulate canvas creation callback
+    React.useEffect(() => {
+      if (onCreated) {
+        const mockState = {
+          gl: {
+            setClearColor: vi.fn(),
+            setPixelRatio: vi.fn(),
+            domElement: {
+              style: {},
+              width: 800,
+              height: 600
+            }
+          },
+          scene: { add: vi.fn(), remove: vi.fn() },
+          camera: { aspect: 1, updateProjectionMatrix: vi.fn() },
+          size: { width: 800, height: 600 }
+        };
+        onCreated(mockState);
+      }
+    }, [onCreated]);
+
     return React.createElement('div', {
       'data-testid': 'three-canvas',
+      style: { width: '100%', height: '100%', background: 'transparent' },
       ...props
     }, children);
   }),
-  useFrame: vi.fn(),
+  useFrame: vi.fn(() => {}),
   useThree: vi.fn(() => ({
-    camera: {},
-    scene: {},
-    gl: {},
+    camera: { aspect: 1, updateProjectionMatrix: vi.fn() },
+    scene: { add: vi.fn(), remove: vi.fn(), traverse: vi.fn() },
+    gl: {
+      setClearColor: vi.fn(),
+      setPixelRatio: vi.fn(),
+      render: vi.fn(),
+      domElement: {
+        style: {},
+        width: 800,
+        height: 600,
+        parentNode: null,
+        isConnected: false
+      }
+    },
     size: { width: 800, height: 600 },
+    viewport: { width: 800, height: 600 },
+    invalidate: vi.fn(),
+    advance: vi.fn()
   })),
   useLoader: vi.fn(() => ({})),
   extend: vi.fn(),
@@ -151,7 +187,7 @@ vi.mock('@react-three/fiber', () => ({
 }));
 
 vi.mock('@react-three/drei', () => ({
-  OrbitControls: vi.fn().mockImplementation(() => null),
+  OrbitControls: vi.fn().mockImplementation(({ makeDefault, ...props }) => null),
   Text: vi.fn().mockImplementation(({ children, ...props }) =>
     React.createElement('div', { 'data-testid': 'drei-text', ...props }, children)
   ),
@@ -161,24 +197,177 @@ vi.mock('@react-three/drei', () => ({
   Sphere: vi.fn().mockImplementation((props) =>
     React.createElement('div', { 'data-testid': 'drei-sphere', ...props })
   ),
-  useGLTF: vi.fn(() => ({})),
+  Float: vi.fn().mockImplementation(({ children, ...props }) =>
+    React.createElement('div', { 'data-testid': 'drei-float', ...props }, children)
+  ),
+  Stars: vi.fn().mockImplementation((props) =>
+    React.createElement('div', { 'data-testid': 'drei-stars', ...props })
+  ),
+  Cloud: vi.fn().mockImplementation((props) =>
+    React.createElement('div', { 'data-testid': 'drei-cloud', ...props })
+  ),
+  useGLTF: vi.fn(() => ({ scene: {}, animations: [] })),
   useTexture: vi.fn(() => ({})),
   Environment: vi.fn().mockImplementation(() => null),
   __esModule: true,
 }));
 
-// Mock Three.js core library
-vi.mock('three', () => ({
-  Scene: vi.fn(),
-  PerspectiveCamera: vi.fn(),
-  WebGLRenderer: vi.fn(),
-  Mesh: vi.fn(),
-  BoxGeometry: vi.fn(),
-  SphereGeometry: vi.fn(),
-  MeshBasicMaterial: vi.fn(),
-  Vector3: vi.fn(),
-  Color: vi.fn(),
-  TextureLoader: vi.fn(),
+// Mock Three.js core library with comprehensive implementations
+vi.mock('three', () => {
+  // Mock Three.js constructors
+  const MockVector3 = vi.fn().mockImplementation((x = 0, y = 0, z = 0) => ({
+    x, y, z,
+    set: vi.fn((x, y, z) => ({ x, y, z })),
+    copy: vi.fn(),
+    clone: vi.fn(() => new MockVector3(x, y, z)),
+    add: vi.fn(),
+    sub: vi.fn(),
+    multiply: vi.fn(),
+    normalize: vi.fn(),
+    length: vi.fn(() => Math.sqrt(x * x + y * y + z * z))
+  }));
+
+  const MockGroup = vi.fn().mockImplementation(() => ({
+    add: vi.fn(),
+    remove: vi.fn(),
+    traverse: vi.fn(),
+    position: new MockVector3(),
+    rotation: { x: 0, y: 0, z: 0 },
+    scale: new MockVector3(1, 1, 1),
+    userData: {},
+    visible: true
+  }));
+
+  return {
+    Scene: vi.fn().mockImplementation(() => ({
+      add: vi.fn(),
+      remove: vi.fn(),
+      traverse: vi.fn(),
+      background: null,
+      fog: null
+    })),
+    Group: MockGroup,
+    PerspectiveCamera: vi.fn().mockImplementation(() => ({
+      aspect: 1,
+      updateProjectionMatrix: vi.fn(),
+      position: new MockVector3()
+    })),
+    WebGLRenderer: vi.fn().mockImplementation(() => ({
+      setSize: vi.fn(),
+      setPixelRatio: vi.fn(),
+      setClearColor: vi.fn(),
+      render: vi.fn(),
+      dispose: vi.fn(),
+      domElement: {
+        style: {},
+        width: 800,
+        height: 600,
+        parentNode: null,
+        isConnected: false
+      },
+      shadowMap: { enabled: false, type: null }
+    })),
+    Mesh: vi.fn().mockImplementation(() => ({
+      position: new MockVector3(),
+      rotation: { x: 0, y: 0, z: 0 },
+      scale: new MockVector3(1, 1, 1),
+      castShadow: false,
+      receiveShadow: false,
+      geometry: { dispose: vi.fn() },
+      material: { dispose: vi.fn() }
+    })),
+    BoxGeometry: vi.fn().mockImplementation(() => ({ dispose: vi.fn() })),
+    SphereGeometry: vi.fn().mockImplementation(() => ({ dispose: vi.fn() })),
+    CylinderGeometry: vi.fn().mockImplementation(() => ({ dispose: vi.fn() })),
+    ConeGeometry: vi.fn().mockImplementation(() => ({ dispose: vi.fn() })),
+    PlaneGeometry: vi.fn().mockImplementation(() => ({ dispose: vi.fn() })),
+    OctahedronGeometry: vi.fn().mockImplementation(() => ({ dispose: vi.fn() })),
+    TorusGeometry: vi.fn().mockImplementation(() => ({ dispose: vi.fn() })),
+    MeshBasicMaterial: vi.fn().mockImplementation(() => ({ dispose: vi.fn() })),
+    MeshStandardMaterial: vi.fn().mockImplementation(() => ({ dispose: vi.fn() })),
+    MeshPhongMaterial: vi.fn().mockImplementation(() => ({ dispose: vi.fn() })),
+    PointsMaterial: vi.fn().mockImplementation(() => ({ dispose: vi.fn() })),
+    Vector3: MockVector3,
+    Color: vi.fn().mockImplementation((color) => ({ r: 1, g: 1, b: 1, set: vi.fn() })),
+    TextureLoader: vi.fn(() => ({ load: vi.fn() })),
+    BufferGeometry: vi.fn().mockImplementation(() => ({
+      setAttribute: vi.fn(),
+      dispose: vi.fn()
+    })),
+    Float32BufferAttribute: vi.fn(),
+    Points: vi.fn().mockImplementation(() => ({
+      position: new MockVector3(),
+      rotation: { x: 0, y: 0, z: 0 },
+      visible: true
+    })),
+    AmbientLight: vi.fn(),
+    DirectionalLight: vi.fn().mockImplementation(() => ({
+      position: new MockVector3(),
+      castShadow: false,
+      shadow: {
+        mapSize: { width: 1024, height: 1024 }
+      }
+    })),
+    PointLight: vi.fn(),
+    Fog: vi.fn(),
+    // Math constants
+    MathUtils: {
+      degToRad: vi.fn((deg) => deg * Math.PI / 180),
+      radToDeg: vi.fn((rad) => rad * 180 / Math.PI)
+    },
+    // Shadow map types
+    BasicShadowMap: 0,
+    PCFShadowMap: 1,
+    PCFSoftShadowMap: 2,
+    __esModule: true,
+  };
+});
+
+// Mock our custom useThree hook
+vi.mock('@/components/three/useThree', () => ({
+  useThree: vi.fn(() => ({
+    scene: {
+      add: vi.fn(),
+      remove: vi.fn(),
+      traverse: vi.fn()
+    },
+    camera: {
+      aspect: 1,
+      updateProjectionMatrix: vi.fn()
+    },
+    renderer: {
+      setSize: vi.fn(),
+      setPixelRatio: vi.fn(),
+      render: vi.fn(),
+      domElement: {
+        style: {},
+        width: 800,
+        height: 600,
+        parentNode: null,
+        isConnected: false
+      }
+    },
+    isWebGLAvailable: false, // Default to false for test environment
+    performanceLevel: 'low',
+    addObject: vi.fn(),
+    removeObject: vi.fn(),
+    cleanup: vi.fn()
+  })),
+  __esModule: true,
+}));
+
+// Also mock the relative path version
+vi.mock('../components/three/useThree', () => ({
+  useThree: vi.fn(() => ({
+    scene: null,
+    camera: null,
+    renderer: null,
+    isWebGLAvailable: false,
+    performanceLevel: 'low',
+    addObject: vi.fn(),
+    removeObject: vi.fn(),
+    cleanup: vi.fn()
+  })),
   __esModule: true,
 }));
 
@@ -295,11 +484,11 @@ vi.mock('@/config/index', () => ({
   },
   API_TIMEOUT: 30000,
   LANGUAGES: [
-    { code: "en", name: "English" },
-    { code: "es", name: "Español" },
-    { code: "fr", name: "Français" },
+    { code: 'en', name: 'English' },
+    { code: 'es', name: 'Español' },
+    { code: 'fr', name: 'Français' },
   ],
-  DEFAULT_LANGUAGE: "en",
+  DEFAULT_LANGUAGE: 'en',
   __esModule: true,
 }));
 

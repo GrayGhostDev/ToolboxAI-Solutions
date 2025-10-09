@@ -4,7 +4,7 @@ export interface DividerProps {
   orientation?: 'horizontal' | 'vertical';
 }
 
-const AtomicDivider = (({ ...props, ref }: HTMLHRElement, DividerProps & { ref?: React.Ref<any> }) => (
+const AtomicDivider = React.forwardRef<HTMLHRElement, DividerProps>((props, ref) => (
   <hr ref={ref} {...props} />
 ));
 

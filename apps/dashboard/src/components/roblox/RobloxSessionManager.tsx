@@ -32,9 +32,9 @@ import {
   Radio,
   MultiSelect,
   Textarea,
-  Divider
+  Divider,
+  useMantineTheme
 } from '@mantine/core';
-import { useMantineTheme } from '@mantine/hooks';
 import {
   IconPlayerPlay,
   IconPlayerPause,
@@ -56,7 +56,7 @@ import {
   IconNotes,
   IconHelp,
   IconMountain,
-  IconDeviceGamepad2,
+  IconDeviceGamepad,
   IconTrophy,
   IconAlertTriangle,
   IconCircleCheck,
@@ -845,7 +845,7 @@ export const RobloxSessionManager: React.FunctionComponent<Record<string, any>> 
         <Card.Section p="md">
           <Group justify="space-between" align="center">
             <Group align="center">
-              <IconDeviceGamepad2 color={theme.colors.blue[6]} size={32} />
+              <IconDeviceGamepad color={theme.colors.blue[6]} size={32} />
               <Box>
                 <Title order={3}>Session Manager</Title>
                 <Text size="sm" c="dimmed">
@@ -1327,7 +1327,7 @@ export const RobloxSessionManager: React.FunctionComponent<Record<string, any>> 
             gap: '16px'
           }}
         >
-          <IconDeviceGamepad2 size={64} color={theme.colors.gray[4]} />
+          <IconDeviceGamepad size={64} color={theme.colors.gray[4]} />
           <Text size="lg" c="dimmed">
             No sessions yet
           </Text>

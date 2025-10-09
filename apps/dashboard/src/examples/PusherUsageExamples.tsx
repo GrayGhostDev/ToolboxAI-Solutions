@@ -1,9 +1,40 @@
-import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../utils/mui-imports';
+import {
+  Box,
+  Button,
+  Text,
+  Paper,
+  Stack,
+  Grid,
+  Container,
+  ActionIcon,
+  Avatar,
+  Card,
+  List,
+  Divider,
+  TextInput,
+  Select,
+  Badge,
+  Alert,
+  Loader,
+  Progress,
+  Modal,
+  Drawer,
+  Tabs,
+  Menu,
+  Tooltip,
+  Checkbox,
+  Radio,
+  Switch,
+  Slider,
+  Rating,
+  Autocomplete,
+  Skeleton
+} from '@mantine/core';
 /**
  * Pusher Usage Examples for ToolboxAI Dashboard
  *
  * This file demonstrates how to use the comprehensive Pusher service
- * with various React hooks and components.
+ * with various Mantine components and React hooks.
  */
 
 import React, { useEffect, useState } from 'react';
@@ -44,28 +75,26 @@ export const BasicConnectionExample: React.FC = () => {
   const { isConnected, isConnecting, state, stats } = usePusherConnection();
 
   return (
-    <Card>
-      <CardContent>
-        <Typography order={6} gutterBottom>
-          Basic Connection Monitoring
-        </Typography>
+    <Card withBorder shadow="sm" radius="md" p="lg">
+      <Text fw={600} size="lg" mb="md">
+        Basic Connection Monitoring
+      </Text>
 
-        <Stack spacing={2}>
-          <PusherConnectionStatus size="medium" />
+      <Stack gap="md">
+        <PusherConnectionStatus size="medium" />
 
-          <Box>
-            <Typography size="sm" color="text.secondary">
-              Status: {ConnectionStateUtils.getStatusMessage(state)}
-            </Typography>
-            <Typography size="sm" color="text.secondary">
-              Messages Sent: {stats.messagesSent}
-            </Typography>
-            <Typography size="sm" color="text.secondary">
-              Messages Received: {stats.messagesReceived}
-            </Typography>
-          </Box>
-        </Stack>
-      </CardContent>
+        <Box>
+          <Text size="sm" c="dimmed">
+            Status: {ConnectionStateUtils.getStatusMessage(state)}
+          </Text>
+          <Text size="sm" c="dimmed">
+            Messages Sent: {stats.messagesSent}
+          </Text>
+          <Text size="sm" c="dimmed">
+            Messages Received: {stats.messagesReceived}
+          </Text>
+        </Box>
+      </Stack>
     </Card>
   );
 };
@@ -111,63 +140,69 @@ export const ChannelSubscriptionExample: React.FC = () => {
   );
 
   return (
-    <Card>
-      <CardContent>
-        <Typography order={6} gutterBottom>
-          Channel Subscription Example
-        </Typography>
+    <Card withBorder shadow="sm" radius="md" p="lg">
+      <Text fw={600} size="lg" mb="md">
+        Channel Subscription Example
+      </Text>
 
-        <Stack spacing={2}>
-          <TextField
-            label="Channel Name"
-            value={channelName}
-            onChange={(e) => setChannelName(e.target.value)}
-            size="small"
-          />
+      <Stack gap="md">
+        <TextInput
+          label="Channel Name"
+          value={channelName}
+          onChange={(e) => setChannelName(e.currentTarget.value)}
+          size="sm"
+        />
 
-          <Box display="flex" gap={1} alignItems="center">
-            <Chip
-              label={isSubscribed ? 'Subscribed' : 'Not Subscribed'}
-              color={isSubscribed ? 'success' : 'default'}
-              size="small"
-            />
-            {subscriptionError && (
-              <Chip
-                label="Error"
-                color="red"
-                size="small"
-                title={subscriptionError.message}
-              />
-            )}
-          </Box>
-
+        <Box style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <Badge
+            color={isSubscribed ? 'green' : 'gray'}
+            size="sm"
+          >
+            {isSubscribed ? 'Subscribed' : 'Not Subscribed'}
+          </Badge>
           {subscriptionError && (
-            <Alert severity="error">
-              Subscription Error: {subscriptionError.message}
-            </Alert>
+            <Badge
+              color="red"
+              size="sm"
+              title={subscriptionError.message}
+            >
+              Error
+            </Badge>
           )}
+        </Box>
 
-          <Typography variant="subtitle2">
-            Recent Messages ({messages.length}):
-          </Typography>
+        {subscriptionError && (
+          <Alert color="red" variant="light">
+            Subscription Error: {subscriptionError.message}
+          </Alert>
+        )}
 
-          <List dense style={{ maxHeight: 200, overflow: 'auto' }}>
+        <Text fw={500} size="sm">
+          Recent Messages ({messages.length}):
+        </Text>
+
+        <Box style={{ maxHeight: 200, overflow: 'auto' }}>
+          <List spacing="xs" size="sm">
             {messages.slice(-10).map((message, index) => (
-              <ListItem key={index}>
-                <ListItemText
-                  primary={`${message.type}: ${JSON.stringify(message.data).substring(0, 100)}...`}
-                  secondary={new Date(message.timestamp).toLocaleTimeString()}
-                />
-              </ListItem>
+              <List.Item key={index}>
+                <Box>
+                  <Text size="sm">
+                    {message.type}: {JSON.stringify(message.data).substring(0, 100)}...
+                  </Text>
+                  <Text size="xs" c="dimmed">
+                    {new Date(message.timestamp).toLocaleTimeString()}
+                  </Text>
+                </Box>
+              </List.Item>
             ))}
             {messages.length === 0 && (
-              <ListItem>
-                <ListItemText primary="No messages received yet" />
-              </ListItem>
+              <List.Item>
+                <Text size="sm" c="dimmed">No messages received yet</Text>
+              </List.Item>
             )}
           </List>
-        </Stack>
-      </CardContent>
+        </Box>
+      </Stack>
     </Card>
   );
 };
@@ -207,64 +242,62 @@ export const MessageSendingExample: React.FC = () => {
   };
 
   return (
-    <Card>
-      <CardContent>
-        <Typography order={6} gutterBottom>
-          Message Sending Example
-        </Typography>
+    <Card withBorder shadow="sm" radius="md" p="lg">
+      <Text fw={600} size="lg" mb="md">
+        Message Sending Example
+      </Text>
 
-        <Stack spacing={2}>
-          <TextField
-            label="Target Channel"
-            value={targetChannel}
-            onChange={(e) => setTargetChannel(e.target.value)}
-            size="small"
-            placeholder="e.g., public-chat, private-user-123"
-          />
+      <Stack gap="md">
+        <TextInput
+          label="Target Channel"
+          value={targetChannel}
+          onChange={(e) => setTargetChannel(e.currentTarget.value)}
+          size="sm"
+          placeholder="e.g., public-chat, private-user-123"
+        />
 
-          <TextField
-            label="Message"
-            value={messageText}
-            onChange={(e) => setMessageText(e.target.value)}
-            multiline
-            rows={2}
-            placeholder="Type your message here..."
-          />
+        <TextInput
+          label="Message"
+          value={messageText}
+          onChange={(e) => setMessageText(e.currentTarget.value)}
+          placeholder="Type your message here..."
+        />
 
-          <Button
-            variant="filled"
-            onClick={handleSendMessage}
-            disabled={isSending || !messageText.trim()}
-          >
-            {isSending ? 'Sending...' : 'Send Message'}
-          </Button>
+        <Button
+          variant="filled"
+          onClick={handleSendMessage}
+          disabled={isSending || !messageText.trim()}
+        >
+          {isSending ? 'Sending...' : 'Send Message'}
+        </Button>
 
-          {lastError && (
-            <Alert severity="error">
-              Error: {lastError.message}
-            </Alert>
-          )}
+        {lastError && (
+          <Alert color="red" variant="light">
+            Error: {lastError.message}
+          </Alert>
+        )}
 
-          <Divider />
+        <Divider />
 
-          <Typography variant="subtitle2">
-            Sent Messages:
-          </Typography>
+        <Text fw={500} size="sm">
+          Sent Messages:
+        </Text>
 
-          <List dense style={{ maxHeight: 150, overflow: 'auto' }}>
+        <Box style={{ maxHeight: 150, overflow: 'auto' }}>
+          <List spacing="xs" size="sm">
             {sentMessages.slice(-5).map((message, index) => (
-              <ListItem key={index}>
-                <ListItemText primary={message} />
-              </ListItem>
+              <List.Item key={index}>
+                <Text size="sm">{message}</Text>
+              </List.Item>
             ))}
             {sentMessages.length === 0 && (
-              <ListItem>
-                <ListItemText primary="No messages sent yet" />
-              </ListItem>
+              <List.Item>
+                <Text size="sm" c="dimmed">No messages sent yet</Text>
+              </List.Item>
             )}
           </List>
-        </Stack>
-      </CardContent>
+        </Box>
+      </Stack>
     </Card>
   );
 };
@@ -311,42 +344,46 @@ export const ContentGenerationExample: React.FC = () => {
   };
 
   return (
-    <Card>
-      <CardContent>
-        <Typography order={6} gutterBottom>
-          Content Generation Monitoring
-        </Typography>
+    <Card withBorder shadow="sm" radius="md" p="lg">
+      <Text fw={600} size="lg" mb="md">
+        Content Generation Monitoring
+      </Text>
 
-        <Stack spacing={2}>
-          <Button
-            variant="filled"
-            onClick={startContentGeneration}
-            disabled={isGenerating}
-          >
-            {isGenerating ? 'Generating...' : 'Start Content Generation'}
-          </Button>
+      <Stack gap="md">
+        <Button
+          variant="filled"
+          onClick={startContentGeneration}
+          disabled={isGenerating}
+        >
+          {isGenerating ? 'Generating...' : 'Start Content Generation'}
+        </Button>
 
-          <Typography variant="subtitle2">
-            Progress Updates:
-          </Typography>
+        <Text fw={500} size="sm">
+          Progress Updates:
+        </Text>
 
-          <List dense style={{ maxHeight: 200, overflow: 'auto' }}>
+        <Box style={{ maxHeight: 200, overflow: 'auto' }}>
+          <List spacing="xs" size="sm">
             {progressData.map((progress, index) => (
-              <ListItem key={index}>
-                <ListItemText
-                  primary={`${progress.stage || 'Unknown'}: ${progress.percentage || 0}%`}
-                  secondary={`${progress.message || ''} - ${new Date(progress.timestamp).toLocaleTimeString()}`}
-                />
-              </ListItem>
+              <List.Item key={index}>
+                <Box>
+                  <Text size="sm">
+                    {progress.stage || 'Unknown'}: {progress.percentage || 0}%
+                  </Text>
+                  <Text size="xs" c="dimmed">
+                    {progress.message || ''} - {new Date(progress.timestamp).toLocaleTimeString()}
+                  </Text>
+                </Box>
+              </List.Item>
             ))}
             {progressData.length === 0 && (
-              <ListItem>
-                <ListItemText primary="No progress updates yet" />
-              </ListItem>
+              <List.Item>
+                <Text size="sm" c="dimmed">No progress updates yet</Text>
+              </List.Item>
             )}
           </List>
-        </Stack>
-      </CardContent>
+        </Box>
+      </Stack>
     </Card>
   );
 };
@@ -375,59 +412,60 @@ export const PresenceChannelExample: React.FC = () => {
   );
 
   return (
-    <Card>
-      <CardContent>
-        <Typography order={6} gutterBottom>
-          Presence Channel Example
-        </Typography>
+    <Card withBorder shadow="sm" radius="md" p="lg">
+      <Text fw={600} size="lg" mb="md">
+        Presence Channel Example
+      </Text>
 
-        <Stack spacing={2}>
-          <Box display="flex" gap={1}>
-            <Button
-              variant="filled"
-              onClick={joinChannel}
-              disabled={isJoined}
-              size="small"
-            >
-              Join Channel
-            </Button>
-            <Button
-              variant="outline"
-              onClick={leaveChannel}
-              disabled={!isJoined}
-              size="small"
-            >
-              Leave Channel
-            </Button>
-          </Box>
+      <Stack gap="md">
+        <Box style={{ display: 'flex', gap: 8 }}>
+          <Button
+            variant="filled"
+            onClick={joinChannel}
+            disabled={isJoined}
+            size="sm"
+          >
+            Join Channel
+          </Button>
+          <Button
+            variant="outline"
+            onClick={leaveChannel}
+            disabled={!isJoined}
+            size="sm"
+          >
+            Leave Channel
+          </Button>
+        </Box>
 
-          <Chip
-            label={isJoined ? 'In Channel' : 'Not in Channel'}
-            color={isJoined ? 'success' : 'default'}
-            size="small"
-          />
+        <Badge
+          color={isJoined ? 'green' : 'gray'}
+          size="sm"
+        >
+          {isJoined ? 'In Channel' : 'Not in Channel'}
+        </Badge>
 
-          <Typography variant="subtitle2">
-            Online Members ({members.length}):
-          </Typography>
+        <Text fw={500} size="sm">
+          Online Members ({members.length}):
+        </Text>
 
-          <List dense>
-            {members.map((member) => (
-              <ListItem key={member.id}>
-                <ListItemText
-                  primary={member.info.name}
-                  secondary={`${member.info.role} - ${member.info.status}`}
-                />
-              </ListItem>
-            ))}
-            {members.length === 0 && (
-              <ListItem>
-                <ListItemText primary="No members online" />
-              </ListItem>
-            )}
-          </List>
-        </Stack>
-      </CardContent>
+        <List spacing="xs" size="sm">
+          {members.map((member) => (
+            <List.Item key={member.id}>
+              <Box>
+                <Text size="sm">{member.info.name}</Text>
+                <Text size="xs" c="dimmed">
+                  {member.info.role} - {member.info.status}
+                </Text>
+              </Box>
+            </List.Item>
+          ))}
+          {members.length === 0 && (
+            <List.Item>
+              <Text size="sm" c="dimmed">No members online</Text>
+            </List.Item>
+          )}
+        </List>
+      </Stack>
     </Card>
   );
 };
@@ -464,36 +502,40 @@ export const EventListeningExample: React.FC = () => {
   );
 
   return (
-    <Card>
-      <CardContent>
-        <Typography order={6} gutterBottom>
-          Event Listening Example
-        </Typography>
+    <Card withBorder shadow="sm" radius="md" p="lg">
+      <Text fw={600} size="lg" mb="md">
+        Event Listening Example
+      </Text>
 
-        <Typography size="sm" color="text.secondary" gutterBottom>
-          Listening for: User Achievements, System Alerts
-        </Typography>
+      <Text size="sm" c="dimmed" mb="md">
+        Listening for: User Achievements, System Alerts
+      </Text>
 
-        <Typography variant="subtitle2">
-          Recent Events ({events.length}):
-        </Typography>
+      <Text fw={500} size="sm">
+        Recent Events ({events.length}):
+      </Text>
 
-        <List dense style={{ maxHeight: 200, overflow: 'auto' }}>
+      <Box style={{ maxHeight: 200, overflow: 'auto' }}>
+        <List spacing="xs" size="sm">
           {events.slice(-10).map((event, index) => (
-            <ListItem key={index}>
-              <ListItemText
-                primary={`${event.type}: ${JSON.stringify(event.data).substring(0, 80)}...`}
-                secondary={new Date(event.timestamp).toLocaleTimeString()}
-              />
-            </ListItem>
+            <List.Item key={index}>
+              <Box>
+                <Text size="sm">
+                  {event.type}: {JSON.stringify(event.data).substring(0, 80)}...
+                </Text>
+                <Text size="xs" c="dimmed">
+                  {new Date(event.timestamp).toLocaleTimeString()}
+                </Text>
+              </Box>
+            </List.Item>
           ))}
           {events.length === 0 && (
-            <ListItem>
-              <ListItemText primary="No events received yet" />
-            </ListItem>
+            <List.Item>
+              <Text size="sm" c="dimmed">No events received yet</Text>
+            </List.Item>
           )}
         </List>
-      </CardContent>
+      </Box>
     </Card>
   );
 };
@@ -503,16 +545,16 @@ export const EventListeningExample: React.FC = () => {
  */
 export const PusherUsageExamples: React.FC = () => {
   return (
-    <Box style={{ p: 3 }}>
-      <Typography order={4} gutterBottom>
+    <Container size="lg" py="xl">
+      <Text size="xl" fw={700} mb="md">
         Pusher Usage Examples
-      </Typography>
+      </Text>
 
-      <Typography size="md" color="text.secondary" paragraph>
-        This page demonstrates various ways to use the Pusher service in the ToolboxAI Dashboard.
-      </Typography>
+      <Text size="md" c="dimmed" mb="xl">
+        This page demonstrates various ways to use the Pusher service with Mantine components in the ToolboxAI Dashboard.
+      </Text>
 
-      <Stack spacing={3}>
+      <Stack gap="xl">
         <BasicConnectionExample />
         <ChannelSubscriptionExample />
         <MessageSendingExample />
@@ -520,7 +562,7 @@ export const PusherUsageExamples: React.FC = () => {
         <PresenceChannelExample />
         <EventListeningExample />
       </Stack>
-    </Box>
+    </Container>
   );
 };
 

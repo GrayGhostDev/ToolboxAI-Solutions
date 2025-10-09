@@ -9,39 +9,36 @@ import {
   Box,
   Button,
   Card,
-  CardContent,
-  Typography,
+  Text,
   Alert,
-  AlertTitle,
-  CircularProgress,
-  LinearProgress,
+  Loader,
+  Progress,
   Stack,
-  Chip,
-  IconButton,
+  ActionIcon,
   Collapse,
   Paper,
   Skeleton,
-  Fade,
-  Zoom,
-  useTheme,
+  Transition,
+  useMantineTheme,
   Container,
-  Link,
-} from '@mui/material';
+  Anchor,
+  Group,
+} from '@mantine/core';
 import {
-  WifiOff,
-  CloudOff,
-  ErrorOutline,
-  Refresh,
-  Close,
-  CheckCircle,
-  Info,
-  Warning,
-  ArrowBack,
-  Home,
-  Support,
-  Timer,
-  TrendingUp,
-} from '@mui/icons-material';
+  IconWifiOff,
+  IconCloudOff,
+  IconExclamationCircle,
+  IconRefresh,
+  IconX,
+  IconCircleCheck,
+  IconInfoCircle,
+  IconAlertTriangle,
+  IconArrowLeft,
+  IconHome,
+  IconHelp,
+  IconClock,
+  IconTrendingUp,
+} from '@tabler/icons-react';
 
 /**
  * Network Error Component
@@ -49,7 +46,7 @@ import {
  */
 export function NetworkError({
   onRetry,
-  message = "Unable to connect to the server",
+  message = 'Unable to connect to the server',
 }: {
   onRetry?: () => void;
   message?: string;
@@ -70,38 +67,47 @@ export function NetworkError({
   }, []);
 
   return (
-    <Card sx={{ maxWidth: 400, mx: 'auto', my: 4 }}>
-      <CardContent sx={{ textAlign: 'center', py: 4 }}>
-        <WifiOff sx={{ fontSize: 64, color: 'error.main', mb: 2 }} />
-        <Typography variant="h5" gutterBottom>
-          Connection Problem
-        </Typography>
-        <Typography variant="body2" color="text.secondary" paragraph>
-          {message}
-        </Typography>
+    <Card
+      style={{ maxWidth: 400, margin: '2rem auto' }}
+      p="xl"
+      ta="center"
+    >
+      <IconWifiOff size={64} color="var(--mantine-color-red-6)" style={{ marginBottom: 16 }} />
+      <Text size="xl" fw={600} mb="sm">
+        Connection Problem
+      </Text>
+      <Text size="sm" c="dimmed" mb="md">
+        {message}
+      </Text>
 
-        {!isOnline && (
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            You appear to be offline. Please check your internet connection.
-          </Alert>
-        )}
-
-        {isOnline && (
-          <Alert severity="info" sx={{ mb: 2 }}>
-            Your internet connection is restored. Try refreshing.
-          </Alert>
-        )}
-
-        <Button
-          variant="contained"
-          startIcon={<Refresh />}
-          onClick={onRetry}
-          disabled={!isOnline}
-          fullWidth
+      {!isOnline && (
+        <Alert
+          icon={<IconAlertTriangle size="1rem" />}
+          color="yellow"
+          mb="md"
         >
-          {isOnline ? 'Retry Connection' : 'Waiting for Connection...'}
-        </Button>
-      </CardContent>
+          You appear to be offline. Please check your internet connection.
+        </Alert>
+      )}
+
+      {isOnline && (
+        <Alert
+          icon={<IconInfoCircle size="1rem" />}
+          color="blue"
+          mb="md"
+        >
+          Your internet connection is restored. Try refreshing.
+        </Alert>
+      )}
+
+      <Button
+        leftSection={<IconRefresh size="1rem" />}
+        onClick={onRetry}
+        disabled={!isOnline}
+        fullWidth
+      >
+        {isOnline ? 'Retry Connection' : 'Waiting for Connection...'}
+      </Button>
     </Card>
   );
 }
@@ -124,67 +130,64 @@ export function ApiError({
   showDetails?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const theme = useTheme();
+  const theme = useMantineTheme();
 
   const getErrorMessage = () => {
-    if (error?.response?.status === 404) return "The requested resource was not found";
+    if (error?.response?.status === 404) return 'The requested resource was not found';
     if (error?.response?.status === 403) return "You don't have permission to access this resource";
-    if (error?.response?.status === 401) return "Your session has expired. Please log in again";
-    if (error?.response?.status >= 500) return "Server error. Please try again later";
-    return error?.message || "An unexpected error occurred";
+    if (error?.response?.status === 401) return 'Your session has expired. Please log in again';
+    if (error?.response?.status >= 500) return 'Server error. Please try again later';
+    return error?.message || 'An unexpected error occurred';
   };
 
   const getErrorTitle = () => {
-    if (error?.response?.status === 404) return "Not Found";
-    if (error?.response?.status === 403) return "Access Denied";
-    if (error?.response?.status === 401) return "Authentication Required";
-    if (error?.response?.status >= 500) return "Server Error";
-    return "Error";
+    if (error?.response?.status === 404) return 'Not Found';
+    if (error?.response?.status === 403) return 'Access Denied';
+    if (error?.response?.status === 401) return 'Authentication Required';
+    if (error?.response?.status >= 500) return 'Server Error';
+    return 'Error';
   };
 
   return (
     <Paper
-      elevation={2}
-      sx={{
-        p: 3,
-        borderLeft: 4,
-        borderColor: 'error.main',
-        bgcolor: theme.palette.mode === 'dark' ? 'error.dark' : 'error.lighter',
+      p="lg"
+      style={{
+        borderLeft: `4px solid ${theme.colors.red[6]}`,
+        backgroundColor: theme.colorScheme === 'dark' ? theme.colors.red[9] : theme.colors.red[0],
       }}
     >
-      <Stack spacing={2}>
-        <Stack direction="row" alignItems="center" spacing={2}>
-          <ErrorOutline color="error" />
-          <Box flex={1}>
-            <Typography variant="h6" color="error">
+      <Stack gap="md">
+        <Group>
+          <IconExclamationCircle color={theme.colors.red[6]} />
+          <Box style={{ flex: 1 }}>
+            <Text size="lg" fw={600} c="red.6">
               {getErrorTitle()}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
+            </Text>
+            <Text size="sm" c="dimmed">
               {getErrorMessage()}
-            </Typography>
+            </Text>
           </Box>
-        </Stack>
+        </Group>
 
         {retryCount > 0 && (
-          <LinearProgress
-            variant="determinate"
+          <Progress
             value={(retryCount / maxRetries) * 100}
-            sx={{ height: 6, borderRadius: 1 }}
+            size="sm"
+            radius="sm"
           />
         )}
 
         {retryCount > 0 && (
-          <Typography variant="caption" color="text.secondary">
+          <Text size="xs" c="dimmed">
             Retry attempt {retryCount} of {maxRetries}
-          </Typography>
+          </Text>
         )}
 
-        <Stack direction="row" spacing={2}>
+        <Group>
           {onRetry && retryCount < maxRetries && (
             <Button
-              variant="contained"
-              size="small"
-              startIcon={<Refresh />}
+              size="sm"
+              leftSection={<IconRefresh size="1rem" />}
               onClick={onRetry}
             >
               Try Again
@@ -193,20 +196,24 @@ export function ApiError({
 
           {showDetails && error?.response && (
             <Button
-              variant="outlined"
-              size="small"
+              variant="outline"
+              size="sm"
               onClick={() => setExpanded(!expanded)}
             >
               {expanded ? 'Hide' : 'Show'} Details
             </Button>
           )}
-        </Stack>
+        </Group>
 
         <Collapse in={expanded}>
-          <Paper variant="outlined" sx={{ p: 2, bgcolor: 'background.paper' }}>
-            <Typography variant="caption" component="pre" sx={{ fontFamily: 'monospace' }}>
+          <Paper p="md" withBorder>
+            <Text
+              component="pre"
+              size="xs"
+              style={{ fontFamily: 'monospace', overflow: 'auto' }}
+            >
               {JSON.stringify(error?.response?.data || error, null, 2)}
-            </Typography>
+            </Text>
           </Paper>
         </Collapse>
       </Stack>
@@ -219,7 +226,7 @@ export function ApiError({
  * Shows when data fails to load with retry capability
  */
 export function LoadingError({
-  title = "Failed to Load",
+  title = 'Failed to Load',
   message = "We couldn't load the data you requested",
   onRetry,
   onGoBack,
@@ -232,24 +239,24 @@ export function LoadingError({
   showBackButton?: boolean;
 }) {
   return (
-    <Container maxWidth="sm" sx={{ py: 4 }}>
-      <Stack spacing={3} alignItems="center" textAlign="center">
-        <CloudOff sx={{ fontSize: 80, color: 'text.secondary' }} />
+    <Container size="sm" py="xl">
+      <Stack gap="lg" align="center" ta="center">
+        <IconCloudOff size={80} color="var(--mantine-color-dimmed)" />
 
         <Box>
-          <Typography variant="h5" gutterBottom>
+          <Text size="xl" fw={600} mb="sm">
             {title}
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
+          </Text>
+          <Text size="md" c="dimmed">
             {message}
-          </Typography>
+          </Text>
         </Box>
 
-        <Stack direction="row" spacing={2}>
+        <Group>
           {showBackButton && onGoBack && (
             <Button
-              variant="outlined"
-              startIcon={<ArrowBack />}
+              variant="outline"
+              leftSection={<IconArrowLeft size="1rem" />}
               onClick={onGoBack}
             >
               Go Back
@@ -258,14 +265,13 @@ export function LoadingError({
 
           {onRetry && (
             <Button
-              variant="contained"
-              startIcon={<Refresh />}
+              leftSection={<IconRefresh size="1rem" />}
               onClick={onRetry}
             >
               Try Again
             </Button>
           )}
-        </Stack>
+        </Group>
       </Stack>
     </Container>
   );
@@ -286,27 +292,37 @@ export function InlineError({
 }) {
   if (!message) return null;
 
+  const getColor = () => {
+    switch (severity) {
+      case 'warning': return 'yellow';
+      case 'info': return 'blue';
+      default: return 'red';
+    }
+  };
+
+  const getIcon = () => {
+    switch (severity) {
+      case 'warning': return <IconAlertTriangle size="1rem" />;
+      case 'info': return <IconInfoCircle size="1rem" />;
+      default: return <IconExclamationCircle size="1rem" />;
+    }
+  };
+
   return (
-    <Fade in>
-      <Alert
-        severity={severity}
-        action={
-          onDismiss && (
-            <IconButton
-              aria-label="close"
-              color="inherit"
-              size="small"
-              onClick={onDismiss}
-            >
-              <Close fontSize="inherit" />
-            </IconButton>
-          )
-        }
-        sx={{ mt: 1 }}
-      >
-        {message}
-      </Alert>
-    </Fade>
+    <Transition mounted={true} transition="fade" duration={200}>
+      {(styles) => (
+        <Alert
+          icon={getIcon()}
+          color={getColor()}
+          mt="xs"
+          style={styles}
+          onClose={onDismiss}
+          withCloseButton={!!onDismiss}
+        >
+          {message}
+        </Alert>
+      )}
+    </Transition>
   );
 }
 
@@ -318,7 +334,7 @@ export function RetryTimer({
   seconds,
   onRetry,
   onCancel,
-  message = "Retrying in",
+  message = 'Retrying in',
 }: {
   seconds: number;
   onRetry: () => void;
@@ -341,24 +357,23 @@ export function RetryTimer({
   }, [timeLeft, onRetry]);
 
   return (
-    <Paper sx={{ p: 2 }}>
-      <Stack direction="row" alignItems="center" spacing={2}>
-        <CircularProgress
-          variant="determinate"
-          value={(timeLeft / seconds) * 100}
+    <Paper p="md">
+      <Group>
+        <Loader
+          variant="ring"
           size={40}
         />
-        <Box flex={1}>
-          <Typography variant="body2">
+        <Box style={{ flex: 1 }}>
+          <Text size="sm">
             {message} {timeLeft} seconds...
-          </Typography>
+          </Text>
         </Box>
         {onCancel && (
-          <Button size="small" onClick={onCancel}>
+          <Button size="sm" onClick={onCancel}>
             Cancel
           </Button>
         )}
-      </Stack>
+      </Group>
     </Paper>
   );
 }
@@ -368,9 +383,9 @@ export function RetryTimer({
  * Shows when no data is available
  */
 export function EmptyState({
-  title = "No Data Available",
+  title = 'No Data Available',
   message = "There's nothing to show here yet",
-  icon = <Info />,
+  icon = <IconInfoCircle />,
   action,
 }: {
   title?: string;
@@ -380,25 +395,23 @@ export function EmptyState({
 }) {
   return (
     <Box
-      sx={{
-        py: 8,
-        px: 3,
-        textAlign: 'center',
-        color: 'text.secondary',
-      }}
+      py="xl"
+      px="lg"
+      ta="center"
+      c="dimmed"
     >
-      <Box sx={{ mb: 3, opacity: 0.5 }}>
+      <Box mb="lg" style={{ opacity: 0.5 }}>
         {React.cloneElement(icon as React.ReactElement, {
-          sx: { fontSize: 80 },
+          size: 80,
         })}
       </Box>
-      <Typography variant="h6" gutterBottom>
+      <Text size="lg" fw={600} mb="sm">
         {title}
-      </Typography>
-      <Typography variant="body2" paragraph>
+      </Text>
+      <Text size="sm" mb="md">
         {message}
-      </Typography>
-      {action && <Box sx={{ mt: 3 }}>{action}</Box>}
+      </Text>
+      {action && <Box mt="lg">{action}</Box>}
     </Box>
   );
 }
@@ -408,7 +421,7 @@ export function EmptyState({
  * Shows when error is successfully recovered
  */
 export function SuccessRecovery({
-  message = "Connection restored successfully",
+  message = 'Connection restored successfully',
   onDismiss,
 }: {
   message?: string;
@@ -423,26 +436,19 @@ export function SuccessRecovery({
   }, [onDismiss]);
 
   return (
-    <Zoom in>
-      <Alert
-        severity="success"
-        icon={<CheckCircle />}
-        action={
-          onDismiss && (
-            <IconButton
-              aria-label="close"
-              color="inherit"
-              size="small"
-              onClick={onDismiss}
-            >
-              <Close fontSize="inherit" />
-            </IconButton>
-          )
-        }
-      >
-        {message}
-      </Alert>
-    </Zoom>
+    <Transition mounted={true} transition="scale" duration={300}>
+      {(styles) => (
+        <Alert
+          icon={<IconCircleCheck size="1rem" />}
+          color="green"
+          style={styles}
+          onClose={onDismiss}
+          withCloseButton={!!onDismiss}
+        >
+          {message}
+        </Alert>
+      )}
+    </Transition>
   );
 }
 
@@ -458,22 +464,22 @@ export function ErrorSkeleton({
   showAvatar?: boolean;
 }) {
   return (
-    <Box sx={{ p: 2 }}>
+    <Box p="md">
       {showAvatar && (
-        <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-          <Skeleton variant="circular" width={40} height={40} />
-          <Box flex={1}>
-            <Skeleton variant="text" width="30%" />
-            <Skeleton variant="text" width="20%" />
+        <Group mb="md">
+          <Skeleton height={40} circle />
+          <Box style={{ flex: 1 }}>
+            <Skeleton height={8} width="30%" mb="xs" />
+            <Skeleton height={8} width="20%" />
           </Box>
-        </Stack>
+        </Group>
       )}
       {Array.from({ length: lines }).map((_, index) => (
         <Skeleton
           key={index}
-          variant="text"
+          height={8}
           width={`${Math.random() * 30 + 70}%`}
-          sx={{ mb: 1 }}
+          mb="xs"
         />
       ))}
     </Box>

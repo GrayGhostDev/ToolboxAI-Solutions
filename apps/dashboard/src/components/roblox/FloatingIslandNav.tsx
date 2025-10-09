@@ -1,36 +1,17 @@
 import React, { useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Box, Card, Text, useMantineTheme, createStyles, keyframes } from '@mantine/core';
+import { Box, Card, Text, useMantineTheme } from '@mantine/core';
 import { OrbitControls, Text as ThreeText, Float, Cloud, Stars, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
 import { useNavigate } from 'react-router-dom';
 
-const float = keyframes({
-  '0%, 100%': { transform: 'translateY(0px)' },
-  '50%': { transform: 'translateY(-20px)' }
-});
-
-const useStyles = createStyles((theme) => ({
-  styledContainer: {
-    background: 'linear-gradient(180deg, #87CEEB 0%, #FFB6C1 50%, #FFD700 100%)',
-    borderRadius: theme.radius.xl,
-    padding: theme.spacing.md,
-    position: 'relative',
-    overflow: 'hidden',
-    height: '400px',
-
-    '&::before': {
-      content: '""',
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.3) 0%, transparent 50%)',
-      pointerEvents: 'none',
-    },
-  },
-}));
+// Floating animation keyframes
+const floatAnimationKeyframes = `
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+  }
+`;
 
 // 3D Island Component
 function Island({ position, color, label, onClick, isHovered, scale = 1 }) {
@@ -202,7 +183,6 @@ interface FloatingIslandNavProps {
 
 export const FloatingIslandNav: React.FunctionComponent<FloatingIslandNavProps> = ({ onNavigate }) => {
   const theme = useMantineTheme();
-  const { classes } = useStyles();
   const navigate = useNavigate();
   const [hoveredIsland, setHoveredIsland] = useState<number | null>(null);
   const [selectedIsland, setSelectedIsland] = useState<number>(0);
@@ -227,106 +207,133 @@ export const FloatingIslandNav: React.FunctionComponent<FloatingIslandNavProps> 
     }, 500);
   };
 
+  // Container styles using modern Mantine v8 patterns
+  const containerStyles = {
+    background: 'linear-gradient(180deg, #87CEEB 0%, #FFB6C1 50%, #FFD700 100%)',
+    borderRadius: theme.radius.xl,
+    padding: theme.spacing.md,
+    position: 'relative' as const,
+    overflow: 'hidden' as const,
+    height: '400px',
+  };
+
   return (
-    <Card className={classes.styledContainer} shadow="none">
-      <Box style={{ position: 'absolute', top: 16, left: 16, zIndex: 1 }}>
-        <Text
-          size="xl"
-          weight={800}
+    <>
+      <style>{floatAnimationKeyframes}</style>
+      <Card style={containerStyles} shadow="none">
+        {/* Radial gradient overlay using Box */}
+        <Box
           style={{
-            color: '#FFFFFF',
-            textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
-            animation: `${float} 3s ease-in-out infinite`,
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.3) 0%, transparent 50%)',
+            pointerEvents: 'none',
+            zIndex: 0,
           }}
+        />
+
+        <Box style={{ position: 'absolute', top: 16, left: 16, zIndex: 1 }}>
+          <Text
+            size="xl"
+            fw={800}
+            style={{
+              color: '#FFFFFF',
+              textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+              animation: 'float 3s ease-in-out infinite',
+            }}
+          >
+            Choose Your Adventure! 🏝️
+          </Text>
+        </Box>
+
+        <Canvas
+          shadows
+          camera={{ position: [0, 5, 8], fov: 60 }}
+          style={{ borderRadius: theme.radius.xl }}
         >
-          Choose Your Adventure! 🏝️
-        </Text>
-      </Box>
-
-      <Canvas
-        shadows
-        camera={{ position: [0, 5, 8], fov: 60 }}
-        style={{ borderRadius: theme.radius.xl }}
-      >
-        <ambientLight intensity={0.5} />
-        <directionalLight
-          position={[10, 10, 5]}
-          intensity={1}
-          castShadow
-          shadow-mapSize={[2048, 2048]}
-        />
-        <pointLight position={[-10, -10, -10]} intensity={0.3} color="#FFD700" />
-
-        {/* Sky and environment */}
-        <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade />
-        <Cloud position={[-4, 3, -2]} speed={0.2} opacity={0.5} />
-        <Cloud position={[4, 4, -1]} speed={0.1} opacity={0.4} />
-        <Cloud position={[0, 3.5, 1]} speed={0.15} opacity={0.3} />
-
-        {/* Islands */}
-        {islands.map((island, index) => (
-          <Island
-            key={index}
-            position={island.position}
-            color={island.color}
-            label={island.label}
-            onClick={() => handleIslandClick(index, island.route)}
-            isHovered={hoveredIsland === index}
-            scale={selectedIsland === index ? 1.3 : 1}
+          <ambientLight intensity={0.5} />
+          <directionalLight
+            position={[10, 10, 5]}
+            intensity={1}
+            castShadow
+            shadow-mapSize={[2048, 2048]}
           />
-        ))}
+          <pointLight position={[-10, -10, -10]} intensity={0.3} color="#FFD700" />
 
-        {/* Bridges between islands */}
-        <Bridge
-          start={islands[0].position}
-          end={islands[1].position}
-          visible={hoveredIsland === 0 || hoveredIsland === 1}
-        />
-        <Bridge
-          start={islands[1].position}
-          end={islands[2].position}
-          visible={hoveredIsland === 1 || hoveredIsland === 2}
-        />
-        <Bridge
-          start={islands[0].position}
-          end={islands[4].position}
-          visible={hoveredIsland === 0 || hoveredIsland === 4}
-        />
-        <Bridge
-          start={islands[2].position}
-          end={islands[5].position}
-          visible={hoveredIsland === 2 || hoveredIsland === 5}
-        />
+          {/* Sky and environment */}
+          <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade />
+          <Cloud position={[-4, 3, -2]} speed={0.2} opacity={0.5} />
+          <Cloud position={[4, 4, -1]} speed={0.1} opacity={0.4} />
+          <Cloud position={[0, 3.5, 1]} speed={0.15} opacity={0.3} />
 
-        {/* Flying character */}
-        <FlyingCharacter
-          targetPosition={selectedIsland !== null ? islands[selectedIsland].position : [0, 2, 0]}
-        />
+          {/* Islands */}
+          {islands.map((island, index) => (
+            <Island
+              key={index}
+              position={island.position}
+              color={island.color}
+              label={island.label}
+              onClick={() => handleIslandClick(index, island.route)}
+              isHovered={hoveredIsland === index}
+              scale={selectedIsland === index ? 1.3 : 1}
+            />
+          ))}
 
-        {/* Camera controls */}
-        <OrbitControls
-          enablePan={false}
-          enableZoom={false}
-          minPolarAngle={Math.PI / 4}
-          maxPolarAngle={Math.PI / 2.5}
-          autoRotate
-          autoRotateSpeed={0.5}
-        />
-      </Canvas>
+          {/* Bridges between islands */}
+          <Bridge
+            start={islands[0].position}
+            end={islands[1].position}
+            visible={hoveredIsland === 0 || hoveredIsland === 1}
+          />
+          <Bridge
+            start={islands[1].position}
+            end={islands[2].position}
+            visible={hoveredIsland === 1 || hoveredIsland === 2}
+          />
+          <Bridge
+            start={islands[0].position}
+            end={islands[4].position}
+            visible={hoveredIsland === 0 || hoveredIsland === 4}
+          />
+          <Bridge
+            start={islands[2].position}
+            end={islands[5].position}
+            visible={hoveredIsland === 2 || hoveredIsland === 5}
+          />
 
-      {/* Particle effects overlay */}
-      <Box
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          pointerEvents: 'none',
-          background: 'radial-gradient(circle at 50% 50%, transparent 0%, rgba(255,255,255,0.1) 100%)',
-        }}
-      />
-    </Card>
+          {/* Flying character */}
+          <FlyingCharacter
+            targetPosition={selectedIsland !== null ? islands[selectedIsland].position : [0, 2, 0]}
+          />
+
+          {/* Camera controls */}
+          <OrbitControls
+            enablePan={false}
+            enableZoom={false}
+            minPolarAngle={Math.PI / 4}
+            maxPolarAngle={Math.PI / 2.5}
+            autoRotate
+            autoRotateSpeed={0.5}
+          />
+        </Canvas>
+
+        {/* Particle effects overlay */}
+        <Box
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            pointerEvents: 'none',
+            background: 'radial-gradient(circle at 50% 50%, transparent 0%, rgba(255,255,255,0.1) 100%)',
+          }}
+        />
+      </Card>
+    </>
   );
 };
 

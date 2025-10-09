@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from 'react';
 import {
   Modal,
   Button,
@@ -13,10 +13,10 @@ import {
   CloseButton
 } from '@mantine/core';
 import { IconX } from '@tabler/icons-react';
-import { createLesson } from "../../services/api";
-import { useAppDispatch } from "../../store";
-import { addNotification } from "../../store/slices/uiSlice";
-import { usePusherChannel } from "../../hooks/usePusherEvents";
+import { useAppDispatch } from '../../store';
+import { addNotification } from '../../store/slices/uiSlice';
+import { usePusherChannel } from '../../hooks/usePusherEvents';
+import { useApiCall } from '../../hooks/useApiCall';
 
 interface Props {
   open: boolean;
@@ -25,28 +25,28 @@ interface Props {
 }
 
 const subjects = [
-  "Math",
-  "Science",
-  "Language",
-  "Arts",
-  "Technology",
-  "Social Studies",
-  "Physical Education",
-  "Life Skills",
+  'Math',
+  'Science',
+  'Language',
+  'Arts',
+  'Technology',
+  'Social Studies',
+  'Physical Education',
+  'Life Skills',
 ];
 
 export default function CreateLessonDialog({ open, onClose, onSuccess }: Props) {
   const dispatch = useAppDispatch();
-  const [loading, setLoading] = React.useState(false);
+  const { execute: createLesson, loading } = useApiCall();
   const [formData, setFormData] = React.useState({
-    title: "",
-    description: "",
-    subject: "Math",
-    status: "draft" as "draft" | "published",
+    title: '',
+    description: '',
+    subject: 'Math',
+    status: 'draft' as 'draft' | 'published',
     enableRoblox: false,
     tags: [] as string[],
   });
-  const [tagInput, setTagInput] = React.useState("");
+  const [tagInput, setTagInput] = React.useState('');
 
   // Pusher real-time updates for lesson creation progress
   usePusherChannel(
@@ -56,15 +56,15 @@ export default function CreateLessonDialog({ open, onClose, onSuccess }: Props) 
         if (data.status === 'completed') {
           dispatch(
             addNotification({
-              type: "success",
-              message: data.message || "Lesson creation completed successfully!",
+              type: 'success',
+              message: data.message || 'Lesson creation completed successfully!',
             })
           );
         } else if (data.status === 'error') {
           dispatch(
             addNotification({
-              type: "error",
-              message: data.message || "Error during lesson creation",
+              type: 'error',
+              message: data.message || 'Error during lesson creation',
             })
           );
         }
@@ -72,7 +72,7 @@ export default function CreateLessonDialog({ open, onClose, onSuccess }: Props) 
       'lesson-updated': (data: { lessonId: string; title: string; action: string }) => {
         dispatch(
           addNotification({
-            type: "info",
+            type: 'info',
             message: `Lesson "${data.title}" has been ${data.action}`,
           })
         );
@@ -101,7 +101,7 @@ export default function CreateLessonDialog({ open, onClose, onSuccess }: Props) 
         ...formData,
         tags: [...formData.tags, tagInput.trim()],
       });
-      setTagInput("");
+      setTagInput('');
     }
   };
 
@@ -116,35 +116,41 @@ export default function CreateLessonDialog({ open, onClose, onSuccess }: Props) 
     if (!formData.title.trim() || !formData.description.trim()) {
       dispatch(
         addNotification({
-          type: "error",
-          message: "Please fill in all required fields",
+          type: 'error',
+          message: 'Please fill in all required fields',
         })
       );
       return;
     }
 
-    setLoading(true);
     try {
-      await createLesson({
-        title: formData.title,
-        description: formData.description,
-        subject: formData.subject as any,
-        status: formData.status,
-      });
+      await createLesson(
+        'POST',
+        '/lessons',
+        {
+          title: formData.title,
+          description: formData.description,
+          subject: formData.subject as any,
+          status: formData.status,
+        },
+        {
+          showNotification: false,  // We'll show our own notification
+        }
+      );
 
       dispatch(
         addNotification({
-          type: "success",
+          type: 'success',
           message: `Lesson "${formData.title}" created successfully`,
         })
       );
 
       // Reset form
       setFormData({
-        title: "",
-        description: "",
-        subject: "Math",
-        status: "draft",
+        title: '',
+        description: '',
+        subject: 'Math',
+        status: 'draft',
         enableRoblox: false,
         tags: [],
       });
@@ -152,15 +158,13 @@ export default function CreateLessonDialog({ open, onClose, onSuccess }: Props) 
       onSuccess?.();
       onClose();
     } catch (error) {
-      console.error("Failed to create lesson:", error);
+      console.error('Failed to create lesson:', error);
       dispatch(
         addNotification({
-          type: "error",
-          message: "Failed to create lesson. Please try again.",
+          type: 'error',
+          message: 'Failed to create lesson. Please try again.',
         })
       );
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -188,7 +192,7 @@ export default function CreateLessonDialog({ open, onClose, onSuccess }: Props) 
           label="Lesson Title"
           required
           value={formData.title}
-          onChange={(event) => handleChange("title", event.currentTarget.value)}
+          onChange={(event) => handleChange('title', event.currentTarget.value)}
           placeholder="e.g., Introduction to Fractions"
           styles={{
             label: { fontWeight: 600 }
@@ -200,7 +204,7 @@ export default function CreateLessonDialog({ open, onClose, onSuccess }: Props) 
           required
           rows={3}
           value={formData.description}
-          onChange={(event) => handleChange("description", event.currentTarget.value)}
+          onChange={(event) => handleChange('description', event.currentTarget.value)}
           placeholder="Describe what students will learn in this lesson..."
           styles={{
             label: { fontWeight: 600 }
@@ -210,7 +214,7 @@ export default function CreateLessonDialog({ open, onClose, onSuccess }: Props) 
         <Select
           label="Subject"
           value={formData.subject}
-          onChange={(value) => handleChange("subject", value || "Math")}
+          onChange={(value) => handleChange('subject', value || 'Math')}
           data={subjects.map(subject => ({ value: subject, label: subject }))}
           styles={{
             label: { fontWeight: 600 }
@@ -220,10 +224,10 @@ export default function CreateLessonDialog({ open, onClose, onSuccess }: Props) 
         <Select
           label="Status"
           value={formData.status}
-          onChange={(value) => handleChange("status", value || "draft")}
+          onChange={(value) => handleChange('status', value || 'draft')}
           data={[
-            { value: "draft", label: "Draft" },
-            { value: "published", label: "Published" }
+            { value: 'draft', label: 'Draft' },
+            { value: 'published', label: 'Published' }
           ]}
           styles={{
             label: { fontWeight: 600 }
@@ -233,7 +237,7 @@ export default function CreateLessonDialog({ open, onClose, onSuccess }: Props) 
         <Switch
           label="Enable Roblox Integration"
           checked={formData.enableRoblox}
-          onChange={(event) => handleSwitchChange("enableRoblox", event.currentTarget.checked)}
+          onChange={(event) => handleSwitchChange('enableRoblox', event.currentTarget.checked)}
           styles={{
             label: { fontWeight: 600 },
             track: {
@@ -250,7 +254,7 @@ export default function CreateLessonDialog({ open, onClose, onSuccess }: Props) 
             value={tagInput}
             onChange={(event) => setTagInput(event.currentTarget.value)}
             onKeyDown={(event) => {
-              if (event.key === "Enter") {
+              if (event.key === 'Enter') {
                 event.preventDefault();
                 handleAddTag();
               }
@@ -308,7 +312,7 @@ export default function CreateLessonDialog({ open, onClose, onSuccess }: Props) 
               }
             }}
           >
-            {loading ? "Creating..." : "Create Lesson"}
+            {loading ? 'Creating...' : 'Create Lesson'}
           </Button>
         </Group>
       </Stack>

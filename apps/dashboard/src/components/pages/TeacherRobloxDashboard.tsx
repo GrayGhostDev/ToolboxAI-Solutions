@@ -1,4 +1,21 @@
-import { Box, Button, Text, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
+import {
+  Box, Button, Text, Title, Paper, Stack, SimpleGrid, Container, ActionIcon, Avatar, Card,
+  Group, List, Divider, TextInput, Select, Badge, Alert, Loader,
+  Progress, Modal, Drawer, Tabs, Menu, Tooltip, Checkbox, Radio,
+  Switch, Slider, Rating, Skeleton, Table, useMantineTheme, Chip
+} from '@mantine/core';
+
+// Helper function for color transparency (replaces MUI alpha)
+const alpha = (color: string, opacity: number) => {
+  if (color.startsWith('#')) {
+    const hex = color.slice(1);
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  }
+  return color;
+};
 /**
  * TeacherRobloxDashboard Page
  *
@@ -16,7 +33,7 @@ import {
   IconShare, IconRefresh, IconLogin, IconSchool, IconBook,
   IconChartBar, IconPalette, IconMoon, IconSun, IconPlayerPlay,
   IconPlayerPause, IconPlayerStop, IconVolume, IconVolumeOff,
-  IconInfoCircle, IconAlertTriangle, IconCircleX, IconCircleCheck,
+  IconInfoCircle, IconAlertTriangle, IconCircleCheck,
   IconArrowLeft, IconArrowRight, IconSend, IconDeviceFloppy,
   IconPrinter, IconHelp, IconHelpCircle, IconLock, IconLockOpen,
   IconMail, IconPhone, IconMapPin, IconMap, IconCalendar, IconClock,
@@ -49,10 +66,10 @@ import { ContentGenerationMonitor } from '../roblox/ContentGenerationMonitor';
 import { StudentProgressDashboard } from '../roblox/StudentProgressDashboard';
 import { RobloxSessionManager } from '../roblox/RobloxSessionManager';
 import { QuizResultsAnalytics } from '../roblox/QuizResultsAnalytics';
-import { RobloxEnvironmentPreview } from '../roblox/RobloxEnvironmentPreview';
+import RobloxEnvironmentPreview from '../roblox/RobloxEnvironmentPreview';
 import { RobloxAIAssistant } from '../roblox/RobloxAIAssistant';
 // import { AIAssistantTest } from '../test/AIAssistantTest'; // File does not exist
-import { IconAutoAwesome, IconBell, IconCircle, IconDashboard, IconGames, IconGroups, IconHelp, IconPsychology, IconQuiz, IconRefresh, IconSettings, IconTerrain } from '@tabler/icons-react';
+import { IconSparkles, IconCircle, IconDeviceGamepad, IconBrain, IconWorld, IconClipboardCheck } from '@tabler/icons-react';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -82,9 +99,13 @@ function TabPanel(props: TabPanelProps) {
 }
 
 export default function TeacherRobloxDashboard() {
-  const theme = useTheme();
+  const theme = useMantineTheme();
   const dispatch = useAppDispatch();
   const { isConnected } = usePusherContext();
+
+  // Bypass mode configuration
+  const bypassAuth = import.meta.env.VITE_BYPASS_AUTH === 'true';
+  const useMockData = import.meta.env.VITE_USE_MOCK_DATA === 'true';
 
   const [activeTab, setActiveTab] = useState(0);
   const [showHelp, setShowHelp] = useState(false);
@@ -106,6 +127,19 @@ export default function TeacherRobloxDashboard() {
 
   // Check plugin connection periodically
   useEffect(() => {
+    // Skip plugin status checks if in bypass mode
+    if (bypassAuth || useMockData) {
+      // Set a static mock status for tests
+      const mockStatus = {
+        connected: true,
+        version: '1.0.0',
+        lastHeartbeat: new Date().toISOString(),
+        capabilities: ['content-generation', 'real-time-sync', 'quiz-management']
+      };
+      dispatch(setPluginStatus(mockStatus));
+      return;
+    }
+
     const checkPluginStatus = () => {
       // This would normally make an API call to check plugin status
       // For now, we'll simulate it
@@ -122,9 +156,9 @@ export default function TeacherRobloxDashboard() {
     const interval = setInterval(checkPluginStatus, 30000); // Check every 30 seconds
 
     return () => clearInterval(interval);
-  }, [dispatch]);
+  }, [dispatch, bypassAuth, useMockData]);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
   };
 
@@ -140,9 +174,9 @@ export default function TeacherRobloxDashboard() {
         <SimpleGrid spacing={2} alignItems="center">
           <Box xs={12} md={6}>
             <Box style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <IconGames color="blue" style={{ fontSize: 40 }} />
+              <IconDeviceGamepad color="blue" style={{ fontSize: 40 }} />
               <Box>
-                <Text order={4}>Roblox Studio Integration</Text>
+                <Title order={4}>Roblox Studio Integration</Title>
                 <Text size="sm" color="text.secondary">
                   Manage educational content and monitor student progress in real-time
                 </Text>
@@ -167,12 +201,12 @@ export default function TeacherRobloxDashboard() {
               />
 
               {/* Actions */}
-              <IconButton onClick={(e: React.MouseEvent) => handleRefresh} size="small">
+              <ActionIcon onClick={() => handleRefresh()} size="sm">
                 <IconRefresh />
-              </IconButton>
-              <IconButton onClick={(e: React.MouseEvent) => () => setShowHelp(!showHelp)} size="small">
+              </ActionIcon>
+              <ActionIcon onClick={() => setShowHelp(!showHelp)} size="sm">
                 <IconHelp />
-              </IconButton>
+              </ActionIcon>
             </Stack>
           </Box>
         </SimpleGrid>
@@ -180,68 +214,61 @@ export default function TeacherRobloxDashboard() {
         {/* Quick Stats */}
         <SimpleGrid spacing={2} style={{ mt: 1 }}>
           <Box xs={6} sm={3}>
-            <Card style={{ bgcolor: alpha(theme.palette.primary.main, 0.1) }}>
-              <CardContent style={{ py: 1 }}>
-                <Stack direction="row" alignItems="center" justifyContent="space-between">
-                  <Box>
-                    <Text order={5}>{stats.activeGenerations}</Text>
-                    <Text variant="caption" color="text.secondary">
-                      Active Generations
-                    </Text>
-                  </Box>
-                  <IconPsychology color="blue" />
-                </Stack>
-              </CardContent>
+            <Card style={{ backgroundColor: alpha(theme.colors.brand[6], 0.1), padding: 8 }}>
+              <Group align="center" justify="space-between">
+                <Box>
+                  <Title order={5}>{stats.activeGenerations}</Title>
+                  <Text size="xs" c="dimmed">
+                    Active Generations
+                  </Text>
+                </Box>
+                <IconBrain color="blue" />
+              </Group>
             </Card>
           </Box>
 
           <Box xs={6} sm={3}>
-            <Card style={{ bgcolor: alpha(theme.palette.success.main, 0.1) }}>
-              <CardContent style={{ py: 1 }}>
-                <Stack direction="row" alignItems="center" justifyContent="space-between">
-                  <Box>
-                    <Text order={5}>{stats.activeSessions}</Text>
-                    <Text variant="caption" color="text.secondary">
-                      Active Sessions
-                    </Text>
-                  </Box>
-                  <IconGames color="green" />
-                </Stack>
-              </CardContent>
+            <Card style={{ backgroundColor: alpha(theme.colors.green[6], 0.1), padding: 8 }}>
+              <Group align="center" justify="space-between">
+                <Box>
+                  <Title order={5}>{stats.activeSessions}</Title>
+                  <Text size="xs" c="dimmed">
+                    Active Sessions
+                  </Text>
+                </Box>
+                <IconDeviceGamepad color="green" />
+              </Group>
             </Card>
           </Box>
 
           <Box xs={6} sm={3}>
-            <Card style={{ bgcolor: alpha(theme.palette.info.main, 0.1) }}>
-              <CardContent style={{ py: 1 }}>
-                <Stack direction="row" alignItems="center" justifyContent="space-between">
-                  <Box>
-                    <Text order={5}>{stats.onlineStudents}</Text>
-                    <Text variant="caption" color="text.secondary">
-                      Online Students
-                    </Text>
-                  </Box>
-                  <IconGroups color="cyan" />
-                </Stack>
-              </CardContent>
+            <Card style={{ backgroundColor: alpha(theme.colors.blue[6], 0.1), padding: 8 }}>
+              <Group align="center" justify="space-between">
+                <Box>
+                  <Title order={5}>{stats.onlineStudents}</Title>
+                  <Text size="xs" c="dimmed">
+                    Online Students
+                  </Text>
+                </Box>
+                <IconUsers color="cyan" />
+              </Group>
             </Card>
           </Box>
 
           <Box xs={6} sm={3}>
-            <Card style={{ bgcolor: alpha(theme.palette.warning.main, 0.1) }}>
-              <CardContent style={{ py: 1 }}>
-                <Stack direction="row" alignItems="center" justifyContent="space-between">
-                  <Box>
-                    <Text order={5}>{stats.totalStudents}</Text>
-                    <Text variant="caption" color="text.secondary">
-                      Total Students
-                    </Text>
-                  </Box>
-                  <Badge badgeContent={stats.onlineStudents} color="green">
-                    <IconGroups color="yellow" />
-                  </Badge>
-                </Stack>
-              </CardContent>
+            <Card style={{ backgroundColor: alpha(theme.colors.orange[6], 0.1), padding: 8 }}>
+              <Group align="center" justify="space-between">
+                <Box>
+                  <Title order={5}>{stats.totalStudents}</Title>
+                  <Text size="xs" c="dimmed">
+                    Total Students
+                  </Text>
+                </Box>
+                <Badge color="green" size="lg">
+                  {stats.onlineStudents}
+                  <IconUsers color="yellow" style={{ marginLeft: 4 }} />
+                </Badge>
+              </Group>
             </Card>
           </Box>
         </SimpleGrid>
@@ -250,18 +277,19 @@ export default function TeacherRobloxDashboard() {
       {/* IconHelp Alert */}
       {showHelp && (
         <Alert
-          severity="info"
+          color="blue"
           onClose={() => setShowHelp(false)}
-          style={{ mb: 2 }}
+          withCloseButton
+          style={{ marginBottom: 16 }}
         >
-          <AlertTitle>Roblox Studio Integration IconHelp</AlertTitle>
+          <Alert.Title>Roblox Studio Integration Help</Alert.Title>
           <Text size="sm">
             • <strong>AI Assistant:</strong> Chat with AI to create educational content effortlessly<br />
             • <strong>Control Panel:</strong> Connect to Roblox Studio plugin and generate content<br />
             • <strong>Content Monitor:</strong> Track AI agent progress during content generation<br />
             • <strong>Student Progress:</strong> Monitor real-time student activity and performance<br />
             • <strong>Session Manager:</strong> Create and manage educational game sessions<br />
-            • <strong>IconQuiz Analytics:</strong> Analyze quiz results and identify learning gaps<br />
+            • <strong>Quiz Analytics:</strong> Analyze quiz results and identify learning gaps<br />
             • <strong>Environment Preview:</strong> Preview 3D environments before deployment
           </Text>
         </Alert>
@@ -276,47 +304,40 @@ export default function TeacherRobloxDashboard() {
           scrollButtons="auto"
           aria-label="Roblox dashboard tabs"
         >
-          <Tab
-            icon={<IconAutoAwesome />}
+          <Tabs.Tab
+            icon={<IconSparkles />}
             label="AI Assistant"
-            id="roblox-tab-0"
-            aria-controls="roblox-tabpanel-0"
+            value="0"
           />
-          <Tab
+          <Tabs.Tab
             icon={<IconDashboard />}
             label="Control Panel"
-            id="roblox-tab-1"
-            aria-controls="roblox-tabpanel-1"
+            value="1"
           />
-          <Tab
-            icon={<IconPsychology />}
+          <Tabs.Tab
+            icon={<IconBrain />}
             label="Content Monitor"
-            id="roblox-tab-2"
-            aria-controls="roblox-tabpanel-2"
+            value="2"
           />
-          <Tab
-            icon={<IconGroups />}
+          <Tabs.Tab
+            icon={<IconUsers />}
             label="Student Progress"
-            id="roblox-tab-3"
-            aria-controls="roblox-tabpanel-3"
+            value="3"
           />
-          <Tab
-            icon={<IconGames />}
+          <Tabs.Tab
+            icon={<IconDeviceGamepad />}
             label="Sessions"
-            id="roblox-tab-4"
-            aria-controls="roblox-tabpanel-4"
+            value="4"
           />
-          <Tab
-            icon={<IconQuiz />}
-            label="IconQuiz Analytics"
-            id="roblox-tab-5"
-            aria-controls="roblox-tabpanel-5"
+          <Tabs.Tab
+            icon={<IconClipboardCheck />}
+            label="Quiz Analytics"
+            value="5"
           />
-          <Tab
-            icon={<IconTerrain />}
+          <Tabs.Tab
+            icon={<IconWorld />}
             label="Environment Preview"
-            id="roblox-tab-6"
-            aria-controls="roblox-tabpanel-6"
+            value="6"
           />
           {/* Removed AI Test tab - component does not exist */}
         </Tabs>

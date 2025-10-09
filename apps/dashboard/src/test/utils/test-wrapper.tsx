@@ -19,8 +19,8 @@ const createTestStore = (preloadedState = {}) => {
             return {
               ...state,
               isAuthenticated: true,
-              user: action.payload.user,
-              token: action.payload.token
+              user: (action.payload as any)?.user,
+              token: (action.payload as any)?.token
             };
           case 'user/signOut':
             return {

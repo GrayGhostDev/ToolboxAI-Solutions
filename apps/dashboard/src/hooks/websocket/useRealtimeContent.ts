@@ -8,9 +8,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { pusherService } from '../../services/pusher';
 import {
   WebSocketMessageType,
-  ContentProgressMessage,
-  ContentCompleteMessage,
-  ContentErrorMessage
+  type ContentProgressMessage,
+  type ContentCompleteMessage,
+  type ContentErrorMessage
 } from '../../types/websocket';
 
 export interface ContentGenerationState {

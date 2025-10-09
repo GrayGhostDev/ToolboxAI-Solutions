@@ -92,23 +92,23 @@ interface SuggestedPrompt {
 const SUGGESTED_PROMPTS: SuggestedPrompt[] = [
   {
     icon: <School />,
-    text: "Create a 4th grade fractions pizza shop game",
-    category: "lesson"
+    text: 'Create a 4th grade fractions pizza shop game',
+    category: 'lesson'
   },
   {
     icon: <Terrain />,
-    text: "Build a 6th grade Ancient Egypt exploration world",
-    category: "environment"
+    text: 'Build a 6th grade Ancient Egypt exploration world',
+    category: 'environment'
   },
   {
     icon: <Quiz />,
-    text: "Design a 5th grade solar system simulation",
-    category: "quiz"
+    text: 'Design a 5th grade solar system simulation',
+    category: 'quiz'
   },
   {
     icon: <AutoAwesome />,
-    text: "Make a 7th grade chemistry lab with experiments",
-    category: "environment"
+    text: 'Make a 7th grade chemistry lab with experiments',
+    category: 'environment'
   }
 ];
 export const RobloxAIAssistant: React.FunctionComponent<Record<string, any>> = () => {
@@ -201,30 +201,30 @@ IMPORTANT: When you have enough information to create an environment, end your r
     };
     const detectedTopic = Object.entries(topics).find(([key]) => message.includes(key))?.[1];
     if (message.includes('create') || message.includes('build') || message.includes('make')) {
-      let response = `Great! I'd love to help you create that educational Roblox environment! `;
+      let response = 'Great! I\'d love to help you create that educational Roblox environment! ';
       if (detectedSubject && grade && detectedTopic) {
         response += `A ${detectedSubject} environment for ${grade}${getOrdinalSuffix(parseInt(grade))} grade focusing on ${detectedTopic} sounds fantastic!\n\n`;
-        response += `To make this perfect for your students, I need to know:\n\n`;
+        response += 'To make this perfect for your students, I need to know:\n\n';
         response += `🎯 **Learning Goals**: What specific skills about ${detectedTopic} should students master?\n`;
-        response += `👥 **Class Size**: How many students will use this environment?\n`;
-        response += `⏱️ **Duration**: How long should the learning experience last?\n`;
-        response += `🎮 **Style**: Should students explore individually or work in teams?`;
+        response += '👥 **Class Size**: How many students will use this environment?\n';
+        response += '⏱️ **Duration**: How long should the learning experience last?\n';
+        response += '🎮 **Style**: Should students explore individually or work in teams?';
       } else {
-        response += `I can help you build an amazing educational world! To get started:\n\n`;
-        if (!grade) response += `📚 **Grade Level**: What grade are your students?\n`;
-        if (!detectedSubject) response += `📖 **Subject**: What subject are you teaching?\n`;
-        if (!detectedTopic) response += `🎯 **Topic**: What specific concept should they learn?\n`;
-        response += `\nOnce I have these details, I'll create a personalized Roblox environment!`;
+        response += 'I can help you build an amazing educational world! To get started:\n\n';
+        if (!grade) response += '📚 **Grade Level**: What grade are your students?\n';
+        if (!detectedSubject) response += '📖 **Subject**: What subject are you teaching?\n';
+        if (!detectedTopic) response += '🎯 **Topic**: What specific concept should they learn?\n';
+        response += '\nOnce I have these details, I\'ll create a personalized Roblox environment!';
       }
       return response;
     }
     // Handle follow-up responses
     if (message.includes('students') || message.includes('minutes') || message.includes('individual') || message.includes('team')) {
-      return `Perfect! That's helpful information. Do you have any other specific requirements for the environment? For example:\n\n` +
-             `• Should it include quizzes or assessments?\n` +
-             `• Any specific activities or interactions you want?\n` +
-             `• Should it connect to your curriculum standards?\n\n` +
-             `Once I have all the details, I'll start creating your personalized Roblox environment!`;
+      return 'Perfect! That\'s helpful information. Do you have any other specific requirements for the environment? For example:\n\n' +
+             '• Should it include quizzes or assessments?\n' +
+             '• Any specific activities or interactions you want?\n' +
+             '• Should it connect to your curriculum standards?\n\n' +
+             'Once I have all the details, I\'ll start creating your personalized Roblox environment!';
     }
     return "I'm here to help you create educational Roblox environments! Try saying something like 'Create a 4th grade History world about US Presidents' and I'll guide you through the process!";
   };
@@ -362,7 +362,7 @@ IMPORTANT: When you have enough information to create an environment, end your r
       const errorMessage: Message = {
         id: `msg_${Date.now()}`,
         role: 'assistant',
-        content: `❌ **Environment Creation Failed**\n\nI encountered an error while creating your environment. This might be due to:\n\n• Roblox Studio not being open\n• Rojo plugin not installed or running\n• Network connectivity issues\n\n**Please try:**\n1. Opening Roblox Studio\n2. Installing the Rojo plugin\n3. Starting the Rojo server\n4. Trying your request again\n\nI'm here to help you create amazing educational environments!`,
+        content: '❌ **Environment Creation Failed**\n\nI encountered an error while creating your environment. This might be due to:\n\n• Roblox Studio not being open\n• Rojo plugin not installed or running\n• Network connectivity issues\n\n**Please try:**\n1. Opening Roblox Studio\n2. Installing the Rojo plugin\n3. Starting the Rojo server\n4. Trying your request again\n\nI\'m here to help you create amazing educational environments!',
         timestamp: new Date(),
         metadata: { generated: true, error: true }
       };

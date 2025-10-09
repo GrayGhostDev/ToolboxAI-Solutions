@@ -14,43 +14,37 @@ import React, { useState, useCallback, useEffect } from 'react';
 import {
   Box,
   Card,
-  CardContent,
-  Typography,
+  Text,
   Button,
   Stack,
-  Chip,
+  Badge,
   Alert,
-  LinearProgress,
-  CircularProgress,
+  Progress,
+  Loader,
   List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
   Avatar,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  FormControl,
-  InputLabel,
+  Modal,
+  TextInput,
+  Textarea,
+  NumberInput,
   Select,
-  MenuItem,
-  Tab,
   Tabs,
-  TabPanel,
   Divider,
-} from '@mui/material';
+  Group,
+  Flex,
+  ActionIcon,
+} from '@mantine/core';
 import {
-  Refresh as RefreshIcon,
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Analytics as AnalyticsIcon,
-  Speed as SpeedIcon,
-  CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon,
-} from '@mui/icons-material';
+  IconRefresh,
+  IconPlus,
+  IconEdit,
+  IconTrash,
+  IconChartBar,
+  IconGauge,
+  IconCircleCheck,
+  IconExclamationMark,
+  IconMail,
+} from '@tabler/icons-react';
 
 // RTK Query hooks and utilities
 import {
@@ -76,7 +70,7 @@ import {
 import { useMigrationProgress, useCacheMetrics } from '../store/api/hooks';
 
 // Types
-import { ClassSummary } from '../types';
+import { type ClassSummary } from '../types';
 import { useAppSelector } from '../store';
 
 interface TabPanelProps {
@@ -95,7 +89,7 @@ function TabPanel(props: TabPanelProps) {
       aria-labelledby={`tab-${index}`}
       {...other}
     >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+      {value === index && <Box p="md">{children}</Box>}
     </div>
   );
 }
@@ -185,199 +179,202 @@ function OptimisticClassManagement() {
   }, []);
 
   return (
-    <Card>
-      <CardContent>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography variant="h6">
-            Class Management (Optimistic Updates)
-            {isFetching && <CircularProgress size={20} sx={{ ml: 1 }} />}
-          </Typography>
-          <Stack direction="row" spacing={1}>
+    <Card withBorder>
+      <Card.Section p="md">
+        <Flex justify="space-between" align="center" mb="md">
+          <Group gap="xs">
+            <Text size="lg" fw={600}>
+              Class Management (Optimistic Updates)
+            </Text>
+            {isFetching && <Loader size="xs" />}
+          </Group>
+          <Group gap="xs">
             <Button
-              startIcon={<AddIcon />}
-              variant="contained"
+              leftSection={<IconPlus size={16} />}
               onClick={() => setCreateDialogOpen(true)}
               disabled={isCreating}
             >
               Create Class
             </Button>
             <Button
-              startIcon={<RefreshIcon />}
-              variant="outlined"
+              leftSection={<IconRefresh size={16} />}
+              variant="outline"
               onClick={() => refetch()}
               disabled={isFetching}
             >
               Refresh
             </Button>
-          </Stack>
-        </Box>
+          </Group>
+        </Flex>
 
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert color="red" mb="md">
             Failed to load classes: {error.toString()}
           </Alert>
         )}
 
-        <Box display="flex" gap={2} mb={2}>
-          <Chip label={`Total: ${classes?.length || 0}`} />
-          <Chip label={`Active: ${activeClasses.length}`} color="success" />
-          <Chip label={`Low Enrollment: ${classesWithStats.filter(c => c.utilization < 50).length}`} color="warning" />
-        </Box>
+        <Group gap="xs" mb="md">
+          <Badge variant="light">{`Total: ${classes?.length || 0}`}</Badge>
+          <Badge color="green">{`Active: ${activeClasses.length}`}</Badge>
+          <Badge color="orange">{`Low Enrollment: ${classesWithStats.filter(c => c.utilization < 50).length}`}</Badge>
+        </Group>
 
-        <List>
+        <Stack gap="xs">
           {classesWithStats.map((classItem) => (
-            <ListItem
-              key={classItem.id}
-              secondaryAction={
-                <Stack direction="row" spacing={1}>
-                  <Button
-                    size="small"
-                    startIcon={<EditIcon />}
+            <Card key={classItem.id} withBorder padding="sm">
+              <Flex justify="space-between" align="flex-start">
+                <Group gap="sm" align="flex-start">
+                  <Avatar
+                    color={classItem.is_online ? 'green' : 'gray'}
+                    radius="sm"
+                  >
+                    {classItem.subject.charAt(0)}
+                  </Avatar>
+                  <Box>
+                    <Group gap="xs" mb="xs">
+                      <Text fw={500}>{classItem.name}</Text>
+                      <Badge
+                        color={classItem.status === 'online' ? 'green' : 'gray'}
+                        size="sm"
+                      >
+                        {classItem.status}
+                      </Badge>
+                      <Badge
+                        color={classItem.utilization > 80 ? 'red' : classItem.utilization > 60 ? 'orange' : 'green'}
+                        size="sm"
+                      >
+                        {`${classItem.utilization.toFixed(0)}% full`}
+                      </Badge>
+                    </Group>
+                    <Text size="sm" c="dimmed">
+                      {classItem.subject} • Grade {classItem.grade_level} • {classItem.student_count}/{classItem.max_students} students
+                    </Text>
+                    <Text size="sm" c="dimmed">
+                      Teacher: {classItem.teacher_name} • Progress: {classItem.average_progress}%
+                    </Text>
+                  </Box>
+                </Group>
+                <Group gap="xs">
+                  <ActionIcon
+                    variant="subtle"
                     onClick={() => openEditDialog(classItem)}
                     disabled={isUpdating}
                   >
-                    Edit
-                  </Button>
-                  <Button
-                    size="small"
-                    color="error"
-                    startIcon={<DeleteIcon />}
+                    <IconEdit size={16} />
+                  </ActionIcon>
+                  <ActionIcon
+                    variant="subtle"
+                    color="red"
                     onClick={() => handleDeleteClass(classItem.id)}
                     disabled={isDeleting}
                   >
-                    Delete
-                  </Button>
-                </Stack>
-              }
-            >
-              <ListItemAvatar>
-                <Avatar sx={{ bgcolor: classItem.is_online ? 'success.main' : 'grey.500' }}>
-                  {classItem.subject.charAt(0)}
-                </Avatar>
-              </ListItemAvatar>
-              <ListItemText
-                primary={
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <Typography variant="subtitle1">{classItem.name}</Typography>
-                    <Chip
-                      label={classItem.status}
-                      size="small"
-                      color={classItem.status === 'online' ? 'success' : 'default'}
-                    />
-                    <Chip
-                      label={`${classItem.utilization.toFixed(0)}% full`}
-                      size="small"
-                      color={classItem.utilization > 80 ? 'error' : classItem.utilization > 60 ? 'warning' : 'success'}
-                    />
-                  </Box>
-                }
-                secondary={
-                  <>
-                    {classItem.subject} • Grade {classItem.grade_level} • {classItem.student_count}/{classItem.max_students} students
-                    <br />
-                    Teacher: {classItem.teacher_name} • Progress: {classItem.average_progress}%
-                  </>
-                }
-              />
-            </ListItem>
+                    <IconTrash size={16} />
+                  </ActionIcon>
+                </Group>
+              </Flex>
+            </Card>
           ))}
-        </List>
+        </Stack>
 
-        {/* Create Class Dialog */}
-        <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="sm" fullWidth>
-          <DialogTitle>Create New Class</DialogTitle>
-          <DialogContent>
-            <Stack spacing={2} sx={{ mt: 1 }}>
-              <TextField
-                label="Class Name"
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                fullWidth
-              />
-              <TextField
-                label="Subject"
-                value={formData.subject}
-                onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
-                fullWidth
-              />
-              <TextField
-                label="Grade Level"
-                type="number"
-                value={formData.grade_level}
-                onChange={(e) => setFormData(prev => ({ ...prev, grade_level: parseInt(e.target.value) }))}
-                fullWidth
-              />
-              <TextField
-                label="Max Students"
-                type="number"
-                value={formData.max_students}
-                onChange={(e) => setFormData(prev => ({ ...prev, max_students: parseInt(e.target.value) }))}
-                fullWidth
-              />
-            </Stack>
+        {/* Create Class Modal */}
+        <Modal
+          opened={createDialogOpen}
+          onClose={() => setCreateDialogOpen(false)}
+          title="Create New Class"
+          centered
+        >
+          <Stack gap="md">
+            <TextInput
+              label="Class Name"
+              value={formData.name}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.currentTarget.value }))}
+            />
+            <TextInput
+              label="Subject"
+              value={formData.subject}
+              onChange={(e) => setFormData(prev => ({ ...prev, subject: e.currentTarget.value }))}
+            />
+            <NumberInput
+              label="Grade Level"
+              value={formData.grade_level}
+              onChange={(value) => setFormData(prev => ({ ...prev, grade_level: value || 1 }))}
+              min={1}
+              max={12}
+            />
+            <NumberInput
+              label="Max Students"
+              value={formData.max_students}
+              onChange={(value) => setFormData(prev => ({ ...prev, max_students: value || 30 }))}
+              min={1}
+              max={100}
+            />
             {createError && (
-              <Alert severity="error" sx={{ mt: 2 }}>
+              <Alert color="red">
                 Failed to create class: {createError.toString()}
               </Alert>
             )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
-            <Button
-              onClick={handleCreateClass}
-              variant="contained"
-              disabled={isCreating || !formData.name || !formData.subject}
-            >
-              {isCreating ? 'Creating...' : 'Create'}
-            </Button>
-          </DialogActions>
-        </Dialog>
+            <Group justify="flex-end" gap="sm">
+              <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleCreateClass}
+                disabled={isCreating || !formData.name || !formData.subject}
+                loading={isCreating}
+              >
+                Create
+              </Button>
+            </Group>
+          </Stack>
+        </Modal>
 
-        {/* Edit Class Dialog */}
-        <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
-          <DialogTitle>Edit Class</DialogTitle>
-          <DialogContent>
-            <Stack spacing={2} sx={{ mt: 1 }}>
-              <TextField
-                label="Class Name"
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                fullWidth
-              />
-              <TextField
-                label="Subject"
-                value={formData.subject}
-                onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
-                fullWidth
-              />
-              <TextField
-                label="Grade Level"
-                type="number"
-                value={formData.grade_level}
-                onChange={(e) => setFormData(prev => ({ ...prev, grade_level: parseInt(e.target.value) }))}
-                fullWidth
-              />
-              <TextField
-                label="Max Students"
-                type="number"
-                value={formData.max_students}
-                onChange={(e) => setFormData(prev => ({ ...prev, max_students: parseInt(e.target.value) }))}
-                fullWidth
-              />
-            </Stack>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-            <Button
-              onClick={handleUpdateClass}
-              variant="contained"
-              disabled={isUpdating || !formData.name || !formData.subject}
-            >
-              {isUpdating ? 'Updating...' : 'Update'}
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </CardContent>
+        {/* Edit Class Modal */}
+        <Modal
+          opened={editDialogOpen}
+          onClose={() => setEditDialogOpen(false)}
+          title="Edit Class"
+          centered
+        >
+          <Stack gap="md">
+            <TextInput
+              label="Class Name"
+              value={formData.name}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.currentTarget.value }))}
+            />
+            <TextInput
+              label="Subject"
+              value={formData.subject}
+              onChange={(e) => setFormData(prev => ({ ...prev, subject: e.currentTarget.value }))}
+            />
+            <NumberInput
+              label="Grade Level"
+              value={formData.grade_level}
+              onChange={(value) => setFormData(prev => ({ ...prev, grade_level: value || 1 }))}
+              min={1}
+              max={12}
+            />
+            <NumberInput
+              label="Max Students"
+              value={formData.max_students}
+              onChange={(value) => setFormData(prev => ({ ...prev, max_students: value || 30 }))}
+              min={1}
+              max={100}
+            />
+            <Group justify="flex-end" gap="sm">
+              <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleUpdateClass}
+                disabled={isUpdating || !formData.name || !formData.subject}
+                loading={isUpdating}
+              >
+                Update
+              </Button>
+            </Group>
+          </Stack>
+        </Modal>
+      </Card.Section>
     </Card>
   );
 }
@@ -405,112 +402,120 @@ function CachePerformanceMonitor() {
   }, []);
 
   return (
-    <Card>
-      <CardContent>
-        <Typography variant="h6" gutterBottom>
+    <Card withBorder>
+      <Card.Section p="md">
+        <Text size="lg" fw={600} mb="md">
           Cache Performance Monitor
-        </Typography>
+        </Text>
 
-        <Stack spacing={3}>
+        <Stack gap="lg">
           {/* Performance Metrics */}
           <Box>
-            <Typography variant="subtitle1" gutterBottom>Performance Metrics</Typography>
-            <Stack direction="row" spacing={2}>
-              <Chip
-                icon={<SpeedIcon />}
-                label={`Cache Hit Ratio: ${cacheMetrics.formattedHitRatio}`}
-                color={cacheMetrics.cacheHitRatio > 0.7 ? 'success' : cacheMetrics.cacheHitRatio > 0.5 ? 'warning' : 'error'}
-              />
-              <Chip
-                icon={<AnalyticsIcon />}
-                label={`Total Queries: ${cacheMetrics.cacheSize}`}
-                color="info"
-              />
-              <Chip
-                icon={migrationProgress.migrationComplete ? <CheckCircleIcon /> : <ErrorIcon />}
-                label={migrationProgress.migrationComplete ? 'Migration Complete' : 'Migration in Progress'}
-                color={migrationProgress.migrationComplete ? 'success' : 'warning'}
-              />
-            </Stack>
+            <Text size="md" fw={500} mb="sm">Performance Metrics</Text>
+            <Group gap="sm">
+              <Badge
+                leftSection={<IconGauge size={14} />}
+                color={cacheMetrics.cacheHitRatio > 0.7 ? 'green' : cacheMetrics.cacheHitRatio > 0.5 ? 'orange' : 'red'}
+                size="lg"
+              >
+                Cache Hit Ratio: {cacheMetrics.formattedHitRatio}
+              </Badge>
+              <Badge
+                leftSection={<IconChartBar size={14} />}
+                color="blue"
+                size="lg"
+              >
+                Total Queries: {cacheMetrics.cacheSize}
+              </Badge>
+              <Badge
+                leftSection={migrationProgress.migrationComplete ? <IconCircleCheck size={14} /> : <IconExclamationMark size={14} />}
+                color={migrationProgress.migrationComplete ? 'green' : 'orange'}
+                size="lg"
+              >
+                {migrationProgress.migrationComplete ? 'Migration Complete' : 'Migration in Progress'}
+              </Badge>
+            </Group>
           </Box>
 
           {/* Detailed Statistics */}
           <Box>
-            <Typography variant="subtitle1" gutterBottom>Detailed Statistics</Typography>
-            <Stack spacing={2}>
+            <Text size="md" fw={500} mb="sm">Detailed Statistics</Text>
+            <Stack gap="md">
               <Box>
-                <Typography variant="body2" color="text.secondary">Query Success Rate</Typography>
-                <Box display="flex" alignItems="center" gap={1}>
-                  <LinearProgress
-                    variant="determinate"
+                <Text size="sm" c="dimmed" mb="xs">Query Success Rate</Text>
+                <Flex align="center" gap="sm">
+                  <Progress
                     value={cachePerformance.queries.successRate}
-                    sx={{ flex: 1, height: 8, borderRadius: 4 }}
+                    style={{ flex: 1 }}
+                    radius="md"
+                    size="md"
                   />
-                  <Typography variant="body2">{cachePerformance.queries.successRate.toFixed(1)}%</Typography>
-                </Box>
+                  <Text size="sm">{cachePerformance.queries.successRate.toFixed(1)}%</Text>
+                </Flex>
               </Box>
 
               <Box>
-                <Typography variant="body2" color="text.secondary">Mutation Success Rate</Typography>
-                <Box display="flex" alignItems="center" gap={1}>
-                  <LinearProgress
-                    variant="determinate"
+                <Text size="sm" c="dimmed" mb="xs">Mutation Success Rate</Text>
+                <Flex align="center" gap="sm">
+                  <Progress
                     value={cachePerformance.mutations.successRate}
-                    sx={{ flex: 1, height: 8, borderRadius: 4 }}
-                    color="secondary"
+                    style={{ flex: 1 }}
+                    radius="md"
+                    size="md"
+                    color="violet"
                   />
-                  <Typography variant="body2">{cachePerformance.mutations.successRate.toFixed(1)}%</Typography>
-                </Box>
+                  <Text size="sm">{cachePerformance.mutations.successRate.toFixed(1)}%</Text>
+                </Flex>
               </Box>
             </Stack>
           </Box>
 
           {/* Cache Operations */}
           <Box>
-            <Typography variant="subtitle1" gutterBottom>Cache Operations</Typography>
-            <Stack direction="row" spacing={1} flexWrap="wrap">
+            <Text size="md" fw={500} mb="sm">Cache Operations</Text>
+            <Group gap="xs">
               <Button
-                size="small"
-                variant="outlined"
+                size="sm"
+                variant="outline"
                 onClick={handlePrefetchData}
-                startIcon={<RefreshIcon />}
+                leftSection={<IconRefresh size={14} />}
               >
                 Prefetch Data
               </Button>
               <Button
-                size="small"
-                variant="outlined"
-                color="warning"
+                size="sm"
+                variant="outline"
+                color="orange"
                 onClick={() => handleInvalidateTags(['Dashboard', 'Class'])}
               >
                 Invalidate Main Tags
               </Button>
               <Button
-                size="small"
-                variant="outlined"
-                color="error"
+                size="sm"
+                variant="outline"
+                color="red"
                 onClick={handleInvalidateAll}
               >
                 Reset All Cache
               </Button>
-            </Stack>
+            </Group>
           </Box>
 
           {/* Migration Status */}
           <Box>
-            <Typography variant="subtitle1" gutterBottom>Migration Status</Typography>
-            <Alert severity={migrationProgress.migrationComplete ? "success" : "info"}>
-              <Typography variant="body2">
-                <strong>Status:</strong> {migrationProgress.migrationComplete ? 'Complete' : 'In Progress'}<br />
-                <strong>RTK Queries:</strong> {migrationProgress.rtkQueries}<br />
-                <strong>RTK Mutations:</strong> {migrationProgress.rtkMutations}<br />
-                <strong>Active Legacy Slices:</strong> {migrationProgress.legacySlicesActive}<br />
-                <strong>Cache Efficiency:</strong> {migrationProgress.cacheEfficiency}
-              </Typography>
+            <Text size="md" fw={500} mb="sm">Migration Status</Text>
+            <Alert color={migrationProgress.migrationComplete ? 'green' : 'blue'}>
+              <Text size="sm">
+                <Text fw={600} component="span">Status:</Text> {migrationProgress.migrationComplete ? 'Complete' : 'In Progress'}<br />
+                <Text fw={600} component="span">RTK Queries:</Text> {migrationProgress.rtkQueries}<br />
+                <Text fw={600} component="span">RTK Mutations:</Text> {migrationProgress.rtkMutations}<br />
+                <Text fw={600} component="span">Active Legacy Slices:</Text> {migrationProgress.legacySlicesActive}<br />
+                <Text fw={600} component="span">Cache Efficiency:</Text> {migrationProgress.cacheEfficiency}
+              </Text>
             </Alert>
           </Box>
         </Stack>
-      </CardContent>
+      </Card.Section>
     </Card>
   );
 }
@@ -553,139 +558,131 @@ function RealtimeMessageSystem() {
   }, [sendMessage, messageText, recipientIds]);
 
   return (
-    <Card>
-      <CardContent>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography variant="h6">
-            Real-time Messages
-            {isFetching && <CircularProgress size={16} sx={{ ml: 1 }} />}
-          </Typography>
-          <Chip
-            label={`${unreadCount} unread`}
-            color={unreadCount > 0 ? 'error' : 'default'}
-            size="small"
-          />
-        </Box>
+    <Card withBorder>
+      <Card.Section p="md">
+        <Flex justify="space-between" align="center" mb="md">
+          <Group gap="xs">
+            <Text size="lg" fw={600}>
+              Real-time Messages
+            </Text>
+            {isFetching && <Loader size="xs" />}
+          </Group>
+          <Badge
+            color={unreadCount > 0 ? 'red' : 'gray'}
+            size="sm"
+          >
+            {unreadCount} unread
+          </Badge>
+        </Flex>
 
         {/* Send Message Form */}
-        <Box mb={3}>
-          <Typography variant="subtitle2" gutterBottom>Send Quick Message</Typography>
-          <Stack spacing={2}>
-            <TextField
+        <Box mb="lg">
+          <Text size="md" fw={500} mb="sm">Send Quick Message</Text>
+          <Stack gap="md">
+            <Textarea
               label="Message"
-              multiline
-              rows={3}
               value={messageText}
-              onChange={(e) => setMessageText(e.target.value)}
-              fullWidth
+              onChange={(e) => setMessageText(e.currentTarget.value)}
               placeholder="Type your message here..."
+              minRows={3}
+              autosize
             />
-            <FormControl fullWidth>
-              <InputLabel>Recipients</InputLabel>
-              <Select
-                multiple
-                value={recipientIds}
-                onChange={(e) => setRecipientIds(typeof e.target.value === 'string' ? [e.target.value] : e.target.value)}
-                label="Recipients"
-              >
-                <MenuItem value="teacher1">Math Teacher</MenuItem>
-                <MenuItem value="teacher2">Science Teacher</MenuItem>
-                <MenuItem value="admin1">School Admin</MenuItem>
-              </Select>
-            </FormControl>
+            <Select
+              label="Recipients"
+              placeholder="Select recipients"
+              data={[
+                { value: 'teacher1', label: 'Math Teacher' },
+                { value: 'teacher2', label: 'Science Teacher' },
+                { value: 'admin1', label: 'School Admin' }
+              ]}
+              value={recipientIds[0] || ''}
+              onChange={(value) => setRecipientIds(value ? [value] : [])}
+            />
             <Button
-              variant="contained"
               onClick={handleSendMessage}
               disabled={isSending || !messageText.trim() || recipientIds.length === 0}
-              startIcon={isSending ? <CircularProgress size={16} /> : undefined}
+              loading={isSending}
             >
-              {isSending ? 'Sending...' : 'Send Message'}
+              Send Message
             </Button>
           </Stack>
         </Box>
 
-        <Divider sx={{ mb: 2 }} />
+        <Divider mb="md" />
 
         {/* Message List */}
-        <Typography variant="subtitle2" gutterBottom>Recent Messages</Typography>
+        <Text size="md" fw={500} mb="sm">Recent Messages</Text>
         {isLoading ? (
-          <Box display="flex" justifyContent="center" p={2}>
-            <CircularProgress />
-          </Box>
+          <Flex justify="center" p="md">
+            <Loader />
+          </Flex>
         ) : (
-          <List>
+          <Stack gap="xs">
             {(messages || []).slice(0, 5).map((message) => (
-              <ListItem key={message.id} alignItems="flex-start">
-                <ListItemAvatar>
-                  <Avatar sx={{ bgcolor: message.is_read ? 'grey.300' : 'primary.main' }}>
-                    📧
+              <Card key={message.id} withBorder padding="sm">
+                <Group gap="sm" align="flex-start">
+                  <Avatar
+                    color={message.is_read ? 'gray' : 'blue'}
+                    radius="sm"
+                  >
+                    <IconMail size={16} />
                   </Avatar>
-                </ListItemAvatar>
-                <ListItemText
-                  primary={
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Typography variant="subtitle2">{message.subject}</Typography>
-                      {!message.is_read && <Chip label="New" size="small" color="primary" />}
-                      {message.priority === 'high' && <Chip label="Priority" size="small" color="error" />}
-                    </Box>
-                  }
-                  secondary={
-                    <>
-                      <Typography variant="body2" color="text.primary" sx={{ mt: 0.5 }}>
-                        {message.body.substring(0, 100)}...
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {new Date(message.created_at).toLocaleString()}
-                      </Typography>
-                    </>
-                  }
-                />
-              </ListItem>
+                  <Box style={{ flex: 1 }}>
+                    <Group gap="xs" mb="xs">
+                      <Text fw={500}>{message.subject}</Text>
+                      {!message.is_read && <Badge color="blue" size="sm">New</Badge>}
+                      {message.priority === 'high' && <Badge color="red" size="sm">Priority</Badge>}
+                    </Group>
+                    <Text size="sm" mb="xs">
+                      {message.body.substring(0, 100)}...
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      {new Date(message.created_at).toLocaleString()}
+                    </Text>
+                  </Box>
+                </Group>
+              </Card>
             ))}
-          </List>
+          </Stack>
         )}
-      </CardContent>
+      </Card.Section>
     </Card>
   );
 }
 
 // Main Examples Component
 export function RTKQueryExamples() {
-  const [currentTab, setCurrentTab] = useState(0);
-
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setCurrentTab(newValue);
-  };
+  const [currentTab, setCurrentTab] = useState<string | null>('optimistic');
 
   return (
-    <Box sx={{ width: '100%' }}>
-      <Typography variant="h4" gutterBottom>
+    <Box>
+      <Text size="xl" fw={700} mb="xs">
         RTK Query Implementation Examples
-      </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+      </Text>
+      <Text size="md" c="dimmed" mb="lg">
         Demonstrating advanced RTK Query patterns including optimistic updates,
         cache management, and real-time synchronization.
-      </Typography>
+      </Text>
 
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs value={currentTab} onChange={handleTabChange}>
-          <Tab label="Optimistic Updates" />
-          <Tab label="Cache Performance" />
-          <Tab label="Real-time Messages" />
-        </Tabs>
-      </Box>
+      <Tabs value={currentTab} onChange={setCurrentTab}>
+        <Tabs.List>
+          <Tabs.Tab value="optimistic">Optimistic Updates</Tabs.Tab>
+          <Tabs.Tab value="cache">Cache Performance</Tabs.Tab>
+          <Tabs.Tab value="realtime">Real-time Messages</Tabs.Tab>
+        </Tabs.List>
 
-      <TabPanel value={currentTab} index={0}>
-        <OptimisticClassManagement />
-      </TabPanel>
+        <Tabs.Panel value="optimistic" pt="md">
+          <OptimisticClassManagement />
+        </Tabs.Panel>
 
-      <TabPanel value={currentTab} index={1}>
-        <CachePerformanceMonitor />
-      </TabPanel>
+        <Tabs.Panel value="cache" pt="md">
+          <CachePerformanceMonitor />
+        </Tabs.Panel>
 
-      <TabPanel value={currentTab} index={2}>
-        <RealtimeMessageSystem />
-      </TabPanel>
+        <Tabs.Panel value="realtime" pt="md">
+          <RealtimeMessageSystem />
+        </Tabs.Panel>
+      </Tabs>
     </Box>
   );
 }

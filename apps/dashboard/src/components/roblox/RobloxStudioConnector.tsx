@@ -41,7 +41,7 @@ import {
   IconTrash
 } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
+import { type RootState } from '../../store';
 import api from '../../services/api';
 import pusher from '../../services/pusher';
 
@@ -84,7 +84,9 @@ const RobloxStudioConnector: React.FunctionComponent<Record<string, any>> = () =
   const [connectionDialogOpen, setConnectionDialogOpen] = useState(false);
   const [autoSync, setAutoSync] = useState(true);
 
-  const user = useSelector((state: RootState) => state.auth.user);
+  // Fix: Changed from state.auth.user to state.user as auth slice doesn't exist
+  // Defensive: Safe fallback for Redux state access
+  const user = useSelector((state: RootState) => state?.user || null);
 
   // Check Rojo installation
   const checkRojoInstallation = useCallback(async () => {
@@ -99,11 +101,17 @@ const RobloxStudioConnector: React.FunctionComponent<Record<string, any>> = () =
   // Load user's Rojo projects
   const loadProjects = useCallback(async () => {
     setLoading(true);
+    setError(null); // Defensive: Clear previous errors
     try {
       const response = await api.get('/api/v1/roblox/rojo/projects');
-      setProjects(response.data.projects || []);
+      // Defensive: Safe array access with fallback
+      const projectsData = response?.data?.projects;
+      setProjects(Array.isArray(projectsData) ? projectsData : []);
     } catch (err: any) {
-      setError('Failed to load projects');
+      const errorMessage = err?.response?.data?.message || err?.message || 'Failed to load projects';
+      setError(errorMessage);
+      // Defensive: Keep existing projects on error rather than clearing
+      console.error('Error loading projects:', err);
     } finally {
       setLoading(false);
     }
@@ -257,15 +265,18 @@ const RobloxStudioConnector: React.FunctionComponent<Record<string, any>> = () =
 
   // Check sync status periodically
   useEffect(() => {
-    if (selectedProject?.status === 'running' && autoSync) {
+    // Defensive: Validate selectedProject before setting up interval
+    if (selectedProject?.status === 'running' && selectedProject?.project_id && autoSync) {
       const interval = setInterval(async () => {
         try {
           const response = await api.get(`/api/v1/roblox/rojo/project/${selectedProject.project_id}`);
-          if (response.data.sync_status) {
+          // Defensive: Validate response data before updating state
+          if (response?.data?.sync_status) {
             setSyncStatus(response.data.sync_status);
           }
         } catch (err) {
-          // Ignore errors in background sync check
+          // Defensive: Log errors but don't disrupt UI
+          console.warn('Background sync status check failed:', err);
         }
       }, 5000);
 
@@ -281,8 +292,23 @@ const RobloxStudioConnector: React.FunctionComponent<Record<string, any>> = () =
   }, [checkRojoInstallation, checkOAuthStatus, loadProjects]);
 
   // Copy to clipboard helper
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
+  const copyToClipboard = async (text: string) => {
+    try {
+      // Defensive: Check if clipboard API is available
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+    } catch (err) {
+      console.error('Failed to copy to clipboard:', err);
+    }
   };
 
   return (
@@ -390,17 +416,22 @@ const RobloxStudioConnector: React.FunctionComponent<Record<string, any>> = () =
           </Group>
         </Group>
 
-        {loading && projects.length === 0 ? (
+        {loading && (!projects || projects.length === 0) ? (
           <Group justify="center" p="lg">
             <Loader />
           </Group>
-        ) : projects.length === 0 ? (
+        ) : (!projects || projects.length === 0) ? (
           <Alert color="blue">
             No projects found. Create one from the Conversation Flow.
           </Alert>
         ) : (
           <Grid gutter="md">
-            {projects.map((project) => (
+            {/* Defensive: Safe array mapping with validation */}
+            {Array.isArray(projects) && projects.map((project) => {
+              // Defensive: Validate project object
+              if (!project || !project.project_id) return null;
+
+              return (
               <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={project.project_id}>
                 <Card
                   style={{
@@ -411,12 +442,12 @@ const RobloxStudioConnector: React.FunctionComponent<Record<string, any>> = () =
                 >
                   <Card.Section p="md">
                     <Text size="lg" fw={600} mb="sm">
-                      {project.name}
+                      {project.name || 'Unnamed Project'}
                     </Text>
                     <Stack gap="xs">
                       <Group justify="space-between">
                         <Text size="sm" c="dimmed">Port</Text>
-                        <Text size="sm">{project.port}</Text>
+                        <Text size="sm">{project.port || 'N/A'}</Text>
                       </Group>
                       <Group justify="space-between">
                         <Text size="sm" c="dimmed">Status</Text>
@@ -427,12 +458,18 @@ const RobloxStudioConnector: React.FunctionComponent<Record<string, any>> = () =
                           }
                           size="sm"
                         >
-                          {project.status}
+                          {project.status || 'unknown'}
                         </Chip>
                       </Group>
                       <Group justify="space-between">
                         <Text size="sm" c="dimmed">Created</Text>
-                        <Text size="sm">{new Date(project.created_at).toLocaleString()}</Text>
+                        <Text size="sm">
+                          {/* Defensive: Safe date formatting */}
+                          {project.created_at ?
+                            new Date(project.created_at).toLocaleString() :
+                            'Unknown'
+                          }
+                        </Text>
                       </Group>
                     </Stack>
                   </Card.Section>
@@ -485,7 +522,8 @@ const RobloxStudioConnector: React.FunctionComponent<Record<string, any>> = () =
                   </Card.Section>
                 </Card>
               </Grid.Col>
-            ))}
+              );
+            })}
           </Grid>
         )}
       </Paper>

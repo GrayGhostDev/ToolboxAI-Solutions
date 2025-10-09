@@ -5,7 +5,7 @@ export interface SwitchProps {
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-const AtomicSwitch = (({ ...props, ref }: HTMLInputElement, SwitchProps & { ref?: React.Ref<any> }) => (
+const AtomicSwitch = React.forwardRef<HTMLInputElement, SwitchProps>((props, ref) => (
   <input ref={ref} type="checkbox" role="switch" {...props} />
 ));
 

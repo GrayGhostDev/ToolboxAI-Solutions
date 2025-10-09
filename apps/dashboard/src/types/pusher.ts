@@ -5,8 +5,8 @@
  * features including presence channels, authentication, and events.
  */
 
-import { Channel, PresenceChannel } from 'pusher-js';
-import { WebSocketMessage, WebSocketMessageType, UserPresence } from './websocket';
+import { type Channel, type PresenceChannel } from 'pusher-js';
+import { type WebSocketMessage, type WebSocketMessageType, UserPresence } from './websocket';
 
 // Pusher Channel Types
 export enum PusherChannelType {

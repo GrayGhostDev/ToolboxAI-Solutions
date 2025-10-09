@@ -44,10 +44,10 @@ import {
 
 import {
   robloxEnvironmentService,
-  EnvironmentCreationRequest,
-  EnvironmentCreationResponse,
+  type EnvironmentCreationRequest,
+  type EnvironmentCreationResponse,
   EnvironmentStatusResponse,
-  RojoConnectionResponse
+  type RojoConnectionResponse
 } from '../../services/robloxEnvironment';
 
 interface EnvironmentCreatorProps {
@@ -101,7 +101,7 @@ const EnvironmentCreator: React.FunctionComponent<EnvironmentCreatorProps> = ({ 
     try {
       // Call backend API to generate detailed preview
       const previewRequest = {
-        name: formData.name || "Preview Environment",
+        name: formData.name || 'Preview Environment',
         description: formData.description,
         grade_level: formData.grade_level,
         subject: formData.subject,
@@ -116,33 +116,33 @@ const EnvironmentCreator: React.FunctionComponent<EnvironmentCreatorProps> = ({ 
       } else {
         // Fallback to client-side preview if backend fails
         const fallbackPreview = {
-          name: formData.name || "Preview Environment",
+          name: formData.name || 'Preview Environment',
           structure: {
             terrain: components.terrain.map((item: string) => ({
               type: item,
               position: { x: Math.random() * 100, y: 0, z: Math.random() * 100 },
               size: { x: 20, y: 10, z: 20 },
-              color: "#4CAF50"
+              color: '#4CAF50'
             })),
             buildings: components.buildings.map((item: string, index: number) => ({
               type: item,
               position: { x: index * 30, y: 0, z: 0 },
               size: { x: 25, y: 15, z: 25 },
-              color: "#" + Math.floor(Math.random()*16777215).toString(16)
+              color: '#' + Math.floor(Math.random()*16777215).toString(16)
             })),
             objects: components.objects.map((item: string, index: number) => ({
               type: item,
               position: { x: Math.random() * 50, y: 0, z: Math.random() * 50 },
               size: { x: 5, y: 5, z: 5 },
-              color: "#" + Math.floor(Math.random()*16777215).toString(16)
+              color: '#' + Math.floor(Math.random()*16777215).toString(16)
             }))
           },
           lighting: {
             type: components.lighting,
             brightness: components.lighting === 'Bright/Sunny' ? 1.0 :
                        components.lighting === 'Dark/Night' ? 0.3 : 0.7,
-            color: components.lighting === 'Bright/Sunny' ? "#FFE4B5" :
-                   components.lighting === 'Dark/Night' ? "#1A1A2E" : "#FFFFFF"
+            color: components.lighting === 'Bright/Sunny' ? '#FFE4B5' :
+                   components.lighting === 'Dark/Night' ? '#1A1A2E' : '#FFFFFF'
           },
           effects: components.effects.map((effect: string) => ({
             type: effect,

@@ -1,11 +1,25 @@
-import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
-// TODO: DEPRECATED - This component uses Material UI
-// Use LoginMantine.tsx instead which provides the same functionality with Mantine
-// This file can be removed once all references are updated
-
 import * as React from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import {
+  Box,
+  Paper,
+  Stack,
+  Button,
+  TextInput,
+  PasswordInput,
+  Text,
+  Alert,
+  Loader,
+  Divider,
+  Anchor,
+} from '@mantine/core';
+import {
+  IconEye,
+  IconEyeOff,
+  IconMail,
+  IconLock
+} from '@tabler/icons-react';
 import { login } from "../../services/api";
 import { useAppDispatch } from "../../store";
 import { signInSuccess } from "../../store/slices/userSlice";
@@ -13,14 +27,13 @@ import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY } from "../../config";
 import { pusherService } from "../../services/pusher";
 import { logger } from "../../utils/logger";
 
-export default function LoginMUI() {
+export default function LoginMantine() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -111,179 +124,134 @@ export default function LoginMUI() {
         alignItems: "center",
         justifyContent: "center",
         background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        p: 2,
+        padding: "16px",
       }}
     >
       <Paper
-        elevation={24}
+        shadow="xl"
         style={{
           width: "100%",
           maxWidth: 400,
-          borderRadius: 3,
+          borderRadius: "12px",
           overflow: "hidden",
         }}
       >
         <Box
           style={{
-            p: 3,
+            padding: "24px",
             background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
             color: "white",
             textAlign: "center",
           }}
         >
-          <Typography order={4} style={{ fontWeight: 700, mb: 1 }}>
+          <Text size="xl" fw={700} mb="xs">
             Welcome Back
-          </Typography>
-          <Typography size="sm" style={{ opacity: 0.9 }}>
+          </Text>
+          <Text size="sm" style={{ opacity: 0.9 }}>
             Sign in to ToolBoxAI Educational Platform
-          </Typography>
+          </Text>
         </Box>
 
-        <CardContent style={{ p: 3 }}>
+        <Box p="xl">
           <Box component="form" onSubmit={handleSubmit}>
-            <Stack spacing={3}>
+            <Stack gap="lg">
               {error && (
-                <Alert severity="error" style={{ borderRadius: 2 }}>
+                <Alert color="red" radius="sm">
                   {error}
                 </Alert>
               )}
 
-              <TextField
-                fullWidth
+              <TextInput
                 id="email-field"
                 name="email"
                 label="Username or Email"
-                type="email"
                 placeholder="e.g. john_teacher or john@teacher.com"
                 value={formData.email}
                 onChange={handleChange}
                 required
                 disabled={loading}
-                helperText="Enter your username or email address"
-                inputProps={{
-                  "data-testid": "email-input",
-                }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Email color="action" />
-                    </InputAdornment>
-                  ),
-                }}
-                style={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
-                  },
-                }}
+                description="Enter your username or email address"
+                data-testid="email-input"
+                leftSection={<IconMail size={16} />}
+                radius="md"
               />
 
-              <TextField
-                fullWidth
+              <PasswordInput
                 id="password-field"
                 name="password"
                 label="Password"
-                type={showPassword ? "text" : "password"}
                 value={formData.password}
                 onChange={handleChange}
                 required
                 disabled={loading}
-                inputProps={{
-                  "data-testid": "password-input",
+                data-testid="password-input"
+                leftSection={<IconLock size={16} />}
+                visibilityToggleIcon={({ reveal, size }) =>
+                  reveal ? <IconEyeOff size={size} /> : <IconEye size={size} />
+                }
+                visibilityToggleButtonProps={{
+                  "data-testid": "password-visibility-toggle",
                 }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Lock color="action" />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowPassword(!showPassword)}
-                        edge="end"
-                        disabled={loading}
-                        aria-label="toggle password visibility"
-                        data-testid="password-visibility-toggle"
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-                style={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
-                  },
-                }}
+                radius="md"
               />
 
               <Button
                 type="submit"
                 fullWidth
                 variant="filled"
-                size="large"
+                size="lg"
                 disabled={loading}
                 data-testid="login-submit"
+                radius="md"
                 style={{
-                  borderRadius: 2,
-                  py: 1.5,
-                  textTransform: "none",
                   fontSize: "1rem",
                   fontWeight: 600,
                 }}
+                leftSection={loading ? <Loader size="sm" /> : undefined}
               >
                 {loading ? "Signing In..." : "Sign In"}
               </Button>
 
               <Box style={{ textAlign: "center" }}>
-                <Link
+                <Anchor
+                  component={Link}
                   to="/password-reset"
-                  style={{
-                    color: "#667eea",
-                    textDecoration: "none",
-                    fontSize: "0.875rem",
-                  }}
+                  size="sm"
+                  style={{ color: "#667eea" }}
                 >
                   Forgot your password?
-                </Link>
+                </Anchor>
               </Box>
 
-              <Divider style={{ my: 2 }}>
-                <Typography variant="caption" color="text.secondary">
-                  Demo Credentials
-                </Typography>
-              </Divider>
+              <Divider label="Demo Credentials" labelPosition="center" />
 
-              <Stack spacing={1}>
-                <Typography variant="caption" color="text.secondary">
+              <Stack gap="xs">
+                <Text size="xs" c="dimmed">
                   <strong>Admin:</strong> admin@toolboxai.com / Admin123!
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
+                </Text>
+                <Text size="xs" c="dimmed">
                   <strong>Teacher:</strong> jane.smith@school.edu / Teacher123!
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
+                </Text>
+                <Text size="xs" c="dimmed">
                   <strong>Student:</strong> alex.johnson@student.edu / Student123!
-                </Typography>
+                </Text>
               </Stack>
 
-              <Box style={{ textAlign: "center", mt: 2 }}>
-                <Typography size="sm" color="text.secondary">
+              <Box style={{ textAlign: "center" }}>
+                <Text size="sm" c="dimmed">
                   Don't have an account?{" "}
-                  <Link
+                  <Anchor
+                    component={Link}
                     to="/register"
-                    style={{
-                      color: "inherit",
-                      textDecoration: "none",
-                      fontWeight: 600,
-                    }}
+                    fw={600}
                   >
                     Sign up here
-                  </Link>
-                </Typography>
+                  </Anchor>
+                </Text>
               </Box>
             </Stack>
           </Box>
-        </CardContent>
+        </Box>
       </Paper>
     </Box>
   );

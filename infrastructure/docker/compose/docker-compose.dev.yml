@@ -411,3 +411,6 @@ networks:
   mcp:
     external: false
     internal: false  # Allow external access in dev
+
+# Override production secrets - use environment variables in dev
+secrets: {}

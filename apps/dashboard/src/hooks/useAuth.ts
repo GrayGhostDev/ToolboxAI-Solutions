@@ -1,12 +1,12 @@
-import { useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "../store";
-import { signOut, setUser } from "../store/slices/userSlice";
-import { refreshToken as refreshTokenAPI, logout as logoutAPI } from "../services/api";
-import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY } from "../config";
-import { authSync } from "../services/auth-sync";
-import { tokenRefreshManager } from "../utils/tokenRefreshManager";
-import { logger } from "../utils/logger";
+import { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '../store';
+import { signOut, setUser } from '../store/slices/userSlice';
+import { refreshToken as refreshTokenAPI, logout as logoutAPI } from '../services/api';
+import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY } from '../config';
+import { authSync } from '../services/auth-sync';
+import { tokenRefreshManager } from '../utils/tokenRefreshManager';
+import { logger } from '../utils/logger';
 
 // This is the legacy auth hook that works with Redux store
 // For new components, use useUnifiedAuth from ./useUnifiedAuth
@@ -37,7 +37,7 @@ export const useAuth = () => {
         await authSync.initialize();
         tokenRefreshManager.initialize();
       } catch (error) {
-        logger.error("Failed to initialize auth services", error);
+        logger.error('Failed to initialize auth services', error);
       }
       const savedToken = localStorage.getItem(AUTH_TOKEN_KEY);
       const savedRefreshToken = localStorage.getItem(AUTH_REFRESH_TOKEN_KEY);
@@ -83,7 +83,7 @@ export const useAuth = () => {
             }
           }
         } catch (error) {
-          logger.error("Error initializing auth", error);
+          logger.error('Error initializing auth', error);
           // Clear invalid tokens
           localStorage.removeItem(AUTH_TOKEN_KEY);
           localStorage.removeItem(AUTH_REFRESH_TOKEN_KEY);
@@ -109,25 +109,25 @@ export const useAuth = () => {
       await tokenRefreshManager.forceRefresh();
       return true;
     } catch (error) {
-      logger.error("Token refresh failed", error);
+      logger.error('Token refresh failed', error);
       return false;
     }
   };
   const requireAuth = () => {
     if (!isAuthenticated) {
-      navigate("/login");
+      navigate('/login');
       return false;
     }
     return true;
   };
   const requireRole = (requiredRoles: string[] | string) => {
     if (!isAuthenticated || !userId) {
-      navigate("/login");
+      navigate('/login');
       return false;
     }
     const roles = Array.isArray(requiredRoles) ? requiredRoles : [requiredRoles];
     if (!roles.includes(role)) {
-      navigate("/unauthorized");
+      navigate('/unauthorized');
       return false;
     }
     return true;

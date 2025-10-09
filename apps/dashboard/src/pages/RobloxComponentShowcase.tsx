@@ -23,7 +23,7 @@ import {
 } from '@mantine/core';
 import {
   IconPalette,
-  IconComponents,
+  IconPackage,
   Icon3dCubeSphere,
   IconDashboard,
   IconSparkles,
@@ -139,7 +139,7 @@ export const RobloxComponentShowcase: React.FC = () => {
       {/* Main Tabs */}
       <Tabs value={String(activeTab)} onTabChange={(value) => setActiveTab(Number(value))}>
         <Tabs.List>
-          <Tabs.Tab value="0" leftSection={<IconComponents size={20} />}>
+          <Tabs.Tab value="0" leftSection={<IconPackage size={20} />}>
             Core Components
           </Tabs.Tab>
           <Tabs.Tab value="1" leftSection={<Icon3dCubeSphere size={20} />}>

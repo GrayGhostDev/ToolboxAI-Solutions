@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from 'react';
 import {
   Box,
   Card,
@@ -15,52 +15,52 @@ import {
   Group
 } from '@mantine/core';
 
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { IconEye, IconEyeOff, IconMail, IconLock, IconUser, IconSchool } from "@tabler/icons-react";
-import { register } from "../../services/api";
-import { useAppDispatch } from "../../store";
-import { signInSuccess } from "../../store/slices/userSlice";
-import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY } from "../../config";
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { IconEye, IconEyeOff, IconMail, IconLock, IconUser, IconSchool } from '@tabler/icons-react';
+import { register } from '../../services/api';
+import { useAppDispatch } from '../../store';
+import { signInSuccess } from '../../store/slices/userSlice';
+import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY } from '../../config';
 
 export default function Register() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    confirmPassword: "",
-    displayName: "",
-    role: "",
+    email: '',
+    password: '',
+    confirmPassword: '',
+    displayName: '',
+    role: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    if (error) setError("");
+    if (error) setError('');
   };
 
   const handleRoleChange = (e: any) => {
     setFormData(prev => ({ ...prev, role: e.target.value }));
-    if (error) setError("");
+    if (error) setError('');
   };
 
   const validateForm = () => {
     if (!formData.email || !formData.password || !formData.displayName || !formData.role) {
-      return "All fields are required";
+      return 'All fields are required';
     }
     if (formData.password.length < 8) {
-      return "Password must be at least 8 characters long";
+      return 'Password must be at least 8 characters long';
     }
     if (formData.password !== formData.confirmPassword) {
-      return "Passwords do not match";
+      return 'Passwords do not match';
     }
     if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      return "Please enter a valid email address";
+      return 'Please enter a valid email address';
     }
     return null;
   };
@@ -75,7 +75,7 @@ export default function Register() {
     }
 
     setLoading(true);
-    setError("");
+    setError('');
 
     try {
       const response = await register({
@@ -103,9 +103,9 @@ export default function Register() {
       }));
 
       // Navigate to dashboard
-      navigate("/");
+      navigate('/');
     } catch (err: any) {
-      setError(err.message || "Registration failed. Please try again.");
+      setError(err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -114,29 +114,29 @@ export default function Register() {
   return (
     <Box
       style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         padding: 16,
       }}
     >
       <Paper
         shadow="xl"
         style={{
-          width: "100%",
+          width: '100%',
           maxWidth: 450,
           borderRadius: 12,
-          overflow: "hidden",
+          overflow: 'hidden',
         }}
       >
         <Box
           p="xl"
           style={{
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            color: "white",
-            textAlign: "center",
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            textAlign: 'center',
           }}
         >
           <Text size="xl" fw={700} mb="xs">
@@ -181,15 +181,15 @@ export default function Register() {
               <Select
                 label="Role"
                 value={formData.role}
-                onChange={(value) => setFormData(prev => ({ ...prev, role: value || "" }))}
+                onChange={(value) => setFormData(prev => ({ ...prev, role: value || '' }))}
                 disabled={loading}
                 leftSection={<IconSchool size={16} />}
                 required
                 data={[
-                  { value: "Student", label: "Student" },
-                  { value: "Teacher", label: "Teacher" },
-                  { value: "Parent", label: "Parent" },
-                  { value: "Admin", label: "Administrator" },
+                  { value: 'Student', label: 'Student' },
+                  { value: 'Teacher', label: 'Teacher' },
+                  { value: 'Parent', label: 'Parent' },
+                  { value: 'Admin', label: 'Administrator' },
                 ]}
               />
 
@@ -220,22 +220,22 @@ export default function Register() {
                 disabled={loading}
                 loading={loading}
                 style={{
-                  textTransform: "none",
-                  fontSize: "1rem",
+                  textTransform: 'none',
+                  fontSize: '1rem',
                   fontWeight: 600,
                 }}
               >
-                {loading ? "Creating Account..." : "Create Account"}
+                {loading ? 'Creating Account...' : 'Create Account'}
               </Button>
 
               <Box ta="center" mt="md">
                 <Text size="sm" c="dimmed">
-                  Already have an account?{" "}
+                  Already have an account?{' '}
                   <Link
                     to="/login"
                     style={{
-                      color: "inherit",
-                      textDecoration: "none",
+                      color: 'inherit',
+                      textDecoration: 'none',
                       fontWeight: 600,
                     }}
                   >

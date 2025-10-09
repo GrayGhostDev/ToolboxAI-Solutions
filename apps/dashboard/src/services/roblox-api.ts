@@ -3,9 +3,9 @@
  * Handles all Roblox-related API calls including OAuth2, conversation flow, and Rojo management
  */
 
-import axios, { AxiosInstance } from 'axios';
+import axios, { type AxiosInstance } from 'axios';
 import pusher from './pusher';
-import { Channel } from 'pusher-js';
+import { type Channel } from 'pusher-js';
 
 // Types
 export interface ConversationStartResponse {

@@ -1,4 +1,4 @@
-import { createTheme, MantineColorsTuple } from '@mantine/core';
+import { createTheme, type MantineColorsTuple } from '@mantine/core';
 import { robloxColors } from '../theme/robloxTheme';
 
 // Roblox-themed color palettes for Mantine

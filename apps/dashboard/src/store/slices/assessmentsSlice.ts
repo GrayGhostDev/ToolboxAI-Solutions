@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import * as api from '../../services/api';
 import type { Assessment, AssessmentSubmission, Question } from '../../types/api';
 
@@ -32,6 +32,18 @@ const initialState: AssessmentsState = {
 export const fetchAssessments = createAsyncThunk(
   'assessments/fetchAll',
   async (filters?: { classId?: string; type?: string; status?: string }) => {
+    // Check if we're in bypass mode
+    const bypassAuth = import.meta.env.VITE_BYPASS_AUTH === 'true';
+    const useMockData = import.meta.env.VITE_USE_MOCK_DATA === 'true';
+
+    if (bypassAuth || useMockData) {
+      // Import mock data
+      const { mockAssessments } = await import('../../services/mock-data');
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 100));
+      return mockAssessments;
+    }
+
     const response = await api.listAssessments(filters?.classId);
     return response;
   }
@@ -94,6 +106,45 @@ export const submitAssessment = createAsyncThunk(
 export const fetchSubmissions = createAsyncThunk(
   'assessments/fetchSubmissions',
   async ({ assessmentId, studentId }: { assessmentId?: string; studentId?: string }) => {
+    // Check if we're in bypass mode
+    const bypassAuth = import.meta.env.VITE_BYPASS_AUTH === 'true';
+    const useMockData = import.meta.env.VITE_USE_MOCK_DATA === 'true';
+
+    if (bypassAuth || useMockData) {
+      // Return mock submission data
+      const mockSubmissions: AssessmentSubmission[] = [
+        {
+          id: 'sub-001',
+          assessmentId: assessmentId || 'assess-001',
+          studentId: studentId || 'student-001',
+          studentName: 'John Doe',
+          answers: [{ questionId: '1', answer: 'A' }],
+          score: 85,
+          maxScore: 100,
+          timeSpentMinutes: 25,
+          submittedAt: new Date().toISOString(),
+          gradedAt: new Date().toISOString(),
+          feedback: 'Good work!'
+        },
+        {
+          id: 'sub-002',
+          assessmentId: assessmentId || 'assess-001',
+          studentId: 'student-002',
+          studentName: 'Jane Smith',
+          answers: [{ questionId: '1', answer: 'B' }],
+          score: 92,
+          maxScore: 100,
+          timeSpentMinutes: 18,
+          submittedAt: new Date().toISOString(),
+          gradedAt: null,
+          feedback: null
+        }
+      ];
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 100));
+      return mockSubmissions;
+    }
+
     if (!assessmentId) return [] as AssessmentSubmission[];
     const response = await api.getAssessmentSubmissions(assessmentId, studentId);
     return response;

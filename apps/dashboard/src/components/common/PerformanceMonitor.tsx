@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { onCLS, onFCP, onFID, onLCP, onTTFB, Metric } from 'web-vitals';
+import { onCLS, onFCP, onFID, onLCP, onTTFB, type Metric } from 'web-vitals';
 
 export interface PerformanceMetrics {
   fcp?: number; // First Contentful Paint

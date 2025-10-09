@@ -18,6 +18,21 @@ logger = logging.getLogger(__name__)
 dashboard_router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
 
+@dashboard_router.get("/overview")
+async def get_dashboard_overview_v2(
+    current_user: User = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """
+    Get dashboard overview data based on authenticated user role (API v2).
+    This endpoint matches frontend expectations and extracts role from JWT token.
+    """
+    # Extract role from authenticated user
+    role = getattr(current_user, 'role', 'student').lower()
+
+    # Reuse existing logic with user's role
+    return await get_dashboard_overview(role, current_user)
+
+
 @dashboard_router.get("/overview/{role}")
 async def get_dashboard_overview(
     role: str, current_user: User = Depends(get_current_user)

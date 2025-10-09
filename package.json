@@ -11,7 +11,7 @@
   "scripts": {
     "dashboard:dev": "npm -w apps/dashboard run dev",
     "dashboard:build": "npm -w apps/dashboard run build",
-    "dashboard:test": "npm -w apps/dashboard test",
+    "dashboard:test": "npm -w apps/dashboard run test",
     "dashboard:lint": "npm -w apps/dashboard run lint",
     "verify:dashboard": "npm -w apps/dashboard run test --silent && npm -w apps/dashboard run build",
     "test:e2e": "playwright test",

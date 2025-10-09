@@ -3,7 +3,7 @@
  * Provides type-safe access to the Redux store
  */
 
-import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
+import { type TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import type { store } from '@/store';
 
 // Infer the `RootState` and `AppDispatch` types from the store itself

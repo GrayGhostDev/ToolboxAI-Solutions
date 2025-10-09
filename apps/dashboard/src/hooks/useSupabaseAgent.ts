@@ -20,10 +20,10 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo, startTransition } from 'react';
 import { 
-  AgentInstance, 
-  AgentExecution, 
-  AgentMetrics, 
-  SystemHealth,
+  type AgentInstance, 
+  type AgentExecution, 
+  type AgentMetrics, 
+  type SystemHealth,
   AgentSupabaseService,
   isSupabaseConfigured 
 } from '../lib/supabase';

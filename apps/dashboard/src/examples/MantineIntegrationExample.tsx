@@ -79,7 +79,7 @@ export function MantineIntegrationExample() {
                 <div>
                   <Title order={4} mb="xs">1. Dependencies Installed</Title>
                   <Code block>
-{`npm install @mantine/core @mantine/hooks @mantine/form @mantine/notifications @tabler/icons-react`}
+{'npm install @mantine/core @mantine/hooks @mantine/form @mantine/notifications @tabler/icons-react'}
                   </Code>
                 </div>
 

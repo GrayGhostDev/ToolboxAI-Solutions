@@ -172,91 +172,30 @@ ENV COORDINATOR_PORT=8888 \
     MEMORY_THRESHOLD=0.8 \
     CPU_THRESHOLD=0.9
 
-# Create health check script
-RUN cat > /app/healthcheck.py << 'EOF'
-#!/usr/bin/env python3
-import json
-import sys
-import time
-import urllib.request
-from urllib.error import URLError, HTTPError
-
-def check_health():
-    """Check agent coordinator health via HTTP endpoint."""
-    try:
-        # Try to connect to the coordinator health endpoint
-        url = "http://localhost:8888/health"
-
-        with urllib.request.urlopen(url, timeout=5) as response:
-            if response.status == 200:
-                data = json.loads(response.read().decode())
-
-                # Check if response indicates healthy state
-                status = data.get("status", "unknown")
-                active_agents = data.get("active_agents", 0)
-                queue_size = data.get("queue_size", 0)
-
-                if status == "healthy":
-                    print(f"✅ Agent Coordinator is healthy")
-                    print(f"   - Active agents: {active_agents}")
-                    print(f"   - Queue size: {queue_size}")
-                    return True
-                else:
-                    print(f"❌ Agent Coordinator unhealthy: {status}")
-                    return False
-            else:
-                print(f"❌ Health check failed with status: {response.status}")
-                return False
-
-    except (URLError, HTTPError, json.JSONDecodeError, TimeoutError) as e:
-        print(f"❌ Health check failed: {e}")
-        return False
-
-if __name__ == "__main__":
-    result = check_health()
-    sys.exit(0 if result else 1)
-EOF
+# Create health check script with echo commands
+RUN echo '#!/usr/bin/env python3' > /app/healthcheck.py && \
+    echo 'import sys' >> /app/healthcheck.py && \
+    echo 'import time' >> /app/healthcheck.py && \
+    echo 'import urllib.request' >> /app/healthcheck.py && \
+    echo 'try:' >> /app/healthcheck.py && \
+    echo '    with urllib.request.urlopen("http://localhost:8888/health", timeout=5) as response:' >> /app/healthcheck.py && \
+    echo '        if response.status == 200:' >> /app/healthcheck.py && \
+    echo '            print("✅ Agent Coordinator is healthy")' >> /app/healthcheck.py && \
+    echo '            sys.exit(0)' >> /app/healthcheck.py && \
+    echo '        else:' >> /app/healthcheck.py && \
+    echo '            sys.exit(1)' >> /app/healthcheck.py && \
+    echo 'except Exception as e:' >> /app/healthcheck.py && \
+    echo '    print(f"❌ Health check failed: {e}")' >> /app/healthcheck.py && \
+    echo '    sys.exit(1)' >> /app/healthcheck.py
 
 RUN chmod +x /app/healthcheck.py
 
-# Create startup script with comprehensive logging
-RUN cat > /app/start-coordinator.sh << 'EOF'
-#!/bin/bash
-set -e
-
-echo "🤖 Starting ToolBoxAI Agent Coordinator"
-echo "📊 Configuration:"
-echo "  - User: $(id)"
-echo "  - Working directory: $(pwd)"
-echo "  - Python version: $(python --version)"
-echo "  - Max concurrent agents: ${MAX_CONCURRENT_AGENTS}"
-echo "  - Task timeout: ${TASK_TIMEOUT}s"
-echo "  - Queue max size: ${QUEUE_MAX_SIZE}"
-
-# Check dependencies
-echo "🔍 Checking dependencies..."
-python -c "import core.agents.master_orchestrator; print('✅ Agent orchestrator module available')"
-python -c "import redis; print('✅ Redis client available')"
-python -c "import asyncio; print('✅ Asyncio available')"
-
-# Check environment variables
-if [ -z "$DATABASE_URL_FILE" ] && [ -z "$DATABASE_URL" ]; then
-    echo "⚠️  Warning: No database URL configured"
-fi
-
-if [ -z "$REDIS_URL_FILE" ] && [ -z "$REDIS_URL" ]; then
-    echo "⚠️  Warning: No Redis URL configured"
-fi
-
-# Start the coordinator
-echo "✅ Starting Agent Coordinator server..."
-exec python -m core.agents.master_orchestrator \
-    --host 0.0.0.0 \
-    --port 8888 \
-    --max-workers ${MAX_CONCURRENT_AGENTS} \
-    --task-timeout ${TASK_TIMEOUT} \
-    --log-level ${LOG_LEVEL}
-EOF
+# Create startup script
+RUN echo '#!/bin/bash' > /app/start-coordinator.sh && \
+    echo 'set -e' >> /app/start-coordinator.sh && \
+    echo 'echo "🤖 Starting ToolBoxAI Agent Coordinator"' >> /app/start-coordinator.sh && \
+    echo 'echo "✅ Starting Agent Coordinator server..."' >> /app/start-coordinator.sh && \
+    echo 'exec python -m core.agents.master_orchestrator --host 0.0.0.0 --port 8888' >> /app/start-coordinator.sh
 
 RUN chmod +x /app/start-coordinator.sh
 

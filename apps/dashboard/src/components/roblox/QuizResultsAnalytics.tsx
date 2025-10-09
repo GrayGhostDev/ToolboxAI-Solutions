@@ -27,9 +27,9 @@ import {
   Group,
   Title,
   Loader,
-  Divider
+  Divider,
+  useMantineTheme
 } from '@mantine/core';
-import { useMantineTheme } from '@mantine/hooks';
 import {
   BarChart,
   Bar,

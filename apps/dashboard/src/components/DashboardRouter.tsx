@@ -1,4 +1,3 @@
-import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../utils/mui-imports';
 /**
  * Dashboard Router Component
  * Routes users to appropriate dashboard based on their role
@@ -6,8 +5,9 @@ import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Ava
 
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { Box, Text, Button } from '@mantine/core';
 import { useAuth } from '../contexts/AuthContext';
-import { UserRole } from '../types/roles';
+import { type UserRole } from '../types/roles';
 
 // Import role-specific dashboards (these will be created)
 import AdminDashboard from './dashboards/AdminDashboard';
@@ -166,9 +166,9 @@ const DashboardRouter: React.FunctionComponent<Record<string, any>> = () => {
           justifyContent: 'center',
           height: '100vh'
         }}>
-          <Typography variant="h4" gutterBottom>Unauthorized Access</Typography>
-          <Typography variant="body1" gutterBottom>You don't have permission to access this page.</Typography>
-          <Button variant="contained" onClick={() => window.history.back()}>Go Back</Button>
+          <Text size="xl" fw={700} mb="md">Unauthorized Access</Text>
+          <Text mb="md">You don't have permission to access this page.</Text>
+          <Button onClick={() => window.history.back()}>Go Back</Button>
         </Box>
       } />
 

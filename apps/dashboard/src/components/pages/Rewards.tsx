@@ -1,19 +1,56 @@
-import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
-import * as React from "react";
+import {
+  Box,
+  Button,
+  Text,
+  Paper,
+  Stack,
+  Grid,
+  Card,
+  List,
+  Chip,
+  Badge,
+  Alert,
+  Modal,
+  Tabs,
+  TextInput,
+  Select,
+  ActionIcon,
+  Avatar,
+  Container,
+  Flex,
+  Group,
+  SimpleGrid,
+  Title
+} from '@mantine/core';
+import {
+  IconStar,
+  IconPlus,
+  IconSearch,
+  IconCircleCheck,
+  IconLock,
+  IconTrendingUp,
+  IconShoppingCart,
+  IconAward,
+  IconDiamond,
+  IconGift,
+  IconTags
+} from '@tabler/icons-react';
+import * as React from 'react';
 
-import { useState } from "react";
-import { useAppSelector, useAppDispatch } from "../../store";
-import { addNotification } from "../../store/slices/uiSlice";
+import { useState } from 'react';
+import { useAppSelector, useAppDispatch } from '../../store';
+import { addNotification } from '../../store/slices/uiSlice';
+import { useApiCallOnMount } from '../../hooks/useApiCall';
 
 interface Reward {
   id: string;
   name: string;
   description: string;
-  category: "avatar" | "theme" | "powerup" | "certificate" | "physical" | "privilege";
+  category: 'avatar' | 'theme' | 'powerup' | 'certificate' | 'physical' | 'privilege';
   cost: number;
   imageUrl?: string;
   icon: React.ReactNode;
-  rarity: "common" | "rare" | "epic" | "legendary";
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
   stock?: number;
   requirements?: {
     level?: number;
@@ -31,189 +68,70 @@ interface RewardHistory {
   rewardName: string;
   redeemedAt: string;
   cost: number;
-  status: "pending" | "delivered" | "used";
+  status: 'pending' | 'delivered' | 'used';
 }
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`rewards-tabpanel-${index}`}
-      aria-labelledby={`rewards-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box style={{ py: 3 }}>{children}</Box>}
-    </div>
-  );
-}
+// Remove TabPanel component - Mantine Tabs handles this internally
 
 export default function Rewards() {
   const dispatch = useAppDispatch();
   const { xp, level, badges } = useAppSelector((s) => s.gamification);
   const role = useAppSelector((s) => s.user.role);
-  
-  const [activeTab, setActiveTab] = useState(0);
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [searchTerm, setSearchTerm] = useState("");
+
+  const [activeTab, setActiveTab] = useState<string | null>('available');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [, setEditDialogOpen] = useState(false);
   const [cart, setCart] = useState<Reward[]>([]);
-  
-  // Mock rewards data
-  const availableRewards: Reward[] = [
-    {
-      id: "1",
-      name: "Golden Avatar Frame",
-      description: "Show off your achievements with this exclusive golden frame",
-      category: "avatar",
-      cost: 500,
-      icon: <EmojiEventsIcon style={{ color: "#FFD700" }} />,
-      rarity: "epic",
-      requirements: { level: 10 },
-    },
-    {
-      id: "2",
-      name: "Dark Mode Theme",
-      description: "Unlock the sleek dark mode theme for your dashboard",
-      category: "theme",
-      cost: 300,
-      icon: <IconStar style={{ color: "#9C27B0" }} />,
-      rarity: "rare",
-    },
-    {
-      id: "3",
-      name: "Double XP Booster (1 Hour)",
-      description: "Earn double XP for the next hour of learning",
-      category: "powerup",
-      cost: 200,
-      icon: <TrendingUpIcon style={{ color: "#4CAF50" }} />,
-      rarity: "common",
-      stock: 10,
-      maxRedeems: 3,
-    },
-    {
-      id: "4",
-      name: "Diamond Badge",
-      description: "The ultimate badge for top performers",
-      category: "avatar",
-      cost: 1000,
-      icon: <DiamondIcon style={{ color: "#00BCD4" }} />,
-      rarity: "legendary",
-      requirements: { level: 20, badges: ["gold_star", "perfect_score"] },
-    },
-    {
-      id: "5",
-      name: "Certificate of Excellence",
-      description: "Official certificate recognizing your outstanding performance",
-      category: "certificate",
-      cost: 750,
-      icon: <CardGiftcardIcon style={{ color: "#FF9800" }} />,
-      rarity: "epic",
-      requirements: { level: 15 },
-    },
-    {
-      id: "6",
-      name: "Extra Homework Pass",
-      description: "Skip one homework assignment without penalty",
-      category: "privilege",
-      cost: 400,
-      icon: <LocalOfferIcon style={{ color: "#E91E63" }} />,
-      rarity: "rare",
-      stock: 5,
-      maxRedeems: 1,
-    },
-    {
-      id: "7",
-      name: "Custom Username Color",
-      description: "Choose a custom color for your username in leaderboards",
-      category: "theme",
-      cost: 250,
-      icon: <IconStar style={{ color: "#673AB7" }} />,
-      rarity: "common",
-    },
-    {
-      id: "8",
-      name: "School Merchandise",
-      description: "Exclusive school-branded merchandise",
-      category: "physical",
-      cost: 1500,
-      icon: <CardGiftcardIcon style={{ color: "#795548" }} />,
-      rarity: "legendary",
-      stock: 3,
-      requirements: { level: 25 },
-    },
-  ];
 
-  const rewardHistory: RewardHistory[] = [
+  // Fetch rewards from API
+  const { data: rewardsData, loading, error, refetch } = useApiCallOnMount(
+    null,
     {
-      id: "h1",
-      rewardId: "3",
-      rewardName: "Double XP Booster",
-      redeemedAt: "2024-01-28 14:30:00",
-      cost: 200,
-      status: "used",
-    },
-    {
-      id: "h2",
-      rewardId: "2",
-      rewardName: "Dark Mode Theme",
-      redeemedAt: "2024-01-25 10:15:00",
-      cost: 300,
-      status: "delivered",
-    },
-    {
-      id: "h3",
-      rewardId: "5",
-      rewardName: "Certificate of Excellence",
-      redeemedAt: "2024-01-20 16:45:00",
-      cost: 750,
-      status: "pending",
-    },
-  ];
+      mockEndpoint: '/student/rewards',
+      showNotification: false,
+    }
+  );
 
-  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
-  };
+  const availableRewards: Reward[] = (rewardsData as Reward[]) || [];
+
+  // TODO: Fetch reward history from API
+  const rewardHistory: RewardHistory[] = [];
+
+  // Mantine tabs don't need custom change handler
 
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
-      case "common":
-        return "#757575";
-      case "rare":
-        return "#2196F3";
-      case "epic":
-        return "#9C27B0";
-      case "legendary":
-        return "#FF9800";
+      case 'common':
+        return '#757575';
+      case 'rare':
+        return '#2196F3';
+      case 'epic':
+        return '#9C27B0';
+      case 'legendary':
+        return '#FF9800';
       default:
-        return "#757575";
+        return '#757575';
     }
   };
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case "avatar":
-        return <EmojiEventsIcon />;
-      case "theme":
+      case 'avatar':
+        return <IconAward />;
+      case 'theme':
         return <IconStar />;
-      case "powerup":
-        return <TrendingUpIcon />;
-      case "certificate":
-        return <CardGiftcardIcon />;
-      case "physical":
-        return <CardGiftcardIcon />;
-      case "privilege":
-        return <LocalOfferIcon />;
+      case 'powerup':
+        return <IconTrendingUp />;
+      case 'certificate':
+        return <IconGift />;
+      case 'physical':
+        return <IconGift />;
+      case 'privilege':
+        return <IconTags />;
       default:
         return <IconStar />;
     }
@@ -235,7 +153,7 @@ export default function Rewards() {
     if (selectedReward) {
       // Here you would call the API to redeem the reward
       dispatch(addNotification({
-        type: "success",
+        type: 'success',
         message: `Successfully redeemed ${selectedReward.name}!`,
         autoHide: true,
       }));
@@ -250,15 +168,15 @@ export default function Rewards() {
   const addToCart = (reward: Reward) => {
     if (cart.find(r => r.id === reward.id)) {
       dispatch(addNotification({
-        type: "warning",
-        message: "This reward is already in your cart",
+        type: 'warning',
+        message: 'This reward is already in your cart',
         autoHide: true,
       }));
       return;
     }
     setCart([...cart, reward]);
     dispatch(addNotification({
-      type: "success",
+      type: 'success',
       message: `Added ${reward.name} to cart`,
       autoHide: true,
     }));
@@ -275,438 +193,440 @@ export default function Rewards() {
   const handleRemoveReward = () => {
     // TODO: API call to remove reward from the system
     dispatch(addNotification({
-      type: "success",
-      message: "Reward removed successfully",
+      type: 'success',
+      message: 'Reward removed successfully',
       autoHide: true,
     }));
   };
 
   const filteredRewards = availableRewards.filter(reward => {
-    if (selectedCategory !== "all" && reward.category !== selectedCategory) return false;
+    if (selectedCategory !== 'all' && reward.category !== selectedCategory) return false;
     if (searchTerm && !reward.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
     return true;
   });
 
   return (
-    <Grid2 container spacing={3}>
+    <Container size="xl">
       {/* Header */}
-      <Grid2 xs={12}>
-        <Card>
-          <CardContent>
-            <Stack
-              direction={{ xs: "column", md: "row" }}
-              justifyContent="space-between"
-              alignItems={{ xs: "flex-start", md: "center" }}
-              gap={2}
-            >
-              <Box>
-                <Typography order={5} style={{ fontWeight: 600, mb: 1 }}>
-                  Rewards Store
-                </Typography>
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <Chip
-                    icon={<IconStar />}
-                    label={`${xp.toLocaleString()} XP Available`}
-                    color="blue"
-                    variant="filled"
-                  />
-                  <Chip
-                    icon={<TrendingUpIcon />}
-                    label={`Level ${level}`}
-                    color="gray"
-                    variant="outline"
-                  />
-                  <Chip
-                    icon={<EmojiEventsIcon />}
-                    label={`${badges.length} Badges`}
-                    variant="outline"
-                  />
-                </Stack>
-              </Box>
-              
-              <Stack direction="row" spacing={2}>
-                {role === "teacher" && (
-                  <Button
-                    variant="outline"
-                    startIcon={<IconPlus />}
-                    onClick={(e: React.MouseEvent) => () => setCreateDialogOpen(true)}
-                  >
-                    Create Reward
-                  </Button>
-                )}
-                <Badge badgeContent={cart.length} color="blue">
-                  <Button
-                    variant="filled"
-                    startIcon={<ShoppingCartIcon />}
-                    disabled={cart.length === 0}
-                    onClick={(e: React.MouseEvent) => () => {
-                      if (cart.length > 0) {
-                        setConfirmDialogOpen(true);
-                      }
-                    }}
-                  >
-                    Cart ({getTotalCartCost()} XP)
-                  </Button>
+      <Card withBorder mb="md">
+        <Card.Section p="md">
+          <Stack gap="md">
+            <Box>
+              <Title order={2} mb="sm">
+                Rewards Store
+              </Title>
+              <Group gap="sm">
+                <Badge color="blue" variant="filled" size="lg">
+                  {xp.toLocaleString()} XP Available
                 </Badge>
-              </Stack>
-            </Stack>
-          </CardContent>
-        </Card>
-      </Grid2>
-
-      {/* Main Content */}
-      <Grid2 xs={12}>
-        <Card>
-          <CardContent>
-            <Box style={{ borderBottom: 1, borderColor: "divider" }}>
-              <Tabs value={activeTab} onChange={handleTabChange}>
-                <Tab label="Available Rewards" />
-                <Tab label="My Rewards" />
-                <Tab label="History" />
-                {role === "teacher" && <Tab label="Manage" />}
-              </Tabs>
+                <Badge color="gray" variant="outline" size="lg">
+                  Level {level}
+                </Badge>
+                <Badge variant="outline" size="lg">
+                  {badges.length} Badges
+                </Badge>
+              </Group>
             </Box>
 
-            {/* Available Rewards Tab */}
-            <TabPanel value={activeTab} index={0}>
-              {/* Filters */}
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2} style={{ mb: 3 }}>
-                <TextField
-                  size="small"
+            <Group gap="sm">
+              {role === 'teacher' && (
+                <Button
+                  variant="outline"
+                  leftSection={<IconPlus size={16} />}
+                  onClick={() => setCreateDialogOpen(true)}
+                >
+                  Create Reward
+                </Button>
+              )}
+              <Button
+                variant="filled"
+                leftSection={<IconShoppingCart size={16} />}
+                disabled={cart.length === 0}
+                onClick={() => {
+                  if (cart.length > 0) {
+                    setConfirmDialogOpen(true);
+                  }
+                }}
+              >
+                Cart ({getTotalCartCost()} XP)
+              </Button>
+            </Group>
+          </Stack>
+        </Card.Section>
+      </Card>
+
+      {/* Main Content */}
+      <Card>
+        <Tabs value={activeTab} onChange={setActiveTab}>
+          <Tabs.List>
+            <Tabs.Tab value="available">Available Rewards</Tabs.Tab>
+            <Tabs.Tab value="my-rewards">My Rewards</Tabs.Tab>
+            <Tabs.Tab value="history">History</Tabs.Tab>
+            {role === 'teacher' && <Tabs.Tab value="manage">Manage</Tabs.Tab>}
+          </Tabs.List>
+
+          {/* Available Rewards Tab */}
+          <Tabs.Panel value="available">
+            {/* Filters */}
+            <Stack gap="sm" mb="lg">
+              <Group gap="md">
+                <TextInput
                   placeholder="Search rewards..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  leftSection={<IconSearch size={16} />}
                   style={{ minWidth: 200 }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <IconSearch />
-                      </InputAdornment>
-                    ),
-                  }}
                 />
-                <FormControl size="small" style={{ minWidth: 150 }}>
-                  <InputLabel>Category</InputLabel>
-                  <Select
-                    value={selectedCategory}
-                    label="Category"
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                  >
-                    <MenuItem value="all">All Categories</MenuItem>
-                    <MenuItem value="avatar">Avatars</MenuItem>
-                    <MenuItem value="theme">Themes</MenuItem>
-                    <MenuItem value="powerup">Power-ups</MenuItem>
-                    <MenuItem value="certificate">Certificates</MenuItem>
-                    <MenuItem value="physical">Physical</MenuItem>
-                    <MenuItem value="privilege">Privileges</MenuItem>
-                  </Select>
-                </FormControl>
-              </Stack>
-
-              {/* Rewards Grid */}
-              <Grid container spacing={3}>
-                {filteredRewards.map((reward) => (
-                  <Grid item xs={12} sm={6} md={4} lg={3} key={reward.id}>
-                    <Card
-                      style={{
-                        height: "100%",
-                        display: "flex",
-                        flexDirection: "column",
-                        position: "relative",
-                        border: `2px solid ${getRarityColor(reward.rarity)}`,
-                        opacity: canRedeem(reward) ? 1 : 0.6,
-                      }}
-                    >
-                      {/* Rarity Badge */}
-                      <Chip
-                        label={reward.rarity.toUpperCase()}
-                        size="small"
-                        style={{
-                          position: "absolute",
-                          top: 8,
-                          right: 8,
-                          backgroundColor: getRarityColor(reward.rarity),
-                          color: "white",
-                          zIndex: 1,
-                        }}
-                      />
-                      
-                      <CardContent style={{ flexGrow: 1 }}>
-                        <Stack alignItems="center" spacing={2}>
-                          <Box style={{ fontSize: 48 }}>{reward.icon}</Box>
-                          <Typography order={6} textAlign="center">
-                            {reward.name}
-                          </Typography>
-                          <Typography size="sm" color="text.secondary" textAlign="center">
-                            {reward.description}
-                          </Typography>
-                          
-                          {/* Requirements */}
-                          {reward.requirements && (
-                            <Stack spacing={0.5} style={{ width: "100%" }}>
-                              {reward.requirements.level && (
-                                <Chip
-                                  label={`Level ${reward.requirements.level} Required`}
-                                  size="small"
-                                  color={level >= reward.requirements.level ? "success" : "default"}
-                                  icon={level >= reward.requirements.level ? <IconCircleCheck /> : <LockIcon />}
-                                />
-                              )}
-                            </Stack>
-                          )}
-                          
-                          {/* Stock */}
-                          {reward.stock !== undefined && (
-                            <Chip
-                              label={`${reward.stock} left`}
-                              size="small"
-                              color={reward.stock > 0 ? "default" : "error"}
-                            />
-                          )}
-                        </Stack>
-                      </CardContent>
-                      
-                      <CardActions style={{ justifyContent: "space-between", p: 2 }}>
-                        <Chip
-                          icon={<IconStar />}
-                          label={`${reward.cost} XP`}
-                          color="blue"
-                        />
-                        <Stack direction="row" spacing={1}>
-                          <IconButton
-                            size="small"
-                            onClick={(e: React.MouseEvent) => () => addToCart(reward)}
-                            disabled={!canRedeem(reward)}
-                          >
-                            <IconPlus />
-                          </IconButton>
-                          <Button
-                            size="small"
-                            variant="filled"
-                            disabled={!canRedeem(reward)}
-                            onClick={(e: React.MouseEvent) => () => handleRedeem(reward)}
-                          >
-                            Redeem
-                          </Button>
-                        </Stack>
-                      </CardActions>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            </TabPanel>
-
-            {/* My Rewards Tab */}
-            <TabPanel value={activeTab} index={1}>
-              <Alert severity="info" style={{ mb: 2 }}>
-                <AlertTitle>Your Redeemed Rewards</AlertTitle>
-                These are the rewards you've already redeemed. Some may still be active!
-              </Alert>
-              
-              <Grid container spacing={3}>
-                {rewardHistory
-                  .filter(h => h.status === "delivered")
-                  .map((item) => {
-                    const reward = availableRewards.find(r => r.id === item.rewardId);
-                    if (!reward) return null;
-                    
-                    return (
-                      <Grid item xs={12} sm={6} md={4} key={item.id}>
-                        <Card>
-                          <CardContent>
-                            <Stack spacing={2}>
-                              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                                <Box style={{ fontSize: 32 }}>{reward.icon}</Box>
-                                <Chip
-                                  label={item.status}
-                                  size="small"
-                                  color={item.status === "delivered" ? "success" : "default"}
-                                />
-                              </Stack>
-                              <Typography order={6}>{reward.name}</Typography>
-                              <Typography size="sm" color="text.secondary">
-                                Redeemed: {new Date(item.redeemedAt).toLocaleDateString()}
-                              </Typography>
-                              {reward.category === "powerup" && (
-                                <Button variant="filled" size="small">
-                                  Activate
-                                </Button>
-                              )}
-                            </Stack>
-                          </CardContent>
-                        </Card>
-                      </Grid>
-                    );
-                  })}
-              </Grid>
-            </TabPanel>
-
-            {/* History Tab */}
-            <TabPanel value={activeTab} index={2}>
-              <List>
-                {rewardHistory.map((item) => (
-                  <ListItem key={item.id}>
-                    <ListItemAvatar>
-                      <Avatar>
-                        {getCategoryIcon(availableRewards.find(r => r.id === item.rewardId)?.category || "")}
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={item.rewardName}
-                      secondary={`Redeemed on ${new Date(item.redeemedAt).toLocaleString()} • ${item.cost} XP`}
-                    />
-                    <ListItemSecondaryAction>
-                      <Chip
-                        label={item.status}
-                        size="small"
-                        color={
-                          item.status === "delivered" ? "success" :
-                          item.status === "used" ? "default" :
-                          "warning"
-                        }
-                      />
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                ))}
-              </List>
-            </TabPanel>
-
-            {/* Manage Tab (Teachers Only) */}
-            {role === "teacher" && (
-              <TabPanel value={activeTab} index={3}>
-                <Alert severity="info" style={{ mb: 2 }}>
-                  <AlertTitle>Manage Rewards</AlertTitle>
-                  Create custom rewards for your students and manage existing ones.
-                </Alert>
-                
-                <Stack spacing={2}>
-                  <Button
-                    variant="filled"
-                    startIcon={<IconPlus />}
-                    onClick={(e: React.MouseEvent) => () => setCreateDialogOpen(true)}
-                  >
-                    Create New Reward
-                  </Button>
-                  
-                  <Typography order={6} style={{ mt: 2 }}>
-                    Active Rewards
-                  </Typography>
-                  
-                  <Grid container spacing={2}>
-                    {availableRewards.map((reward) => (
-                      <Grid item xs={12} key={reward.id}>
-                        <Paper style={{ p: 2 }}>
-                          <Stack direction="row" justifyContent="space-between" alignItems="center">
-                            <Stack direction="row" spacing={2} alignItems="center">
-                              {reward.icon}
-                              <Box>
-                                <Typography variant="subtitle1">{reward.name}</Typography>
-                                <Typography size="sm" color="text.secondary">
-                                  {reward.cost} XP • {reward.rarity} • {reward.stock ? `${reward.stock} in stock` : "Unlimited"}
-                                </Typography>
-                              </Box>
-                            </Stack>
-                            <Stack direction="row" spacing={1}>
-                              <Button 
-                                size="small"
-                                onClick={(e: React.MouseEvent) => () => {
-                                  setSelectedReward(reward);
-                                  setEditDialogOpen(true);
-                                }}
-                              >
-                                Edit
-                              </Button>
-                          <Button 
-                                size="small" 
-                                color="red"
-                                onClick={(e: React.MouseEvent) => handleRemoveReward}
-                              >
-                                Remove
-                              </Button>
-                            </Stack>
-                          </Stack>
-                        </Paper>
-                      </Grid>
-                    ))}
-                  </Grid>
-                </Stack>
-              </TabPanel>
-            )}
-          </CardContent>
-        </Card>
-      </Grid2>
-
-      {/* Redeem Confirmation Dialog */}
-      <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)}>
-        <DialogTitle>Confirm Redemption</DialogTitle>
-        <DialogContent>
-          {selectedReward && (
-            <Stack spacing={2}>
-              <Typography>
-                Are you sure you want to redeem <strong>{selectedReward.name}</strong>?
-              </Typography>
-              <Alert severity="info">
-                This will cost {selectedReward.cost} XP. You currently have {xp} XP.
-              </Alert>
-              <Typography size="sm" color="text.secondary">
-                After redemption: {xp - selectedReward.cost} XP remaining
-              </Typography>
+                <Select
+                  value={selectedCategory}
+                  onChange={(value) => setSelectedCategory(value || 'all')}
+                  placeholder="Category"
+                  data={[
+                    { value: 'all', label: 'All Categories' },
+                    { value: 'avatar', label: 'Avatars' },
+                    { value: 'theme', label: 'Themes' },
+                    { value: 'powerup', label: 'Power-ups' },
+                    { value: 'certificate', label: 'Certificates' },
+                    { value: 'physical', label: 'Physical' },
+                    { value: 'privilege', label: 'Privileges' },
+                  ]}
+                  style={{ minWidth: 150 }}
+                />
+              </Group>
             </Stack>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={(e: React.MouseEvent) => () => setConfirmDialogOpen(false)}>Cancel</Button>
-          <Button variant="filled" onClick={(e: React.MouseEvent) => confirmRedeem}>
-            Confirm Redemption
-          </Button>
-        </DialogActions>
-      </Dialog>
 
-      {/* Create Reward Dialog (Teachers) */}
-      <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Create New Reward</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} style={{ mt: 2 }}>
-            <TextField fullWidth label="Reward Name" />
-            <TextField fullWidth label="Description" multiline rows={3} />
-            <FormControl fullWidth>
-              <InputLabel>Category</InputLabel>
-              <Select label="Category">
-                <MenuItem value="avatar">Avatar</MenuItem>
-                <MenuItem value="theme">Theme</MenuItem>
-                <MenuItem value="powerup">Power-up</MenuItem>
-                <MenuItem value="certificate">Certificate</MenuItem>
-                <MenuItem value="privilege">Privilege</MenuItem>
-              </Select>
-            </FormControl>
-            <TextField fullWidth label="XP Cost" type="number" />
-            <FormControl fullWidth>
-              <InputLabel>Rarity</InputLabel>
-              <Select label="Rarity">
-                <MenuItem value="common">Common</MenuItem>
-                <MenuItem value="rare">Rare</MenuItem>
-                <MenuItem value="epic">Epic</MenuItem>
-                <MenuItem value="legendary">Legendary</MenuItem>
-              </Select>
-            </FormControl>
-            <TextField fullWidth label="Stock (optional)" type="number" helperText="Leave empty for unlimited" />
-            <TextField fullWidth label="Required Level (optional)" type="number" />
+            {/* Rewards Grid */}
+            <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="md">
+              {filteredRewards.map((reward) => (
+                <Card
+                  key={reward.id}
+                  style={{
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    position: 'relative',
+                    border: `2px solid ${getRarityColor(reward.rarity)}`,
+                    opacity: canRedeem(reward) ? 1 : 0.6,
+                  }}
+                  withBorder
+                >
+                  {/* Rarity Badge */}
+                  <Badge
+                    color={getRarityColor(reward.rarity)}
+                    style={{
+                      position: 'absolute',
+                      top: 8,
+                      right: 8,
+                      zIndex: 1,
+                    }}
+                  >
+                    {reward.rarity.toUpperCase()}
+                  </Badge>
+
+                  <Card.Section p="md" style={{ flexGrow: 1 }}>
+                    <Stack align="center" gap="sm">
+                      <Box style={{ fontSize: 48 }}>{reward.icon}</Box>
+                      <Text fw={600} ta="center">
+                        {reward.name}
+                      </Text>
+                      <Text size="sm" c="dimmed" ta="center">
+                        {reward.description}
+                      </Text>
+
+                      {/* Requirements */}
+                      {reward.requirements && (
+                        <Stack gap="xs" w="100%">
+                          {reward.requirements.level && (
+                            <Badge
+                              color={level >= reward.requirements.level ? 'green' : 'red'}
+                              leftSection={level >= reward.requirements.level ? <IconCircleCheck size={12} /> : <IconLock size={12} />}
+                              variant="light"
+                            >
+                              Level {reward.requirements.level} Required
+                            </Badge>
+                          )}
+                        </Stack>
+                      )}
+
+                      {/* Stock */}
+                      {reward.stock !== undefined && (
+                        <Badge
+                          color={reward.stock > 0 ? 'blue' : 'red'}
+                          variant="light"
+                        >
+                          {reward.stock} left
+                        </Badge>
+                      )}
+                    </Stack>
+                  </Card.Section>
+
+                  <Card.Section p="sm" style={{ borderTop: '1px solid var(--mantine-color-gray-3)' }}>
+                    <Group justify="space-between">
+                      <Badge leftSection={<IconStar size={12} />} color="blue">
+                        {reward.cost} XP
+                      </Badge>
+                      <Group gap="xs">
+                        <ActionIcon
+                          size="sm"
+                          onClick={() => addToCart(reward)}
+                          disabled={!canRedeem(reward)}
+                        >
+                          <IconPlus size={16} />
+                        </ActionIcon>
+                        <Button
+                          size="xs"
+                          variant="filled"
+                          disabled={!canRedeem(reward)}
+                          onClick={() => handleRedeem(reward)}
+                        >
+                          Redeem
+                        </Button>
+                      </Group>
+                    </Group>
+                  </Card.Section>
+                </Card>
+              ))}
+            </SimpleGrid>
+          </Tabs.Panel>
+
+          {/* My Rewards Tab */}
+          <Tabs.Panel value="my-rewards">
+            <Alert color="blue" mb="md">
+              <Text fw={600}>Your Redeemed Rewards</Text>
+              <Text size="sm">These are the rewards you've already redeemed. Some may still be active!</Text>
+            </Alert>
+
+            <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+              {rewardHistory
+                .filter(h => h.status === 'delivered')
+                .map((item) => {
+                  const reward = availableRewards.find(r => r.id === item.rewardId);
+                  if (!reward) return null;
+
+                  return (
+                    <Card key={item.id} withBorder>
+                      <Card.Section p="md">
+                        <Stack gap="sm">
+                          <Group justify="space-between" align="center">
+                            <Box style={{ fontSize: 32 }}>{reward.icon}</Box>
+                            <Badge
+                              color={item.status === 'delivered' ? 'green' : 'gray'}
+                              variant="light"
+                            >
+                              {item.status}
+                            </Badge>
+                          </Group>
+                          <Text fw={600}>{reward.name}</Text>
+                          <Text size="sm" c="dimmed">
+                            Redeemed: {new Date(item.redeemedAt).toLocaleDateString()}
+                          </Text>
+                          {reward.category === 'powerup' && (
+                            <Button variant="filled" size="sm">
+                              Activate
+                            </Button>
+                          )}
+                        </Stack>
+                      </Card.Section>
+                    </Card>
+                  );
+                })}
+            </SimpleGrid>
+          </Tabs.Panel>
+
+          {/* History Tab */}
+          <Tabs.Panel value="history">
+            <Stack gap="sm">
+              {rewardHistory.map((item) => (
+                <Paper key={item.id} p="md" withBorder>
+                  <Group justify="space-between" align="center">
+                    <Group gap="md">
+                      <Avatar color="blue" radius="sm">
+                        {getCategoryIcon(availableRewards.find(r => r.id === item.rewardId)?.category || '')}
+                      </Avatar>
+                      <Stack gap="xs">
+                        <Text fw={600}>{item.rewardName}</Text>
+                        <Text size="sm" c="dimmed">
+                          Redeemed on {new Date(item.redeemedAt).toLocaleString()} • {item.cost} XP
+                        </Text>
+                      </Stack>
+                    </Group>
+                    <Badge
+                      color={
+                        item.status === 'delivered' ? 'green' :
+                        item.status === 'used' ? 'blue' :
+                        'yellow'
+                      }
+                      variant="light"
+                    >
+                      {item.status}
+                    </Badge>
+                  </Group>
+                </Paper>
+              ))}
+            </Stack>
+          </Tabs.Panel>
+
+          {/* Manage Tab (Teachers Only) */}
+          {role === 'teacher' && (
+            <Tabs.Panel value="manage">
+              <Alert color="blue" mb="md">
+                <Text fw={600}>Manage Rewards</Text>
+                <Text size="sm">Create custom rewards for your students and manage existing ones.</Text>
+              </Alert>
+
+              <Stack gap="md">
+                <Button
+                  variant="filled"
+                  leftSection={<IconPlus size={16} />}
+                  onClick={() => setCreateDialogOpen(true)}
+                >
+                  Create New Reward
+                </Button>
+
+                <Title order={3}>Active Rewards</Title>
+
+                <Stack gap="sm">
+                  {availableRewards.map((reward) => (
+                    <Paper key={reward.id} p="md" withBorder>
+                      <Group justify="space-between" align="center">
+                        <Group gap="md">
+                          {reward.icon}
+                          <Stack gap="xs">
+                            <Text fw={600}>{reward.name}</Text>
+                            <Text size="sm" c="dimmed">
+                              {reward.cost} XP • {reward.rarity} • {reward.stock ? `${reward.stock} in stock` : 'Unlimited'}
+                            </Text>
+                          </Stack>
+                        </Group>
+                        <Group gap="xs">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedReward(reward);
+                              setEditDialogOpen(true);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            color="red"
+                            variant="outline"
+                            onClick={handleRemoveReward}
+                          >
+                            Remove
+                          </Button>
+                        </Group>
+                      </Group>
+                    </Paper>
+                  ))}
+                </Stack>
+              </Stack>
+            </Tabs.Panel>
+          )}
+        </Tabs>
+      </Card>
+
+      {/* Redeem Confirmation Modal */}
+      <Modal
+        opened={confirmDialogOpen}
+        onClose={() => setConfirmDialogOpen(false)}
+        title="Confirm Redemption"
+        centered
+      >
+        {selectedReward && (
+          <Stack gap="md">
+            <Text>
+              Are you sure you want to redeem <Text fw={600} component="span">{selectedReward.name}</Text>?
+            </Text>
+            <Alert color="blue">
+              This will cost {selectedReward.cost} XP. You currently have {xp} XP.
+            </Alert>
+            <Text size="sm" c="dimmed">
+              After redemption: {xp - selectedReward.cost} XP remaining
+            </Text>
+            <Group justify="flex-end" gap="sm">
+              <Button variant="outline" onClick={() => setConfirmDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button variant="filled" onClick={confirmRedeem}>
+                Confirm Redemption
+              </Button>
+            </Group>
           </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={(e: React.MouseEvent) => () => setCreateDialogOpen(false)}>Cancel</Button>
-          <Button variant="filled" onClick={() => {
-            dispatch(addNotification({
-              type: "success",
-              message: "Reward created successfully!",
-              autoHide: true,
-            }));
-            setCreateDialogOpen(false);
-          }}>
-            Create Reward
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Grid2>
+        )}
+      </Modal>
+
+      {/* Create Reward Modal (Teachers) */}
+      <Modal
+        opened={createDialogOpen}
+        onClose={() => setCreateDialogOpen(false)}
+        title="Create New Reward"
+        size="lg"
+        centered
+      >
+        <Stack gap="md">
+          <TextInput label="Reward Name" placeholder="Enter reward name" />
+          <TextInput
+            label="Description"
+            placeholder="Enter reward description"
+            minRows={3}
+            autosize
+          />
+          <Select
+            label="Category"
+            placeholder="Select category"
+            data={[
+              { value: 'avatar', label: 'Avatar' },
+              { value: 'theme', label: 'Theme' },
+              { value: 'powerup', label: 'Power-up' },
+              { value: 'certificate', label: 'Certificate' },
+              { value: 'privilege', label: 'Privilege' },
+            ]}
+          />
+          <TextInput label="XP Cost" type="number" placeholder="Enter XP cost" />
+          <Select
+            label="Rarity"
+            placeholder="Select rarity"
+            data={[
+              { value: 'common', label: 'Common' },
+              { value: 'rare', label: 'Rare' },
+              { value: 'epic', label: 'Epic' },
+              { value: 'legendary', label: 'Legendary' },
+            ]}
+          />
+          <TextInput
+            label="Stock (optional)"
+            type="number"
+            placeholder="Leave empty for unlimited"
+            description="Leave empty for unlimited stock"
+          />
+          <TextInput
+            label="Required Level (optional)"
+            type="number"
+            placeholder="Enter required level"
+          />
+          <Group justify="flex-end" gap="sm" mt="md">
+            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="filled"
+              onClick={() => {
+                dispatch(addNotification({
+                  type: 'success',
+                  message: 'Reward created successfully!',
+                  autoHide: true,
+                }));
+                setCreateDialogOpen(false);
+              }}
+            >
+              Create Reward
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+    </Container>
   );
 }

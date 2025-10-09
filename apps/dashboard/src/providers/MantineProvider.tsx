@@ -4,7 +4,7 @@ import {
   createTheme,
   MantineColorsTuple,
   DEFAULT_THEME,
-  MantineColorScheme
+  type MantineColorScheme
 } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { useThemeContext } from '../contexts/ThemeContext';

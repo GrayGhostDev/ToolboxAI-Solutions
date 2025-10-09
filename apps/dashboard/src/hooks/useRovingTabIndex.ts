@@ -8,7 +8,7 @@
  * @since 2025-10-01
  */
 
-import { useState, useCallback, KeyboardEvent } from 'react';
+import { useState, useCallback, type KeyboardEvent } from 'react';
 
 export interface RovingTabIndexOptions {
   /** Total number of items to navigate */

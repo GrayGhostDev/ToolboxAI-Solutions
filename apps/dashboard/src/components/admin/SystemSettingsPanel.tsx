@@ -7,77 +7,62 @@ import React, { memo, useState, useCallback, useEffect } from 'react';
 import {
   Box,
   Paper,
-  Typography,
+  Text,
   Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Stack,
-  TextField,
+  TextInput,
   Switch,
-  FormControlLabel,
-  FormControl,
-  InputLabel,
   Select,
-  MenuItem,
   Button,
   Alert,
-  AlertTitle,
-  Chip,
+  Badge,
   Slider,
   Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  ActionIcon,
+  Modal,
   List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
   Divider,
-  Tab,
   Tabs,
-  InputAdornment,
   Tooltip,
-  Badge,
-  CircularProgress,
-  LinearProgress,
-  useTheme,
-  alpha,
-} from '@mui/material';
+  Loader,
+  Progress,
+  useMantineTheme,
+  Group,
+  Flex,
+  Textarea,
+  NumberInput,
+  TimeInput,
+  Notification,
+} from '@mantine/core';
+import { notifications } from '@mantine/notifications';
 import {
-  ExpandMore as ExpandIcon,
-  Settings as SettingsIcon,
-  Security as SecurityIcon,
-  Email as EmailIcon,
-  Storage as StorageIcon,
-  Language as LanguageIcon,
-  Palette as ThemeIcon,
-  NotificationsActive as NotificationIcon,
-  Api as APIIcon,
-  Speed as PerformanceIcon,
-  Backup as BackupIcon,
-  Update as UpdateIcon,
-  Lock as LockIcon,
-  Save as SaveIcon,
-  RestartAlt as ResetIcon,
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Check as CheckIcon,
-  Close as CloseIcon,
-  Warning as WarningIcon,
-  Info as InfoIcon,
-  CloudUpload as CloudIcon,
-  Schedule as ScheduleIcon,
-  Group as UsersIcon,
-  School as EducationIcon,
-} from '@mui/icons-material';
+  IconChevronDown,
+  IconSettings,
+  IconShield,
+  IconMail,
+  IconDatabase,
+  IconLanguage,
+  IconPalette,
+  IconBell,
+  IconApi,
+  IconGauge,
+  IconBackup,
+  IconRefresh,
+  IconLock,
+  IconDeviceFloppy,
+  IconRotateClockwise2,
+  IconPlus,
+  IconEdit,
+  IconTrash,
+  IconCheck,
+  IconX,
+  IconAlertTriangle,
+  IconInfoCircle,
+  IconCloud,
+  IconClock,
+  IconUsers,
+  IconSchool,
+} from '@tabler/icons-react';
 import { api } from '@/services/api';
 
 interface SystemSettings {
@@ -182,13 +167,13 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
   allowDangerousActions = false,
   readOnly = false,
 }) => {
-  const theme = useTheme();
+  const theme = useMantineTheme();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [tabValue, setTabValue] = useState(0);
-  const [expandedPanel, setExpandedPanel] = useState<string | false>('general');
+  const [expandedPanel, setExpandedPanel] = useState<string | null>('general');
 
   // Settings state
   const [settings, setSettings] = useState<SystemSettings>({
@@ -317,10 +302,20 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      setSuccess('Settings saved successfully');
+      notifications.show({
+        title: 'Success',
+        message: 'Settings saved successfully',
+        color: 'green',
+        icon: <IconCheck size={16} />,
+      });
       onSettingsSave?.(settings);
     } catch (err) {
-      setError('Failed to save settings');
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to save settings',
+        color: 'red',
+        icon: <IconX size={16} />,
+      });
     } finally {
       setSaving(false);
     }
@@ -336,9 +331,19 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
     try {
       // Trigger manual backup
       await new Promise(resolve => setTimeout(resolve, 2000));
-      setSuccess('Backup initiated successfully');
+      notifications.show({
+        title: 'Success',
+        message: 'Backup initiated successfully',
+        color: 'green',
+        icon: <IconCheck size={16} />,
+      });
     } catch (err) {
-      setError('Failed to initiate backup');
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to initiate backup',
+        color: 'red',
+        icon: <IconX size={16} />,
+      });
     } finally {
       setSaving(false);
     }
@@ -352,71 +357,62 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
   };
 
   const renderGeneralSettings = () => (
-    <Stack spacing={3}>
-      <TextField
+    <Stack gap="md">
+      <TextInput
         label="Site Name"
         value={settings.general.siteName}
         onChange={(e) => handleSettingChange('general', 'siteName', e.target.value)}
-        fullWidth
         disabled={readOnly}
       />
-      <TextField
+      <TextInput
         label="Site URL"
         value={settings.general.siteUrl}
         onChange={(e) => handleSettingChange('general', 'siteUrl', e.target.value)}
-        fullWidth
         disabled={readOnly}
       />
-      <FormControl fullWidth disabled={readOnly}>
-        <InputLabel>Timezone</InputLabel>
-        <Select
-          value={settings.general.timezone}
-          label="Timezone"
-          onChange={(e) => handleSettingChange('general', 'timezone', e.target.value)}
-        >
-          <MenuItem value="America/New_York">Eastern Time</MenuItem>
-          <MenuItem value="America/Chicago">Central Time</MenuItem>
-          <MenuItem value="America/Denver">Mountain Time</MenuItem>
-          <MenuItem value="America/Los_Angeles">Pacific Time</MenuItem>
-          <MenuItem value="UTC">UTC</MenuItem>
-        </Select>
-      </FormControl>
-      <FormControl fullWidth disabled={readOnly}>
-        <InputLabel>Language</InputLabel>
-        <Select
-          value={settings.general.language}
-          label="Language"
-          onChange={(e) => handleSettingChange('general', 'language', e.target.value)}
-        >
-          <MenuItem value="en">English</MenuItem>
-          <MenuItem value="es">Spanish</MenuItem>
-          <MenuItem value="fr">French</MenuItem>
-          <MenuItem value="de">German</MenuItem>
-          <MenuItem value="zh">Chinese</MenuItem>
-        </Select>
-      </FormControl>
+      <Select
+        label="Timezone"
+        value={settings.general.timezone}
+        onChange={(value) => handleSettingChange('general', 'timezone', value)}
+        disabled={readOnly}
+        data={[
+          { value: 'America/New_York', label: 'Eastern Time' },
+          { value: 'America/Chicago', label: 'Central Time' },
+          { value: 'America/Denver', label: 'Mountain Time' },
+          { value: 'America/Los_Angeles', label: 'Pacific Time' },
+          { value: 'UTC', label: 'UTC' },
+        ]}
+      />
+      <Select
+        label="Language"
+        value={settings.general.language}
+        onChange={(value) => handleSettingChange('general', 'language', value)}
+        disabled={readOnly}
+        data={[
+          { value: 'en', label: 'English' },
+          { value: 'es', label: 'Spanish' },
+          { value: 'fr', label: 'French' },
+          { value: 'de', label: 'German' },
+          { value: 'zh', label: 'Chinese' },
+        ]}
+      />
       <Divider />
-      <Alert severity="warning">
-        <AlertTitle>Maintenance Mode</AlertTitle>
-        <Stack spacing={2}>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={settings.general.maintenanceMode}
-                onChange={(e) => handleSettingChange('general', 'maintenanceMode', e.target.checked)}
-                disabled={readOnly}
-              />
-            }
-            label="Enable Maintenance Mode"
-          />
+      <Alert icon={<IconAlertTriangle size={16} />} title="Maintenance Mode" color="yellow">
+        <Stack gap="sm">
+          <Group>
+            <Switch
+              checked={settings.general.maintenanceMode}
+              onChange={(e) => handleSettingChange('general', 'maintenanceMode', e.currentTarget.checked)}
+              disabled={readOnly}
+              label="Enable Maintenance Mode"
+            />
+          </Group>
           {settings.general.maintenanceMode && (
-            <TextField
+            <Textarea
               label="Maintenance Message"
               value={settings.general.maintenanceMessage}
               onChange={(e) => handleSettingChange('general', 'maintenanceMessage', e.target.value)}
-              multiline
               rows={3}
-              fullWidth
               disabled={readOnly}
             />
           )}
@@ -426,153 +422,126 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
   );
 
   const renderSecuritySettings = () => (
-    <Stack spacing={3}>
-      <Typography variant="subtitle1" fontWeight="bold">
+    <Stack gap="md">
+      <Text size="sm" fw={600}>
         Password Requirements
-      </Typography>
-      <Stack spacing={2}>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <Typography sx={{ width: 200 }}>Minimum Length</Typography>
-          <Slider
-            value={settings.security.passwordMinLength}
-            onChange={(_, value) => handleSettingChange('security', 'passwordMinLength', value)}
-            min={6}
-            max={20}
-            marks
-            valueLabelDisplay="on"
-            disabled={readOnly}
-            sx={{ flex: 1 }}
-          />
-        </Stack>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={settings.security.passwordRequireUppercase}
-              onChange={(e) => handleSettingChange('security', 'passwordRequireUppercase', e.target.checked)}
+      </Text>
+      <Stack gap="sm">
+        <Group>
+          <Text size="sm" style={{ width: 200 }}>Minimum Length</Text>
+          <Box style={{ flex: 1 }}>
+            <Slider
+              value={settings.security.passwordMinLength}
+              onChange={(value) => handleSettingChange('security', 'passwordMinLength', value)}
+              min={6}
+              max={20}
+              marks
+              label={(value) => value}
               disabled={readOnly}
             />
-          }
+          </Box>
+        </Group>
+        <Switch
+          checked={settings.security.passwordRequireUppercase}
+          onChange={(e) => handleSettingChange('security', 'passwordRequireUppercase', e.currentTarget.checked)}
+          disabled={readOnly}
           label="Require uppercase letters"
         />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={settings.security.passwordRequireLowercase}
-              onChange={(e) => handleSettingChange('security', 'passwordRequireLowercase', e.target.checked)}
-              disabled={readOnly}
-            />
-          }
+        <Switch
+          checked={settings.security.passwordRequireLowercase}
+          onChange={(e) => handleSettingChange('security', 'passwordRequireLowercase', e.currentTarget.checked)}
+          disabled={readOnly}
           label="Require lowercase letters"
         />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={settings.security.passwordRequireNumbers}
-              onChange={(e) => handleSettingChange('security', 'passwordRequireNumbers', e.target.checked)}
-              disabled={readOnly}
-            />
-          }
+        <Switch
+          checked={settings.security.passwordRequireNumbers}
+          onChange={(e) => handleSettingChange('security', 'passwordRequireNumbers', e.currentTarget.checked)}
+          disabled={readOnly}
           label="Require numbers"
         />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={settings.security.passwordRequireSpecial}
-              onChange={(e) => handleSettingChange('security', 'passwordRequireSpecial', e.target.checked)}
-              disabled={readOnly}
-            />
-          }
+        <Switch
+          checked={settings.security.passwordRequireSpecial}
+          onChange={(e) => handleSettingChange('security', 'passwordRequireSpecial', e.currentTarget.checked)}
+          disabled={readOnly}
           label="Require special characters"
         />
       </Stack>
 
       <Divider />
 
-      <Typography variant="subtitle1" fontWeight="bold">
+      <Text size="sm" fw={600}>
         Session & Login
-      </Typography>
-      <Stack spacing={2}>
-        <TextField
+      </Text>
+      <Stack gap="sm">
+        <NumberInput
           label="Session Timeout (seconds)"
-          type="number"
           value={settings.security.sessionTimeout}
-          onChange={(e) => handleSettingChange('security', 'sessionTimeout', parseInt(e.target.value))}
-          fullWidth
+          onChange={(value) => handleSettingChange('security', 'sessionTimeout', value || 0)}
           disabled={readOnly}
         />
-        <TextField
+        <NumberInput
           label="Max Login Attempts"
-          type="number"
           value={settings.security.maxLoginAttempts}
-          onChange={(e) => handleSettingChange('security', 'maxLoginAttempts', parseInt(e.target.value))}
-          fullWidth
+          onChange={(value) => handleSettingChange('security', 'maxLoginAttempts', value || 0)}
           disabled={readOnly}
         />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={settings.security.twoFactorEnabled}
-              onChange={(e) => handleSettingChange('security', 'twoFactorEnabled', e.target.checked)}
-              disabled={readOnly}
-            />
-          }
+        <Switch
+          checked={settings.security.twoFactorEnabled}
+          onChange={(e) => handleSettingChange('security', 'twoFactorEnabled', e.currentTarget.checked)}
+          disabled={readOnly}
           label="Enable Two-Factor Authentication"
         />
       </Stack>
 
       <Divider />
 
-      <Typography variant="subtitle1" fontWeight="bold">
+      <Text size="sm" fw={600}>
         IP Access Control
-      </Typography>
-      <Stack spacing={2}>
+      </Text>
+      <Stack gap="sm">
         <Button
-          variant="outlined"
-          startIcon={<AddIcon />}
+          variant="outline"
+          leftSection={<IconPlus size={16} />}
           onClick={() => setIpDialogOpen(true)}
           disabled={readOnly}
         >
           Manage IP Whitelist/Blacklist
         </Button>
-        <Stack direction="row" spacing={2}>
-          <Chip
-            label={`${settings.security.ipWhitelist.length} Whitelisted IPs`}
-            variant="outlined"
-            color="success"
-          />
-          <Chip
-            label={`${settings.security.ipBlacklist.length} Blacklisted IPs`}
-            variant="outlined"
-            color="error"
-          />
-        </Stack>
+        <Group>
+          <Badge
+            variant="outline"
+            color="green"
+          >
+            {settings.security.ipWhitelist.length} Whitelisted IPs
+          </Badge>
+          <Badge
+            variant="outline"
+            color="red"
+          >
+            {settings.security.ipBlacklist.length} Blacklisted IPs
+          </Badge>
+        </Group>
       </Stack>
     </Stack>
   );
 
   const renderPerformanceSettings = () => (
-    <Stack spacing={3}>
-      <Typography variant="subtitle1" fontWeight="bold">
+    <Stack gap="md">
+      <Text size="sm" fw={600}>
         Caching
-      </Typography>
-      <Stack spacing={2}>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={settings.performance.cacheEnabled}
-              onChange={(e) => handleSettingChange('performance', 'cacheEnabled', e.target.checked)}
-              disabled={readOnly}
-            />
-          }
+      </Text>
+      <Stack gap="sm">
+        <Switch
+          checked={settings.performance.cacheEnabled}
+          onChange={(e) => handleSettingChange('performance', 'cacheEnabled', e.currentTarget.checked)}
+          disabled={readOnly}
           label="Enable Caching"
         />
         {settings.performance.cacheEnabled && (
-          <TextField
+          <NumberInput
             label="Cache Duration (seconds)"
-            type="number"
             value={settings.performance.cacheDuration}
-            onChange={(e) => handleSettingChange('performance', 'cacheDuration', parseInt(e.target.value))}
-            fullWidth
+            onChange={(value) => handleSettingChange('performance', 'cacheDuration', value || 0)}
             disabled={readOnly}
           />
         )}
@@ -580,46 +549,33 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
 
       <Divider />
 
-      <Typography variant="subtitle1" fontWeight="bold">
+      <Text size="sm" fw={600}>
         Optimization
-      </Typography>
-      <Stack spacing={2}>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={settings.performance.compressionEnabled}
-              onChange={(e) => handleSettingChange('performance', 'compressionEnabled', e.target.checked)}
-              disabled={readOnly}
-            />
-          }
+      </Text>
+      <Stack gap="sm">
+        <Switch
+          checked={settings.performance.compressionEnabled}
+          onChange={(e) => handleSettingChange('performance', 'compressionEnabled', e.currentTarget.checked)}
+          disabled={readOnly}
           label="Enable Compression"
         />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={settings.performance.lazyLoadingEnabled}
-              onChange={(e) => handleSettingChange('performance', 'lazyLoadingEnabled', e.target.checked)}
-              disabled={readOnly}
-            />
-          }
+        <Switch
+          checked={settings.performance.lazyLoadingEnabled}
+          onChange={(e) => handleSettingChange('performance', 'lazyLoadingEnabled', e.currentTarget.checked)}
+          disabled={readOnly}
           label="Enable Lazy Loading"
         />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={settings.performance.cdnEnabled}
-              onChange={(e) => handleSettingChange('performance', 'cdnEnabled', e.target.checked)}
-              disabled={readOnly}
-            />
-          }
+        <Switch
+          checked={settings.performance.cdnEnabled}
+          onChange={(e) => handleSettingChange('performance', 'cdnEnabled', e.currentTarget.checked)}
+          disabled={readOnly}
           label="Enable CDN"
         />
         {settings.performance.cdnEnabled && (
-          <TextField
+          <TextInput
             label="CDN URL"
             value={settings.performance.cdnUrl || ''}
             onChange={(e) => handleSettingChange('performance', 'cdnUrl', e.target.value)}
-            fullWidth
             disabled={readOnly}
           />
         )}
@@ -627,36 +583,28 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
 
       <Divider />
 
-      <Typography variant="subtitle1" fontWeight="bold">
+      <Text size="sm" fw={600}>
         Rate Limiting
-      </Typography>
-      <Stack spacing={2}>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={settings.performance.rateLimitEnabled}
-              onChange={(e) => handleSettingChange('performance', 'rateLimitEnabled', e.target.checked)}
-              disabled={readOnly}
-            />
-          }
+      </Text>
+      <Stack gap="sm">
+        <Switch
+          checked={settings.performance.rateLimitEnabled}
+          onChange={(e) => handleSettingChange('performance', 'rateLimitEnabled', e.currentTarget.checked)}
+          disabled={readOnly}
           label="Enable Rate Limiting"
         />
         {settings.performance.rateLimitEnabled && (
           <>
-            <TextField
+            <NumberInput
               label="Requests per Window"
-              type="number"
               value={settings.performance.rateLimitRequests}
-              onChange={(e) => handleSettingChange('performance', 'rateLimitRequests', parseInt(e.target.value))}
-              fullWidth
+              onChange={(value) => handleSettingChange('performance', 'rateLimitRequests', value || 0)}
               disabled={readOnly}
             />
-            <TextField
+            <NumberInput
               label="Window Duration (seconds)"
-              type="number"
               value={settings.performance.rateLimitWindow}
-              onChange={(e) => handleSettingChange('performance', 'rateLimitWindow', parseInt(e.target.value))}
-              fullWidth
+              onChange={(value) => handleSettingChange('performance', 'rateLimitWindow', value || 0)}
               disabled={readOnly}
             />
           </>
@@ -666,71 +614,61 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
   );
 
   const renderBackupSettings = () => (
-    <Stack spacing={3}>
-      <Alert severity="info">
-        <AlertTitle>Backup Status</AlertTitle>
-        <Stack spacing={1}>
-          <Typography variant="body2">
+    <Stack gap="md">
+      <Alert icon={<IconInfoCircle size={16} />} title="Backup Status" color="blue">
+        <Stack gap="xs">
+          <Text size="sm">
             Last backup: {settings.backup.lastBackup ? new Date(settings.backup.lastBackup).toLocaleString() : 'Never'}
-          </Typography>
-          <Typography variant="body2">
+          </Text>
+          <Text size="sm">
             Next scheduled: {settings.backup.nextBackup ? new Date(settings.backup.nextBackup).toLocaleString() : 'Not scheduled'}
-          </Typography>
+          </Text>
         </Stack>
       </Alert>
 
-      <FormControlLabel
-        control={
-          <Switch
-            checked={settings.backup.autoBackupEnabled}
-            onChange={(e) => handleSettingChange('backup', 'autoBackupEnabled', e.target.checked)}
-            disabled={readOnly}
-          />
-        }
+      <Switch
+        checked={settings.backup.autoBackupEnabled}
+        onChange={(e) => handleSettingChange('backup', 'autoBackupEnabled', e.currentTarget.checked)}
+        disabled={readOnly}
         label="Enable Automatic Backups"
       />
 
       {settings.backup.autoBackupEnabled && (
         <>
-          <FormControl fullWidth disabled={readOnly}>
-            <InputLabel>Backup Frequency</InputLabel>
-            <Select
-              value={settings.backup.backupFrequency}
-              label="Backup Frequency"
-              onChange={(e) => handleSettingChange('backup', 'backupFrequency', e.target.value)}
-            >
-              <MenuItem value="daily">Daily</MenuItem>
-              <MenuItem value="weekly">Weekly</MenuItem>
-              <MenuItem value="monthly">Monthly</MenuItem>
-            </Select>
-          </FormControl>
-
-          <TextField
-            label="Backup Time"
-            type="time"
-            value={settings.backup.backupTime}
-            onChange={(e) => handleSettingChange('backup', 'backupTime', e.target.value)}
-            fullWidth
+          <Select
+            label="Backup Frequency"
+            value={settings.backup.backupFrequency}
+            onChange={(value) => handleSettingChange('backup', 'backupFrequency', value)}
             disabled={readOnly}
-            InputLabelProps={{ shrink: true }}
+            data={[
+              { value: 'daily', label: 'Daily' },
+              { value: 'weekly', label: 'Weekly' },
+              { value: 'monthly', label: 'Monthly' },
+            ]}
           />
 
-          <TextField
+          <TimeInput
+            label="Backup Time"
+            value={settings.backup.backupTime}
+            onChange={(e) => handleSettingChange('backup', 'backupTime', e.target.value)}
+            disabled={readOnly}
+          />
+
+          <NumberInput
             label="Retention Period (days)"
-            type="number"
             value={settings.backup.backupRetention}
-            onChange={(e) => handleSettingChange('backup', 'backupRetention', parseInt(e.target.value))}
-            fullWidth
+            onChange={(value) => handleSettingChange('backup', 'backupRetention', value || 0)}
             disabled={readOnly}
           />
         </>
       )}
 
       <Button
-        variant="contained"
-        startIcon={<BackupIcon />}
+        variant="filled"
+        leftSection={<IconBackup size={16} />}
         onClick={handleRunBackup}
         disabled={readOnly || saving}
+        loading={saving}
       >
         Run Manual Backup Now
       </Button>
@@ -738,19 +676,20 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
   );
 
   return (
-    <Paper sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Paper style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
-      <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Typography variant="h6" fontWeight="bold">
+      <Box p="md" style={{ borderBottom: `1px solid ${theme.colors.gray[3]}` }}>
+        <Group justify="space-between" align="center">
+          <Text size="lg" fw={600}>
             System Settings
-          </Typography>
-          <Stack direction="row" spacing={1}>
+          </Text>
+          <Group gap="xs">
             {allowDangerousActions && (
               <Button
-                size="small"
-                color="error"
-                startIcon={<ResetIcon />}
+                size="sm"
+                color="red"
+                variant="outline"
+                leftSection={<IconRotateClockwise2 size={16} />}
                 onClick={handleResetSettings}
                 disabled={readOnly}
               >
@@ -758,119 +697,92 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
               </Button>
             )}
             <Button
-              variant="contained"
-              size="small"
-              startIcon={<SaveIcon />}
+              variant="filled"
+              size="sm"
+              leftSection={<IconDeviceFloppy size={16} />}
               onClick={handleSaveSettings}
               disabled={readOnly || saving}
+              loading={saving}
             >
               Save Changes
             </Button>
-          </Stack>
-        </Stack>
+          </Group>
+        </Group>
       </Box>
 
       {/* Loading */}
-      {loading && <LinearProgress />}
-
-      {/* Alerts */}
-      {error && (
-        <Alert severity="error" onClose={() => setError(null)} sx={{ m: 2 }}>
-          {error}
-        </Alert>
-      )}
-      {success && (
-        <Alert severity="success" onClose={() => setSuccess(null)} sx={{ m: 2 }}>
-          {success}
-        </Alert>
-      )}
+      {loading && <Progress size="xs" animated />}
 
       {/* Content */}
-      <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
-        {/* General Settings */}
-        <Accordion
-          expanded={expandedPanel === 'general'}
-          onChange={(_, isExpanded) => setExpandedPanel(isExpanded ? 'general' : false)}
-        >
-          <AccordionSummary expandIcon={<ExpandIcon />}>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <SettingsIcon />
-              <Typography>General Settings</Typography>
-            </Stack>
-          </AccordionSummary>
-          <AccordionDetails>{renderGeneralSettings()}</AccordionDetails>
-        </Accordion>
+      <Box style={{ flex: 1, overflow: 'auto' }} p="md">
+        <Accordion value={expandedPanel} onChange={setExpandedPanel}>
+          {/* General Settings */}
+          <Accordion.Item value="general">
+            <Accordion.Control icon={<IconSettings size={20} />}>
+              General Settings
+            </Accordion.Control>
+            <Accordion.Panel>{renderGeneralSettings()}</Accordion.Panel>
+          </Accordion.Item>
 
-        {/* Security Settings */}
-        <Accordion
-          expanded={expandedPanel === 'security'}
-          onChange={(_, isExpanded) => setExpandedPanel(isExpanded ? 'security' : false)}
-        >
-          <AccordionSummary expandIcon={<ExpandIcon />}>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <SecurityIcon />
-              <Typography>Security Settings</Typography>
-            </Stack>
-          </AccordionSummary>
-          <AccordionDetails>{renderSecuritySettings()}</AccordionDetails>
-        </Accordion>
+          {/* Security Settings */}
+          <Accordion.Item value="security">
+            <Accordion.Control icon={<IconShield size={20} />}>
+              Security Settings
+            </Accordion.Control>
+            <Accordion.Panel>{renderSecuritySettings()}</Accordion.Panel>
+          </Accordion.Item>
 
-        {/* Performance Settings */}
-        <Accordion
-          expanded={expandedPanel === 'performance'}
-          onChange={(_, isExpanded) => setExpandedPanel(isExpanded ? 'performance' : false)}
-        >
-          <AccordionSummary expandIcon={<ExpandIcon />}>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <PerformanceIcon />
-              <Typography>Performance Settings</Typography>
-            </Stack>
-          </AccordionSummary>
-          <AccordionDetails>{renderPerformanceSettings()}</AccordionDetails>
-        </Accordion>
+          {/* Performance Settings */}
+          <Accordion.Item value="performance">
+            <Accordion.Control icon={<IconGauge size={20} />}>
+              Performance Settings
+            </Accordion.Control>
+            <Accordion.Panel>{renderPerformanceSettings()}</Accordion.Panel>
+          </Accordion.Item>
 
-        {/* Backup Settings */}
-        <Accordion
-          expanded={expandedPanel === 'backup'}
-          onChange={(_, isExpanded) => setExpandedPanel(isExpanded ? 'backup' : false)}
-        >
-          <AccordionSummary expandIcon={<ExpandIcon />}>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <BackupIcon />
-              <Typography>Backup Settings</Typography>
-            </Stack>
-          </AccordionSummary>
-          <AccordionDetails>{renderBackupSettings()}</AccordionDetails>
+          {/* Backup Settings */}
+          <Accordion.Item value="backup">
+            <Accordion.Control icon={<IconBackup size={20} />}>
+              Backup Settings
+            </Accordion.Control>
+            <Accordion.Panel>{renderBackupSettings()}</Accordion.Panel>
+          </Accordion.Item>
         </Accordion>
       </Box>
 
-      {/* Confirmation Dialog */}
-      <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)}>
-        <DialogTitle>Confirm Action</DialogTitle>
-        <DialogContent>
-          <Typography>
+      {/* Confirmation Modal */}
+      <Modal
+        opened={confirmDialogOpen}
+        onClose={() => setConfirmDialogOpen(false)}
+        title="Confirm Action"
+        centered
+      >
+        <Stack gap="md">
+          <Text>
             {confirmAction === 'reset'
               ? 'Are you sure you want to reset all settings to defaults? This action cannot be undone.'
               : 'Are you sure you want to proceed with this action?'}
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmDialogOpen(false)}>Cancel</Button>
-          <Button
-            variant="contained"
-            color="error"
-            onClick={() => {
-              if (confirmAction === 'reset') {
-                // Reset settings to defaults
-                fetchSettings();
-              }
-              setConfirmDialogOpen(false);
-            }}
-          >
-            Confirm
-          </Button>
-        </DialogActions>
-      </Dialog>
+          </Text>
+          <Group justify="flex-end" gap="sm">
+            <Button variant="outline" onClick={() => setConfirmDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="filled"
+              color="red"
+              onClick={() => {
+                if (confirmAction === 'reset') {
+                  // Reset settings to defaults
+                  fetchSettings();
+                }
+                setConfirmDialogOpen(false);
+              }}
+            >
+              Confirm
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Paper>
   );
 });

@@ -35,6 +35,17 @@ export {
   type UsePresenceReturn
 } from './usePusherPresence';
 
+// Celery task progress tracking hooks
+export {
+  useCeleryTaskProgress,
+  useContentGenerationProgress,
+  useQuizGenerationProgress,
+  useRobloxOptimizationProgress,
+  useMultipleCeleryTasks,
+  type CeleryTaskProgress,
+  type UseCeleryTaskProgressOptions
+} from './useCeleryTaskProgress';
+
 // Re-export context hooks for convenience
 export {
   usePusherContext,

@@ -8,12 +8,12 @@
  */
 
 import React from 'react';
-import { render as rtlRender, RenderOptions, RenderResult } from '@testing-library/react';
+import { render as rtlRender, type RenderOptions, type RenderResult } from '@testing-library/react';
 import { Provider } from 'react-redux';
-import { MemoryRouter, MemoryRouterProps } from 'react-router-dom';
+import { MemoryRouter, type MemoryRouterProps } from 'react-router-dom';
 import { MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
-import { configureStore, PreloadedState } from '@reduxjs/toolkit';
+import { configureStore, type PreloadedState } from '@reduxjs/toolkit';
 
 // Import all Redux slices
 import userSlice from '@/store/slices/userSlice';
@@ -31,28 +31,34 @@ import realtimeSlice from '@/store/slices/realtimeSlice';
 import robloxSlice from '@/store/slices/robloxSlice';
 
 // Import Mantine theme
-import { theme } from '@/theme/mantine-theme';
+import { mantineTheme as theme } from '@/theme/mantine-theme';
+
+// Root reducer for type inference
+const rootReducer = {
+  user: userSlice,
+  ui: uiSlice,
+  dashboard: dashboardSlice,
+  assessments: assessmentsSlice,
+  compliance: complianceSlice,
+  messages: messagesSlice,
+  progress: progressSlice,
+  gamification: gamificationSlice,
+  analytics: analyticsSlice,
+  classes: classesSlice,
+  lessons: lessonsSlice,
+  realtime: realtimeSlice,
+  roblox: robloxSlice,
+};
+
+// Infer types first
+export type RootState = ReturnType<ReturnType<typeof configureStore<typeof rootReducer>>['getState']>;
 
 /**
  * Create a test Redux store with all slices
  */
 export function createTestStore(preloadedState?: PreloadedState<RootState>) {
   return configureStore({
-    reducer: {
-      user: userSlice,
-      ui: uiSlice,
-      dashboard: dashboardSlice,
-      assessments: assessmentsSlice,
-      compliance: complianceSlice,
-      messages: messagesSlice,
-      progress: progressSlice,
-      gamification: gamificationSlice,
-      analytics: analyticsSlice,
-      classes: classesSlice,
-      lessons: lessonsSlice,
-      realtime: realtimeSlice,
-      roblox: robloxSlice,
-    },
+    reducer: rootReducer,
     preloadedState,
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({
@@ -64,7 +70,6 @@ export function createTestStore(preloadedState?: PreloadedState<RootState>) {
 
 // Export store type for TypeScript
 export type AppStore = ReturnType<typeof createTestStore>;
-export type RootState = ReturnType<AppStore['getState']>;
 export type AppDispatch = AppStore['dispatch'];
 
 /**

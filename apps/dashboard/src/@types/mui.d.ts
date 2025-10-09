@@ -1,15 +1,19 @@
-// MUI Type Shims
-declare module '@/utils/mui-imports' {
-  export * from '@mantine/core';
+// Mantine Type Extensions
+declare module '@mantine/core' {
+  // Ensure all Mantine exports are available
   export * from '@mantine/core';
 }
 
-declare module '@mantine/core' {
-  export * from '@mantine/core';
-}
-
-declare module '@mantine/core' {
-  export const createStyles: any;
-  export const MantineProvider: any;
-  export const useMantineTheme: any;
+// Legacy type compatibility for migration
+declare module '@mantine/theme' {
+  interface MantineTheme {
+    // Extended theme properties for custom styling
+    shadows: {
+      xs: string;
+      sm: string;
+      md: string;
+      lg: string;
+      xl: string;
+    };
+  }
 }

@@ -7,7 +7,7 @@ export interface SliderProps {
   max?: number;
 }
 
-const AtomicSlider = (({ ...props, ref }: HTMLInputElement, SliderProps & { ref?: React.Ref<any> }) => (
+const AtomicSlider = React.forwardRef<HTMLInputElement, SliderProps>((props, ref) => (
   <input ref={ref} type="range" {...props} />
 ));
 

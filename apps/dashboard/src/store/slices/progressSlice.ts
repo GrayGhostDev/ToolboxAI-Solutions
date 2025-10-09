@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import * as api from '../../services/api';
 import type { StudentProgress, SubjectProgress, ProgressPoint } from '../../types/api';
 

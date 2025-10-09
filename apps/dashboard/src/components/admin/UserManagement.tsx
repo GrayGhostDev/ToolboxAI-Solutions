@@ -1,70 +1,55 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import * as React from "react";
-import { useState, useEffect } from "react";
+import * as React from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
-  CardContent,
-  Typography,
+  Text,
   Box,
   Stack,
   Avatar,
-  Chip,
-  IconButton,
+  Badge,
+  ActionIcon,
   Skeleton,
   Alert,
   Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Paper,
   Grid,
   Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  TextField,
+  TextInput,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Modal,
   Tabs,
-  Tab,
-  Badge,
   Tooltip,
   Menu,
   Switch,
-  FormControlLabel,
-} from "@mui/material";
-import {
-  Person,
-  Add,
-  Edit,
-  Delete,
-  MoreVert,
-  Search,
-  FilterList,
-  Download,
-  Upload,
-  Refresh,
-  School,
-  AdminPanelSettings,
-  PersonAdd,
-  Block,
-  CheckCircle,
-  Warning,
   Group,
-  Security,
-} from "@mui/icons-material";
-import { useTheme } from "@mui/material/styles";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { useWebSocketContext } from "../../contexts/WebSocketContext";
-import { useAppDispatch } from "../../store";
-import { addNotification } from "../../store/slices/uiSlice";
+  SimpleGrid,
+} from '@mantine/core';
+import {
+  IconUser,
+  IconPlus,
+  IconEdit,
+  IconTrash,
+  IconDotsVertical,
+  IconSearch,
+  IconFilter,
+  IconDownload,
+  IconUpload,
+  IconRefresh,
+  IconSchool,
+  IconShield,
+  IconUserPlus,
+  IconBan,
+  IconCheck,
+  IconAlertTriangle,
+  IconUsers,
+  IconSecurity,
+} from '@tabler/icons-react';
+import { useMantineTheme } from '@mantine/core';
+import { DatePickerInput } from '@mantine/dates';
+import { useWebSocketContext } from '../../contexts/WebSocketContext';
+import { useAppDispatch } from '../../store';
+import { addNotification } from '../../store/slices/uiSlice';
 import { 
   listUsers, 
   createUser, 
@@ -72,15 +57,15 @@ import {
   deleteUser, 
   suspendUser, 
   listSchools
-} from "../../services/api";
-import type { User, UserCreate, UserUpdate } from "@/types/api";
+} from '../../services/api';
+import type { User, UserCreate, UserUpdate } from '@/types/api';
 
 interface UserWithStats extends User {
   lastLogin?: string;
   loginCount?: number;
   createdLessons?: number;
   studentsManaged?: number;
-  status: "active" | "inactive" | "suspended" | "pending";
+  status: 'active' | 'inactive' | 'suspended' | 'pending';
 }
 
 interface UserFilters {
@@ -97,11 +82,11 @@ interface UserManagementProps {
   showBulkActions?: boolean;
 }
 
-export function UserManagement({ 
+export function UserManagement({
   initialRole,
-  showBulkActions = true 
+  showBulkActions = true
 }: UserManagementProps) {
-  const theme = useTheme();
+  const theme = useMantineTheme();
   const dispatch = useAppDispatch();
   const { isConnected, subscribe, unsubscribe } = useWebSocketContext();
   
@@ -121,13 +106,13 @@ export function UserManagement({
 
   // Form states
   const [formData, setFormData] = useState<UserCreate | UserUpdate>({
-    email: "",
-    username: "",
-    firstName: "",
-    lastName: "",
-    displayName: "",
-    role: "student",
-    schoolId: "",
+    email: '',
+    username: '',
+    firstName: '',
+    lastName: '',
+    displayName: '',
+    role: 'student',
+    schoolId: '',
   });
 
   // Fetch users and schools data
@@ -140,7 +125,7 @@ export function UserManagement({
         listUsers({
           role: filters.role,
           school_id: filters.schoolId,
-          is_active: filters.status === "active" ? true : filters.status === "inactive" ? false : undefined,
+          is_active: filters.status === 'active' ? true : filters.status === 'inactive' ? false : undefined,
           search: filters.search,
           limit: 100,
         }),
@@ -152,10 +137,10 @@ export function UserManagement({
         ...user,
         lastLogin: user.last_login || user.lastLogin,
         loginCount: user.login_count || Math.floor(Math.random() * 100) + 10,
-        createdLessons: user.created_lessons || (user.role === "teacher" ? Math.floor(Math.random() * 20) + 5 : 0),
-        studentsManaged: user.students_managed || (user.role === "teacher" ? Math.floor(Math.random() * 30) + 10 : 0),
-        status: user.is_active === false ? "suspended" : 
-                user.is_verified === false ? "pending" : "active",
+        createdLessons: user.created_lessons || (user.role === 'teacher' ? Math.floor(Math.random() * 20) + 5 : 0),
+        studentsManaged: user.students_managed || (user.role === 'teacher' ? Math.floor(Math.random() * 30) + 10 : 0),
+        status: user.is_active === false ? 'suspended' : 
+                user.is_verified === false ? 'pending' : 'active',
       }));
 
       setUsers(transformedUsers);
@@ -170,11 +155,11 @@ export function UserManagement({
         id: `user_${index + 1}`,
         email: `user${index + 1}@school.edu`,
         username: `user${index + 1}`,
-        firstName: `User`,
+        firstName: 'User',
         lastName: `${index + 1}`,
         displayName: `User ${index + 1}`,
         avatarUrl: undefined,
-        role: ["student", "teacher", "admin", "parent"][Math.floor(Math.random() * 4)] as any,
+        role: ['student', 'teacher', 'admin', 'parent'][Math.floor(Math.random() * 4)] as any,
         schoolId: `school_${Math.floor(Math.random() * 5) + 1}`,
         schoolName: `School ${Math.floor(Math.random() * 5) + 1}`,
         classIds: [],
@@ -187,7 +172,7 @@ export function UserManagement({
         lastLogin: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
         createdAt: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
         updatedAt: new Date().toISOString(),
-        status: Math.random() > 0.9 ? "suspended" : Math.random() > 0.8 ? "pending" : "active",
+        status: Math.random() > 0.9 ? 'suspended' : Math.random() > 0.8 ? 'pending' : 'active',
         loginCount: Math.floor(Math.random() * 100) + 10,
         createdLessons: Math.floor(Math.random() * 20),
         studentsManaged: Math.floor(Math.random() * 30),
@@ -242,16 +227,16 @@ export function UserManagement({
     // Tab filtering
     switch (currentTab) {
       case 1:
-        filtered = filtered.filter(user => user.role === "teacher");
+        filtered = filtered.filter(user => user.role === 'teacher');
         break;
       case 2:
-        filtered = filtered.filter(user => user.role === "admin");
+        filtered = filtered.filter(user => user.role === 'admin');
         break;
       case 3:
-        filtered = filtered.filter(user => user.role === "parent");
+        filtered = filtered.filter(user => user.role === 'parent');
         break;
       case 4:
-        filtered = filtered.filter(user => user.status === "pending");
+        filtered = filtered.filter(user => user.status === 'pending');
         break;
       default:
         // All users
@@ -292,13 +277,13 @@ export function UserManagement({
       setUsers(prevUsers => [newUser as UserWithStats, ...prevUsers]);
       setIsCreateDialogOpen(false);
       setFormData({
-        email: "",
-        username: "",
-        firstName: "",
-        lastName: "",
-        displayName: "",
-        role: "student",
-        schoolId: "",
+        email: '',
+        username: '',
+        firstName: '',
+        lastName: '',
+        displayName: '',
+        role: 'student',
+        schoolId: '',
       });
       
       dispatch(addNotification({
@@ -356,7 +341,7 @@ export function UserManagement({
       await suspendUser(userId);
       setUsers(prevUsers =>
         prevUsers.map(user =>
-          user.id === userId ? { ...user, status: "suspended", isActive: false } : user
+          user.id === userId ? { ...user, status: 'suspended', isActive: false } : user
         )
       );
       
@@ -371,447 +356,407 @@ export function UserManagement({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "active":
-        return "success";
-      case "inactive":
-        return "default";
-      case "suspended":
-        return "error";
-      case "pending":
-        return "warning";
+      case 'active':
+        return 'green';
+      case 'inactive':
+        return 'gray';
+      case 'suspended':
+        return 'red';
+      case 'pending':
+        return 'orange';
       default:
-        return "default";
+        return 'gray';
     }
   };
 
   const getRoleIcon = (role: string) => {
+    const iconProps = { size: 16 };
     switch (role) {
-      case "admin":
-        return <AdminPanelSettings />;
-      case "teacher":
-        return <School />;
-      case "parent":
-        return <Group />;
+      case 'admin':
+        return <IconShield {...iconProps} />;
+      case 'teacher':
+        return <IconSchool {...iconProps} />;
+      case 'parent':
+        return <IconUsers {...iconProps} />;
       default:
-        return <Person />;
+        return <IconUser {...iconProps} />;
     }
   };
 
   if (loading) {
     return (
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Skeleton variant="text" height={40} />
-              <Skeleton variant="rectangular" height={400} />
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      <SimpleGrid cols={1} spacing="lg">
+        <Card>
+          <Skeleton height={40} mb="md" />
+          <Skeleton height={400} />
+        </Card>
+      </SimpleGrid>
     );
   }
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Grid container spacing={3}>
+    <>
+      <SimpleGrid cols={1} spacing="lg">
         {/* Header */}
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                  User Management
-                </Typography>
-                <Stack direction="row" spacing={2}>
-                  {showBulkActions && (
-                    <>
-                      <Button variant="outlined" startIcon={<Upload />}>
-                        Import
-                      </Button>
-                      <Button variant="outlined" startIcon={<Download />}>
-                        Export
-                      </Button>
-                    </>
-                  )}
-                  <Button
-                    variant="contained"
-                    startIcon={<PersonAdd />}
-                    onClick={() => setIsCreateDialogOpen(true)}
-                  >
-                    Add User
+        <Card>
+          <Stack justify="space-between" align="center" direction="row" mb="md">
+            <Text size="xl" fw={600}>
+              User Management
+            </Text>
+            <Group gap="sm">
+              {showBulkActions && (
+                <>
+                  <Button variant="outline" leftSection={<IconUpload size={16} />}>
+                    Import
                   </Button>
-                </Stack>
-              </Stack>
-
-              {error && (
-                <Alert severity="warning" sx={{ mb: 2 }}>
-                  Using fallback data: {error}
-                </Alert>
+                  <Button variant="outline" leftSection={<IconDownload size={16} />}>
+                    Export
+                  </Button>
+                </>
               )}
+              <Button
+                variant="filled"
+                leftSection={<IconUserPlus size={16} />}
+                onClick={() => setIsCreateDialogOpen(true)}
+              >
+                Add User
+              </Button>
+            </Group>
+          </Stack>
 
-              {/* Filters */}
-              <Stack direction="row" spacing={2} flexWrap="wrap" mb={2}>
-                <TextField
-                  placeholder="Search users..."
-                  size="small"
-                  InputProps={{
-                    startAdornment: <Search sx={{ mr: 1, color: 'text.secondary' }} />,
-                  }}
-                  value={filters.search || ""}
-                  onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                  sx={{ minWidth: 200 }}
-                />
-                <FormControl size="small" sx={{ minWidth: 120 }}>
-                  <InputLabel>Role</InputLabel>
-                  <Select
-                    value={filters.role || ""}
-                    label="Role"
-                    onChange={(e) => setFilters({ ...filters, role: e.target.value || undefined })}
-                  >
-                    <MenuItem value="">All Roles</MenuItem>
-                    <MenuItem value="student">Student</MenuItem>
-                    <MenuItem value="teacher">Teacher</MenuItem>
-                    <MenuItem value="admin">Admin</MenuItem>
-                    <MenuItem value="parent">Parent</MenuItem>
-                  </Select>
-                </FormControl>
-                <FormControl size="small" sx={{ minWidth: 120 }}>
-                  <InputLabel>Status</InputLabel>
-                  <Select
-                    value={filters.status || ""}
-                    label="Status"
-                    onChange={(e) => setFilters({ ...filters, status: e.target.value || undefined })}
-                  >
-                    <MenuItem value="">All Status</MenuItem>
-                    <MenuItem value="active">Active</MenuItem>
-                    <MenuItem value="inactive">Inactive</MenuItem>
-                    <MenuItem value="suspended">Suspended</MenuItem>
-                    <MenuItem value="pending">Pending</MenuItem>
-                  </Select>
-                </FormControl>
-                <FormControl size="small" sx={{ minWidth: 150 }}>
-                  <InputLabel>School</InputLabel>
-                  <Select
-                    value={filters.schoolId || ""}
-                    label="School"
-                    onChange={(e) => setFilters({ ...filters, schoolId: e.target.value || undefined })}
-                  >
-                    <MenuItem value="">All Schools</MenuItem>
-                    {schools.map((school) => (
-                      <MenuItem key={school.id} value={school.id}>
-                        {school.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <IconButton onClick={fetchData}>
-                  <Refresh />
-                </IconButton>
-              </Stack>
+          {error && (
+            <Alert color="orange" mb="md">
+              Using fallback data: {error}
+            </Alert>
+          )}
 
-              {/* Tabs */}
-              <Tabs value={currentTab} onChange={(_, newValue) => setCurrentTab(newValue)}>
-                <Tab label={`All Users (${users.length})`} />
-                <Tab label={`Teachers (${users.filter(u => u.role === "teacher").length})`} />
-                <Tab label={`Admins (${users.filter(u => u.role === "admin").length})`} />
-                <Tab label={`Parents (${users.filter(u => u.role === "parent").length})`} />
-                <Tab label={`Pending (${users.filter(u => u.status === "pending").length})`} />
-              </Tabs>
-            </CardContent>
-          </Card>
-        </Grid>
+          {/* Filters */}
+          <Group gap="sm" wrap="wrap" mb="md">
+            <TextInput
+              placeholder="Search users..."
+              leftSection={<IconSearch size={16} />}
+              value={filters.search || ''}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              style={{ minWidth: 200 }}
+            />
+            <Select
+              placeholder="All Roles"
+              data={[
+                { value: '', label: 'All Roles' },
+                { value: 'student', label: 'Student' },
+                { value: 'teacher', label: 'Teacher' },
+                { value: 'admin', label: 'Admin' },
+                { value: 'parent', label: 'Parent' },
+              ]}
+              value={filters.role || ''}
+              onChange={(value) => setFilters({ ...filters, role: value || undefined })}
+              style={{ minWidth: 120 }}
+              clearable
+            />
+            <Select
+              placeholder="All Status"
+              data={[
+                { value: '', label: 'All Status' },
+                { value: 'active', label: 'Active' },
+                { value: 'inactive', label: 'Inactive' },
+                { value: 'suspended', label: 'Suspended' },
+                { value: 'pending', label: 'Pending' },
+              ]}
+              value={filters.status || ''}
+              onChange={(value) => setFilters({ ...filters, status: value || undefined })}
+              style={{ minWidth: 120 }}
+              clearable
+            />
+            <Select
+              placeholder="All Schools"
+              data={[
+                { value: '', label: 'All Schools' },
+                ...schools.map((school) => ({
+                  value: school.id,
+                  label: school.name,
+                })),
+              ]}
+              value={filters.schoolId || ''}
+              onChange={(value) => setFilters({ ...filters, schoolId: value || undefined })}
+              style={{ minWidth: 150 }}
+              clearable
+            />
+            <ActionIcon onClick={fetchData} variant="light">
+              <IconRefresh size={16} />
+            </ActionIcon>
+          </Group>
+
+          {/* Tabs */}
+          <Tabs value={currentTab.toString()} onChange={(value) => setCurrentTab(parseInt(value || '0'))}>
+            <Tabs.List>
+              <Tabs.Tab value="0">{`All Users (${users.length})`}</Tabs.Tab>
+              <Tabs.Tab value="1">{`Teachers (${users.filter(u => u.role === 'teacher').length})`}</Tabs.Tab>
+              <Tabs.Tab value="2">{`Admins (${users.filter(u => u.role === 'admin').length})`}</Tabs.Tab>
+              <Tabs.Tab value="3">{`Parents (${users.filter(u => u.role === 'parent').length})`}</Tabs.Tab>
+              <Tabs.Tab value="4">{`Pending (${users.filter(u => u.status === 'pending').length})`}</Tabs.Tab>
+            </Tabs.List>
+          </Tabs>
+        </Card>
 
         {/* Users Table */}
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>User</TableCell>
-                      <TableCell>Role</TableCell>
-                      <TableCell>School</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell>Last Login</TableCell>
-                      <TableCell>Created</TableCell>
-                      <TableCell>Stats</TableCell>
-                      <TableCell>Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {filteredUsers.slice(0, 50).map((user) => (
-                      <TableRow key={user.id} hover>
-                        <TableCell>
-                          <Stack direction="row" alignItems="center" spacing={2}>
-                            <Avatar src={user.avatarUrl} sx={{ width: 32, height: 32 }}>
-                              {user.firstName.charAt(0)}
-                            </Avatar>
-                            <Box>
-                              <Typography variant="body2" fontWeight={500}>
-                                {user.displayName}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {user.email}
-                              </Typography>
-                            </Box>
-                          </Stack>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            icon={getRoleIcon(user.role)}
-                            label={user.role}
-                            size="small"
-                            color={user.role === "admin" ? "error" : user.role === "teacher" ? "primary" : "default"}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2">
-                            {user.schoolName || "No School"}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={user.status}
-                            size="small"
-                            color={getStatusColor(user.status) as any}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="caption" color="text.secondary">
-                            {user.lastLogin 
-                              ? new Date(user.lastLogin).toLocaleDateString()
-                              : "Never"
-                            }
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="caption" color="text.secondary">
-                            {new Date(user.createdAt).toLocaleDateString()}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Stack spacing={0.5}>
-                            {user.role === "teacher" && (
-                              <>
-                                <Typography variant="caption">
-                                  {user.createdLessons} lessons
-                                </Typography>
-                                <Typography variant="caption">
-                                  {user.studentsManaged} students
-                                </Typography>
-                              </>
-                            )}
-                            {user.role === "student" && (
-                              <>
-                                <Typography variant="caption">
-                                  Level {user.level}
-                                </Typography>
-                                <Typography variant="caption">
-                                  {user.totalXP?.toLocaleString()} XP
-                                </Typography>
-                              </>
-                            )}
-                            <Typography variant="caption">
-                              {user.loginCount} logins
-                            </Typography>
-                          </Stack>
-                        </TableCell>
-                        <TableCell>
-                          <Stack direction="row" spacing={1}>
-                            <Tooltip title="Edit User">
-                              <IconButton
-                                size="small"
-                                onClick={() => {
-                                  setSelectedUser(user);
-                                  setFormData({
-                                    email: user.email,
-                                    username: user.username,
-                                    firstName: user.firstName,
-                                    lastName: user.lastName,
-                                    displayName: user.displayName,
-                                    role: user.role,
-                                    schoolId: user.schoolId,
-                                    isActive: user.isActive,
-                                  });
-                                  setIsEditDialogOpen(true);
-                                }}
-                              >
-                                <Edit />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title={user.status === "suspended" ? "Unsuspend User" : "Suspend User"}>
-                              <IconButton
-                                size="small"
-                                onClick={() => handleSuspendUser(user.id)}
-                                color={user.status === "suspended" ? "success" : "warning"}
-                              >
-                                {user.status === "suspended" ? <CheckCircle /> : <Block />}
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Delete User">
-                              <IconButton
-                                size="small"
-                                onClick={() => handleDeleteUser(user.id)}
-                                color="error"
-                              >
-                                <Delete />
-                              </IconButton>
-                            </Tooltip>
-                          </Stack>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+        <Card>
+          <Table>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>User</Table.Th>
+                <Table.Th>Role</Table.Th>
+                <Table.Th>School</Table.Th>
+                <Table.Th>Status</Table.Th>
+                <Table.Th>Last Login</Table.Th>
+                <Table.Th>Created</Table.Th>
+                <Table.Th>Stats</Table.Th>
+                <Table.Th>Actions</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {filteredUsers.slice(0, 50).map((user) => (
+                <Table.Tr key={user.id}>
+                  <Table.Td>
+                    <Group gap="sm">
+                      <Avatar src={user.avatarUrl} size="sm">
+                        {user.firstName.charAt(0)}
+                      </Avatar>
+                      <Box>
+                        <Text size="sm" fw={500}>
+                          {user.displayName}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          {user.email}
+                        </Text>
+                      </Box>
+                    </Group>
+                  </Table.Td>
+                  <Table.Td>
+                    <Badge
+                      variant="light"
+                      color={user.role === 'admin' ? 'red' : user.role === 'teacher' ? 'blue' : 'gray'}
+                      leftSection={getRoleIcon(user.role)}
+                    >
+                      {user.role}
+                    </Badge>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="sm">
+                      {user.schoolName || 'No School'}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Badge
+                      variant="light"
+                      color={getStatusColor(user.status)}
+                    >
+                      {user.status}
+                    </Badge>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="xs" c="dimmed">
+                      {user.lastLogin
+                        ? new Date(user.lastLogin).toLocaleDateString()
+                        : 'Never'
+                      }
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="xs" c="dimmed">
+                      {new Date(user.createdAt).toLocaleDateString()}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Stack gap={2}>
+                      {user.role === 'teacher' && (
+                        <>
+                          <Text size="xs">
+                            {user.createdLessons} lessons
+                          </Text>
+                          <Text size="xs">
+                            {user.studentsManaged} students
+                          </Text>
+                        </>
+                      )}
+                      {user.role === 'student' && (
+                        <>
+                          <Text size="xs">
+                            Level {user.level}
+                          </Text>
+                          <Text size="xs">
+                            {user.totalXP?.toLocaleString()} XP
+                          </Text>
+                        </>
+                      )}
+                      <Text size="xs">
+                        {user.loginCount} logins
+                      </Text>
+                    </Stack>
+                  </Table.Td>
+                  <Table.Td>
+                    <Group gap="xs">
+                      <Tooltip label="Edit User">
+                        <ActionIcon
+                          size="sm"
+                          variant="light"
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setFormData({
+                              email: user.email,
+                              username: user.username,
+                              firstName: user.firstName,
+                              lastName: user.lastName,
+                              displayName: user.displayName,
+                              role: user.role,
+                              schoolId: user.schoolId,
+                              isActive: user.isActive,
+                            });
+                            setIsEditDialogOpen(true);
+                          }}
+                        >
+                          <IconEdit size={16} />
+                        </ActionIcon>
+                      </Tooltip>
+                      <Tooltip label={user.status === 'suspended' ? 'Unsuspend User' : 'Suspend User'}>
+                        <ActionIcon
+                          size="sm"
+                          variant="light"
+                          color={user.status === 'suspended' ? 'green' : 'orange'}
+                          onClick={() => handleSuspendUser(user.id)}
+                        >
+                          {user.status === 'suspended' ? <IconCheck size={16} /> : <IconBan size={16} />}
+                        </ActionIcon>
+                      </Tooltip>
+                      <Tooltip label="Delete User">
+                        <ActionIcon
+                          size="sm"
+                          variant="light"
+                          color="red"
+                          onClick={() => handleDeleteUser(user.id)}
+                        >
+                          <IconTrash size={16} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </Card>
+      </SimpleGrid>
 
       {/* Create User Dialog */}
-      <Dialog open={isCreateDialogOpen} onClose={() => setIsCreateDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Create New User</DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="First Name"
-                value={formData.firstName}
-                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Last Name"
-                value={formData.lastName}
-                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Username"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <FormControl fullWidth>
-                <InputLabel>Role</InputLabel>
-                <Select
-                  value={formData.role}
-                  label="Role"
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
-                >
-                  <MenuItem value="student">Student</MenuItem>
-                  <MenuItem value="teacher">Teacher</MenuItem>
-                  <MenuItem value="admin">Admin</MenuItem>
-                  <MenuItem value="parent">Parent</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={6}>
-              <FormControl fullWidth>
-                <InputLabel>School</InputLabel>
-                <Select
-                  value={formData.schoolId}
-                  label="School"
-                  onChange={(e) => setFormData({ ...formData, schoolId: e.target.value })}
-                >
-                  {schools.map((school) => (
-                    <MenuItem key={school.id} value={school.id}>
-                      {school.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleCreateUser} variant="contained">Create User</Button>
-        </DialogActions>
-      </Dialog>
+      <Modal
+        opened={isCreateDialogOpen}
+        onClose={() => setIsCreateDialogOpen(false)}
+        title="Create New User"
+        size="lg"
+      >
+        <Stack gap="md">
+          <SimpleGrid cols={2} spacing="md">
+            <TextInput
+              label="First Name"
+              value={formData.firstName}
+              onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+            />
+            <TextInput
+              label="Last Name"
+              value={formData.lastName}
+              onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+            />
+            <TextInput
+              label="Email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            />
+            <TextInput
+              label="Username"
+              value={formData.username}
+              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+            />
+            <Select
+              label="Role"
+              data={[
+                { value: 'student', label: 'Student' },
+                { value: 'teacher', label: 'Teacher' },
+                { value: 'admin', label: 'Admin' },
+                { value: 'parent', label: 'Parent' },
+              ]}
+              value={formData.role}
+              onChange={(value) => setFormData({ ...formData, role: value as any })}
+            />
+            <Select
+              label="School"
+              data={schools.map((school) => ({
+                value: school.id,
+                label: school.name,
+              }))}
+              value={formData.schoolId}
+              onChange={(value) => setFormData({ ...formData, schoolId: value || '' })}
+            />
+          </SimpleGrid>
+          <Group justify="flex-end" gap="sm">
+            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateUser}>Create User</Button>
+          </Group>
+        </Stack>
+      </Modal>
 
       {/* Edit User Dialog */}
-      <Dialog open={isEditDialogOpen} onClose={() => setIsEditDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Edit User</DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="First Name"
-                value={formData.firstName}
-                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Last Name"
-                value={formData.lastName}
-                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <FormControl fullWidth>
-                <InputLabel>Role</InputLabel>
-                <Select
-                  value={formData.role}
-                  label="Role"
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
-                >
-                  <MenuItem value="student">Student</MenuItem>
-                  <MenuItem value="teacher">Teacher</MenuItem>
-                  <MenuItem value="admin">Admin</MenuItem>
-                  <MenuItem value="parent">Parent</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={(formData as any).isActive ?? true}
-                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked } as any)}
-                  />
-                }
-                label="Active Account"
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleUpdateUser} variant="contained">Update User</Button>
-        </DialogActions>
-      </Dialog>
-    </LocalizationProvider>
+      <Modal
+        opened={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        title="Edit User"
+        size="lg"
+      >
+        <Stack gap="md">
+          <SimpleGrid cols={2} spacing="md">
+            <TextInput
+              label="First Name"
+              value={formData.firstName}
+              onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+            />
+            <TextInput
+              label="Last Name"
+              value={formData.lastName}
+              onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+            />
+            <TextInput
+              label="Email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            />
+            <Select
+              label="Role"
+              data={[
+                { value: 'student', label: 'Student' },
+                { value: 'teacher', label: 'Teacher' },
+                { value: 'admin', label: 'Admin' },
+                { value: 'parent', label: 'Parent' },
+              ]}
+              value={formData.role}
+              onChange={(value) => setFormData({ ...formData, role: value as any })}
+            />
+          </SimpleGrid>
+          <Switch
+            label="Active Account"
+            checked={(formData as any).isActive ?? true}
+            onChange={(e) => setFormData({ ...formData, isActive: e.currentTarget.checked } as any)}
+          />
+          <Group justify="flex-end" gap="sm">
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateUser}>Update User</Button>
+          </Group>
+        </Stack>
+      </Modal>
+    </>
   );
 }
 

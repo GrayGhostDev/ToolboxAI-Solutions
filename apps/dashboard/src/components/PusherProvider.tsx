@@ -6,10 +6,10 @@
  * @since 2025-09-26
  */
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { pusherClient } from '../services/pusher-client';
 import { useSelector } from 'react-redux';
-import { RootState } from '../store';
+import { type RootState } from '../store';
 import { Alert, Progress, Box, Text, Group } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { config } from '../config';
@@ -48,7 +48,10 @@ export const PusherProvider: React.FC<PusherProviderProps> = ({
   showConnectionStatus = true,
   autoReconnect = true,
 }) => {
-  const { user, token } = useSelector((state: RootState) => state.auth);
+  // Fix: Changed from state.auth to state.user as auth slice doesn't exist
+  // Defensive: Safe fallback for Redux state access
+  const user = useSelector((state: RootState) => state?.user || null);
+  const token = user?.token || null;
   const [contextValue, setContextValue] = useState<PusherContextValue>({
     isConnected: false,
     connectionState: 'uninitialized',
@@ -61,7 +64,9 @@ export const PusherProvider: React.FC<PusherProviderProps> = ({
 
   // Initialize Pusher when user is authenticated
   useEffect(() => {
-    if (user?.id && token && config.pusher.enabled) {
+    // Defensive: Check for valid user data and configuration
+    if (user?.id && token && typeof user.id === 'string' && typeof token === 'string' &&
+        config?.pusher?.enabled) {
       try {
         console.log('Initializing Pusher for user:', user.id);
         pusherClient.initialize(user.id, token);
@@ -73,34 +78,47 @@ export const PusherProvider: React.FC<PusherProviderProps> = ({
         }));
       } catch (error) {
         console.error('Failed to initialize Pusher:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
         setContextValue(prev => ({
           ...prev,
           isInitialized: false,
-          error: (error as Error).message,
+          error: errorMessage,
         }));
         setShowError(true);
       }
-    } else if (!config.pusher.enabled) {
+    } else if (config?.pusher?.enabled === false) {
       console.log('Pusher is disabled in configuration');
       setContextValue(prev => ({
         ...prev,
         connectionState: 'disabled',
         error: 'Real-time updates are disabled',
       }));
+    } else if (!user?.id || !token) {
+      // Defensive: Reset state when user data is invalid
+      setContextValue(prev => ({
+        ...prev,
+        isInitialized: false,
+        connectionState: 'unauthenticated',
+        error: null,
+      }));
     }
 
     // Cleanup on unmount or when user changes
     return () => {
       if (contextValue.isInitialized) {
-        console.log('Cleaning up Pusher connection');
-        pusherClient.disconnect();
-        setContextValue({
-          isConnected: false,
-          connectionState: 'disconnected',
-          isInitialized: false,
-          error: null,
-          debugInfo: {},
-        });
+        try {
+          console.log('Cleaning up Pusher connection');
+          pusherClient?.disconnect?.();
+          setContextValue({
+            isConnected: false,
+            connectionState: 'disconnected',
+            isInitialized: false,
+            error: null,
+            debugInfo: {},
+          });
+        } catch (error) {
+          console.error('Error during Pusher cleanup:', error);
+        }
       }
     };
   }, [user?.id, token]);
@@ -110,26 +128,38 @@ export const PusherProvider: React.FC<PusherProviderProps> = ({
     if (!contextValue.isInitialized) return;
 
     const interval = setInterval(() => {
-      const state = pusherClient.getConnectionState();
-      const isConnected = pusherClient.isConnected();
-      const debugInfo = pusherClient.getDebugInfo();
+      try {
+        // Defensive: Safely get connection info with fallbacks
+        const state = pusherClient?.getConnectionState?.() || 'unknown';
+        const isConnected = pusherClient?.isConnected?.() || false;
+        const debugInfo = pusherClient?.getDebugInfo?.() || {};
 
-      setContextValue(prev => ({
-        ...prev,
-        connectionState: state,
-        isConnected,
-        debugInfo,
-        error: debugInfo.lastError || null,
-      }));
+        setContextValue(prev => ({
+          ...prev,
+          connectionState: state,
+          isConnected,
+          debugInfo,
+          error: debugInfo?.lastError || null,
+        }));
 
-      // Update reconnect attempts
-      if (debugInfo.connectionAttempts !== reconnectAttempts) {
-        setReconnectAttempts(debugInfo.connectionAttempts);
-      }
+        // Update reconnect attempts
+        const connectionAttempts = debugInfo?.connectionAttempts || 0;
+        if (connectionAttempts !== reconnectAttempts) {
+          setReconnectAttempts(connectionAttempts);
+        }
 
-      // Show error if connection failed after max attempts
-      if (debugInfo.fallbackToPolling && !showError) {
-        setShowError(true);
+        // Show error if connection failed after max attempts
+        if (debugInfo?.fallbackToPolling && !showError) {
+          setShowError(true);
+        }
+      } catch (error) {
+        console.error('Error monitoring Pusher connection:', error);
+        setContextValue(prev => ({
+          ...prev,
+          connectionState: 'error',
+          isConnected: false,
+          error: 'Connection monitoring failed',
+        }));
       }
     }, 1000);
 
@@ -140,7 +170,8 @@ export const PusherProvider: React.FC<PusherProviderProps> = ({
   const renderConnectionStatus = () => {
     if (!showConnectionStatus || !contextValue.isInitialized) return null;
 
-    const { connectionState } = contextValue;
+    // Defensive: Safe fallback for connection state
+    const { connectionState = 'unknown' } = contextValue || {};
 
     if (connectionState === 'connecting' || reconnectAttempts > 0) {
       return (

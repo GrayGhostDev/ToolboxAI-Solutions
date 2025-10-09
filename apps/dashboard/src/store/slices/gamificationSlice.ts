@@ -1,6 +1,6 @@
-import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { Badge, LeaderboardEntry, XPTransaction } from "../../types/api";
-import * as api from "../../services/api";
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
+import { type Badge, type LeaderboardEntry, type XPTransaction } from '../../types/api';
+import * as api from '../../services/api';
 
 interface GamificationState {
   xp: number;
@@ -70,7 +70,7 @@ export const addXPToStudent = createAsyncThunk(
 );
 
 const gamificationSlice = createSlice({
-  name: "gamification",
+  name: 'gamification',
   initialState,
   reducers: {
     setXP(state, action: PayloadAction<number>) {
@@ -87,7 +87,7 @@ const gamificationSlice = createSlice({
       // Add transaction to recent list
       const transaction: XPTransaction = {
         id: `xp-${Date.now()}`,
-        studentId: "", // Will be filled by the app
+        studentId: '', // Will be filled by the app
         amount: action.payload.amount,
         reason: action.payload.reason,
         source: action.payload.source as any,

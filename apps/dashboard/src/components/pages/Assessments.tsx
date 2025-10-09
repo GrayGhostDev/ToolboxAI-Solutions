@@ -4,7 +4,7 @@ import {
   IconFilter,
   IconDots,
   IconRefresh,
-} from "@tabler/icons-react";
+} from '@tabler/icons-react';
 import {
   Alert,
   Box,
@@ -26,44 +26,85 @@ import {
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../../store';
-import {
-  clearError,
-  fetchAssessments,
-  fetchSubmissions,
-  setFilters,
-} from '../../store/slices/assessmentsSlice';
-import { createAssessment } from '../../services/api';
+import { useAppDispatch } from '../../store';
 import { addNotification } from '../../store/slices/uiSlice';
+import { useApiCall, useApiCallOnMount } from '../../hooks/useApiCall';
 import CreateAssessmentDialog from '../dialogs/CreateAssessmentDialog';
+import { useMultipleCeleryTasks } from '../../hooks/pusher/useCeleryTaskProgress';
+import { TaskProgressList } from '../common/TaskProgressList';
 
 export default function Assessments() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { assessments, submissions, loading, error, filters } = useAppSelector(
-    (state) => state.assessments
-  );
+
+  // State management
+  const [filters, setFiltersState] = useState<any>({});
   const [filterAnchorEl, setFilterAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedAssessment, setSelectedAssessment] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [menuAssessment, setMenuAssessment] = useState<any>(null);
+  const [showTaskPanel, setShowTaskPanel] = useState(false);
 
+  // Get organization ID from user context (fallback to default for demo)
+  const organizationId = 'default_org'; // TODO: Get from auth context
+
+  // Track all Celery tasks for quiz generation
+  const {
+    tasks,
+    addTask,
+    removeTask,
+    activeTasks,
+    completedTasks
+  } = useMultipleCeleryTasks(organizationId);
+
+  // Show task panel when there are active tasks
   useEffect(() => {
-    // Fetch assessments when component mounts
-    dispatch(fetchAssessments());
-    dispatch(fetchSubmissions({}));
-  }, [dispatch]);
+    if (activeTasks.length > 0) {
+      setShowTaskPanel(true);
+    }
+  }, [activeTasks.length]);
+
+  // Fetch assessments using API hook
+  const {
+    data: assessmentsData,
+    loading: assessmentsLoading,
+    error: assessmentsError,
+    refetch: refetchAssessments
+  } = useApiCallOnMount(
+    null,
+    { mockEndpoint: '/assessments', showNotification: false }
+  );
+
+  // Fetch submissions using API hook
+  const {
+    data: submissionsData,
+    loading: submissionsLoading,
+    error: submissionsError,
+    refetch: refetchSubmissions
+  } = useApiCallOnMount(
+    null,
+    { mockEndpoint: '/submissions', showNotification: false }
+  );
+
+  // API hooks for mutations
+  const { execute: deleteAssessmentApi } = useApiCall();
+
+  const assessments = (assessmentsData as any[]) || [];
+  const submissions = (submissionsData as any[]) || [];
+  const loading = assessmentsLoading || submissionsLoading;
+  const error = assessmentsError || submissionsError;
 
   const handleRefresh = () => {
-    dispatch(fetchAssessments(filters));
-    dispatch(fetchSubmissions({}));
+    refetchAssessments();
+    refetchSubmissions();
   };
 
   const handleFilterChange = (filterType: string, value: any) => {
     const newFilters = { ...filters, [filterType]: value };
-    dispatch(setFilters(newFilters));
-    dispatch(fetchAssessments(newFilters));
+    setFiltersState(newFilters);
+    // In a real implementation, you'd refetch with filters
+    refetchAssessments();
   };
 
   const handleFilterMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -105,15 +146,25 @@ export default function Assessments() {
     handleMenuClose();
   };
 
-  const handleDeleteAssessment = (assessment: any) => {
+  const handleDeleteAssessment = async (assessment: any) => {
     if (window.confirm(`Are you sure you want to delete "${assessment.title}"?`)) {
-      dispatch(
-        addNotification({
-          type: 'success',
-          message: `Assessment "${assessment.title}" deleted successfully!`,
-        })
-      );
-      dispatch(fetchAssessments());
+      try {
+        await deleteAssessmentApi('DELETE', `/assessments/${assessment.id}`, null);
+        dispatch(
+          addNotification({
+            type: 'success',
+            message: `Assessment "${assessment.title}" deleted successfully!`,
+          })
+        );
+        refetchAssessments();
+      } catch (error) {
+        dispatch(
+          addNotification({
+            type: 'error',
+            message: 'Failed to delete assessment',
+          })
+        );
+      }
     }
     handleMenuClose();
   };
@@ -291,6 +342,22 @@ export default function Assessments() {
             </Stack>
           </Card>
         </Grid.Col>
+
+        {/* Task Progress Panel */}
+        {showTaskPanel && tasks.length > 0 && (
+          <Grid.Col span={12}>
+            <TaskProgressList
+              tasks={tasks}
+              onRemove={removeTask}
+              onClearCompleted={() => {
+                completedTasks.forEach(task => removeTask(task.taskId));
+              }}
+              maxHeight={400}
+              showCompact={false}
+              title="Quiz Generation Tasks"
+            />
+          </Grid.Col>
+        )}
 
         {/* Recent Assessments */}
         <Grid.Col span={12}>

@@ -1,120 +1,16 @@
-import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 import React, { useState, useEffect } from 'react';
-import { robloxColors } from '../../robloxTheme';
+import { Box, Card, Text, Group, ActionIcon, Tooltip, useMantineTheme } from '@mantine/core';
+import { IconTrendingUp, IconTrendingDown, IconInfoCircle } from '@tabler/icons-react';
 import { motion } from 'framer-motion';
-const float = keyframes`
-  0%, 100% { transform: translateY(0px) rotateX(0deg); }
-  50% { transform: translateY(-10px) rotateX(5deg); }
-`;
-const pulse = keyframes`
-  0% { box-shadow: 0 0 0 0 ${alpha(robloxColors.primary, 0.7)}; }
-  70% { box-shadow: 0 0 0 10px ${alpha(robloxColors.primary, 0)}; }
-  100% { box-shadow: 0 0 0 0 ${alpha(robloxColors.primary, 0)}; }
-`;
-const shine = keyframes`
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
-`;
-const StyledCard = styled(Card)<{ glowcolor?: string; isHovered?: boolean }>(({ theme, glowcolor, isHovered }) => ({
-  background: `linear-gradient(135deg, ${robloxColors.dark} 0%, ${robloxColors.darkGray} 100%)`,
-  border: `2px solid ${glowcolor || robloxColors.primary}`,
-  borderRadius: '16px',
-  position: 'relative',
-  overflow: 'visible',
-  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-  transform: isHovered ? 'translateY(-8px) scale(1.02)' : 'translateY(0) scale(1)',
-  animation: isHovered ? `${float} 2s ease-in-out infinite` : 'none',
-  cursor: 'pointer',
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: `linear-gradient(105deg, transparent 40%, ${alpha(glowcolor || robloxColors.primary, 0.1)} 50%, transparent 60%)`,
-    backgroundSize: '200% 100%',
-    animation: isHovered ? `${shine} 2s linear infinite` : 'none',
-    borderRadius: '16px',
-    pointerEvents: 'none',
-  },
-  '&::after': {
-    content: '""',
-    position: 'absolute',
-    top: '-4px',
-    left: '-4px',
-    right: '-4px',
-    bottom: '-4px',
-    background: `linear-gradient(45deg, ${glowcolor || robloxColors.primary}, ${robloxColors.secondary})`,
-    borderRadius: '20px',
-    opacity: isHovered ? 0.8 : 0,
-    filter: 'blur(12px)',
-    transition: 'opacity 0.3s ease',
-    zIndex: -1,
-  },
-  boxShadow: isHovered
-    ? `0 20px 40px ${alpha(glowcolor || robloxColors.primary, 0.4)}, inset 0 1px 0 ${alpha('#fff', 0.1)}`
-    : `0 4px 12px ${alpha('#000', 0.2)}, inset 0 1px 0 ${alpha('#fff', 0.05)}`,
-}));
-const IconContainer = styled(Box)<{ bgcolor?: string }>(({ bgcolor }) => ({
-  width: 64,
-  height: 64,
-  borderRadius: '12px',
-  background: `linear-gradient(135deg, ${bgcolor || robloxColors.primary} 0%, ${alpha(bgcolor || robloxColors.primary, 0.8)} 100%)`,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  position: 'relative',
-  boxShadow: `0 4px 12px ${alpha(bgcolor || robloxColors.primary, 0.3)}`,
-  '& svg': {
-    fontSize: 32,
-    color: '#fff',
-    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
-  },
-  '&::after': {
-    content: '""',
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: '100%',
-    height: '100%',
-    borderRadius: '12px',
-    border: `2px solid ${alpha('#fff', 0.2)}`,
-    animation: `${pulse} 2s infinite`,
-  },
-}));
-const ValueDisplay = styled(Typography)(({ theme }) => ({
-  fontSize: '2.5rem',
-  fontWeight: 800,
-  background: `linear-gradient(135deg, #fff 0%, ${robloxColors.accent} 100%)`,
-  backgroundClip: 'text',
-  WebkitBackgroundClip: 'text',
-  WebkitTextFillColor: 'transparent',
-  textShadow: '0 2px 8px rgba(0,0,0,0.1)',
-  letterSpacing: '-0.02em',
-  lineHeight: 1,
-}));
-const TrendIndicator = styled(Box)<{ trend: 'up' | 'down' | 'neutral' }>(({ trend }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: '4px',
-  padding: '4px 8px',
-  borderRadius: '8px',
-  background: trend === 'up'
-    ? alpha(robloxColors.success, 0.1)
-    : trend === 'down'
-    ? alpha(robloxColors.error, 0.1)
-    : alpha(robloxColors.gray, 0.1),
-  '& svg': {
-    fontSize: 18,
-    color: trend === 'up'
-      ? robloxColors.success
-      : trend === 'down'
-      ? robloxColors.error
-      : robloxColors.gray,
-  },
-}));
+import { robloxColors } from '../../theme/robloxTheme';
+// Helper function to add transparency to colors
+const alphaColor = (color: string, alpha: number) => {
+  const hex = color.replace('#', '');
+  const r = parseInt(hex.substr(0, 2), 16);
+  const g = parseInt(hex.substr(2, 2), 16);
+  const b = parseInt(hex.substr(4, 2), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
 interface Roblox3DMetricCardProps {
   title: string;
   value: number | string;
@@ -142,9 +38,9 @@ export const Roblox3DMetricCard: React.FunctionComponent<Roblox3DMetricCardProps
 }) => {
   const theme = useMantineTheme();
   const [isHovered, setIsHovered] = useState(false);
-  const { classes } = useStyles({ glowcolor: color, isHovered });
   const [displayValue, setDisplayValue] = useState<string>('0');
   const [animatedValue, setAnimatedValue] = useState(0);
+
   useEffect(() => {
     // Animate number counting
     if (typeof value === 'number') {
@@ -166,6 +62,7 @@ export const Roblox3DMetricCard: React.FunctionComponent<Roblox3DMetricCardProps
       setDisplayValue(value);
     }
   }, [value]);
+
   useEffect(() => {
     // Format the animated value
     let formatted = '';
@@ -184,94 +81,138 @@ export const Roblox3DMetricCard: React.FunctionComponent<Roblox3DMetricCardProps
     }
     setDisplayValue(formatted);
   }, [animatedValue, format]);
+
+  const cardStyles = {
+    background: `linear-gradient(135deg, ${robloxColors.darkBase} 0%, ${robloxColors.darkGray} 100%)`,
+    border: `2px solid ${color}`,
+    borderRadius: '16px',
+    cursor: onClick ? 'pointer' : 'default',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    transform: isHovered ? 'translateY(-8px) scale(1.02)' : 'translateY(0) scale(1)',
+    boxShadow: isHovered
+      ? `0 20px 40px ${alphaColor(color, 0.4)}`
+      : `0 4px 12px ${alphaColor('#000000', 0.2)}`,
+  };
+
+  const iconContainerStyles = {
+    width: 64,
+    height: 64,
+    borderRadius: '12px',
+    background: `linear-gradient(135deg, ${color} 0%, ${alphaColor(color, 0.8)} 100%)`,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: `0 4px 12px ${alphaColor(color, 0.3)}`,
+  };
+
+  const valueDisplayStyles = {
+    fontSize: '2.5rem',
+    fontWeight: 800,
+    background: `linear-gradient(135deg, #fff 0%, ${robloxColors.accent} 100%)`,
+    backgroundClip: 'text',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    letterSpacing: '-0.02em',
+    lineHeight: 1,
+  };
+
+  const getTrendColor = (direction: string) => {
+    switch (direction) {
+      case 'up':
+        return robloxColors.success;
+      case 'down':
+        return robloxColors.error;
+      default:
+        return robloxColors.gray;
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
     >
-      <StyledCard
-        glowcolor={color}
-        isHovered={isHovered}
+      <Card
+        style={cardStyles}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        onClick={(e: React.MouseEvent) => onClick}
+        onClick={onClick}
+        p="lg"
       >
-        <CardContent style={{ p: 3 }}>
-          <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-            <Box flex={1}>
-              <Box display="flex" alignItems="center" gap={1} mb={1}>
-                <Typography
-                  order={6}
-                  style={{
-                    color: robloxColors.lightGray,
-                    fontWeight: 600,
-                    fontSize: '0.875rem',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                  }}
-                >
-                  {title}
-                </Typography>
-                {tooltip && (
-                  <Tooltip title={tooltip} arrow placement="top">
-                    <IconButton size="small" style={{ p: 0.5, color: robloxColors.gray }}>
-                      <InfoOutlinedIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                )}
-              </Box>
-              <ValueDisplay>{displayValue}</ValueDisplay>
-              {subtitle && (
-                <Typography
-                  size="sm"
-                  style={{
-                    color: alpha(robloxColors.lightGray, 0.7),
-                    mt: 0.5,
-                    fontSize: '0.75rem',
-                  }}
-                >
-                  {subtitle}
-                </Typography>
-              )}
-            </Box>
-            <IconContainer bgcolor={color}>
-              {icon}
-            </IconContainer>
-          </Box>
-          {trend && (
-            <TrendIndicator trend={trend.direction}>
-              {trend.direction === 'up' ? (
-                <TrendingUpIcon />
-              ) : trend.direction === 'down' ? (
-                <TrendingDownIcon />
-              ) : null}
-              <Typography
+        <Group justify="space-between" align="flex-start" mb="md">
+          <Box style={{ flex: 1 }}>
+            <Group gap="xs" mb="xs">
+              <Text
                 size="sm"
+                fw={600}
+                tt="uppercase"
                 style={{
-                  fontWeight: 600,
-                  color: trend.direction === 'up'
-                    ? robloxColors.success
-                    : trend.direction === 'down'
-                    ? robloxColors.error
-                    : robloxColors.gray,
+                  color: robloxColors.lightGray,
+                  letterSpacing: '0.05em',
                 }}
               >
-                {trend.value > 0 ? '+' : ''}{trend.value}%
-              </Typography>
-              <Typography
-                variant="caption"
+                {title}
+              </Text>
+              {tooltip && (
+                <Tooltip label={tooltip}>
+                  <ActionIcon size="sm" variant="subtle" color="gray">
+                    <IconInfoCircle size={14} />
+                  </ActionIcon>
+                </Tooltip>
+              )}
+            </Group>
+            <Text style={valueDisplayStyles}>
+              {displayValue}
+            </Text>
+            {subtitle && (
+              <Text
+                size="xs"
                 style={{
-                  color: alpha(robloxColors.lightGray, 0.7),
-                  ml: 0.5,
+                  color: alphaColor(robloxColors.lightGray, 0.7),
+                  marginTop: 4,
                 }}
               >
-                vs last week
-              </Typography>
-            </TrendIndicator>
-          )}
-        </CardContent>
-      </StyledCard>
+                {subtitle}
+              </Text>
+            )}
+          </Box>
+          <Box style={iconContainerStyles}>
+            <Box style={{ color: '#fff', fontSize: 32 }}>
+              {icon}
+            </Box>
+          </Box>
+        </Group>
+        {trend && (
+          <Group
+            gap="xs"
+            p="xs"
+            style={{
+              borderRadius: '8px',
+              backgroundColor: alphaColor(getTrendColor(trend.direction), 0.1),
+            }}
+          >
+            {trend.direction === 'up' ? (
+              <IconTrendingUp size={18} color={getTrendColor(trend.direction)} />
+            ) : trend.direction === 'down' ? (
+              <IconTrendingDown size={18} color={getTrendColor(trend.direction)} />
+            ) : null}
+            <Text
+              size="sm"
+              fw={600}
+              style={{ color: getTrendColor(trend.direction) }}
+            >
+              {trend.value > 0 ? '+' : ''}{trend.value}%
+            </Text>
+            <Text
+              size="xs"
+              style={{ color: alphaColor(robloxColors.lightGray, 0.7) }}
+            >
+              vs last week
+            </Text>
+          </Group>
+        )}
+      </Card>
     </motion.div>
   );
 };

@@ -3,13 +3,13 @@
  * Manages WebSocket and real-time communication state
  */
 
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import {
   WebSocketState,
-  WebSocketChannel,
-  ContentGenerationProgress,
-  ContentGenerationResponse,
-  SystemNotification
+  type WebSocketChannel,
+  type ContentGenerationProgress,
+  type ContentGenerationResponse,
+  type SystemNotification
 } from '../../types/websocket';
 
 // User presence status

@@ -1,13 +1,13 @@
-import { Overlay, Stack, Loader, Text, Box } from "@mantine/core";
-import { Roblox3DLoader } from "../roblox/Roblox3DLoader";
-import { useMantineTheme } from "@mantine/core";
+import { Overlay, Stack, Loader, Text, Box } from '@mantine/core';
+import { Roblox3DLoader } from '../roblox/Roblox3DLoader';
+import { useMantineTheme } from '@mantine/core';
 
 interface Props {
   message?: string;
   use3DLoader?: boolean;
 }
 
-export function LoadingOverlay({ message = "Loading awesome stuff...", use3DLoader = true }: Props) {
+export function LoadingOverlay({ message = 'Loading awesome stuff...', use3DLoader = true }: Props) {
   const theme = useMantineTheme();
 
   return (
@@ -19,11 +19,11 @@ export function LoadingOverlay({ message = "Loading awesome stuff...", use3DLoad
     >
       <Box
         style={{
-          position: "fixed",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          color: "white",
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          color: 'white',
         }}
       >
         {use3DLoader ? (

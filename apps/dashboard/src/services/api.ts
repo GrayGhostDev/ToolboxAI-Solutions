@@ -1,7 +1,8 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
-import { API_BASE_URL, AUTH_TOKEN_KEY, API_TIMEOUT } from "../config/index";
+import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios';
+import axiosConfigured, { isBypassMode } from '../utils/axios-config';
+import { API_BASE_URL, AUTH_TOKEN_KEY, API_TIMEOUT } from '../config/index';
 import { store } from '../store';
-import { addNotification } from "../store/slices/uiSlice";
+import { addNotification } from '../store/slices/uiSlice';
 import { tokenRefreshManager } from '../utils/tokenRefreshManager';
 import type {
   ApiResponse,
@@ -29,18 +30,19 @@ class ApiClient {
   private client: AxiosInstance;
   constructor() {
     try {
-      this.client = axios.create({
-        baseURL: API_BASE_URL,
-        timeout: API_TIMEOUT,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      // Use the configured axios instance with interceptors for mock data support
+      this.client = axiosConfigured;
+
+      // Set timeout if not already set
+      if (!this.client.defaults.timeout) {
+        this.client.defaults.timeout = API_TIMEOUT;
+      }
+
       if (!this.client) {
-        throw new Error("Failed to create axios client instance");
+        throw new Error('Failed to create axios client instance');
       }
     } catch (error) {
-      logger.error("Failed to initialize API client", error);
+      logger.error('Failed to initialize API client', error);
       throw new Error(`API Client initialization failed: ${error}`);
     }
     // Listen for token updates from the token refresh manager
@@ -48,19 +50,9 @@ class ApiClient {
       // Update default headers for new requests
       this.client.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
     });
-    // Request interceptor to add auth token
-    this.client.interceptors.request.use(
-      (config) => {
-        const token = localStorage.getItem(AUTH_TOKEN_KEY);
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error) => {
-        return Promise.reject(error);
-      }
-    );
+
+    // Note: Request interceptor for auth token is already configured in axios-config.ts
+    // which also handles mock data in bypass mode
     // Response interceptor for token refresh and error handling
     this.client.interceptors.response.use(
       (response) => {
@@ -243,7 +235,7 @@ class ApiClient {
   }
   public async request<T>(config: AxiosRequestConfig): Promise<T> {
     if (!this.client) {
-      throw new Error("API client not initialized");
+      throw new Error('API client not initialized');
     }
     try {
       const response: AxiosResponse<T> = await this.client(config);
@@ -258,11 +250,11 @@ class ApiClient {
       }
       // Only throw error if we expected data but got none
       if (config.method?.toUpperCase() !== 'DELETE') {
-        throw new Error("No data in response");
+        throw new Error('No data in response');
       }
       return undefined as unknown as T;
     } catch (error) {
-      logger.error("API Error", {
+      logger.error('API Error', {
         error,
         config,
         clientInitialized: !!this.client,
@@ -282,8 +274,8 @@ class ApiClient {
       ? { email, password }  // Send email field for email addresses
       : { username: email, password };  // Send username field for usernames
     const response = await this.request<any>({
-      method: "POST",
-      url: "/api/v1/auth/login",
+      method: 'POST',
+      url: '/api/v1/auth/login',
       data: loginData,
     });
     logger.debug('Login response received', response);
@@ -335,8 +327,8 @@ class ApiClient {
       role: data.role,
     };
     const response = await this.request<any>({
-      method: "POST",
-      url: "/api/v1/auth/register",
+      method: 'POST',
+      url: '/api/v1/auth/register',
       data: backendData,
     });
     // Map backend response to frontend format
@@ -371,22 +363,22 @@ class ApiClient {
   }
   async refreshToken(refreshToken: string): Promise<AuthResponse> {
     return this.request<AuthResponse>({
-      method: "POST",
-      url: "/api/v1/auth/refresh",
+      method: 'POST',
+      url: '/api/v1/auth/refresh',
       data: { refresh_token: refreshToken },
     });
   }
   async logout(): Promise<void> {
     return this.request<void>({
-      method: "POST",
-      url: "/api/v1/auth/logout",
+      method: 'POST',
+      url: '/api/v1/auth/logout',
     });
   }
   // Dashboard
   async getDashboardOverview(role: string): Promise<DashboardOverview> {
     return this.request<DashboardOverview>({
-      method: "GET",
-      url: `/api/v1/dashboard/overview`,
+      method: 'GET',
+      url: '/api/v1/dashboard/overview',
       timeout: 15000 // 15 seconds timeout for dashboard data
     });
   }
@@ -422,96 +414,96 @@ class ApiClient {
   }
   async getWeeklyXP(studentId?: string): Promise<ProgressPoint[]> {
     return this.request<ProgressPoint[]>({
-      method: "GET",
-      url: "/api/v1/analytics/weekly_xp",
+      method: 'GET',
+      url: '/api/v1/analytics/weekly_xp',
       params: { studentId },
     });
   }
   async getSubjectMastery(studentId?: string): Promise<{ subject: string; mastery: number }[]> {
     return this.request<{ subject: string; mastery: number }[]>({
-      method: "GET",
-      url: "/api/v1/analytics/subject_mastery",
+      method: 'GET',
+      url: '/api/v1/analytics/subject_mastery',
       params: { studentId },
     });
   }
   // Lessons
   async listLessons(classId?: string): Promise<Lesson[]> {
     return this.request<Lesson[]>({
-      method: "GET",
-      url: "/api/v1/lessons",
+      method: 'GET',
+      url: '/api/v1/lessons',
       params: { classId },
     });
   }
   async getLesson(id: string): Promise<Lesson> {
     return this.request<Lesson>({
-      method: "GET",
+      method: 'GET',
       url: `/api/v1/lessons/${id}`,
     });
   }
   async createLesson(data: Partial<Lesson>): Promise<Lesson> {
     return this.request<Lesson>({
-      method: "POST",
-      url: "/api/v1/lessons",
+      method: 'POST',
+      url: '/api/v1/lessons',
       data,
     });
   }
   async updateLesson(id: string, data: Partial<Lesson>): Promise<Lesson> {
     return this.request<Lesson>({
-      method: "PUT",
+      method: 'PUT',
       url: `/api/v1/lessons/${id}`,
       data,
     });
   }
   async deleteLesson(id: string): Promise<void> {
     return this.request<void>({
-      method: "DELETE",
+      method: 'DELETE',
       url: `/api/v1/lessons/${id}`,
     });
   }
   // Classes
   async listClasses(): Promise<ClassSummary[]> {
     return this.request<ClassSummary[]>({
-      method: "GET",
-      url: "/api/v1/classes/",
+      method: 'GET',
+      url: '/api/v1/classes/',
     });
   }
   async getClass(id: string): Promise<ClassDetails> {
     return this.request<ClassDetails>({
-      method: "GET",
+      method: 'GET',
       url: `/api/v1/classes/${id}`,
     });
   }
   async createClass(data: Partial<ClassSummary>): Promise<ClassSummary> {
     return this.request<ClassSummary>({
-      method: "POST",
-      url: "/api/v1/classes/",
+      method: 'POST',
+      url: '/api/v1/classes/',
       data,
     });
   }
   async updateClass(id: string, data: Partial<ClassSummary>): Promise<ClassSummary> {
     return this.request<ClassSummary>({
-      method: "PUT",
+      method: 'PUT',
       url: `/api/v1/classes/${id}`,
       data,
     });
   }
   async deleteClass(id: string): Promise<void> {
     return this.request<void>({
-      method: "DELETE",
+      method: 'DELETE',
       url: `/api/v1/classes/${id}`,
     });
   }
   // Assessments
   async listAssessments(classId?: string): Promise<Assessment[]> {
     return this.request<Assessment[]>({
-      method: "GET",
-      url: "/api/v1/assessments/",
+      method: 'GET',
+      url: '/api/v1/assessments/',
       params: classId ? { class_id: classId } : undefined, // Transform to snake_case for backend
     });
   }
   async getAssessment(id: string): Promise<Assessment> {
     return this.request<Assessment>({
-      method: "GET",
+      method: 'GET',
       url: `/api/v1/assessments/${id}`,
     });
   }
@@ -529,284 +521,284 @@ class ApiClient {
     // Note: Assessment interface doesn't have description property
     if (data.status !== undefined) transformedData.status = data.status;
     return this.request<Assessment>({
-      method: "POST",
-      url: "/api/v1/assessments/",
+      method: 'POST',
+      url: '/api/v1/assessments/',
       data: transformedData,
     });
   }
   async submitAssessment(assessmentId: string, data: { answers: any; time_spent_minutes?: number }): Promise<AssessmentSubmission> {
     return this.request<AssessmentSubmission>({
-      method: "POST",
+      method: 'POST',
       url: `/assessments/${assessmentId}/submit`,
       data,
     });
   }
   async updateAssessment(id: string, data: Partial<Assessment>): Promise<Assessment> {
     return this.request<Assessment>({
-      method: "PUT",
+      method: 'PUT',
       url: `/api/v1/assessments/${id}`,
       data,
     });
   }
   async deleteAssessment(id: string): Promise<void> {
     return this.request<void>({
-      method: "DELETE",
+      method: 'DELETE',
       url: `/api/v1/assessments/${id}`,
     });
   }
   async getAssessmentSubmissions(assessmentId: string, studentId?: string): Promise<AssessmentSubmission[]> {
     return this.request<AssessmentSubmission[]>({
-      method: "GET",
+      method: 'GET',
       url: `/api/v1/assessments/${assessmentId}/submissions`,
       params: { student_id: studentId },
     });
   }
   async publishAssessment(assessmentId: string): Promise<Assessment> {
     return this.request<Assessment>({
-      method: "PUT",
+      method: 'PUT',
       url: `/api/v1/assessments/${assessmentId}/publish`,
     });
   }
   // Student Progress
   async getStudentProgress(studentId: string): Promise<StudentProgress> {
     return this.request<StudentProgress>({
-      method: "GET",
+      method: 'GET',
       url: `/api/v1/progress/student/${studentId}`,
     });
   }
   async getClassProgress(classId: string): Promise<any> {
     return this.request<any>({
-      method: "GET",
+      method: 'GET',
       url: `/api/v1/progress/class/${classId}`,
     });
   }
   async getLessonAnalytics(lessonId: string): Promise<any> {
     return this.request<any>({
-      method: "GET",
+      method: 'GET',
       url: `/api/v1/progress/lesson/${lessonId}`,
     });
   }
   async updateProgress(lessonId: string, progressPercentage: number, timeSpentMinutes: number, score?: number): Promise<any> {
     return this.request<any>({
-      method: "POST",
-      url: `/api/v1/progress/update`,
+      method: 'POST',
+      url: '/api/v1/progress/update',
       data: { lesson_id: lessonId, progress_percentage: progressPercentage, time_spent_minutes: timeSpentMinutes, score },
     });
   }
   async getProgressAnalytics(filters?: { studentId?: string; classId?: string; subject?: string }): Promise<any> {
     return this.request<any>({
-      method: "GET",
-      url: `/api/v1/progress/analytics`,
+      method: 'GET',
+      url: '/api/v1/progress/analytics',
       params: filters,
     });
   }
   // Gamification
   async getStudentXP(studentId: string): Promise<{ xp: number; level: number }> {
     return this.request<{ xp: number; level: number }>({
-      method: "GET",
+      method: 'GET',
       url: `/api/v1/gamification/xp/${studentId}`,
     });
   }
   async addXP(studentId: string, amount: number, reason: string): Promise<XPTransaction> {
     return this.request<XPTransaction>({
-      method: "POST",
+      method: 'POST',
       url: `/api/v1/gamification/xp/${studentId}`,
       data: { amount, reason },
     });
   }
   async getBadges(studentId?: string): Promise<Badge[]> {
     return this.request<Badge[]>({
-      method: "GET",
-      url: "/api/v1/gamification/badges",
+      method: 'GET',
+      url: '/api/v1/gamification/badges',
       params: { studentId },
     });
   }
   async awardBadge(studentId: string, badgeId: string): Promise<Badge> {
     return this.request<Badge>({
-      method: "POST",
-      url: `/api/v1/gamification/badges/award`,
+      method: 'POST',
+      url: '/api/v1/gamification/badges/award',
       data: { studentId, badgeId },
     });
   }
-  async getLeaderboard(classId?: string, timeframe?: "daily" | "weekly" | "monthly" | "all"): Promise<LeaderboardEntry[]> {
+  async getLeaderboard(classId?: string, timeframe?: 'daily' | 'weekly' | 'monthly' | 'all'): Promise<LeaderboardEntry[]> {
     return this.request<LeaderboardEntry[]>({
-      method: "GET",
-      url: "/api/v1/gamification/leaderboard",
+      method: 'GET',
+      url: '/api/v1/gamification/leaderboard',
       params: { classId, timeframe },
     });
   }
   // Roblox Integration
   async listRobloxWorlds(lessonId?: string): Promise<RobloxWorld[]> {
     return this.request<RobloxWorld[]>({
-      method: "GET",
-      url: "/api/v1/roblox/worlds",
+      method: 'GET',
+      url: '/api/v1/roblox/worlds',
       params: { lessonId },
     });
   }
   async pushLessonToRoblox(lessonId: string): Promise<{ jobId: string; status: string }> {
     return this.request<{ jobId: string; status: string }>({
-      method: "POST",
+      method: 'POST',
       url: `/api/v1/roblox/push/${lessonId}`,
     });
   }
   async getRobloxJoinUrl(classId: string): Promise<{ joinUrl: string }> {
     return this.request<{ joinUrl: string }>({
-      method: "GET",
+      method: 'GET',
       url: `/api/v1/roblox/join/${classId}`,
     });
   }
   // New Roblox OAuth and template methods
   async initRobloxOAuth(): Promise<{ oauth_url: string; state: string }> {
     return this.request<{ oauth_url: string; state: string }>({
-      method: "GET",
-      url: "/api/v1/roblox/auth/login",
+      method: 'GET',
+      url: '/api/v1/roblox/auth/login',
     });
   }
   async getRobloxTemplates(category?: string, subject?: string): Promise<any[]> {
     return this.request<any[]>({
-      method: "GET",
-      url: "/api/v1/roblox/templates",
+      method: 'GET',
+      url: '/api/v1/roblox/templates',
       params: { category, subject },
     });
   }
   async createFromRobloxTemplate(templateId: number, data: any): Promise<any> {
     return this.request<any>({
-      method: "POST",
+      method: 'POST',
       url: `/api/v1/roblox/templates/${templateId}/create`,
       data,
     });
   }
   async getRobloxSessions(): Promise<any[]> {
     return this.request<any[]>({
-      method: "GET",
-      url: "/api/v1/roblox/sessions",
+      method: 'GET',
+      url: '/api/v1/roblox/sessions',
     });
   }
   async getRobloxWorldAnalytics(worldId: string): Promise<any> {
     return this.request<any>({
-      method: "GET",
+      method: 'GET',
       url: `/api/v1/roblox/analytics/${worldId}`,
     });
   }
   async syncRobloxWorld(worldId: string): Promise<any> {
     return this.request<any>({
-      method: "POST",
+      method: 'POST',
       url: `/api/v1/roblox/sync/${worldId}`,
     });
   }
   async checkRobloxPluginStatus(): Promise<{ connected: boolean; version?: string }> {
     return this.request<{ connected: boolean; version?: string }>({
-      method: "GET",
-      url: "/api/v1/roblox/plugin/status",
+      method: 'GET',
+      url: '/api/v1/roblox/plugin/status',
     });
   }
   async getRobloxPluginInstallInfo(): Promise<any> {
     return this.request<any>({
-      method: "POST",
-      url: "/api/v1/roblox/plugin/install",
+      method: 'POST',
+      url: '/api/v1/roblox/plugin/install',
     });
   }
   async deployToRoblox(contentId: string): Promise<any> {
     return this.request<any>({
-      method: "POST",
+      method: 'POST',
       url: `/api/v1/roblox/deploy/${contentId}`,
     });
   }
   async exportRobloxEnvironment(contentId: string): Promise<any> {
     return this.request<any>({
-      method: "GET",
+      method: 'GET',
       url: `/api/v1/roblox/export/${contentId}`,
     });
   }
   // Messages
   async listMessages(folder?: string, filters?: { unread_only?: boolean; class_id?: string; search?: string }): Promise<Message[]> {
     return this.request<Message[]>({
-      method: "GET",
-      url: "/api/v1/messages/",
+      method: 'GET',
+      url: '/api/v1/messages/',
       params: { folder, ...filters },
     });
   }
   async sendMessage(data: { subject: string; body: string; recipient_ids: string[]; class_id?: string; priority?: string }): Promise<Message> {
     return this.request<Message>({
-      method: "POST",
-      url: "/api/v1/messages/",
+      method: 'POST',
+      url: '/api/v1/messages/',
       data,
     });
   }
   async getMessage(id: string): Promise<Message> {
     return this.request<Message>({
-      method: "GET",
+      method: 'GET',
       url: `/api/v1/messages/${id}`,
     });
   }
   async getMessageThread(threadId: string): Promise<any> {
     return this.request<any>({
-      method: "GET",
+      method: 'GET',
       url: `/api/v1/messages/thread/${threadId}`,
     });
   }
   async markMessageAsRead(id: string): Promise<void> {
     return this.request<void>({
-      method: "PUT",
+      method: 'PUT',
       url: `/api/v1/messages/${id}/read`,
     });
   }
   async markMessageAsUnread(id: string): Promise<void> {
     return this.request<void>({
-      method: "PUT",
+      method: 'PUT',
       url: `/api/v1/messages/${id}/unread`,
     });
   }
   async starMessage(id: string): Promise<void> {
     return this.request<void>({
-      method: "PUT",
+      method: 'PUT',
       url: `/api/v1/messages/${id}/star`,
     });
   }
   async archiveMessage(id: string): Promise<void> {
     return this.request<void>({
-      method: "PUT",
+      method: 'PUT',
       url: `/api/v1/messages/${id}/archive`,
     });
   }
   async deleteMessage(id: string, permanent?: boolean): Promise<void> {
     return this.request<void>({
-      method: "DELETE",
+      method: 'DELETE',
       url: `/api/v1/messages/${id}`,
       params: { permanent },
     });
   }
   async replyToMessage(id: string, data: { subject: string; body: string; recipient_ids: string[] }): Promise<Message> {
     return this.request<Message>({
-      method: "POST",
+      method: 'POST',
       url: `/api/v1/messages/${id}/reply`,
       data,
     });
   }
   async forwardMessage(id: string, data: { subject: string; body: string; recipient_ids: string[] }): Promise<Message> {
     return this.request<Message>({
-      method: "POST",
+      method: 'POST',
       url: `/api/v1/messages/${id}/forward`,
       data,
     });
   }
   async getMessageStats(): Promise<any> {
     return this.request<any>({
-      method: "GET",
-      url: "/api/v1/messages/stats",
+      method: 'GET',
+      url: '/api/v1/messages/stats',
     });
   }
   // Compliance
   async getComplianceStatus(): Promise<ComplianceStatus> {
     return this.request<ComplianceStatus>({
-      method: "GET",
-      url: "/api/v1/analytics/compliance/status",
+      method: 'GET',
+      url: '/api/v1/analytics/compliance/status',
     });
   }
-  async recordConsent(type: "coppa" | "ferpa" | "gdpr", userId: string): Promise<void> {
+  async recordConsent(type: 'coppa' | 'ferpa' | 'gdpr', userId: string): Promise<void> {
     return this.request<void>({
-      method: "POST",
-      url: "/api/v1/compliance/consent",
+      method: 'POST',
+      url: '/api/v1/compliance/consent',
       data: {
         consent_type: type,  // Backend expects 'consent_type' not 'type'
         granted: true,       // Backend requires this field
@@ -820,21 +812,21 @@ class ApiClient {
   // LMS Integrations
   async connectGoogleClassroom(token: string): Promise<{ connected: boolean }> {
     return this.request<{ connected: boolean }>({
-      method: "POST",
-      url: "/integrations/google_classroom",
+      method: 'POST',
+      url: '/integrations/google_classroom',
       data: { token },
     });
   }
   async connectCanvas(token: string): Promise<{ connected: boolean }> {
     return this.request<{ connected: boolean }>({
-      method: "POST",
-      url: "/integrations/canvas",
+      method: 'POST',
+      url: '/integrations/canvas',
       data: { token },
     });
   }
-  async syncLMSData(platform: "google_classroom" | "canvas"): Promise<{ synced: boolean }> {
+  async syncLMSData(platform: 'google_classroom' | 'canvas'): Promise<{ synced: boolean }> {
     return this.request<{ synced: boolean }>({
-      method: "POST",
+      method: 'POST',
       url: `/integrations/${platform}/sync`,
     });
   }
@@ -925,14 +917,14 @@ export const moveToFolder = async (messageId: string, folder: string) => {
 export const searchMessages = async (query: string) => {
   return apiClient['request']<any>({
     method: 'GET',
-    url: `/api/v1/messages/search`,
+    url: '/api/v1/messages/search',
     params: { q: query },
   });
 };
 export const getUnreadCount = async () => {
   const response = await apiClient['request']<any>({
     method: 'GET',
-    url: `/api/v1/messages/unread-count`,
+    url: '/api/v1/messages/unread-count',
   });
   return response.count || 0;
 };
@@ -990,7 +982,7 @@ export const listSchools = async (params?: {
 }) => {
   const schools = await apiClient['request']<School[]>({
     method: 'GET',
-    url: `/api/v1/schools/`,
+    url: '/api/v1/schools/',
     params,
   });
   // Transform snake_case to camelCase for frontend compatibility
@@ -1012,7 +1004,7 @@ export const getSchool = async (schoolId: string) => {
 export const createSchool = async (data: SchoolCreate) => {
   const school = await apiClient['request']<School>({
     method: 'POST',
-    url: `/api/v1/schools/`,
+    url: '/api/v1/schools/',
     data,
   });
   // Transform response for frontend compatibility
@@ -1167,7 +1159,7 @@ export const listReportTemplates = async (params?: {
   } : undefined;
   return apiClient['request']<ReportTemplate[]>({
     method: 'GET',
-    url: `/reports/templates`,
+    url: '/reports/templates',
     params: transformedParams,
   });
 };
@@ -1182,7 +1174,7 @@ export const listReports = async (params?: {
 }) => {
   return apiClient['request']<Report[]>({
     method: 'GET',
-    url: `/reports/`,
+    url: '/reports/',
     params,
   });
 };
@@ -1201,14 +1193,14 @@ export const generateReport = async (data: ReportGenerateRequest) => {
   };
   return apiClient['request']<Report>({
     method: 'POST',
-    url: `/reports/generate`,
+    url: '/reports/generate',
     data: transformedData,
   });
 };
 export const scheduleReport = async (data: ReportScheduleRequest) => {
   return apiClient['request']<ReportSchedule>({
     method: 'POST',
-    url: `/reports/schedule`,
+    url: '/reports/schedule',
     data,
   });
 };
@@ -1220,7 +1212,7 @@ export const emailReport = async (data: {
 }) => {
   return apiClient['request']<{ message: string; recipients: string[] }>({
     method: 'POST',
-    url: `/reports/email`,
+    url: '/reports/email',
     data,
   });
 };
@@ -1243,7 +1235,7 @@ export const listScheduledReports = async (params?: {
 }) => {
   return apiClient['request']<ReportSchedule[]>({
     method: 'GET',
-    url: `/reports/schedules/`,
+    url: '/reports/schedules/',
     params,
   });
 };
@@ -1264,7 +1256,7 @@ export const getReportStatistics = async () => {
     storage_used_gb: number;
   }>({
     method: 'GET',
-    url: `/reports/stats/overview`,
+    url: '/reports/stats/overview',
   });
 };
 // Users Management API
@@ -1278,7 +1270,7 @@ export const listUsers = async (params?: {
 }) => {
   return apiClient['request']<User[]>({
     method: 'GET',
-    url: `/api/v1/users/`,
+    url: '/api/v1/users/',
     params,
   });
 };
@@ -1304,7 +1296,7 @@ export const createUser = async (data: UserCreate) => {
   };
   return apiClient['request']<User>({
     method: 'POST',
-    url: `/api/v1/users/`,
+    url: '/api/v1/users/',
     data: transformedData,
   });
 };
@@ -1341,6 +1333,6 @@ export const suspendUser = async (userId: string) => {
 export const getMyProfile = async () => {
   return apiClient['request']<User>({
     method: 'GET',
-    url: `/api/v1/users/me/profile`,
+    url: '/api/v1/users/me/profile',
   });
 };

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from 'react';
 import {
   Box,
   Card,
@@ -22,26 +22,26 @@ import {
   IconUsers as People,
   IconClipboard as Assessment,
   IconGauge as Speed,
-} from "@tabler/icons-react";
-import { useAppDispatch, useAppSelector } from "../../store";
-import { addNotification } from "../../store/slices/uiSlice";
-import { usePusherContext } from "../../contexts/PusherContext";
+} from '@tabler/icons-react';
+import { useAppDispatch, useAppSelector } from '../../store';
+import { addNotification } from '../../store/slices/uiSlice';
+import { usePusherContext } from '../../contexts/PusherContext';
 
 // Import our new analytics components
-import UserActivityChart from "../analytics/UserActivityChart";
-import ContentMetrics from "../analytics/ContentMetrics";
-import PerformanceIndicator from "../analytics/PerformanceIndicator";
-import StudentProgress from "../progress/StudentProgress";
-import ClassOverview from "../progress/ClassOverview";
+import UserActivityChart from '../analytics/UserActivityChart';
+import ContentMetrics from '../analytics/ContentMetrics';
+import PerformanceIndicator from '../analytics/PerformanceIndicator';
+import StudentProgress from '../progress/StudentProgress';
+import ClassOverview from '../progress/ClassOverview';
 
 interface EnhancedAnalyticsProps {
   initialTab?: number;
-  timeRange?: "24h" | "7d" | "30d" | "90d";
+  timeRange?: '24h' | '7d' | '30d' | '90d';
 }
 
 export function EnhancedAnalytics({ 
   initialTab = 0,
-  timeRange: initialTimeRange = "7d" 
+  timeRange: initialTimeRange = '7d' 
 }: EnhancedAnalyticsProps) {
   const dispatch = useAppDispatch();
   const { isConnected } = usePusherContext();
@@ -87,22 +87,22 @@ export function EnhancedAnalytics({
   // Tab configuration based on user role
   const getTabConfig = () => {
     const baseTabs = [
-      { label: "Overview", icon: <Timeline /> },
-      { label: "User Activity", icon: <People /> },
-      { label: "Content Metrics", icon: <Assessment /> },
-      { label: "Performance", icon: <Speed /> },
+      { label: 'Overview', icon: <Timeline /> },
+      { label: 'User Activity', icon: <People /> },
+      { label: 'Content Metrics', icon: <Assessment /> },
+      { label: 'Performance', icon: <Speed /> },
     ];
 
-    if (userRole === "admin") {
+    if (userRole === 'admin') {
       return [
         ...baseTabs,
-        { label: "Class Management", icon: <Assessment /> },
+        { label: 'Class Management', icon: <Assessment /> },
       ];
-    } else if (userRole === "teacher") {
+    } else if (userRole === 'teacher') {
       return [
         ...baseTabs,
-        { label: "My Classes", icon: <Assessment /> },
-        { label: "Student Progress", icon: <People /> },
+        { label: 'My Classes', icon: <Assessment /> },
+        { label: 'Student Progress', icon: <People /> },
       ];
     }
 
@@ -119,7 +119,7 @@ export function EnhancedAnalytics({
             {/* Performance Indicators */}
             <Grid item xs={12}>
               <PerformanceIndicator 
-                showSystemHealth={userRole === "admin"}
+                showSystemHealth={userRole === 'admin'}
                 autoRefresh={autoRefresh}
                 refreshInterval={30}
               />
@@ -173,7 +173,7 @@ export function EnhancedAnalytics({
           <Grid container spacing={3}>
             <Grid item xs={12}>
               <PerformanceIndicator 
-                showSystemHealth={userRole === "admin"}
+                showSystemHealth={userRole === 'admin'}
                 autoRefresh={autoRefresh}
                 refreshInterval={30}
               />
@@ -248,9 +248,9 @@ export function EnhancedAnalytics({
             <InputLabel size="small">Refresh</InputLabel>
             <Select
               size="small"
-              value={autoRefresh ? "auto" : "manual"}
+              value={autoRefresh ? 'auto' : 'manual'}
               label="Refresh"
-              onChange={(e) => setAutoRefresh(e.target.value === "auto")}
+              onChange={(e) => setAutoRefresh(e.target.value === 'auto')}
             >
               <MenuItem value="auto">Auto</MenuItem>
               <MenuItem value="manual">Manual</MenuItem>
@@ -274,7 +274,7 @@ export function EnhancedAnalytics({
       {/* Last Update Info */}
       <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
         Last updated: {lastRefresh.toLocaleString()}
-        {autoRefresh && " • Auto-refresh enabled"}
+        {autoRefresh && ' • Auto-refresh enabled'}
       </Typography>
 
       {/* Navigation Tabs */}

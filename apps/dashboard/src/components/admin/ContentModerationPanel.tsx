@@ -7,73 +7,53 @@ import React, { memo, useState, useCallback, useEffect } from 'react';
 import {
   Box,
   Paper,
-  Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  IconButton,
+  Text,
   Button,
-  Chip,
   Stack,
-  TextField,
-  InputAdornment,
-  FormControl,
-  InputLabel,
+  TextInput,
   Select,
-  MenuItem,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Modal,
   Alert,
-  AlertTitle,
   Tooltip,
   Checkbox,
   Card,
-  CardContent,
-  CardActions,
-  CardMedia,
   Grid,
-  Tab,
   Tabs,
   Badge,
-  LinearProgress,
+  Loader,
   Avatar,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  ListItemSecondaryAction,
-  useTheme,
-  alpha,
-} from '@mui/material';
+  ActionIcon,
+  Group,
+  Space,
+  Divider,
+  Pagination,
+  Chip,
+  useMantineTheme,
+  Progress,
+} from '@mantine/core';
 import {
-  Search as SearchIcon,
-  FilterList as FilterIcon,
-  Check as ApproveIcon,
-  Close as RejectIcon,
-  Flag as FlagIcon,
-  Visibility as ViewIcon,
-  Delete as DeleteIcon,
-  Warning as WarningIcon,
-  Info as InfoIcon,
-  School as EducationIcon,
-  Assessment as AssessmentIcon,
-  Message as MessageIcon,
-  Image as ImageIcon,
-  VideoLibrary as VideoIcon,
-  Description as DocumentIcon,
-  Code as CodeIcon,
-  Report as ReportIcon,
-  Gavel as PolicyIcon,
-  AutoAwesome as AIIcon,
-  ThumbUp as ThumbUpIcon,
-  ThumbDown as ThumbDownIcon,
-} from '@mui/icons-material';
+  IconSearch,
+  IconFilter,
+  IconCheck,
+  IconX,
+  IconFlag,
+  IconEye,
+  IconTrash,
+  IconAlertTriangle,
+  IconInfoCircle,
+  IconSchool,
+  IconClipboardList,
+  IconMessage,
+  IconPhoto,
+  IconVideo,
+  IconFileText,
+  IconCode,
+  IconReportAnalytics,
+  IconGavel,
+  IconSparkles,
+  IconThumbUp,
+  IconThumbDown,
+} from '@tabler/icons-react';
 import { format } from 'date-fns';
 import { api } from '@/services/api';
 import { usePusher } from '@/hooks/usePusher';
@@ -140,7 +120,7 @@ export const ContentModerationPanel = memo<ContentModerationPanelProps>(({
   showAIAssist = true,
   allowBulkActions = true,
 }) => {
-  const theme = useTheme();
+  const theme = useMantineTheme();
   const [tabValue, setTabValue] = useState(0);
   const [content, setContent] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -393,45 +373,45 @@ export const ContentModerationPanel = memo<ContentModerationPanelProps>(({
   const getContentIcon = (type: ContentType) => {
     switch (type) {
       case 'lesson':
-        return <EducationIcon />;
+        return <IconSchool size={16} />;
       case 'assessment':
-        return <AssessmentIcon />;
+        return <IconClipboardList size={16} />;
       case 'message':
-        return <MessageIcon />;
+        return <IconMessage size={16} />;
       case 'image':
-        return <ImageIcon />;
+        return <IconPhoto size={16} />;
       case 'video':
-        return <VideoIcon />;
+        return <IconVideo size={16} />;
       case 'document':
-        return <DocumentIcon />;
+        return <IconFileText size={16} />;
       case 'code':
-        return <CodeIcon />;
+        return <IconCode size={16} />;
       default:
-        return <InfoIcon />;
+        return <IconInfoCircle size={16} />;
     }
   };
 
-  const getStatusColor = (status: ContentStatus) => {
+  const getStatusColor = (status: ContentStatus): string => {
     switch (status) {
       case 'pending':
-        return 'warning';
+        return theme.colors.yellow[6];
       case 'approved':
-        return 'success';
+        return theme.colors.green[6];
       case 'rejected':
-        return 'error';
+        return theme.colors.red[6];
       case 'flagged':
-        return 'error';
+        return theme.colors.red[6];
       case 'under_review':
-        return 'info';
+        return theme.colors.blue[6];
       default:
-        return 'default';
+        return theme.colors.gray[6];
     }
   };
 
   const getAIScoreColor = (score: number) => {
-    if (score >= 80) return theme.palette.success.main;
-    if (score >= 60) return theme.palette.warning.main;
-    return theme.palette.error.main;
+    if (score >= 80) return theme.colors.green[6];
+    if (score >= 60) return theme.colors.yellow[6];
+    return theme.colors.red[6];
   };
 
   const filteredContent = content.filter(item => {
@@ -468,28 +448,28 @@ export const ContentModerationPanel = memo<ContentModerationPanelProps>(({
   );
 
   return (
-    <Paper sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Paper style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
-      <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Typography variant="h6" fontWeight="bold">
+      <Box p="md" style={{ borderBottom: `1px solid ${theme.colors.gray[3]}` }}>
+        <Group justify="space-between" align="center">
+          <Text size="lg" fw={700}>
             Content Moderation
-          </Typography>
-          <Stack direction="row" spacing={1}>
+          </Text>
+          <Group gap="xs">
             {allowBulkActions && selected.length > 0 && (
               <>
                 <Button
-                  size="small"
-                  color="success"
-                  startIcon={<ApproveIcon />}
+                  size="sm"
+                  color="green"
+                  leftSection={<IconCheck size={16} />}
                   onClick={() => handleBulkAction('approve')}
                 >
                   Approve ({selected.length})
                 </Button>
                 <Button
-                  size="small"
-                  color="error"
-                  startIcon={<RejectIcon />}
+                  size="sm"
+                  color="red"
+                  leftSection={<IconX size={16} />}
                   onClick={() => handleBulkAction('reject')}
                 >
                   Reject ({selected.length})
@@ -498,357 +478,359 @@ export const ContentModerationPanel = memo<ContentModerationPanelProps>(({
             )}
             {showAIAssist && (
               <Button
-                size="small"
-                variant="outlined"
-                startIcon={<AIIcon />}
+                size="sm"
+                variant="outline"
+                leftSection={<IconSparkles size={16} />}
               >
                 AI Assist
               </Button>
             )}
-          </Stack>
-        </Stack>
+          </Group>
+        </Group>
 
         {/* Tabs */}
-        <Tabs
-          value={tabValue}
-          onChange={(_, value) => setTabValue(value)}
-          sx={{ mt: 2 }}
-        >
-          <Tab
-            label={
-              <Badge badgeContent={content.filter(c => c.status === 'pending').length} color="warning">
+        <Tabs value={tabValue.toString()} onChange={(value) => setTabValue(parseInt(value))} mt="md">
+          <Tabs.List>
+            <Tabs.Tab value="0">
+              <Badge
+                count={content.filter(c => c.status === 'pending').length}
+                color="yellow"
+                size="sm"
+              >
                 Pending Review
               </Badge>
-            }
-          />
-          <Tab
-            label={
-              <Badge badgeContent={content.filter(c => c.status === 'flagged').length} color="error">
+            </Tabs.Tab>
+            <Tabs.Tab value="1">
+              <Badge
+                count={content.filter(c => c.status === 'flagged').length}
+                color="red"
+                size="sm"
+              >
                 Flagged
               </Badge>
-            }
-          />
-          <Tab
-            label={
-              <Badge badgeContent={content.filter(c => c.status === 'under_review').length} color="info">
+            </Tabs.Tab>
+            <Tabs.Tab value="2">
+              <Badge
+                count={content.filter(c => c.status === 'under_review').length}
+                color="blue"
+                size="sm"
+              >
                 Under Review
               </Badge>
-            }
-          />
-          <Tab label="All Content" />
+            </Tabs.Tab>
+            <Tabs.Tab value="3">All Content</Tabs.Tab>
+          </Tabs.List>
         </Tabs>
 
         {/* Filters */}
-        <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
-          <TextField
-            size="small"
+        <Group gap="md" mt="md">
+          <TextInput
+            size="sm"
             placeholder="Search content..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ flex: 1, maxWidth: 300 }}
+            onChange={(e) => setSearchTerm(e.currentTarget.value)}
+            leftSection={<IconSearch size={16} />}
+            style={{ flex: 1, maxWidth: 300 }}
           />
-          <FormControl size="small" sx={{ minWidth: 120 }}>
-            <InputLabel>Type</InputLabel>
-            <Select
-              value={filterType}
-              label="Type"
-              onChange={(e) => setFilterType(e.target.value as ContentType | 'all')}
-            >
-              <MenuItem value="all">All Types</MenuItem>
-              <MenuItem value="lesson">Lesson</MenuItem>
-              <MenuItem value="assessment">Assessment</MenuItem>
-              <MenuItem value="message">Message</MenuItem>
-              <MenuItem value="video">Video</MenuItem>
-              <MenuItem value="document">Document</MenuItem>
-            </Select>
-          </FormControl>
-        </Stack>
+          <Select
+            size="sm"
+            placeholder="Type"
+            value={filterType}
+            onChange={(value) => setFilterType(value as ContentType | 'all')}
+            data={[
+              { value: 'all', label: 'All Types' },
+              { value: 'lesson', label: 'Lesson' },
+              { value: 'assessment', label: 'Assessment' },
+              { value: 'message', label: 'Message' },
+              { value: 'video', label: 'Video' },
+              { value: 'document', label: 'Document' },
+            ]}
+            style={{ minWidth: 120 }}
+          />
+        </Group>
       </Box>
 
       {/* Loading */}
-      {loading && <LinearProgress />}
+      {loading && <Progress value={100} animated />}
 
       {/* Error */}
       {error && (
-        <Alert severity="error" sx={{ m: 2 }}>
+        <Alert color="red" m="md">
           {error}
         </Alert>
       )}
 
       {/* Content List */}
-      <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
-        <Grid container spacing={2}>
+      <Box style={{ flex: 1, overflow: 'auto' }} p="md">
+        <Grid>
           {paginatedContent.map(item => (
-            <Grid item xs={12} md={6} lg={4} key={item.id}>
+            <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={item.id}>
               <Card
-                sx={{
+                style={{
                   height: '100%',
                   display: 'flex',
                   flexDirection: 'column',
-                  borderLeft: `4px solid ${theme.palette[getStatusColor(item.status)].main}`,
+                  borderLeft: `4px solid ${getStatusColor(item.status)}`,
                 }}
               >
                 {item.thumbnail && (
-                  <CardMedia
-                    component="img"
-                    height="140"
-                    image={item.thumbnail}
-                    alt={item.title}
-                  />
+                  <Card.Section>
+                    <img
+                      src={item.thumbnail}
+                      alt={item.title}
+                      style={{ height: 140, width: '100%', objectFit: 'cover' }}
+                    />
+                  </Card.Section>
                 )}
-                <CardContent sx={{ flex: 1 }}>
-                  <Stack spacing={1}>
+                <Card.Section p="md" style={{ flex: 1 }}>
+                  <Stack gap="xs">
                     {/* Header */}
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
+                    <Group justify="space-between" align="center">
                       <Chip
-                        icon={getContentIcon(item.type)}
-                        label={item.type}
-                        size="small"
-                        variant="outlined"
-                      />
+                        leftSection={getContentIcon(item.type)}
+                        size="sm"
+                        variant="outline"
+                      >
+                        {item.type}
+                      </Chip>
                       <Chip
-                        label={item.status}
-                        size="small"
-                        color={getStatusColor(item.status) as any}
-                      />
-                    </Stack>
+                        size="sm"
+                        style={{ backgroundColor: getStatusColor(item.status), color: 'white' }}
+                      >
+                        {item.status}
+                      </Chip>
+                    </Group>
 
                     {/* Title and description */}
-                    <Typography variant="subtitle1" fontWeight="bold">
+                    <Text size="sm" fw={700}>
                       {item.title}
-                    </Typography>
+                    </Text>
                     {item.description && (
-                      <Typography variant="body2" color="text.secondary" sx={{ height: 40, overflow: 'hidden' }}>
+                      <Text size="xs" c="dimmed" style={{ height: 40, overflow: 'hidden' }}>
                         {item.description}
-                      </Typography>
+                      </Text>
                     )}
 
                     {/* Author */}
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <Avatar sx={{ width: 24, height: 24 }}>
+                    <Group gap="xs" align="center">
+                      <Avatar size={24} radius="xl">
                         {item.author.name.charAt(0)}
                       </Avatar>
-                      <Typography variant="caption">
+                      <Text size="xs">
                         {item.author.name} • {format(new Date(item.createdAt), 'MMM dd, HH:mm')}
-                      </Typography>
-                    </Stack>
+                      </Text>
+                    </Group>
 
                     {/* AI Scores */}
                     {showAIAssist && item.aiScore && (
-                      <Stack spacing={0.5}>
-                        <Typography variant="caption" color="text.secondary">
+                      <Stack gap="xs">
+                        <Text size="xs" c="dimmed">
                           AI Analysis
-                        </Typography>
-                        <Stack direction="row" spacing={2}>
-                          <Tooltip title="Safety Score">
-                            <Stack direction="row" alignItems="center" spacing={0.5}>
-                              <PolicyIcon fontSize="small" sx={{ color: getAIScoreColor(item.aiScore.safety) }} />
-                              <Typography variant="caption">{item.aiScore.safety}%</Typography>
-                            </Stack>
+                        </Text>
+                        <Group gap="md">
+                          <Tooltip label="Safety Score">
+                            <Group gap="xs" align="center">
+                              <IconGavel size={14} style={{ color: getAIScoreColor(item.aiScore.safety) }} />
+                              <Text size="xs">{item.aiScore.safety}%</Text>
+                            </Group>
                           </Tooltip>
-                          <Tooltip title="Quality Score">
-                            <Stack direction="row" alignItems="center" spacing={0.5}>
-                              <ThumbUpIcon fontSize="small" sx={{ color: getAIScoreColor(item.aiScore.quality) }} />
-                              <Typography variant="caption">{item.aiScore.quality}%</Typography>
-                            </Stack>
+                          <Tooltip label="Quality Score">
+                            <Group gap="xs" align="center">
+                              <IconThumbUp size={14} style={{ color: getAIScoreColor(item.aiScore.quality) }} />
+                              <Text size="xs">{item.aiScore.quality}%</Text>
+                            </Group>
                           </Tooltip>
-                          <Tooltip title="Relevance Score">
-                            <Stack direction="row" alignItems="center" spacing={0.5}>
-                              <InfoIcon fontSize="small" sx={{ color: getAIScoreColor(item.aiScore.relevance) }} />
-                              <Typography variant="caption">{item.aiScore.relevance}%</Typography>
-                            </Stack>
+                          <Tooltip label="Relevance Score">
+                            <Group gap="xs" align="center">
+                              <IconInfoCircle size={14} style={{ color: getAIScoreColor(item.aiScore.relevance) }} />
+                              <Text size="xs">{item.aiScore.relevance}%</Text>
+                            </Group>
                           </Tooltip>
-                        </Stack>
+                        </Group>
                       </Stack>
                     )}
 
                     {/* Flags and reports */}
                     {(item.flags > 0 || item.reports.length > 0) && (
-                      <Alert severity="warning" sx={{ py: 0.5 }}>
-                        <Stack spacing={0.5}>
-                          <Typography variant="caption">
+                      <Alert color="yellow" py="xs">
+                        <Stack gap="xs">
+                          <Text size="xs">
                             {item.flags} flags, {item.reports.length} reports
-                          </Typography>
+                          </Text>
                           {item.reports[0] && (
-                            <Typography variant="caption">
+                            <Text size="xs">
                               Latest: {item.reports[0].reason}
-                            </Typography>
+                            </Text>
                           )}
                         </Stack>
                       </Alert>
                     )}
                   </Stack>
-                </CardContent>
-                <CardActions>
-                  {allowBulkActions && (
-                    <Checkbox
-                      checked={selected.includes(item.id)}
-                      onChange={() => {
-                        if (selected.includes(item.id)) {
-                          setSelected(prev => prev.filter(id => id !== item.id));
-                        } else {
-                          setSelected(prev => [...prev, item.id]);
-                        }
-                      }}
-                    />
-                  )}
-                  <IconButton
-                    size="small"
-                    onClick={() => {
-                      setSelectedContent(item);
-                      setViewDialogOpen(true);
-                    }}
-                  >
-                    <ViewIcon />
-                  </IconButton>
-                  {item.status === 'pending' && (
-                    <>
-                      <IconButton
-                        size="small"
-                        color="success"
-                        onClick={() => handleApprove(item)}
-                      >
-                        <ApproveIcon />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        color="error"
+                </Card.Section>
+                <Card.Section p="xs" style={{ borderTop: `1px solid ${theme.colors.gray[3]}` }}>
+                  <Group justify="space-between" align="center">
+                    <Group gap="xs">
+                      {allowBulkActions && (
+                        <Checkbox
+                          checked={selected.includes(item.id)}
+                          onChange={() => {
+                            if (selected.includes(item.id)) {
+                              setSelected(prev => prev.filter(id => id !== item.id));
+                            } else {
+                              setSelected(prev => [...prev, item.id]);
+                            }
+                          }}
+                        />
+                      )}
+                      <ActionIcon
+                        size="sm"
+                        variant="subtle"
                         onClick={() => {
                           setSelectedContent(item);
-                          setRejectDialogOpen(true);
+                          setViewDialogOpen(true);
                         }}
                       >
-                        <RejectIcon />
-                      </IconButton>
-                    </>
-                  )}
-                  <IconButton
-                    size="small"
-                    onClick={() => handleDelete(item)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </CardActions>
+                        <IconEye size={16} />
+                      </ActionIcon>
+                      {item.status === 'pending' && (
+                        <>
+                          <ActionIcon
+                            size="sm"
+                            variant="subtle"
+                            color="green"
+                            onClick={() => handleApprove(item)}
+                          >
+                            <IconCheck size={16} />
+                          </ActionIcon>
+                          <ActionIcon
+                            size="sm"
+                            variant="subtle"
+                            color="red"
+                            onClick={() => {
+                              setSelectedContent(item);
+                              setRejectDialogOpen(true);
+                            }}
+                          >
+                            <IconX size={16} />
+                          </ActionIcon>
+                        </>
+                      )}
+                    </Group>
+                    <ActionIcon
+                      size="sm"
+                      variant="subtle"
+                      color="red"
+                      onClick={() => handleDelete(item)}
+                    >
+                      <IconTrash size={16} />
+                    </ActionIcon>
+                  </Group>
+                </Card.Section>
               </Card>
-            </Grid>
+            </Grid.Col>
           ))}
         </Grid>
       </Box>
 
       {/* Pagination */}
-      <TablePagination
-        component="div"
-        count={tabContent.length}
-        page={page}
-        onPageChange={(_, newPage) => setPage(newPage)}
-        rowsPerPage={rowsPerPage}
-        onRowsPerPageChange={(e) => {
-          setRowsPerPage(parseInt(e.target.value, 10));
-          setPage(0);
-        }}
-      />
+      <Box p="md" style={{ borderTop: `1px solid ${theme.colors.gray[3]}` }}>
+        <Group justify="space-between" align="center">
+          <Text size="sm" c="dimmed">
+            Showing {page * rowsPerPage + 1}-{Math.min((page + 1) * rowsPerPage, tabContent.length)} of {tabContent.length} items
+          </Text>
+          <Pagination
+            total={Math.ceil(tabContent.length / rowsPerPage)}
+            value={page + 1}
+            onChange={(newPage) => setPage(newPage - 1)}
+            size="sm"
+          />
+        </Group>
+      </Box>
 
       {/* View Dialog */}
-      <Dialog
-        open={viewDialogOpen}
+      <Modal
+        opened={viewDialogOpen}
         onClose={() => setViewDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
+        title="Content Details"
+        size="lg"
       >
-        <DialogTitle>Content Details</DialogTitle>
-        <DialogContent>
-          {selectedContent && (
-            <Stack spacing={2}>
-              <Typography variant="h6">{selectedContent.title}</Typography>
-              {selectedContent.description && (
-                <Typography>{selectedContent.description}</Typography>
-              )}
-              {selectedContent.content && (
-                <Paper variant="outlined" sx={{ p: 2 }}>
-                  <Typography>{selectedContent.content}</Typography>
-                </Paper>
-              )}
-              <Divider />
-              <Typography variant="subtitle2">Metadata</Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <Typography variant="caption" color="text.secondary">
-                    Author
-                  </Typography>
-                  <Typography>{selectedContent.author.name}</Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="caption" color="text.secondary">
-                    Created
-                  </Typography>
-                  <Typography>
-                    {format(new Date(selectedContent.createdAt), 'PPp')}
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Stack>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setViewDialogOpen(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
+        {selectedContent && (
+          <Stack gap="md">
+            <Text size="lg" fw={700}>{selectedContent.title}</Text>
+            {selectedContent.description && (
+              <Text>{selectedContent.description}</Text>
+            )}
+            {selectedContent.content && (
+              <Paper withBorder p="md">
+                <Text>{selectedContent.content}</Text>
+              </Paper>
+            )}
+            <Divider />
+            <Text size="sm" fw={600}>Metadata</Text>
+            <Grid>
+              <Grid.Col span={6}>
+                <Text size="xs" c="dimmed">Author</Text>
+                <Text size="sm">{selectedContent.author.name}</Text>
+              </Grid.Col>
+              <Grid.Col span={6}>
+                <Text size="xs" c="dimmed">Created</Text>
+                <Text size="sm">
+                  {format(new Date(selectedContent.createdAt), 'PPp')}
+                </Text>
+              </Grid.Col>
+            </Grid>
+            <Group justify="flex-end" mt="md">
+              <Button variant="light" onClick={() => setViewDialogOpen(false)}>
+                Close
+              </Button>
+            </Group>
+          </Stack>
+        )}
+      </Modal>
 
       {/* Reject Dialog */}
-      <Dialog
-        open={rejectDialogOpen}
+      <Modal
+        opened={rejectDialogOpen}
         onClose={() => setRejectDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
+        title="Reject Content"
+        size="md"
       >
-        <DialogTitle>Reject Content</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2}>
-            <Typography>
-              Please provide a reason for rejecting "{selectedContent?.title}"
-            </Typography>
-            <FormControl fullWidth>
-              <InputLabel>Reason</InputLabel>
-              <Select
-                value={rejectReason}
-                label="Reason"
-                onChange={(e) => setRejectReason(e.target.value)}
-              >
-                <MenuItem value="inappropriate">Inappropriate Content</MenuItem>
-                <MenuItem value="spam">Spam</MenuItem>
-                <MenuItem value="copyright">Copyright Violation</MenuItem>
-                <MenuItem value="quality">Low Quality</MenuItem>
-                <MenuItem value="policy">Policy Violation</MenuItem>
-                <MenuItem value="other">Other</MenuItem>
-              </Select>
-            </FormControl>
-            <TextField
-              multiline
-              rows={3}
-              label="Additional Comments"
-              fullWidth
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setRejectDialogOpen(false)}>Cancel</Button>
-          <Button
-            variant="contained"
-            color="error"
-            onClick={handleReject}
-            disabled={!rejectReason}
-          >
-            Reject
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <Stack gap="md">
+          <Text>
+            Please provide a reason for rejecting "{selectedContent?.title}"
+          </Text>
+          <Select
+            label="Reason"
+            placeholder="Select reason"
+            value={rejectReason}
+            onChange={(value) => setRejectReason(value || '')}
+            data={[
+              { value: 'inappropriate', label: 'Inappropriate Content' },
+              { value: 'spam', label: 'Spam' },
+              { value: 'copyright', label: 'Copyright Violation' },
+              { value: 'quality', label: 'Low Quality' },
+              { value: 'policy', label: 'Policy Violation' },
+              { value: 'other', label: 'Other' },
+            ]}
+          />
+          <TextInput
+            label="Additional Comments"
+            placeholder="Optional additional comments"
+          />
+          <Group justify="flex-end" mt="md">
+            <Button variant="light" onClick={() => setRejectDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              color="red"
+              onClick={handleReject}
+              disabled={!rejectReason}
+            >
+              Reject
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Paper>
   );
 });

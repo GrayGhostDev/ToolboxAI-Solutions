@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   Container,
   Paper,
@@ -23,40 +23,40 @@ import {
   IconAlertCircle,
   IconCheck
 } from '@tabler/icons-react';
-import { Link, useNavigate } from "react-router-dom";
-import { login } from "../../services/api";
-import { useAppDispatch } from "../../store";
-import { signInSuccess } from "../../store/slices/userSlice";
-import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY } from "../../config";
-import { pusherService } from "../../services/pusher";
-import { logger } from "../../utils/logger";
+import { Link, useNavigate } from 'react-router-dom';
+import { login } from '../../services/api';
+import { useAppDispatch } from '../../store';
+import { signInSuccess } from '../../store/slices/userSlice';
+import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY } from '../../config';
+import { pusherService } from '../../services/pusher';
+import { logger } from '../../utils/logger';
 
 export default function LoginMantine() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
+    email: '',
+    password: '',
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   const handleChange = (field: string) => (value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    if (error) setError("");
+    if (error) setError('');
   };
 
   const validateForm = () => {
     if (!formData.email || !formData.password) {
-      setError("Email and password are required");
+      setError('Email and password are required');
       return false;
     }
 
     // Basic email format validation - check if it's not a username (contains _)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const isUsername = formData.email.includes("_") || !formData.email.includes("@");
+    const isUsername = formData.email.includes('_') || !formData.email.includes('@');
     if (!isUsername && !emailRegex.test(formData.email)) {
-      setError("Please enter a valid email address or username");
+      setError('Please enter a valid email address or username');
       return false;
     }
 
@@ -65,7 +65,7 @@ export default function LoginMantine() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
 
     if (!validateForm()) {
       setLoading(false);
@@ -123,9 +123,9 @@ export default function LoginMantine() {
       });
 
       // Navigate to dashboard
-      navigate("/");
+      navigate('/');
     } catch (err: any) {
-      const errorMessage = err.message || "Login failed. Please check your credentials.";
+      const errorMessage = err.message || 'Login failed. Please check your credentials.';
       setError(errorMessage);
 
       // Show error notification
@@ -141,14 +141,14 @@ export default function LoginMantine() {
   };
 
   const demoCredentials = [
-    { role: "Admin", email: "admin@toolboxai.com", password: "Admin123!" },
-    { role: "Teacher", email: "jane.smith@school.edu", password: "Teacher123!" },
-    { role: "Student", email: "alex.johnson@student.edu", password: "Student123!" },
+    { role: 'Admin', email: 'admin@toolboxai.com', password: 'Admin123!' },
+    { role: 'Teacher', email: 'jane.smith@school.edu', password: 'Teacher123!' },
+    { role: 'Student', email: 'alex.johnson@student.edu', password: 'Student123!' },
   ];
 
   const fillDemoCredentials = (email: string, password: string) => {
     setFormData({ email, password });
-    setError("");
+    setError('');
   };
 
   return (
@@ -176,7 +176,7 @@ export default function LoginMantine() {
           {/* Header with gradient background */}
           <Box
             style={{
-              margin: `calc(var(--mantine-spacing-xl) * -1)`,
+              margin: 'calc(var(--mantine-spacing-xl) * -1)',
               marginBottom: 'var(--mantine-spacing-xl)',
               padding: 'var(--mantine-spacing-xl)',
               background: 'linear-gradient(135deg, var(--mantine-color-roblox-blue-6) 0%, var(--mantine-color-roblox-purple-6) 100%)',

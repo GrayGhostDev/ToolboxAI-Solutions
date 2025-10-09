@@ -1,4 +1,22 @@
-import { Box, Button, Text, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
+import {
+  Box, Button, Text, Paper, Stack, SimpleGrid, Container, ActionIcon, Avatar, Card,
+  Group, List, Divider, TextInput, Select, Badge, Alert, Loader,
+  Progress, Modal, Drawer, Tabs, Menu, Tooltip, Checkbox, Radio,
+  Switch, Slider, Rating, Skeleton, Table, useMantineTheme
+} from '@mantine/core';
+
+// Helper function for color transparency (replaces MUI alpha)
+const alpha = (color: string, opacity: number) => {
+  if (color.startsWith('#')) {
+    const hex = color.slice(1);
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  }
+  return color;
+};
+
 /**
  * Observability Dashboard Component
  *
@@ -17,7 +35,7 @@ import {
   IconShare, IconRefresh, IconLogin, IconSchool, IconBook,
   IconChartBar, IconPalette, IconMoon, IconSun, IconPlayerPlay,
   IconPlayerPause, IconPlayerStop, IconVolume, IconVolumeOff,
-  IconInfoCircle, IconAlertTriangle, IconCircleX, IconCircleCheck,
+  IconInfoCircle, IconAlertTriangle, IconCircleCheck,
   IconArrowLeft, IconArrowRight, IconSend, IconDeviceFloppy,
   IconPrinter, IconHelp, IconHelpCircle, IconLock, IconLockOpen,
   IconMail, IconPhone, IconMapPin, IconMap, IconCalendar, IconClock,
@@ -32,7 +50,8 @@ import {
   IconBellOff, IconCalendarEvent, IconCalendarStats, IconAlarm,
   IconAlarmOff, IconHistory, IconRefreshOff, IconRefreshAlert,
   IconDashboard, IconUsers, IconDotsVertical, IconDots,
-  IconReportAnalytics
+  IconReportAnalytics, IconGauge, IconActivity, IconTrendingUp,
+  IconTrendingDown, IconNetwork, IconBug, IconShieldCheck, IconDatabase
 } from '@tabler/icons-react';
 import {
   LineChart,
@@ -59,7 +78,6 @@ import {
   Sankey
 } from 'recharts';
 import { format, subMinutes, isAfter } from 'date-fns';
-import { IconAlertTriangle, IconBell, IconBugReport, IconChevronDown, IconChevronUp, IconCircleCheck, IconCircleX, IconCloudQueue, IconCode, IconFilter, IconHub, IconMemory, IconNetworkCheck, IconRefresh, IconReportAnalytics, IconSearch, IconSpeed, IconStorage, IconTimeline, IconTrendingDown, IconTrendingUp } from '@tabler/icons-react';
 
 // Types
 interface MetricData {
@@ -103,64 +121,45 @@ interface SystemHealth {
   };
 }
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
 // Custom components
-const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other }) => {
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`observability-tabpanel-${index}`}
-      aria-labelledby={`observability-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box style={{ p: 3 }}>{children}</Box>}
-    </div>
-  );
-};
 
 const MetricCard: React.FC<{
   title: string;
   value: number | string;
   unit?: string;
   trend?: 'up' | 'down' | 'stable';
-  color?: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
+  color?: 'blue' | 'gray' | 'red' | 'orange' | 'cyan' | 'green';
   icon?: React.ReactElement;
-}> = ({ title, value, unit, trend, color = 'primary', icon }) => {
+}> = ({ title, value, unit, trend, color = 'blue', icon }) => {
+  const theme = useMantineTheme();
+
   return (
     <Card style={{ height: '100%' }}>
-      <CardContent>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Box>
-            <Text color="textSecondary" gutterBottom size="sm">
-              {title}
-            </Text>
-            <Text order={4} component="div" color={color}>
-              {value}
-              {unit && (
-                <Text component="span" size="md" color="textSecondary">
-                  {' ' + unit}
-                </Text>
-              )}
-            </Text>
-          </Box>
-          <Box display="flex" flexDirection="column" alignItems="center">
-            {icon && <Box mb={1}>{icon}</Box>}
-            {trend && (
-              <Box>
-                {trend === 'up' && <IconTrendingUp color="green" />}
-                {trend === 'down' && <IconTrendingDown color="red" />}
-                {trend === 'stable' && <IconTrendingUp color="action" />}
-              </Box>
+      <Group justify="space-between" align="center">
+        <Box>
+          <Text c="dimmed" size="sm">
+            {title}
+          </Text>
+          <Text size="xl" fw={600} c={color}>
+            {value}
+            {unit && (
+              <Text component="span" size="md" c="dimmed">
+                {' ' + unit}
+              </Text>
             )}
-          </Box>
+          </Text>
         </Box>
-      </CardContent>
+        <Stack align="center" gap="xs">
+          {icon && <Box>{icon}</Box>}
+          {trend && (
+            <Box>
+              {trend === 'up' && <IconTrendingUp color={theme.colors.green[6]} />}
+              {trend === 'down' && <IconTrendingDown color={theme.colors.red[6]} />}
+              {trend === 'stable' && <IconTrendingUp color={theme.colors.gray[6]} />}
+            </Box>
+          )}
+        </Stack>
+      </Group>
     </Card>
   );
 };
@@ -181,34 +180,39 @@ const TraceTimeline: React.FC<{ traces: TraceData[] }> = ({ traces }) => {
   };
 
   const renderTrace = (trace: TraceData, depth = 0) => (
-    <Box key={trace.spanId} ml={depth * 4}>
-      <Paper style={{ p: 2, mb: 1, backgroundColor: trace.status === 'ERROR' ? 'error.light' : 'background.paper' }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Box display="flex" alignItems="center">
+    <Box key={trace.spanId} ml={depth * 16}>
+      <Paper style={{
+        padding: 16,
+        marginBottom: 8,
+        backgroundColor: trace.status === 'ERROR' ? '#ffe6e6' : 'white'
+      }}>
+        <Group justify="space-between" align="center">
+          <Group align="center">
             {trace.children && trace.children.length > 0 && (
-              <IconButton size="small" onClick={() => toggleExpand(trace.spanId)}>
+              <ActionIcon size="sm" onClick={() => toggleExpand(trace.spanId)}>
                 {expanded.has(trace.spanId) ? <IconChevronUp /> : <IconChevronDown />}
-              </IconButton>
+              </ActionIcon>
             )}
-            <Text size="sm" fontFamily="monospace">
+            <Text size="sm" ff="monospace">
               {trace.operationName}
             </Text>
-            <Chip
-              label={trace.serviceName}
-              size="small"
-              style={{ ml: 1 }}
-              color={trace.status === 'ERROR' ? 'error' : 'primary'}
-            />
-          </Box>
-          <Box display="flex" alignItems="center" gap={1}>
-            <Text variant="caption" color="textSecondary">
+            <Badge
+              size="sm"
+              style={{ marginLeft: 8 }}
+              color={trace.status === 'ERROR' ? 'red' : 'blue'}
+            >
+              {trace.serviceName}
+            </Badge>
+          </Group>
+          <Group align="center" gap={8}>
+            <Text size="xs" c="dimmed">
               {trace.duration}ms
             </Text>
-            {trace.status === 'ERROR' && <IconCircleX color="red" fontSize="small" />}
-          </Box>
-        </Box>
+            {trace.status === 'ERROR' && <IconX color="red" size={16} />}
+          </Group>
+        </Group>
         {expanded.has(trace.spanId) && trace.children && (
-          <Box mt={2}>
+          <Box mt={16}>
             {trace.children.map(child => renderTrace(child, depth + 1))}
           </Box>
         )}
@@ -416,7 +420,7 @@ const ObservabilityDashboard: React.FC = () => {
 
     } catch (error: any) {
       console.error('Failed to start streaming:', error);
-      setStreamingError((error instanceof IconCircleX) ? (error as IconCircleX).message : 'Failed to start streaming');
+      setStreamingError('Failed to start streaming');
       setIsStreaming(false);
     }
   }, []);
@@ -480,181 +484,179 @@ const ObservabilityDashboard: React.FC = () => {
   // Chart colors
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
+  const theme = useMantineTheme();
+
   return (
-    <Box style={{ flexGrow: 1, p: 3 }}>
+    <Box style={{ flexGrow: 1, padding: 24 }}>
       {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Text order={4} component="h1">
+      <Group justify="space-between" align="center" mb={24}>
+        <Text size="xl" fw={600}>
           Observability Dashboard
         </Text>
-        <Box display="flex" gap={2} alignItems="center">
-          <FormControl size="small" style={{ minWidth: 120 }}>
-            <InputLabel>Time Range</InputLabel>
-            <Select
-              value={timeRange}
-              label="Time Range"
-              onChange={(e) => setTimeRange(e.target.value)}
-            >
-              <MenuItem value="5m">Last 5 min</MenuItem>
-              <MenuItem value="15m">Last 15 min</MenuItem>
-              <MenuItem value="1h">Last 1 hour</MenuItem>
-              <MenuItem value="6h">Last 6 hours</MenuItem>
-              <MenuItem value="24h">Last 24 hours</MenuItem>
-            </Select>
-          </FormControl>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={autoRefresh}
-                onChange={(e) => setAutoRefresh(e.target.checked)}
-              />
-            }
-            label="Auto Refresh"
+        <Group gap={16} align="center">
+          <Select
+            value={timeRange}
+            data={[
+              { value: '5m', label: 'Last 5 min' },
+              { value: '15m', label: 'Last 15 min' },
+              { value: '1h', label: 'Last 1 hour' },
+              { value: '6h', label: 'Last 6 hours' },
+              { value: '24h', label: 'Last 24 hours' }
+            ]}
+            onChange={(value) => setTimeRange(value || '1h')}
+            style={{ minWidth: 120 }}
           />
-          <FormControlLabel
-            control={
-              <Switch
-                checked={isStreaming}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    startStreaming();
-                  } else {
-                    stopStreaming();
-                  }
-                }}
-                disabled={!autoRefresh}
-                color="gray"
-              />
-            }
-            label="Real-time Stream"
-          />
-          <IconButton onClick={fetchMetrics} disabled={loading}>
+          <Group align="center" gap={8}>
+            <Switch
+              checked={autoRefresh}
+              onChange={(e) => setAutoRefresh(e.currentTarget.checked)}
+            />
+            <Text size="sm">Auto Refresh</Text>
+          </Group>
+          <Group align="center" gap={8}>
+            <Switch
+              checked={isStreaming}
+              onChange={(e) => {
+                if (e.currentTarget.checked) {
+                  startStreaming();
+                } else {
+                  stopStreaming();
+                }
+              }}
+              disabled={!autoRefresh}
+            />
+            <Text size="sm">Real-time Stream</Text>
+          </Group>
+          <ActionIcon onClick={fetchMetrics} disabled={loading}>
             <IconRefresh />
-          </IconButton>
-        </Box>
-      </Box>
+          </ActionIcon>
+        </Group>
+      </Group>
 
       {/* Loading indicator */}
-      {loading && <LinearProgress style={{ mb: 2 }} />}
+      {loading && <Progress value={undefined} mb={16} />}
 
       {/* Streaming error alert */}
       {streamingError && (
-        <Alert severity="error" style={{ mb: 2 }} onClose={() => setStreamingError(null)}>
-          <AlertTitle>Streaming IconCircleX</AlertTitle>
+        <Alert
+          color="red"
+          title="Streaming Error"
+          onClose={() => setStreamingError(null)}
+          withCloseButton
+          mb={16}
+        >
           {streamingError}
         </Alert>
       )}
 
       {/* Alert banner for critical issues */}
       {summaryMetrics.activeAlerts > 0 && (
-        <Alert severity="error" style={{ mb: 2 }}>
-          <AlertTitle>Critical Alerts</AlertTitle>
+        <Alert
+          color="red"
+          title="Critical Alerts"
+          mb={16}
+        >
           {summaryMetrics.activeAlerts} critical alerts require immediate attention
         </Alert>
       )}
 
       {/* Summary Cards */}
-      <SimpleGrid spacing={3} mb={3}>
-        <Box xs={12} sm={6} md={2}>
-          <MetricCard
-            title="Avg Latency"
-            value={summaryMetrics.avgLatency}
-            unit="ms"
-            trend={summaryMetrics.avgLatency > 200 ? 'up' : 'stable'}
-            color={summaryMetrics.avgLatency > 500 ? 'error' : 'primary'}
-            icon={<IconSpeed />}
-          />
-        </Box>
-        <Box xs={12} sm={6} md={2}>
-          <MetricCard
-            title="Throughput"
-            value={summaryMetrics.totalRequests}
-            unit="req/5m"
-            trend="up"
-            color="green"
-            icon={<IconTimeline />}
-          />
-        </Box>
-        <Box xs={12} sm={6} md={2}>
-          <MetricCard
-            title="IconCircleX Rate"
-            value={summaryMetrics.errorRate}
-            unit="%"
-            trend={parseFloat(summaryMetrics.errorRate as string) > 1 ? 'up' : 'stable'}
-            color={parseFloat(summaryMetrics.errorRate as string) > 5 ? 'error' : 'warning'}
-            icon={<IconCircleX />}
-          />
-        </Box>
-        <Box xs={12} sm={6} md={2}>
-          <MetricCard
-            title="Service Health"
-            value={`${summaryMetrics.healthyServices}/${summaryMetrics.totalServices}`}
-            trend="stable"
-            color={summaryMetrics.healthyServices === summaryMetrics.totalServices ? 'success' : 'warning'}
-            icon={<IconCircleCheck />}
-          />
-        </Box>
-        <Box xs={12} sm={6} md={2}>
-          <MetricCard
-            title="Cache Hit Rate"
-            value={cacheHitRate}
-            unit="%"
-            trend={cacheHitRate > 80 ? 'up' : 'down'}
-            color={cacheHitRate > 80 ? 'success' : 'warning'}
-            icon={<IconStorage />}
-          />
-        </Box>
-        <Box xs={12} sm={6} md={2}>
-          <MetricCard
-            title="Active Alerts"
-            value={summaryMetrics.activeAlerts}
-            trend={summaryMetrics.activeAlerts > 0 ? 'up' : 'stable'}
-            color={summaryMetrics.activeAlerts > 0 ? 'error' : 'success'}
-            icon={<IconBell />}
-          />
-        </Box>
+      <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 6 }} spacing="lg" mb={24}>
+        <MetricCard
+          title="Avg Latency"
+          value={summaryMetrics.avgLatency}
+          unit="ms"
+          trend={summaryMetrics.avgLatency > 200 ? 'up' : 'stable'}
+          color={summaryMetrics.avgLatency > 500 ? 'red' : 'blue'}
+          icon={<IconGauge />}
+        />
+        <MetricCard
+          title="Throughput"
+          value={summaryMetrics.totalRequests}
+          unit="req/5m"
+          trend="up"
+          color="green"
+          icon={<IconActivity />}
+        />
+        <MetricCard
+          title="Error Rate"
+          value={summaryMetrics.errorRate}
+          unit="%"
+          trend={parseFloat(summaryMetrics.errorRate as string) > 1 ? 'up' : 'stable'}
+          color={parseFloat(summaryMetrics.errorRate as string) > 5 ? 'red' : 'orange'}
+          icon={<IconX />}
+        />
+        <MetricCard
+          title="Service Health"
+          value={`${summaryMetrics.healthyServices}/${summaryMetrics.totalServices}`}
+          trend="stable"
+          color={summaryMetrics.healthyServices === summaryMetrics.totalServices ? 'green' : 'orange'}
+          icon={<IconCircleCheck />}
+        />
+        <MetricCard
+          title="Cache Hit Rate"
+          value={cacheHitRate}
+          unit="%"
+          trend={cacheHitRate > 80 ? 'up' : 'down'}
+          color={cacheHitRate > 80 ? 'green' : 'orange'}
+          icon={<IconDatabase />}
+        />
+        <MetricCard
+          title="Active Alerts"
+          value={summaryMetrics.activeAlerts}
+          trend={summaryMetrics.activeAlerts > 0 ? 'up' : 'stable'}
+          color={summaryMetrics.activeAlerts > 0 ? 'red' : 'green'}
+          icon={<IconBell />}
+        />
       </SimpleGrid>
 
       {/* Streaming Status Indicator */}
       {isStreaming && (
-        <Box display="flex" alignItems="center" gap={1} mb={2}>
+        <Group align="center" gap={8} mb={16}>
           <Box
             style={{
               width: 8,
               height: 8,
               borderRadius: '50%',
-              backgroundColor: 'success.main',
+              backgroundColor: theme.colors.green[6],
               animation: 'pulse 2s infinite'
             }}
           />
-          <Text size="sm" color="success.main">
+          <Text size="sm" c="green">
             Real-time streaming active
           </Text>
-        </Box>
+        </Group>
       )}
 
       {/* Main Content Tabs */}
-      <Paper style={{ mb: 3 }}>
+      <Paper mb={24}>
         <Tabs
-          value={tabValue}
-          onChange={(_, newValue) => setTabValue(newValue)}
-          indicatorColor="primary"
-          textColor="primary"
+          value={String(tabValue)}
+          onChange={(value) => setTabValue(Number(value))}
         >
-          <Tab label="Metrics" icon={<IconReportAnalytics />} iconPosition="start" />
-          <Tab label="Traces" icon={<IconTimeline />} iconPosition="start" />
-          <Tab label="Load Balancing" icon={<IconHub />} iconPosition="start" />
-          <Tab label="Anomalies" icon={<IconBugReport />} iconPosition="start" />
-          <Tab label="System Health" icon={<IconNetworkCheck />} iconPosition="start" />
-        </Tabs>
+          <Tabs.List>
+            <Tabs.Tab value="0" leftSection={<IconReportAnalytics />}>
+              Metrics
+            </Tabs.Tab>
+            <Tabs.Tab value="1" leftSection={<IconActivity />}>
+              Traces
+            </Tabs.Tab>
+            <Tabs.Tab value="2" leftSection={<IconNetwork />}>
+              Load Balancing
+            </Tabs.Tab>
+            <Tabs.Tab value="3" leftSection={<IconBug />}>
+              Anomalies
+            </Tabs.Tab>
+            <Tabs.Tab value="4" leftSection={<IconShieldCheck />}>
+              System Health
+            </Tabs.Tab>
+          </Tabs.List>
 
-        {/* Metrics Tab */}
-        <TabPanel value={tabValue} index={0}>
-          <SimpleGrid spacing={3}>
-            {/* Latency Chart */}
-            <Box xs={12} md={6}>
-              <Paper style={{ p: 2 }}>
-                <Text order={6} gutterBottom>
+          <Tabs.Panel value="0">
+            <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
+              {/* Latency Chart */}
+              <Paper p="md">
+                <Text size="lg" fw={500} mb="sm">
                   Response Latency
                 </Text>
                 <ResponsiveContainer width="100%" height={300}>
@@ -677,12 +679,10 @@ const ObservabilityDashboard: React.FC = () => {
                   </LineChart>
                 </ResponsiveContainer>
               </Paper>
-            </Box>
 
-            {/* Throughput Chart */}
-            <Box xs={12} md={6}>
-              <Paper style={{ p: 2 }}>
-                <Text order={6} gutterBottom>
+              {/* Throughput Chart */}
+              <Paper p="md">
+                <Text size="lg" fw={500} mb="sm">
                   Request Throughput
                 </Text>
                 <ResponsiveContainer width="100%" height={300}>
@@ -705,13 +705,11 @@ const ObservabilityDashboard: React.FC = () => {
                   </AreaChart>
                 </ResponsiveContainer>
               </Paper>
-            </Box>
 
-            {/* IconCircleX Rate Chart */}
-            <Box xs={12} md={6}>
-              <Paper style={{ p: 2 }}>
-                <Text order={6} gutterBottom>
-                  IconCircleX Rate
+              {/* Error Rate Chart */}
+              <Paper p="md">
+                <Text size="lg" fw={500} mb="sm">
+                  Error Rate
                 </Text>
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={errorRateData}>
@@ -727,18 +725,16 @@ const ObservabilityDashboard: React.FC = () => {
                       type="monotone"
                       dataKey="value"
                       stroke="#ff7300"
-                      name="IconCircleX Rate (%)"
+                      name="Error Rate (%)"
                       strokeWidth={2}
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </Paper>
-            </Box>
 
-            {/* System Metrics */}
-            <Box xs={12} md={6}>
-              <Paper style={{ p: 2 }}>
-                <Text order={6} gutterBottom>
+              {/* System Metrics */}
+              <Paper p="md">
+                <Text size="lg" fw={500} mb="sm">
                   System Resources
                 </Text>
                 <ResponsiveContainer width="100%" height={300}>
@@ -762,51 +758,47 @@ const ObservabilityDashboard: React.FC = () => {
                   </RadarChart>
                 </ResponsiveContainer>
               </Paper>
+            </SimpleGrid>
+          </Tabs.Panel>
+
+          {/* Traces Tab */}
+          <Tabs.Panel value="1">
+            <Box>
+              <Text size="lg" fw={500} mb="md">
+                Recent Traces
+              </Text>
+              <TraceTimeline traces={traces} />
             </Box>
-          </SimpleGrid>
-        </TabPanel>
+          </Tabs.Panel>
 
-        {/* Traces Tab */}
-        <TabPanel value={tabValue} index={1}>
-          <Box>
-            <Text order={6} gutterBottom>
-              Recent Traces
-            </Text>
-            <TraceTimeline traces={traces} />
-          </Box>
-        </TabPanel>
-
-        {/* Load Balancing Tab */}
-        <TabPanel value={tabValue} index={2}>
-          <SimpleGrid spacing={3}>
-            {/* Circuit Breakers */}
-            <Box xs={12} md={6}>
-              <Paper style={{ p: 2 }}>
-                <Text order={6} gutterBottom>
+          {/* Load Balancing Tab */}
+          <Tabs.Panel value="2">
+            <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
+              {/* Circuit Breakers */}
+              <Paper p="md">
+                <Text size="lg" fw={500} mb="md">
                   Circuit Breaker States
                 </Text>
-                <List>
+                <Stack gap="sm">
                   {Object.entries(circuitBreakerStates).map(([name, state]) => (
-                    <ListItem key={name}>
-                      <ListItemIcon>
-                        {state === 'OPEN' && <IconCircleX color="red" />}
-                        {state === 'HALF_OPEN' && <IconAlertTriangle color="yellow" />}
+                    <Group key={name} justify="space-between" align="center">
+                      <Group align="center" gap="sm">
+                        {state === 'OPEN' && <IconX color="red" />}
+                        {state === 'HALF_OPEN' && <IconAlertTriangle color="orange" />}
                         {state === 'CLOSED' && <IconCircleCheck color="green" />}
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={name}
-                        secondary={`State: ${state}`}
-                      />
-                    </ListItem>
+                        <Box>
+                          <Text fw={500}>{name}</Text>
+                          <Text size="sm" c="dimmed">State: {state}</Text>
+                        </Box>
+                      </Group>
+                    </Group>
                   ))}
-                </List>
+                </Stack>
               </Paper>
-            </Box>
 
-            {/* Rate Limiting */}
-            <Box xs={12} md={6}>
-              <Paper style={{ p: 2 }}>
-                <Text order={6} gutterBottom>
+              {/* Rate Limiting */}
+              <Paper p="md">
+                <Text size="lg" fw={500} mb="md">
                   Rate Limiting Metrics
                 </Text>
                 <ResponsiveContainer width="100%" height={300}>
@@ -823,141 +815,137 @@ const ObservabilityDashboard: React.FC = () => {
                   </BarChart>
                 </ResponsiveContainer>
               </Paper>
-            </Box>
 
-            {/* Database Replicas */}
-            <Box xs={12}>
-              <Paper style={{ p: 2 }}>
-                <Text order={6} gutterBottom>
-                  Database Replica Health
-                </Text>
-                <SimpleGrid spacing={2}>
-                  {Object.entries(replicaHealth).map(([replica, healthy]) => (
-                    <Box xs={12} sm={6} md={3} key={replica}>
-                      <Card style={{ backgroundColor: healthy ? 'success.light' : 'error.light' }}>
-                        <CardContent>
-                          <Text size="sm" color="textSecondary">
+              {/* Database Replicas */}
+              <Box style={{ gridColumn: '1 / -1' }}>
+                <Paper p="md">
+                  <Text size="lg" fw={500} mb="md">
+                    Database Replica Health
+                  </Text>
+                  <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="md">
+                    {Object.entries(replicaHealth).map(([replica, healthy]) => (
+                      <Card key={replica} style={{
+                        backgroundColor: healthy ? alpha(theme.colors.green[6], 0.1) : alpha(theme.colors.red[6], 0.1)
+                      }}>
+                        <Stack gap="xs">
+                          <Text size="sm" c="dimmed">
                             {replica}
                           </Text>
-                          <Box display="flex" alignItems="center" gap={1}>
+                          <Group align="center" gap="xs">
                             {healthy ? (
-                              <IconCircleCheck color="green" />
+                              <IconCircleCheck color={theme.colors.green[6]} />
                             ) : (
-                              <IconCircleX color="red" />
+                              <IconX color={theme.colors.red[6]} />
                             )}
-                            <Text order={6}>
+                            <Text fw={500}>
                               {healthy ? 'Healthy' : 'Unhealthy'}
                             </Text>
-                          </Box>
-                        </CardContent>
+                          </Group>
+                        </Stack>
                       </Card>
-                    </Box>
-                  ))}
-                </SimpleGrid>
-              </Paper>
-            </Box>
-          </SimpleGrid>
-        </TabPanel>
+                    ))}
+                  </SimpleGrid>
+                </Paper>
+              </Box>
+            </SimpleGrid>
+          </Tabs.Panel>
 
-        {/* Anomalies Tab */}
-        <TabPanel value={tabValue} index={3}>
-          <Box>
-            <Text order={6} gutterBottom>
-              Detected Anomalies
-            </Text>
-            <SimpleGrid spacing={2}>
-              {anomalies.map((anomaly) => (
-                <Box xs={12} key={anomaly.id}>
+          {/* Anomalies Tab */}
+          <Tabs.Panel value="3">
+            <Box>
+              <Text size="lg" fw={500} mb="md">
+                Detected Anomalies
+              </Text>
+              <Stack gap="md">
+                {anomalies.map((anomaly) => (
                   <Alert
-                    severity={
-                      anomaly.severity === 'critical' ? 'error' :
-                      anomaly.severity === 'high' ? 'warning' :
-                      'info'
+                    key={anomaly.id}
+                    color={
+                      anomaly.severity === 'critical' ? 'red' :
+                      anomaly.severity === 'high' ? 'orange' :
+                      'blue'
                     }
+                    title={anomaly.metric}
                   >
-                    <AlertTitle>{anomaly.metric}</AlertTitle>
                     {anomaly.message} - Value: {anomaly.value}, Expected: {anomaly.expected}
-                    <Text variant="caption" display="block" mt={1}>
+                    <Text size="xs" c="dimmed" mt="xs">
                       {format(new Date(anomaly.timestamp), 'PPpp')}
                     </Text>
                   </Alert>
-                </Box>
-              ))}
-            </SimpleGrid>
-          </Box>
-        </TabPanel>
+                ))}
+              </Stack>
+            </Box>
+          </Tabs.Panel>
 
-        {/* System Health Tab */}
-        <TabPanel value={tabValue} index={4}>
-          <SimpleGrid spacing={3}>
-            {systemHealth.map((service) => (
-              <Box xs={12} sm={6} md={4} key={service.service}>
-                <Card>
-                  <CardContent>
-                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                      <Text order={6}>
-                        {service.service}
+          {/* System Health Tab */}
+          <Tabs.Panel value="4">
+            <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
+              {systemHealth.map((service) => (
+                <Card key={service.service}>
+                  <Group justify="space-between" align="center" mb="md">
+                    <Text fw={500}>
+                      {service.service}
+                    </Text>
+                    <Badge
+                      color={
+                        service.status === 'healthy' ? 'green' :
+                        service.status === 'degraded' ? 'orange' :
+                        'red'
+                      }
+                    >
+                      {service.status}
+                    </Badge>
+                  </Group>
+                  <Stack gap="sm">
+                    <Box>
+                      <Text size="sm" c="dimmed">
+                        CPU
                       </Text>
-                      <Chip
-                        label={service.status}
-                        color={
-                          service.status === 'healthy' ? 'success' :
-                          service.status === 'degraded' ? 'warning' :
-                          'error'
-                        }
+                      <Progress
+                        value={service.metrics.cpu}
+                        color={service.metrics.cpu > 80 ? 'red' : 'blue'}
+                        size="sm"
                       />
                     </Box>
-                    <SimpleGrid spacing={1}>
-                      <Box xs={6}>
-                        <Text size="sm" color="textSecondary">
-                          CPU
-                        </Text>
-                        <LinearProgress
-                          variant="determinate"
-                          value={service.metrics.cpu}
-                          color={service.metrics.cpu > 80 ? 'error' : 'primary'}
-                        />
-                      </Box>
-                      <Box xs={6}>
-                        <Text size="sm" color="textSecondary">
-                          IconMemory
-                        </Text>
-                        <LinearProgress
-                          variant="determinate"
-                          value={service.metrics.memory}
-                          color={service.metrics.memory > 80 ? 'error' : 'primary'}
-                        />
-                      </Box>
-                      <Box xs={6}>
-                        <Text size="sm" color="textSecondary">
-                          Disk
-                        </Text>
-                        <LinearProgress
-                          variant="determinate"
-                          value={service.metrics.disk}
-                          color={service.metrics.disk > 80 ? 'error' : 'primary'}
-                        />
-                      </Box>
-                      <Box xs={6}>
-                        <Text size="sm" color="textSecondary">
-                          Network
-                        </Text>
-                        <LinearProgress
-                          variant="determinate"
-                          value={service.metrics.network}
-                          color={service.metrics.network > 80 ? 'error' : 'primary'}
-                        />
-                      </Box>
-                    </SimpleGrid>
-                    <Text variant="caption" color="textSecondary" display="block" mt={2}>
-                      Uptime: {Math.floor(service.uptime / 3600)}h {Math.floor((service.uptime % 3600) / 60)}m
-                    </Text>
-                  </CardContent>
+                    <Box>
+                      <Text size="sm" c="dimmed">
+                        Memory
+                      </Text>
+                      <Progress
+                        value={service.metrics.memory}
+                        color={service.metrics.memory > 80 ? 'red' : 'blue'}
+                        size="sm"
+                      />
+                    </Box>
+                    <Box>
+                      <Text size="sm" c="dimmed">
+                        Disk
+                      </Text>
+                      <Progress
+                        value={service.metrics.disk}
+                        color={service.metrics.disk > 80 ? 'red' : 'blue'}
+                        size="sm"
+                      />
+                    </Box>
+                    <Box>
+                      <Text size="sm" c="dimmed">
+                        Network
+                      </Text>
+                      <Progress
+                        value={service.metrics.network}
+                        color={service.metrics.network > 80 ? 'red' : 'blue'}
+                        size="sm"
+                      />
+                    </Box>
+                  </Stack>
+                  <Text size="xs" c="dimmed" mt="md">
+                    Uptime: {Math.floor(service.uptime / 3600)}h {Math.floor((service.uptime % 3600) / 60)}m
+                  </Text>
                 </Card>
-              </Box>
-            ))}
-          </SimpleGrid>
-        </TabPanel>
+              ))}
+            </SimpleGrid>
+          </Tabs.Panel>
+        </Tabs>
       </Paper>
     </Box>
   );

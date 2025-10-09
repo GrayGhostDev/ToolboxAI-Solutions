@@ -6,7 +6,7 @@
  */
 
 import React, { forwardRef } from 'react';
-import { Box as MantineBox, BoxProps as MantineBoxProps, MantineStyleProp } from '@mantine/core';
+import { Box as MantineBox, type BoxProps as MantineBoxProps, type MantineStyleProp } from '@mantine/core';
 import { designTokens } from '../../../theme/designTokens';
 
 // Spacing type

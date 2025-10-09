@@ -2,60 +2,46 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Card,
-  CardContent,
-  CardHeader,
   Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  Paper,
-  IconButton,
   Button,
-  Chip,
+  Badge,
   Avatar,
-  TextField,
-  InputAdornment,
+  TextInput,
   Menu,
-  MenuItem,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  FormControl,
-  InputLabel,
+  Modal,
   Select,
-  Typography,
+  Text,
   Stack,
-  Tooltip,
   Alert,
-  CircularProgress,
+  Loader,
   Switch,
-  FormControlLabel,
   Grid,
-} from '@mui/material';
-import {
-  Search,
-  Add,
-  Edit,
-  Delete,
-  MoreVert,
-  FilterList,
-  Download,
-  Upload,
-  Lock,
-  LockOpen,
-  Email,
-  CheckCircle,
-  Cancel,
-  PersonAdd,
-  Person,
+  ActionIcon,
   Group,
-  School,
-  AdminPanelSettings,
-} from '@mui/icons-material';
+  Pagination,
+  Checkbox,
+  Tooltip,
+} from '@mantine/core';
+import {
+  IconSearch,
+  IconPlus,
+  IconEdit,
+  IconTrash,
+  IconDots,
+  IconFilter,
+  IconDownload,
+  IconUpload,
+  IconLock,
+  IconLockOpen,
+  IconMail,
+  IconCheck,
+  IconX,
+  IconUserPlus,
+  IconUser,
+  IconUsers,
+  IconSchool,
+  IconShield,
+} from '@tabler/icons-react';
 import { apiClient } from '../../../services/api';
 import { useAppDispatch } from '../../../store';
 import { addNotification } from '../../../store/slices/uiSlice';
@@ -112,75 +98,65 @@ const EditUserDialog: React.FC<EditUserDialogProps> = ({ open, user, onClose, on
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{user ? 'Edit User' : 'Add New User'}</DialogTitle>
-      <DialogContent>
-        <Stack spacing={2} sx={{ mt: 2 }}>
-          <TextField
-            label="Username"
-            value={formData.username}
-            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-            fullWidth
-            required
+    <Modal opened={open} onClose={onClose} title={user ? 'Edit User' : 'Add New User'} size="sm">
+      <Stack gap="md">
+        <TextInput
+          label="Username"
+          value={formData.username}
+          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+          required
+        />
+        <TextInput
+          label="Email"
+          type="email"
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          required
+        />
+        <Select
+          label="Role"
+          value={formData.role}
+          onChange={(value) => setFormData({ ...formData, role: value as any })}
+          data={[
+            { value: 'admin', label: 'Admin' },
+            { value: 'teacher', label: 'Teacher' },
+            { value: 'student', label: 'Student' },
+            { value: 'parent', label: 'Parent' },
+          ]}
+        />
+        <Select
+          label="Status"
+          value={formData.status}
+          onChange={(value) => setFormData({ ...formData, status: value as any })}
+          data={[
+            { value: 'active', label: 'Active' },
+            { value: 'inactive', label: 'Inactive' },
+            { value: 'suspended', label: 'Suspended' },
+          ]}
+        />
+        <TextInput
+          label="School"
+          value={formData.school}
+          onChange={(e) => setFormData({ ...formData, school: e.target.value })}
+        />
+        {(formData.role === 'student' || formData.role === 'parent') && (
+          <TextInput
+            label="Grade"
+            type="number"
+            value={formData.grade}
+            onChange={(e) => setFormData({ ...formData, grade: parseInt(e.target.value) })}
+            min={1}
+            max={12}
           />
-          <TextField
-            label="Email"
-            type="email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            fullWidth
-            required
-          />
-          <FormControl fullWidth>
-            <InputLabel>Role</InputLabel>
-            <Select
-              value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
-              label="Role"
-            >
-              <MenuItem value="admin">Admin</MenuItem>
-              <MenuItem value="teacher">Teacher</MenuItem>
-              <MenuItem value="student">Student</MenuItem>
-              <MenuItem value="parent">Parent</MenuItem>
-            </Select>
-          </FormControl>
-          <FormControl fullWidth>
-            <InputLabel>Status</InputLabel>
-            <Select
-              value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-              label="Status"
-            >
-              <MenuItem value="active">Active</MenuItem>
-              <MenuItem value="inactive">Inactive</MenuItem>
-              <MenuItem value="suspended">Suspended</MenuItem>
-            </Select>
-          </FormControl>
-          <TextField
-            label="School"
-            value={formData.school}
-            onChange={(e) => setFormData({ ...formData, school: e.target.value })}
-            fullWidth
-          />
-          {(formData.role === 'student' || formData.role === 'parent') && (
-            <TextField
-              label="Grade"
-              type="number"
-              value={formData.grade}
-              onChange={(e) => setFormData({ ...formData, grade: parseInt(e.target.value) })}
-              fullWidth
-              inputProps={{ min: 1, max: 12 }}
-            />
-          )}
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={handleSubmit} variant="contained">
-          {user ? 'Update' : 'Create'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+        )}
+        <Group justify="flex-end" mt="md">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={handleSubmit}>
+            {user ? 'Update' : 'Create'}
+          </Button>
+        </Group>
+      </Stack>
+    </Modal>
   );
 };
 
@@ -408,15 +384,15 @@ const UserManagement: React.FC = () => {
   const getRoleIcon = (role: string) => {
     switch (role) {
       case 'admin':
-        return <AdminPanelSettings />;
+        return <IconShield size={16} />;
       case 'teacher':
-        return <School />;
+        return <IconSchool size={16} />;
       case 'student':
-        return <Person />;
+        return <IconUser size={16} />;
       case 'parent':
-        return <Group />;
+        return <IconUsers size={16} />;
       default:
-        return <Person />;
+        return <IconUser size={16} />;
     }
   };
 
@@ -435,316 +411,290 @@ const UserManagement: React.FC = () => {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
+      <Text size="xl" fw={700} mb="lg">
         User Management
-      </Typography>
+      </Text>
 
       {/* Statistics Cards */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Box>
-                  <Typography color="textSecondary" gutterBottom variant="caption">
-                    Total Users
-                  </Typography>
-                  <Typography variant="h4">{users.length}</Typography>
-                </Box>
-                <Avatar sx={{ bgcolor: 'primary.main' }}>
-                  <Group />
-                </Avatar>
-              </Stack>
-            </CardContent>
+      <Grid mb="xl">
+        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+          <Card padding="lg">
+            <Group justify="space-between">
+              <Box>
+                <Text c="dimmed" size="xs" tt="uppercase" fw={700}>
+                  Total Users
+                </Text>
+                <Text fw={700} size="xl">{users.length}</Text>
+              </Box>
+              <Avatar color="blue" radius="md" size="lg">
+                <IconUsers size="1.5rem" />
+              </Avatar>
+            </Group>
           </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Box>
-                  <Typography color="textSecondary" gutterBottom variant="caption">
-                    Active Users
-                  </Typography>
-                  <Typography variant="h4">
-                    {users.filter((u) => u.status === 'active').length}
-                  </Typography>
-                </Box>
-                <Avatar sx={{ bgcolor: 'success.main' }}>
-                  <CheckCircle />
-                </Avatar>
-              </Stack>
-            </CardContent>
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+          <Card padding="lg">
+            <Group justify="space-between">
+              <Box>
+                <Text c="dimmed" size="xs" tt="uppercase" fw={700}>
+                  Active Users
+                </Text>
+                <Text fw={700} size="xl">
+                  {users.filter((u) => u.status === 'active').length}
+                </Text>
+              </Box>
+              <Avatar color="green" radius="md" size="lg">
+                <IconCheck size="1.5rem" />
+              </Avatar>
+            </Group>
           </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Box>
-                  <Typography color="textSecondary" gutterBottom variant="caption">
-                    Teachers
-                  </Typography>
-                  <Typography variant="h4">
-                    {users.filter((u) => u.role === 'teacher').length}
-                  </Typography>
-                </Box>
-                <Avatar sx={{ bgcolor: 'info.main' }}>
-                  <School />
-                </Avatar>
-              </Stack>
-            </CardContent>
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+          <Card padding="lg">
+            <Group justify="space-between">
+              <Box>
+                <Text c="dimmed" size="xs" tt="uppercase" fw={700}>
+                  Teachers
+                </Text>
+                <Text fw={700} size="xl">
+                  {users.filter((u) => u.role === 'teacher').length}
+                </Text>
+              </Box>
+              <Avatar color="cyan" radius="md" size="lg">
+                <IconSchool size="1.5rem" />
+              </Avatar>
+            </Group>
           </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Box>
-                  <Typography color="textSecondary" gutterBottom variant="caption">
-                    Students
-                  </Typography>
-                  <Typography variant="h4">
-                    {users.filter((u) => u.role === 'student').length}
-                  </Typography>
-                </Box>
-                <Avatar sx={{ bgcolor: 'secondary.main' }}>
-                  <Person />
-                </Avatar>
-              </Stack>
-            </CardContent>
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+          <Card padding="lg">
+            <Group justify="space-between">
+              <Box>
+                <Text c="dimmed" size="xs" tt="uppercase" fw={700}>
+                  Students
+                </Text>
+                <Text fw={700} size="xl">
+                  {users.filter((u) => u.role === 'student').length}
+                </Text>
+              </Box>
+              <Avatar color="violet" radius="md" size="lg">
+                <IconUser size="1.5rem" />
+              </Avatar>
+            </Group>
           </Card>
-        </Grid>
+        </Grid.Col>
       </Grid>
 
       {/* User Table */}
-      <Card>
-        <CardHeader
-          title="Users"
-          action={
-            <Stack direction="row" spacing={1}>
-              <Button
-                variant="outlined"
-                startIcon={<Upload />}
-                size="small"
-              >
-                Import
-              </Button>
-              <Button
-                variant="outlined"
-                startIcon={<Download />}
-                size="small"
-                onClick={handleExportUsers}
-              >
-                Export
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={() => {
-                  setSelectedUser(null);
-                  setEditDialogOpen(true);
-                }}
-              >
-                Add User
-              </Button>
-            </Stack>
-          }
-        />
-        <CardContent>
-          {/* Filters */}
-          <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-            <TextField
-              placeholder="Search users..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              size="small"
-              sx={{ flexGrow: 1, maxWidth: 300 }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search />
-                  </InputAdornment>
-                ),
+      <Card padding="lg">
+        <Group justify="space-between" mb="md">
+          <Text size="lg" fw={600}>Users</Text>
+          <Group gap="xs">
+            <Button
+              variant="outline"
+              leftSection={<IconUpload size="1rem" />}
+              size="sm"
+            >
+              Import
+            </Button>
+            <Button
+              variant="outline"
+              leftSection={<IconDownload size="1rem" />}
+              size="sm"
+              onClick={handleExportUsers}
+            >
+              Export
+            </Button>
+            <Button
+              leftSection={<IconPlus size="1rem" />}
+              onClick={() => {
+                setSelectedUser(null);
+                setEditDialogOpen(true);
               }}
-            />
-            <FormControl size="small" sx={{ minWidth: 120 }}>
-              <InputLabel>Role</InputLabel>
-              <Select
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                label="Role"
-              >
-                <MenuItem value="all">All Roles</MenuItem>
-                <MenuItem value="admin">Admin</MenuItem>
-                <MenuItem value="teacher">Teacher</MenuItem>
-                <MenuItem value="student">Student</MenuItem>
-                <MenuItem value="parent">Parent</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl size="small" sx={{ minWidth: 120 }}>
-              <InputLabel>Status</InputLabel>
-              <Select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                label="Status"
-              >
-                <MenuItem value="all">All Status</MenuItem>
-                <MenuItem value="active">Active</MenuItem>
-                <MenuItem value="inactive">Inactive</MenuItem>
-                <MenuItem value="suspended">Suspended</MenuItem>
-              </Select>
-            </FormControl>
-            {selectedUsers.length > 0 && (
-              <Button
-                variant="outlined"
-                startIcon={<FilterList />}
-                onClick={(e) => setBulkActionMenu(e.currentTarget)}
-              >
-                Bulk Actions ({selectedUsers.length})
-              </Button>
-            )}
-          </Stack>
+            >
+              Add User
+            </Button>
+          </Group>
+        </Group>
 
-          {/* Table */}
-          {loading ? (
-            <Box display="flex" justifyContent="center" p={3}>
-              <CircularProgress />
-            </Box>
-          ) : (
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell padding="checkbox">
-                      <input
-                        type="checkbox"
-                        checked={selectedUsers.length === filteredUsers.length}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedUsers(filteredUsers.map((u) => u.id));
-                          } else {
-                            setSelectedUsers([]);
-                          }
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>User</TableCell>
-                    <TableCell>Role</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>School</TableCell>
-                    <TableCell>Last Active</TableCell>
-                    <TableCell>Verified</TableCell>
-                    <TableCell align="right">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredUsers
-                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((user) => (
-                      <TableRow key={user.id} hover>
-                        <TableCell padding="checkbox">
-                          <input
-                            type="checkbox"
-                            checked={selectedUsers.includes(user.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedUsers([...selectedUsers, user.id]);
-                              } else {
-                                setSelectedUsers(selectedUsers.filter((id) => id !== user.id));
-                              }
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Stack direction="row" spacing={2} alignItems="center">
-                            <Avatar sx={{ width: 32, height: 32 }}>
-                              {user.username[0].toUpperCase()}
-                            </Avatar>
-                            <Box>
-                              <Typography variant="body2" fontWeight={500}>
-                                {user.username}
-                              </Typography>
-                              <Typography variant="caption" color="textSecondary">
-                                {user.email}
-                              </Typography>
-                            </Box>
-                          </Stack>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            icon={getRoleIcon(user.role)}
-                            label={user.role}
-                            size="small"
-                            variant="outlined"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={user.status}
-                            size="small"
-                            color={getStatusColor(user.status)}
-                          />
-                        </TableCell>
-                        <TableCell>{user.school || '-'}</TableCell>
-                        <TableCell>
-                          <Typography variant="caption">{user.lastActive}</Typography>
-                        </TableCell>
-                        <TableCell>
-                          {user.verified ? (
-                            <CheckCircle color="success" fontSize="small" />
-                          ) : (
-                            <Cancel color="error" fontSize="small" />
-                          )}
-                        </TableCell>
-                        <TableCell align="right">
-                          <IconButton
-                            size="small"
-                            onClick={(e) => {
-                              setSelectedUser(user);
-                              setAnchorEl(e.currentTarget);
-                            }}
-                          >
-                            <MoreVert />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={filteredUsers.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={(_, newPage) => setPage(newPage)}
-            onRowsPerPageChange={(e) => {
-              setRowsPerPage(parseInt(e.target.value, 10));
-              setPage(0);
-            }}
+        {/* Filters */}
+        <Group mb="md" gap="sm">
+          <TextInput
+            placeholder="Search users..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ flexGrow: 1, maxWidth: 300 }}
+            leftSection={<IconSearch size="1rem" />}
           />
-        </CardContent>
+          <Select
+            placeholder="All Roles"
+            value={roleFilter}
+            onChange={(value) => setRoleFilter(value || 'all')}
+            style={{ minWidth: 120 }}
+            data={[
+              { value: 'all', label: 'All Roles' },
+              { value: 'admin', label: 'Admin' },
+              { value: 'teacher', label: 'Teacher' },
+              { value: 'student', label: 'Student' },
+              { value: 'parent', label: 'Parent' },
+            ]}
+          />
+          <Select
+            placeholder="All Status"
+            value={statusFilter}
+            onChange={(value) => setStatusFilter(value || 'all')}
+            style={{ minWidth: 120 }}
+            data={[
+              { value: 'all', label: 'All Status' },
+              { value: 'active', label: 'Active' },
+              { value: 'inactive', label: 'Inactive' },
+              { value: 'suspended', label: 'Suspended' },
+            ]}
+          />
+          {selectedUsers.length > 0 && (
+            <Button
+              variant="outline"
+              leftSection={<IconFilter size="1rem" />}
+              onClick={(e) => setBulkActionMenu(e.currentTarget)}
+            >
+              Bulk Actions ({selectedUsers.length})
+            </Button>
+          )}
+        </Group>
+
+        {/* Table */}
+        {loading ? (
+          <Box style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+            <Loader />
+          </Box>
+        ) : (
+          <Table.ScrollContainer minWidth={800}>
+            <Table>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th style={{ width: '50px' }}>
+                    <Checkbox
+                      checked={selectedUsers.length === filteredUsers.length}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedUsers(filteredUsers.map((u) => u.id));
+                        } else {
+                          setSelectedUsers([]);
+                        }
+                      }}
+                    />
+                  </Table.Th>
+                  <Table.Th>User</Table.Th>
+                  <Table.Th>Role</Table.Th>
+                  <Table.Th>Status</Table.Th>
+                  <Table.Th>School</Table.Th>
+                  <Table.Th>Last Active</Table.Th>
+                  <Table.Th>Verified</Table.Th>
+                  <Table.Th style={{ textAlign: 'right' }}>Actions</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {filteredUsers
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((user) => (
+                    <Table.Tr key={user.id}>
+                      <Table.Td>
+                        <Checkbox
+                          checked={selectedUsers.includes(user.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedUsers([...selectedUsers, user.id]);
+                            } else {
+                              setSelectedUsers(selectedUsers.filter((id) => id !== user.id));
+                            }
+                          }}
+                        />
+                      </Table.Td>
+                      <Table.Td>
+                        <Group gap="sm">
+                          <Avatar size="sm" radius="xl">
+                            {user.username[0].toUpperCase()}
+                          </Avatar>
+                          <Box>
+                            <Text size="sm" fw={500}>
+                              {user.username}
+                            </Text>
+                            <Text size="xs" c="dimmed">
+                              {user.email}
+                            </Text>
+                          </Box>
+                        </Group>
+                      </Table.Td>
+                      <Table.Td>
+                        <Badge
+                          leftSection={getRoleIcon(user.role)}
+                          variant="outline"
+                          size="sm"
+                        >
+                          {user.role}
+                        </Badge>
+                      </Table.Td>
+                      <Table.Td>
+                        <Badge
+                          color={getStatusColor(user.status)}
+                          size="sm"
+                        >
+                          {user.status}
+                        </Badge>
+                      </Table.Td>
+                      <Table.Td>{user.school || '-'}</Table.Td>
+                      <Table.Td>
+                        <Text size="xs">{user.lastActive}</Text>
+                      </Table.Td>
+                      <Table.Td>
+                        {user.verified ? (
+                          <IconCheck color="var(--mantine-color-green-6)" size="1rem" />
+                        ) : (
+                          <IconX color="var(--mantine-color-red-6)" size="1rem" />
+                        )}
+                      </Table.Td>
+                      <Table.Td style={{ textAlign: 'right' }}>
+                        <ActionIcon
+                          variant="subtle"
+                          onClick={(e) => {
+                            setSelectedUser(user);
+                            setAnchorEl(e.currentTarget);
+                          }}
+                        >
+                          <IconDots size="1rem" />
+                        </ActionIcon>
+                      </Table.Td>
+                    </Table.Tr>
+                  ))}
+              </Table.Tbody>
+            </Table>
+          </Table.ScrollContainer>
+        )}
+
+        <Group justify="space-between" mt="md">
+          <Text size="sm" c="dimmed">
+            Showing {page * rowsPerPage + 1} to {Math.min((page + 1) * rowsPerPage, filteredUsers.length)} of {filteredUsers.length} entries
+          </Text>
+          <Pagination
+            total={Math.ceil(filteredUsers.length / rowsPerPage)}
+            value={page + 1}
+            onChange={(newPage) => setPage(newPage - 1)}
+          />
+        </Group>
       </Card>
 
       {/* Action Menu */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={() => setAnchorEl(null)}
-      >
-        <MenuItem
+      <Menu opened={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
+        <Menu.Item
+          leftSection={<IconEdit size="1rem" />}
           onClick={() => {
             if (selectedUser) handleEditUser(selectedUser);
           }}
         >
-          <Edit fontSize="small" sx={{ mr: 1 }} />
           Edit
-        </MenuItem>
-        <MenuItem
+        </Menu.Item>
+        <Menu.Item
+          leftSection={<IconLock size="1rem" />}
           onClick={() => {
             // Send password reset email
             dispatch(
@@ -756,10 +706,10 @@ const UserManagement: React.FC = () => {
             setAnchorEl(null);
           }}
         >
-          <Lock fontSize="small" sx={{ mr: 1 }} />
           Reset Password
-        </MenuItem>
-        <MenuItem
+        </Menu.Item>
+        <Menu.Item
+          leftSection={selectedUser?.status === 'active' ? <IconLock size="1rem" /> : <IconLockOpen size="1rem" />}
           onClick={() => {
             // Toggle user status
             if (selectedUser) {
@@ -771,48 +721,41 @@ const UserManagement: React.FC = () => {
             setAnchorEl(null);
           }}
         >
-          {selectedUser?.status === 'active' ? (
-            <>
-              <Lock fontSize="small" sx={{ mr: 1 }} />
-              Deactivate
-            </>
-          ) : (
-            <>
-              <LockOpen fontSize="small" sx={{ mr: 1 }} />
-              Activate
-            </>
-          )}
-        </MenuItem>
-        <MenuItem
+          {selectedUser?.status === 'active' ? 'Deactivate' : 'Activate'}
+        </Menu.Item>
+        <Menu.Item
+          leftSection={<IconTrash size="1rem" />}
+          color="red"
           onClick={() => {
             setDeleteDialogOpen(true);
             setAnchorEl(null);
           }}
-          sx={{ color: 'error.main' }}
         >
-          <Delete fontSize="small" sx={{ mr: 1 }} />
           Delete
-        </MenuItem>
+        </Menu.Item>
       </Menu>
 
       {/* Bulk Action Menu */}
-      <Menu
-        anchorEl={bulkActionMenu}
-        open={Boolean(bulkActionMenu)}
-        onClose={() => setBulkActionMenu(null)}
-      >
-        <MenuItem onClick={() => handleBulkAction('activate')}>
-          <CheckCircle fontSize="small" sx={{ mr: 1 }} />
+      <Menu opened={Boolean(bulkActionMenu)} onClose={() => setBulkActionMenu(null)}>
+        <Menu.Item
+          leftSection={<IconCheck size="1rem" />}
+          onClick={() => handleBulkAction('activate')}
+        >
           Activate Selected
-        </MenuItem>
-        <MenuItem onClick={() => handleBulkAction('deactivate')}>
-          <Cancel fontSize="small" sx={{ mr: 1 }} />
+        </Menu.Item>
+        <Menu.Item
+          leftSection={<IconX size="1rem" />}
+          onClick={() => handleBulkAction('deactivate')}
+        >
           Deactivate Selected
-        </MenuItem>
-        <MenuItem onClick={() => handleBulkAction('delete')} sx={{ color: 'error.main' }}>
-          <Delete fontSize="small" sx={{ mr: 1 }} />
+        </Menu.Item>
+        <Menu.Item
+          leftSection={<IconTrash size="1rem" />}
+          color="red"
+          onClick={() => handleBulkAction('delete')}
+        >
           Delete Selected
-        </MenuItem>
+        </Menu.Item>
       </Menu>
 
       {/* Edit User Dialog */}
@@ -827,25 +770,26 @@ const UserManagement: React.FC = () => {
       />
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete user <strong>{selectedUser?.username}</strong>? This
-            action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+      <Modal
+        opened={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        title="Confirm Delete"
+        centered
+      >
+        <Text mb="lg">
+          Are you sure you want to delete user <Text component="span" fw={700}>{selectedUser?.username}</Text>? This
+          action cannot be undone.
+        </Text>
+        <Group justify="flex-end">
+          <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
           <Button
+            color="red"
             onClick={() => selectedUser && handleDeleteUser(selectedUser)}
-            color="error"
-            variant="contained"
           >
             Delete
           </Button>
-        </DialogActions>
-      </Dialog>
+        </Group>
+      </Modal>
     </Box>
   );
 };

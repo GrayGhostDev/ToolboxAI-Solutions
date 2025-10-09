@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from 'react';
 import {
   Card,
   Text,
@@ -29,11 +29,11 @@ import {
   IconMedal,
   IconCrown
 } from '@tabler/icons-react';
-import { useEffect } from "react";
-import { useAppSelector, useAppDispatch } from "../../store";
-import { fetchLeaderboard, setLeaderboard } from "../../store/slices/gamificationSlice";
-import { pusherService } from "../../services/pusher";
-import { WebSocketMessageType } from "../../types/websocket";
+import { useEffect } from 'react';
+import { useAppSelector, useAppDispatch } from '../../store';
+import { fetchLeaderboard, setLeaderboard } from '../../store/slices/gamificationSlice';
+import { pusherService } from '../../services/pusher';
+import { WebSocketMessageType } from '../../types/websocket';
 
 export default function Leaderboard() {
   const dispatch = useAppDispatch();
@@ -41,8 +41,8 @@ export default function Leaderboard() {
   const currentClassId = useAppSelector((s) => s.user.classIds?.[0]);
   const { leaderboard, loading } = useAppSelector((s) => s.gamification);
 
-  const [timeframe, setTimeframe] = React.useState<"daily" | "weekly" | "monthly" | "all">("weekly");
-  const [searchTerm, setSearchTerm] = React.useState("");
+  const [timeframe, setTimeframe] = React.useState<'daily' | 'weekly' | 'monthly' | 'all'>('weekly');
+  const [searchTerm, setSearchTerm] = React.useState('');
 
   // Fetch leaderboard on mount and when timeframe changes
   useEffect(() => {
@@ -89,7 +89,7 @@ export default function Leaderboard() {
 
   const handleTimeframeChange = (value: string | null) => {
     if (value) {
-      setTimeframe(value as "daily" | "weekly" | "monthly" | "all");
+      setTimeframe(value as 'daily' | 'weekly' | 'monthly' | 'all');
     }
   };
 

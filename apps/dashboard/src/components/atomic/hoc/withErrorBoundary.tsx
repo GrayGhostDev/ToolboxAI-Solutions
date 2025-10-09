@@ -5,7 +5,7 @@
  * JavaScript errors gracefully in the component tree.
  */
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 import { AtomicBox, AtomicText, AtomicButton } from '../atoms';
 
 export interface WithErrorBoundaryProps {
@@ -194,7 +194,7 @@ const withErrorBoundary = <P extends object>(
         <WrappedComponent {...props} ref={ref} />
       </ErrorBoundary>
     );
-  });
+  };
 
   ComponentWithErrorBoundary.displayName = `withErrorBoundary(${
     WrappedComponent.displayName || WrappedComponent.name || 'Component'

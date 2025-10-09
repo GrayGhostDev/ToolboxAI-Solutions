@@ -1,3 +1,5 @@
+import React from 'react';
+
 // React 19 Feature Configuration
 export const REACT_19_FEATURES = {
   // Enable React 19 Actions API

@@ -33,7 +33,7 @@ import {
   Notification
 } from '@mantine/core';
 import {
-  IconDeviceGamepad2 as GameIcon,
+  IconDeviceGamepad as GameIcon,
   IconRobot as AIIcon,
   IconUsers as GroupIcon,
   IconCode as CodeIcon,
@@ -56,7 +56,7 @@ import {
 } from '@tabler/icons-react';
 import { usePusher } from '../../hooks/usePusher';
 import { useAppDispatch } from '../../store';
-import { WebSocketMessageType, ContentGenerationRequest } from '../../types/websocket';
+import { WebSocketMessageType, type ContentGenerationRequest } from '../../types/websocket';
 
 interface RobloxControlPanelProps {
   className?: string;

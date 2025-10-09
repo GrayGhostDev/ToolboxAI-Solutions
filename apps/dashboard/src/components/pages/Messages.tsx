@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from 'react';
 import {
   Card,
   Text,
@@ -21,7 +21,7 @@ import {
   NavLink
 } from '@mantine/core';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import {
   IconSend,
   IconPaperclip,
@@ -38,8 +38,8 @@ import {
   IconInbox,
   IconSend2,
   IconMail
-} from "@tabler/icons-react";
-import { useAppSelector, useAppDispatch } from "../../store";
+} from '@tabler/icons-react';
+import { useAppSelector, useAppDispatch } from '../../store';
 import {
   fetchMessages,
   sendMessage,
@@ -55,8 +55,8 @@ import {
   closeCompose,
   updateCompose,
   clearError,
-} from "../../store/slices/messagesSlice";
-import type { Message } from "../../types/api";
+} from '../../store/slices/messagesSlice';
+import type { Message } from '../../types/api';
 
 // Using Message type from types/api.ts
 // Additional local interfaces for UI state
@@ -70,7 +70,7 @@ interface Conversation {
   lastMessage: string;
   timestamp: string;
   unread: number;
-  type: "individual" | "group" | "announcement";
+  type: 'individual' | 'group' | 'announcement';
 }
 
 export default function Messages() {
@@ -88,8 +88,8 @@ export default function Messages() {
   } = useAppSelector((s) => s.messages);
 
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [replyText, setReplyText] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [replyText, setReplyText] = useState('');
   const [showComposeDialog, setShowComposeDialog] = useState(false);
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
 
@@ -125,7 +125,7 @@ export default function Messages() {
           lastMessage: msg.subject,
           timestamp: msg.sentAt,
           unread: msg.read ? 0 : 1,
-          type: "individual",
+          type: 'individual',
         });
       } else {
         const conv = convMap.get(senderId)!;
@@ -190,7 +190,7 @@ export default function Messages() {
         messageId: currentMessage.id,
         content: replyText
       }));
-      setReplyText("");
+      setReplyText('');
     }
   };
 
@@ -225,10 +225,10 @@ export default function Messages() {
 
   const getStatusIcon = (message: Message) => {
     if (message.read && message.readAt) {
-      return <IconChecks size={16} style={{ color: "var(--mantine-color-blue-6)" }} />;
+      return <IconChecks size={16} style={{ color: 'var(--mantine-color-blue-6)' }} />;
     }
     if (message.sentAt) {
-      return <IconCheck size={16} style={{ color: "var(--mantine-color-gray-6)" }} />;
+      return <IconCheck size={16} style={{ color: 'var(--mantine-color-gray-6)' }} />;
     }
     return null;
   };
@@ -246,18 +246,18 @@ export default function Messages() {
 
   if (loading && messages.length === 0) {
     return (
-      <Box style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "400px" }}>
+      <Box style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
         <Loader />
       </Box>
     );
   }
 
   return (
-    <Grid gutter="md" style={{ height: "calc(100vh - 200px)" }}>
+    <Grid gutter="md" style={{ height: 'calc(100vh - 200px)' }}>
       {/* Conversations List */}
       <Grid.Col span={{ base: 12, md: 3 }}>
-        <Card style={{ height: "100%" }}>
-          <Stack style={{ height: "100%" }}>
+        <Card style={{ height: '100%' }}>
+          <Stack style={{ height: '100%' }}>
             {/* Search */}
             <Box p="md">
               <TextInput
@@ -269,16 +269,16 @@ export default function Messages() {
             </Box>
 
             {/* Tabs */}
-            <Group gap="xs" px="md" pb="sm" style={{ flexWrap: "wrap" }}>
-              {(["inbox", "sent", "drafts", "starred", "archived", "trash"] as const).map((tab) => (
+            <Group gap="xs" px="md" pb="sm" style={{ flexWrap: 'wrap' }}>
+              {(['inbox', 'sent', 'drafts', 'starred', 'archived', 'trash'] as const).map((tab) => (
                 <Button
                   key={tab}
                   size="compact-sm"
-                  variant={filters.folder === tab ? "filled" : "outline"}
+                  variant={filters.folder === tab ? 'filled' : 'outline'}
                   leftSection={getFolderIcon(tab)}
                   onClick={() => handleTabChange(tab)}
                   rightSection={
-                    tab === "inbox" && unreadCount > 0 ? (
+                    tab === 'inbox' && unreadCount > 0 ? (
                       <Badge size="sm" color="red">{unreadCount}</Badge>
                     ) : null
                   }
@@ -291,15 +291,15 @@ export default function Messages() {
             <Divider />
 
             {/* Conversations */}
-            <Stack style={{ flex: 1, overflow: "auto" }} gap={0}>
+            <Stack style={{ flex: 1, overflow: 'auto' }} gap={0}>
               {conversations.map((conversation) => (
                 <Box
                   key={conversation.id}
                   p="md"
                   style={{
-                    cursor: "pointer",
+                    cursor: 'pointer',
                     backgroundColor: selectedConversation?.id === conversation.id ?
-                      "var(--mantine-color-blue-0)" : "transparent"
+                      'var(--mantine-color-blue-0)' : 'transparent'
                   }}
                   onClick={() => setSelectedConversation(conversation)}
                 >
@@ -327,9 +327,9 @@ export default function Messages() {
                         size="xs"
                         c="dimmed"
                         style={{
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
                         }}
                         fw={conversation.unread > 0 ? 600 : 400}
                       >
@@ -346,8 +346,8 @@ export default function Messages() {
 
       {/* Messages List */}
       <Grid.Col span={{ base: 12, md: 4 }}>
-        <Card style={{ height: "100%" }}>
-          <Stack style={{ height: "100%" }}>
+        <Card style={{ height: '100%' }}>
+          <Stack style={{ height: '100%' }}>
             {/* Header */}
             <Group justify="space-between" align="center" p="md">
               <Group align="center" gap="xs">
@@ -380,17 +380,17 @@ export default function Messages() {
               <Alert
                 color="red"
                 onClose={() => dispatch(clearError())}
-                style={{ margin: "0 16px 16px 16px" }}
+                style={{ margin: '0 16px 16px 16px' }}
                 withCloseButton
               >
                 {error}
               </Alert>
             )}
-            <Stack style={{ flex: 1, overflow: "auto" }} gap={0}>
+            <Stack style={{ flex: 1, overflow: 'auto' }} gap={0}>
               {filteredMessages.length === 0 ? (
                 <Box p="xl" ta="center">
                   <Text c="dimmed">
-                    {searchTerm ? "No messages found matching your search" : "No messages in this folder"}
+                    {searchTerm ? 'No messages found matching your search' : 'No messages in this folder'}
                   </Text>
                 </Box>
               ) : (
@@ -399,10 +399,10 @@ export default function Messages() {
                     key={message.id}
                     p="md"
                     style={{
-                      cursor: "pointer",
+                      cursor: 'pointer',
                       backgroundColor: currentMessage?.id === message.id ?
-                        "var(--mantine-color-blue-0)" : !message.read ?
-                        "var(--mantine-color-gray-0)" : "transparent"
+                        'var(--mantine-color-blue-0)' : !message.read ?
+                        'var(--mantine-color-gray-0)' : 'transparent'
                     }}
                     onClick={() => handleMessageSelect(message)}
                   >
@@ -442,9 +442,9 @@ export default function Messages() {
                           size="xs"
                           c="dimmed"
                           style={{
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
                           }}
                         >
                           {message.content ? `${message.content.substring(0, 100)}...` : 'No content'}
@@ -461,8 +461,8 @@ export default function Messages() {
 
       {/* Message Content */}
       <Grid.Col span={{ base: 12, md: 5 }}>
-        <Card style={{ height: "100%" }}>
-          <Stack style={{ height: "100%" }}>
+        <Card style={{ height: '100%' }}>
+          <Stack style={{ height: '100%' }}>
             {currentMessage ? (
               <>
                 {/* Message Header */}
@@ -532,7 +532,7 @@ export default function Messages() {
                 <Divider />
 
                 {/* Message Content */}
-                <Box style={{ flex: 1, padding: 24, overflow: "auto" }}>
+                <Box style={{ flex: 1, padding: 24, overflow: 'auto' }}>
                   <Text size="xs" c="dimmed" mb="md">
                     {new Date(currentMessage.sentAt).toLocaleString()}
                     {currentMessage.readAt && (
@@ -543,9 +543,9 @@ export default function Messages() {
                     {currentMessage.content}
                   </Text>
                   {currentMessage.attachments && currentMessage.attachments.length > 0 && (
-                    <Group gap="xs" mt="md" style={{ flexWrap: "wrap" }}>
+                    <Group gap="xs" mt="md" style={{ flexWrap: 'wrap' }}>
                       {currentMessage.attachments.map((attachment, idx) => (
-                        <Paper key={idx} p="sm" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <Paper key={idx} p="sm" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <IconPaperclip size={16} />
                           <Text size="xs">
                             {attachment.split('/').pop() || `Attachment ${idx + 1}`}
@@ -566,7 +566,7 @@ export default function Messages() {
                       value={replyText}
                       onChange={(e) => setReplyText(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter" && e.ctrlKey) {
+                        if (e.key === 'Enter' && e.ctrlKey) {
                           handleSendReply();
                         }
                       }}
@@ -595,10 +595,10 @@ export default function Messages() {
             ) : (
               <Box
                 style={{
-                  height: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
                 <Text c="dimmed">

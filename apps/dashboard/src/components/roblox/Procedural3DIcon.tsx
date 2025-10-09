@@ -1,8 +1,9 @@
-import React, { useRef } from 'react';
+import React, { useRef, memo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Box as ThreeBox, Sphere, Cone, Cylinder, Torus, Octahedron } from '@react-three/drei';
 import { Box } from '@mantine/core';
-import * as THREE from 'three';
+import type * as THREE from 'three';
+import { useWebGLContext } from '../../hooks/useWebGLContext';
 
 // Icon type to 3D shape mapping
 const iconShapes: Record<string, React.FunctionComponent<any>> = {
@@ -189,8 +190,13 @@ const AnimatedIcon: React.FunctionComponent<{ iconName: string; color?: string }
 
   useFrame((state) => {
     if (meshRef.current) {
-      meshRef.current.rotation.y = state.clock.elapsedTime;
-      meshRef.current.position.y = Math.sin(state.clock.elapsedTime * 2) * 0.1;
+      // Use proper Three.js methods to set position and rotation
+      meshRef.current.rotation.set(
+        meshRef.current.rotation.x,
+        state.clock.elapsedTime,
+        meshRef.current.rotation.z
+      );
+      meshRef.current.position.setY(Math.sin(state.clock.elapsedTime * 2) * 0.1);
     }
   });
 
@@ -213,13 +219,15 @@ interface Procedural3DIconProps {
   style?: React.CSSProperties;
 }
 
-export const Procedural3DIcon: React.FunctionComponent<Procedural3DIconProps> = ({
+export const Procedural3DIcon: React.FunctionComponent<Procedural3DIconProps> = memo(({
   iconName,
   size = 'medium',
   color,
   animated = true,
   style,
 }) => {
+  const { canRender, isQueued } = useWebGLContext();
+
   const sizeMap = {
     small: 80,
     medium: 120,
@@ -227,6 +235,32 @@ export const Procedural3DIcon: React.FunctionComponent<Procedural3DIconProps> = 
   };
 
   const iconSize = sizeMap[size];
+
+  // Fallback to 2D representation if WebGL context limit is reached
+  if (!canRender) {
+    const iconKey = iconName.replace(/_\d+$/, '');
+    const iconData = iconShapes[iconKey] ? { emoji: '🎮', color: color || '#666' } : { emoji: '📦', color: '#999' };
+
+    return (
+      <Box
+        style={{
+          width: iconSize,
+          height: iconSize,
+          borderRadius: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: `linear-gradient(135deg, ${iconData.color}20 0%, ${iconData.color}40 100%)`,
+          border: `2px solid ${iconData.color}`,
+          fontSize: iconSize * 0.5,
+          opacity: isQueued ? 0.5 : 1,
+          ...style,
+        }}
+      >
+        {iconData.emoji}
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -242,6 +276,11 @@ export const Procedural3DIcon: React.FunctionComponent<Procedural3DIconProps> = 
       <Canvas
         camera={{ position: [0, 0, 3], fov: 50 }}
         style={{ width: '100%', height: '100%' }}
+        gl={{
+          antialias: false, // Reduce memory usage
+          alpha: true,
+          powerPreference: 'low-power'
+        }}
       >
         <ambientLight intensity={0.5} />
         <directionalLight position={[5, 5, 5]} intensity={1} />
@@ -259,6 +298,6 @@ export const Procedural3DIcon: React.FunctionComponent<Procedural3DIconProps> = 
       </Canvas>
     </Box>
   );
-};
+});
 
 export default Procedural3DIcon;

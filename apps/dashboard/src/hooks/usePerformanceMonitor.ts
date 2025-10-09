@@ -5,7 +5,7 @@
  * Provides controlled access to performance monitoring based on configuration
  */
 import { useEffect, useRef, useState } from 'react';
-import { performanceMonitor, PerformanceSummary } from '@/utils/performance-monitor';
+import { performanceMonitor, type PerformanceSummary } from '@/utils/performance-monitor';
 import { useFeatureFlag } from '@/config/features';
 export interface UsePerformanceMonitorOptions {
   // Override feature flag settings

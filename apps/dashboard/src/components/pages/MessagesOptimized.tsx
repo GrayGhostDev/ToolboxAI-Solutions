@@ -1,10 +1,56 @@
-import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
-import * as React from "react";
-
-import { useEffect, useState, memo } from "react";
-import { useAppDispatch } from "../../store";
-import VirtualizedList from "../common/VirtualizedList";
-import { useOptimizedMemo, useOptimizedCallback, useDebouncedCallback, useRenderPerformance } from "../../hooks/usePerformance";
+import {
+  Box,
+  Button,
+  Text,
+  Paper,
+  Stack,
+  Grid,
+  Container,
+  ActionIcon,
+  Avatar,
+  Card,
+  Group,
+  TextInput,
+  Chip,
+  Badge,
+  Alert,
+  Loader,
+  Progress,
+  Modal,
+  Title,
+  Divider,
+  Drawer,
+  Tabs,
+  Menu,
+  Tooltip,
+  Checkbox,
+  Radio,
+  Switch,
+  Slider,
+  Autocomplete,
+  Skeleton,
+  Table,
+  rem
+} from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import {
+  IconStar,
+  IconTrash,
+  IconSearch,
+  IconInbox,
+  IconMail,
+  IconSend,
+  IconEdit,
+  IconRefresh,
+  IconPaperclip,
+  IconReply,
+  IconArrowForward
+} from '@tabler/icons-react';
+import * as React from 'react';
+import { useEffect, useState, memo } from 'react';
+import { useAppDispatch } from '../../store';
+import VirtualizedList from '../common/VirtualizedList';
+import { useOptimizedMemo, useOptimizedCallback, useDebouncedCallback, useRenderPerformance } from '../../hooks/usePerformance';
 interface Message {
   id: string;
   subject: string;
@@ -57,90 +103,92 @@ const MessageItem = memo<{
   }, [message.priority], 'MessageItem:priorityColor');
   return (
     <Paper
-      elevation={message.isRead ? 0 : 1}
+      shadow={message.isRead ? 'xs' : 'sm'}
+      p="md"
       style={{
         margin: 1,
         height: 120, // Fixed height for virtual scrolling
         cursor: 'pointer',
-        backgroundColor: message.isRead ? 'background.paper' : 'action.hover',
-        '&:hover': {
-          backgroundColor: 'action.selected',
-        },
+        backgroundColor: message.isRead ? 'var(--mantine-color-gray-0)' : 'var(--mantine-color-blue-0)',
       }}
-      onClick={(e: React.MouseEvent) => handleClick}
+      onClick={handleClick}
     >
-      <Box p={2} height="100%" display="flex" alignItems="center">
+      <Group h="100%" align="center" spacing="md">
         <Avatar
           src={message.senderAvatar}
-          style={{ mr: 2, width: 40, height: 40 }}
+          size={40}
+          radius="sm"
         >
           {message.sender.charAt(0).toUpperCase()}
         </Avatar>
-        <Box flexGrow={1} minWidth={0}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
-            <Typography
-              variant="subtitle2"
-              fontWeight={message.isRead ? 'normal' : 'bold'}
-              noWrap
+        <Box style={{ flex: 1, minWidth: 0 }}>
+          <Group justify="space-between" align="center" mb="xs">
+            <Text
+              size="sm"
+              fw={message.isRead ? 400 : 700}
+              truncate
             >
               {message.sender}
-            </Typography>
-            <Box display="flex" alignItems="center" gap={0.5}>
-              <Typography variant="caption" color="text.secondary">
+            </Text>
+            <Group align="center" spacing={4}>
+              <Text size="xs" c="dimmed">
                 {formattedTime}
-              </Typography>
-              <IconButton
-                size="small"
-                onClick={(e: React.MouseEvent) => handleStarToggle}
-                color={message.isStarred ? 'warning' : 'default'}
+              </Text>
+              <ActionIcon
+                size="sm"
+                variant="subtle"
+                onClick={handleStarToggle}
+                color={message.isStarred ? 'yellow' : 'gray'}
               >
-                <IconStar fontSize="small" />
-              </IconButton>
-              <IconButton size="small" onClick={(e: React.MouseEvent) => handleDelete}>
-                <IconTrash fontSize="small" />
-              </IconButton>
-            </Box>
-          </Box>
-          <Typography
+                <IconStar size={rem(14)} />
+              </ActionIcon>
+              <ActionIcon size="sm" variant="subtle" onClick={handleDelete} color="red">
+                <IconTrash size={rem(14)} />
+              </ActionIcon>
+            </Group>
+          </Group>
+          <Text
             size="sm"
-            fontWeight={message.isRead ? 'normal' : 'bold'}
-            noWrap
-            mb={0.5}
+            fw={message.isRead ? 400 : 600}
+            truncate
+            mb="xs"
           >
             {message.subject}
-          </Typography>
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography
+          </Text>
+          <Group justify="space-between" align="center">
+            <Text
               size="sm"
-              color="text.secondary"
-              noWrap
-              style={{ flexGrow: 1, mr: 1 }}
+              c="dimmed"
+              truncate
+              style={{ flex: 1, marginRight: rem(8) }}
             >
               {message.preview}
-            </Typography>
-            <Box display="flex" gap={0.5}>
+            </Text>
+            <Group spacing={4}>
               {message.priority !== 'normal' && (
                 <Chip
-                  size="small"
-                  label={message.priority}
-                  color={priorityColor as any}
+                  size="xs"
                   variant="outline"
-                />
+                  color={priorityColor as any}
+                >
+                  {message.priority}
+                </Chip>
               )}
               {message.hasAttachment && (
-                <AttachFileIcon fontSize="small" color="action" />
+                <IconPaperclip size={rem(14)} color="var(--mantine-color-gray-5)" />
               )}
               {message.threadCount > 1 && (
                 <Chip
-                  size="small"
-                  label={message.threadCount}
+                  size="xs"
                   variant="outline"
-                />
+                >
+                  {message.threadCount}
+                </Chip>
               )}
-            </Box>
-          </Box>
+            </Group>
+          </Group>
         </Box>
-      </Box>
+      </Group>
     </Paper>
   );
 });
@@ -159,53 +207,47 @@ const MessageFilters = memo<{
     onSearchChange(event.target.value);
   }, 300, [onSearchChange]);
   const filterOptions = useOptimizedMemo(() => [
-    { value: 'all', label: 'All Messages', icon: <InboxIcon /> },
-    { value: 'unread', label: 'Unread', icon: <DraftsIcon /> },
-    { value: 'starred', label: 'Starred', icon: <IconStar /> },
-    { value: 'sent', label: 'Sent', icon: <SendOutlinedIcon /> },
+    { value: 'all', label: 'All Messages', icon: <IconInbox size={rem(16)} /> },
+    { value: 'unread', label: 'Unread', icon: <IconMail size={rem(16)} /> },
+    { value: 'starred', label: 'Starred', icon: <IconStar size={rem(16)} /> },
+    { value: 'sent', label: 'Sent', icon: <IconSend size={rem(16)} /> },
   ], [], 'MessageFilters:filterOptions');
   return (
-    <Box display="flex" gap={2} mb={3} flexWrap="wrap">
-      <TextField
+    <Group mb="lg" wrap="wrap">
+      <TextInput
         placeholder="Search messages..."
         defaultValue={searchTerm}
         onChange={handleSearchChange}
-        size="small"
-        style={{ minWidth: 300, flexGrow: 1 }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <IconSearch />
-            </InputAdornment>
-          ),
-        }}
+        size="sm"
+        style={{ minWidth: 300, flex: 1 }}
+        leftSection={<IconSearch size={rem(16)} />}
       />
-      <Box display="flex" gap={1}>
+      <Group spacing="xs">
         {filterOptions.map((option) => (
           <Button
             key={option.value}
-            variant={filterType === option.value ? 'contained' : 'outlined'}
-            startIcon={option.icon}
-            onClick={(e: React.MouseEvent) => () => onFilterChange(option.value)}
-            size="small"
+            variant={filterType === option.value ? 'filled' : 'outline'}
+            leftSection={option.icon}
+            onClick={() => onFilterChange(option.value)}
+            size="sm"
           >
             {option.label}
           </Button>
         ))}
-      </Box>
-      <Box display="flex" gap={1}>
+      </Group>
+      <Group spacing="xs">
         <Button
           variant="filled"
-          startIcon={<CreateIcon />}
-          onClick={(e: React.MouseEvent) => onCompose}
+          leftSection={<IconEdit size={rem(16)} />}
+          onClick={onCompose}
         >
           Compose
         </Button>
-        <IconButton onClick={(e: React.MouseEvent) => onRefresh} disabled={loading}>
-          <IconRefresh />
-        </IconButton>
-      </Box>
-    </Box>
+        <ActionIcon variant="subtle" onClick={onRefresh} loading={loading}>
+          <IconRefresh size={rem(16)} />
+        </ActionIcon>
+      </Group>
+    </Group>
   );
 });
 MessageFilters.displayName = 'MessageFilters';
@@ -308,10 +350,10 @@ export default function MessagesOptimized() {
     />
   ), [handleMessageClick, handleStarToggle, handleDelete], 'MessagesOptimized:renderMessageItem');
   return (
-    <Box>
-      <Typography order={4} component="h1" mb={3}>
+    <Container size="xl">
+      <Title order={4} mb="lg">
         Messages
-      </Typography>
+      </Title>
       <MessageFilters
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
@@ -322,15 +364,15 @@ export default function MessagesOptimized() {
         loading={loading}
       />
       {loading && filteredMessages.length === 0 ? (
-        <Box display="flex" justifyContent="center" alignItems="center" height="400px">
-          <CircularProgress />
-        </Box>
+        <Group justify="center" align="center" style={{ height: 400 }}>
+          <Loader size="lg" />
+        </Group>
       ) : filteredMessages.length === 0 ? (
-        <Box display="flex" justifyContent="center" alignItems="center" height="400px">
-          <Typography color="text.secondary">
+        <Group justify="center" align="center" style={{ height: 400 }}>
+          <Text c="dimmed">
             {searchTerm ? 'No messages match your search.' : 'No messages found.'}
-          </Typography>
-        </Box>
+          </Text>
+        </Group>
       ) : (
         /* Use virtual scrolling for large message lists */
         <VirtualizedList
@@ -341,90 +383,91 @@ export default function MessagesOptimized() {
           overscanCount={10}
         />
       )}
-      {/* Message Detail Dialog */}
-      <Dialog
-        open={!!selectedMessage}
+      {/* Message Detail Modal */}
+      <Modal
+        opened={!!selectedMessage}
         onClose={() => setSelectedMessage(null)}
-        maxWidth="md"
-        fullWidth
+        size="lg"
+        title={
+          selectedMessage && (
+            <Group justify="space-between" align="center">
+              <Title order={6}>{selectedMessage.subject}</Title>
+              <Group spacing="xs">
+                <ActionIcon
+                  variant="subtle"
+                  onClick={() => handleStarToggle(selectedMessage.id)}
+                  color={selectedMessage.isStarred ? 'yellow' : 'gray'}
+                >
+                  <IconStar size={rem(16)} />
+                </ActionIcon>
+                <ActionIcon variant="subtle">
+                  <IconReply size={rem(16)} />
+                </ActionIcon>
+                <ActionIcon variant="subtle">
+                  <IconArrowForward size={rem(16)} />
+                </ActionIcon>
+              </Group>
+            </Group>
+          )
+        }
       >
         {selectedMessage && (
           <>
-            <DialogTitle>
-              <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Typography order={6}>{selectedMessage.subject}</Typography>
-                <Box>
-                  <IconButton onClick={(e: React.MouseEvent) => () => handleStarToggle(selectedMessage.id)}>
-                    <IconStar color={selectedMessage.isStarred ? "warning" : "inherit"} />
-                  </IconButton>
-                  <IconButton>
-                    <ReplyIcon />
-                  </IconButton>
-                  <IconButton>
-                    <ForwardIcon />
-                  </IconButton>
-                </Box>
-              </Box>
-            </DialogTitle>
-            <DialogContent>
-              <Box mb={2}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  From: {selectedMessage.sender}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {selectedMessage.timestamp.toLocaleString()}
-                </Typography>
-              </Box>
-              <Typography size="md">
-                {selectedMessage.preview}
-                {/* In real app, would show full message content */}
-              </Typography>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={(e: React.MouseEvent) => () => setSelectedMessage(null)}>Close</Button>
-              <Button variant="filled" startIcon={<ReplyIcon />}>
+            <Box mb="md">
+              <Text size="sm" c="dimmed">
+                From: {selectedMessage.sender}
+              </Text>
+              <Text size="xs" c="dimmed">
+                {selectedMessage.timestamp.toLocaleString()}
+              </Text>
+            </Box>
+            <Text size="md">
+              {selectedMessage.preview}
+              {/* In real app, would show full message content */}
+            </Text>
+            <Group justify="flex-end" mt="xl">
+              <Button variant="subtle" onClick={() => setSelectedMessage(null)}>
+                Close
+              </Button>
+              <Button variant="filled" leftSection={<IconReply size={rem(16)} />}>
                 Reply
               </Button>
-            </DialogActions>
+            </Group>
           </>
         )}
-      </Dialog>
-      {/* Compose Dialog */}
-      <Dialog
-        open={composeOpen}
+      </Modal>
+      {/* Compose Modal */}
+      <Modal
+        opened={composeOpen}
         onClose={() => setComposeOpen(false)}
-        maxWidth="md"
-        fullWidth
+        size="lg"
+        title="Compose Message"
       >
-        <DialogTitle>Compose Message</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} style={{ mt: 1 }}>
-            <TextField
-              label="To"
-              fullWidth
-              placeholder="Enter recipient..."
-            />
-            <TextField
-              label="Subject"
-              fullWidth
-              placeholder="Enter subject..."
-            />
-            <TextField
-              label="Message"
-              multiline
-              rows={6}
-              fullWidth
-              placeholder="Type your message..."
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={(e: React.MouseEvent) => () => setComposeOpen(false)}>Cancel</Button>
-          <Button variant="filled" startIcon={<SendIcon />}>
-            Send
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        <Stack spacing="md">
+          <TextInput
+            label="To"
+            placeholder="Enter recipient..."
+          />
+          <TextInput
+            label="Subject"
+            placeholder="Enter subject..."
+          />
+          <TextInput
+            label="Message"
+            placeholder="Type your message..."
+            minRows={6}
+            autosize
+          />
+          <Group justify="flex-end" mt="xl">
+            <Button variant="subtle" onClick={() => setComposeOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="filled" leftSection={<IconSend size={rem(16)} />}>
+              Send
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+    </Container>
   );
 }

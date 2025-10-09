@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Card,
   Text,
-  Title,
   Grid,
   Box,
   Button,
@@ -244,7 +243,7 @@ const ReportGenerator: React.FunctionComponent<Record<string, any>> = () => {
       // Reset form
       if (scheduleTime === 'now') {
         setSelectedReport(null);
-setExportFormat('pdf');
+        setExportFormat('pdf');
         setSelectedStudent('all');
         setSelectedClass('all');
         setSelectedSubjects([]);
@@ -297,218 +296,189 @@ setExportFormat('pdf');
   };
 
   return (
-    <DatesProvider settings={{ locale: "en" }}>
-      <Box style={{ flexGrow: 1 }}>
-        <Text order={4} gutterBottom style={{ mb: 3 }}>
-          Report Generator
-        </Text>
+    <Box style={{ flexGrow: 1 }}>
+      <Text size="xl" fw={600} mb="lg">
+        Report Generator
+      </Text>
 
-        <SimpleGrid spacing={3}>
-          {/* Report Type Selection */}
-          <Box xs={12} md={8}>
-            <Card>
-              <CardHeader title="Select Report Type" />
-              <CardContent>
-                <SimpleGrid spacing={2}>
-                  {reportTypes.map((report) => (
-                    <Box xs={12} sm={6} key={report.type}>
-                      <Paper
-                        style={{
-                          p: 2,
-                          cursor: 'pointer',
-                          border: selectedReport?.type === report.type ? 2 : 1,
-                          borderColor: selectedReport?.type === report.type ? 'primary.main' : 'divider',
-                          '&:hover': {
-                            bgcolor: 'action.hover',
-                          },
-                        }}
-                        onClick={(e: React.MouseEvent) => () => setSelectedReport(report)}
-                      >
-                        <Stack direction="row" spacing={2} alignItems="center">
-                          {report.icon}
-                          <Box flex={1}>
-                            <Text variant="subtitle1" fontWeight={600}>
-                              {report.name}
-                            </Text>
-                            <Text variant="caption" color="text.secondary">
-                              {report.description}
-                            </Text>
-                          </Box>
-                          {selectedReport?.type === report.type && (
-                            <CheckCircle color="blue" />
-                          )}
-                        </Stack>
-                      </Paper>
-                    </SimpleGrid>
-                  ))}
-                </SimpleGrid>
+      <Grid>
+        {/* Report Type Selection */}
+        <Grid.Col span={{ xs: 12, md: 8 }}>
+          <Card withBorder>
+            <Card.Section p="md" style={{ borderBottom: '1px solid var(--mantine-color-gray-3)' }}>
+              <Text size="lg" fw={500}>Select Report Type</Text>
+            </Card.Section>
+            <Card.Section p="md">
+              <Grid>
+                {reportTypes.map((report) => (
+                  <Grid.Col span={{ xs: 12, sm: 6 }} key={report.type}>
+                    <Paper
+                      p="md"
+                      withBorder
+                      style={{
+                        cursor: 'pointer',
+                        borderColor: selectedReport?.type === report.type ? 'var(--mantine-primary-color-filled)' : undefined,
+                        borderWidth: selectedReport?.type === report.type ? 2 : 1,
+                      }}
+                      onClick={() => setSelectedReport(report)}
+                    >
+                      <Group align="center" gap="md">
+                        {report.icon}
+                        <Box style={{ flex: 1 }}>
+                          <Text size="md" fw={600}>
+                            {report.name}
+                          </Text>
+                          <Text size="sm" c="dimmed">
+                            {report.description}
+                          </Text>
+                        </Box>
+                        {selectedReport?.type === report.type && (
+                          <CheckCircle color="blue" />
+                        )}
+                      </Group>
+                    </Paper>
+                  </Grid.Col>
+                ))}
+              </Grid>
 
                 {selectedReport && (
                   <>
-                    <Divider style={{ my: 3 }} />
-                    
+                    <Divider my="lg" />
+
                     {/* Report Parameters */}
-                    <Text order={6} gutterBottom>
+                    <Text size="md" fw={500} mb="md">
                       Report Parameters
                     </Text>
-                    
-                    <SimpleGrid spacing={2} style={{ mt: 1 }}>
+
+                    <Grid mt="sm">
                       {/* Format Selection */}
-                      <Box xs={12} sm={6}>
-                        <FormControl fullWidth>
-                          <InputLabel>Export Format</InputLabel>
-                          <Select
-                            value={exportFormat}
-                            onChange={(e) => setExportFormat(String(e.target.value))}
-                            label="Export Format"
-                          >
-                            {selectedReport.formats.map((fmt) => (
-                              <MenuItem key={fmt} value={fmt}>
-                                <Stack direction="row" spacing={1} alignItems="center">
-                                  {getFormatIcon(fmt)}
-                                  <span>{fmt.toUpperCase()}</span>
-                                </Stack>
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </SimpleGrid>
+                      <Grid.Col span={{ xs: 12, sm: 6 }}>
+                        <Select
+                          label="Export Format"
+                          value={exportFormat}
+                          onChange={(value) => value && setExportFormat(value)}
+                          data={selectedReport.formats.map((fmt) => ({
+                            value: fmt,
+                            label: fmt.toUpperCase(),
+                          }))}
+                        />
+                      </Grid.Col>
 
                       {/* Date Range */}
                       {selectedReport.parameters.includes('dateRange') && (
                         <>
-                          <Box xs={12} sm={3}>
+                          <Grid.Col span={{ xs: 12, sm: 3 }}>
                             <DatePicker
                               label="Start Date"
                               value={dateRange.start}
                               onChange={(date) => date && setDateRange({ ...dateRange, start: date })}
-                              slotProps={{
-                                textField: { fullWidth: true },
-                              }}
                             />
-                          </SimpleGrid>
-                          <Box xs={12} sm={3}>
+                          </Grid.Col>
+                          <Grid.Col span={{ xs: 12, sm: 3 }}>
                             <DatePicker
                               label="End Date"
                               value={dateRange.end}
                               onChange={(date) => date && setDateRange({ ...dateRange, end: date })}
-                              slotProps={{
-                                textField: { fullWidth: true },
-                              }}
                             />
-                          </SimpleGrid>
+                          </Grid.Col>
                         </>
                       )}
 
                       {/* Student Selection */}
                       {selectedReport.parameters.includes('student') && (
-                        <Box xs={12} sm={6}>
-                          <FormControl fullWidth>
-                            <InputLabel>Student</InputLabel>
-                            <Select
-                              value={selectedStudent}
-                              onChange={(e) => setSelectedStudent(e.target.value)}
-                              label="Student"
-                            >
-                              {students.map((student) => (
-                                <MenuItem key={student.id} value={student.id}>
-                                  {student.name}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
-                        </SimpleGrid>
+                        <Grid.Col span={{ xs: 12, sm: 6 }}>
+                          <Select
+                            label="Student"
+                            value={selectedStudent}
+                            onChange={(value) => value && setSelectedStudent(value)}
+                            data={students.map((student) => ({
+                              value: student.id,
+                              label: student.name,
+                            }))}
+                          />
+                        </Grid.Col>
                       )}
 
                       {/* Class Selection */}
                       {selectedReport.parameters.includes('class') && (
-                        <Box xs={12} sm={6}>
-                          <FormControl fullWidth>
-                            <InputLabel>Class</InputLabel>
-                            <Select
-                              value={selectedClass}
-                              onChange={(e) => setSelectedClass(e.target.value)}
-                              label="Class"
-                            >
-                              {classes.map((cls) => (
-                                <MenuItem key={cls.id} value={cls.id}>
-                                  {cls.name}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
-                        </SimpleGrid>
+                        <Grid.Col span={{ xs: 12, sm: 6 }}>
+                          <Select
+                            label="Class"
+                            value={selectedClass}
+                            onChange={(value) => value && setSelectedClass(value)}
+                            data={classes.map((cls) => ({
+                              value: cls.id,
+                              label: cls.name,
+                            }))}
+                          />
+                        </Grid.Col>
                       )}
 
                       {/* Subject Selection */}
                       {selectedReport.parameters.includes('subjects') && (
-                        <Box xs={12}>
-                          <Text variant="subtitle2" gutterBottom>
+                        <Grid.Col span={12}>
+                          <Text size="sm" fw={500} mb="xs">
                             Select Subjects
                           </Text>
-                          <Stack direction="row" spacing={1} flexWrap="wrap">
+                          <Group gap="xs">
                             {subjects.map((subject) => (
-                              <Chip
+                              <Badge
                                 key={subject}
-                                label={subject}
-                                onClick={(e: React.MouseEvent) => () => {
+                                variant={selectedSubjects.includes(subject) ? 'filled' : 'outline'}
+                                style={{ cursor: 'pointer' }}
+                                onClick={() => {
                                   if (selectedSubjects.includes(subject)) {
                                     setSelectedSubjects(selectedSubjects.filter((s) => s !== subject));
                                   } else {
                                     setSelectedSubjects([...selectedSubjects, subject]);
                                   }
                                 }}
-                                color={selectedSubjects.includes(subject) ? 'primary' : 'default'}
-                                style={{ mb: 1 }}
-                              />
+                              >
+                                {subject}
+                              </Badge>
                             ))}
-                          </Stack>
-                        </SimpleGrid>
+                          </Group>
+                        </Grid.Col>
                       )}
 
                       {/* Delivery Options */}
-                      <Box xs={12}>
-                        <Divider style={{ my: 2 }} />
-                        <Text order={6} gutterBottom>
+                      <Grid.Col span={12}>
+                        <Divider my="md" />
+                        <Text size="md" fw={500} mb="md">
                           Delivery Options
                         </Text>
-                      </SimpleGrid>
+                      </Grid.Col>
 
-                      <Box xs={12} sm={6}>
-                        <TextField
-                          fullWidth
+                      <Grid.Col span={{ xs: 12, sm: 6 }}>
+                        <TextInput
                           label="Email Report To (Optional)"
                           value={emailRecipient}
                           onChange={(e) => setEmailRecipient(e.target.value)}
                           placeholder="email@example.com"
-                          InputProps={{
-                            startAdornment: <Email style={{ mr: 1, color: 'action.active' }} />,
-                          }}
+                          leftSection={<Email size={16} />}
                         />
-                      </SimpleGrid>
+                      </Grid.Col>
 
-                      <Box xs={12} sm={6}>
-                        <FormControl fullWidth>
-                          <InputLabel>Schedule</InputLabel>
-                          <Select
-                            value={scheduleTime}
-                            onChange={(e) => setScheduleTime(e.target.value as any)}
-                            label="Schedule"
-                          >
-                            <MenuItem value="now">Generate Now</MenuItem>
-                            <MenuItem value="daily">Daily</MenuItem>
-                            <MenuItem value="weekly">Weekly</MenuItem>
-                            <MenuItem value="monthly">Monthly</MenuItem>
-                          </Select>
-                        </FormControl>
-                      </SimpleGrid>
+                      <Grid.Col span={{ xs: 12, sm: 6 }}>
+                        <Select
+                          label="Schedule"
+                          value={scheduleTime}
+                          onChange={(value) => value && setScheduleTime(value as any)}
+                          data={[
+                            { value: 'now', label: 'Generate Now' },
+                            { value: 'daily', label: 'Daily' },
+                            { value: 'weekly', label: 'Weekly' },
+                            { value: 'monthly', label: 'Monthly' },
+                          ]}
+                        />
+                      </Grid.Col>
 
                       {/* Generate Button */}
-                      <Box xs={12}>
-                        <Box display="flex" justifyContent="flex-end" gap={2}>
+                      <Grid.Col span={12}>
+                        <Group justify="flex-end" gap="sm">
                           <Button
                             variant="outline"
-                            onClick={(e: React.MouseEvent) => () => {
+                            onClick={() => {
                               setSelectedReport(null);
                               setExportFormat('pdf');
                               setSelectedStudent('all');
@@ -520,87 +490,85 @@ setExportFormat('pdf');
                           </Button>
                           <Button
                             variant="filled"
-                            startIcon={<Download />}
-                            onClick={(e: React.MouseEvent) => handleGenerateReport}
+                            leftSection={<Download size={16} />}
+                            onClick={handleGenerateReport}
                             disabled={generating}
                           >
                             {generating ? 'Generating...' : 'Generate Report'}
                           </Button>
-                        </Box>
-                      </SimpleGrid>
-                    </SimpleGrid>
+                        </Group>
+                      </Grid.Col>
+                    </Grid>
                   </>
                 )}
 
-                {generating && <LinearProgress style={{ mt: 2 }} />}
+                {generating && <Progress size="sm" style={{ marginTop: 16 }} />}
                 {error && (
-                  <Alert severity="error" style={{ mt: 2 }}>
+                  <Alert color="red" style={{ marginTop: 16 }}>
                     {error}
                   </Alert>
                 )}
-              </CardContent>
-            </Card>
-          </SimpleGrid>
+            </Card.Section>
+          </Card>
+        </Grid.Col>
 
-          {/* Recent Reports */}
-          <Box xs={12} md={4}>
-            <Card>
-              <CardHeader
-                title="Recent Reports"
-                action={
-                  <IconButton onClick={(e: React.MouseEvent) => loadRecentReports}>
-                    <Refresh />
-                  </IconButton>
-                }
-              />
-              <CardContent>
-                <List>
-                  {recentReports.map((report) => (
-                    <ListItem key={report.id} divider>
-                      <ListItemIcon>{getFormatIcon(report.format)}</ListItemIcon>
-                      <ListItemText
-                        primary={report.name}
-                        secondary={
-                          <Stack spacing={0.5}>
-                            <Text variant="caption">
-{formatDate(report.generatedAt, 'MMM dd, yyyy HH:mm')}
-                            </Text>
-                            <Stack direction="row" spacing={1} alignItems="center">
-                              <Chip
-                                label={report.status}
-                                size="small"
-                                color={getStatusColor(report.status)}
-                              />
-                              <Text variant="caption">{report.size}</Text>
-                            </Stack>
-                          </Stack>
-                        }
-                      />
-                      <ListItemSecondaryAction>
-                        {report.status === 'ready' && (
-                          <Tooltip title="Download">
-                            <IconButton onClick={(e: React.MouseEvent) => () => handleDownloadReport(report)}>
-                              <Download />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                        {report.status === 'pending' && <CircularProgress size={20} />}
-                      </ListItemSecondaryAction>
-                    </ListItem>
-                  ))}
-                </List>
+        {/* Recent Reports */}
+        <Grid.Col span={{ xs: 12, md: 4 }}>
+          <Card withBorder>
+            <Card.Section p="md" style={{ borderBottom: '1px solid var(--mantine-color-gray-3)' }}>
+              <Group justify="space-between" align="center">
+                <Text size="lg" fw={500}>Recent Reports</Text>
+                <ActionIcon onClick={loadRecentReports} variant="subtle">
+                  <Refresh size={16} />
+                </ActionIcon>
+              </Group>
+            </Card.Section>
+            <Card.Section p="md">
+              <Stack gap="md">
+                {recentReports.map((report) => (
+                  <Group key={report.id} align="flex-start" wrap="nowrap">
+                    <Box mt="xs">{getFormatIcon(report.format)}</Box>
+                    <Box style={{ flex: 1 }}>
+                      <Text size="sm" fw={500}>
+                        {report.name}
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        {formatDate(report.generatedAt, 'MMM dd, yyyy HH:mm')}
+                      </Text>
+                      <Group gap="xs" mt="xs">
+                        <Badge
+                          size="sm"
+                          color={getStatusColor(report.status) as any}
+                        >
+                          {report.status}
+                        </Badge>
+                        <Text size="xs">{report.size}</Text>
+                      </Group>
+                    </Box>
+                    <Box>
+                      {report.status === 'ready' && (
+                        <Tooltip label="Download">
+                          <ActionIcon onClick={() => handleDownloadReport(report)} variant="subtle">
+                            <Download size={16} />
+                          </ActionIcon>
+                        </Tooltip>
+                      )}
+                      {report.status === 'pending' && <Loader size="sm" />}
+                    </Box>
+                  </Group>
+                ))}
 
                 {recentReports.length === 0 && (
-                  <Text size="sm" color="text.secondary" align="center">
+                  <Text size="sm" c="dimmed" ta="center">
                     No reports generated yet
                   </Text>
                 )}
-              </CardContent>
-            </Card>
-          </SimpleGrid>
-        </SimpleGrid>
-      </Box>
-    </DatesProvider>
+              </Stack>
+            </Card.Section>
+          </Card>
+        </Grid.Col>
+      </Grid>
+    </Box>
   );
 };
 

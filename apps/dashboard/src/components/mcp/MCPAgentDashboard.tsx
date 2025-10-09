@@ -1,56 +1,46 @@
-import * as React from "react";
-import { useState, useEffect } from "react";
+import * as React from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
-  CardContent,
-  Typography,
+  Text,
   Box,
   Stack,
-  Chip,
-  IconButton,
+  Badge,
+  ActionIcon,
   Skeleton,
   Alert,
   Grid,
   Paper,
-  LinearProgress,
+  Progress,
   Avatar,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
   Divider,
-  FormControl,
-  InputLabel,
   Select,
-  MenuItem,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-} from "@mui/material";
+  Modal,
+  TextInput,
+  Textarea,
+  Group,
+} from '@mantine/core';
 import {
-  SmartToy,
-  Psychology,
-  School,
-  Quiz,
-  Terrain,
-  Code,
-  RateReview,
-  PlayArrow,
-  Pause,
-  Stop,
-  Refresh,
-  Settings,
-  Memory,
-  Speed,
-  CheckCircle,
-  Error,
-  Warning,
-  Info,
-} from "@mui/icons-material";
-import { useTheme } from "@mui/material/styles";
+  IconRobot,
+  IconBrain,
+  IconSchool,
+  IconQuestionMark,
+  IconMountain,
+  IconCode,
+  IconStarFilled,
+  IconPlayerPlay,
+  IconPlayerPause,
+  IconPlayerStop,
+  IconRefresh,
+  IconSettings,
+  IconMemory,
+  IconGauge,
+  IconCircleCheck,
+  IconExclamationMark,
+  IconAlertTriangle,
+  IconInfoCircle,
+} from '@tabler/icons-react';
 import {
   LineChart,
   Line,
@@ -63,16 +53,16 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
-} from "recharts";
-import { useWebSocketContext } from "../../contexts/WebSocketContext";
-import { useAppDispatch } from "../../store";
-import { addNotification } from "../../store/slices/uiSlice";
+} from 'recharts';
+import { useWebSocketContext } from '../../contexts/WebSocketContext';
+import { useAppDispatch } from '../../store';
+import { addNotification } from '../../store/slices/uiSlice';
 
 interface MCPAgent {
   id: string;
   name: string;
-  type: "supervisor" | "content" | "quiz" | "terrain" | "script" | "review";
-  status: "active" | "idle" | "working" | "error" | "offline";
+  type: 'supervisor' | 'content' | 'quiz' | 'terrain' | 'script' | 'review';
+  status: 'active' | 'idle' | 'working' | 'error' | 'offline';
   lastActivity: string;
   tasksCompleted: number;
   avgResponseTime: number;
@@ -96,7 +86,7 @@ interface MCPAgent {
 
 interface MCPMessage {
   id: string;
-  type: "request" | "response" | "notification" | "error";
+  type: 'request' | 'response' | 'notification' | 'error';
   agentId: string;
   content: string;
   timestamp: string;
@@ -109,28 +99,27 @@ interface MCPAgentDashboardProps {
 }
 
 const AGENT_ICONS: Record<string, React.ReactElement> = {
-  supervisor: <SmartToy />,
-  content: <Psychology />,
-  quiz: <Quiz />,
-  terrain: <Terrain />,
-  script: <Code />,
-  review: <RateReview />,
+  supervisor: <IconRobot size={20} />,
+  content: <IconBrain size={20} />,
+  quiz: <IconQuestionMark size={20} />,
+  terrain: <IconMountain size={20} />,
+  script: <IconCode size={20} />,
+  review: <IconStarFilled size={20} />,
 };
 
 const AGENT_COLORS: Record<string, string> = {
-  supervisor: "#2563EB",
-  content: "#22C55E",
-  quiz: "#FACC15",
-  terrain: "#9333EA",
-  script: "#EF4444",
-  review: "#06B6D4",
+  supervisor: '#2563EB',
+  content: '#22C55E',
+  quiz: '#FACC15',
+  terrain: '#9333EA',
+  script: '#EF4444',
+  review: '#06B6D4',
 };
 
-export function MCPAgentDashboard({ 
+export function MCPAgentDashboard({
   autoRefresh = true,
-  showLogs = true 
+  showLogs = true
 }: MCPAgentDashboardProps) {
-  const theme = useTheme();
   const dispatch = useAppDispatch();
   const { isConnected, subscribe, unsubscribe, sendMessage } = useWebSocketContext();
   
@@ -140,8 +129,8 @@ export function MCPAgentDashboard({
   const [error, setError] = useState<string | null>(null);
   const [selectedAgent, setSelectedAgent] = useState<MCPAgent | null>(null);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
-  const [taskType, setTaskType] = useState<string>("");
-  const [taskContent, setTaskContent] = useState<string>("");
+  const [taskType, setTaskType] = useState<string>('');
+  const [taskContent, setTaskContent] = useState<string>('');
   const [mcpWebSocket, setMcpWebSocket] = useState<WebSocket | null>(null);
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
   const MAX_RECONNECT_ATTEMPTS = 3;
@@ -247,7 +236,7 @@ export function MCPAgentDashboard({
               ? { 
                   ...agent, 
                   currentTask: message.task,
-                  status: "working"
+                  status: 'working'
                 }
               : agent
           )
@@ -260,7 +249,7 @@ export function MCPAgentDashboard({
               ? { 
                   ...agent, 
                   currentTask: undefined,
-                  status: "active",
+                  status: 'active',
                   tasksCompleted: agent.tasksCompleted + 1,
                   lastActivity: new Date().toISOString(),
                 }
@@ -295,17 +284,17 @@ export function MCPAgentDashboard({
   const loadMockData = () => {
     const mockAgents: MCPAgent[] = [
       {
-        id: "supervisor",
-        name: "Supervisor Agent",
-        type: "supervisor",
-        status: "active",
+        id: 'supervisor',
+        name: 'Supervisor Agent',
+        type: 'supervisor',
+        status: 'active',
         lastActivity: new Date().toISOString(),
         tasksCompleted: 156,
         avgResponseTime: 245,
         successRate: 98.5,
         memoryUsage: 68,
         cpuUsage: 42,
-        capabilities: ["orchestration", "task_routing", "error_handling"],
+        capabilities: ['orchestration', 'task_routing', 'error_handling'],
         metrics: Array.from({ length: 10 }, (_, i) => ({
           timestamp: new Date(Date.now() - i * 60000).toISOString(),
           responseTime: Math.floor(Math.random() * 500) + 200,
@@ -314,10 +303,10 @@ export function MCPAgentDashboard({
         })),
       },
       {
-        id: "content",
-        name: "Content Generator",
-        type: "content",
-        status: "working",
+        id: 'content',
+        name: 'Content Generator',
+        type: 'content',
+        status: 'working',
         lastActivity: new Date().toISOString(),
         tasksCompleted: 89,
         avgResponseTime: 1200,
@@ -325,12 +314,12 @@ export function MCPAgentDashboard({
         memoryUsage: 85,
         cpuUsage: 78,
         currentTask: {
-          id: "task_001",
-          type: "generate_lesson",
+          id: 'task_001',
+          type: 'generate_lesson',
           progress: 65,
           startedAt: new Date(Date.now() - 120000).toISOString(),
         },
-        capabilities: ["lesson_generation", "content_creation", "curriculum_design"],
+        capabilities: ['lesson_generation', 'content_creation', 'curriculum_design'],
         metrics: Array.from({ length: 10 }, (_, i) => ({
           timestamp: new Date(Date.now() - i * 60000).toISOString(),
           responseTime: Math.floor(Math.random() * 1000) + 800,
@@ -339,17 +328,17 @@ export function MCPAgentDashboard({
         })),
       },
       {
-        id: "quiz",
-        name: "Quiz Agent",
-        type: "quiz",
-        status: "idle",
+        id: 'quiz',
+        name: 'Quiz Agent',
+        type: 'quiz',
+        status: 'idle',
         lastActivity: new Date(Date.now() - 300000).toISOString(),
         tasksCompleted: 234,
         avgResponseTime: 180,
         successRate: 96.8,
         memoryUsage: 45,
         cpuUsage: 25,
-        capabilities: ["quiz_generation", "assessment_creation", "grading"],
+        capabilities: ['quiz_generation', 'assessment_creation', 'grading'],
         metrics: Array.from({ length: 10 }, (_, i) => ({
           timestamp: new Date(Date.now() - i * 60000).toISOString(),
           responseTime: Math.floor(Math.random() * 300) + 150,
@@ -358,17 +347,17 @@ export function MCPAgentDashboard({
         })),
       },
       {
-        id: "terrain",
-        name: "Terrain Builder",
-        type: "terrain",
-        status: "active",
+        id: 'terrain',
+        name: 'Terrain Builder',
+        type: 'terrain',
+        status: 'active',
         lastActivity: new Date(Date.now() - 60000).toISOString(),
         tasksCompleted: 67,
         avgResponseTime: 3400,
         successRate: 91.5,
         memoryUsage: 92,
         cpuUsage: 85,
-        capabilities: ["3d_modeling", "environment_design", "world_building"],
+        capabilities: ['3d_modeling', 'environment_design', 'world_building'],
         metrics: Array.from({ length: 10 }, (_, i) => ({
           timestamp: new Date(Date.now() - i * 60000).toISOString(),
           responseTime: Math.floor(Math.random() * 2000) + 2500,
@@ -377,17 +366,17 @@ export function MCPAgentDashboard({
         })),
       },
       {
-        id: "script",
-        name: "Script Agent",
-        type: "script",
-        status: "error",
+        id: 'script',
+        name: 'Script Agent',
+        type: 'script',
+        status: 'error',
         lastActivity: new Date(Date.now() - 180000).toISOString(),
         tasksCompleted: 145,
         avgResponseTime: 890,
         successRate: 89.2,
         memoryUsage: 58,
         cpuUsage: 35,
-        capabilities: ["lua_scripting", "code_generation", "debugging"],
+        capabilities: ['lua_scripting', 'code_generation', 'debugging'],
         metrics: Array.from({ length: 10 }, (_, i) => ({
           timestamp: new Date(Date.now() - i * 60000).toISOString(),
           responseTime: Math.floor(Math.random() * 800) + 600,
@@ -396,17 +385,17 @@ export function MCPAgentDashboard({
         })),
       },
       {
-        id: "review",
-        name: "Review Agent",
-        type: "review",
-        status: "active",
+        id: 'review',
+        name: 'Review Agent',
+        type: 'review',
+        status: 'active',
         lastActivity: new Date(Date.now() - 30000).toISOString(),
         tasksCompleted: 201,
         avgResponseTime: 320,
         successRate: 97.1,
         memoryUsage: 52,
         cpuUsage: 28,
-        capabilities: ["content_review", "quality_assurance", "validation"],
+        capabilities: ['content_review', 'quality_assurance', 'validation'],
         metrics: Array.from({ length: 10 }, (_, i) => ({
           timestamp: new Date(Date.now() - i * 60000).toISOString(),
           responseTime: Math.floor(Math.random() * 400) + 250,
@@ -476,8 +465,8 @@ export function MCPAgentDashboard({
       }));
 
       setIsTaskDialogOpen(false);
-      setTaskType("");
-      setTaskContent("");
+      setTaskType('');
+      setTaskContent('');
     } catch (error) {
       dispatch(addNotification({
         type: 'error',
@@ -488,330 +477,341 @@ export function MCPAgentDashboard({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "active":
-        return "success";
-      case "working":
-        return "warning";
-      case "idle":
-        return "default";
-      case "error":
-        return "error";
-      case "offline":
-        return "error";
+      case 'active':
+        return 'green';
+      case 'working':
+        return 'yellow';
+      case 'idle':
+        return 'gray';
+      case 'error':
+        return 'red';
+      case 'offline':
+        return 'red';
       default:
-        return "default";
+        return 'gray';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "active":
-        return <CheckCircle color="success" />;
-      case "working":
-        return <PlayArrow color="warning" />;
-      case "idle":
-        return <Pause color="disabled" />;
-      case "error":
-        return <Error color="error" />;
-      case "offline":
-        return <Stop color="error" />;
+      case 'active':
+        return <IconCircleCheck size={16} style={{ color: 'var(--mantine-color-green-6)' }} />;
+      case 'working':
+        return <IconPlayerPlay size={16} style={{ color: 'var(--mantine-color-yellow-6)' }} />;
+      case 'idle':
+        return <IconPlayerPause size={16} style={{ color: 'var(--mantine-color-gray-6)' }} />;
+      case 'error':
+        return <IconExclamationMark size={16} style={{ color: 'var(--mantine-color-red-6)' }} />;
+      case 'offline':
+        return <IconPlayerStop size={16} style={{ color: 'var(--mantine-color-red-6)' }} />;
       default:
-        return <Info />;
+        return <IconInfoCircle size={16} />;
     }
   };
 
   if (loading) {
     return (
-      <Grid container spacing={3}>
+      <Grid>
         {[1, 2, 3, 4].map((item) => (
-          <Grid item xs={12} md={6} lg={4} key={item}>
-            <Card>
-              <CardContent>
-                <Skeleton variant="text" height={40} />
-                <Skeleton variant="rectangular" height={200} />
-              </CardContent>
+          <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={item}>
+            <Card withBorder>
+              <Stack gap="md">
+                <Skeleton height={40} />
+                <Skeleton height={200} />
+              </Stack>
             </Card>
-          </Grid>
+          </Grid.Col>
         ))}
       </Grid>
     );
   }
 
   return (
-    <Grid container spacing={3}>
+    <Grid>
       {/* Header */}
-      <Grid item xs={12}>
-        <Card>
-          <CardContent>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-              <Typography variant="h5" sx={{ fontWeight: 600 }}>
+      <Grid.Col span={12}>
+        <Card withBorder>
+          <Stack gap="md">
+            <Group justify="space-between" align="center">
+              <Text size="xl" fw={600}>
                 MCP Agent Dashboard
-              </Typography>
-              <Stack direction="row" spacing={2} alignItems="center">
+              </Text>
+              <Group gap="sm" align="center">
                 {mcpWebSocket && mcpWebSocket.readyState === WebSocket.OPEN ? (
-                  <Chip label="MCP Connected" color="success" size="small" />
+                  <Badge color="green" size="sm">MCP Connected</Badge>
                 ) : reconnectAttempts > 0 ? (
-                  <Chip 
-                    label={`Reconnecting... (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`} 
-                    color="warning" 
-                    size="small" 
-                  />
+                  <Badge color="yellow" size="sm">
+                    Reconnecting... ({reconnectAttempts}/{MAX_RECONNECT_ATTEMPTS})
+                  </Badge>
                 ) : (
-                  <Chip label="MCP Offline" color="default" size="small" />
+                  <Badge color="gray" size="sm">MCP Offline</Badge>
                 )}
-                <IconButton 
+                <ActionIcon
                   onClick={() => {
                     setReconnectAttempts(0);
                     connectToMCP();
                   }}
                   disabled={!!(mcpWebSocket && mcpWebSocket.readyState === WebSocket.CONNECTING)}
+                  variant="subtle"
                 >
-                  <Refresh />
-                </IconButton>
-              </Stack>
-            </Stack>
+                  <IconRefresh size={16} />
+                </ActionIcon>
+              </Group>
+            </Group>
 
             {error && (
-              <Alert severity="warning" sx={{ mb: 2 }}>
-                MCP Connection Issue: {error} (Using mock data)
+              <Alert color="yellow" title="MCP Connection Issue">
+                {error} (Using mock data)
               </Alert>
             )}
 
             {/* Quick Stats */}
-            <Grid container spacing={2}>
-              <Grid item xs={6} md={3}>
-                <Paper sx={{ p: 2, textAlign: 'center' }}>
-                  <Typography variant="caption" color="text.secondary">
+            <Grid>
+              <Grid.Col span={{ base: 6, md: 3 }}>
+                <Paper p="md" style={{ textAlign: 'center' }} withBorder>
+                  <Text size="xs" c="dimmed">
                     Active Agents
-                  </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 700, color: 'success.main' }}>
-                    {agents.filter(a => a.status === "active" || a.status === "working").length}
-                  </Typography>
+                  </Text>
+                  <Text size="xl" fw={700} c="green">
+                    {agents.filter(a => a.status === 'active' || a.status === 'working').length}
+                  </Text>
                 </Paper>
-              </Grid>
-              <Grid item xs={6} md={3}>
-                <Paper sx={{ p: 2, textAlign: 'center' }}>
-                  <Typography variant="caption" color="text.secondary">
+              </Grid.Col>
+              <Grid.Col span={{ base: 6, md: 3 }}>
+                <Paper p="md" style={{ textAlign: 'center' }} withBorder>
+                  <Text size="xs" c="dimmed">
                     Tasks Completed
-                  </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                  </Text>
+                  <Text size="xl" fw={700} c="blue">
                     {agents.reduce((sum, agent) => sum + agent.tasksCompleted, 0)}
-                  </Typography>
+                  </Text>
                 </Paper>
-              </Grid>
-              <Grid item xs={6} md={3}>
-                <Paper sx={{ p: 2, textAlign: 'center' }}>
-                  <Typography variant="caption" color="text.secondary">
+              </Grid.Col>
+              <Grid.Col span={{ base: 6, md: 3 }}>
+                <Paper p="md" style={{ textAlign: 'center' }} withBorder>
+                  <Text size="xs" c="dimmed">
                     Avg Response Time
-                  </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 700, color: 'info.main' }}>
+                  </Text>
+                  <Text size="xl" fw={700} c="cyan">
                     {Math.round(agents.reduce((sum, agent) => sum + agent.avgResponseTime, 0) / agents.length)}ms
-                  </Typography>
+                  </Text>
                 </Paper>
-              </Grid>
-              <Grid item xs={6} md={3}>
-                <Paper sx={{ p: 2, textAlign: 'center' }}>
-                  <Typography variant="caption" color="text.secondary">
+              </Grid.Col>
+              <Grid.Col span={{ base: 6, md: 3 }}>
+                <Paper p="md" style={{ textAlign: 'center' }} withBorder>
+                  <Text size="xs" c="dimmed">
                     Success Rate
-                  </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 700, color: 'warning.main' }}>
+                  </Text>
+                  <Text size="xl" fw={700} c="orange">
                     {Math.round(agents.reduce((sum, agent) => sum + agent.successRate, 0) / agents.length)}%
-                  </Typography>
+                  </Text>
                 </Paper>
-              </Grid>
+              </Grid.Col>
             </Grid>
-          </CardContent>
+          </Stack>
         </Card>
-      </Grid>
+      </Grid.Col>
 
       {/* Agent Cards */}
       {agents.map((agent) => (
-        <Grid item xs={12} md={6} lg={4} key={agent.id}>
-          <Card>
-            <CardContent>
-              <Stack spacing={2}>
-                {/* Agent Header */}
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Stack direction="row" alignItems="center" spacing={2}>
-                    <Avatar sx={{ bgcolor: AGENT_COLORS[agent.type] + '20', color: AGENT_COLORS[agent.type] }}>
-                      {AGENT_ICONS[agent.type]}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                        {agent.name}
-                      </Typography>
-                      <Chip 
-                        label={agent.status} 
-                        size="small" 
-                        color={getStatusColor(agent.status) as any}
-                        icon={getStatusIcon(agent.status)}
-                      />
-                    </Box>
-                  </Stack>
-                  <IconButton 
-                    size="small"
-                    onClick={() => {
-                      setSelectedAgent(agent);
-                      setIsTaskDialogOpen(true);
+        <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={agent.id}>
+          <Card withBorder>
+            <Stack gap="md">
+              {/* Agent Header */}
+              <Group justify="space-between" align="center">
+                <Group align="center" gap="sm">
+                  <Avatar
+                    style={{
+                      backgroundColor: AGENT_COLORS[agent.type] + '20',
+                      color: AGENT_COLORS[agent.type]
                     }}
                   >
-                    <Settings />
-                  </IconButton>
-                </Stack>
+                    {AGENT_ICONS[agent.type]}
+                  </Avatar>
+                  <Box>
+                    <Text size="lg" fw={600}>
+                      {agent.name}
+                    </Text>
+                    <Badge
+                      size="sm"
+                      color={getStatusColor(agent.status)}
+                      leftSection={getStatusIcon(agent.status)}
+                    >
+                      {agent.status}
+                    </Badge>
+                  </Box>
+                </Group>
+                <ActionIcon
+                  size="sm"
+                  variant="subtle"
+                  onClick={() => {
+                    setSelectedAgent(agent);
+                    setIsTaskDialogOpen(true);
+                  }}
+                >
+                  <IconSettings size={16} />
+                </ActionIcon>
+              </Group>
 
-                {/* Current Task */}
-                {agent.currentTask && (
-                  <Paper sx={{ p: 2, bgcolor: 'warning.light', color: 'warning.contrastText' }}>
-                    <Typography variant="subtitle2" gutterBottom>
-                      Current Task: {agent.currentTask.type}
-                    </Typography>
-                    <LinearProgress
-                      variant="determinate"
-                      value={agent.currentTask.progress}
-                      sx={{ mb: 1 }}
+              {/* Current Task */}
+              {agent.currentTask && (
+                <Paper p="md" style={{ backgroundColor: 'var(--mantine-color-yellow-1)' }} withBorder>
+                  <Text size="sm" fw={600} mb="xs">
+                    Current Task: {agent.currentTask.type}
+                  </Text>
+                  <Progress
+                    value={agent.currentTask.progress}
+                    mb="xs"
+                    color="yellow"
+                  />
+                  <Text size="xs" c="dimmed">
+                    {agent.currentTask.progress}% complete • Started {new Date(agent.currentTask.startedAt).toLocaleTimeString()}
+                  </Text>
+                </Paper>
+              )}
+
+              {/* Agent Stats */}
+              <Grid>
+                <Grid.Col span={6}>
+                  <Text size="xs" c="dimmed">
+                    Tasks Completed
+                  </Text>
+                  <Text size="lg" fw={600}>
+                    {agent.tasksCompleted}
+                  </Text>
+                </Grid.Col>
+                <Grid.Col span={6}>
+                  <Text size="xs" c="dimmed">
+                    Success Rate
+                  </Text>
+                  <Text size="lg" fw={600}>
+                    {agent.successRate.toFixed(1)}%
+                  </Text>
+                </Grid.Col>
+                <Grid.Col span={6}>
+                  <Text size="xs" c="dimmed">
+                    Response Time
+                  </Text>
+                  <Text size="lg" fw={600}>
+                    {agent.avgResponseTime}ms
+                  </Text>
+                </Grid.Col>
+                <Grid.Col span={6}>
+                  <Text size="xs" c="dimmed">
+                    Memory Usage
+                  </Text>
+                  <Text size="lg" fw={600}>
+                    {agent.memoryUsage}%
+                  </Text>
+                </Grid.Col>
+              </Grid>
+
+              {/* Performance Chart */}
+              <Box style={{ height: 100 }}>
+                <ResponsiveContainer>
+                  <LineChart data={agent.metrics.slice(-10)}>
+                    <Line
+                      type="monotone"
+                      dataKey="responseTime"
+                      stroke={AGENT_COLORS[agent.type]}
+                      strokeWidth={2}
+                      dot={false}
                     />
-                    <Typography variant="caption">
-                      {agent.currentTask.progress}% complete • Started {new Date(agent.currentTask.startedAt).toLocaleTimeString()}
-                    </Typography>
-                  </Paper>
-                )}
+                    <Tooltip />
+                  </LineChart>
+                </ResponsiveContainer>
+              </Box>
 
-                {/* Agent Stats */}
-                <Grid container spacing={2}>
-                  <Grid item xs={6}>
-                    <Typography variant="caption" color="text.secondary">
-                      Tasks Completed
-                    </Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                      {agent.tasksCompleted}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="caption" color="text.secondary">
-                      Success Rate
-                    </Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                      {agent.successRate.toFixed(1)}%
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="caption" color="text.secondary">
-                      Response Time
-                    </Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                      {agent.avgResponseTime}ms
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="caption" color="text.secondary">
-                      Memory Usage
-                    </Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                      {agent.memoryUsage}%
-                    </Typography>
-                  </Grid>
-                </Grid>
-
-                {/* Performance Chart */}
-                <Box sx={{ height: 100 }}>
-                  <ResponsiveContainer>
-                    <LineChart data={agent.metrics.slice(-10)}>
-                      <Line
-                        type="monotone"
-                        dataKey="responseTime"
-                        stroke={AGENT_COLORS[agent.type]}
-                        strokeWidth={2}
-                        dot={false}
-                      />
-                      <Tooltip />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </Box>
-
-                {/* Capabilities */}
-                <Stack direction="row" spacing={1} flexWrap="wrap">
-                  {agent.capabilities.slice(0, 3).map((capability) => (
-                    <Chip
-                      key={capability}
-                      label={capability}
-                      size="small"
-                      variant="outlined"
-                      sx={{ fontSize: '0.7rem' }}
-                    />
-                  ))}
-                </Stack>
-              </Stack>
-            </CardContent>
+              {/* Capabilities */}
+              <Group gap="xs">
+                {agent.capabilities.slice(0, 3).map((capability) => (
+                  <Badge
+                    key={capability}
+                    size="xs"
+                    variant="outline"
+                  >
+                    {capability}
+                  </Badge>
+                ))}
+              </Group>
+            </Stack>
           </Card>
-        </Grid>
+        </Grid.Col>
       ))}
 
       {/* Message Log */}
       {showLogs && (
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+        <Grid.Col span={12}>
+          <Card withBorder>
+            <Stack gap="md">
+              <Text size="lg" fw={600}>
                 MCP Message Log
-              </Typography>
-              <List sx={{ maxHeight: 300, overflow: 'auto' }}>
-                {messages.slice(0, 20).map((message, index) => (
-                  <React.Fragment key={message.id}>
-                    <ListItem>
-                      <ListItemIcon>
-                        {AGENT_ICONS[agents.find(a => a.id === message.agentId)?.type || 'supervisor']}
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={message.content}
-                        secondary={`${message.type} • ${new Date(message.timestamp).toLocaleTimeString()}`}
-                      />
-                    </ListItem>
-                    {index < messages.length - 1 && <Divider />}
-                  </React.Fragment>
-                ))}
-              </List>
-            </CardContent>
+              </Text>
+              <Box style={{ maxHeight: 300, overflow: 'auto' }}>
+                <Stack gap="xs">
+                  {messages.slice(0, 20).map((message, index) => (
+                    <React.Fragment key={message.id}>
+                      <Group align="flex-start" gap="sm">
+                        <Box style={{ minWidth: 24 }}>
+                          {AGENT_ICONS[agents.find(a => a.id === message.agentId)?.type || 'supervisor']}
+                        </Box>
+                        <Box style={{ flex: 1 }}>
+                          <Text size="sm">
+                            {message.content}
+                          </Text>
+                          <Text size="xs" c="dimmed">
+                            {message.type} • {new Date(message.timestamp).toLocaleTimeString()}
+                          </Text>
+                        </Box>
+                      </Group>
+                      {index < messages.length - 1 && <Divider />}
+                    </React.Fragment>
+                  ))}
+                </Stack>
+              </Box>
+            </Stack>
           </Card>
-        </Grid>
+        </Grid.Col>
       )}
 
-      {/* Task Assignment Dialog */}
-      <Dialog open={isTaskDialogOpen} onClose={() => setIsTaskDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>
-          Assign Task to {selectedAgent?.name}
-        </DialogTitle>
-        <DialogContent>
-          <Stack spacing={3} sx={{ mt: 1 }}>
-            <FormControl fullWidth>
-              <InputLabel>Task Type</InputLabel>
-              <Select
-                value={taskType}
-                label="Task Type"
-                onChange={(e) => setTaskType(e.target.value)}
-              >
-                <MenuItem value="generate_content">Generate Content</MenuItem>
-                <MenuItem value="create_quiz">Create Quiz</MenuItem>
-                <MenuItem value="build_terrain">Build Terrain</MenuItem>
-                <MenuItem value="write_script">Write Script</MenuItem>
-                <MenuItem value="review_content">Review Content</MenuItem>
-              </Select>
-            </FormControl>
-            <TextField
-              fullWidth
-              multiline
-              rows={4}
-              label="Task Content"
-              value={taskContent}
-              onChange={(e) => setTaskContent(e.target.value)}
-              placeholder="Describe the task details..."
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setIsTaskDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleSendTask} variant="contained">Assign Task</Button>
-        </DialogActions>
-      </Dialog>
+      {/* Task Assignment Modal */}
+      <Modal
+        opened={isTaskDialogOpen}
+        onClose={() => setIsTaskDialogOpen(false)}
+        title={`Assign Task to ${selectedAgent?.name}`}
+        size="md"
+      >
+        <Stack gap="md">
+          <Select
+            label="Task Type"
+            placeholder="Select task type"
+            value={taskType}
+            onChange={(value) => setTaskType(value || '')}
+            data={[
+              { value: 'generate_content', label: 'Generate Content' },
+              { value: 'create_quiz', label: 'Create Quiz' },
+              { value: 'build_terrain', label: 'Build Terrain' },
+              { value: 'write_script', label: 'Write Script' },
+              { value: 'review_content', label: 'Review Content' },
+            ]}
+          />
+          <Textarea
+            label="Task Content"
+            placeholder="Describe the task details..."
+            value={taskContent}
+            onChange={(event) => setTaskContent(event.currentTarget.value)}
+            rows={4}
+          />
+          <Group justify="flex-end" gap="sm">
+            <Button variant="subtle" onClick={() => setIsTaskDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSendTask}>
+              Assign Task
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Grid>
   );
 }

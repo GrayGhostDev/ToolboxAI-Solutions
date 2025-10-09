@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Grid,
   Card,
@@ -15,7 +15,7 @@ import {
   Divider,
   ActionIcon,
   Container
-} from "@mantine/core";
+} from '@mantine/core';
 import {
   IconRefresh,
   IconTrophy,
@@ -23,32 +23,33 @@ import {
   IconCheck,
   IconRocket,
   IconSchool,
-  IconDeviceGamepad2,
+  IconDeviceGamepad,
   IconClipboardCheck
-} from "@tabler/icons-react";
-import { useMantineTheme } from "@mantine/core";
-import { UserRole } from "../../types";
-import { ProgressCharts } from "../widgets/ProgressCharts";
-import { useAppSelector, useAppDispatch } from "../../store";
-import { addXP } from "../../store/slices/gamificationSlice";
-import { addNotification } from "../../store/slices/uiSlice";
-import { getDashboardOverview } from "../../services/api";
-import { DashboardOverview } from "../../types/api";
-import { ROUTES } from "../../config/routes";
-import CreateLessonDialog from "../dialogs/CreateLessonDialog";
-import RealTimeAnalytics from "../widgets/RealTimeAnalytics";
-import ConnectionStatus from "../widgets/ConnectionStatus";
+} from '@tabler/icons-react';
+import { useMantineTheme } from '@mantine/core';
+import { type UserRole } from '../../types';
+import { ProgressCharts } from '../widgets/ProgressCharts';
+import { useAppSelector, useAppDispatch } from '../../store';
+import { addXP } from '../../store/slices/gamificationSlice';
+import { addNotification } from '../../store/slices/uiSlice';
+import { type DashboardOverview } from '../../types/api';
+import { useApiCallOnMount, useApiCall } from '../../hooks/useApiCall';
+import { ROUTES } from '../../config/routes';
+import CreateLessonDialog from '../dialogs/CreateLessonDialog';
+import RealTimeAnalytics from '../widgets/RealTimeAnalytics';
+import ConnectionStatus from '../widgets/ConnectionStatus';
 // Roblox-themed components
-import RobloxCharacterAvatar from "../roblox/RobloxCharacterAvatar";
-import Roblox3DIcon from "../roblox/Roblox3DIcon";
-import { Roblox3DButton } from "../roblox/Roblox3DButton";
-import { Roblox3DTabs } from "../roblox/Roblox3DTabs";
-import { Roblox3DNavigation } from "../roblox/Roblox3DNavigation";
-import { RobloxProgressBar } from "../roblox/RobloxProgressBar";
-import { RobloxAchievementBadge } from "../roblox/RobloxAchievementBadge";
-import { Simple3DIcon } from "../roblox/Simple3DIcon";
-import { Real3DIcon } from "../roblox/Real3DIcon";
-import { robloxColors } from "../../theme/robloxTheme";
+import RobloxCharacterAvatar from '../roblox/RobloxCharacterAvatar';
+import Roblox3DIcon from '../roblox/Roblox3DIcon';
+import { Roblox3DButton } from '../roblox/Roblox3DButton';
+import { Roblox3DTabs } from '../roblox/Roblox3DTabs';
+import { Roblox3DNavigation } from '../roblox/Roblox3DNavigation';
+import { RobloxProgressBar } from '../roblox/RobloxProgressBar';
+import { RobloxAchievementBadge } from '../roblox/RobloxAchievementBadge';
+import { Simple3DIcon } from '../roblox/Simple3DIcon';
+import { Real3DIcon } from '../roblox/Real3DIcon';
+import { robloxColors } from '../../theme/robloxTheme';
+import { getDashboardOverview } from '../../services/api';
 
 export function DashboardHome({ role }: { role?: UserRole }) {
   const theme = useMantineTheme();
@@ -59,122 +60,41 @@ export function DashboardHome({ role }: { role?: UserRole }) {
   const streakDays = useAppSelector((s) => s.gamification?.streakDays ?? 0);
   const badgesCount = useAppSelector((s) => (s.gamification?.badges ? s.gamification.badges.length : 0));
   const storeRole = useAppSelector((s) => (s as any).user?.role ?? (s as any).user?.currentUser?.role ?? null);
-  const effectiveRole = (role ?? storeRole) as UserRole | null;
+  const bypassAuth = import.meta.env.VITE_BYPASS_AUTH === 'true';
+  // In bypass mode, always use teacher role as default
+  const effectiveRole = (role ?? storeRole ?? (bypassAuth ? 'teacher' : null)) as UserRole | null;
   const userXP = useAppSelector((s) => (s as any).user?.userId) ? xp : 0;
 
-  const [dashboardData, setDashboardData] = useState<DashboardOverview | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [createLessonOpen, setCreateLessonOpen] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
 
-// Data loader with retry mechanism and fallback
-  const loadDashboardData = useCallback(async (isRetry = false) => {
-    if (!effectiveRole) {
-      // No role available, nothing to load
-      setLoading(false);
-      return;
+  // Fetch dashboard data using API hook
+  const {
+    data: dashboardData,
+    loading,
+    error,
+    refetch: loadDashboardData
+  } = useApiCallOnMount(
+    effectiveRole ? `/dashboard/${effectiveRole}` : null,
+    {
+      mockEndpoint: '/dashboard/overview',
+      showNotification: false,
+      retryAttempts: 3,
+      retryDelay: 2000
     }
-
-    try {
-      if (!isRetry) {
-        setLoading(true);
-        setError(null);
-        setRetryCount(0);
-      }
-
-      const data = await getDashboardOverview(effectiveRole);
-      setDashboardData(data);
-      setRetryCount(0); // Reset retry count on success
-    } catch (err: any) {
-      console.error("Dashboard data load error:", err);
-
-      // After 3 failed attempts, show fallback data instead of infinite retries
-      if (retryCount >= 2) {
-        console.log("Using fallback dashboard data due to repeated failures");
-        setDashboardData({
-          role: effectiveRole,
-          metrics: {
-            totalStudents: 0,
-            activeClasses: 0,
-            averageProgress: 0
-          },
-          recentActivity: [],
-          notifications: [],
-          kpis: {
-            totalStudents: 0,
-            activeSessions: 0,
-            completedLessons: 0,
-            averageScore: 0,
-            progressChange: 0
-          }
-        });
-        setError('Using offline mode - some features may be limited. Check your connection and refresh to sync with server.');
-        setLoading(false);
-        return;
-      }
-
-      // Provide more specific error messages
-      if (err && typeof err === 'object' && 'code' in err && err.code === 'ECONNABORTED') {
-        if (retryCount < 2 && !isRetry) {
-          // Retry for timeout errors (only on initial load, not on retries)
-          setRetryCount(prev => prev + 1);
-          setTimeout(() => {
-            loadDashboardData(true);
-          }, 2000 * (retryCount + 1)); // Exponential backoff
-          setError(`Connection timeout. Retrying... (${retryCount + 1}/3)`);
-          return;
-        } else {
-          setError('Dashboard data is taking longer than expected. Please check your connection and try refreshing the page.');
-        }
-      } else if (err && typeof err === 'object' && 'response' in err) {
-        const status = err.response?.status;
-        if (status === 401) {
-          setError('Authentication expired. Please refresh the page and log in again.');
-        } else if (status === 500) {
-          if (retryCount < 1 && !isRetry) {
-            // Retry once for server errors (only on initial load, not on retries)
-            setRetryCount(prev => prev + 1);
-            setTimeout(() => {
-              loadDashboardData(true);
-            }, 3000);
-            setError('Server error. Retrying...');
-            return;
-          } else {
-            setError('Server error. Please try again in a moment.');
-          }
-        } else if (status === 404) {
-          setError('Dashboard endpoint not found. Please contact support.');
-        } else {
-          setError(err.message || "Failed to load dashboard data");
-        }
-      } else {
-        setError(err.message || "Failed to load dashboard data");
-      }
-    } finally {
-      if (!isRetry) {
-        setLoading(false);
-      }
-    }
-  }, [effectiveRole, retryCount]);
-
-  // Load on mount or role change
-  useEffect(() => {
-    void loadDashboardData();
-  }, [loadDashboardData]);
+  );
 
   // Navigate to Play page for students
   const handleCompleteTask = () => {
     if (effectiveRole === 'student') {
       navigate('/play');
     } else {
-      dispatch(addXP({ amount: 25, reason: "Completed daily task", source: "achievement" }));
+      dispatch(addXP({ amount: 25, reason: 'Completed daily task', source: 'achievement' }));
     }
   };
 
   if (loading) {
     return (
-      <Box style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "400px" }}>
+      <Box style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
         <Loader />
       </Box>
     );
@@ -184,7 +104,9 @@ export function DashboardHome({ role }: { role?: UserRole }) {
     return (
       <Box p={20}>
         <Text c="red" size="xl" fw={600}>Error loading dashboard</Text>
-        <Text size="sm" style={{ marginBottom: 16 }}>{error}</Text>
+        <Text size="sm" style={{ marginBottom: 16 }}>
+          {typeof error === 'string' ? error : 'Failed to load dashboard data. Please try again.'}
+        </Text>
         <Group>
           <Button
             onClick={() => loadDashboardData()}
@@ -213,7 +135,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
         <Card
           style={{
             background: `linear-gradient(135deg, ${theme.colors.blue[6]}, ${theme.colors.violet[6]})`,
-            color: "white",
+            color: 'white',
             position: 'relative',
             overflow: 'hidden',
           }}
@@ -226,6 +148,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
             >
               <Stack style={{ flex: 1 }}>
                 <Text
+                  component="div"
                   size="xl"
                   fw={800}
                   style={{
@@ -257,23 +180,23 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                   </Group>
                 </Text>
                 <Text size="md" style={{ opacity: 0.9, marginBottom: 16 }}>
-                  {role === "teacher" && "Review today's classes, push lessons to Roblox, and track assessments."}
-                  {role === "admin" && "Monitor usage across schools, manage integrations, and review compliance."}
-                  {role === "student" && "Jump into your next mission, level up, and check the leaderboard!"}
-                  {role === "parent" && "See your child's progress, download reports, and message teachers."}
+                  {role === 'teacher' && "Review today's classes, push lessons to Roblox, and track assessments."}
+                  {role === 'admin' && 'Monitor usage across schools, manage integrations, and review compliance.'}
+                  {role === 'student' && 'Jump into your next mission, level up, and check the leaderboard!'}
+                  {role === 'parent' && "See your child's progress, download reports, and message teachers."}
                 </Text>
 
                 {/* Character Avatar */}
                 <Group align="center" gap="md" style={{ marginBottom: 16 }}>
                   <RobloxCharacterAvatar
                     character={{
-                      name: "Space Explorer",
-                      type: "astronaut",
+                      name: 'Space Explorer',
+                      type: 'astronaut',
                       level: level,
                       xp: userXP,
-                      achievements: ["First Mission", "Quiz Master", "Level Up"],
+                      achievements: ['First Mission', 'Quiz Master', 'Level Up'],
                       isActive: true,
-                      imagePath: "" // Will be loaded dynamically
+                      imagePath: '' // Will be loaded dynamically
                     }}
                     size="medium"
                     showLevel={false}
@@ -291,7 +214,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                 </Group>
               </Stack>
               <Group gap="md" wrap="wrap">
-                {role === "teacher" && (
+                {role === 'teacher' && (
                   <>
                     <Roblox3DButton
                       iconName="ROCKET"
@@ -323,7 +246,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     />
                   </>
                 )}
-                {role === "admin" && (
+                {role === 'admin' && (
                   <>
                     <Roblox3DButton
                       iconName="LIGHT_BULB"
@@ -345,7 +268,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     />
                   </>
                 )}
-                {role === "student" && (
+                {role === 'student' && (
                   <>
                     <Roblox3DButton
                       iconName="ROCKET"
@@ -367,7 +290,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     />
                   </>
                 )}
-                {role === "parent" && (
+                {role === 'parent' && (
                   <>
                     <Roblox3DButton
                       iconName="SPORTS_ESPORTS"
@@ -417,6 +340,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
         >
           <Card.Section p="xl">
             <Text
+              component="div"
               size="xl"
               fw={700}
               style={{
@@ -491,7 +415,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
             padding: 16,
           }}
         >
-          <Text size="lg" ta="center" mb="md" fw={700}>
+          <Box mb="md">
             <Group justify="center" align="center" gap="xs">
               <Real3DIcon
                 iconName="BOARD"
@@ -500,9 +424,9 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                 particleEffect="none"
                 glowColor={robloxColors.neon.electricBlue}
               />
-              <span>Navigation Hub</span>
+              <Text size="lg" ta="center" fw={700} component="span">Navigation Hub</Text>
             </Group>
-          </Text>
+          </Box>
           <Group justify="center" gap="md" wrap="wrap">
             {[
               { name: 'Dashboard', icon: 'BOARD', iconColor: robloxColors.neon.electricBlue, path: '/dashboard' },
@@ -553,7 +477,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
       </Grid.Col>
 
       {/* 3D Progress and Achievement Cards */}
-      {role === "student" && (
+      {role === 'student' && (
         <>
           <Grid.Col span={{ base: 12, md: 4 }}>
             <Card
@@ -706,7 +630,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
         </>
       )}
 
-      {(role === "teacher" || role === "admin") && (
+      {(role === 'teacher' || role === 'admin') && (
         <>
           <Grid.Col span={{ base: 12, md: 3 }}>
             <Card role="region" aria-label="Active classes">
@@ -768,7 +692,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                     </Text>
                     <Badge
                       size="sm"
-                      color={((dashboardData?.kpis?.progressChange || 0) >= 0) ? "green" : "red"}
+                      color={((dashboardData?.kpis?.progressChange || 0) >= 0) ? 'green' : 'red'}
                       style={{ marginTop: 4 }}
                     >
                       {dashboardData?.kpis?.progressChange || 0}% this week
@@ -790,7 +714,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                       Compliance
                     </Text>
                     <Text size="xl" fw={700}>
-                      {dashboardData?.compliance?.status || "Unknown"}
+                      {dashboardData?.compliance?.status || 'Unknown'}
                     </Text>
                     <Text size="xs" c="dimmed">
                       {dashboardData?.compliance?.pendingAlerts || 0} pending alerts
@@ -803,7 +727,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
         </>
       )}
 
-      {role === "parent" && (
+      {role === 'parent' && (
         <>
           <Grid.Col span={{ base: 12, md: 3 }}>
             <Card role="region" aria-label="Child's XP">
@@ -846,7 +770,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                       color="green"
                       style={{ marginTop: 4 }}
                     >
-                      {dashboardData?.studentData?.performanceRating || "Average"}
+                      {dashboardData?.studentData?.performanceRating || 'Average'}
                     </Badge>
                   </Stack>
                 </Group>
@@ -887,10 +811,10 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                       Last Active
                     </Text>
                     <Text size="xl" fw={700}>
-                      {dashboardData?.studentData?.lastActive ? new Date(dashboardData.studentData.lastActive).toLocaleDateString() : "Today"}
+                      {dashboardData?.studentData?.lastActive ? new Date(dashboardData.studentData.lastActive).toLocaleDateString() : 'Today'}
                     </Text>
                     <Text size="xs" c="dimmed">
-                      {dashboardData?.studentData?.lastActive ? new Date(dashboardData.studentData.lastActive).toLocaleTimeString() : "Recently"}
+                      {dashboardData?.studentData?.lastActive ? new Date(dashboardData.studentData.lastActive).toLocaleTimeString() : 'Recently'}
                     </Text>
                   </Stack>
                 </Group>
@@ -901,7 +825,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
       )}
 
       {/* Real-Time Analytics for Admin and Teacher */}
-      {(role === "admin" || role === "teacher") && (
+      {(role === 'admin' || role === 'teacher') && (
         <Grid.Col span={12}>
           <Group justify="space-between" align="center" mb="md">
             <Text size="lg" fw={600}>
@@ -930,10 +854,10 @@ export function DashboardHome({ role }: { role?: UserRole }) {
             </Text>
             <Stack gap="md">
               {(dashboardData?.recentActivity || [
-                { time: "2 hours ago", action: "Completed Math Lesson", type: "success" },
-                { time: "5 hours ago", action: "Earned 'Problem Solver' badge", type: "achievement" },
-                { time: "Yesterday", action: "Submitted Science Assignment", type: "info" },
-                { time: "2 days ago", action: "Joined Roblox Chemistry Lab", type: "game" },
+                { time: '2 hours ago', action: 'Completed Math Lesson', type: 'success' },
+                { time: '5 hours ago', action: "Earned 'Problem Solver' badge", type: 'achievement' },
+                { time: 'Yesterday', action: 'Submitted Science Assignment', type: 'info' },
+                { time: '2 days ago', action: 'Joined Roblox Chemistry Lab', type: 'game' },
               ]).map((activity: any, index) => (
                 <Group
                   key={index}
@@ -946,10 +870,10 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                   }}
                 >
                   <Avatar size="sm" color="blue">
-                    {activity.type === "success" && "✓"}
-                    {activity.type === "achievement" && "🏆"}
-                    {activity.type === "info" && "📝"}
-                    {activity.type === "game" && "🎮"}
+                    {activity.type === 'success' && '✓'}
+                    {activity.type === 'achievement' && '🏆'}
+                    {activity.type === 'info' && '📝'}
+                    {activity.type === 'game' && '🎮'}
                   </Avatar>
                   <Stack gap="xs" style={{ flex: 1 }}>
                     <Text size="sm">{activity.action}</Text>
@@ -973,10 +897,10 @@ export function DashboardHome({ role }: { role?: UserRole }) {
             </Text>
             <Stack gap="md">
               {(dashboardData?.upcomingEvents || [
-                { date: "Today, 2:00 PM", event: "Math Quiz", type: "assessment" },
-                { date: "Tomorrow, 10:00 AM", event: "Science Lab (Roblox)", type: "lesson" },
-                { date: "Friday, 3:00 PM", event: "Parent-Teacher Meeting", type: "meeting" },
-                { date: "Next Monday", event: "History Project Due", type: "deadline" },
+                { date: 'Today, 2:00 PM', event: 'Math Quiz', type: 'assessment' },
+                { date: 'Tomorrow, 10:00 AM', event: 'Science Lab (Roblox)', type: 'lesson' },
+                { date: 'Friday, 3:00 PM', event: 'Parent-Teacher Meeting', type: 'meeting' },
+                { date: 'Next Monday', event: 'History Project Due', type: 'deadline' },
               ]).map((event: any, index) => (
                 <Group
                   key={index}
@@ -991,19 +915,19 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                   <Avatar
                     size="sm"
                     color={
-                      event.type === "assessment"
-                        ? "orange"
-                        : event.type === "lesson"
-                        ? "cyan"
-                        : event.type === "meeting"
-                        ? "violet"
-                        : "red"
+                      event.type === 'assessment'
+                        ? 'orange'
+                        : event.type === 'lesson'
+                        ? 'cyan'
+                        : event.type === 'meeting'
+                        ? 'violet'
+                        : 'red'
                     }
                   >
-                    {event.type === "assessment" && "📝"}
-                    {event.type === "lesson" && "📚"}
-                    {event.type === "meeting" && "👥"}
-                    {event.type === "deadline" && "⏰"}
+                    {event.type === 'assessment' && '📝'}
+                    {event.type === 'lesson' && '📚'}
+                    {event.type === 'meeting' && '👥'}
+                    {event.type === 'deadline' && '⏰'}
                   </Avatar>
                   <Stack gap="xs" style={{ flex: 1 }}>
                     <Text size="sm">{event.event}</Text>
@@ -1020,7 +944,7 @@ export function DashboardHome({ role }: { role?: UserRole }) {
       </Grid>
 
       {/* Create Lesson Dialog for Teachers */}
-      {role === "teacher" && (
+      {role === 'teacher' && (
         <CreateLessonDialog
           open={createLessonOpen}
           onClose={() => setCreateLessonOpen(false)}
@@ -1028,8 +952,8 @@ export function DashboardHome({ role }: { role?: UserRole }) {
             setCreateLessonOpen(false);
             dispatch(
               addNotification({
-                type: "success",
-                message: "Lesson created successfully!",
+                type: 'success',
+                message: 'Lesson created successfully!',
               })
             );
           }}

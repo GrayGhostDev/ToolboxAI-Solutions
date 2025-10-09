@@ -1,26 +1,26 @@
 import React from 'react';
 import {
   Card,
-  CardContent,
-  CardActions,
-  Typography,
+  Text,
   Button,
-  Chip,
-  LinearProgress,
+  Badge,
+  Progress,
   Box,
-  IconButton,
+  ActionIcon,
   Menu,
-  MenuItem,
-} from '@mui/material';
+  Group,
+  Stack,
+  Flex,
+} from '@mantine/core';
 import {
-  PlayArrow as PlayIcon,
-  Download as DownloadIcon,
-  Delete as DeleteIcon,
-  MoreVert as MoreIcon,
-  CloudUpload as DeployIcon,
-} from '@mui/icons-material';
-import { RobloxEnvironment } from '../services/robloxSync';
-import { GenerationStatus } from '../store/slices/robloxSlice';
+  IconPlayerPlay as PlayIcon,
+  IconDownload as DownloadIcon,
+  IconTrash as DeleteIcon,
+  IconDots as MoreIcon,
+  IconCloudUpload as DeployIcon,
+} from '@tabler/icons-react';
+import { type RobloxEnvironment } from '../services/robloxSync';
+import { type GenerationStatus } from '../store/slices/robloxSlice';
 
 interface RobloxEnvironmentCardProps {
   environment: RobloxEnvironment;
@@ -45,11 +45,11 @@ export const RobloxEnvironmentCard: React.FC<RobloxEnvironmentCardProps> = ({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'ready': return 'success';
-      case 'generating': return 'warning';
-      case 'deployed': return 'info';
-      case 'error': return 'error';
-      default: return 'default';
+      case 'ready': return 'green';
+      case 'generating': return 'orange';
+      case 'deployed': return 'blue';
+      case 'error': return 'red';
+      default: return 'gray';
     }
   };
 
@@ -70,121 +70,132 @@ export const RobloxEnvironmentCard: React.FC<RobloxEnvironmentCardProps> = ({
   const canDownload = environment.status === 'ready' && environment.downloadUrl;
 
   return (
-    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <CardContent sx={{ flexGrow: 1 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
-          <Typography variant="h6" component="h3" noWrap>
+    <Card h="100%" style={{ display: 'flex', flexDirection: 'column' }}>
+      <Card.Section p="lg" style={{ flexGrow: 1 }}>
+        <Flex justify="space-between" align="flex-start" mb="xs">
+          <Text size="lg" fw={600} truncate>
             {environment.name}
-          </Typography>
-          <IconButton
-            size="small"
-            onClick={(e) => setMenuAnchor(e.currentTarget)}
-          >
-            <MoreIcon />
-          </IconButton>
-        </Box>
+          </Text>
+          <Menu shadow="md" width={200} opened={Boolean(menuAnchor)} onChange={setMenuAnchor}>
+            <Menu.Target>
+              <ActionIcon
+                size="sm"
+                variant="subtle"
+                onClick={(e) => setMenuAnchor(e.currentTarget)}
+              >
+                <MoreIcon size={16} />
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item
+                leftSection={<DeleteIcon size={16} />}
+                color="red"
+                onClick={() => {
+                  onDelete(environment.id);
+                  setMenuAnchor(null);
+                }}
+              >
+                Delete
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        </Flex>
 
-        <Typography color="text.secondary" gutterBottom>
+        <Text c="dimmed" mb="sm">
           {environment.theme} • {environment.mapType.replace('_', ' ')}
-        </Typography>
+        </Text>
 
-        <Box mb={2}>
-          <Chip
-            label={getStatusText(environment.status)}
+        <Box mb="md">
+          <Badge
             color={getStatusColor(environment.status)}
-            size="small"
-          />
+            size="sm"
+            variant="light"
+          >
+            {getStatusText(environment.status)}
+          </Badge>
         </Box>
 
         {environment.spec.learning_objectives && (
-          <Box mb={2}>
-            <Typography variant="body2" color="text.secondary">
+          <Box mb="md">
+            <Text size="sm" c="dimmed" mb="xs">
               Learning Objectives:
-            </Typography>
-            <Typography variant="body2">
+            </Text>
+            <Text size="sm">
               {environment.spec.learning_objectives.join(', ')}
-            </Typography>
+            </Text>
           </Box>
         )}
 
         {isGenerating && generationStatus && (
-          <Box mb={2}>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
+          <Stack gap="xs" mb="md">
+            <Text size="sm" c="dimmed">
               {generationStatus.message}
-            </Typography>
-            <LinearProgress 
-              variant="determinate" 
-              value={generationStatus.progress || 0} 
+            </Text>
+            <Progress
+              value={generationStatus.progress || 0}
+              color="blue"
+              size="sm"
             />
-            <Typography variant="caption" color="text.secondary">
+            <Text size="xs" c="dimmed">
               {generationStatus.progress}% • {generationStatus.stage}
-            </Typography>
-          </Box>
+            </Text>
+          </Stack>
         )}
 
         {environment.status === 'error' && generationStatus?.error && (
-          <Typography variant="body2" color="error">
+          <Text size="sm" c="red">
             Error: {generationStatus.error}
-          </Typography>
+          </Text>
         )}
-      </CardContent>
+      </Card.Section>
 
-      <CardActions>
-        {canGenerate && (
-          <Button
-            startIcon={<PlayIcon />}
-            onClick={() => onGenerate(environment.id)}
-            variant="contained"
-            color="primary"
-          >
-            Generate
-          </Button>
-        )}
+      <Card.Section p="md" pt={0}>
+        <Group gap="sm" wrap="wrap">
+          {canGenerate && (
+            <Button
+              leftSection={<PlayIcon size={16} />}
+              onClick={() => onGenerate(environment.id)}
+              variant="filled"
+              color="blue"
+              size="sm"
+            >
+              Generate
+            </Button>
+          )}
 
-        {canDownload && (
-          <Button
-            startIcon={<DownloadIcon />}
-            onClick={() => onDownload(environment.id)}
-            size="small"
-          >
-            Download
-          </Button>
-        )}
+          {canDownload && (
+            <Button
+              leftSection={<DownloadIcon size={16} />}
+              onClick={() => onDownload(environment.id)}
+              variant="light"
+              size="sm"
+            >
+              Download
+            </Button>
+          )}
 
-        {canDeploy && (
-          <Button
-            startIcon={<DeployIcon />}
-            onClick={() => onDeploy(environment.id)}
-            size="small"
-            variant="outlined"
-          >
-            Deploy
-          </Button>
-        )}
+          {canDeploy && (
+            <Button
+              leftSection={<DeployIcon size={16} />}
+              onClick={() => onDeploy(environment.id)}
+              variant="outline"
+              size="sm"
+            >
+              Deploy
+            </Button>
+          )}
 
-        {environment.previewUrl && (
-          <Button
-            onClick={() => onPreview(environment.id)}
-            size="small"
-          >
-            Preview
-          </Button>
-        )}
-      </CardActions>
-
-      <Menu
-        anchorEl={menuAnchor}
-        open={Boolean(menuAnchor)}
-        onClose={() => setMenuAnchor(null)}
-      >
-        <MenuItem onClick={() => {
-          onDelete(environment.id);
-          setMenuAnchor(null);
-        }}>
-          <DeleteIcon sx={{ mr: 1 }} />
-          Delete
-        </MenuItem>
-      </Menu>
+          {environment.previewUrl && (
+            <Button
+              onClick={() => onPreview(environment.id)}
+              variant="subtle"
+              size="sm"
+            >
+              Preview
+            </Button>
+          )}
+        </Group>
+      </Card.Section>
     </Card>
   );
 };

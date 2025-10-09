@@ -191,7 +191,7 @@ export const useAgentAPI = () => {
 
     // Route to specific endpoint based on agent type and task type
     let endpoint = '';
-    let requestData = task_data;
+    const requestData = task_data;
 
     switch (agent_type) {
       case 'content':

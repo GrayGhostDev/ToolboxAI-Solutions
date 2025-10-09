@@ -9,9 +9,9 @@ import { useEffect, useCallback, useRef, useState } from 'react';
 import { usePusherContext } from '../../contexts/PusherContext';
 import {
   PusherChannelType,
-  PusherChannelOptions,
-  PusherEventHandler,
-  PusherConnectionState
+  type PusherChannelOptions,
+  type PusherEventHandler,
+  type PusherConnectionState
 } from '../../types/pusher';
 import { logger } from '../../utils/logger';
 

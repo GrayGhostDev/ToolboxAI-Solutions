@@ -1,7 +1,7 @@
 // Global type definitions for ToolBoxAI Dashboard
 // Updated for Mantine migration
 
-import * as React from 'react';
+import type * as React from 'react';
 
 // Mantine component type declarations for global usage
 declare global {

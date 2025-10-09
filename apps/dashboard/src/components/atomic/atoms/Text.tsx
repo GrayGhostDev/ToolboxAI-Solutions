@@ -6,7 +6,7 @@
  */
 
 import React, { forwardRef } from 'react';
-import { Text as MantineText, TextProps as MantineTextProps } from '@mantine/core';
+import { Text as MantineText, type TextProps as MantineTextProps } from '@mantine/core';
 import { designTokens } from '../../../theme/designTokens';
 
 // Polymorphic component types

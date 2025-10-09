@@ -1,7 +1,7 @@
-import * as React from "react";
+import * as React from 'react';
 import { Card, Text, Title, Box, Stack, Badge, ActionIcon, Skeleton, Alert, Tooltip, Paper, Progress, Avatar } from '@mantine/core';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import {
   IconTrendingUp,
   IconTrendingDown,
@@ -12,10 +12,10 @@ import {
   IconInfoCircle,
   IconRefresh,
   IconChartLine,
-} from "@tabler/icons-react";
-import { useMantineTheme } from "@mantine/core";
-import { usePusherContext } from "../../contexts/PusherContext";
-import { apiClient } from "../../services/api";
+} from '@tabler/icons-react';
+import { useMantineTheme } from '@mantine/core';
+import { usePusherContext } from '../../contexts/PusherContext';
+import { apiClient } from '../../services/api';
 
 interface PerformanceMetric {
   id: string;
@@ -23,15 +23,15 @@ interface PerformanceMetric {
   value: number;
   unit: string;
   target: number;
-  status: "excellent" | "good" | "warning" | "critical";
-  trend: "up" | "down" | "stable";
+  status: 'excellent' | 'good' | 'warning' | 'critical';
+  trend: 'up' | 'down' | 'stable';
   trendValue: number;
   description: string;
   lastUpdated: string;
 }
 
 interface SystemHealth {
-  overall: "healthy" | "warning" | "critical";
+  overall: 'healthy' | 'warning' | 'critical';
   uptime: number;
   responseTime: number;
   errorRate: number;
@@ -85,55 +85,55 @@ export function PerformanceIndicator({
       // Transform metrics data
       const transformedMetrics: PerformanceMetric[] = metricsResponse.metrics ? [
         {
-          id: "completion_rate",
-          name: "Completion Rate",
+          id: 'completion_rate',
+          name: 'Completion Rate',
           value: metricsResponse.metrics.completion_rate || 78.5,
-          unit: "%",
+          unit: '%',
           target: 80,
-          status: (metricsResponse.metrics.completion_rate || 78.5) >= 80 ? "excellent" : 
-                 (metricsResponse.metrics.completion_rate || 78.5) >= 70 ? "good" : "warning",
-          trend: "up",
+          status: (metricsResponse.metrics.completion_rate || 78.5) >= 80 ? 'excellent' : 
+                 (metricsResponse.metrics.completion_rate || 78.5) >= 70 ? 'good' : 'warning',
+          trend: 'up',
           trendValue: 2.3,
-          description: "Overall course completion rate",
+          description: 'Overall course completion rate',
           lastUpdated: new Date().toISOString(),
         },
         {
-          id: "average_score",
-          name: "Average Score",
+          id: 'average_score',
+          name: 'Average Score',
           value: metricsResponse.metrics.average_score || 84.2,
-          unit: "%",
+          unit: '%',
           target: 85,
-          status: (metricsResponse.metrics.average_score || 84.2) >= 85 ? "excellent" : 
-                 (metricsResponse.metrics.average_score || 84.2) >= 75 ? "good" : "warning",
-          trend: "up",
+          status: (metricsResponse.metrics.average_score || 84.2) >= 85 ? 'excellent' : 
+                 (metricsResponse.metrics.average_score || 84.2) >= 75 ? 'good' : 'warning',
+          trend: 'up',
           trendValue: 1.7,
-          description: "Average assessment score",
+          description: 'Average assessment score',
           lastUpdated: new Date().toISOString(),
         },
         {
-          id: "engagement_rate",
-          name: "Engagement Rate",
+          id: 'engagement_rate',
+          name: 'Engagement Rate',
           value: metricsResponse.metrics.engagement_rate || 92.1,
-          unit: "%",
+          unit: '%',
           target: 90,
-          status: (metricsResponse.metrics.engagement_rate || 92.1) >= 90 ? "excellent" : 
-                 (metricsResponse.metrics.engagement_rate || 92.1) >= 80 ? "good" : "warning",
-          trend: "stable",
+          status: (metricsResponse.metrics.engagement_rate || 92.1) >= 90 ? 'excellent' : 
+                 (metricsResponse.metrics.engagement_rate || 92.1) >= 80 ? 'good' : 'warning',
+          trend: 'stable',
           trendValue: 0.5,
-          description: "Student engagement in activities",
+          description: 'Student engagement in activities',
           lastUpdated: new Date().toISOString(),
         },
         {
-          id: "response_time",
-          name: "Response Time",
+          id: 'response_time',
+          name: 'Response Time',
           value: metricsResponse.metrics.avg_response_time || 245,
-          unit: "ms",
+          unit: 'ms',
           target: 300,
-          status: (metricsResponse.metrics.avg_response_time || 245) <= 200 ? "excellent" : 
-                 (metricsResponse.metrics.avg_response_time || 245) <= 300 ? "good" : "warning",
-          trend: "down",
+          status: (metricsResponse.metrics.avg_response_time || 245) <= 200 ? 'excellent' : 
+                 (metricsResponse.metrics.avg_response_time || 245) <= 300 ? 'good' : 'warning',
+          trend: 'down',
           trendValue: -12.3,
-          description: "Average API response time",
+          description: 'Average API response time',
           lastUpdated: new Date().toISOString(),
         },
       ] : [];
@@ -142,75 +142,75 @@ export function PerformanceIndicator({
       if (transformedMetrics.length === 0) {
         const mockMetrics: PerformanceMetric[] = [
           {
-            id: "completion_rate",
-            name: "Completion Rate",
+            id: 'completion_rate',
+            name: 'Completion Rate',
             value: 78.5,
-            unit: "%",
+            unit: '%',
             target: 80,
-            status: "good",
-            trend: "up",
+            status: 'good',
+            trend: 'up',
             trendValue: 2.3,
-            description: "Overall course completion rate",
+            description: 'Overall course completion rate',
             lastUpdated: new Date().toISOString(),
           },
           {
-            id: "average_score",
-            name: "Average Score",
+            id: 'average_score',
+            name: 'Average Score',
             value: 84.2,
-            unit: "%",
+            unit: '%',
             target: 85,
-            status: "good",
-            trend: "up",
+            status: 'good',
+            trend: 'up',
             trendValue: 1.7,
-            description: "Average assessment score",
+            description: 'Average assessment score',
             lastUpdated: new Date().toISOString(),
           },
           {
-            id: "engagement_rate",
-            name: "Engagement Rate",
+            id: 'engagement_rate',
+            name: 'Engagement Rate',
             value: 92.1,
-            unit: "%",
+            unit: '%',
             target: 90,
-            status: "excellent",
-            trend: "stable",
+            status: 'excellent',
+            trend: 'stable',
             trendValue: 0.5,
-            description: "Student engagement in activities",
+            description: 'Student engagement in activities',
             lastUpdated: new Date().toISOString(),
           },
           {
-            id: "response_time",
-            name: "Response Time",
+            id: 'response_time',
+            name: 'Response Time',
             value: 245,
-            unit: "ms",
+            unit: 'ms',
             target: 300,
-            status: "good",
-            trend: "down",
+            status: 'good',
+            trend: 'down',
             trendValue: -12.3,
-            description: "Average API response time",
+            description: 'Average API response time',
             lastUpdated: new Date().toISOString(),
           },
           {
-            id: "error_rate",
-            name: "Error Rate",
+            id: 'error_rate',
+            name: 'Error Rate',
             value: 0.8,
-            unit: "%",
+            unit: '%',
             target: 1.0,
-            status: "excellent",
-            trend: "down",
+            status: 'excellent',
+            trend: 'down',
             trendValue: -0.3,
-            description: "System error rate",
+            description: 'System error rate',
             lastUpdated: new Date().toISOString(),
           },
           {
-            id: "user_satisfaction",
-            name: "User Satisfaction",
+            id: 'user_satisfaction',
+            name: 'User Satisfaction',
             value: 4.6,
-            unit: "/5",
+            unit: '/5',
             target: 4.5,
-            status: "excellent",
-            trend: "up",
+            status: 'excellent',
+            trend: 'up',
             trendValue: 0.2,
-            description: "Average user rating",
+            description: 'Average user rating',
             lastUpdated: new Date().toISOString(),
           },
         ];
@@ -222,7 +222,7 @@ export function PerformanceIndicator({
       // Transform system health data
       if (showSystemHealth && healthResponse) {
         const transformedHealth: SystemHealth = {
-          overall: healthResponse.status === "healthy" ? "healthy" : "warning",
+          overall: healthResponse.status === 'healthy' ? 'healthy' : 'warning',
           uptime: healthResponse.uptime || 99.8,
           responseTime: healthResponse.response_time || 245,
           errorRate: healthResponse.error_rate || 0.8,
@@ -234,7 +234,7 @@ export function PerformanceIndicator({
       } else if (showSystemHealth) {
         // Mock system health data
         const mockHealth: SystemHealth = {
-          overall: "healthy",
+          overall: 'healthy',
           uptime: 99.8,
           responseTime: 245,
           errorRate: 0.8,
@@ -253,15 +253,15 @@ export function PerformanceIndicator({
       // Use mock data as fallback
       const mockMetrics: PerformanceMetric[] = [
         {
-          id: "completion_rate",
-          name: "Completion Rate",
+          id: 'completion_rate',
+          name: 'Completion Rate',
           value: 78.5,
-          unit: "%",
+          unit: '%',
           target: 80,
-          status: "good",
-          trend: "up",
+          status: 'good',
+          trend: 'up',
           trendValue: 2.3,
-          description: "Overall course completion rate",
+          description: 'Overall course completion rate',
           lastUpdated: new Date().toISOString(),
         },
         // ... other mock metrics
@@ -270,7 +270,7 @@ export function PerformanceIndicator({
 
       if (showSystemHealth) {
         const mockHealth: SystemHealth = {
-          overall: "healthy",
+          overall: 'healthy',
           uptime: 99.8,
           responseTime: 245,
           errorRate: 0.8,
@@ -326,13 +326,13 @@ export function PerformanceIndicator({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "excellent":
+      case 'excellent':
         return theme.colors.green[6];
-      case "good":
+      case 'good':
         return theme.colors.blue[6];
-      case "warning":
+      case 'warning':
         return theme.colors.yellow[6];
-      case "critical":
+      case 'critical':
         return theme.colors.red[6];
       default:
         return theme.colors.gray[6];
@@ -341,13 +341,13 @@ export function PerformanceIndicator({
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "excellent":
+      case 'excellent':
         return <IconCircleCheck color={theme.colors.green[6]} />;
-      case "good":
+      case 'good':
         return <IconInfoCircle color={theme.colors.blue[6]} />;
-      case "warning":
+      case 'warning':
         return <IconAlertTriangle color={theme.colors.yellow[6]} />;
-      case "critical":
+      case 'critical':
         return <IconX color={theme.colors.red[6]} />;
       default:
         return <IconInfoCircle />;
@@ -356,9 +356,9 @@ export function PerformanceIndicator({
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
-      case "up":
+      case 'up':
         return <IconTrendingUp size={16} color={theme.colors.green[6]} />;
-      case "down":
+      case 'down':
         return <IconTrendingDown size={16} color={theme.colors.red[6]} />;
       default:
         return <IconChartLine size={16} color={theme.colors.gray[6]} />;
@@ -399,7 +399,7 @@ export function PerformanceIndicator({
                 <Badge color="green" size="sm">Live</Badge>
               )}
               <Badge
-                color={systemHealth.overall === "healthy" ? "green" : "yellow"}
+                color={systemHealth.overall === 'healthy' ? 'green' : 'yellow'}
                 size="sm"
               >
                 {systemHealth.overall.toUpperCase()}
@@ -461,7 +461,7 @@ export function PerformanceIndicator({
                 value={systemHealth.memoryUsage}
                 h={6}
                 radius="xl"
-                color={systemHealth.memoryUsage > 80 ? "red" : theme.primaryColor}
+                color={systemHealth.memoryUsage > 80 ? 'red' : theme.primaryColor}
               />
             </Box>
             <Box style={{ flex: 1 }}>
@@ -473,7 +473,7 @@ export function PerformanceIndicator({
                 value={systemHealth.cpuUsage}
                 h={6}
                 radius="xl"
-                color={systemHealth.cpuUsage > 80 ? "red" : "green"}
+                color={systemHealth.cpuUsage > 80 ? 'red' : 'green'}
               />
             </Box>
           </Stack>
@@ -481,7 +481,7 @@ export function PerformanceIndicator({
       )}
 
       {/* Performance Metrics */}
-      <Stack direction="row" gap="md" style={{ flexWrap: "wrap" }}>
+      <Stack direction="row" gap="md" style={{ flexWrap: 'wrap' }}>
         {metrics.map((metric) => (
           <Card key={metric.id} style={{ flex: 1, minWidth: 250 }}>
             <Stack gap="md">
@@ -492,7 +492,7 @@ export function PerformanceIndicator({
                   </Text>
                   <Stack direction="row" align="baseline" gap="xs">
                     <Title order={2} fw={700} style={{ color: getStatusColor(metric.status) }}>
-                      {metric.value.toFixed(metric.unit === "ms" || metric.unit === "/5" ? 1 : 1)}
+                      {metric.value.toFixed(metric.unit === 'ms' || metric.unit === '/5' ? 1 : 1)}
                     </Title>
                     <Text size="xs" c="dimmed">
                       {metric.unit}
@@ -516,9 +516,9 @@ export function PerformanceIndicator({
                     {getTrendIcon(metric.trend)}
                     <Text
                       size="xs"
-                      c={metric.trend === "up" ? "green" : metric.trend === "down" ? "red" : "dimmed"}
+                      c={metric.trend === 'up' ? 'green' : metric.trend === 'down' ? 'red' : 'dimmed'}
                     >
-                      {metric.trendValue > 0 ? "+" : ""}{metric.trendValue.toFixed(1)}%
+                      {metric.trendValue > 0 ? '+' : ''}{metric.trendValue.toFixed(1)}%
                     </Text>
                   </Stack>
                 </Stack>

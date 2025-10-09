@@ -2,20 +2,105 @@
  * FloatingCharacters Component
  *
  * Adds floating 3D characters throughout the dashboard
- * for a playful, game-like atmosphere
+ * for a playful, game-like atmosphere with proper WebGL context handling
  */
-import React, { useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import React, { useRef, ErrorBoundary, Component, Suspense } from 'react';
+import { Canvas, useFrame, type ThreeElements } from '@react-three/fiber';
 import { OrbitControls, Float, Stars, Cloud } from '@react-three/drei';
-import { Box } from '@mantine/core';
+import { Box, Loader, Alert } from '@mantine/core';
 import * as THREE from 'three';
+import type { Group } from 'three';
+
+// WebGL Context Check Hook
+const useWebGLSupport = () => {
+  const [isSupported, setIsSupported] = React.useState(true);
+
+  React.useEffect(() => {
+    try {
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      setIsSupported(!!context);
+    } catch (error) {
+      console.warn('WebGL context check failed:', error);
+      setIsSupported(false);
+    }
+  }, []);
+
+  return isSupported;
+};
+
+// Error Boundary for 3D Components
+class ThreeErrorBoundary extends Component<
+  { children: React.ReactNode; fallback?: React.ReactNode },
+  { hasError: boolean; error?: Error }
+> {
+  constructor(props: { children: React.ReactNode; fallback?: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.warn('3D Component Error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback || (
+        <Alert color="yellow" variant="light">
+          3D graphics unavailable - using fallback display
+        </Alert>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+// 2D Fallback Component
+const FloatingCharactersFallback: React.FunctionComponent<{ characterCount: number }> = ({ characterCount }) => (
+  <Box
+    style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      pointerEvents: 'none',
+      zIndex: 0,
+      background: 'linear-gradient(135deg, rgba(10, 10, 10, 0.1) 0%, rgba(30, 30, 30, 0.1) 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      opacity: 0.3
+    }}
+  >
+    <Box style={{ color: '#666', fontSize: '12px', textAlign: 'center' }}>
+      {characterCount} 3D characters (fallback mode)
+    </Box>
+  </Box>
+);
 interface FloatingCharacterProps {
-  position: [number, number, number];
+  position: [number, number, number] | THREE.Vector3;
   characterType: 'astronaut' | 'robot' | 'wizard' | 'pirate' | 'ninja';
   floatSpeed?: number;
   rotationSpeed?: number;
   scale?: number;
 }
+// Utility function to convert position to array format
+// This prevents "Cannot assign to read only property 'position'" errors
+// by ensuring position is always passed as an array [x, y, z] to Three.js
+const positionToArray = (pos: [number, number, number] | THREE.Vector3): [number, number, number] => {
+  if (pos instanceof THREE.Vector3) {
+    return [pos.x, pos.y, pos.z];
+  }
+  // If it's already an array, ensure it's a proper tuple
+  return Array.isArray(pos) ? [pos[0] || 0, pos[1] || 0, pos[2] || 0] as [number, number, number] : [0, 0, 0];
+};
+
 const FloatingCharacter: React.FunctionComponent<FloatingCharacterProps> = ({
   position,
   characterType,
@@ -23,11 +108,13 @@ const FloatingCharacter: React.FunctionComponent<FloatingCharacterProps> = ({
   rotationSpeed = 0.5,
   scale = 1
 }) => {
-  const meshRef = useRef<THREE.Group>(null);
+  const meshRef = useRef<Group>(null);
+  const positionArray = positionToArray(position);
+
   useFrame((state) => {
     if (meshRef.current) {
       meshRef.current.rotation.y += rotationSpeed * 0.01;
-      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * floatSpeed) * 0.2;
+      meshRef.current.position.y = positionArray[1] + Math.sin(state.clock.elapsedTime * floatSpeed) * 0.2;
     }
   });
   const characterColors = {
@@ -40,7 +127,7 @@ const FloatingCharacter: React.FunctionComponent<FloatingCharacterProps> = ({
   const colors = characterColors[characterType];
   return (
     <Float speed={floatSpeed} rotationIntensity={0.5} floatIntensity={0.5}>
-      <group ref={meshRef} position={position} scale={scale}>
+      <group ref={meshRef} position={positionArray} scale={scale}>
         {characterType === 'astronaut' && (
           <>
             {/* Helmet */}
@@ -283,7 +370,7 @@ const FloatingCharacter: React.FunctionComponent<FloatingCharacterProps> = ({
 interface FloatingCharactersProps {
   characters?: Array<{
     type: 'astronaut' | 'robot' | 'wizard' | 'pirate' | 'ninja';
-    position: [number, number, number];
+    position: [number, number, number] | THREE.Vector3;
   }>;
   showStars?: boolean;
   showClouds?: boolean;
@@ -299,49 +386,79 @@ export const FloatingCharacters: React.FunctionComponent<FloatingCharactersProps
   showStars = true,
   showClouds = true
 }) => {
+  const isWebGLSupported = useWebGLSupport();
+
+  // Test environment detection
+  const isTestEnvironment = process.env.NODE_ENV === 'test' || typeof window === 'undefined';
+
+  // Fallback for non-WebGL environments or test environments
+  if (!isWebGLSupported || isTestEnvironment) {
+    return <FloatingCharactersFallback characterCount={characters.length} />;
+  }
+
   return (
-    <Box
-      sx={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        pointerEvents: 'none',
-        zIndex: 0
-      }}
-    >
-      <Canvas
-        camera={{ position: [0, 0, 5], fov: 60 }}
-        style={{ background: 'transparent' }}
+    <ThreeErrorBoundary fallback={<FloatingCharactersFallback characterCount={characters.length} />}>
+      <Box
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          pointerEvents: 'none',
+          zIndex: 0
+        }}
       >
-        <ambientLight intensity={0.5} />
-        <pointLight position={[10, 10, 10]} intensity={0.8} />
-        <pointLight position={[-10, -10, -10]} intensity={0.5} color="#ff00ff" />
-        {showStars && <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade />}
-        {showClouds && (
-          <>
-            <Cloud position={[-4, 2, -5]} speed={0.2} opacity={0.3} />
-            <Cloud position={[4, -2, -5]} speed={0.3} opacity={0.2} />
-          </>
-        )}
-        {characters.map((char, index) => (
-          <FloatingCharacter
-            key={index}
-            characterType={char.type}
-            position={char.position}
-            floatSpeed={1 + index * 0.2}
-            rotationSpeed={0.5 + index * 0.1}
-            scale={0.8 + (index % 2) * 0.2}
-          />
-        ))}
-        <OrbitControls
-          enableZoom={false}
-          enablePan={false}
-          enableRotate={false}
-        />
-      </Canvas>
-    </Box>
+        <Canvas
+          camera={{ position: [0, 0, 5], fov: 60 }}
+          style={{ background: 'transparent' }}
+          dpr={[1, 2]}
+          performance={{ min: 0.5 }}
+          frameloop="demand"
+          gl={{
+            powerPreference: 'high-performance',
+            antialias: false,
+            alpha: true,
+            depth: false,
+            stencil: false,
+          }}
+          onCreated={(state) => {
+            // Ensure canvas is properly initialized
+            state.gl.setClearColor('#000000', 0);
+            state.gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+          }}
+        >
+          <Suspense fallback={null}>
+            <ambientLight intensity={0.5} />
+            <pointLight position={[10, 10, 10]} intensity={0.8} />
+            <pointLight position={[-10, -10, -10]} intensity={0.5} color="#ff00ff" />
+            {showStars && <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade />}
+            {showClouds && (
+              <>
+                <Cloud position={[-4, 2, -5]} speed={0.2} opacity={0.3} />
+                <Cloud position={[4, -2, -5]} speed={0.3} opacity={0.2} />
+              </>
+            )}
+            {characters.map((char, index) => (
+              <FloatingCharacter
+                key={`${char.type}-${index}`}
+                characterType={char.type}
+                position={char.position}
+                floatSpeed={1 + index * 0.2}
+                rotationSpeed={0.5 + index * 0.1}
+                scale={0.8 + (index % 2) * 0.2}
+              />
+            ))}
+            <OrbitControls
+              enableZoom={false}
+              enablePan={false}
+              enableRotate={false}
+              makeDefault
+            />
+          </Suspense>
+        </Canvas>
+      </Box>
+    </ThreeErrorBoundary>
   );
 };
 export default FloatingCharacters;

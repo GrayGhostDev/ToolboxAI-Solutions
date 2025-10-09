@@ -28,7 +28,7 @@ def register_middleware(app: FastAPI) -> None:
         _register_compression_middleware(app)
         _register_versioning_middleware(app)
         # _register_security_middleware(app)  # Disable for now - config issues
-        # _register_cors_middleware(app)      # Disable for now - config issues
+        _register_cors_middleware(app)       # Enabled - required for frontend communication
         _register_trust_middleware(app)
         _register_logging_middleware(app)
         # _register_resilience_middleware(app)  # Disable for now - dependency issues
@@ -75,8 +75,8 @@ def _register_cors_middleware(app: FastAPI) -> None:
         from apps.backend.core.security.cors import SecureCORSConfig, CORSMiddlewareWithLogging
 
         # Configure CORS origins based on environment
-        allowed_origins = ["*"]  # Default for development
-        if hasattr(settings, "ALLOWED_ORIGINS"):
+        allowed_origins = None  # Use environment defaults for development
+        if hasattr(settings, "ALLOWED_ORIGINS") and settings.ALLOWED_ORIGINS:
             allowed_origins = settings.ALLOWED_ORIGINS
         elif settings.ENVIRONMENT == "production":
             allowed_origins = [
@@ -86,13 +86,12 @@ def _register_cors_middleware(app: FastAPI) -> None:
             ]
 
         cors_config = SecureCORSConfig(
-            allowed_origins_env=allowed_origins,
-            allowed_methods_env=getattr(
-                settings, "ALLOWED_METHODS", ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-            ),
-            allowed_headers_env=getattr(settings, "ALLOWED_HEADERS", ["*"]),
             environment=settings.ENVIRONMENT,
-            debug=settings.DEBUG,
+            allowed_origins=allowed_origins,
+            allowed_methods=getattr(
+                settings, "ALLOWED_METHODS", ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"]
+            ),
+            allowed_headers=getattr(settings, "ALLOWED_HEADERS", ["*"]),
         )
 
         app.add_middleware(

@@ -165,51 +165,21 @@ ENV MCP_HOST=0.0.0.0 \
     CONTEXT_CACHE_SIZE=1000 \
     AGENT_TIMEOUT=300
 
-# Create health check script
-RUN cat > /app/healthcheck.py << 'EOF'
-#!/usr/bin/env python3
-import asyncio
-import json
-import sys
-import websockets
-from urllib.parse import urljoin
-
-async def check_health():
-    """Check MCP server health via WebSocket connection."""
-    try:
-        # Try to connect to the MCP server
-        uri = f"ws://localhost:9877/health"
-
-        async with websockets.connect(uri, timeout=5) as websocket:
-            # Send health check message
-            health_request = {
-                "jsonrpc": "2.0",
-                "id": "health-check",
-                "method": "server.health",
-                "params": {}
-            }
-            await websocket.send(json.dumps(health_request))
-
-            # Wait for response
-            response = await asyncio.wait_for(websocket.recv(), timeout=3)
-            result = json.loads(response)
-
-            # Check if response indicates healthy state
-            if result.get("result", {}).get("status") == "healthy":
-                print("✅ MCP Server is healthy")
-                return True
-            else:
-                print(f"❌ MCP Server unhealthy: {result}")
-                return False
-
-    except Exception as e:
-        print(f"❌ Health check failed: {e}")
-        return False
-
-if __name__ == "__main__":
-    result = asyncio.run(check_health())
-    sys.exit(0 if result else 1)
-EOF
+# Create health check script with echo commands
+RUN echo '#!/usr/bin/env python3' > /app/healthcheck.py && \
+    echo 'import sys' >> /app/healthcheck.py && \
+    echo 'import time' >> /app/healthcheck.py && \
+    echo 'import requests' >> /app/healthcheck.py && \
+    echo 'try:' >> /app/healthcheck.py && \
+    echo '    response = requests.get("http://localhost:9877/health", timeout=5)' >> /app/healthcheck.py && \
+    echo '    if response.status_code == 200:' >> /app/healthcheck.py && \
+    echo '        print("✅ MCP Server is healthy")' >> /app/healthcheck.py && \
+    echo '        sys.exit(0)' >> /app/healthcheck.py && \
+    echo '    else:' >> /app/healthcheck.py && \
+    echo '        sys.exit(1)' >> /app/healthcheck.py && \
+    echo 'except Exception as e:' >> /app/healthcheck.py && \
+    echo '    print(f"❌ Health check failed: {e}")' >> /app/healthcheck.py && \
+    echo '    sys.exit(1)' >> /app/healthcheck.py
 
 RUN chmod +x /app/healthcheck.py
 

@@ -1,87 +1,81 @@
-IconimportIcon { IconBoxIcon, IconButtonIcon, IconTypographyIcon, IconPaperIcon, IconStackIcon, IconGridIcon, IconContainerIcon, IconIconButtonIcon, IconAvatarIcon, IconCardIcon, IconCardContentIcon, IconCardActionsIcon, IconListIcon, IconListItemIcon, IconListItemTextIcon, IconDividerIcon, IconTextFieldIcon, IconSelectIcon, IconMenuItemIcon, IconChipIcon, IconBadgeIcon, IconAlertIcon, IconCircularProgressIcon, IconLinearProgressIcon, IconDialogIcon, IconDialogTitleIcon, IconDialogContentIcon, IconDialogActionsIcon, IconDrawerIcon, IconAppBarIcon, IconToolbarIcon, IconTabsIcon, IconTabIcon, IconMenuIcon, IconTooltipIcon, IconCheckboxIcon, IconRadioIcon, IconRadioGroupIcon, IconFormControlIcon, IconFormControlLabelIcon, IconInputLabelIcon, IconSwitchIcon, IconSliderIcon, IconRatingIcon, IconAutocompleteIcon, IconSkeletonIcon, IconTableIcon } IconfromIcon '../../IconutilsIcon/IconmuiIcon-Iconimports';
+import { Box, Button, Text, Paper, Stack, SimpleGrid, Container, ActionIcon, Avatar, Card, Group, List, Divider, TextInput, Select, Badge, Alert, Loader, Progress, Modal, Drawer, Tabs, Menu, Tooltip, Checkbox, Radio, Switch, Slider, Rating, Skeleton, Table } from '@mantine/core';
 /**
- * IconSystemIcon IconHealthIcon IconIndicatorIcon IconComponentIcon
- * 
- * IconVisualIcon IconindicatorIcon IconforIcon IconoverallIcon IconagentIcon IconsystemIcon IconhealthIcon IconstatusIcon.
- * 
- * @IconauthorIcon IconToolboxAIIcon IconTeamIcon
- * @IconcreatedIcon Icon2025Icon-Icon09Icon-Icon21Icon
- * @IconversionIcon Icon1Icon.Icon0Icon.Icon0Icon
+ * System Health Indicator Component
+ *
+ * Visual indicator for overall agent system health status.
+ *
+ * @author ToolboxAI Team
+ * @created 2025-09-21
+ * @version 1.0.0
  */
 
-IconimportIcon IconReactIcon IconfromIcon 'Iconreact';
-IconimportIcon { IconIconIcon, IconIconAlertTriangleIcon, IconIconCircleCheckIcon, IconIconCircleXIcon, IconIconWifiOffIcon } IconfromIcon '@IcontablerIcon/IconiconsIcon-Iconreact';
-IconimportIcon {
-  IconCheckCircleIcon IconasIcon IconIconCircleCheckIcon,
-  IconWarningIcon IconasIcon IconIconAlertTriangleIcon,
-  IconErrorIcon IconasIcon IconIconCircleXIcon,
-  IconWifiOffIcon IconasIcon IconIconWifiOffIcon,
-} IconfromIcon '@IconmuiIcon/IconiconsIcon-Iconmaterial';
+import React from 'react';
+import { IconAlertTriangle, IconCircleCheck, IconX, IconWifiOff } from '@tabler/icons-react';
 
-IconinterfaceIcon IconSystemHealthIndicatorPropsIcon {
-  IconstatusIcon: 'Iconhealthy' | 'Icondegraded' | 'Iconerror';
-  IconisConnectedIcon: IconbooleanIcon;
+interface SystemHealthIndicatorProps {
+  status: 'healthy' | 'degraded' | 'error';
+  isConnected: boolean;
 }
 
-IconexportIcon IconconstIcon IconSystemHealthIndicatorIcon = ({
-  IconstatusIcon,
-  IconisConnectedIcon,
-}: IconSystemHealthIndicatorPropsIcon) => {
-  IconconstIcon IcongetHealthConfigIcon = () => {
-    IconifIcon (!IconisConnectedIcon) {
-      IconreturnIcon {
-        IconcolorIcon: 'Icondefault' IconasIcon IconconstIcon,
-        IconiconIcon: <IconIconWifiOffIcon />,
-        IconlabelIcon: 'IconDisconnected',
-        IcontooltipIcon: 'IconNotIcon IconconnectedIcon IcontoIcon IconrealIcon-IcontimeIcon Iconupdates'
+export const SystemHealthIndicator = ({
+  status,
+  isConnected,
+}: SystemHealthIndicatorProps) => {
+  const getHealthConfig = () => {
+    if (!isConnected) {
+      return {
+        color: 'gray' as const,
+        icon: <IconWifiOff />,
+        label: 'Disconnected',
+        tooltip: 'Not connected to real-time updates'
       };
     }
 
-    IconswitchIcon (IconstatusIcon) {
-      IconcaseIcon 'Iconhealthy':
-        IconreturnIcon {
-          IconcolorIcon: 'Iconsuccess' IconasIcon IconconstIcon,
-          IconiconIcon: <IconIconCircleCheckIcon />,
-          IconlabelIcon: 'IconHealthy',
-          IcontooltipIcon: 'IconAllIcon IconsystemsIcon Iconoperational'
+    switch (status) {
+      case 'healthy':
+        return {
+          color: 'green' as const,
+          icon: <IconCircleCheck />,
+          label: 'Healthy',
+          tooltip: 'All systems operational'
         };
-      IconcaseIcon 'Icondegraded':
-        IconreturnIcon {
-          IconcolorIcon: 'Iconwarning' IconasIcon IconconstIcon,
-          IconiconIcon: <IconIconAlertTriangleIcon />,
-          IconlabelIcon: 'IconDegraded',
-          IcontooltipIcon: 'IconSomeIcon IconagentsIcon IconexperiencingIcon Iconissues'
+      case 'degraded':
+        return {
+          color: 'orange' as const,
+          icon: <IconAlertTriangle />,
+          label: 'Degraded',
+          tooltip: 'Some issues detected'
         };
-      IconcaseIcon 'Iconerror':
-        IconreturnIcon {
-          IconcolorIcon: 'Iconerror' IconasIcon IconconstIcon,
-          IconiconIcon: <IconIconCircleXIcon />,
-          IconlabelIcon: 'IconError',
-          IcontooltipIcon: 'IconCriticalIcon IconsystemIcon IconissuesIcon Icondetected'
+      case 'error':
+        return {
+          color: 'red' as const,
+          icon: <IconX />,
+          label: 'Error',
+          tooltip: 'Critical issues detected'
         };
-      IcondefaultIcon:
-        IconreturnIcon {
-          IconcolorIcon: 'Icondefault' IconasIcon IconconstIcon,
-          IconiconIcon: <IconCircularProgressIcon IconsizeIcon={Icon16Icon} />,
-          IconlabelIcon: 'IconUnknown',
-          IcontooltipIcon: 'IconSystemIcon IconstatusIcon Iconunknown'
+      default:
+        return {
+          color: 'gray' as const,
+          icon: <IconAlertTriangle />,
+          label: 'Unknown',
+          tooltip: 'Status unknown'
         };
     }
   };
 
-  IconconstIcon IconconfigIcon = IcongetHealthConfigIcon();
+  const config = getHealthConfig();
 
-  IconreturnIcon (
-    <IconTooltipIcon IcontitleIcon={IconconfigIcon.IcontooltipIcon}>
-      <IconChipIcon
-        IconiconIcon={IconconfigIcon.IconiconIcon}
-        IconlabelIcon={IconconfigIcon.IconlabelIcon}
-        IconcolorIcon={IconconfigIcon.IconcolorIcon}
-        IconvariantIcon="Iconoutline"
-        IconsizeIcon="Iconsmall"
-      />
-    <IconIconIcon/IconTooltipIcon>
+  return (
+    <Tooltip label={config.tooltip}>
+      <Badge
+        color={config.color}
+        leftSection={config.icon}
+        size="lg"
+      >
+        {config.label}
+      </Badge>
+    </Tooltip>
   );
 };
 
-IconexportIcon IcondefaultIcon IconSystemHealthIndicatorIcon;
+export default SystemHealthIndicator;

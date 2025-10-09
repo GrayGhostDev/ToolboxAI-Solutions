@@ -28,7 +28,7 @@ import {
   IconTrophy,
   IconTrendingUp,
   IconSchool,
-  IconDeviceGamepad2,
+  IconDeviceGamepad,
   IconBrain,
   IconUsers,
   IconDeviceGamepad,
@@ -149,7 +149,7 @@ const SAMPLE_ITEMS: DashboardItem[] = [
 const getTypeIcon = (type: string) => {
   switch (type) {
     case 'education': return IconSchool;
-    case 'gaming': return IconDeviceGamepad2;
+    case 'gaming': return IconDeviceGamepad;
     case 'tool': return IconBrain;
     case 'achievement': return IconTrophy;
     default: return IconSparkles;

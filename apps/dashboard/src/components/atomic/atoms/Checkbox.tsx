@@ -9,7 +9,7 @@ export interface CheckboxProps {
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-const AtomicCheckbox = (({ ...props, ref }: HTMLInputElement, CheckboxProps & { ref?: React.Ref<any> }) => (
+const AtomicCheckbox = React.forwardRef<HTMLInputElement, CheckboxProps>((props, ref) => (
   <input ref={ref} type="checkbox" {...props} />
 ));
 

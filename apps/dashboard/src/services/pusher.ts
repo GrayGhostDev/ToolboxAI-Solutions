@@ -7,23 +7,23 @@
  * This service consolidates all real-time features using Pusher Channels,
  * replacing the legacy Socket.IO implementation.
  */
-import Pusher, { Channel } from 'pusher-js';
+import Pusher, { type Channel } from 'pusher-js';
 import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY, WS_CONFIG, WS_URL, PUSHER_KEY, PUSHER_CLUSTER, PUSHER_AUTH_ENDPOINT } from '../config';
 import { tokenRefreshManager } from '../utils/tokenRefreshManager';
 import {
-  MessageAcknowledgment,
-  QueuedMessage,
-  WebSocketChannel,
-  WebSocketConnectionOptions,
-  WebSocketError,
-  WebSocketErrorHandler,
-  WebSocketEventHandler,
-  WebSocketMessage,
-  WebSocketMessageType,
+  type MessageAcknowledgment,
+  type QueuedMessage,
+  type WebSocketChannel,
+  type WebSocketConnectionOptions,
+  type WebSocketError,
+  type WebSocketErrorHandler,
+  type WebSocketEventHandler,
+  type WebSocketMessage,
+  type WebSocketMessageType,
   WebSocketState,
-  WebSocketStateHandler,
-  WebSocketStats,
-  WebSocketSubscription,
+  type WebSocketStateHandler,
+  type WebSocketStats,
+  type WebSocketSubscription,
 } from '../types/websocket';
 import ApiClient from './api';
 import { logger } from '../utils/logger';
@@ -785,7 +785,7 @@ url: options.url || WS_URL,
       this.tokenRefreshTimer = setTimeout(() => {
         this.handleTokenExpiration();
       }, refreshTime) as any;
-      this.log(`Using default token refresh in 25 minutes`);
+      this.log('Using default token refresh in 25 minutes');
     }
   }
   /**

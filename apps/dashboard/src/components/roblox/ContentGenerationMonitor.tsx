@@ -24,9 +24,9 @@ import {
   Title,
   RingProgress,
   Loader,
-  Switch
+  Switch,
+  useMantineTheme
 } from '@mantine/core';
-import { useMantineTheme } from '@mantine/hooks';
 import {
   IconPlayerPlay,
   IconPlayerPause,
@@ -45,7 +45,7 @@ import {
   IconChevronDown,
   IconChevronUp,
   IconGauge,
-  IconMemory,
+  IconBrain as IconMemory,
   IconDatabase,
   IconClock,
   IconX,
@@ -55,7 +55,7 @@ import {
 } from '@tabler/icons-react';
 import { usePusherContext } from '../../contexts/PusherContext';
 import {
-  ContentGenerationProgress,
+  type ContentGenerationProgress,
   WebSocketMessageType,
   WebSocketChannel
 } from '../../types/websocket';

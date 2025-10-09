@@ -6,7 +6,7 @@
  * @since 2025-09-26
  */
 
-import Pusher, { Channel, PresenceChannel } from 'pusher-js';
+import Pusher, { type Channel, type PresenceChannel } from 'pusher-js';
 import { store } from '../store';
 import { setConnectionStatus, setConnectionError } from '../store/slices/pusherSlice';
 import { config } from '../config';

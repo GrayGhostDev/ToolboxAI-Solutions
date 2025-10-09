@@ -26,9 +26,9 @@ import {
   Title,
   SegmentedControl,
   TextInput,
-  Menu
+  Menu,
+  useMantineTheme
 } from '@mantine/core';
-import { useMantineTheme } from '@mantine/hooks';
 import {
   IconSchool,
   IconUser,
@@ -60,7 +60,7 @@ import {
   IconCircle
 } from '@tabler/icons-react';
 import { usePusherContext } from '../../contexts/PusherContext';
-import { ProgressUpdate, WebSocketMessageType } from '../../types/websocket';
+import { type ProgressUpdate, WebSocketMessageType } from '../../types/websocket';
 
 interface StudentProgress {
   userId: string;
@@ -237,7 +237,7 @@ const updateStudentProgress = (update: ProgressUpdate) => {
 
   // Filtering and sorting
   const filteredAndSortedStudents = useMemo(() => {
-    let filtered = students.filter(student =>
+    const filtered = students.filter(student =>
       student.username.toLowerCase().includes(searchQuery.toLowerCase())
     );
 

@@ -1,8 +1,8 @@
-import * as React from "react";
+import * as React from 'react';
 import { Box, Card, Text, Button, Table, Paper, Badge, ActionIcon, Stack, TextInput, Modal, Group } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 
-import { useState } from "react";
+import { useState } from 'react';
 import {
   listSchools,
   createSchool,
@@ -11,9 +11,9 @@ import {
   activateSchool,
   type School as SchoolType,
   type SchoolCreate,
-} from "../../../services/api";
-import { useRealTimeData } from "../../../hooks/useRealTimeData";
-import { IconPlus, IconEdit, IconTrash, IconSchool } from "@tabler/icons-react";
+} from '../../../services/api';
+import { useRealTimeData } from '../../../hooks/useRealTimeData';
+import { IconPlus, IconEdit, IconTrash, IconSchool } from '@tabler/icons-react';
 
 interface SchoolFormData {
   name: string;
@@ -49,18 +49,18 @@ export default function Schools() {
   const [openDialog, setOpenDialog] = useState(false);
   const [editingSchool, setEditingSchool] = useState<SchoolType | null>(null);
   const [formData, setFormData] = useState<SchoolFormData>({
-    name: "",
-    address: "",
-    city: "",
-    state: "",
-    zip_code: "",
-    phone: "",
-    email: "",
-    principal_name: "",
-    district: "",
+    name: '',
+    address: '',
+    city: '',
+    state: '',
+    zip_code: '',
+    phone: '',
+    email: '',
+    principal_name: '',
+    district: '',
     max_students: 500,
   });
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Refetch when search term changes
   React.useEffect(() => {
@@ -70,15 +70,15 @@ export default function Schools() {
   const handleAdd = () => {
     setEditingSchool(null);
     setFormData({
-      name: "",
-      address: "",
-      city: "",
-      state: "",
-      zip_code: "",
-      phone: "",
-      email: "",
-      principal_name: "",
-      district: "",
+      name: '',
+      address: '',
+      city: '',
+      state: '',
+      zip_code: '',
+      phone: '',
+      email: '',
+      principal_name: '',
+      district: '',
       max_students: 500,
     });
     setOpenDialog(true);
@@ -92,10 +92,10 @@ export default function Schools() {
       city: school.city,
       state: school.state,
       zip_code: school.zip_code,
-      phone: school.phone || "",
-      email: school.email || "",
-      principal_name: school.principal_name || "",
-      district: school.district || "",
+      phone: school.phone || '',
+      email: school.email || '',
+      principal_name: school.principal_name || '',
+      district: school.district || '',
       max_students: school.max_students,
     });
     setOpenDialog(true);
@@ -118,7 +118,7 @@ export default function Schools() {
       
       setOpenDialog(false);
     } catch (err) {
-      console.error("Error saving school:", err);
+      console.error('Error saving school:', err);
       // Error handling is done by the real-time hook
     }
   };
@@ -189,7 +189,7 @@ export default function Schools() {
                     <Table.Td>{school.teacherCount || 0}</Table.Td>
                     <Table.Td>
                       <Badge
-                        color={school.status === "active" ? "green" : "gray"}
+                        color={school.status === 'active' ? 'green' : 'gray'}
                         size="sm"
                       >
                         {school.status}
@@ -228,7 +228,7 @@ export default function Schools() {
       <Modal
         opened={openDialog}
         onClose={() => setOpenDialog(false)}
-        title={editingSchool ? "Edit School" : "Add New School"}
+        title={editingSchool ? 'Edit School' : 'Add New School'}
         size="lg"
       >
         <Stack gap="md">
@@ -322,7 +322,7 @@ export default function Schools() {
               disabled={loading || !formData.name || !formData.address || !formData.city || !formData.state || !formData.zip_code}
               loading={loading}
             >
-              {editingSchool ? "Update" : "Create"}
+              {editingSchool ? 'Update' : 'Create'}
             </Button>
           </Group>
         </Stack>

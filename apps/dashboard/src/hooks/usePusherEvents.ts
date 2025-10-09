@@ -9,7 +9,7 @@
 import { useEffect, useCallback, useRef, useState, useMemo } from 'react';
 import { pusherClient } from '../services/pusher-client';
 import { useSelector } from 'react-redux';
-import { RootState } from '../store';
+import { type RootState } from '../store';
 
 // Types
 export interface PusherEventOptions {
@@ -28,12 +28,16 @@ export interface PusherPresenceState {
  * Hook to initialize Pusher client
  */
 export const usePusherClient = () => {
-  const { user, token } = useSelector((state: RootState) => state.auth);
+  // Fix: Changed from state.auth to state.user as auth slice doesn't exist
+  // Defensive: Safe fallback for Redux state access
+  const user = useSelector((state: RootState) => state?.user || null);
+  const token = user?.token || null;
   const [isInitialized, setIsInitialized] = useState(false);
   const [connectionState, setConnectionState] = useState<string>('uninitialized');
 
   useEffect(() => {
-    if (user?.id && token) {
+    // Defensive: Check for valid user data before initializing
+    if (user?.id && token && typeof user.id === 'string' && typeof token === 'string') {
       try {
         pusherClient.initialize(user.id, token);
         setIsInitialized(true);
@@ -41,6 +45,9 @@ export const usePusherClient = () => {
         console.error('Failed to initialize Pusher:', error);
         setIsInitialized(false);
       }
+    } else {
+      // Defensive: Reset initialization state if user data is invalid
+      setIsInitialized(false);
     }
 
     return () => {
@@ -51,8 +58,14 @@ export const usePusherClient = () => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const state = pusherClient.getConnectionState();
-      setConnectionState(state);
+      try {
+        // Defensive: Safely get connection state with fallback
+        const state = pusherClient?.getConnectionState?.() || 'unknown';
+        setConnectionState(state);
+      } catch (error) {
+        console.error('Error getting Pusher connection state:', error);
+        setConnectionState('error');
+      }
     }, 1000);
 
     return () => clearInterval(interval);
@@ -62,7 +75,8 @@ export const usePusherClient = () => {
     client: pusherClient,
     isInitialized,
     connectionState,
-    isConnected: pusherClient.isConnected(),
+    // Defensive: Safely check connection with fallback
+    isConnected: pusherClient?.isConnected?.() || false,
   };
 };
 
@@ -85,14 +99,19 @@ export const usePusherEvent = <T = any>(
   }, [callback]);
 
   useEffect(() => {
-    if (!enabled || !isInitialized || !channelName || !eventName) {
+    // Defensive: Validate all required parameters
+    if (!enabled || !isInitialized || !channelName || !eventName ||
+        typeof channelName !== 'string' || typeof eventName !== 'string') {
       return;
     }
 
     // Wrapped callback to use the latest version
     const wrappedCallback = (data: T) => {
       try {
-        callbackRef.current(data);
+        // Defensive: Check if callback ref is still valid
+        if (typeof callbackRef.current === 'function') {
+          callbackRef.current(data);
+        }
       } catch (error) {
         console.error(`Error in Pusher event handler for ${eventName}:`, error);
         onError?.(error as Error);
@@ -101,9 +120,9 @@ export const usePusherEvent = <T = any>(
 
     try {
       // Subscribe to channel
-      const channel = pusherClient.subscribe(channelName);
+      const channel = pusherClient?.subscribe?.(channelName);
 
-      if (channel) {
+      if (channel && pusherClient?.bind) {
         // Bind event
         pusherClient.bind(channelName, eventName, wrappedCallback);
 
@@ -117,8 +136,9 @@ export const usePusherEvent = <T = any>(
     // Cleanup
     return () => {
       try {
-        pusherClient.unbind(channelName, eventName, wrappedCallback);
-        pusherClient.unsubscribe(channelName);
+        // Defensive: Safely cleanup subscriptions
+        pusherClient?.unbind?.(channelName, eventName, wrappedCallback);
+        pusherClient?.unsubscribe?.(channelName);
         console.log(`🔌 Unsubscribed from ${channelName}:${eventName}`);
       } catch (error) {
         console.error(`Error during cleanup for ${channelName}:${eventName}:`, error);
@@ -303,12 +323,25 @@ export const usePusherConnectionStatus = () => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const debugInfo = pusherClient.getDebugInfo();
-      setStatus({
-        state: pusherClient.getConnectionState(),
-        isConnected: pusherClient.isConnected(),
-        isPolling: debugInfo.fallbackToPolling,
-      });
+      try {
+        // Defensive: Safely get debug info and connection state
+        const debugInfo = pusherClient?.getDebugInfo?.() || {};
+        const connectionState = pusherClient?.getConnectionState?.() || 'unknown';
+        const isConnected = pusherClient?.isConnected?.() || false;
+
+        setStatus({
+          state: connectionState,
+          isConnected,
+          isPolling: debugInfo?.fallbackToPolling || false,
+        });
+      } catch (error) {
+        console.error('Error getting Pusher connection status:', error);
+        setStatus({
+          state: 'error',
+          isConnected: false,
+          isPolling: false,
+        });
+      }
     }, 1000);
 
     return () => clearInterval(interval);

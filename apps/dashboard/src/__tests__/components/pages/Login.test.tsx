@@ -1,8 +1,8 @@
 /**
- * Login Component Migration Test Suite
+ * Login Component Test Suite
  *
- * Comprehensive tests for both MUI and Mantine versions of the Login component
- * Testing feature parity, migration compatibility, and real behaviors
+ * Comprehensive tests for the Mantine-based Login component
+ * Testing functionality, accessibility, and user interactions
  */
 
 import React from 'react';
@@ -16,7 +16,6 @@ import { ThemeProvider, createTheme } from '@mantine/core/styles';
 import { MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import Login from '../../../components/pages/Login';
-import LoginMUI from '../../../components/pages/LoginMUI';
 import LoginMantine from '../../../components/pages/LoginMantine';
 import { login } from '../../../services/api';
 
@@ -384,20 +383,6 @@ describe('Login Component', () => {
         }
       });
 
-      // Test MUI version
-      const { unmount: unmountMUI } = renderWithProviders(<LoginMUI />);
-
-      await user.type(screen.getByLabelText(/username or email/i), 'test@example.com');
-      await user.type(screen.getByLabelText(/password/i), 'password123');
-      await user.click(screen.getByRole('button', { name: /sign in/i }));
-
-      await waitFor(() => {
-        expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123');
-      });
-
-      unmountMUI();
-      vi.clearAllMocks();
-
       // Test Mantine version
       renderWithProviders(<LoginMantine />);
 
@@ -410,19 +395,8 @@ describe('Login Component', () => {
       });
     });
 
-    it('✅ should have identical form validation in both versions', async () => {
+    it('✅ should have proper form validation', async () => {
       const user = userEvent.setup();
-
-      // Test MUI version validation
-      const { unmount: unmountMUI } = renderWithProviders(<LoginMUI />);
-
-      await user.click(screen.getByRole('button', { name: /sign in/i }));
-
-      await waitFor(() => {
-        expect(screen.getByRole('alert')).toHaveTextContent(/email and password are required/i);
-      });
-
-      unmountMUI();
 
       // Test Mantine version validation
       renderWithProviders(<LoginMantine />);
@@ -434,17 +408,8 @@ describe('Login Component', () => {
       });
     });
 
-    it('✅ should handle demo credentials in both versions', async () => {
+    it('✅ should handle demo credentials with clickable buttons', async () => {
       const user = userEvent.setup();
-
-      // Test MUI version - demo credentials should be visible as text
-      const { unmount: unmountMUI } = renderWithProviders(<LoginMUI />);
-
-      expect(screen.getByText(/admin@toolboxai.com/i)).toBeInTheDocument();
-      expect(screen.getByText(/jane.smith@school.edu/i)).toBeInTheDocument();
-      expect(screen.getByText(/alex.johnson@student.edu/i)).toBeInTheDocument();
-
-      unmountMUI();
 
       // Test Mantine version - demo credentials should be clickable
       renderWithProviders(<LoginMantine />);
@@ -459,14 +424,7 @@ describe('Login Component', () => {
       expect(emailInput.value).toBe('admin@toolboxai.com');
     });
 
-    it('✅ should maintain consistent styling themes', () => {
-      // Test MUI version styling
-      const { unmount: unmountMUI } = renderWithProviders(<LoginMUI />);
-
-      expect(screen.getByText(/welcome back/i)).toBeInTheDocument();
-
-      unmountMUI();
-
+    it('✅ should maintain proper styling and branding', () => {
       // Test Mantine version styling
       renderWithProviders(<LoginMantine />);
 
@@ -501,17 +459,7 @@ describe('Login Component', () => {
   });
 
   describe('Performance & Accessibility', () => {
-    it('✅ should maintain accessibility in both versions', () => {
-      // Test MUI version accessibility
-      const { unmount: unmountMUI } = renderWithProviders(<LoginMUI />);
-
-      expect(screen.getByLabelText(/username or email/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
-      expect(screen.getByLabelText(/toggle password visibility/i)).toBeInTheDocument();
-
-      unmountMUI();
-
+    it('✅ should maintain proper accessibility', () => {
       // Test Mantine version accessibility
       renderWithProviders(<LoginMantine />);
 
@@ -521,16 +469,7 @@ describe('Login Component', () => {
       // Mantine PasswordInput should handle visibility toggle internally
     });
 
-    it('✅ should have consistent data-testid attributes', () => {
-      // Test MUI version
-      const { unmount: unmountMUI } = renderWithProviders(<LoginMUI />);
-
-      expect(screen.getByTestId('email-input')).toBeInTheDocument();
-      expect(screen.getByTestId('password-input')).toBeInTheDocument();
-      expect(screen.getByTestId('login-submit')).toBeInTheDocument();
-
-      unmountMUI();
-
+    it('✅ should have proper data-testid attributes', () => {
       // Test Mantine version
       renderWithProviders(<LoginMantine />);
 
@@ -542,17 +481,17 @@ describe('Login Component', () => {
 });
 
 /**
- * Migration Test Results Summary:
+ * Login Component Test Results Summary:
  *
- * ✅ Feature Parity Tests: Both versions maintain identical functionality
- * ✅ Validation Consistency: Error handling works the same way
- * ✅ Accessibility: Both versions maintain proper ARIA labels and roles
- * ✅ Theme Integration: Both versions use consistent ToolBoxAI branding
- * ✅ Migration Wrapper: Properly switches between versions
- * ✅ Demo Credentials: Enhanced in Mantine version with clickable buttons
+ * ✅ Core Functionality: Login form works correctly with API integration
+ * ✅ Form Validation: Proper client-side validation for email and password
+ * ✅ Accessibility: Maintains proper ARIA labels and keyboard navigation
+ * ✅ Theme Integration: Uses consistent ToolBoxAI branding and Mantine theme
+ * ✅ Demo Credentials: Interactive buttons for quick credential filling
+ * ✅ User Experience: Enhanced UX with notifications and loading states
  *
- * Total Tests: 18 (8 original + 10 migration)
- * Migration Status: ✅ Ready for gradual rollout
+ * Total Tests: 12 comprehensive test cases
+ * Status: ✅ Fully converted to Mantine v8
  *
  * Performance Benefits of Mantine:
  * - Smaller bundle size (no emotion dependencies)

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   Modal,
   Button,
@@ -12,9 +12,9 @@ import {
   Text,
 } from '@mantine/core';
 import { DateTimePicker } from '@mantine/dates';
-import { usePusherChannel } from "../../hooks/usePusherEvents";
-import { useAppDispatch } from "../../store";
-import { addNotification } from "../../store/slices/uiSlice";
+import { usePusherChannel } from '../../hooks/usePusherEvents';
+import { useAppDispatch } from '../../store';
+import { addNotification } from '../../store/slices/uiSlice';
 
 interface CreateAssessmentDialogProps {
   open: boolean;
@@ -28,12 +28,12 @@ const CreateAssessmentDialog: React.FunctionComponent<CreateAssessmentDialogProp
   onSave,
 }) => {
   const dispatch = useAppDispatch();
-  const [title, setTitle] = useState("");
-  const [type, setType] = useState("quiz"); // Default to quiz
-  const [classId, setClassId] = useState("");
+  const [title, setTitle] = useState('');
+  const [type, setType] = useState('quiz'); // Default to quiz
+  const [classId, setClassId] = useState('');
   const [dueDate, setDueDate] = useState<Date | null>(null);
   const [maxSubmissions, setMaxSubmissions] = useState(1);
-  const [description, setDescription] = useState("");
+  const [description, setDescription] = useState('');
 
   // Pusher real-time updates for assessment activities
   usePusherChannel(
@@ -42,7 +42,7 @@ const CreateAssessmentDialog: React.FunctionComponent<CreateAssessmentDialogProp
       'assessment-created': (data: { assessmentId: string; title: string; type: string; classId: string }) => {
         dispatch(
           addNotification({
-            type: "success",
+            type: 'success',
             message: `New ${data.type} "${data.title}" has been created`,
           })
         );
@@ -51,7 +51,7 @@ const CreateAssessmentDialog: React.FunctionComponent<CreateAssessmentDialogProp
         const scoreText = data.score ? ` with a score of ${data.score}%` : '';
         dispatch(
           addNotification({
-            type: "info",
+            type: 'info',
             message: `${data.studentName} submitted an assessment${scoreText}`,
           })
         );
@@ -59,7 +59,7 @@ const CreateAssessmentDialog: React.FunctionComponent<CreateAssessmentDialogProp
       'assessment-graded': (data: { assessmentId: string; title: string; avgScore: number; totalSubmissions: number }) => {
         dispatch(
           addNotification({
-            type: "info",
+            type: 'info',
             message: `Assessment "${data.title}" - Average score: ${data.avgScore}% (${data.totalSubmissions} submissions)`,
           })
         );
@@ -77,7 +77,7 @@ const CreateAssessmentDialog: React.FunctionComponent<CreateAssessmentDialogProp
         dueDate: dueDate?.toISOString(),
         maxSubmissions,
         description,
-        status: "draft",
+        status: 'draft',
         questions: [], // Include empty questions array as required by backend
       });
       // Reset form
@@ -86,12 +86,12 @@ const CreateAssessmentDialog: React.FunctionComponent<CreateAssessmentDialogProp
   };
 
   const resetForm = () => {
-    setTitle("");
-    setType("quiz"); // Reset to default
-    setClassId("");
+    setTitle('');
+    setType('quiz'); // Reset to default
+    setClassId('');
     setDueDate(null);
     setMaxSubmissions(1);
-    setDescription("");
+    setDescription('');
   };
 
   const handleClose = () => {
@@ -100,17 +100,17 @@ const CreateAssessmentDialog: React.FunctionComponent<CreateAssessmentDialogProp
   };
 
   const assessmentTypes = [
-    { value: "quiz", label: "Quiz" },
-    { value: "test", label: "Test" },
-    { value: "assignment", label: "Assignment" },
-    { value: "project", label: "Project" },
+    { value: 'quiz', label: 'Quiz' },
+    { value: 'test', label: 'Test' },
+    { value: 'assignment', label: 'Assignment' },
+    { value: 'project', label: 'Project' },
   ];
 
   const classes = [
-    { value: "class-1", label: "Mathematics 101" },
-    { value: "class-2", label: "Science 202" },
-    { value: "class-3", label: "History 303" },
-    { value: "class-4", label: "English 404" },
+    { value: 'class-1', label: 'Mathematics 101' },
+    { value: 'class-2', label: 'Science 202' },
+    { value: 'class-3', label: 'History 303' },
+    { value: 'class-4', label: 'English 404' },
   ];
 
   return (
@@ -148,7 +148,7 @@ const CreateAssessmentDialog: React.FunctionComponent<CreateAssessmentDialogProp
           label="Assessment Type"
           required
           value={type}
-          onChange={(value) => setType(value || "quiz")}
+          onChange={(value) => setType(value || 'quiz')}
           data={assessmentTypes}
           styles={{
             label: { fontWeight: 600 }
@@ -159,7 +159,7 @@ const CreateAssessmentDialog: React.FunctionComponent<CreateAssessmentDialogProp
           label="Class"
           required
           value={classId}
-          onChange={(value) => setClassId(value || "")}
+          onChange={(value) => setClassId(value || '')}
           data={classes}
           styles={{
             label: { fontWeight: 600 }

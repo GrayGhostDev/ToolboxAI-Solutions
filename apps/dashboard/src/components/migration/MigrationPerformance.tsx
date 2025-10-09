@@ -30,7 +30,6 @@ import {
   IconBenchmark,
   IconChartBar
 } from '@tabler/icons-react';
-import LoginMUI from '../pages/LoginMUI';
 import LoginMantine from '../pages/LoginMantine';
 
 interface PerformanceMetrics {

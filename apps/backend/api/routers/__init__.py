@@ -80,6 +80,24 @@ def _register_core_routers(app: FastAPI) -> None:
         except ImportError as e:
             logger.warning(f"Could not load content generation endpoints: {e}")
 
+        # Stripe payment routers
+        try:
+            from apps.backend.api.routers.stripe import router as stripe_router
+
+            app.include_router(stripe_router)
+            logger.info("Stripe payment endpoints loaded successfully")
+        except ImportError as e:
+            logger.warning(f"Could not load Stripe payment endpoints: {e}")
+
+        # Email service routers
+        try:
+            from apps.backend.api.routers.email import router as email_router
+
+            app.include_router(email_router)
+            logger.info("Email service endpoints loaded successfully")
+        except ImportError as e:
+            logger.warning(f"Could not load Email service endpoints: {e}")
+
         # Legacy health check routers (fallback)
         try:
             from apps.backend.api.health.health_checks import router as health_checks_router
@@ -94,11 +112,13 @@ def _register_core_routers(app: FastAPI) -> None:
         # Legacy Pusher authentication endpoints (fallback)
         try:
             from apps.backend.api.v1.endpoints.pusher_auth import router as pusher_auth_router
+            from apps.backend.api.v1.endpoints.pusher_auth import realtime_router
             from apps.backend.api.v1.pusher_endpoints import router as pusher_replacement_router
 
             app.include_router(pusher_auth_router, prefix="/api/v1")
+            app.include_router(realtime_router, prefix="/api/v1")
             app.include_router(pusher_replacement_router)
-            logger.info("Legacy Pusher endpoints loaded successfully")
+            logger.info("Legacy Pusher and Realtime endpoints loaded successfully")
         except ImportError as e:
             logger.warning(f"Could not load legacy Pusher endpoints: {e}")
 
@@ -152,7 +172,7 @@ def _register_v1_routers(app: FastAPI) -> None:
         ("apps.backend.api.v1.endpoints.database_swarm", "router", "/api/v1"),
         ("apps.backend.api.v1.endpoints.gpt4_migration_monitoring", "router", "/api/v1"),
         # Dashboard endpoints
-        ("apps.backend.api.v1.endpoints.dashboard", "dashboard_router", ""),
+        ("apps.backend.api.v1.endpoints.dashboard", "dashboard_router", "/api/v1"),
     ]
 
     for module_path, router_name, prefix in routers_config:

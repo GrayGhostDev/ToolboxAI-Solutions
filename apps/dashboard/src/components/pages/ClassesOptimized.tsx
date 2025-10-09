@@ -1,15 +1,24 @@
-import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
-import * as React from "react";
+import {
+  Box, Button, Text, Paper, Stack, Grid, Container, ActionIcon, Avatar, Card,
+  List, Divider, TextInput, Select, Chip, Badge, Alert, Loader, Progress,
+  Modal, Menu, Tooltip, Checkbox, Switch, Slider, Autocomplete, Skeleton,
+  Table, Group
+} from '@mantine/core';
+import {
+  IconSearch, IconPlus, IconEye, IconEdit, IconTrash, IconDotsVertical,
+  IconPeople, IconSchedule, IconTrendingUp, IconRefresh, IconUsers
+} from '@tabler/icons-react';
+import * as React from 'react';
 
-import { useNavigate } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "../../store";
-import { addNotification } from "../../store/slices/uiSlice";
-import { setClasses, removeClass, setClassOnlineStatus } from "../../store/slices/classesSlice";
-import { listClasses } from "../../services/api";
-import { getClassDetailsRoute } from "../../config/routes";
-import CreateClassDialog from "../dialogs/CreateClassDialog";
-import VirtualizedList from "../common/VirtualizedList";
-import { performanceUtils } from "../common/PerformanceMonitor";
+import { useNavigate } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '../../store';
+import { addNotification } from '../../store/slices/uiSlice';
+import { setClasses, removeClass, setClassOnlineStatus } from '../../store/slices/classesSlice';
+import { listClasses } from '../../services/api';
+import { getClassDetailsRoute } from '../../config/routes';
+import CreateClassDialog from '../dialogs/CreateClassDialog';
+import VirtualizedList from '../common/VirtualizedList';
+import { performanceUtils } from '../common/PerformanceMonitor';
 interface ClassCardData {
   id: string;
   name: string;
@@ -44,76 +53,76 @@ const ClassCard = React.memo<{
   }, [performanceMark]);
   return (
     <Card
-      onClick={(e: React.MouseEvent) => handleCardClick}
+      onClick={handleCardClick}
+      withBorder
       style={{
-        cursor: "pointer",
-        transition: "all 0.2s ease-in-out",
-        "&:hover": {
-          transform: "translateY(-2px)",
-          boxShadow: 3,
-        },
-        margin: 1,
-        height: "280px", // Fixed height for virtual scrolling
+        cursor: 'pointer',
+        transition: 'all 0.2s ease-in-out',
+        height: '280px', // Fixed height for virtual scrolling
       }}
     >
-      <CardContent>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography order={6} component="h2" noWrap>
-            {classData.name}
-          </Typography>
-          <IconButton size="small" onClick={(e: React.MouseEvent) => handleMenuClick}>
-            <IconDotsVertical />
-          </IconButton>
+      <Group justify="space-between" align="center" p="md">
+        <Text size="md" fw={600} truncate>
+          {classData.name}
+        </Text>
+        <ActionIcon size="sm" onClick={handleMenuClick}>
+          <IconDotsVertical />
+        </ActionIcon>
+      </Group>
+      <Stack gap="md" p="md" pt={0}>
+        <Group>
+          <IconPeople size={16} color="blue" />
+          <Text size="sm" c="dimmed">
+            Grade {classData.grade} • {classData.studentCount} students
+          </Text>
+        </Group>
+        <Group>
+          <IconSchedule size={16} />
+          <Text size="sm" c="dimmed" truncate>
+            {classData.schedule}
+          </Text>
+        </Group>
+        <Box>
+          <Group justify="space-between" mb="xs">
+            <Text size="sm" c="dimmed">
+              Progress
+            </Text>
+            <Text size="sm" c="dimmed">
+              {Math.round(classData.completionRate * 100)}%
+            </Text>
+          </Group>
+          <Progress
+            value={classData.completionRate * 100}
+            size="sm"
+            radius="md"
+          />
         </Box>
-        <Stack spacing={2}>
-          <Box display="flex" alignItems="center" gap={1}>
-            <PeopleIcon color="blue" />
-            <Typography size="sm" color="text.secondary">
-              Grade {classData.grade} • {classData.studentCount} students
-            </Typography>
-          </Box>
-          <Box display="flex" alignItems="center" gap={1}>
-            <ScheduleIcon color="action" />
-            <Typography size="sm" color="text.secondary" noWrap>
-              {classData.schedule}
-            </Typography>
-          </Box>
-          <Box>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-              <Typography size="sm" color="text.secondary">
-                Progress
-              </Typography>
-              <Typography size="sm" color="text.secondary">
-                {Math.round(classData.completionRate * 100)}%
-              </Typography>
-            </Box>
-            <LinearProgress
-              variant="determinate"
-              value={classData.completionRate * 100}
-              style={{ height: 6, borderRadius: 3 }}
-            />
-          </Box>
-          <Box display="flex" alignItems="center" gap={1}>
-            <TrendingUpIcon color="green" />
-            <Typography size="sm" color="text.secondary">
+        <Group justify="space-between">
+          <Group>
+            <IconTrendingUp size={16} color="green" />
+            <Text size="sm" c="dimmed">
               Avg XP: {classData.averageXP}
-            </Typography>
-            <Chip
-              size="small"
-              label={classData.isOnline ? "Online" : "Offline"}
-              color={classData.isOnline ? "success" : "default"}
-              variant="outline"
-            />
-          </Box>
-          {classData.studentAvatars.length > 0 && (
-            <AvatarGroup max={4} style={{ justifyContent: "flex-start" }}>
-              {classData.studentAvatars.map((avatar, index) => (
-                <Avatar key={index} src={avatar} style={{ width: 24, height: 24 }} />
-              ))}
-            </AvatarGroup>
-          )}
-        </Stack>
-      </CardContent>
+            </Text>
+          </Group>
+          <Chip
+            size="xs"
+            color={classData.isOnline ? 'green' : 'gray'}
+            variant="outline"
+          >
+            {classData.isOnline ? 'Online' : 'Offline'}
+          </Chip>
+        </Group>
+        {classData.studentAvatars.length > 0 && (
+          <Avatar.Group>
+            {classData.studentAvatars.slice(0, 4).map((avatar, index) => (
+              <Avatar key={index} src={avatar} size="sm" />
+            ))}
+            {classData.studentAvatars.length > 4 && (
+              <Avatar size="sm">+{classData.studentAvatars.length - 4}</Avatar>
+            )}
+          </Avatar.Group>
+        )}
+      </Stack>
     </Card>
   );
 });
@@ -128,30 +137,22 @@ const ClassFilters = React.memo<{
     onSearchChange(event.target.value);
   }, [onSearchChange]);
   return (
-    <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-      <TextField
+    <Group justify="space-between" mb="lg">
+      <TextInput
         placeholder="Search classes..."
         value={searchTerm}
         onChange={handleSearchChange}
-        size="small"
+        leftSection={<IconSearch size={16} />}
         style={{ minWidth: 300 }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <IconSearch />
-            </InputAdornment>
-          ),
-        }}
       />
       <Button
-        variant="filled"
-        startIcon={<IconPlus />}
-        onClick={(e: React.MouseEvent) => onCreateClass}
+        leftSection={<IconPlus />}
+        onClick={onCreateClass}
         style={{ minWidth: 140 }}
       >
         New Class
       </Button>
-    </Box>
+    </Group>
   );
 });
 ClassFilters.displayName = 'ClassFilters';
@@ -162,7 +163,7 @@ export default function ClassesOptimized() {
   // State management with useState
   const [classes, setClassesState] = React.useState<ClassCardData[]>([]);
   const [loading, setLoading] = React.useState(false);
-  const [searchTerm, setSearchTerm] = React.useState("");
+  const [searchTerm, setSearchTerm] = React.useState('');
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [selectedClass, setSelectedClass] = React.useState<ClassCardData | null>(null);
   const [createClassOpen, setCreateClassOpen] = React.useState(false);
@@ -196,18 +197,18 @@ export default function ClassesOptimized() {
         name: classItem.name,
         grade: classItem.grade_level || classItem.grade,
         studentCount: classItem.student_count || classItem.studentCount || 0,
-        schedule: classItem.schedule || "Schedule not set",
+        schedule: classItem.schedule || 'Schedule not set',
         averageXP: Math.round((classItem.average_progress || 0) * 100),
         completionRate: classItem.average_progress || 0,
-        nextLesson: classItem.next_lesson || "No upcoming lessons",
+        nextLesson: classItem.next_lesson || 'No upcoming lessons',
         isOnline: classItem.is_online || false,
         studentAvatars: [], // Will be populated when we have student endpoints
       }));
       setClassesState(transformedClasses);
     } catch (error: any) {
-      console.error("Failed to fetch classes:", error);
+      console.error('Failed to fetch classes:', error);
       const errorDetail = error.response?.data?.detail;
-      let errorMessage = "Failed to load classes. Please try again.";
+      let errorMessage = 'Failed to load classes. Please try again.';
       if (typeof errorDetail === 'string') {
         errorMessage = errorDetail;
       } else if (Array.isArray(errorDetail)) {
@@ -217,7 +218,7 @@ export default function ClassesOptimized() {
         ).join(', ');
       }
       dispatch(addNotification({
-        type: "error",
+        type: 'error',
         message: errorMessage,
       }));
     } finally {
@@ -252,13 +253,13 @@ export default function ClassesOptimized() {
         // TODO: Implement delete API call
         setClassesState(prev => prev.filter(c => c.id !== selectedClass.id));
         dispatch(addNotification({
-          type: "success",
-          message: "Class deleted successfully",
+          type: 'success',
+          message: 'Class deleted successfully',
         }));
       } catch (error) {
         dispatch(addNotification({
-          type: "error",
-          message: "Failed to delete class",
+          type: 'error',
+          message: 'Failed to delete class',
         }));
       }
     }
@@ -275,25 +276,26 @@ export default function ClassesOptimized() {
   ), [handleMenuClick, handleCardClick]);
   if (loading && classes.length === 0) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="400px">
-        <Typography>Loading classes...</Typography>
-      </Box>
+      <Group justify="center" align="center" style={{ height: 400 }}>
+        <Text>Loading classes...</Text>
+      </Group>
     );
   }
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography order={4} component="h1">
+      <Group justify="space-between" align="center" mb="lg">
+        <Text size="xl" fw={600}>
           Classes
-        </Typography>
+        </Text>
         <Button
           variant="outline"
-          onClick={(e: React.MouseEvent) => fetchClasses}
+          leftSection={<IconRefresh />}
+          onClick={fetchClasses}
           disabled={loading}
         >
           Refresh
         </Button>
-      </Box>
+      </Group>
       <ClassFilters
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
@@ -310,43 +312,36 @@ export default function ClassesOptimized() {
         />
       ) : (
         /* Use regular grid for smaller datasets */
-        <Grid container spacing={2}>
+        <Grid gutter="md">
           {filteredClasses.map((classData) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={classData.id}>
+            <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 3 }} key={classData.id}>
               <ClassCard
                 classData={classData}
                 onMenuClick={handleMenuClick}
                 onCardClick={handleCardClick}
               />
-            </Grid>
+            </Grid.Col>
           ))}
         </Grid>
       )}
       {filteredClasses.length === 0 && !loading && (
-        <Box display="flex" justifyContent="center" alignItems="center" height="200px">
-          <Typography color="text.secondary">
+        <Group justify="center" align="center" style={{ height: 200 }}>
+          <Text c="dimmed">
             {searchTerm ? 'No classes match your search.' : 'No classes available.'}
-          </Typography>
-        </Box>
+          </Text>
+        </Group>
       )}
       {/* Context Menu */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-      >
-        <MenuItem onClick={(e: React.MouseEvent) => () => selectedClass && handleCardClick(selectedClass)}>
-          <IconEye style={{ mr: 1 }} />
+      <Menu opened={Boolean(anchorEl)} onClose={handleMenuClose}>
+        <Menu.Item leftSection={<IconEye />} onClick={() => selectedClass && handleCardClick(selectedClass)}>
           View Details
-        </MenuItem>
-        <MenuItem onClick={(e: React.MouseEvent) => handleMenuClose}>
-          <IconEdit style={{ mr: 1 }} />
+        </Menu.Item>
+        <Menu.Item leftSection={<IconEdit />} onClick={handleMenuClose}>
           Edit Class
-        </MenuItem>
-        <MenuItem onClick={(e: React.MouseEvent) => handleDeleteClass}>
-          <IconTrash style={{ mr: 1 }} />
+        </Menu.Item>
+        <Menu.Item leftSection={<IconTrash />} onClick={handleDeleteClass} color="red">
           Delete Class
-        </MenuItem>
+        </Menu.Item>
       </Menu>
       {/* Create Class Dialog */}
       <CreateClassDialog

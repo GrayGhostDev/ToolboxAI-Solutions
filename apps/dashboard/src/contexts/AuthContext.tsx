@@ -5,8 +5,8 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, AuthResponse } from '../types/api';
-import { UserRole } from '../types/roles';
+import { type User, type AuthResponse } from '../types/api';
+import { type UserRole } from '../types/roles';
 import { getUserConfig, AUTH_CONFIG } from '../config/users';
 import ApiClient, { getMyProfile, updateUser as apiUpdateUser } from '../services/api';
 import { store } from '../store';
@@ -29,7 +29,7 @@ interface AuthContextType {
   switchRole: (role: UserRole) => void; // For development/testing
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -51,35 +51,55 @@ export const AuthProvider: React.FunctionComponent<{ children: React.ReactNode }
   useEffect(() => {
     const initAuth = async () => {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
+
+      // In development mode without token, allow unauthenticated access
+      if (!token && process.env.NODE_ENV === 'development') {
+        logger.info('Development mode - allowing unauthenticated access');
+        setIsLoading(false);
+        return;
+      }
+
       if (token) {
-        try {
-          // Verify token and get user data
-          const response = await getMyProfile();
-          if (response) {
-            setUser(response);
-            const config = getUserConfig(response.role as UserRole);
-            setUserConfig(config);
-            logger.info('Authentication restored successfully');
-          }
-        } catch (error: any) {
-          logger.warn('Failed to restore authentication - token may be expired or backend unavailable', error);
+        // Add a single retry attempt instead of infinite loop
+        let retryCount = 0;
+        const maxRetries = 1;
 
-          // Only clear tokens if it's a 401 (unauthorized) or 403 (forbidden) error
-          // For network errors or 500 errors, keep the token for retry
-          if (error.response?.status === 401 || error.response?.status === 403) {
-            localStorage.removeItem(AUTH_TOKEN_KEY);
-            localStorage.removeItem(AUTH_REFRESH_TOKEN_KEY);
-            logger.info('Cleared expired authentication tokens');
-          } else {
-            // For other errors (network, 500, etc.), keep tokens and show warning
-            logger.warn('Keeping tokens for retry - backend may be temporarily unavailable');
+        while (retryCount <= maxRetries) {
+          try {
+            // Verify token and get user data
+            const response = await getMyProfile();
+            if (response) {
+              setUser(response);
+              const config = getUserConfig(response.role as UserRole);
+              setUserConfig(config);
+              logger.info('Authentication restored successfully');
+              break; // Success, exit retry loop
+            }
+          } catch (error: any) {
+            retryCount++;
+            logger.warn(`Failed to restore authentication (attempt ${retryCount}/${maxRetries + 1})`, error);
 
-            // Show a non-intrusive notification
-            store.dispatch(addNotification({
-              type: 'warning',
-              message: 'Unable to verify authentication. Some features may be limited until connection is restored.',
-              autoHide: true,
-            }));
+            // Only clear tokens if it's a 401 (unauthorized) or 403 (forbidden) error
+            // For network errors or 500 errors, keep the token for retry
+            if (error.response?.status === 401 || error.response?.status === 403) {
+              localStorage.removeItem(AUTH_TOKEN_KEY);
+              localStorage.removeItem(AUTH_REFRESH_TOKEN_KEY);
+              logger.info('Cleared expired authentication tokens');
+              break; // No point retrying with invalid token
+            } else if (retryCount > maxRetries) {
+              // For other errors after max retries, keep tokens and show warning
+              logger.warn('Backend may be temporarily unavailable - continuing in offline mode');
+
+              // Show a non-intrusive notification only once
+              store.dispatch(addNotification({
+                type: 'warning',
+                message: 'Backend connection unavailable. Running in offline mode.',
+                autoHide: true,
+              }));
+            } else {
+              // Wait briefly before retry
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
           }
         }
       }

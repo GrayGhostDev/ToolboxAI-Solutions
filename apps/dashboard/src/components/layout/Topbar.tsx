@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from 'react';
 import {
   Paper,
   Group,
@@ -9,7 +9,7 @@ import {
   Tooltip,
   Indicator,
   Box
-} from "@mantine/core";
+} from '@mantine/core';
 import {
   IconBell,
   IconMenu2,
@@ -19,16 +19,16 @@ import {
   IconUser,
   IconLogout,
   IconSettings
-} from "@tabler/icons-react";
-import { UserRole } from "../../types";
-import { useAppDispatch, useAppSelector } from "../../store";
-import { toggleSidebar, setTheme, setLanguage } from "../../store/slices/uiSlice";
-import { setRole, signOut } from "../../store/slices/userSlice";
-import { useNavigate } from "react-router-dom";
-import { LANGUAGES } from "../../config";
-import { pusherService } from "../../services/pusher";
-import ConnectionStatus from "../widgets/ConnectionStatus";
-import AtomicAvatar from "../atomic/atoms/Avatar";
+} from '@tabler/icons-react';
+import { type UserRole } from '../../types';
+import { useAppDispatch, useAppSelector } from '../../store';
+import { toggleSidebar, setTheme, setLanguage } from '../../store/slices/uiSlice';
+import { setRole, signOut } from '../../store/slices/userSlice';
+import { useNavigate } from 'react-router-dom';
+import { LANGUAGES } from '../../config';
+import { pusherService } from '../../services/pusher';
+import ConnectionStatus from '../widgets/ConnectionStatus';
+import AtomicAvatar from '../atomic/atoms/Avatar';
 
 export default function Topbar() {
   const dispatch = useAppDispatch();
@@ -44,33 +44,33 @@ export default function Topbar() {
     // Disconnect Pusher before signing out
     pusherService.disconnect('User signed out');
     dispatch(signOut());
-    navigate("/");
+    navigate('/');
   };
 
   const handleSettings = () => {
-    navigate("/settings");
+    navigate('/settings');
   };
 
   return (
     <Paper
       h={64}
       style={{
-        backdropFilter: "blur(8px)",
-        background: theme === "dark"
-          ? "linear-gradient(90deg, rgba(10, 10, 10, 0.95) 0%, rgba(26, 26, 26, 0.95) 100%)"
-          : "linear-gradient(90deg, rgba(255, 255, 255, 0.95) 0%, rgba(245, 245, 255, 0.95) 100%)",
-        borderBottom: "2px solid var(--mantine-color-cyan-6)",
-        boxShadow: "0 4px 20px rgba(0, 188, 212, 0.3)",
-        position: "fixed",
+        backdropFilter: 'blur(8px)',
+        background: theme === 'dark'
+          ? 'linear-gradient(90deg, rgba(10, 10, 10, 0.95) 0%, rgba(26, 26, 26, 0.95) 100%)'
+          : 'linear-gradient(90deg, rgba(255, 255, 255, 0.95) 0%, rgba(245, 245, 255, 0.95) 100%)',
+        borderBottom: '2px solid var(--mantine-color-cyan-6)',
+        boxShadow: '0 4px 20px rgba(0, 188, 212, 0.3)',
+        position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
         zIndex: 101,
-        display: "flex",
-        alignItems: "center"
+        display: 'flex',
+        alignItems: 'center'
       }}
     >
-      <Group style={{ height: "100%", paddingInline: "1rem", width: "100%" }} justify="space-between">
+      <Group style={{ height: '100%', paddingInline: '1rem', width: '100%' }} justify="space-between">
         <Group gap="md">
           {/* Menu Toggle */}
           <ActionIcon
@@ -78,7 +78,7 @@ export default function Topbar() {
             variant="subtle"
             size="lg"
             aria-label="Toggle navigation"
-            color={theme === "dark" ? "gray" : "dark"}
+            color={theme === 'dark' ? 'gray' : 'dark'}
           >
             <IconMenu2 size={20} />
           </ActionIcon>
@@ -88,11 +88,11 @@ export default function Topbar() {
             size="lg"
             fw={700}
             style={{
-              background: "linear-gradient(135deg, #00bcd4, #e91e63)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              textShadow: "0 0 10px rgba(0, 188, 212, 0.5)"
+              background: 'linear-gradient(135deg, #00bcd4, #e91e63)',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              textShadow: '0 0 10px rgba(0, 188, 212, 0.5)'
             }}
           >
             🚀 Space Station Dashboard
@@ -105,20 +105,20 @@ export default function Topbar() {
             value={role}
             onChange={(value) => value && dispatch(setRole(value as UserRole))}
             data={[
-              { value: "admin", label: "Admin" },
-              { value: "teacher", label: "Teacher" },
-              { value: "student", label: "Student" },
-              { value: "parent", label: "Parent" }
+              { value: 'admin', label: 'Admin' },
+              { value: 'teacher', label: 'Teacher' },
+              { value: 'student', label: 'Student' },
+              { value: 'parent', label: 'Parent' }
             ]}
             size="sm"
             styles={{
               input: {
-                fontSize: "0.875rem",
-                background: "linear-gradient(135deg, rgba(0, 188, 212, 0.1), rgba(233, 30, 99, 0.1))",
-                border: "1px solid rgba(0, 188, 212, 0.3)",
-                color: theme === "dark" ? "white" : "#1a1a2e",
-                "&:focus": {
-                  borderColor: "#00bcd4",
+                fontSize: '0.875rem',
+                background: 'linear-gradient(135deg, rgba(0, 188, 212, 0.1), rgba(233, 30, 99, 0.1))',
+                border: '1px solid rgba(0, 188, 212, 0.3)',
+                color: theme === 'dark' ? 'white' : '#1a1a2e',
+                '&:focus': {
+                  borderColor: '#00bcd4',
                 },
               },
             }}
@@ -136,7 +136,7 @@ export default function Topbar() {
                   variant="subtle"
                   size="lg"
                   aria-label="Language selector"
-                  color={theme === "dark" ? "gray" : "dark"}
+                  color={theme === 'dark' ? 'gray' : 'dark'}
                 >
                   <IconLanguage size={20} />
                 </ActionIcon>
@@ -160,13 +160,13 @@ export default function Topbar() {
           {/* Theme Toggle */}
           <Tooltip label="Toggle theme">
             <ActionIcon
-              onClick={() => dispatch(setTheme(theme === "light" ? "dark" : "light"))}
+              onClick={() => dispatch(setTheme(theme === 'light' ? 'dark' : 'light'))}
               variant="subtle"
               size="lg"
               aria-label="Toggle theme"
-              color={theme === "dark" ? "gray" : "dark"}
+              color={theme === 'dark' ? 'gray' : 'dark'}
             >
-              {theme === "light" ? <IconMoon size={20} /> : <IconSun size={20} />}
+              {theme === 'light' ? <IconMoon size={20} /> : <IconSun size={20} />}
             </ActionIcon>
           </Tooltip>
 
@@ -184,7 +184,7 @@ export default function Topbar() {
                     variant="subtle"
                     size="lg"
                     aria-label="Notifications"
-                    color={theme === "dark" ? "gray" : "dark"}
+                    color={theme === 'dark' ? 'gray' : 'dark'}
                   >
                     <IconBell size={20} />
                   </ActionIcon>
@@ -213,11 +213,11 @@ export default function Topbar() {
           <Menu shadow="md" width={200}>
             <Menu.Target>
               <Tooltip label="Profile menu">
-                <Box style={{ cursor: "pointer" }}>
+                <Box style={{ cursor: 'pointer' }}>
                   {avatarUrl ? (
                     <AtomicAvatar
                       src={avatarUrl}
-                      alt={displayName || "User"}
+                      alt={displayName || 'User'}
                       size="sm"
                       border={false}
                     />
@@ -225,7 +225,7 @@ export default function Topbar() {
                     <ActionIcon
                       variant="subtle"
                       size="lg"
-                      color={theme === "dark" ? "gray" : "dark"}
+                      color={theme === 'dark' ? 'gray' : 'dark'}
                     >
                       <IconUser size={20} />
                     </ActionIcon>
@@ -234,7 +234,7 @@ export default function Topbar() {
               </Tooltip>
             </Menu.Target>
             <Menu.Dropdown>
-              <Menu.Label>{displayName || "Guest User"}</Menu.Label>
+              <Menu.Label>{displayName || 'Guest User'}</Menu.Label>
               <Menu.Item
                 leftSection={<IconSettings size={16} />}
                 onClick={handleSettings}

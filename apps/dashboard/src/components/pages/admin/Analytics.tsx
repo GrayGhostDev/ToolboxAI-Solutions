@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -46,8 +46,8 @@ import {
   ResponsiveContainer,
   Area,
   AreaChart,
-} from "recharts";
-import { useAppDispatch, useAppSelector } from "../../../store";
+} from 'recharts';
+import { useAppDispatch, useAppSelector } from '../../../store';
 import {
   fetchPlatformAnalytics,
   fetchPerformanceMetrics,
@@ -56,7 +56,7 @@ import {
   refreshAllAnalytics,
   setTimeRange,
   clearError,
-} from "../../../store/slices/analyticsSlice";
+} from '../../../store/slices/analyticsSlice';
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1'];
 
@@ -128,11 +128,11 @@ export default function Analytics() {
         </Box>
         <Box
           style={{
-            backgroundColor: color + "15",
+            backgroundColor: color + '15',
             borderRadius: 8,
             padding: 12,
-            display: "flex",
-            alignItems: "center",
+            display: 'flex',
+            alignItems: 'center',
             color,
           }}
         >
@@ -256,7 +256,7 @@ export default function Analytics() {
                       <Group gap="md">
                         <Badge
                           size="lg"
-                          color={index === 0 ? "yellow" : index < 3 ? "blue" : "gray"}
+                          color={index === 0 ? 'yellow' : index < 3 ? 'blue' : 'gray'}
                         >
                           #{index + 1}
                         </Badge>
@@ -330,13 +330,13 @@ export default function Analytics() {
               <Title order={4}>Roblox Engagement Analytics</Title>
             </Group>
             <SimpleGrid cols={{ base: 1, md: 3 }} spacing="lg">
-              <Paper p="md" withBorder style={{ textAlign: "center" }}>
+              <Paper p="md" withBorder style={{ textAlign: 'center' }}>
                 <Title order={3} c="blue" fw={700}>
                   {platform?.activeUsers?.toLocaleString() || '0'}
                 </Title>
                 <Text c="dimmed">Active Users Today</Text>
               </Paper>
-              <Paper p="md" withBorder style={{ textAlign: "center" }}>
+              <Paper p="md" withBorder style={{ textAlign: 'center' }}>
                 <Title order={3} c="gray" fw={700}>
                   {platform?.averageEngagement || 0}%
                 </Title>

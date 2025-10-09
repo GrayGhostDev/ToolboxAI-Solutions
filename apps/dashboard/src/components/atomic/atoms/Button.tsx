@@ -6,7 +6,7 @@
  */
 
 import React, { forwardRef } from 'react';
-import { Button as MantineButton, ButtonProps as MantineButtonProps, Loader } from '@mantine/core';
+import { Button as MantineButton, type ButtonProps as MantineButtonProps, Loader } from '@mantine/core';
 import { IconType } from '@tabler/icons-react';
 
 // Custom props for our Button component

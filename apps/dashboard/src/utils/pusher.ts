@@ -10,15 +10,15 @@ import { logger } from './logger';
 import {
   PusherChannelType,
   PusherChannels,
-  PusherEvents,
-  PusherMessage,
-  PusherMember,
+  type PusherEvents,
+  type PusherMessage,
+  type PusherMember,
   formatChannelName,
   parseChannelName,
   isPusherMessage,
   isPusherMember
 } from '../types/pusher';
-import { WebSocketMessageType } from '../types/websocket';
+import { type WebSocketMessageType } from '../types/websocket';
 
 // Channel Name Generators
 export class ChannelNameGenerator {
@@ -158,10 +158,9 @@ export class MessageFormatter {
   ): PusherMessage<T> {
     return {
       type: type as WebSocketMessageType,
-      payload: data,
-      timestamp: new Date().toISOString(),
-      messageId: generateMessageId(),
-      sender: options.sender,
+      data: data,
+      timestamp: Date.now(),
+      id: generateMessageId(),
       metadata: options.metadata,
       pusherChannel: options.channel,
     };
@@ -183,7 +182,7 @@ export class MessageFormatter {
       percentage,
       message,
       artifacts,
-      timestamp: new Date().toISOString(),
+      timestamp: Date.now(),
     });
   }
 
@@ -202,7 +201,7 @@ export class MessageFormatter {
       message,
       type,
       actionUrl,
-      timestamp: new Date().toISOString(),
+      timestamp: Date.now(),
       read: false,
     });
   }
@@ -220,8 +219,9 @@ export class MessageFormatter {
       roomId,
       action: action.toLowerCase(),
       data,
-      timestamp: new Date().toISOString(),
-    }, { sender: user });
+      user,
+      timestamp: Date.now(),
+    });
   }
 
   /**
@@ -236,7 +236,7 @@ export class MessageFormatter {
       sessionId,
       event: event.toLowerCase(),
       data,
-      timestamp: new Date().toISOString(),
+      timestamp: Date.now(),
     });
   }
 
@@ -254,7 +254,7 @@ export class MessageFormatter {
       title,
       message,
       severity,
-      timestamp: new Date().toISOString(),
+      timestamp: Date.now(),
     }, { metadata });
   }
 }

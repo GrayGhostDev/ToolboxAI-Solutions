@@ -30,6 +30,19 @@ export enum WebSocketMessageType {
   HEARTBEAT_ACK = 'heartbeat-ack',
   SUBSCRIPTION_CONFIRMED = 'subscription-confirmed',
   SUBSCRIPTION_REJECTED = 'subscription-rejected',
+  // Additional message types for quiz, user, system, etc.
+  QUIZ_UPDATE = 'quiz-update',
+  QUIZ_RESULTS = 'quiz-results',
+  USER_STATUS = 'user-status',
+  SYSTEM_NOTIFICATION = 'system-notification',
+  ROBLOX_UPDATE = 'roblox-update',
+  ENVIRONMENT_SYNC = 'environment-sync',
+  ANALYTICS_UPDATE = 'analytics-update',
+  METRICS_UPDATE = 'metrics-update',
+  PROGRESS_UPDATE = 'progress-update',
+  AGENT_STATUS = 'agent-status',
+  AGENT_TASK = 'agent-task',
+  AGENT_RESULT = 'agent-result',
 }
 
 // WebSocket channels (mapped to Pusher channels)
@@ -318,8 +331,4 @@ export type TypedMessageHandler<T extends WebSocketMessageType> =
   T extends WebSocketMessageType.AGENT_RESULT ? WebSocketEventHandler<AgentResultMessage> :
   WebSocketEventHandler<any>;
 
-// Re-export commonly used types
-export type {
-  WebSocketEventHandler,
-  WebSocketConnectionState,
-};
+// Note: WebSocketEventHandler and WebSocketConnectionState are already exported above

@@ -1,5 +1,5 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { UserRole } from "../../types";
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { type UserRole } from '../../types';
 
 interface UserState {
   userId?: string;
@@ -17,20 +17,23 @@ interface UserState {
   classIds?: string[];
 }
 
+// Check if we're in bypass mode
+const bypassAuth = typeof window !== 'undefined' && import.meta.env.VITE_BYPASS_AUTH === 'true';
+
 const initialState: UserState = {
-  role: "teacher",
-  // Auto-authenticate in development, but not during E2E tests
-  isAuthenticated: process.env.NODE_ENV === 'development' && !import.meta.env.VITE_E2E_TESTING,
-  userId: import.meta.env.VITE_E2E_TESTING ? undefined : "dev-user-001",
-  email: import.meta.env.VITE_E2E_TESTING ? undefined : "teacher@example.com",
-  displayName: import.meta.env.VITE_E2E_TESTING ? undefined : "Development Teacher",
-  firstName: import.meta.env.VITE_E2E_TESTING ? undefined : "Development",
-  lastName: import.meta.env.VITE_E2E_TESTING ? undefined : "Teacher",
-  token: import.meta.env.VITE_E2E_TESTING ? undefined : "dev-token",
+  role: bypassAuth ? 'teacher' : 'teacher', // Default to teacher role in bypass mode
+  // In bypass mode, set authentication to true with demo user data
+  isAuthenticated: bypassAuth,
+  userId: bypassAuth ? 'demo-teacher-001' : undefined,
+  email: bypassAuth ? 'teacher@demo.com' : undefined,
+  displayName: bypassAuth ? 'Demo Teacher' : undefined,
+  firstName: bypassAuth ? 'Demo' : undefined,
+  lastName: bypassAuth ? 'Teacher' : undefined,
+  token: bypassAuth ? 'bypass-mode-token' : undefined,
 };
 
 export const userSlice = createSlice({
-  name: "user",
+  name: 'user',
   initialState,
   reducers: {
     setRole(state, action: PayloadAction<UserRole>) {

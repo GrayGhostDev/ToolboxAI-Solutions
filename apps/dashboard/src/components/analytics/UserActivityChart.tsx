@@ -1,7 +1,7 @@
-import * as React from "react";
+import * as React from 'react';
 import { Card, Text, Title, Box, Select, Stack, Skeleton, Badge, Alert } from '@mantine/core';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import {
   LineChart,
   Line,
@@ -15,10 +15,10 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
-} from "recharts";
-import { useMantineTheme } from "@mantine/core";
-import { usePusherContext } from "../../contexts/PusherContext";
-import { apiClient } from "../../services/api";
+} from 'recharts';
+import { useMantineTheme } from '@mantine/core';
+import { usePusherContext } from '../../contexts/PusherContext';
+import { apiClient } from '../../services/api';
 
 interface UserActivityData {
   date: string;
@@ -30,13 +30,13 @@ interface UserActivityData {
 }
 
 interface UserActivityChartProps {
-  timeRange?: "24h" | "7d" | "30d" | "90d";
+  timeRange?: '24h' | '7d' | '30d' | '90d';
   height?: number;
   autoRefresh?: boolean;
 }
 
 export function UserActivityChart({
-  timeRange = "7d",
+  timeRange = '7d',
   height = 350,
   autoRefresh = true
 }: UserActivityChartProps) {
@@ -46,8 +46,8 @@ export function UserActivityChart({
   const [data, setData] = useState<UserActivityData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedMetric, setSelectedMetric] = useState<"activeUsers" | "newUsers" | "sessionDuration" | "pageViews">("activeUsers");
-  const [chartType, setChartType] = useState<"line" | "area" | "bar">("area");
+  const [selectedMetric, setSelectedMetric] = useState<'activeUsers' | 'newUsers' | 'sessionDuration' | 'pageViews'>('activeUsers');
+  const [chartType, setChartType] = useState<'line' | 'area' | 'bar'>('area');
 
   // Fetch user activity data from real backend
   const fetchData = React.useCallback(async () => {
@@ -60,16 +60,16 @@ export function UserActivityChart({
       
       // Calculate start date based on time range
       switch (timeRange) {
-        case "24h":
+        case '24h':
           startDate.setHours(startDate.getHours() - 24);
           break;
-        case "7d":
+        case '7d':
           startDate.setDate(startDate.getDate() - 7);
           break;
-        case "30d":
+        case '30d':
           startDate.setDate(startDate.getDate() - 30);
           break;
-        case "90d":
+        case '90d':
           startDate.setDate(startDate.getDate() - 90);
           break;
       }
@@ -81,7 +81,7 @@ export function UserActivityChart({
         params: {
           start_date: startDate.toISOString(),
           end_date: endDate.toISOString(),
-          interval: timeRange === "24h" ? "hour" : "day"
+          interval: timeRange === '24h' ? 'hour' : 'day'
         }
       });
 
@@ -99,22 +99,22 @@ export function UserActivityChart({
       if (chartData.length === 0) {
         const mockData: UserActivityData[] = [];
         const now = new Date();
-        const days = timeRange === "24h" ? 24 : timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 90;
-        const interval = timeRange === "24h" ? "hours" : "days";
+        const days = timeRange === '24h' ? 24 : timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
+        const interval = timeRange === '24h' ? 'hours' : 'days';
         
         for (let i = days - 1; i >= 0; i--) {
           const date = new Date(now);
-          if (interval === "hours") {
+          if (interval === 'hours') {
             date.setHours(date.getHours() - i);
           } else {
             date.setDate(date.getDate() - i);
           }
           
           mockData.push({
-            date: interval === "hours" 
+            date: interval === 'hours' 
               ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
               : date.toLocaleDateString(),
-            activeUsers: Math.floor(Math.random() * 500) + 300 + (interval === "hours" ? Math.sin(i / 4) * 100 : 0),
+            activeUsers: Math.floor(Math.random() * 500) + 300 + (interval === 'hours' ? Math.sin(i / 4) * 100 : 0),
             newUsers: Math.floor(Math.random() * 50) + 10,
             sessionDuration: Math.floor(Math.random() * 20) + 15,
             pageViews: Math.floor(Math.random() * 2000) + 1000,
@@ -132,7 +132,7 @@ export function UserActivityChart({
       // Use mock data as fallback
       const mockData: UserActivityData[] = [];
       const now = new Date();
-      const days = timeRange === "7d" ? 7 : 30;
+      const days = timeRange === '7d' ? 7 : 30;
       
       for (let i = days - 1; i >= 0; i--) {
         const date = new Date(now);
@@ -204,13 +204,13 @@ export function UserActivityChart({
 
   const getMetricColor = (metric: string) => {
     switch (metric) {
-      case "activeUsers":
+      case 'activeUsers':
         return theme.colors.blue[6];
-      case "newUsers":
+      case 'newUsers':
         return theme.colors.green[6];
-      case "sessionDuration":
+      case 'sessionDuration':
         return theme.colors.yellow[6];
-      case "pageViews":
+      case 'pageViews':
         return theme.colors.cyan[6];
       default:
         return theme.colors.blue[6];
@@ -219,14 +219,14 @@ export function UserActivityChart({
 
   const getMetricLabel = (metric: string) => {
     switch (metric) {
-      case "activeUsers":
-        return "Active Users";
-      case "newUsers":
-        return "New Users";
-      case "sessionDuration":
-        return "Session Duration (min)";
-      case "pageViews":
-        return "Page Views";
+      case 'activeUsers':
+        return 'Active Users';
+      case 'newUsers':
+        return 'New Users';
+      case 'sessionDuration':
+        return 'Session Duration (min)';
+      case 'pageViews':
+        return 'Page Views';
       default:
         return metric;
     }
@@ -236,7 +236,7 @@ export function UserActivityChart({
     const color = getMetricColor(selectedMetric);
     
     switch (chartType) {
-      case "bar":
+      case 'bar':
         return (
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.gray[3]} />
@@ -253,7 +253,7 @@ export function UserActivityChart({
           </BarChart>
         );
       
-      case "area":
+      case 'area':
         return (
           <AreaChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.gray[3]} />
@@ -330,10 +330,10 @@ export function UserActivityChart({
             value={selectedMetric}
             onChange={(value) => setSelectedMetric(value as any)}
             data={[
-              { value: "activeUsers", label: "Active Users" },
-              { value: "newUsers", label: "New Users" },
-              { value: "sessionDuration", label: "Session Duration" },
-              { value: "pageViews", label: "Page Views" }
+              { value: 'activeUsers', label: 'Active Users' },
+              { value: 'newUsers', label: 'New Users' },
+              { value: 'sessionDuration', label: 'Session Duration' },
+              { value: 'pageViews', label: 'Page Views' }
             ]}
           />
           <Select
@@ -343,9 +343,9 @@ export function UserActivityChart({
             value={chartType}
             onChange={(value) => setChartType(value as any)}
             data={[
-              { value: "line", label: "Line" },
-              { value: "area", label: "Area" },
-              { value: "bar", label: "Bar" }
+              { value: 'line', label: 'Line' },
+              { value: 'area', label: 'Area' },
+              { value: 'bar', label: 'Bar' }
             ]}
           />
         </Stack>

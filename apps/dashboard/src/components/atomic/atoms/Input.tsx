@@ -6,7 +6,7 @@
  */
 
 import React, { forwardRef } from 'react';
-import { TextInput, TextInputProps, ActionIcon, Box } from '@mantine/core';
+import { TextInput, type TextInputProps, ActionIcon, Box } from '@mantine/core';
 import { IconEye, IconEyeOff, IconX } from '@tabler/icons-react';
 import { designTokens } from '../../../theme/designTokens';
 

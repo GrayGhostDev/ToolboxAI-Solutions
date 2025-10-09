@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from 'react';
 import { FixedSizeList as List } from 'react-window';
-import { Box, BoxProps } from '@mantine/core';
+import { Box, type BoxProps } from '@mantine/core';
 
 export interface VirtualizedListItem {
   id: string | number;

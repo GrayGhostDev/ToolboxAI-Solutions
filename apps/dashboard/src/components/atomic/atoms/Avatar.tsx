@@ -6,7 +6,7 @@
  */
 
 import React, { forwardRef } from 'react';
-import { Avatar as MantineAvatar, AvatarProps as MantineAvatarProps, Indicator, Box } from '@mantine/core';
+import { Avatar as MantineAvatar, type AvatarProps as MantineAvatarProps, Indicator, Box } from '@mantine/core';
 import { designTokens } from '../../../theme/designTokens';
 
 export interface AtomicAvatarProps extends Omit<MantineAvatarProps, 'size'> {

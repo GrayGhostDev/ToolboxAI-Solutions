@@ -1,6 +1,6 @@
-import * as React from "react";
-import { Alert, Box, Button, Text } from "@mantine/core";
-import { IconAlertCircle, IconRefresh } from "@tabler/icons-react";
+import * as React from 'react';
+import { Alert, Box, Button, Text } from '@mantine/core';
+import { IconAlertCircle, IconRefresh } from '@tabler/icons-react';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -27,7 +27,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("ErrorBoundary caught an error:", error, errorInfo);
+    console.error('ErrorBoundary caught an error:', error, errorInfo);
     this.setState({
       error,
       errorInfo,
@@ -48,12 +48,12 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
       return (
         <Box
           style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            minHeight: "400px",
-            padding: "var(--mantine-spacing-lg)",
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '400px',
+            padding: 'var(--mantine-spacing-lg)',
           }}
         >
           <Alert
@@ -64,12 +64,12 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
             styles={{
               root: {
                 maxWidth: 600,
-                width: "100%",
+                width: '100%',
               },
             }}
           >
             <Text size="sm" mb="md">
-              {this.state.error?.message || "An unexpected error occurred"}
+              {this.state.error?.message || 'An unexpected error occurred'}
             </Text>
             <Button
               variant="outline"

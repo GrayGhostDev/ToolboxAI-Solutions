@@ -21,8 +21,8 @@ import {
   PieChart,
   Pie,
   Cell,
-} from "recharts";
-import { UserRole } from "../../types";
+} from 'recharts';
+import { type UserRole } from '../../types';
 import { useMantineTheme } from '@mantine/core';
 import { usePusherContext } from '../PusherProvider';
 import { pusherClient } from '../../services/pusher-client';
@@ -32,39 +32,39 @@ export function ProgressCharts({ role }: { role: UserRole }) {
 
   // Real-time chart data states
   const [weeklyData, setWeeklyData] = useState([
-    { day: "Mon", xp: 120, hours: 2.5 },
-    { day: "Tue", xp: 180, hours: 3.2 },
-    { day: "Wed", xp: 140, hours: 2.8 },
-    { day: "Thu", xp: 220, hours: 4.1 },
-    { day: "Fri", xp: 190, hours: 3.5 },
-    { day: "Sat", xp: 60, hours: 1.2 },
-    { day: "Sun", xp: 40, hours: 0.8 },
+    { day: 'Mon', xp: 120, hours: 2.5 },
+    { day: 'Tue', xp: 180, hours: 3.2 },
+    { day: 'Wed', xp: 140, hours: 2.8 },
+    { day: 'Thu', xp: 220, hours: 4.1 },
+    { day: 'Fri', xp: 190, hours: 3.5 },
+    { day: 'Sat', xp: 60, hours: 1.2 },
+    { day: 'Sun', xp: 40, hours: 0.8 },
   ]);
 
   const [subjectData, setSubjectData] = useState([
-    { subject: "Math", mastery: 78, avgScore: 85 },
-    { subject: "Science", mastery: 64, avgScore: 72 },
-    { subject: "Language", mastery: 82, avgScore: 88 },
-    { subject: "Arts", mastery: 70, avgScore: 75 },
-    { subject: "Tech", mastery: 90, avgScore: 92 },
+    { subject: 'Math', mastery: 78, avgScore: 85 },
+    { subject: 'Science', mastery: 64, avgScore: 72 },
+    { subject: 'Language', mastery: 82, avgScore: 88 },
+    { subject: 'Arts', mastery: 70, avgScore: 75 },
+    { subject: 'Tech', mastery: 90, avgScore: 92 },
   ]);
 
-  const [levelData, setLevelData] = useState([{ name: "Level Progress", value: 65, fill: theme.colors.blue[6] }]);
+  const [levelData, setLevelData] = useState([{ name: 'Level Progress', value: 65, fill: theme.colors.blue[6] }]);
 
   const [skillsData, setSkillsData] = useState([
-    { skill: "Problem Solving", A: 85, fullMark: 100 },
-    { skill: "Critical Thinking", A: 78, fullMark: 100 },
-    { skill: "Creativity", A: 92, fullMark: 100 },
-    { skill: "Collaboration", A: 70, fullMark: 100 },
-    { skill: "Communication", A: 88, fullMark: 100 },
-    { skill: "Digital Literacy", A: 95, fullMark: 100 },
+    { skill: 'Problem Solving', A: 85, fullMark: 100 },
+    { skill: 'Critical Thinking', A: 78, fullMark: 100 },
+    { skill: 'Creativity', A: 92, fullMark: 100 },
+    { skill: 'Collaboration', A: 70, fullMark: 100 },
+    { skill: 'Communication', A: 88, fullMark: 100 },
+    { skill: 'Digital Literacy', A: 95, fullMark: 100 },
   ]);
 
   const [activityData, setActivityData] = useState([
-    { name: "Lessons", value: 35, color: theme.colors.blue[6] },
-    { name: "Quizzes", value: 25, color: theme.colors.green[6] },
-    { name: "Projects", value: 20, color: theme.colors.yellow[6] },
-    { name: "Games", value: 20, color: theme.colors.violet[6] },
+    { name: 'Lessons', value: 35, color: theme.colors.blue[6] },
+    { name: 'Quizzes', value: 25, color: theme.colors.green[6] },
+    { name: 'Projects', value: 20, color: theme.colors.yellow[6] },
+    { name: 'Games', value: 20, color: theme.colors.violet[6] },
   ]);
 
   // Subscribe to Pusher for real-time chart updates
@@ -133,7 +133,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
       <Grid.Col span={{ base: 12, md: 6 }}>
         <Card shadow="sm" p="md" role="region" aria-label="Weekly XP chart">
           <Text size="lg" fw={600} mb="md">
-            Weekly {role === "student" ? "XP Progress" : "Class Activity"}
+            Weekly {role === 'student' ? 'XP Progress' : 'Class Activity'}
           </Text>
           <Box h={300}>
             <ResponsiveContainer width="100%" height="100%">
@@ -156,7 +156,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
                   dot={{ fill: chartColors.primary, r: 4 }}
                   activeDot={{ r: 6 }}
                 />
-                {role === "teacher" && (
+                {role === 'teacher' && (
                   <Line
                     type="monotone"
                     dataKey="hours"
@@ -175,7 +175,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
       <Grid.Col span={{ base: 12, md: 6 }}>
         <Card shadow="sm" p="md" role="region" aria-label="Subject mastery bar chart">
           <Text size="lg" fw={600} mb="md">
-            Subject {role === "student" ? "Mastery" : "Performance"}
+            Subject {role === 'student' ? 'Mastery' : 'Performance'}
           </Text>
           <Box h={300}>
             <ResponsiveContainer width="100%" height="100%">
@@ -191,7 +191,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
                   }}
                 />
                 <Bar dataKey="mastery" fill={chartColors.primary} radius={[8, 8, 0, 0]} />
-                {role === "teacher" && (
+                {role === 'teacher' && (
                   <Bar dataKey="avgScore" fill={chartColors.secondary} radius={[8, 8, 0, 0]} />
                 )}
               </BarChart>
@@ -200,7 +200,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
         </Card>
       </Grid.Col>
       {/* Skills Radar Chart */}
-      {role === "student" && (
+      {role === 'student' && (
         <Grid.Col span={{ base: 12, md: 6 }}>
           <Card shadow="sm" p="md" role="region" aria-label="Skills radar chart">
             <Text size="lg" fw={600} mb="md">
@@ -237,7 +237,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
         </Grid.Col>
       )}
       {/* Activity Distribution */}
-      <Grid.Col span={{ base: 12, md: role === "student" ? 6 : 4 }}>
+      <Grid.Col span={{ base: 12, md: role === 'student' ? 6 : 4 }}>
         <Card shadow="sm" p="md" role="region" aria-label="Activity distribution pie chart">
           <Text size="lg" fw={600} mb="md">
             Activity Distribution
@@ -272,11 +272,11 @@ export function ProgressCharts({ role }: { role: UserRole }) {
         </Card>
       </Grid.Col>
       {/* Level Progress (for Students) or Completion Rate (for others) */}
-      {role !== "parent" && (
+      {role !== 'parent' && (
         <Grid.Col span={{ base: 12, md: 4 }}>
           <Card shadow="sm" p="md" role="region" aria-label="Progress radial chart">
             <Text size="lg" fw={600} mb="md">
-              {role === "student" ? "Level Progress" : "Completion Rate"}
+              {role === 'student' ? 'Level Progress' : 'Completion Rate'}
             </Text>
             <Box h={300}>
               <ResponsiveContainer width="100%" height="100%">
@@ -316,7 +316,7 @@ export function ProgressCharts({ role }: { role: UserRole }) {
         </Grid.Col>
       )}
       {/* Monthly Trend (for Teachers and Admins) */}
-      {(role === "teacher" || role === "admin") && (
+      {(role === 'teacher' || role === 'admin') && (
         <Grid.Col span={{ base: 12, md: 4 }}>
           <Card shadow="sm" p="md" role="region" aria-label="Monthly trend">
             <Text size="lg" fw={600} mb="md">
@@ -326,11 +326,11 @@ export function ProgressCharts({ role }: { role: UserRole }) {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                   data={[
-                    { month: "Jan", students: 82 },
-                    { month: "Feb", students: 85 },
-                    { month: "Mar", students: 88 },
-                    { month: "Apr", students: 86 },
-                    { month: "May", students: 90 },
+                    { month: 'Jan', students: 82 },
+                    { month: 'Feb', students: 85 },
+                    { month: 'Mar', students: 88 },
+                    { month: 'Apr', students: 86 },
+                    { month: 'May', students: 90 },
                   ]}
                   margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                 >

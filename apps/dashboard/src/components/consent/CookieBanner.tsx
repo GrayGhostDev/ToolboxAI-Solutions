@@ -1,5 +1,6 @@
-import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
-import * as React from "react";
+import { Notification, Button, Group, Anchor } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import * as React from 'react';
 
 export default function CookieBanner() {
   const [open, setOpen] = React.useState(false);
@@ -21,26 +22,36 @@ export default function CookieBanner() {
     setOpen(false);
   };
 
-  return (
-    <Snackbar
-      open={open}
-      anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-    >
-      <Alert
-        severity="info"
-        variant="filled"
-        action={
+  React.useEffect(() => {
+    if (open) {
+      notifications.show({
+        id: 'cookie-consent',
+        title: 'Cookie Consent',
+        message: (
           <>
-            <Button color="inherit" size="small" onClick={(e: React.MouseEvent) => decline}>Decline</Button>
-            <Button color="inherit" size="small" onClick={(e: React.MouseEvent) => accept}>Accept</Button>
+            We use cookies to operate and improve the service. See our{' '}
+            <Anchor href="/cookies.html" target="_blank" rel="noopener noreferrer" c="inherit">
+              Cookie Policy
+            </Anchor>
+            .
+            <Group gap="sm" mt="sm">
+              <Button variant="outline" size="xs" onClick={decline}>
+                Decline
+              </Button>
+              <Button size="xs" onClick={accept}>
+                Accept
+              </Button>
+            </Group>
           </>
-        }
-      >
-        We use cookies to operate and improve the service. See our{' '}
-        <Link href="/cookies.html" target="_blank" rel="noopener noreferrer" color="inherit" underline="always">
-          Cookie Policy
-        </Link>.
-      </Alert>
-    </Snackbar>
-  );
+        ),
+        color: 'blue',
+        autoClose: false,
+        position: 'bottom-center',
+        withCloseButton: false,
+      });
+    }
+  }, [open]);
+
+  // This component now uses Mantine's notification system
+  return null;
 }

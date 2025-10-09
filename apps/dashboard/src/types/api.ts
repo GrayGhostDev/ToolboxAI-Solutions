@@ -1,4 +1,4 @@
-import { UserRole } from "./roles";
+import { type UserRole } from './roles';
 
 // User & Authentication
 export interface User {
@@ -22,7 +22,7 @@ export interface User {
   lastLogin?: string;
   createdAt: string;
   updatedAt: string;
-  status: "active" | "suspended" | "pending" | "inactive";
+  status: 'active' | 'suspended' | 'pending' | 'inactive';
 }
 
 export interface UserCreate {
@@ -65,15 +65,15 @@ export interface Lesson {
   title: string;
   description: string;
   subject:
-    | "Math"
-    | "Science"
-    | "Language"
-    | "Arts"
-    | "Technology"
-    | "Social Studies"
-    | "Physical Education"
-    | "Life Skills";
-  status: "draft" | "published" | "archived";
+    | 'Math'
+    | 'Science'
+    | 'Language'
+    | 'Arts'
+    | 'Technology'
+    | 'Social Studies'
+    | 'Physical Education'
+    | 'Life Skills';
+  status: 'draft' | 'published' | 'archived';
   teacherId: string;
   classIds: string[];
   robloxWorldId?: string;
@@ -120,8 +120,8 @@ export interface Badge {
   name: string;
   description: string;
   imageUrl: string;
-  category: "achievement" | "milestone" | "special" | "seasonal";
-  rarity: "common" | "rare" | "epic" | "legendary";
+  category: 'achievement' | 'milestone' | 'special' | 'seasonal';
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
   earnedAt?: string;
   progress?: number;
   maxProgress?: number;
@@ -132,7 +132,7 @@ export interface XPTransaction {
   studentId: string;
   amount: number;
   reason: string;
-  source: "lesson" | "assessment" | "achievement" | "bonus";
+  source: 'lesson' | 'assessment' | 'achievement' | 'bonus';
   timestamp: string;
 }
 
@@ -153,10 +153,10 @@ export interface Assessment {
   title: string;
   lessonId?: string;
   classId: string;
-  type: "quiz" | "test" | "assignment" | "project";
+  type: 'quiz' | 'test' | 'assignment' | 'project';
   questions: Question[];
   dueDate?: string;
-  status: "draft" | "active" | "closed" | "graded";
+  status: 'draft' | 'active' | 'closed' | 'graded';
   averageScore?: number;
   submissions: number;
   maxSubmissions: number;
@@ -164,7 +164,7 @@ export interface Assessment {
 
 export interface Question {
   id: string;
-  type: "multiple_choice" | "true_false" | "short_answer" | "essay";
+  type: 'multiple_choice' | 'true_false' | 'short_answer' | 'essay';
   question: string;
   options?: string[];
   correctAnswer?: string | number;
@@ -204,7 +204,7 @@ export interface SubjectProgress {
   lessonsCompleted: number;
   totalLessons: number;
   averageScore: number;
-  trend: "improving" | "stable" | "declining";
+  trend: 'improving' | 'stable' | 'declining';
 }
 
 // Compliance
@@ -212,13 +212,13 @@ export interface ComplianceStatus {
   coppa: ComplianceCheck;
   ferpa: ComplianceCheck;
   gdpr: ComplianceCheck;
-  overallStatus: "compliant" | "warning" | "critical";
+  overallStatus: 'compliant' | 'warning' | 'critical';
   lastAudit: string;
   nextAudit: string;
 }
 
 export interface ComplianceCheck {
-  status: "compliant" | "warning" | "critical";
+  status: 'compliant' | 'warning' | 'critical';
   issues: string[];
   lastChecked: string;
   recommendations: string[];
@@ -228,7 +228,7 @@ export interface ComplianceCheck {
 export interface Notification {
   id: string;
   userId: string;
-  type: "info" | "warning" | "success" | "error";
+  type: 'info' | 'warning' | 'success' | 'error';
   title: string;
   message: string;
   read: boolean;
@@ -276,7 +276,7 @@ export interface DashboardMetrics {
   activeClasses?: number;
   totalStudents?: number;
   totalTeachers?: number;
-  compliance?: "ok" | "warning" | "critical";
+  compliance?: 'ok' | 'warning' | 'critical';
   averageProgress?: number;
   lessonsCompleted?: number;
 }
@@ -293,7 +293,7 @@ export interface Activity {
 export interface Event {
   id: string;
   title: string;
-  type: "lesson" | "assessment" | "meeting" | "deadline";
+  type: 'lesson' | 'assessment' | 'meeting' | 'deadline';
   date: string;
   classId?: string;
   description?: string;
@@ -338,8 +338,8 @@ export interface Mission {
   id: string;
   title: string;
   description: string;
-  type: "daily" | "weekly" | "monthly" | "special" | "custom";
-  category: "academic" | "social" | "creativity" | "physical" | "community";
+  type: 'daily' | 'weekly' | 'monthly' | 'special' | 'custom';
+  category: 'academic' | 'social' | 'creativity' | 'physical' | 'community';
   xpReward: number;
   badgeReward?: string;
   requirements: MissionRequirement[];
@@ -348,7 +348,7 @@ export interface Mission {
   isActive: boolean;
   isRepeatable: boolean;
   maxCompletions?: number;
-  difficulty: "easy" | "medium" | "hard" | "expert";
+  difficulty: 'easy' | 'medium' | 'hard' | 'expert';
   imageUrl?: string;
   createdBy: string;
   createdAt: string;
@@ -356,8 +356,8 @@ export interface Mission {
 
 export interface MissionRequirement {
   id: string;
-  type: "lesson_complete" | "assessment_score" | "xp_earned" | "badge_earned" |
-        "attendance" | "social_interaction" | "time_spent" | "custom";
+  type: 'lesson_complete' | 'assessment_score' | 'xp_earned' | 'badge_earned' |
+        'attendance' | 'social_interaction' | 'time_spent' | 'custom';
   target: number;
   current?: number;
   description: string;
@@ -368,7 +368,7 @@ export interface MissionProgress {
   id: string;
   missionId: string;
   studentId: string;
-  status: "not_started" | "in_progress" | "completed" | "claimed";
+  status: 'not_started' | 'in_progress' | 'completed' | 'claimed';
   startedAt?: string;
   completedAt?: string;
   claimedAt?: string;
@@ -386,7 +386,7 @@ export interface Challenge {
   id: string;
   title: string;
   description: string;
-  type: "speed" | "accuracy" | "creativity" | "collaboration" | "endurance";
+  type: 'speed' | 'accuracy' | 'creativity' | 'collaboration' | 'endurance';
   classId?: string; // null for school-wide challenges
   participants: string[];
   startTime: string;
@@ -399,7 +399,7 @@ export interface Challenge {
     customReward?: string;
   }[];
   leaderboard?: ChallengeLeaderboard[];
-  status: "upcoming" | "active" | "completed";
+  status: 'upcoming' | 'active' | 'completed';
   createdBy: string;
   createdAt: string;
 }
@@ -419,7 +419,7 @@ export interface Reward {
   name: string;
   description: string;
   cost: number;
-  category: "digital" | "physical" | "experience" | "privilege";
+  category: 'digital' | 'physical' | 'experience' | 'privilege';
   imageUrl?: string;
   stock?: number;
   isActive: boolean;
@@ -427,7 +427,7 @@ export interface Reward {
     level?: number;
     badges?: string[];
   };
-  rarity: "common" | "rare" | "epic" | "legendary";
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
   createdBy: string;
   createdAt: string;
   updatedAt: string;
@@ -438,7 +438,7 @@ export interface RewardRedemption {
   rewardId: string;
   studentId: string;
   redeemedAt: string;
-  status: "pending" | "approved" | "delivered" | "rejected";
+  status: 'pending' | 'approved' | 'delivered' | 'rejected';
   notes?: string;
   approvedBy?: string;
   approvedAt?: string;

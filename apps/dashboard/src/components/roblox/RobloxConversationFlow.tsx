@@ -32,7 +32,7 @@ import {
   IconCloudUpload
 } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
+import { type RootState } from '../../store';
 import api from '../../services/api';
 import pusher from '../../services/pusher';
 
@@ -127,7 +127,9 @@ const RobloxConversationFlow: React.FunctionComponent<Record<string, any>> = () 
   const [aiResponse, setAiResponse] = useState<string | null>(null);
   const [generationStatus, setGenerationStatus] = useState<string | null>(null);
 
-  const user = useSelector((state: RootState) => state.auth.user);
+  // Fix: Changed from state.auth.user to state.user as auth slice doesn't exist
+  // Defensive: Safe fallback for Redux state access
+  const user = useSelector((state: RootState) => state?.user || null);
 
   // Initialize conversation
   const startConversation = useCallback(async () => {
@@ -139,35 +141,62 @@ const RobloxConversationFlow: React.FunctionComponent<Record<string, any>> = () 
         initial_message: 'I want to create an educational Roblox experience'
       });
 
-      if (response.data.success) {
+      // Defensive: Validate response structure
+      if (response?.data?.success && response.data.session_id) {
         setContext({
           sessionId: response.data.session_id,
-          currentStage: response.data.current_stage,
-          progress: 0,
+          currentStage: response.data.current_stage || 'greeting',
+          progress: response.data.progress || 0,
           stageData: {}
         });
 
         // Subscribe to Pusher channel for real-time updates
-        const channel = pusher.subscribe(`conversation-${response.data.session_id}`);
+        try {
+          const channel = pusher?.subscribe?.(`conversation-${response.data.session_id}`);
 
-        channel.bind('stage_processed', (data: any) => {
-          handleStageUpdate(data);
-        });
+          if (channel) {
+            channel.bind('stage_processed', (data: any) => {
+              try {
+                handleStageUpdate(data);
+              } catch (err) {
+                console.error('Error handling stage update:', err);
+              }
+            });
 
-        channel.bind('stage_transition', (data: any) => {
-          handleStageTransition(data);
-        });
+            channel.bind('stage_transition', (data: any) => {
+              try {
+                handleStageTransition(data);
+              } catch (err) {
+                console.error('Error handling stage transition:', err);
+              }
+            });
 
-        channel.bind('generation_complete', (data: any) => {
-          handleGenerationComplete(data);
-        });
+            channel.bind('generation_complete', (data: any) => {
+              try {
+                handleGenerationComplete(data);
+              } catch (err) {
+                console.error('Error handling generation complete:', err);
+              }
+            });
 
-        channel.bind('assets_uploaded', (data: any) => {
-          setGenerationStatus('Assets uploaded successfully!');
-        });
+            channel.bind('assets_uploaded', (data: any) => {
+              try {
+                setGenerationStatus('Assets uploaded successfully!');
+              } catch (err) {
+                console.error('Error handling assets uploaded:', err);
+              }
+            });
+          }
+        } catch (pusherErr) {
+          console.warn('Pusher subscription failed, continuing without real-time updates:', pusherErr);
+        }
+      } else {
+        throw new Error('Invalid response from conversation start endpoint');
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to start conversation');
+      const errorMessage = err?.response?.data?.detail || err?.message || 'Failed to start conversation';
+      setError(errorMessage);
+      console.error('Error starting conversation:', err);
     } finally {
       setLoading(false);
     }
@@ -175,7 +204,8 @@ const RobloxConversationFlow: React.FunctionComponent<Record<string, any>> = () 
 
   // Process user input for current stage
   const processUserInput = useCallback(async () => {
-    if (!context || !userInput.trim()) return;
+    // Defensive: Validate inputs before processing
+    if (!context?.sessionId || !userInput?.trim()) return;
 
     setLoading(true);
     setError(null);
@@ -184,28 +214,38 @@ const RobloxConversationFlow: React.FunctionComponent<Record<string, any>> = () 
     try {
       const response = await api.post('/api/v1/roblox/conversation/input', {
         session_id: context.sessionId,
-        user_input: userInput
+        user_input: userInput.trim()
       });
 
-      if (response.data.success) {
+      // Defensive: Validate response structure
+      if (response?.data?.success && response.data.result) {
         const result = response.data.result;
-        setAiResponse(result.result.response || 'Processing complete');
+        const responseText = result?.result?.response || result?.response || 'Processing complete';
+        setAiResponse(responseText);
 
         // Update context with new data
-        setContext(prev => ({
-          ...prev!,
-          stageData: {
-            ...prev!.stageData,
-            [result.current_stage]: result.result
-          },
-          progress: result.progress
-        }));
+        setContext(prev => {
+          if (!prev) return prev;
+
+          return {
+            ...prev,
+            stageData: {
+              ...prev.stageData,
+              [result.current_stage || prev.currentStage]: result.result || result
+            },
+            progress: typeof result.progress === 'number' ? result.progress : prev.progress
+          };
+        });
 
         // Clear input
         setUserInput('');
+      } else {
+        throw new Error('Invalid response from conversation input endpoint');
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to process input');
+      const errorMessage = err?.response?.data?.detail || err?.message || 'Failed to process input';
+      setError(errorMessage);
+      console.error('Error processing user input:', err);
     } finally {
       setLoading(false);
     }
@@ -273,48 +313,97 @@ const RobloxConversationFlow: React.FunctionComponent<Record<string, any>> = () 
 
   // Handle real-time updates
   const handleStageUpdate = (data: any) => {
-    setAiResponse(data.result.response || 'Stage completed');
-    setContext(prev => ({
-      ...prev!,
-      stageData: {
-        ...prev!.stageData,
-        [data.stage]: data.result
-      }
-    }));
+    try {
+      // Defensive: Validate data structure
+      if (!data) return;
+
+      const responseText = data?.result?.response || data?.response || 'Stage completed';
+      setAiResponse(responseText);
+
+      setContext(prev => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          stageData: {
+            ...prev.stageData,
+            [data.stage || 'unknown']: data.result || data
+          }
+        };
+      });
+    } catch (err) {
+      console.error('Error in handleStageUpdate:', err);
+    }
   };
 
   const handleStageTransition = (data: any) => {
-    const nextStageIndex = stages.findIndex(s => s.id === data.to);
-    if (nextStageIndex !== -1) {
-      setActiveStep(nextStageIndex);
-      updateStageStatus(nextStageIndex);
-    }
+    try {
+      // Defensive: Validate data and find stage
+      if (!data?.to || !Array.isArray(stages)) return;
 
-    setContext(prev => ({
-      ...prev!,
-      currentStage: data.to,
-      progress: data.progress
-    }));
+      const nextStageIndex = stages.findIndex(s => s?.id === data.to);
+      if (nextStageIndex !== -1) {
+        setActiveStep(nextStageIndex);
+        updateStageStatus(nextStageIndex);
+      }
+
+      setContext(prev => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          currentStage: data.to,
+          progress: typeof data.progress === 'number' ? data.progress : prev.progress
+        };
+      });
+    } catch (err) {
+      console.error('Error in handleStageTransition:', err);
+    }
   };
 
   const handleGenerationComplete = (data: any) => {
-    setGenerationStatus('Environment ready for Roblox Studio!');
-    setContext(prev => ({
-      ...prev!,
-      robloxData: {
-        projectId: data.project_id,
-        rojoPort: data.rojo_port,
-        syncUrl: `http://localhost:${data.rojo_port}`
-      }
-    }));
+    try {
+      // Defensive: Validate data structure
+      if (!data) return;
+
+      setGenerationStatus('Environment ready for Roblox Studio!');
+
+      setContext(prev => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          robloxData: {
+            projectId: data.project_id || 'unknown',
+            rojoPort: data.rojo_port || 34872,
+            syncUrl: data.rojo_port ? `http://localhost:${data.rojo_port}` : 'http://localhost:34872'
+          }
+        };
+      });
+    } catch (err) {
+      console.error('Error in handleGenerationComplete:', err);
+    }
   };
 
   const updateStageStatus = (currentIndex: number) => {
-    setStages(prev => prev.map((stage, index) => ({
-      ...stage,
-      status: index < currentIndex ? 'completed' :
-              index === currentIndex ? 'active' : 'pending'
-    })));
+    // Defensive: Validate currentIndex is a valid number
+    if (typeof currentIndex !== 'number' || currentIndex < 0) return;
+
+    setStages(prev => {
+      // Defensive: Ensure prev is an array
+      if (!Array.isArray(prev)) return prev;
+
+      return prev.map((stage, index) => {
+        // Defensive: Validate stage object
+        if (!stage) return stage;
+
+        return {
+          ...stage,
+          status: index < currentIndex ? 'completed' :
+                  index === currentIndex ? 'active' : 'pending'
+        };
+      });
+    });
   };
 
   // Start conversation on mount if not started
@@ -324,8 +413,12 @@ const RobloxConversationFlow: React.FunctionComponent<Record<string, any>> = () 
     }
 
     return () => {
-      if (context) {
-        pusher.unsubscribe(`conversation-${context.sessionId}`);
+      if (context?.sessionId) {
+        try {
+          pusher?.unsubscribe?.(`conversation-${context.sessionId}`);
+        } catch (err) {
+          console.warn('Error unsubscribing from Pusher:', err);
+        }
       }
     };
   }, [context, startConversation]);
@@ -464,56 +557,71 @@ const RobloxConversationFlow: React.FunctionComponent<Record<string, any>> = () 
             </Title>
             <Divider mb="md" />
 
-            {Object.entries(context?.stageData || {}).map(([stage, data]: [string, any]) => (
+            {Object.entries(context?.stageData || {}).map(([stage, data]: [string, any]) => {
+              // Defensive: Validate stage and data
+              if (!stage || !data) return null;
+
+              return (
               <Box key={stage} mb="md">
-                <Text size="sm" weight={600} color="blue" mb="xs">
-                  {stages.find(s => s.id === stage)?.name}
+                <Text size="sm" fw={600} c="blue" mb="xs">
+                  {/* Defensive: Safe stage name lookup */}
+                  {Array.isArray(stages) ? stages.find(s => s?.id === stage)?.name || stage : stage}
                 </Text>
 
-                <Group spacing="xs" mb="xs">
-                  {/* Display key data points */}
-                  {data.subject_area && (
+                <Group gap="xs" mb="xs">
+                  {/* Display key data points with defensive checks */}
+                  {data?.subject_area && (
                     <Badge size="sm" variant="outline">Subject: {data.subject_area}</Badge>
                   )}
-                  {data.grade_level && (
+                  {data?.grade_level && (
                     <Badge size="sm" variant="outline">Grade: {data.grade_level}</Badge>
                   )}
-                  {data.environment_type && (
+                  {data?.environment_type && (
                     <Badge size="sm" variant="outline">Environment: {data.environment_type}</Badge>
                   )}
-                  {data.visual_style && (
+                  {data?.visual_style && (
                     <Badge size="sm" variant="outline">Style: {data.visual_style}</Badge>
                   )}
-                  {data.max_players && (
+                  {data?.max_players && (
                     <Badge size="sm" variant="outline">Players: {data.max_players}</Badge>
                   )}
                 </Group>
               </Box>
-            ))}
+              );
+            })}
 
             {/* Validation Scores */}
             {context?.stageData?.validation?.validation_scores && (
               <Box mt="lg">
-                <Text weight={600} size="sm" mb="md">
+                <Text fw={600} size="sm" mb="md">
                   Quality Scores
                 </Text>
-                {Object.entries(context.stageData.validation.validation_scores).map(([key, value]: [string, any]) => (
+                {/* Defensive: Safe object entries with validation */}
+                {Object.entries(context.stageData.validation.validation_scores || {}).map(([key, value]: [string, any]) => {
+                  // Defensive: Validate key and value
+                  if (!key || typeof value !== 'number') return null;
+
+                  const percentage = Math.round(Math.max(0, Math.min(1, value)) * 100);
+                  const isGood = value >= 0.85;
+
+                  return (
                   <Box key={key} mb="md">
-                    <Group position="apart" mb="xs">
+                    <Group justify="space-between" mb="xs">
                       <Text size="xs">
                         {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                       </Text>
-                      <Text size="xs" color={value >= 0.85 ? 'green' : 'orange'}>
-                        {Math.round(value * 100)}%
+                      <Text size="xs" c={isGood ? 'green' : 'orange'}>
+                        {percentage}%
                       </Text>
                     </Group>
                     <Progress
-                      value={value * 100}
-                      color={value >= 0.85 ? 'green' : 'orange'}
+                      value={percentage}
+                      color={isGood ? 'green' : 'orange'}
                       size="sm"
                     />
                   </Box>
-                ))}
+                  );
+                })}
               </Box>
             )}
           </Paper>

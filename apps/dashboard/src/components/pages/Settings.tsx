@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from 'react';
 import {
   Card,
   Text,
@@ -39,15 +39,15 @@ import {
   IconMail,
   IconDeviceMobile,
   IconSettings
-} from "@tabler/icons-react";
-import { useAppSelector, useAppDispatch } from "../../store";
-import { setTheme } from "../../store/slices/uiSlice";
+} from '@tabler/icons-react';
+import { useAppSelector, useAppDispatch } from '../../store';
+import { setTheme } from '../../store/slices/uiSlice';
 
 export default function Settings() {
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.user);
   const theme = useAppSelector((s) => s.ui.theme);
-  const [activeTab, setActiveTab] = React.useState("0");
+  const [activeTab, setActiveTab] = React.useState('0');
   const [editMode, setEditMode] = React.useState(false);
   const [adminSettings, setAdminSettings] = React.useState({
     agentDashboard: {
@@ -66,17 +66,17 @@ export default function Settings() {
     },
   });
   const [profileData, setProfileData] = React.useState({
-    displayName: (user as any).displayName || "John Doe",
-    email: user.email || "john@example.com",
-    phone: "+1 (555) 123-4567",
-    bio: "Passionate educator dedicated to innovative learning",
-    location: "San Francisco, CA",
-    timezone: "PST",
+    displayName: (user as any).displayName || 'John Doe',
+    email: user.email || 'john@example.com',
+    phone: '+1 (555) 123-4567',
+    bio: 'Passionate educator dedicated to innovative learning',
+    location: 'San Francisco, CA',
+    timezone: 'PST',
   });
 
   const handleSaveProfile = () => {
     setEditMode(false);
-    console.log("Saving profile:", profileData);
+    console.log('Saving profile:', profileData);
   };
 
   return (
@@ -98,7 +98,7 @@ export default function Settings() {
       {/* Settings Tabs */}
       <Grid.Col span={12}>
         <Card>
-          <Tabs value={activeTab} onTabChange={(value) => setActiveTab(value || "0")}>
+          <Tabs value={activeTab} onTabChange={(value) => setActiveTab(value || '0')}>
             <Tabs.List>
               <Tabs.Tab value="0" leftSection={<IconUser size={16} />}>
                 Profile
@@ -121,7 +121,7 @@ export default function Settings() {
               <Tabs.Tab value="6" leftSection={<IconDatabase size={16} />}>
                 Data
               </Tabs.Tab>
-              {user.role === "admin" && (
+              {user.role === 'admin' && (
                 <Tabs.Tab value="7" leftSection={<IconSettings size={16} />}>
                   Admin
                 </Tabs.Tab>
@@ -136,7 +136,7 @@ export default function Settings() {
                     <Badge
                       variant="light"
                       size="xl"
-                      style={{ position: "relative" }}
+                      style={{ position: 'relative' }}
                     >
                       <Avatar
                         src={(user as any).avatarUrl}
@@ -147,7 +147,7 @@ export default function Settings() {
                       <ActionIcon
                         size="sm"
                         variant="filled"
-                        style={{ position: "absolute", bottom: 0, right: 0 }}
+                        style={{ position: 'absolute', bottom: 0, right: 0 }}
                       >
                         <IconCamera size={14} />
                       </ActionIcon>
@@ -223,13 +223,13 @@ export default function Settings() {
                         <Select
                           label="Timezone"
                           value={profileData.timezone}
-                          onChange={(value) => setProfileData({ ...profileData, timezone: value || "PST" })}
+                          onChange={(value) => setProfileData({ ...profileData, timezone: value || 'PST' })}
                           disabled={!editMode}
                           data={[
-                            { value: "PST", label: "PST" },
-                            { value: "EST", label: "EST" },
-                            { value: "CST", label: "CST" },
-                            { value: "MST", label: "MST" },
+                            { value: 'PST', label: 'PST' },
+                            { value: 'EST', label: 'EST' },
+                            { value: 'CST', label: 'CST' },
+                            { value: 'MST', label: 'MST' },
                           ]}
                         />
                       </Grid.Col>
@@ -372,7 +372,7 @@ export default function Settings() {
                     Color Scheme
                   </Text>
                   <Group gap="md">
-                    {["#2563EB", "#9333EA", "#22C55E", "#EF4444", "#F59E0B"].map((color) => (
+                    {['#2563EB', '#9333EA', '#22C55E', '#EF4444', '#F59E0B'].map((color) => (
                       <Box
                         key={color}
                         style={{
@@ -380,8 +380,8 @@ export default function Settings() {
                           height: 40,
                           backgroundColor: color,
                           borderRadius: 8,
-                          cursor: "pointer",
-                          border: "2px solid transparent",
+                          cursor: 'pointer',
+                          border: '2px solid transparent',
                         }}
                       />
                     ))}
@@ -412,12 +412,12 @@ export default function Settings() {
                     label="Language"
                     defaultValue="en"
                     data={[
-                      { value: "en", label: "English" },
-                      { value: "es", label: "Español" },
-                      { value: "fr", label: "Français" },
-                      { value: "de", label: "Deutsch" },
-                      { value: "zh", label: "中文" },
-                      { value: "ja", label: "日本語" },
+                      { value: 'en', label: 'English' },
+                      { value: 'es', label: 'Español' },
+                      { value: 'fr', label: 'Français' },
+                      { value: 'de', label: 'Deutsch' },
+                      { value: 'zh', label: '中文' },
+                      { value: 'ja', label: '日本語' },
                     ]}
                   />
                 </Card>
@@ -431,17 +431,17 @@ export default function Settings() {
                       label="Date Format"
                       defaultValue="mm/dd/yyyy"
                       data={[
-                        { value: "mm/dd/yyyy", label: "MM/DD/YYYY" },
-                        { value: "dd/mm/yyyy", label: "DD/MM/YYYY" },
-                        { value: "yyyy-mm-dd", label: "YYYY-MM-DD" },
+                        { value: 'mm/dd/yyyy', label: 'MM/DD/YYYY' },
+                        { value: 'dd/mm/yyyy', label: 'DD/MM/YYYY' },
+                        { value: 'yyyy-mm-dd', label: 'YYYY-MM-DD' },
                       ]}
                     />
                     <Select
                       label="Time Format"
                       defaultValue="12h"
                       data={[
-                        { value: "12h", label: "12-hour" },
-                        { value: "24h", label: "24-hour" },
+                        { value: '12h', label: '12-hour' },
+                        { value: '24h', label: '24-hour' },
                       ]}
                     />
                   </Stack>
@@ -513,7 +513,7 @@ export default function Settings() {
             </Tabs.Panel>
 
             {/* Admin Settings Tab - Only visible to admins */}
-            {user.role === "admin" && (
+            {user.role === 'admin' && (
               <Tabs.Panel value="7" pt="md">
                 <Stack gap="md">
                   <Alert color="yellow">
@@ -718,7 +718,7 @@ export default function Settings() {
                       leftSection={<IconDeviceFloppy size={16} />}
                       onClick={() => {
                         // Save admin settings to backend
-                        console.log("Saving admin settings:", adminSettings);
+                        console.log('Saving admin settings:', adminSettings);
                         // TODO: Call API to save settings
                       }}
                     >

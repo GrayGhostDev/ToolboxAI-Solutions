@@ -52,7 +52,7 @@ import {
   IconPhone as PhoneIcon,
 } from '@tabler/icons-react';
 import { format } from 'date-fns';
-import { User, UserRole } from '@/types';
+import { type User, type UserRole } from '@/types';
 export interface ExtendedUser extends User {
   status: 'active' | 'inactive' | 'suspended' | 'pending';
   lastLogin?: string;

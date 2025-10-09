@@ -5,10 +5,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { PusherService } from '../services/pusher';
 import {
-  WebSocketMessage,
+  type WebSocketMessage,
   WebSocketState,
   WebSocketChannel,
-  WebSocketEventHandler
+  type WebSocketEventHandler
 } from '../types/websocket';
 // Get singleton instance
 const pusherService = PusherService.getInstance();

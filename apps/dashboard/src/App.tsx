@@ -1,44 +1,45 @@
-import * as React from "react";
-import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
-import AppLayout from "./components/layout/AppLayout";
-import { useAppSelector } from "./store";
-import AppRoutes from "./routes";
-import { ConsentModal } from "./components/modals/ConsentModal";
-import { NotificationToast } from "./components/notifications/NotificationToast";
-import { logger } from "./utils/logger";
-import RealtimeToast from "./components/notifications/RealtimeToast";
-import { LoadingOverlay } from "./components/common/LoadingOverlay";
-import { COPPA_COMPLIANCE } from "./config";
+import * as React from 'react';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { LoadingOverlay } from '@mantine/core';
+import AppLayout from './components/layout/AppLayout';
+import { useAppSelector } from './store';
+import AppRoutes from './routes';
+import { ConsentModal } from './components/modals/ConsentModal';
+import { NotificationToast } from './components/notifications/NotificationToast';
+import { logger } from './utils/logger';
+import RealtimeToast from './components/notifications/RealtimeToast';
+import { COPPA_COMPLIANCE } from './config';
 // Auth Components
-import ClerkLogin from "./components/auth/ClerkLogin";
-import ClerkSignUp from "./components/auth/ClerkSignUp";
-import Login from "./components/pages/Login";
-import Register from "./components/pages/Register";
-import PasswordReset from "./components/pages/PasswordReset";
+import ClerkLogin from './components/auth/ClerkLogin';
+import ClerkSignUp from './components/auth/ClerkSignUp';
+import Login from './components/pages/Login';
+import Register from './components/pages/Register';
+import PasswordReset from './components/pages/PasswordReset';
 
 // Unified Auth Hook
-import { useUnifiedAuth } from "./hooks/useUnifiedAuth";
-import ErrorBoundary from "./components/ErrorBoundary";
+import { useUnifiedAuth } from './hooks/useUnifiedAuth';
+import ErrorBoundary from './components/ErrorBoundary';
 // WebSocket removed - using Pusher for real-time features
-import { pusherService } from "./services/pusher";
-import { PusherProvider } from "./contexts/PusherContext";
-import { NetworkError } from "./components/ErrorComponents";
-import { SessionMonitor, NetworkStatus } from "./components/auth/AuthRecovery";
-// Import new Three.js infrastructure
-import { ThreeProvider } from "./components/three/ThreeProvider";
-import { Scene3D } from "./components/three/Scene3D";
-import { FloatingCharactersV2 } from "./components/roblox/FloatingCharactersV2";
-import { Canvas2D } from "./components/three/fallbacks/Canvas2D";
-import { PerformanceMonitor } from "./components/common/PerformanceMonitor";
-// Import Migration Control Panel for development
-import { MigrationControlPanel } from "./components/migration/MigrationWrapper";
+import { pusherService } from './services/pusher';
+import { PusherProvider } from './contexts/PusherContext';
+import { NetworkError } from './components/ErrorComponents';
+import { SessionMonitor, NetworkStatus } from './components/auth/AuthRecovery';
+// Lazy load heavy 3D components to improve initial load time
+const ThreeProvider = React.lazy(() => import('./components/three/ThreeProvider').then(m => ({ default: m.ThreeProvider })));
+const Scene3D = React.lazy(() => import('./components/three/Scene3D').then(m => ({ default: m.Scene3D })));
+const FloatingCharactersV2 = React.lazy(() => import('./components/roblox/FloatingCharactersV2').then(m => ({ default: m.FloatingCharactersV2 })));
+const Canvas2D = React.lazy(() => import('./components/three/fallbacks/Canvas2D').then(m => ({ default: m.Canvas2D })));
+const PerformanceMonitor = React.lazy(() => import('./components/common/PerformanceMonitor').then(m => ({ default: m.PerformanceMonitor })));
+
+// Development tools - lazy loaded
+const MigrationControlPanel = React.lazy(() => import('./components/migration/MigrationWrapper').then(m => ({ default: m.MigrationControlPanel })));
+const RoutePerformanceMonitor = React.lazy(() => import('./components/performance/RoutePerformanceMonitor').then(m => ({ default: m.RoutePerformanceMonitor })));
+const RoutePreloader = React.lazy(() => import('./components/performance/RoutePreloader').then(m => ({ default: m.RoutePreloader })));
 
 // Keep old FloatingCharacters as fallback
-const FloatingCharacters = React.lazy(() => import("./components/roblox/FloatingCharacters").then(module => ({ default: module.FloatingCharacters })));
+const FloatingCharacters = React.lazy(() => import('./components/roblox/FloatingCharacters').then(module => ({ default: module.FloatingCharacters })));
 
-// Terminal services removed - not part of application
-// Old performance monitor disabled due to performance issues
-
+// Cookie banner - only in production
 const CookieBannerLazy = React.lazy(() => import('./components/consent/CookieBanner').then(m => ({ default: m.default })));
 
 export default function App() {
@@ -55,6 +56,9 @@ export default function App() {
 
   // Check if Clerk auth is enabled
   const useClerkAuthEnabled = import.meta.env.VITE_ENABLE_CLERK_AUTH === 'true';
+
+  // Check for bypass mode
+  const bypassAuth = import.meta.env.VITE_BYPASS_AUTH === 'true';
 
   // Use the unified auth hook that handles conditional logic correctly
   const authHookResult = useUnifiedAuth();
@@ -85,7 +89,7 @@ export default function App() {
   React.useEffect(() => {
     let isConnected = false;
 
-    if (isAuthenticated) {
+    if (isAuthenticated && !bypassAuth) {
       // Small delay to allow component to stabilize
       const connectTimer = setTimeout(() => {
         pusherService.connect();
@@ -102,7 +106,7 @@ export default function App() {
       };
     }
     return undefined; // Explicit return for when not authenticated
-  }, [isAuthenticated]);
+  }, [isAuthenticated, bypassAuth]);
 
   // Lightweight performance monitoring for development
   React.useEffect(() => {
@@ -113,8 +117,8 @@ export default function App() {
 
   React.useEffect(() => {
     // Check if COPPA consent is needed
-    if (COPPA_COMPLIANCE && role === "student" && !consentGiven) {
-      const consent = localStorage.getItem("coppa_consent");
+    if (COPPA_COMPLIANCE && role === 'student' && !consentGiven) {
+      const consent = localStorage.getItem('coppa_consent');
       if (!consent) {
         setShowConsent(true);
       } else {
@@ -125,7 +129,7 @@ export default function App() {
 
   const handleConsentClose = (accepted: boolean) => {
     if (accepted) {
-      localStorage.setItem("coppa_consent", "true");
+      localStorage.setItem('coppa_consent', 'true');
       setConsentGiven(true);
       // Navigate to dashboard after consent is accepted
       navigate('/dashboard');
@@ -133,8 +137,11 @@ export default function App() {
     setShowConsent(false);
   };
 
-  // If not authenticated, show auth routes
-  if (!isAuthenticated) {
+  // Check if we're in development mode
+  const isDevelopment = import.meta.env.VITE_ENV === 'development' || process.env.NODE_ENV === 'development';
+
+  // If not authenticated and not bypassing auth, show auth routes
+  if (!isAuthenticated && !bypassAuth) {
     return (
       <ErrorBoundary>
         <Routes>
@@ -144,41 +151,67 @@ export default function App() {
           <Route path="/register" element={useClerkAuthEnabled ? <ClerkSignUp /> : <Register />} />
           <Route path="/sign-up" element={<ClerkSignUp />} />
           <Route path="/password-reset" element={<PasswordReset />} />
-          <Route path="*" element={<Navigate to={useClerkAuthEnabled ? "/sign-in" : "/login"} replace />} />
+          <Route path="*" element={<Navigate to={useClerkAuthEnabled ? '/sign-in' : '/login'} replace />} />
         </Routes>
 
         {/* Global Components */}
         <NotificationToast />
-        {loading && <LoadingOverlay />}
+        {loading && <LoadingOverlay visible={loading} />}
       </ErrorBoundary>
     );
+  }
+
+  // Log development mode status
+  if (bypassAuth && isDevelopment) {
+    logger.info('Development mode: Authentication bypassed');
   }
 
   return (
     <ErrorBoundary>
       <PusherProvider
-        autoConnect={true}
-        enablePresence={true}
-        debug={process.env.NODE_ENV === 'development'}
-        onConnectionChange={(state) => logger.debug('Pusher connection state:', state)}
+        autoConnect={!bypassAuth}
+        enablePresence={!bypassAuth}
+        debug={process.env.NODE_ENV === 'development' && !bypassAuth}
+        onConnectionChange={(state) => !bypassAuth && logger.debug('Pusher connection state:', state)}
       >
-        {/* Modern 3D Background with fallback support */}
-        {!isRobloxPage && (
-          <ThreeProvider fallback={<Canvas2D particleCount={30} animate={true} />}>
-            <Scene3D>
-              <FloatingCharactersV2
-                characters={[
-                  { type: 'astronaut', position: [-4, 2, -3] },
-                  { type: 'robot', position: [4, 1, -2] },
-                  { type: 'wizard', position: [0, 3, -4] },
-                  { type: 'pirate', position: [-3, -1, -2] },
-                  { type: 'ninja', position: [3, 0, -3] }
-                ]}
-                showStars={true}
-                showClouds={true}
-              />
-            </Scene3D>
-          </ThreeProvider>
+        {/* Modern 3D Background with fallback support - lazy loaded */}
+        {!isRobloxPage && !bypassAuth && (
+          <React.Suspense fallback={<div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', zIndex: -1, pointerEvents: 'none' }} />}>
+            <ThreeProvider fallback={
+              <React.Suspense fallback={null}>
+                <Canvas2D particleCount={30} animate={true} />
+              </React.Suspense>
+            }>
+              <React.Suspense fallback={null}>
+                <Scene3D>
+                  <React.Suspense fallback={null}>
+                    <FloatingCharactersV2
+                      characters={[
+                        { type: 'astronaut', position: [-4, 2, -3] },
+                        { type: 'robot', position: [4, 1, -2] },
+                        { type: 'wizard', position: [0, 3, -4] },
+                        { type: 'pirate', position: [-3, -1, -2] },
+                        { type: 'ninja', position: [3, 0, -3] }
+                      ]}
+                      showStars={true}
+                      showClouds={true}
+                    />
+                  </React.Suspense>
+                </Scene3D>
+              </React.Suspense>
+            </ThreeProvider>
+          </React.Suspense>
+        )}
+
+        {/* Simple background for bypass mode */}
+        {!isRobloxPage && bypassAuth && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+            zIndex: -1,
+            pointerEvents: 'none'
+          }} />
         )}
 
         <AppLayout role={role} isRobloxPage={isRobloxPage}>
@@ -188,9 +221,10 @@ export default function App() {
         {/* Global Components */}
         <NotificationToast />
         <RealtimeToast />
-        <SessionMonitor />
-        <NetworkStatus />
-        {loading && <LoadingOverlay />}
+        {/* Disable complex session monitoring in development */}
+        {!bypassAuth && <SessionMonitor />}
+        {!bypassAuth && <NetworkStatus />}
+        {loading && <LoadingOverlay visible={loading} />}
 
         {/* Cookie Consent */}
         {process.env.NODE_ENV === 'production' && (
@@ -200,16 +234,44 @@ export default function App() {
         )}
 
         {/* Performance Monitoring - Development Only */}
-        <PerformanceMonitor enabled={process.env.NODE_ENV === 'development'} />
+        {process.env.NODE_ENV === 'development' && (
+          <React.Suspense fallback={null}>
+            <PerformanceMonitor enabled={true} />
+          </React.Suspense>
+        )}
 
         {/* COPPA Consent Modal */}
         {showConsent && (
           <ConsentModal
-            open={showConsent}
+            opened={showConsent}
             onClose={handleConsentClose}
           />
         )}
-        <MigrationControlPanel />
+
+        {/* Development Tools - Lazy Loaded */}
+        {process.env.NODE_ENV === 'development' && (
+          <React.Suspense fallback={null}>
+            <MigrationControlPanel />
+          </React.Suspense>
+        )}
+
+        {/* Performance Tools - Development Only */}
+        {process.env.NODE_ENV === 'development' && (
+          <>
+            <React.Suspense fallback={null}>
+              <RoutePerformanceMonitor
+                enabled={true}
+                timeoutThreshold={1500}
+              />
+            </React.Suspense>
+            <React.Suspense fallback={null}>
+              <RoutePreloader
+                enabled={true}
+                aggressivePreload={false}
+              />
+            </React.Suspense>
+          </>
+        )}
       </PusherProvider>
     </ErrorBoundary>
   );

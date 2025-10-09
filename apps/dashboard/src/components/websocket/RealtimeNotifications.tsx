@@ -39,7 +39,7 @@ import {
   markAllNotificationsRead,
   clearNotifications
 } from '../../store/slices/realtimeSlice';
-import { SystemNotification } from '../../types/websocket';
+import { type SystemNotification } from '../../types/websocket';
 import { formatDistanceToNow } from 'date-fns';
 
 interface RealtimeNotificationsProps {

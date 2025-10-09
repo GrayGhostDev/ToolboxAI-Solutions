@@ -1,5 +1,5 @@
-import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../../utils/mui-imports';
 import React, { Suspense, lazy } from 'react';
+import { Box, Text, Alert, Loader, Skeleton } from '@mantine/core';
 
 // Lazy load 3D components only when needed
 const Scene3D = lazy(() => import('../three/Scene3D').then(module => ({ default: module.Scene3D })));
@@ -17,7 +17,7 @@ interface Lazy3DProps {
 // 3D fallback for unsupported browsers
 const WebGL3DFallback = ({
   height,
-  message = "3D content not available"
+  message = '3D content not available'
 }: { height: number; message?: string }) => (
   <Box
     style={{
@@ -27,16 +27,15 @@ const WebGL3DFallback = ({
       alignItems: 'center',
       justifyContent: 'center',
       background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)',
-      borderRadius: 1,
-      color: 'text.secondary'
+      borderRadius: 8,
     }}
   >
-    <Typography size="sm" style={{ mb: 1 }}>
+    <Text size="sm" c="dimmed" mb="xs">
       {message}
-    </Typography>
-    <Typography variant="caption" color="text.disabled">
+    </Text>
+    <Text size="xs" c="gray.6">
       WebGL not supported or disabled
-    </Typography>
+    </Text>
   </Box>
 );
 
@@ -46,28 +45,27 @@ const ThreeDSkeleton = ({ height }: { height: number }) => (
     style={{
       height,
       background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)',
-      borderRadius: 1,
+      borderRadius: 8,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       position: 'relative'
     }}
   >
-    <Box style={{ textAlign: 'center' }}>
-      <CircularProgress size={40} style={{ mb: 2 }} />
-      <Typography size="sm" color="text.secondary">
+    <Box style={{ textAlign: 'center', zIndex: 1 }}>
+      <Loader size="md" mb="sm" />
+      <Text size="sm" c="dimmed">
         Loading 3D content...
-      </Typography>
+      </Text>
     </Box>
     <Skeleton
-      variant="rectangular"
       width="100%"
       height="100%"
       style={{
         position: 'absolute',
         top: 0,
         left: 0,
-        backgroundColor: 'rgba(255, 255, 255, 0.05)'
+        opacity: 0.1
       }}
     />
   </Box>
@@ -123,12 +121,12 @@ export const Lazy3D = ({
 
   const errorFallback = (
     <Alert
-      severity="info"
+      color="blue"
+      title="3D Content Unavailable"
       style={{
         height: fallbackHeight,
         display: 'flex',
         alignItems: 'center',
-        borderRadius: 1
       }}
     >
       3D content temporarily unavailable. Please check your browser settings.

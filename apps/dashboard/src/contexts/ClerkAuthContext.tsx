@@ -14,7 +14,7 @@ import {
   UserButton,
   SignOutButton
 } from '@clerk/clerk-react';
-import { User } from '../types/api';
+import { type User } from '../types/api';
 import type { UserRole } from '../types/roles';
 import { getUserConfig } from '../config/users';
 import { store } from '../store';
@@ -43,6 +43,9 @@ interface ClerkAuthContextType {
 
 const ClerkAuthContext = createContext<ClerkAuthContextType | undefined>(undefined);
 
+// Export the context for use in unified auth hook
+export { ClerkAuthContext };
+
 export const useAuth = () => {
   const context = useContext(ClerkAuthContext);
   if (!context) {
@@ -70,18 +73,24 @@ export const ClerkAuthProvider: React.FunctionComponent<{ children: React.ReactN
           id: clerkUser.id,
           email: clerkUser.primaryEmailAddress?.emailAddress || '',
           username: clerkUser.username || clerkUser.firstName || 'User',
-          role: (clerkUser.publicMetadata?.role as UserRole) || 'student',
           firstName: clerkUser.firstName || '',
           lastName: clerkUser.lastName || '',
-          avatar: clerkUser.imageUrl || '',
-          createdAt: clerkUser.createdAt ? new Date(clerkUser.createdAt).toISOString() : new Date().toISOString(),
+          displayName: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || clerkUser.username || 'User',
+          avatarUrl: clerkUser.imageUrl || undefined,
+          role: (clerkUser.publicMetadata?.role as UserRole) || 'student',
+          schoolId: clerkUser.publicMetadata?.schoolId as string | undefined,
+          schoolName: clerkUser.publicMetadata?.schoolName as string | undefined,
+          classIds: clerkUser.publicMetadata?.classIds as string[] | undefined,
+          parentIds: clerkUser.publicMetadata?.parentIds as string[] | undefined,
+          childIds: clerkUser.publicMetadata?.childIds as string[] | undefined,
           isActive: true,
-          emailVerified: clerkUser.primaryEmailAddress?.verification?.status === 'verified',
-          // Additional metadata from Clerk
-          metadata: {
-            ...clerkUser.publicMetadata,
-            ...clerkUser.unsafeMetadata
-          }
+          isVerified: clerkUser.primaryEmailAddress?.verification?.status === 'verified' || false,
+          totalXP: (clerkUser.publicMetadata?.totalXP as number) || 0,
+          level: (clerkUser.publicMetadata?.level as number) || 1,
+          lastLogin: new Date().toISOString(),
+          createdAt: clerkUser.createdAt ? new Date(clerkUser.createdAt).toISOString() : new Date().toISOString(),
+          updatedAt: clerkUser.updatedAt ? new Date(clerkUser.updatedAt).toISOString() : new Date().toISOString(),
+          status: 'active' as const
         };
 
         setUser(mappedUser);

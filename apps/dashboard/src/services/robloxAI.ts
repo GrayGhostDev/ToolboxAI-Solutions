@@ -9,9 +9,9 @@ import { api } from './api';
 import { pusherService } from './pusher';
 import {
   WebSocketMessageType,
-  AgentChatUserMessage,
-  RobloxAgentRequest,
-  FollowupFieldType
+  type AgentChatUserMessage,
+  type RobloxAgentRequest,
+  type FollowupFieldType
 } from '../types/websocket';
 
 export interface RobloxSpec {

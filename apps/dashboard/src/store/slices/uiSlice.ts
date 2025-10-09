@@ -1,17 +1,17 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 interface NotificationItem {
   id: string;
-  type: "info" | "warning" | "success" | "error";
+  type: 'info' | 'warning' | 'success' | 'error';
   message: string;
   timestamp: number;
   autoHide?: boolean;
-  severity?: "info" | "warning" | "success" | "error";
+  severity?: 'info' | 'warning' | 'success' | 'error';
 }
 
 interface UIState {
   sidebarOpen: boolean;
-  theme: "light" | "dark";
+  theme: 'light' | 'dark';
   language: string;
   notifications: NotificationItem[];
   loading: boolean;
@@ -20,15 +20,15 @@ interface UIState {
 
 const initialState: UIState = {
   sidebarOpen: true,
-  theme: "light",
-  language: "en",
+  theme: 'light',
+  language: 'en',
   notifications: [],
   loading: false,
   globalError: null,
 };
 
 export const uiSlice = createSlice({
-  name: "ui",
+  name: 'ui',
   initialState,
   reducers: {
     setSidebarOpen(state, action: PayloadAction<boolean>) {
@@ -37,16 +37,16 @@ export const uiSlice = createSlice({
     toggleSidebar(state) {
       state.sidebarOpen = !state.sidebarOpen;
     },
-    setTheme(state, action: PayloadAction<"light" | "dark">) {
+    setTheme(state, action: PayloadAction<'light' | 'dark'>) {
       state.theme = action.payload;
     },
     toggleTheme(state) {
-      state.theme = state.theme === "light" ? "dark" : "light";
+      state.theme = state.theme === 'light' ? 'dark' : 'light';
     },
     setLanguage(state, action: PayloadAction<string>) {
       state.language = action.payload;
     },
-    addNotification(state, action: PayloadAction<Omit<NotificationItem, "id" | "timestamp">>) {
+    addNotification(state, action: PayloadAction<Omit<NotificationItem, 'id' | 'timestamp'>>) {
       const notification: NotificationItem = {
         ...action.payload,
         id: `notification-${Date.now()}-${Math.random()}`,

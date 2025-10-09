@@ -189,7 +189,7 @@ export const RobloxCharacterAvatar: React.FunctionComponent<RobloxCharacterAvata
             style={{
               width: avatarSize,
               height: avatarSize,
-              boxShadow: `0 4px 20px rgba(66, 153, 225, 0.3)`,
+              boxShadow: '0 4px 20px rgba(66, 153, 225, 0.3)',
               transition: 'all 0.3s ease',
               borderRadius: '50%'
             }}

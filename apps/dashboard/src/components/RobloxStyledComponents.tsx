@@ -1,312 +1,410 @@
-import { Box, Button, Typography, Paper, Stack, Grid, Container, IconButton, Avatar, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, TextField, Select, MenuItem, Chip, Badge, Alert, CircularProgress, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions, Drawer, AppBar, Toolbar, Tabs, Tab, Menu, Tooltip, Checkbox, Radio, RadioGroup, FormControl, FormControlLabel, InputLabel, Switch, Slider, Rating, Autocomplete, Skeleton, Table } from '../utils/mui-imports';
 /**
  * Roblox-Styled Components
  *
  * Pre-built components with Roblox theming and gamification elements.
+ * 🎯 100% PURE MANTINE v8 IMPLEMENTATION - ZERO MUI/EMOTION DEPENDENCIES
  */
 import React from 'react';
-import { designTokens } from '..//designTokens';
+import {
+  Box,
+  Card,
+  Button,
+  Text,
+  Paper,
+  Stack,
+  Group,
+  Container,
+  ActionIcon,
+  Avatar,
+  Divider,
+  TextInput,
+  Badge,
+  Alert,
+  Loader,
+  Progress,
+  Tooltip,
+  Checkbox,
+  Radio,
+  Switch,
+  Slider,
+  Select,
+  Skeleton
+} from '@mantine/core';
+
 // Roblox brand colors
 const ROBLOX_RED = '#E2231A';
 const ROBLOX_RED_DARK = '#B71C15';
 const ROBLOX_GRAY = '#393B3D';
 const ROBLOX_WHITE = '#FFFFFF';
-// Animations
-const robloxPulse = keyframes`
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0.9;
-  }
-`;
-const robloxGlow = keyframes`
-  0%, 100% {
-    box-shadow: 0 0 5px rgba(226, 35, 26, 0.25);
-  }
-  50% {
-    box-shadow: 0 0 20px rgba(226, 35, 26, 0.5);
-  }
-`;
-const robloxShimmer = keyframes`
-  0% {
-    background-position: -200% center;
-  }
-  100% {
-    background-position: 200% center;
-  }
-`;
-const robloxFloat = keyframes`
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-`;
-// Enhanced Card with Roblox styling
-export const RobloxCard = styled(Card)(({ theme }) => ({
-  borderRadius: designTokens.borderRadius['2xl'],
-  border: `2px solid ${theme.palette.divider}`,
-  background: theme.palette.mode === 'dark'
-    ? `linear-gradient(145deg, ${theme.palette.background.paper}, ${alpha(theme.palette.background.paper, 0.8)})`
-    : theme.palette.background.paper,
-  boxShadow: '0 4px 12px rgba(226, 35, 26, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1)',
-  transition: `all ${designTokens.animation.duration.normal} ${designTokens.animation.easing.inOut}`,
-  position: 'relative',
-  overflow: 'hidden',
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '4px',
-    background: `linear-gradient(135deg, ${ROBLOX_RED}, ${ROBLOX_RED_DARK})`,
-    borderRadius: `${designTokens.borderRadius['2xl']} ${designTokens.borderRadius['2xl']} 0 0`
-  },
-  '&:hover': {
-    transform: 'translateY(-4px)',
-    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
-    borderColor: alpha(ROBLOX_RED, 0.5)
-  }
-}));
-// Gaming-style button
-export const RobloxButton = styled(Button)(({ theme }) => ({
-  borderRadius: designTokens.borderRadius.xl,
-  fontWeight: designTokens.typography.fontWeight.bold,
-  fontSize: designTokens.typography.fontSize.sm[0],
-  textTransform: 'none',
-  padding: `${designTokens.spacing[3]} ${designTokens.spacing[6]}`,
-  position: 'relative',
-  overflow: 'hidden',
-  transition: `all ${designTokens.animation.duration.normal} ${designTokens.animation.easing.inOut}`,
-  ...(variant === 'contained' && {
-    background: `linear-gradient(135deg, ${ROBLOX_RED}, ${ROBLOX_RED_DARK})`,
-    color: ROBLOX_WHITE,
-    boxShadow: `0 2px 8px rgba(226, 35, 26, 0.2)`,
-    '&::before': {
-      content: '""',
-      position: 'absolute',
-      top: 0,
-      left: '-100%',
-      width: '100%',
-      height: '100%',
-      background: `linear-gradient(90deg, transparent, ${alpha(ROBLOX_WHITE, 0.2)}, transparent)`,
-      transition: `left ${designTokens.animation.duration.slow} ${designTokens.animation.easing.inOut}`
-    },
-    '&:hover': {
-      transform: 'translateY(-2px) scale(1.02)',
-      boxShadow: `0 8px 25px ${alpha(ROBLOX_RED, 0.4)}`,
-      '&::before': {
-        left: '100%'
+
+// Pure CSS animations (no emotion/styled-components)
+const injectRobloxAnimations = () => {
+  if (typeof document !== 'undefined' && !document.getElementById('roblox-animations')) {
+    const style = document.createElement('style');
+    style.id = 'roblox-animations';
+    style.textContent = `
+      @keyframes robloxPulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.05); opacity: 0.9; }
       }
-    },
-    '&:active': {
-      transform: 'translateY(0) scale(0.98)'
-    }
-  }),
-  ...(variant === 'outlined' && {
-    borderWidth: '2px',
-    borderColor: ROBLOX_RED,
-    color: ROBLOX_RED,
-    '&:hover': {
-      borderColor: ROBLOX_RED_DARK,
-      backgroundColor: alpha(ROBLOX_RED, 0.1),
-      transform: 'translateY(-1px)'
-    }
-  })
-}));
-// Gamification chip
-export const RobloxChip = styled(Chip)(({ theme }) => {
-  const rarity = 'common'; // Default rarity
+      @keyframes robloxGlow {
+        0%, 100% { box-shadow: 0 0 5px rgba(226, 35, 26, 0.25); }
+        50% { box-shadow: 0 0 20px rgba(226, 35, 26, 0.5); }
+      }
+      @keyframes robloxShimmer {
+        0% { background-position: -200% center; }
+        100% { background-position: 200% center; }
+      }
+      @keyframes robloxFloat {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-8px); }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+};
+
+// Initialize animations
+injectRobloxAnimations();
+// Enhanced Card with Roblox styling - Pure Mantine
+export const RobloxCard: React.FC<any> = ({ children, ...props }) => (
+  <Card
+    {...props}
+    style={{
+      borderRadius: 'var(--mantine-radius-xl)',
+      border: '2px solid var(--mantine-color-gray-3)',
+      background: 'var(--mantine-color-white)',
+      boxShadow: '0 4px 12px rgba(226, 35, 26, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1)',
+      transition: 'all 300ms ease-in-out',
+      position: 'relative',
+      overflow: 'hidden',
+      ...props.style
+    }}
+    styles={{
+      root: {
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '4px',
+          background: `linear-gradient(135deg, ${ROBLOX_RED}, ${ROBLOX_RED_DARK})`,
+          borderRadius: 'var(--mantine-radius-xl) var(--mantine-radius-xl) 0 0'
+        },
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
+          borderColor: `${ROBLOX_RED}80`
+        }
+      }
+    }}
+  >
+    {children}
+  </Card>
+);
+
+// Gaming-style button - Pure Mantine
+export const RobloxButton: React.FC<any> = ({ children, ...props }) => (
+  <Button
+    {...props}
+    variant="filled"
+    color={ROBLOX_RED}
+    style={{
+      borderRadius: 'var(--mantine-radius-md)',
+      fontWeight: 700,
+      fontSize: 'var(--mantine-font-size-sm)',
+      textTransform: 'none',
+      position: 'relative',
+      overflow: 'hidden',
+      transition: 'all 300ms ease-in-out',
+      ...props.style
+    }}
+    styles={{
+      root: {
+        '&:hover': {
+          transform: 'translateY(-2px) scale(1.02)',
+          boxShadow: `0 8px 25px ${ROBLOX_RED}66`
+        }
+      }
+    }}
+  >
+    {children}
+  </Button>
+);
+
+// Gamification chip - Pure Mantine
+export const RobloxChip: React.FC<any> = ({ children, achievement = 'common', ...props }) => {
   const colorMap = {
-    common: '#10B981',
+    common: '#6B7280',
+    uncommon: '#10B981',
     rare: '#3B82F6',
     epic: '#8B5CF6',
     legendary: '#F59E0B'
   };
-  const color = colorMap[rarity];
-  return {
-    borderRadius: designTokens.borderRadius.full,
-    fontWeight: designTokens.typography.fontWeight.bold,
-    fontSize: designTokens.typography.fontSize.xs[0],
-    height: 'auto',
-    padding: `${designTokens.spacing[1]} ${designTokens.spacing[3]}`,
-    background: `linear-gradient(135deg, ${color}, ${alpha(color, 0.8)})`,
-    color: ROBLOX_WHITE,
-    border: `1px solid ${alpha(color, 0.3)}`,
-    boxShadow: `0 2px 8px ${alpha(color, 0.3)}`,
-    transition: `all ${designTokens.animation.duration.normal} ${designTokens.animation.easing.inOut}`,
-    '&:hover': {
-      transform: 'scale(1.05)',
-      boxShadow: `0 4px 15px ${alpha(color, 0.5)}`,
-      animation: `${robloxGlow} 1s ease-in-out`
-    }
-  };
-});
-// XP Progress bar
-export const XPProgressBar = styled(LinearProgress)<{ level?: number }>(({ theme, level = 1 }) => ({
-  height: 12,
-  borderRadius: designTokens.borderRadius.full,
-  backgroundColor: theme.palette.mode === 'dark'
-    ? alpha(ROBLOX_GRAY, 0.3)
-    : alpha(ROBLOX_GRAY, 0.1),
-  '& .MuiLinearProgress-bar': {
-    borderRadius: designTokens.borderRadius.full,
-    background: 'linear-gradient(135deg, #8B5CF6, #F59E0B)',
-    position: 'relative',
-    '&::after': {
-      content: '""',
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: `linear-gradient(90deg, transparent, ${alpha(ROBLOX_WHITE, 0.3)}, transparent)`,
-      backgroundSize: '200% 100%',
-      animation: `${robloxShimmer} 2s infinite`
-    }
-  }
-}));
-// Floating action button with game-like effects
-export const RobloxFAB = styled(IconButton)(({ theme }) => ({
-  width: 56,
-  height: 56,
-  background: `linear-gradient(135deg, ${ROBLOX_RED}, ${ROBLOX_RED_DARK})`,
-  color: ROBLOX_WHITE,
-  borderRadius: designTokens.borderRadius.full,
-  boxShadow: `0 2px 8px rgba(226, 35, 26, 0.2)`,
-  transition: `all ${designTokens.animation.duration.normal} ${designTokens.animation.easing.inOut}`,
-  '&:hover': {
-    background: `linear-gradient(135deg, ${ROBLOX_RED_DARK}, ${ROBLOX_RED})`,
-    transform: 'scale(1.1)',
-    boxShadow: `0 8px 25px ${alpha(ROBLOX_RED, 0.4)}`,
-    animation: `${robloxFloat} 2s ease-in-out infinite`
-  },
-  '&:active': {
-    transform: 'scale(0.95)'
-  }
-}));
-// Gaming avatar with level badge
-export const RobloxAvatar = styled(Box)<{ level?: number; isOnline?: boolean }>(({ theme, level, isOnline }) => ({
-  position: 'relative',
-  display: 'inline-block',
-  '& .MuiAvatar-root': {
-    border: `3px solid ${ROBLOX_RED}`,
-    boxShadow: `0 0 0 2px ${alpha(ROBLOX_RED, 0.2)}`,
-    transition: `all ${designTokens.animation.duration.normal} ${designTokens.animation.easing.inOut}`
-  },
-  ...(isOnline && {
-    '&::after': {
-      content: '""',
-      position: 'absolute',
-      bottom: 0,
-      right: 0,
-      width: 12,
-      height: 12,
-      backgroundColor: '#22C55E',
-      borderRadius: '50%',
-      border: `2px solid ${theme.palette.background.paper}`,
-      animation: `${robloxPulse} 2s infinite`
-    }
-  }),
-  ...(level && {
-    '&::before': {
-      content: `"${level}"`,
-      position: 'absolute',
-      top: -8,
-      left: -8,
-      width: 24,
-      height: 24,
-      backgroundColor: '#F59E0B',
-      color: ROBLOX_WHITE,
-      borderRadius: '50%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontSize: '10px',
-      fontWeight: 'bold',
-      border: `2px solid ${theme.palette.background.paper}`,
-      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-    }
-  })
-}));
-// Achievement badge
-export const AchievementBadge = styled(Badge)<{ achievement?: 'bronze' | 'silver' | 'gold' | 'diamond' }>(({ theme, achievement = 'bronze' }) => {
+  const color = colorMap[achievement] || colorMap.common;
+
+  return (
+    <Badge
+      {...props}
+      variant="filled"
+      style={{
+        background: `linear-gradient(135deg, ${color}, ${color}CC)`,
+        color: ROBLOX_WHITE,
+        border: `1px solid ${color}4D`,
+        borderRadius: 'var(--mantine-radius-md)',
+        transition: 'all 300ms ease-in-out',
+        ...props.style
+      }}
+      styles={{
+        root: {
+          '&:hover': {
+            transform: 'scale(1.05)',
+            boxShadow: `0 4px 15px ${color}80`,
+            animation: 'robloxGlow 1s ease-in-out'
+          }
+        }
+      }}
+    >
+      {children}
+    </Badge>
+  );
+};
+
+// XP Progress bar - Pure Mantine
+export const XPProgressBar: React.FC<any> = ({ level = 1, ...props }) => (
+  <Progress
+    {...props}
+    radius="xl"
+    size="md"
+    color={ROBLOX_RED}
+    style={{
+      backgroundColor: `${ROBLOX_GRAY}26`,
+      position: 'relative',
+      ...props.style
+    }}
+    styles={{
+      bar: {
+        background: `linear-gradient(90deg, ${ROBLOX_RED_DARK}, ${ROBLOX_RED})`,
+        position: 'relative',
+        overflow: 'hidden',
+        '&::after': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: `linear-gradient(90deg, transparent, ${ROBLOX_WHITE}4D, transparent)`,
+          backgroundSize: '200% 100%',
+          animation: 'robloxShimmer 2s infinite'
+        }
+      }
+    }}
+  />
+);
+
+// Floating action button with game-like effects - Pure Mantine
+export const RobloxFAB: React.FC<any> = ({ children, ...props }) => (
+  <ActionIcon
+    {...props}
+    size="xl"
+    radius="xl"
+    variant="filled"
+    color={ROBLOX_RED}
+    style={{
+      background: `linear-gradient(135deg, ${ROBLOX_RED_DARK}, ${ROBLOX_RED})`,
+      boxShadow: `0 4px 20px ${ROBLOX_RED}4D`,
+      transition: 'all 300ms ease-in-out',
+      ...props.style
+    }}
+    styles={{
+      root: {
+        '&:hover': {
+          transform: 'scale(1.1)',
+          boxShadow: `0 8px 25px ${ROBLOX_RED}66`,
+          animation: 'robloxFloat 2s ease-in-out infinite'
+        }
+      }
+    }}
+  >
+    {children}
+  </ActionIcon>
+);
+
+// Gaming avatar with level badge - Pure Mantine
+export const RobloxAvatar: React.FC<any> = ({ level, isOnline, children, ...props }) => (
+  <Box style={{ position: 'relative', display: 'inline-block' }}>
+    <Avatar
+      {...props}
+      style={{
+        border: `3px solid ${ROBLOX_RED}`,
+        boxShadow: `0 0 0 2px ${ROBLOX_RED}33`,
+        transition: 'all 300ms ease-in-out',
+        ...props.style
+      }}
+    >
+      {children}
+    </Avatar>
+    {level && (
+      <Badge
+        size="sm"
+        variant="filled"
+        color={ROBLOX_RED}
+        style={{
+          position: 'absolute',
+          bottom: -4,
+          right: -4,
+          zIndex: 1,
+          minWidth: 20,
+          height: 20,
+          borderRadius: '50%',
+          border: '2px solid var(--mantine-color-white)',
+          boxShadow: `0 0 10px ${ROBLOX_RED}80`,
+          animation: 'robloxPulse 3s infinite'
+        }}
+      >
+        {level}
+      </Badge>
+    )}
+    {isOnline && (
+      <Box
+        style={{
+          position: 'absolute',
+          top: 2,
+          right: 2,
+          width: 12,
+          height: 12,
+          backgroundColor: '#10B981',
+          borderRadius: '50%',
+          border: '2px solid var(--mantine-color-white)',
+          boxShadow: '0 0 0 2px #10B98133'
+        }}
+      />
+    )}
+  </Box>
+);
+
+// Achievement badge - Pure Mantine
+export const AchievementBadge: React.FC<any> = ({ achievement = 'bronze', children, ...props }) => {
   const colors = {
     bronze: '#CD7F32',
     silver: '#C0C0C0',
-    gold: '#F59E0B',
+    gold: '#FFD700',
     diamond: '#B9F2FF'
   };
-  const color = colors[achievement];
-  return {
-    '& .MuiBadge-badge': {
-      backgroundColor: color,
-      color: achievement === 'silver' ? ROBLOX_GRAY : ROBLOX_WHITE,
-      fontWeight: designTokens.typography.fontWeight.bold,
-      fontSize: designTokens.typography.fontSize.xs[0],
-      minWidth: 20,
-      height: 20,
-      borderRadius: '50%',
-      border: `2px solid ${theme.palette.background.paper}`,
-      boxShadow: `0 0 10px ${alpha(color, 0.5)}`,
-      animation: `${robloxPulse} 3s infinite`
-    }
-  };
-});
-// Notification card with Roblox styling
-export const RobloxNotificationCard = styled(RobloxCard)<{ severity?: 'info' | 'success' | 'warning' | 'error' }>(({ theme, severity = 'info' }) => {
+  const color = colors[achievement] || colors.bronze;
+
+  return (
+    <Badge
+      {...props}
+      variant="filled"
+      style={{
+        background: `linear-gradient(135deg, ${color}, ${color}CC)`,
+        position: 'relative',
+        overflow: 'hidden',
+        ...props.style
+      }}
+      styles={{
+        root: {
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            borderRadius: '50%',
+            border: '2px solid var(--mantine-color-white)',
+            boxShadow: `0 0 10px ${color}80`,
+            animation: 'robloxPulse 3s infinite'
+          }
+        }
+      }}
+    >
+      {children}
+    </Badge>
+  );
+};
+
+// Notification card with Roblox styling - Pure Mantine
+export const RobloxNotificationCard: React.FC<any> = ({ severity = 'info', children, ...props }) => {
   const colors = {
     info: '#3B82F6',
-    success: '#22C55E',
+    success: '#10B981',
     warning: '#F59E0B',
     error: '#EF4444'
   };
   const color = colors[severity];
-  return {
-    backgroundColor: alpha(color, 0.1),
-    borderColor: alpha(color, 0.3),
-    '&::before': {
-      background: color
-    }
-  };
-});
-// Loading skeleton with Roblox theme
-export const RobloxSkeleton = styled(Box)<{ width?: number | string; height?: number | string }>(({ theme, width = '100%', height = 20 }) => ({
-  width,
-  height,
-  borderRadius: designTokens.borderRadius.md,
-  background: theme.palette.mode === 'dark'
-    ? `linear-gradient(90deg, ${alpha(ROBLOX_GRAY, 0.2)} 25%, ${alpha(ROBLOX_GRAY, 0.3)} 50%, ${alpha(ROBLOX_GRAY, 0.2)} 75%)`
-    : `linear-gradient(90deg, ${alpha(ROBLOX_GRAY, 0.1)} 25%, ${alpha(ROBLOX_GRAY, 0.2)} 50%, ${alpha(ROBLOX_GRAY, 0.1)} 75%)`,
-  backgroundSize: '200% 100%',
-  animation: `${robloxShimmer} 1.5s infinite`
-}));
-// Gamified container
-export const GameContainer = styled(Box)(({ theme }) => ({
-  background: theme.palette.mode === 'dark'
-    ? `radial-gradient(circle at 20% 80%, ${alpha(ROBLOX_RED, 0.1)} 0%, transparent 50%), radial-gradient(circle at 80% 20%, ${alpha('#8B5CF6', 0.1)} 0%, transparent 50%)`
-    : `radial-gradient(circle at 20% 80%, ${alpha(ROBLOX_RED, 0.05)} 0%, transparent 50%), radial-gradient(circle at 80% 20%, ${alpha('#8B5CF6', 0.05)} 0%, transparent 50%)`,
-  borderRadius: designTokens.borderRadius['3xl'],
-  padding: designTokens.spacing[6],
-  position: 'relative',
-  overflow: 'hidden',
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: `conic-gradient(from 0deg, transparent, ${alpha(ROBLOX_RED, 0.1)}, transparent)`,
-    animation: `${robloxFloat} 10s linear infinite`,
-    pointerEvents: 'none'
-  }
-}));
+
+  return (
+    <RobloxCard
+      {...props}
+      style={{
+        backgroundColor: `${color}1A`,
+        borderColor: `${color}4D`,
+        ...props.style
+      }}
+      styles={{
+        root: {
+          '&::before': {
+            background: color
+          }
+        }
+      }}
+    >
+      {children}
+    </RobloxCard>
+  );
+};
+
+// Loading skeleton with Roblox theme - Pure Mantine
+export const RobloxSkeleton: React.FC<any> = ({ width = '100%', height = 20, ...props }) => (
+  <Box
+    {...props}
+    style={{
+      width,
+      height,
+      borderRadius: 'var(--mantine-radius-md)',
+      background: `linear-gradient(90deg, ${ROBLOX_GRAY}33 25%, ${ROBLOX_GRAY}4D 50%, ${ROBLOX_GRAY}33 75%)`,
+      backgroundSize: '200% 100%',
+      animation: 'robloxShimmer 1.5s infinite',
+      ...props.style
+    }}
+  />
+);
+
+// Gamified container - Pure Mantine
+export const GameContainer: React.FC<any> = ({ children, ...props }) => (
+  <Box
+    {...props}
+    style={{
+      background: `radial-gradient(circle at 20% 80%, ${ROBLOX_RED}1A 0%, transparent 50%), radial-gradient(circle at 80% 20%, #8B5CF61A 0%, transparent 50%)`,
+      borderRadius: 'var(--mantine-radius-xl)',
+      padding: 'var(--mantine-spacing-xl)',
+      position: 'relative',
+      overflow: 'hidden',
+      ...props.style
+    }}
+    styles={{
+      root: {
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: `conic-gradient(from 0deg, transparent, ${ROBLOX_RED}1A, transparent)`,
+          animation: 'robloxFloat 10s linear infinite',
+          pointerEvents: 'none'
+        }
+      }
+    }}
+  >
+    {children}
+  </Box>
+);
 export default {
   RobloxCard,
   RobloxButton,

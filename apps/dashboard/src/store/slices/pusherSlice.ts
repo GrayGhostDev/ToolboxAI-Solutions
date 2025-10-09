@@ -6,7 +6,7 @@
  * @since 2025-09-26
  */
 
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 // Pusher connection states
 export enum PusherConnectionState {

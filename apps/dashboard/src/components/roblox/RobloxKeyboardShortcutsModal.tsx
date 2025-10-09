@@ -10,7 +10,7 @@
 import { memo } from 'react';
 import { Modal, Text, Grid, Box, Group, Badge, Stack } from '@mantine/core';
 import { IconKeyboard } from '@tabler/icons-react';
-import { KeyboardShortcut, formatShortcut } from '../../hooks/useKeyboardShortcuts';
+import { type KeyboardShortcut, formatShortcut } from '../../hooks/useKeyboardShortcuts';
 
 export interface RobloxKeyboardShortcutsModalProps {
   /** Whether modal is open */

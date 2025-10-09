@@ -193,7 +193,7 @@ export const UserLoginSchema = z.object({
 export const ClassCreationSchema = z.object({
   name: CommonValidationSchemas.requiredString.max(100),
   grade: CommonValidationSchemas.grade,
-  description: CommonValidationSchemas.optionalString.max(500),
+  description: z.string().max(500).optional(),
   schedule: CommonValidationSchemas.optionalString,
   maxStudents: CommonValidationSchemas.positiveNumber.max(50).optional(),
 });
@@ -245,10 +245,10 @@ export const MessageCreationSchema = z.object({
 });
 
 export const UserProfileUpdateSchema = z.object({
-  firstName: CommonValidationSchemas.optionalString.max(50),
-  lastName: CommonValidationSchemas.optionalString.max(50),
-  displayName: CommonValidationSchemas.optionalString.max(50),
-  bio: CommonValidationSchemas.optionalString.max(500),
+  firstName: z.string().max(50).optional(),
+  lastName: z.string().max(50).optional(),
+  displayName: z.string().max(50).optional(),
+  bio: z.string().max(500).optional(),
   avatarFile: CommonValidationSchemas.imageFile.optional(),
   language: CommonValidationSchemas.optionalString,
   timezone: CommonValidationSchemas.optionalString,

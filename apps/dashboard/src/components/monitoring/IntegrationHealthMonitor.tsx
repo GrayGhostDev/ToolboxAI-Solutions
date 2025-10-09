@@ -36,7 +36,7 @@ import {
   IconDatabase as DatabaseIcon,
   IconApi as APIIcon,
   IconNetwork as AgentIcon,
-  IconDeviceGamepad2 as RobloxIcon,
+  IconDeviceGamepad as RobloxIcon,
   IconBroadcast as RealtimeIcon,
   IconGauge as PerformanceIcon,
   IconTrendingUp as TrendIcon,
