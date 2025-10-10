@@ -121,6 +121,9 @@ ToolBoxAI-Solutions/
 - [Collaboration Guide](docs/guides/COLLABORATION.md) - Team workflows
 - [Roblox Quick Start](docs/guides/ROBLOX_QUICK_START.md) - Roblox integration
 
+### Testing Guides
+- [Visual Regression Testing Guide](docs/testing/visual-regression-guide.md) - Comprehensive visual testing with Playwright
+
 ### Architecture & Design
 - [Accessibility Guide](docs/guides/ACCESSIBILITY_GUIDE.md) - Accessibility standards
 - [Responsive Design Guide](docs/guides/RESPONSIVE_DESIGN_GUIDE.md) - UI/UX guidelines
@@ -153,6 +156,7 @@ ToolBoxAI-Solutions/
 - **Containerization**: Docker with security hardening
 - **Orchestration**: Docker Compose / Kubernetes ready
 - **CI/CD**: GitHub Actions (23 workflows)
+- **Testing**: Playwright visual regression (56 tests across 6 feature areas)
 - **Monitoring**: Prometheus + Grafana (ready to deploy)
 
 ## 📚 Core Features
@@ -184,6 +188,11 @@ ToolBoxAI-Solutions/
 make test                    # Run all tests
 pytest                       # Python tests
 npm -w apps/dashboard test   # Frontend tests
+
+# Visual Regression Testing
+npm -w apps/dashboard run test:e2e:visual          # Run visual tests
+npm -w apps/dashboard run test:e2e:visual:update   # Update snapshots
+npm -w apps/dashboard run test:e2e:visual:debug    # Debug visual tests
 
 # Linting & Formatting
 make lint                    # Run all linters

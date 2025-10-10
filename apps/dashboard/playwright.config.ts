@@ -101,6 +101,24 @@ export default defineConfig({
           permissions: ['notifications', 'clipboard-read', 'clipboard-write'],
         }
       },
+      // Visual regression testing project
+      testMatch: /.*\.(spec|visual)\.ts/,
+    },
+
+    // Visual regression testing only (Chromium)
+    {
+      name: 'visual-regression',
+      use: {
+        ...devices['Desktop Chrome'],
+        // Specific settings for consistent visual testing
+        viewport: { width: 1280, height: 720 },
+        deviceScaleFactor: 1,
+        hasTouch: false,
+        isMobile: false,
+        colorScheme: 'light',
+      },
+      testMatch: /.*\.visual\.spec\.ts/,
+      retries: 0, // No retries for visual tests
     },
     {
       name: 'firefox',
@@ -213,8 +231,27 @@ export default defineConfig({
   expect: {
     timeout: 5 * 1000,
 
-    // Custom matchers
-    toMatchSnapshot: { maxDiffPixels: 100 },
+    // Visual regression settings
+    toHaveScreenshot: {
+      // Maximum number of pixels that can be different
+      maxDiffPixels: 100,
+      // Maximum ratio of pixels that can be different (0-1)
+      maxDiffPixelRatio: 0.01,
+      // Pixel comparison threshold (0-1)
+      threshold: 0.2,
+      // Animations: 'allow' | 'disabled'
+      animations: 'disabled',
+      // CSS animations and transitions
+      caret: 'hide',
+      // Scale factor for retina displays
+      scale: 'css',
+    },
+
+    // Snapshot settings
+    toMatchSnapshot: {
+      maxDiffPixels: 100,
+      threshold: 0.2,
+    },
   },
 
   // Output folder for test artifacts

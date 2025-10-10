@@ -513,6 +513,43 @@ The backend still maintains WebSocket endpoints for backward compatibility:
 - Component and integration tests
 - jsdom environment with canvas/ResizeObserver mocks needed
 
+#### Visual Regression Testing (Added 2025-10-10)
+- **Framework**: Playwright's native visual regression using `toHaveScreenshot()`
+- **Test Location**: `apps/dashboard/e2e/visual/*.visual.spec.ts`
+- **Test Coverage**: 56 tests across 6 feature areas
+  - Authentication (7 tests): Login, register, password reset, validation
+  - Dashboard (11 tests): Home, stats, charts, navigation, dark mode
+  - Classes (10 tests): List, details, students, assignments, modals
+  - Content (10 tests): Library, creation, editor, AI assistant, preview
+  - Quizzes (10 tests): Library, creation, taking, results, progress
+  - Reports (8 tests): Analytics, charts, tables, filters, export
+- **Utilities**: `e2e/utils/visual-testing.ts` provides helper functions
+  - `preparePageForVisualTesting()` - Disables animations, waits for fonts/images
+  - `captureFullPageSnapshot()` - Full page screenshot comparison
+  - `captureComponentSnapshot()` - Component-level visual testing
+  - `maskDynamicElements()` - Auto-mask timestamps, dates, UUIDs
+  - `testResponsiveSnapshots()` - Test across multiple viewports
+  - `STANDARD_VIEWPORTS` - Predefined viewport sizes
+- **Configuration**: Enhanced `playwright.config.ts` with visual regression settings
+- **Commands**:
+  ```bash
+  npm run test:e2e:visual          # Run all visual regression tests
+  npm run test:e2e:visual:update   # Update baseline snapshots
+  npm run test:e2e:visual:debug    # Debug visual tests with Playwright UI
+  npx playwright show-report       # View test results with diffs
+  ```
+- **CI/CD Integration**: Dedicated `visual-regression-tests` job in GitHub Actions
+  - Runs on every PR to main/develop branches
+  - Uploads visual diffs as artifacts on failure
+  - Comments on PRs with update instructions
+- **Documentation**: See `docs/testing/visual-regression-guide.md` for comprehensive guide
+- **Best Practices**:
+  - Always use `preparePageForVisualTesting()` in test beforeEach
+  - Mask dynamic content to prevent false failures
+  - Test critical user flows across mobile, tablet, desktop viewports
+  - Review snapshot diffs carefully before updating baselines
+  - Commit updated snapshots with clear explanation of visual changes
+
 #### Test Database Shims
 Compatibility layers exist for legacy test imports:
 - `database/connection.py` - Re-exports from root
