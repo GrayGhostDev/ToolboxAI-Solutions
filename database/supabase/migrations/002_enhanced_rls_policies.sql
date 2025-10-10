@@ -597,7 +597,7 @@ COMMENT ON FUNCTION is_student() IS
 'Returns true if current user is a student';
 
 COMMENT ON FUNCTION in_user_organization(UUID) IS
-'Checks if the provided organization_id matches the current user\'s organization';
+'Checks if the provided organization_id matches the current user''s organization';
 
 COMMENT ON TABLE rls_audit_log IS
 'Audit log for tracking all data modifications with user context';
