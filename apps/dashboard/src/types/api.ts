@@ -444,6 +444,79 @@ export interface RewardRedemption {
   approvedAt?: string;
 }
 
+// Billing & Subscriptions
+export interface Subscription {
+  id: number;
+  tier: 'free' | 'starter' | 'professional' | 'enterprise';
+  status: 'trialing' | 'active' | 'incomplete' | 'past_due' | 'canceled' | 'unpaid';
+  amount: number;
+  currency: string;
+  interval: 'month' | 'year';
+  currentPeriodStart?: string;
+  currentPeriodEnd?: string;
+  trialEnd?: string;
+  cancelAtPeriodEnd: boolean;
+  canceledAt?: string;
+}
+
+export interface SubscriptionCreate {
+  tier: 'starter' | 'professional' | 'enterprise';
+  interval?: 'month' | 'year';
+  paymentMethodId?: string;
+  trialDays?: number;
+}
+
+export interface SubscriptionUpdate {
+  tier?: 'starter' | 'professional' | 'enterprise';
+  interval?: 'month' | 'year';
+}
+
+export interface SubscriptionCancel {
+  cancelAtPeriodEnd?: boolean;
+  reason?: string;
+}
+
+export interface PaymentMethod {
+  id: number;
+  type: 'card' | 'bank_account';
+  isDefault: boolean;
+  cardBrand?: string;
+  cardLast4?: string;
+  cardExpMonth?: number;
+  cardExpYear?: number;
+}
+
+export interface PaymentMethodAdd {
+  paymentMethodId: string;
+  setAsDefault?: boolean;
+}
+
+export interface Invoice {
+  id: string;
+  number?: string;
+  amountDue: number;
+  amountPaid: number;
+  currency: string;
+  status: 'draft' | 'open' | 'paid' | 'void' | 'uncollectible';
+  created: number;
+  periodStart?: number;
+  periodEnd?: number;
+  pdf?: string;
+  hostedUrl?: string;
+}
+
+export interface CheckoutSession {
+  id: string;
+  url: string;
+  expiresAt: number;
+}
+
+export interface CheckoutSessionCreate {
+  tier: 'starter' | 'professional' | 'enterprise';
+  interval?: 'month' | 'year';
+  trialDays?: number;
+}
+
 // API Response Wrapper
 export interface ApiResponse<T> {
   success: boolean;
