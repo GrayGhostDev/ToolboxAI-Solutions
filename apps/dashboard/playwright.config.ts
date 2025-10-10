@@ -207,14 +207,18 @@ export default defineConfig({
       reuseExistingServer: true,  // Use already running server
       env: {
         VITE_API_BASE_URL: apiURL,
-        VITE_ENABLE_CLERK_AUTH: 'false',  // Disable Clerk for tests - use custom Login
+        // Clerk auth: Enable if VITE_CLERK_PUBLISHABLE_KEY is set, otherwise disable
+        VITE_ENABLE_CLERK_AUTH: process.env.VITE_CLERK_PUBLISHABLE_KEY ? 'true' : 'false',
+        VITE_CLERK_PUBLISHABLE_KEY: process.env.VITE_CLERK_PUBLISHABLE_KEY || '',
+        VITE_CLERK_SIGN_IN_URL: '/sign-in',
+        VITE_CLERK_SIGN_UP_URL: '/sign-up',
         VITE_ENABLE_WEBSOCKET: 'false',   // Disable WebSocket - use Pusher
-        VITE_BYPASS_AUTH: 'true',         // Enable bypass mode for tests
-        VITE_USE_MOCK_DATA: 'true',       // Enable mock data for tests
+        VITE_BYPASS_AUTH: process.env.VITE_CLERK_PUBLISHABLE_KEY ? 'false' : 'true',  // Disable bypass if Clerk enabled
+        VITE_USE_MOCK_DATA: process.env.VITE_CLERK_PUBLISHABLE_KEY ? 'false' : 'true',  // Disable mocks if Clerk enabled
         VITE_PUSHER_KEY: process.env.VITE_PUSHER_KEY || 'test-key',
         VITE_PUSHER_CLUSTER: process.env.VITE_PUSHER_CLUSTER || 'us2',
         VITE_PUSHER_AUTH_ENDPOINT: '/pusher/auth',
-        VITE_E2E_TESTING: 'true',  // Disable auto-authentication for tests
+        VITE_E2E_TESTING: 'true',  // Enable E2E testing mode
       },
     },
   ],

@@ -129,24 +129,65 @@ async def handle_user_created(user_data: Dict[str, Any]):
     """
     try:
         from database.models import User
-        from database.connection import get_session
+        from database.connection import get_async_session
+        from sqlalchemy import select
+        from sqlalchemy.exc import IntegrityError
 
         user_id = user_data.get("id")
-        email = user_data.get("email_addresses", [{}])[0].get("email_address")
+        if not user_id:
+            logger.error("Missing user ID in webhook data")
+            return
+
+        email_addresses = user_data.get("email_addresses", [])
+        email = email_addresses[0].get("email_address") if email_addresses else None
+
+        if not email:
+            logger.error(f"Missing email for user {user_id}")
+            return
+
         username = user_data.get("username") or user_data.get("first_name", "User")
 
-        # Extract role from public metadata
-        role = user_data.get("public_metadata", {}).get("role", "student")
+        # Extract role from public metadata with validation
+        public_metadata = user_data.get("public_metadata", {})
+        role = public_metadata.get("role", "student")
 
-        # Create user in local database
-        async with get_session() as session:
-            # Check if user already exists
-            existing = await session.execute(f"SELECT id FROM users WHERE clerk_id = '{user_id}'")
-            if existing.scalar():
+        # Validate role against allowed values
+        allowed_roles = ["student", "teacher", "admin", "parent"]
+        if role not in allowed_roles:
+            logger.warning(f"Invalid role '{role}' for user {user_id}, defaulting to 'student'")
+            role = "student"
+
+        # Create user in local database using async session and ORM
+        async with get_async_session() as session:
+            # Check if user already exists using parameterized query
+            stmt = select(User).where(User.clerk_id == user_id)
+            result = await session.execute(stmt)
+            existing_user = result.scalar_one_or_none()
+
+            if existing_user:
                 logger.info(f"User {user_id} already exists")
                 return
 
-            # Create new user
+            # Parse email verification status safely
+            email_verified = False
+            if email_addresses:
+                verification = email_addresses[0].get("verification", {})
+                email_verified = verification.get("status") == "verified"
+
+            # Parse created_at timestamp safely
+            created_at = None
+            if user_data.get("created_at"):
+                try:
+                    created_at = datetime.fromisoformat(
+                        user_data.get("created_at").replace("Z", "+00:00")
+                    )
+                except (ValueError, AttributeError) as e:
+                    logger.warning(f"Failed to parse created_at: {e}")
+                    created_at = datetime.utcnow()
+            else:
+                created_at = datetime.utcnow()
+
+            # Create new user with validated data
             new_user = User(
                 clerk_id=user_id,
                 email=email,
@@ -156,22 +197,22 @@ async def handle_user_created(user_data: Dict[str, Any]):
                 last_name=user_data.get("last_name", ""),
                 avatar=user_data.get("image_url", ""),
                 is_active=True,
-                email_verified=user_data.get("email_addresses", [{}])[0]
-                .get("verification", {})
-                .get("status")
-                == "verified",
-                created_at=datetime.fromisoformat(
-                    user_data.get("created_at").replace("Z", "+00:00")
-                ),
+                email_verified=email_verified,
+                created_at=created_at,
             )
 
             session.add(new_user)
-            await session.commit()
 
-            logger.info(f"Created user {user_id} in local database")
+            try:
+                await session.commit()
+                logger.info(f"Successfully created user {user_id} in local database")
+            except IntegrityError as ie:
+                await session.rollback()
+                logger.error(f"Database integrity error creating user {user_id}: {ie}")
+                raise
 
     except Exception as e:
-        logger.error(f"Failed to create user: {e}")
+        logger.error(f"Failed to create user: {e}", exc_info=True)
         raise
 
 
@@ -183,32 +224,71 @@ async def handle_user_updated(user_data: Dict[str, Any]):
         user_data: Updated user data from Clerk
     """
     try:
-        from database.connection import get_session
+        from database.models import User
+        from database.connection import get_async_session
+        from sqlalchemy import select, update
+        from datetime import datetime
 
         user_id = user_data.get("id")
+        if not user_id:
+            logger.error("Missing user ID in webhook data")
+            return
 
-        async with get_session() as session:
-            # Update user in local database
-            result = await session.execute(
-                f"""
-                UPDATE users
-                SET
-                    email = '{user_data.get("email_addresses", [{}])[0].get("email_address", "")}',
-                    username = '{user_data.get("username", "")}',
-                    first_name = '{user_data.get("first_name", "")}',
-                    last_name = '{user_data.get("last_name", "")}',
-                    avatar = '{user_data.get("image_url", "")}',
-                    role = '{user_data.get("public_metadata", {}).get("role", "student")}',
-                    updated_at = NOW()
-                WHERE clerk_id = '{user_id}'
-                """
-            )
-            await session.commit()
+        # Extract and validate data
+        email_addresses = user_data.get("email_addresses", [])
+        email = email_addresses[0].get("email_address") if email_addresses else None
 
-            logger.info(f"Updated user {user_id} in local database")
+        username = user_data.get("username", "")
+        first_name = user_data.get("first_name", "")
+        last_name = user_data.get("last_name", "")
+        avatar = user_data.get("image_url", "")
+
+        # Extract and validate role
+        public_metadata = user_data.get("public_metadata", {})
+        role = public_metadata.get("role", "student")
+
+        # Validate role against allowed values
+        allowed_roles = ["student", "teacher", "admin", "parent"]
+        if role not in allowed_roles:
+            logger.warning(f"Invalid role '{role}' for user {user_id}, keeping existing role")
+            role = None  # Don't update if invalid
+
+        async with get_async_session() as session:
+            # Find user using parameterized query
+            stmt = select(User).where(User.clerk_id == user_id)
+            result = await session.execute(stmt)
+            user = result.scalar_one_or_none()
+
+            if not user:
+                logger.warning(f"User {user_id} not found for update")
+                return
+
+            # Update user fields
+            if email:
+                user.email = email
+            if username:
+                user.username = username
+            if first_name:
+                user.first_name = first_name
+            if last_name:
+                user.last_name = last_name
+            if avatar:
+                user.avatar = avatar
+            if role:
+                user.role = role
+
+            user.updated_at = datetime.utcnow()
+
+            try:
+                await session.commit()
+                logger.info(f"Successfully updated user {user_id} in local database")
+            except Exception as e:
+                await session.rollback()
+                logger.error(f"Database error updating user {user_id}: {e}")
+                raise
 
     except Exception as e:
-        logger.error(f"Failed to update user: {e}")
+        logger.error(f"Failed to update user: {e}", exc_info=True)
         raise
 
 
@@ -220,25 +300,40 @@ async def handle_user_deleted(user_data: Dict[str, Any]):
         user_data: Deleted user data from Clerk
     """
     try:
-        from database.connection import get_session
+        from database.models import User
+        from database.connection import get_async_session
+        from sqlalchemy import select
+        from datetime import datetime
 
         user_id = user_data.get("id")
+        if not user_id:
+            logger.error("Missing user ID in webhook data")
+            return
 
-        async with get_session() as session:
-            # Soft delete user in local database
-            result = await session.execute(
-                f"""
-                UPDATE users
-                SET is_active = FALSE, deleted_at = NOW()
-                WHERE clerk_id = '{user_id}'
-                """
-            )
-            await session.commit()
+        async with get_async_session() as session:
+            # Find user using parameterized query
+            stmt = select(User).where(User.clerk_id == user_id)
+            result = await session.execute(stmt)
+            user = result.scalar_one_or_none()
 
-            logger.info(f"Soft deleted user {user_id} in local database")
+            if not user:
+                logger.warning(f"User {user_id} not found for deletion")
+                return
+
+            # Soft delete user
+            user.is_active = False
+            user.deleted_at = datetime.utcnow()
+
+            try:
+                await session.commit()
+                logger.info(f"Successfully soft deleted user {user_id} in local database")
+            except Exception as e:
+                await session.rollback()
+                logger.error(f"Database error deleting user {user_id}: {e}")
+                raise
 
     except Exception as e:
-        logger.error(f"Failed to delete user: {e}")
+        logger.error(f"Failed to delete user: {e}", exc_info=True)
         raise
 
 
@@ -250,27 +345,40 @@ async def handle_session_created(session_data: Dict[str, Any]):
         session_data: Session data from Clerk
     """
     try:
+        from database.models import User
+        from database.connection import get_async_session
+        from sqlalchemy import select
+        from datetime import datetime
+
         user_id = session_data.get("user_id")
         session_id = session_data.get("id")
 
-        # Log session creation
+        if not user_id:
+            logger.error("Missing user ID in session data")
+            return
+
         logger.info(f"User {user_id} logged in with session {session_id}")
 
-        # Could update last_login timestamp in database
-        from database.connection import get_session
+        # Update last_login timestamp in database
+        async with get_async_session() as session:
+            # Find user using parameterized query
+            stmt = select(User).where(User.clerk_id == user_id)
+            result = await session.execute(stmt)
+            user = result.scalar_one_or_none()
 
-        async with get_session() as session:
-            await session.execute(
-                f"""
-                UPDATE users
-                SET last_login = NOW()
-                WHERE clerk_id = '{user_id}'
-                """
-            )
-            await session.commit()
+            if user:
+                user.last_login = datetime.utcnow()
+                try:
+                    await session.commit()
+                    logger.info(f"Updated last_login for user {user_id}")
+                except Exception as e:
+                    await session.rollback()
+                    logger.error(f"Failed to update last_login: {e}")
+            else:
+                logger.warning(f"User {user_id} not found when updating last_login")
 
     except Exception as e:
-        logger.error(f"Failed to handle session creation: {e}")
+        logger.error(f"Failed to handle session creation: {e}", exc_info=True)
 
 
 async def handle_session_ended(session_data: Dict[str, Any]):
