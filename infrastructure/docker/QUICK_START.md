@@ -46,7 +46,7 @@ curl http://localhost:8009/health
 - **PostgreSQL**: `5432` (Primary Database)
 - **Redis**: `6379` (Cache + Sessions)
 - **Roblox Sync**: `34872` (Studio Integration)
-- **Adminer**: `8082` (Database UI)
+- **Adminer**: `8080` (Database UI)
 - **Redis Commander**: `8081` (Redis UI)
 - **Mailhog**: `8025` (Email Testing)
 
@@ -128,7 +128,7 @@ docker compose -f compose/docker-compose.yml -f compose/docker-compose.dev.yml l
 # Connect to PostgreSQL (development)
 docker compose -f compose/docker-compose.yml -f compose/docker-compose.dev.yml exec postgres psql -U toolboxai -d toolboxai
 
-# Or use Adminer at http://localhost:8082
+# Or use Adminer at http://localhost:8080
 ```
 
 #### Redis Access

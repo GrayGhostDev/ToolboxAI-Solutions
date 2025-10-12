@@ -68,7 +68,7 @@ You should see these services reporting `running` or `healthy`:
 - **MCP Server**: http://localhost:9877
 - **Agent Coordinator**: http://localhost:8888
 - **Celery Flower**: http://localhost:5555
-- **Adminer (Postgres UI)**: http://localhost:8082
+- **Adminer (Postgres UI)**: http://localhost:8080
 - **Redis Commander**: http://localhost:8081
 - **Mailhog**: http://localhost:8025
 

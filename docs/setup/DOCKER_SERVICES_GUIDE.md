@@ -32,7 +32,7 @@ The combined configuration launches:
 | Celery Worker | `toolboxai-celery-worker` | — | Processes async jobs |
 | Celery Beat | `toolboxai-celery-beat` | — | Schedules periodic jobs |
 | Flower | `toolboxai-flower` | 5555 | Task monitoring |
-| Adminer | `toolboxai-adminer` | 8082 | Database UI |
+| Adminer | `toolboxai-adminer` | 8080 | Database UI |
 | Redis Commander | `toolboxai-redis-commander` | 8081 | Redis UI |
 | Mailhog | `toolboxai-mailhog` | 8025 | Email testing |
 

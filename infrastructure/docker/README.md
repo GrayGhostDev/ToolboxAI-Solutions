@@ -65,7 +65,7 @@ docker compose -f infrastructure/docker/compose/docker-compose.yml \
 - Dashboard: http://localhost:5179
 - Backend API: http://localhost:8009
 - API Docs: http://localhost:8009/docs
-- Adminer (DB): http://localhost:8082
+- Adminer (DB): http://localhost:8080
 - Redis Commander: http://localhost:8081
 - Mailhog: http://localhost:8025
 
