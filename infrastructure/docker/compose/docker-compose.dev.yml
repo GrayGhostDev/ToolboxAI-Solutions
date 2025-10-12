@@ -16,6 +16,9 @@ services:
     environment:
       # Use simple password for dev (override secrets)
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpass2024}
+      POSTGRES_USER: ${POSTGRES_USER:-toolboxai}
+      POSTGRES_DB: ${POSTGRES_DB:-toolboxai}
+      POSTGRES_PASSWORD_FILE: ""
       # Enable query logging for development
       POSTGRES_LOG_STATEMENT: all
       POSTGRES_LOG_CONNECTIONS: "on"

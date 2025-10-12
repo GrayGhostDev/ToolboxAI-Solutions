@@ -63,7 +63,7 @@ Press `Ctrl+C` to stop streaming.
 | MCP Server | http://localhost:9877 | Model Context Protocol |
 | Agent Coordinator | http://localhost:8888 | Orchestration API |
 | Celery Flower | http://localhost:5555 | Task dashboard (admin/admin) |
-| Adminer | http://localhost:8080 | Postgres UI |
+| Adminer | http://localhost:8082 | Postgres UI |
 | Redis Commander | http://localhost:8081 | Redis browser (admin/admin) |
 | Mailhog | http://localhost:8025 | Test inbox |
 
