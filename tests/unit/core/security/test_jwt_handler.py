@@ -248,9 +248,9 @@ class TestJWTTokenSecurity:
         data = {"sub": "user123"}
 
         token1 = create_access_token(data)
-        # Wait a moment to ensure different timestamp
+        # Wait a moment to ensure different timestamp (JWT uses second precision)
         import time
-        time.sleep(0.01)
+        time.sleep(1.1)
         token2 = create_access_token(data)
 
         # Tokens should be different due to different exp timestamp
@@ -268,15 +268,13 @@ class TestJWTTokenSecurity:
     def test_tokens_expire_correctly(self):
         """Test that expired tokens cannot be used."""
         data = {"sub": "user123"}
+        # Create an already-expired token (negative delta)
         token = create_access_token(
             data,
-            expires_delta=timedelta(milliseconds=100)
+            expires_delta=timedelta(seconds=-5)
         )
 
-        # Wait for token to expire
-        import time
-        time.sleep(0.2)
-
+        # Token should be expired immediately
         with pytest.raises(HTTPException) as exc_info:
             verify_token(token)
 
@@ -360,15 +358,12 @@ class TestJWTEdgeCases:
     def test_create_token_with_zero_expiration(self):
         """Test creating token with zero expiration."""
         data = {"sub": "user123"}
-        expires_delta = timedelta(seconds=0)
+        # Use negative delta to ensure immediate expiration (JWT has second precision)
+        expires_delta = timedelta(seconds=-1)
 
         token = create_access_token(data, expires_delta=expires_delta)
 
-        # Token should be immediately expired or expire very soon
-        # Give it a moment to definitely be expired
-        import time
-        time.sleep(0.01)
-
+        # Token should be immediately expired
         with pytest.raises(HTTPException):
             verify_token(token)
 
