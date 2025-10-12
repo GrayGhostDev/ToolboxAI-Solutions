@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Outdated configuration references
 - Missing accessibility features
 - Incorrect compose volume paths and documentation references to legacy scripts
+- Development PostgreSQL service now honors .env credentials to prevent connection failures during local startup
 
 ## [2.0.0] - 2025-09-14
 
