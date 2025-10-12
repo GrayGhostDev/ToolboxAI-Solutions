@@ -70,15 +70,46 @@ db_url = f"postgresql://{creds['username']}:{creds['password']}@localhost/toolbo
 Migrate existing hardcoded secrets to Vault:
 
 ```bash
-# Dry run to identify secrets
-python scripts/vault/migrate_secrets.py --dry-run --output secrets_report.md
+# Dry run to identify secrets from .env (report written to JSON)
+python scripts/vault/migrate_secrets.py \
+  --plan scripts/vault/examples/migration_plan.example.json \
+  --dry-run \
+  --output-report secrets_report.json
 
 # Perform actual migration
-python scripts/vault/migrate_secrets.py
+python scripts/vault/migrate_secrets.py \
+  --plan scripts/vault/examples/migration_plan.example.json
 
-# Rotate all secrets
-python scripts/vault/rotate_secrets.py
+# Rotate all secrets that are due and a specific path
+python scripts/vault/rotate_secrets.py --all
+python scripts/vault/rotate_secrets.py --path apps/backend/secrets/openai
 ```
+
+### Automated Rotation Workflow
+
+A dedicated GitHub Actions workflow (`.github/workflows/vault-rotation.yml`) runs nightly at 03:15 UTC to execute `scripts/vault/rotate_secrets.py --all`. It requires the Vault credentials (`VAULT_ADDR`, `VAULT_ROLE_ID`, `VAULT_SECRET_ID`, `VAULT_NAMESPACE`) to be stored as encrypted repository secrets. Monitor the workflow results in GitHub Actions and configure alerts for failures.
+
+### Secret Detection Guardrail
+
+Run the lightweight secret scanner before committing or in CI:
+
+```bash
+# Scan entire repo using default patterns and allowlist
+python scripts/security/check_secrets.py --root . --allowlist scripts/security/allowlist.txt --fail-on-detect
+```
+
+Allowlist entries live in `scripts/security/allowlist.txt`; add only intentional exceptions (for example, a committed `.env` used for local development).
+The script is wired into `.pre-commit-config.yaml` (hook id `toolboxai-secret-scanner`) and the GitHub `security-pipeline` workflow so the same rules run locally and in CI.
+
+### Dependencies
+
+Install the tools required for Vault automation (these can be added to your local virtualenv or CI image):
+
+```bash
+pip install hvac
+```
+
+> The CLI scripts lazily import `apps.backend.services.vault_manager`. Ensure the repository root is on `PYTHONPATH` (for example, run from project root or set `PYTHONPATH=. python scripts/...`).
 
 ### Vault Features
 

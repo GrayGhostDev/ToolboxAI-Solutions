@@ -80,7 +80,7 @@ services:
       - db_password
     volumes:
       - postgres_data:/var/lib/postgresql/data:Z
-      - ./config/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ../config/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
       - postgres_backup:/backup
     networks:
       database:
@@ -131,7 +131,7 @@ services:
       - redis_password
     volumes:
       - redis_data:/data:Z
-      - ./config/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - ../config/redis.conf:/usr/local/etc/redis/redis.conf:ro
     networks:
       cache:
         aliases:

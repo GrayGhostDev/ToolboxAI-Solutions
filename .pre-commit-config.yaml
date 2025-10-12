@@ -74,6 +74,16 @@ repos:
       - id: destroyed-symlinks
       - id: fix-byte-order-marker
 
+  # Security - ToolboxAI custom secret scanner
+  - repo: local
+    hooks:
+      - id: toolboxai-secret-scanner
+        name: ToolboxAI Secret Scanner
+        entry: python scripts/security/check_secrets.py --root . --allowlist scripts/security/allowlist.txt --fail-on-detect
+        language: system
+        pass_filenames: true
+        types: [text]
+
   # Python - Type checking with Python 3.12 support
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.8.0

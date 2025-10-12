@@ -2,7 +2,7 @@
 # ToolBoxAI Docker Development Environment Startup Script
 # This script validates configuration and starts all services in the correct order
 
-set -e
+set -euo pipefail
 
 # Colors for output
 RED='\033[0;31m'
@@ -12,9 +12,13 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-COMPOSE_FILES=("-f infrastructure/docker/compose/docker-compose.yml" "-f infrastructure/docker/compose/docker-compose.dev.yml")
-PROJECT_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-ENV_FILE=".env"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+COMPOSE_FILES=(
+    "-f" "$PROJECT_ROOT/infrastructure/docker/compose/docker-compose.yml"
+    "-f" "$PROJECT_ROOT/infrastructure/docker/compose/docker-compose.dev.yml"
+)
+ENV_FILE="$PROJECT_ROOT/.env"
 
 # Logging functions
 log() {
@@ -31,6 +35,21 @@ log_warn() {
 
 log_error() {
     echo -e "${RED}[$(date +'%Y-%m-%d %H:%M:%S')] [SETUP]${NC} $1"
+}
+
+if docker compose version >/dev/null 2>&1; then
+    COMPOSE_CMD=(docker compose)
+elif command -v docker-compose >/dev/null 2>&1; then
+    COMPOSE_CMD=(docker-compose)
+else
+    log_error "Docker Compose plugin or binary not found. Install Docker Desktop 4.29+."
+    exit 1
+fi
+
+COMPOSE_DISPLAY="${COMPOSE_CMD[*]}"
+
+compose() {
+    "${COMPOSE_CMD[@]}" "${COMPOSE_FILES[@]}" "$@"
 }
 
 # Function to check if Docker is running
@@ -93,7 +112,7 @@ validate_env_file() {
 check_port_conflicts() {
     log "Checking for port conflicts..."
     
-    local ports=(8009 5179 5434 6381 8888 9877 5001 8000)
+    local ports=(8009 5179 5434 6381 8888 9877 5555 8080 8081 8025)
     local conflicts=()
     
     for port in "${ports[@]}"; do
@@ -131,6 +150,7 @@ validate_dockerfiles() {
         "infrastructure/docker/dockerfiles/agents.Dockerfile"
         "infrastructure/docker/dockerfiles/celery-worker.Dockerfile"
         "infrastructure/docker/dockerfiles/celery-beat.Dockerfile"
+        "infrastructure/docker/dockerfiles/celery-flower.Dockerfile"
         "infrastructure/docker/dockerfiles/roblox-sync.Dockerfile"
     )
     
@@ -158,7 +178,7 @@ validate_dockerfiles() {
 validate_compose_file() {
     log "Validating docker-compose file..."
     
-    if ! docker-compose ${COMPOSE_FILES[@]} config --quiet; then
+    if ! compose config --quiet; then
         log_error "Docker Compose file validation failed"
         return 1
     fi
@@ -172,7 +192,7 @@ cleanup_previous_run() {
     log "Cleaning up previous Docker resources..."
     
     # Stop and remove containers
-    docker-compose ${COMPOSE_FILES[@]} down --remove-orphans --volumes 2>/dev/null || true
+    compose down --remove-orphans --volumes 2>/dev/null || true
     
     # Remove dangling images (optional)
     docker image prune -f > /dev/null 2>&1 || true
@@ -185,11 +205,11 @@ pull_base_images() {
     log "Pulling base Docker images..."
     
     local base_images=(
-        "postgres:15-alpine"
-        "redis:7-alpine" 
-        "python:3.11-slim"
+        "postgres:16-alpine"
+        "redis:7-alpine"
+        "python:3.12-slim"
         "node:22-alpine"
-        "ghost:5-alpine"
+        "hashicorp/vault:latest"
     )
     
     for image in "${base_images[@]}"; do
@@ -204,7 +224,7 @@ pull_base_images() {
 build_services() {
     log "Building Docker services..."
     
-    if ! docker-compose ${COMPOSE_FILES[@]} build --parallel; then
+    if ! compose build --parallel; then
         log_error "Failed to build services"
         return 1
     fi
@@ -216,16 +236,16 @@ build_services() {
 # Function to start services in phases
 start_services() {
     log "Starting services in phases..."
-    
+
     # Phase 1: Database and cache services
     log "Phase 1: Starting database and cache services..."
-    docker-compose ${COMPOSE_FILES[@]} up -d postgres redis
-    
+    compose up -d postgres redis
+
     # Wait for databases to be ready
     log "Waiting for PostgreSQL to be ready..."
     local postgres_ready=false
     for i in {1..30}; do
-        if docker-compose ${COMPOSE_FILES[@]} exec -T postgres pg_isready -U eduplatform -d educational_platform_dev 2>/dev/null; then
+        if compose exec -T postgres pg_isready -U "${POSTGRES_USER:-toolboxai}" -d "${POSTGRES_DB:-toolboxai}" 2>/dev/null; then
             postgres_ready=true
             break
         fi
@@ -237,11 +257,11 @@ start_services() {
         log_error "PostgreSQL failed to become ready"
         return 1
     fi
-    
+
     log "Waiting for Redis to be ready..."
     local redis_ready=false
     for i in {1..15}; do
-        if docker-compose ${COMPOSE_FILES[@]} exec -T redis redis-cli ping 2>/dev/null | grep -q PONG; then
+        if compose exec -T redis redis-cli ping 2>/dev/null | grep -q PONG; then
             redis_ready=true
             break
         fi
@@ -255,33 +275,33 @@ start_services() {
     fi
     
     log_success "Database and cache services are ready"
-    
+
     # Phase 2: Backend services
     log "Phase 2: Starting backend services..."
-    docker-compose ${COMPOSE_FILES[@]} up -d fastapi-main
-    
+    compose up -d backend
+
     # Wait for backend to be ready
     log "Waiting for FastAPI backend to be ready..."
     sleep 30
-    
+
     # Phase 3: MCP and agent services
     log "Phase 3: Starting MCP and agent services..."
-    docker-compose ${COMPOSE_FILES[@]} up -d mcp-server
+    compose up -d mcp-server
     sleep 15
-    docker-compose ${COMPOSE_FILES[@]} up -d agent-coordinator
+    compose up -d agent-coordinator
     sleep 10
-    docker-compose ${COMPOSE_FILES[@]} up -d educational-agents
-    
-    # Phase 4: Integration services
-    log "Phase 4: Starting integration services..."
-    docker-compose ${COMPOSE_FILES[@]} up -d flask-bridge ghost-backend
-    
+    compose up -d celery-worker celery-beat
+
+    # Phase 4: Observability and tooling
+    log "Phase 4: Starting observability services..."
+    compose up -d flower
+
     sleep 10
-    
+
     # Phase 5: Frontend
     log "Phase 5: Starting frontend..."
-    docker-compose ${COMPOSE_FILES[@]} up -d dashboard-frontend
-    
+    compose up -d dashboard adminer redis-commander mailhog
+
     log_success "All services started"
 }
 
@@ -326,6 +346,13 @@ verify_services() {
             services_status+="✗ Agents (8888) "
         fi
         
+        # Flower health (optional)
+        if curl -f -s -m 5 http://localhost:5555/ > /dev/null; then
+            services_status+="✓ Flower (5555) "
+        else
+            services_status+="✗ Flower (5555) "
+        fi
+
         log "$services_status"
         
         # Check if all services are healthy
@@ -342,7 +369,7 @@ verify_services() {
         attempt=$((attempt + 1))
     done
     
-    log_warn "Some services may not be fully ready yet. Check docker-compose logs for details."
+    log_warn "Some services may not be fully ready yet. Check $COMPOSE_DISPLAY ${COMPOSE_FILES[*]} logs for details."
     return 0
 }
 
@@ -354,19 +381,21 @@ show_service_urls() {
     echo
     log_success "Service URLs:"
     log_success "• Dashboard Frontend: http://localhost:5179"
-    log_success "• FastAPI Backend: http://localhost:8009"
+    log_success "• FastAPI Backend:   http://localhost:8009"
     log_success "• API Documentation: http://localhost:8009/docs"
-    log_success "• MCP Server: http://localhost:9877"
+    log_success "• MCP Server:        http://localhost:9877"
     log_success "• Agent Coordinator: http://localhost:8888"
-    log_success "• Flask Bridge: http://localhost:5001"
-    log_success "• Ghost CMS: http://localhost:8000"
+    log_success "• Celery Flower:     http://localhost:5555"
+    log_success "• Adminer:           http://localhost:8080"
+    log_success "• Redis Commander:   http://localhost:8081"
+    log_success "• Mailhog:           http://localhost:8025"
     echo
     log_success "Database Connections:"
     log_success "• PostgreSQL: localhost:5434"
     log_success "• Redis: localhost:6381"
     echo
-    log_success "To view logs: docker-compose ${COMPOSE_FILES[@]} logs -f [service-name]"
-    log_success "To stop all services: docker-compose ${COMPOSE_FILES[@]} down"
+    log_success "To view logs: $COMPOSE_DISPLAY ${COMPOSE_FILES[*]} logs -f <service>"
+    log_success "To stop all services: $COMPOSE_DISPLAY ${COMPOSE_FILES[*]} down"
     echo
 }
 
@@ -384,10 +413,10 @@ show_logs_menu() {
     echo
     
     case $REPLY in
-        1) docker-compose ${COMPOSE_FILES[@]} logs -f ;;
-        2) docker-compose ${COMPOSE_FILES[@]} logs -f dashboard-frontend ;;
-        3) docker-compose ${COMPOSE_FILES[@]} logs -f fastapi-main ;;
-        4) docker-compose ${COMPOSE_FILES[@]} logs -f agent-coordinator ;;
+        1) compose logs -f ;;
+        2) compose logs -f dashboard ;;
+        3) compose logs -f backend ;;
+        4) compose logs -f agent-coordinator ;;
         5) ;;
         *) log_warn "Invalid option" ;;
     esac
@@ -405,7 +434,7 @@ main() {
     log "ToolBoxAI Docker Development Setup"
     log "============================================"
     log "Project: $PROJECT_ROOT"
-    log "Compose file: ${COMPOSE_FILES[*]}"
+    log "Compose command: $COMPOSE_DISPLAY ${COMPOSE_FILES[*]}"
     echo
     
     # Run all validation steps

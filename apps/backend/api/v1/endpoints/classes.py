@@ -19,7 +19,7 @@ from apps.backend.models.classes import (
     ClassListResponse,
     ClassDetailsResponse,
 )
-from database.models import Class, ClassEnrollment, User
+from database.models.models import Class, ClassEnrollment, User
 from database.database_service import DatabaseService
 
 # Create database service instance

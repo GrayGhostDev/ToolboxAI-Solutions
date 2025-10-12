@@ -18,8 +18,8 @@
  * @requires supabase
  */
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
+// Updated to 2025 standards: Deno 2.1 + Supabase JS 2.75.0
+import { createClient } from "npm:@supabase/supabase-js@2.75.0";
 
 // ============================================================================
 // Types and Interfaces
@@ -418,7 +418,7 @@ async function processFile(
 // Edge Function Handler
 // ============================================================================
 
-serve(async (req: Request) => {
+Deno.serve(async (req: Request) => {
   try {
     // Handle CORS preflight
     if (req.method === "OPTIONS") {

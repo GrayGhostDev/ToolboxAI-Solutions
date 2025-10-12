@@ -42,7 +42,7 @@ infrastructure/docker/
 
 1. **Clone and navigate to the project:**
 ```bash
-cd /Volumes/G-DRIVE\ ArmorATD/Development/Clients/ToolBoxAI-Solutions
+cd /Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions
 ```
 
 2. **Copy environment template:**
@@ -53,8 +53,12 @@ cp .env.example .env
 
 3. **Start development stack:**
 ```bash
-cd infrastructure/docker/compose
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+./infrastructure/docker/start-docker-dev.sh
+```
+This helper performs validation, builds images, and starts services in the proper order. To start manually use:
+```bash
+docker compose -f infrastructure/docker/compose/docker-compose.yml \
+              -f infrastructure/docker/compose/docker-compose.dev.yml up -d
 ```
 
 4. **Access services:**

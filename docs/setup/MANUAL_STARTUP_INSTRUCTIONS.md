@@ -1,367 +1,129 @@
-# MANUAL STARTUP INSTRUCTIONS
+# Manual Startup Instructions (Developer Mode)
 
-Since the terminal commands are not returning output in the current session, please follow these **manual steps** to start all services.
+Follow these steps when you need to bring the ToolboxAI development stack up by hand.
 
-## Step-by-Step Manual Startup
-
-### 1. Start Docker Desktop
-
-Open a **new Terminal window** and run:
-
+## 1. Start Docker Desktop
 ```bash
 open -a Docker
 ```
+Wait until the Docker whale icon in the macOS menu bar stops animating.
 
-Wait 30-60 seconds for Docker to fully start. You'll see a Docker whale icon in your macOS menu bar at the top of the screen.
-
-### 2. Verify Docker is Running
-
-In your new terminal, run:
-
+## 2. Confirm Docker Is Ready
 ```bash
 docker ps
 ```
+Seeing the container table (even if empty) means Docker is ready.
 
-You should see a table with headers. If you get an error, Docker isn't ready yet - wait another 30 seconds and try again.
-
-### 3. Navigate to Project Directory
-
+## 3. Navigate to the Repository
 ```bash
-cd /Users/grayghostdataconsultants/GrayGhostDataConsultants/Development/ActiveProjects/Development/Cursor/Customers/ToolboxAI-Solutions
+cd /Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions
 ```
 
-### 4. Stop Any Existing Containers
-
+## 4. (Optional) Run the Preflight Check
 ```bash
-docker-compose -f docker-compose.complete.yml down
+./infrastructure/docker/check-setup.sh
 ```
+This highlights missing Dockerfiles, port conflicts, and required env vars.
 
-### 5. Start All Services
-
+## 5. Stop Any Existing Stack
 ```bash
-docker-compose -f docker-compose.complete.yml up -d
+docker compose -f infrastructure/docker/compose/docker-compose.yml \
+              -f infrastructure/docker/compose/docker-compose.dev.yml down
 ```
+This clears out stale containers while keeping volumes intact.
 
-This will:
-- Pull PostgreSQL 16 image
-- Pull Redis 7 image
-- Build backend service
-- Build dashboard service
-- Build MCP and coordinator services
-- Start all monitoring services
-
-**This may take 5-10 minutes on first run** as it downloads images and builds containers.
-
-### 6. Check Service Status
-
+## 6. Start All Services
 ```bash
-docker-compose -f docker-compose.complete.yml ps
+COMPOSE="docker compose -f infrastructure/docker/compose/docker-compose.yml -f infrastructure/docker/compose/docker-compose.dev.yml"
+$COMPOSE up -d
 ```
+On first run Docker downloads images and builds containers; expect a few minutes of setup.
 
-You should see all services with "Up" status:
-- toolboxai-postgres
-- toolboxai-redis
-- toolboxai-backend
-- toolboxai-dashboard
-- toolboxai-mcp
-- toolboxai-coordinator
-- toolboxai-nginx
-- toolboxai-prometheus
-- toolboxai-grafana
-- toolboxai-vault
-
-### 7. Verify PostgreSQL 16
-
+## 7. Verify Containers
 ```bash
-docker-compose -f docker-compose.complete.yml exec postgres psql -U eduplatform -d educational_platform_dev -c "SELECT version();"
+docker compose -f infrastructure/docker/compose/docker-compose.yml \
+              -f infrastructure/docker/compose/docker-compose.dev.yml ps
 ```
+You should see `postgres`, `redis`, `backend`, `dashboard`, `mcp-server`, `agent-coordinator`, `celery-worker`, `celery-beat`, `flower`, `adminer`, `redis-commander`, and `mailhog` listed as running/healthy.
 
-You should see output showing PostgreSQL 16.x
-
-### 8. Check Logs (if any service is not running)
-
-For specific service:
+## 8. Tail Logs (if needed)
 ```bash
-docker-compose -f docker-compose.complete.yml logs postgres
-docker-compose -f docker-compose.complete.yml logs backend
-docker-compose -f docker-compose.complete.yml logs dashboard
+$COMPOSE logs -f backend
+$COMPOSE logs -f dashboard
 ```
+Press `Ctrl+C` to stop streaming.
 
-For all services:
+## 9. Access the Running Services
+
+| Service | URL | Notes |
+| --- | --- | --- |
+| Dashboard | http://localhost:5179 | Vite dev server |
+| Backend API | http://localhost:8009 | FastAPI |
+| API Docs | http://localhost:8009/docs | Swagger UI |
+| MCP Server | http://localhost:9877 | Model Context Protocol |
+| Agent Coordinator | http://localhost:8888 | Orchestration API |
+| Celery Flower | http://localhost:5555 | Task dashboard (admin/admin) |
+| Adminer | http://localhost:8080 | Postgres UI |
+| Redis Commander | http://localhost:8081 | Redis browser (admin/admin) |
+| Mailhog | http://localhost:8025 | Test inbox |
+
+## Helper Scripts
+
+All scripts live in `infrastructure/docker/` and assume you are in the repo root.
+
+| Script | When to Use |
+| --- | --- |
+| `check-setup.sh` | Quick readiness check (Docker, ports, env vars) |
+| `start-docker-dev.sh` | Full validation and startup sequence |
+| `start-services.sh` | Lightweight helper when you just need the stack |
+| `start-services-enhanced.sh` | Guided startup with health polling |
+| `validate-setup.sh` | Comprehensive validation + reporting |
+
+## Common Issues
+
+### Port Already in Use
 ```bash
-docker-compose -f docker-compose.complete.yml logs -f
+lsof -i :5434 :6381 :8009 :5179
 ```
+Stop the conflicting process or update the port mapping in the dev compose override.
 
-Press `Ctrl+C` to stop watching logs.
-
-## Access Your Running Services
-
-Once all services are up:
-
-| Service | URL | Credentials |
-|---------|-----|-------------|
-| **Dashboard** | http://localhost:5179 | - |
-| **Backend API** | http://localhost:8009 | - |
-| **API Docs** | http://localhost:8009/docs | - |
-| **Grafana** | http://localhost:3001 | admin/admin |
-| **Prometheus** | http://localhost:9090 | - |
-| **Vault** | http://localhost:8200 | token: root |
-
-## Quick Scripts Available
-
-I've created several scripts to help you:
-
-### Check Docker Status
+### Docker Compose Errors
+Run the validation suite for actionable diagnostics:
 ```bash
-./docker-status.sh
+./infrastructure/docker/validate-setup.sh
 ```
 
-### Start All Services (with Docker check)
+### Backend or Dashboard Unreachable
+Inspect logs:
 ```bash
-./check-and-start.sh
+$COMPOSE logs -f backend
+$COMPOSE logs -f dashboard
 ```
+Most failures trace back to missing environment variables or database migrations.
 
-### View All Logs
+## Clean Up
 ```bash
-docker-compose -f docker-compose.complete.yml logs -f
+# Stop stack, keep volumes
+$COMPOSE down
+
+# Stop stack and remove volumes (irreversible)
+$COMPOSE down -v
 ```
 
-## What Was Fixed
+## Development Database Defaults
+- Host: `localhost` (maps to container `postgres`)
+- Port: `5434`
+- Database: `toolboxai`
+- User: `toolboxai`
+- Password: `devpass2024`
 
-✅ **PostgreSQL upgraded from 15 to 16**
-- Image: `postgres:16-alpine`
-- Port 5432 exposed to host
-- Proper initialization scripts
+Redis listens on `localhost:6381` with no password in development.
 
-✅ **Database credentials properly configured**
-- User: eduplatform
-- Password: eduplatform2024
-- Database: educational_platform_dev
-- Environment variables with fallbacks
-
-✅ **Database initialization script created**
-- File: `database/init.sql`
-- Installs extensions: uuid-ossp, pgcrypto, pg_trgm
-- Creates toolboxai schema
-- Sets up permissions
-
-✅ **All services have health checks**
-- PostgreSQL: pg_isready check
-- Redis: ping check
-- Backend: HTTP health endpoint
-- Proper dependency ordering
-
-✅ **Service restart policies**
-- All services set to `restart: unless-stopped`
-- Automatic recovery on failure
-
-## Troubleshooting Common Issues
-
-### Issue: "port is already allocated" for 5432
-
-This means you have a local PostgreSQL running.
-
-**Solution:**
+With services running you can apply migrations or seed data:
 ```bash
-# Check what's using the port
-lsof -i :5432
-
-# If it's PostgreSQL from Homebrew, stop it
-brew services stop postgresql
-
-# Or kill the process
-sudo kill -9 $(lsof -ti:5432)
-
-# Then restart services
-docker-compose -f docker-compose.complete.yml restart postgres
+source venv/bin/activate
+alembic upgrade head
+python scripts/development/seed_database.py
 ```
 
-### Issue: "Cannot connect to Docker daemon"
-
-Docker Desktop isn't running.
-
-**Solution:**
-1. Look for Docker whale icon in menu bar
-2. If not there, run: `open -a Docker`
-3. Wait for icon to appear and stop animating
-4. Try your command again
-
-### Issue: PostgreSQL container keeps restarting
-
-Check the logs for the specific error:
-
-```bash
-docker-compose -f docker-compose.complete.yml logs postgres
-```
-
-Common causes:
-- Corrupted data volume
-- Insufficient disk space
-- Permission issues
-
-**Solution:**
-```bash
-# Remove volumes and start fresh
-docker-compose -f docker-compose.complete.yml down -v
-docker-compose -f docker-compose.complete.yml up -d
-```
-
-### Issue: Backend fails to connect to database
-
-Check if PostgreSQL is healthy:
-
-```bash
-docker-compose -f docker-compose.complete.yml ps postgres
-docker-compose -f docker-compose.complete.yml logs postgres
-```
-
-**Solution:**
-```bash
-# Restart backend after database is healthy
-docker-compose -f docker-compose.complete.yml restart backend
-```
-
-### Issue: Dashboard not loading
-
-Check if backend is running:
-
-```bash
-curl http://localhost:8009/health
-```
-
-**Solution:**
-```bash
-# Check backend logs
-docker-compose -f docker-compose.complete.yml logs backend
-
-# Restart dashboard
-docker-compose -f docker-compose.complete.yml restart dashboard
-```
-
-## Verify Everything is Working
-
-### 1. Check PostgreSQL Connection
-```bash
-docker-compose -f docker-compose.complete.yml exec postgres psql -U eduplatform -d educational_platform_dev
-```
-
-Inside psql:
-```sql
--- Check version (should be 16.x)
-SELECT version();
-
--- List extensions
-\dx
-
--- List schemas
-\dn
-
--- Exit
-\q
-```
-
-### 2. Check Redis Connection
-```bash
-docker-compose -f docker-compose.complete.yml exec redis redis-cli
-```
-
-Inside redis-cli:
-```
-PING
-# Should return: PONG
-
-INFO server
-# Shows Redis version
-
-EXIT
-```
-
-### 3. Check Backend API
-```bash
-# Health check
-curl http://localhost:8009/health
-
-# API documentation
-open http://localhost:8009/docs
-```
-
-### 4. Check Dashboard
-```bash
-open http://localhost:5179
-```
-
-## Next Steps After Startup
-
-Once all services are running:
-
-1. **Run Database Migrations** (if needed):
-   ```bash
-   docker-compose -f docker-compose.complete.yml exec backend alembic upgrade head
-   ```
-
-2. **Create Initial Data** (if needed):
-   ```bash
-   docker-compose -f docker-compose.complete.yml exec backend python database/setup/create_initial_data.py
-   ```
-
-3. **Monitor Services** via Grafana:
-   - Open http://localhost:3001
-   - Login: admin/admin
-   - Explore pre-configured dashboards
-
-4. **View Metrics** via Prometheus:
-   - Open http://localhost:9090
-   - Query metrics from all services
-
-## Complete Service List
-
-All services configured in `docker-compose.complete.yml`:
-
-1. **postgres** - PostgreSQL 16 database (port 5432)
-2. **redis** - Redis 7 cache (port 6380)
-3. **backend** - FastAPI backend (port 8009)
-4. **dashboard** - React/Vite frontend (port 5179)
-5. **mcp-server** - Model Context Protocol (port 8010)
-6. **coordinator** - Agent coordinator (port 8888)
-7. **nginx** - Reverse proxy (ports 80, 443)
-8. **prometheus** - Metrics collection (port 9090)
-9. **grafana** - Monitoring dashboards (port 3001)
-10. **vault** - Secrets management (port 8200)
-
-## Environment Variables
-
-All environment variables are properly configured in `.env` file with fallbacks in docker-compose.
-
-Key variables:
-- `POSTGRES_USER=eduplatform`
-- `POSTGRES_PASSWORD=eduplatform2024`
-- `POSTGRES_DB=educational_platform_dev`
-- `DATABASE_URL=postgresql://eduplatform:eduplatform2024@postgres:5432/educational_platform_dev`
-
-## Files Created/Modified
-
-### Modified:
-- `docker-compose.complete.yml` - Updated PostgreSQL to 16, fixed credentials, added health checks
-
-### Created:
-- `database/init.sql` - Database initialization script
-- `check-and-start.sh` - Comprehensive startup script
-- `start-all-services.sh` - Auto Docker wait and startup
-- `docker-status.sh` - Quick Docker status check
-- `SERVICES_STARTUP_GUIDE.md` - Detailed guide
-- `POSTGRES16_UPGRADE_SUMMARY.md` - Upgrade documentation
-- `MANUAL_STARTUP_INSTRUCTIONS.md` - This file
-
-## Summary
-
-All configuration is complete. To start services:
-
-1. **Open a new Terminal window**
-2. **Start Docker Desktop**: `open -a Docker` (wait 30-60 seconds)
-3. **Navigate to project**: `cd /Users/.../ToolboxAI-Solutions`
-4. **Start services**: `docker-compose -f docker-compose.complete.yml up -d`
-5. **Check status**: `docker-compose -f docker-compose.complete.yml ps`
-6. **Access dashboard**: http://localhost:5179
-
-That's it! All services will be running with PostgreSQL 16, proper credentials, and all ports correctly exposed.
-
+That’s it—your ToolboxAI development environment is live.

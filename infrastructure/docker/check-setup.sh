@@ -1,7 +1,7 @@
 #!/bin/bash
 # Quick setup check script for ToolBoxAI Docker environment
 
-set -e
+set -euo pipefail
 
 # Colors
 GREEN='\033[0;32m'
@@ -9,8 +9,21 @@ RED='\033[0;31m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-PROJECT_ROOT="/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
-COMPOSE_FILE="infrastructure/docker/docker-compose.dev.yml"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+COMPOSE_FILES=(
+    "$PROJECT_ROOT/infrastructure/docker/compose/docker-compose.yml"
+    "$PROJECT_ROOT/infrastructure/docker/compose/docker-compose.dev.yml"
+)
+
+if docker compose version >/dev/null 2>&1; then
+    COMPOSE_CMD="docker compose"
+elif command -v docker-compose >/dev/null 2>&1; then
+    COMPOSE_CMD="docker-compose"
+else
+    echo -e "${RED}Docker Compose plugin or binary not found${NC}"
+    exit 1
+fi
 
 cd "$PROJECT_ROOT"
 
@@ -41,9 +54,16 @@ else
     exit 1
 fi
 
-# Check compose file
-echo -n "Docker Compose file: "
-if [ -f "$COMPOSE_FILE" ]; then
+# Check compose files
+echo -n "Docker Compose files: "
+missing_compose=0
+for compose_file in "${COMPOSE_FILES[@]}"; do
+    if [ ! -f "$compose_file" ]; then
+        missing_compose=$((missing_compose + 1))
+    fi
+done
+
+if [ $missing_compose -eq 0 ]; then
     echo -e "${GREEN}✓ Found${NC}"
 else
     echo -e "${RED}✗ Missing${NC}"
@@ -54,12 +74,13 @@ fi
 echo -n "Dockerfiles: "
 missing_dockerfiles=0
 dockerfiles=(
-    "infrastructure/docker/Dockerfile.backend"
-    "infrastructure/docker/dashboard.dev.Dockerfile"
-    "infrastructure/docker/mcp-server.Dockerfile"
-    "infrastructure/docker/agent-coordinator.Dockerfile"
-    "infrastructure/docker/educational-agents.Dockerfile"
-    "infrastructure/docker/flask-bridge.Dockerfile"
+    "infrastructure/docker/dockerfiles/backend.Dockerfile"
+    "infrastructure/docker/dockerfiles/dashboard-2025.Dockerfile"
+    "infrastructure/docker/dockerfiles/mcp.Dockerfile"
+    "infrastructure/docker/dockerfiles/agents.Dockerfile"
+    "infrastructure/docker/dockerfiles/celery-worker.Dockerfile"
+    "infrastructure/docker/dockerfiles/celery-beat.Dockerfile"
+    "infrastructure/docker/dockerfiles/celery-flower.Dockerfile"
 )
 
 for dockerfile in "${dockerfiles[@]}"; do
@@ -77,7 +98,7 @@ fi
 # Check ports
 echo -n "Port conflicts: "
 conflicts=0
-ports=(8009 5179 5434 6381 8888 9877 5001 8000)
+ports=(8009 5179 5434 6381 8888 9877 5555 8080 8081 8025)
 for port in "${ports[@]}"; do
     if lsof -i ":$port" > /dev/null 2>&1; then
         conflicts=$((conflicts + 1))
@@ -114,4 +135,4 @@ echo "To start all services, run:"
 echo "  ./infrastructure/docker/start-docker-dev.sh"
 echo ""
 echo "Or start manually with:"
-echo "  docker-compose -f $COMPOSE_FILE up -d"
+echo "  $COMPOSE_CMD -f ${COMPOSE_FILES[0]} -f ${COMPOSE_FILES[1]} up -d"
