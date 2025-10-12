@@ -57,6 +57,7 @@ except (
     redis.TimeoutError,
     redis.RedisError,
     AttributeError,
+    ValueError,
 ) as e:
     logger.warning(f"Redis connection failed: {e}. Using in-memory storage.")
     redis_client = None

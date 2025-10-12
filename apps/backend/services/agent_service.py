@@ -353,6 +353,23 @@ class AgentService:
         except Exception as e:
             logger.warning(f"Failed to store metrics for agent {agent_id} to Supabase: {e}")
 
+    async def list_agents(self) -> List[Dict[str, Any]]:
+        """
+        List all available agents with their current status.
+
+        Returns:
+            List of agent dictionaries with id, name, status, and type
+        """
+        agents_list = []
+        for agent_id, agent_info in self.agents.items():
+            agents_list.append({
+                "id": agent_id,
+                "name": agent_info.agent_type.replace("_", " ").title(),
+                "status": "active" if agent_info.status == AgentStatus.IDLE else "inactive",
+                "type": agent_info.agent_type.upper(),
+            })
+        return agents_list
+
     async def execute_task(
         self,
         agent_type: str,

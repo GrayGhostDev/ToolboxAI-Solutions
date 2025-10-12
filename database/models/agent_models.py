@@ -10,10 +10,12 @@ Features:
 - Task queue management
 - System health monitoring
 - User interaction logging
+- Multi-tenant isolation via organization_id
 
 Author: ToolboxAI Team
 Created: 2025-09-21
-Version: 1.0.0
+Updated: 2025-10-10 (Added multi-tenant support)
+Version: 2.0.0
 """
 
 import uuid
@@ -29,10 +31,8 @@ from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import func
 
-from sqlalchemy.orm import declarative_base
-
-# Create Base here to avoid circular imports
-Base = declarative_base()
+# Import tenant-aware base models
+from database.models.base import TenantBaseModel, GlobalBaseModel
 
 
 class AgentType(PyEnum):
@@ -79,73 +79,77 @@ class TaskPriority(PyEnum):
     CRITICAL = "critical"
 
 
-class AgentInstance(Base):
+class AgentInstance(TenantBaseModel):
     """
     Agent instance registration and configuration.
-    
+
     Tracks individual agent instances, their configuration,
     and current operational status.
+
+    Multi-tenant: organization_id inherited from TenantBaseModel
     """
     __tablename__ = "agent_instances"
-    
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    # Note: id, organization_id, created_at, updated_at, created_by_id, updated_by_id, deleted_at
+    # are inherited from TenantBaseModel
+
     agent_id = Column(String(100), unique=True, nullable=False, index=True)
     agent_type = Column(
-        Enum(AgentType, values_callable=lambda x: [e.value for e in x]), 
-        nullable=False, 
-        index=True
-    )
-    status = Column(
-        Enum(AgentStatus, values_callable=lambda x: [e.value for e in x]), 
-        default=AgentStatus.INITIALIZING, 
+        Enum(AgentType, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
         index=True
     )
-    
+    status = Column(
+        Enum(AgentStatus, values_callable=lambda x: [e.value for e in x]),
+        default=AgentStatus.INITIALIZING,
+        nullable=False,
+        index=True
+    )
+
     # Configuration and metadata
     configuration = Column(JSONB, default={})
     resource_limits = Column(JSONB, default={})
     performance_thresholds = Column(JSONB, default={})
-    
+
     # Status tracking
     current_task_id = Column(String(100), index=True)
     last_activity = Column(DateTime(timezone=True), default=func.now(), index=True)
     last_heartbeat = Column(DateTime(timezone=True), default=func.now())
-    
+
     # Performance counters
     total_tasks_completed = Column(Integer, default=0)
     total_tasks_failed = Column(Integer, default=0)
     total_execution_time = Column(Float, default=0.0)
     average_execution_time = Column(Float, default=0.0)
-    
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now())
-    
+
     # Relationships
     executions = relationship("AgentExecution", back_populates="agent_instance")
     metrics = relationship("AgentMetrics", back_populates="agent_instance")
-    
-    # Indexes
+
+    # Indexes (organization_id index auto-created by TenantMixin)
     __table_args__ = (
-        Index('idx_agent_type_status', 'agent_type', 'status'),
+        Index('idx_agent_org_type_status', 'organization_id', 'agent_type', 'status'),
         Index('idx_agent_last_activity', 'last_activity'),
         Index('idx_agent_performance', 'total_tasks_completed', 'total_tasks_failed'),
     )
 
 
-class AgentExecution(Base):
+class AgentExecution(TenantBaseModel):
     """
     Individual agent task execution records.
-    
+
     Tracks every task executed by agents including input data,
     output results, performance metrics, and error information.
+
+    Multi-tenant: organization_id inherited from TenantBaseModel
     """
     __tablename__ = "agent_executions"
-    
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    # Note: id, organization_id, created_at, updated_at, created_by_id, updated_by_id, deleted_at
+    # are inherited from TenantBaseModel
+
     task_id = Column(String(100), unique=True, nullable=False, index=True)
-    
+
     # Agent information
     agent_instance_id = Column(UUID(as_uuid=True), ForeignKey("agent_instances.id"), nullable=False, index=True)
     agent_type = Column(
@@ -186,49 +190,50 @@ class AgentExecution(Base):
     quality_score = Column(Float)
     confidence_score = Column(Float)
     user_rating = Column(Integer)  # 1-5 rating from user
-    
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False, index=True)
+
+    # Execution timestamps (created_at/updated_at inherited from TenantBaseModel)
     started_at = Column(DateTime(timezone=True), index=True)
     completed_at = Column(DateTime(timezone=True), index=True)
-    
+
     # User context
     user_id = Column(UUID(as_uuid=True), index=True)
     session_id = Column(String(100), index=True)
-    
+
     # Retry information
     retry_count = Column(Integer, default=0)
     max_retries = Column(Integer, default=3)
     parent_task_id = Column(String(100), index=True)  # For retry chains
-    
+
     # Relationships
     agent_instance = relationship("AgentInstance", back_populates="executions")
-    
-    # Constraints
+
+    # Constraints (organization_id index auto-created by TenantMixin)
     __table_args__ = (
         CheckConstraint('execution_time_seconds >= 0', name='check_positive_execution_time'),
         CheckConstraint('quality_score >= 0 AND quality_score <= 1', name='check_quality_score_range'),
         CheckConstraint('confidence_score >= 0 AND confidence_score <= 1', name='check_confidence_score_range'),
         CheckConstraint('user_rating >= 1 AND user_rating <= 5', name='check_user_rating_range'),
         CheckConstraint('retry_count >= 0', name='check_positive_retry_count'),
-        Index('idx_execution_status_created', 'status', 'created_at'),
+        Index('idx_execution_org_status_created', 'organization_id', 'status', 'created_at'),
         Index('idx_execution_agent_task_type', 'agent_type', 'task_type'),
         Index('idx_execution_user_session', 'user_id', 'session_id'),
         Index('idx_execution_performance', 'execution_time_seconds', 'quality_score'),
     )
 
 
-class AgentMetrics(Base):
+class AgentMetrics(TenantBaseModel):
     """
     Aggregated agent performance metrics.
-    
+
     Stores periodic performance snapshots for agents including
     throughput, success rates, and resource utilization.
+
+    Multi-tenant: organization_id inherited from TenantBaseModel
     """
     __tablename__ = "agent_metrics"
-    
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    
+
+    # Note: id, organization_id, created_at inherited from TenantBaseModel
+
     # Agent reference
     agent_instance_id = Column(UUID(as_uuid=True), ForeignKey("agent_instances.id"), nullable=False, index=True)
     agent_type = Column(
@@ -276,14 +281,13 @@ class AgentMetrics(Base):
     
     # Additional metrics
     custom_metrics = Column(JSONB, default={})
-    
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
-    
+
+    # Note: created_at timestamp inherited from TenantBaseModel
+
     # Relationships
     agent_instance = relationship("AgentInstance", back_populates="metrics")
-    
-    # Constraints
+
+    # Constraints (organization_id index auto-created by TenantMixin)
     __table_args__ = (
         CheckConstraint('success_rate >= 0 AND success_rate <= 100', name='check_success_rate_range'),
         CheckConstraint('error_rate >= 0 AND error_rate <= 100', name='check_error_rate_range'),
@@ -291,21 +295,24 @@ class AgentMetrics(Base):
         CheckConstraint('availability_percentage >= 0 AND availability_percentage <= 100', name='check_availability_range'),
         CheckConstraint('period_end > period_start', name='check_valid_period'),
         UniqueConstraint('agent_instance_id', 'period_start', name='uq_agent_period'),
-        Index('idx_metrics_period', 'period_start', 'period_end'),
+        Index('idx_metrics_org_period', 'organization_id', 'period_start', 'period_end'),
         Index('idx_metrics_performance', 'success_rate', 'average_execution_time'),
     )
 
 
-class AgentTaskQueue(Base):
+class AgentTaskQueue(TenantBaseModel):
     """
     Task queue management for agent system.
-    
+
     Manages task queuing, prioritization, and scheduling
     for optimal agent utilization.
+
+    Multi-tenant: organization_id inherited from TenantBaseModel
     """
     __tablename__ = "agent_task_queue"
-    
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    # Note: id, organization_id, created_at, updated_at inherited from TenantBaseModel
+
     task_id = Column(String(100), unique=True, nullable=False, index=True)
     
     # Task specification
@@ -354,34 +361,35 @@ class AgentTaskQueue(Base):
     user_id = Column(UUID(as_uuid=True), index=True)
     session_id = Column(String(100), index=True)
     callback_url = Column(String(500))
-    
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False, index=True)
-    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now())
-    
-    # Constraints
+
+    # Note: created_at, updated_at timestamps inherited from TenantBaseModel
+
+    # Constraints (organization_id index auto-created by TenantMixin)
     __table_args__ = (
         CheckConstraint('max_retries >= 0', name='check_positive_max_retries'),
         CheckConstraint('retry_count >= 0', name='check_positive_retry_count'),
         CheckConstraint('max_execution_time_seconds > 0', name='check_positive_execution_time'),
-        Index('idx_queue_priority_created', 'priority', 'created_at'),
+        Index('idx_queue_org_priority_created', 'organization_id', 'priority', 'created_at'),
         Index('idx_queue_agent_status', 'agent_type', 'status'),
         Index('idx_queue_scheduled', 'scheduled_at', 'status'),
         Index('idx_queue_user_session', 'user_id', 'session_id'),
     )
 
 
-class SystemHealth(Base):
+class SystemHealth(GlobalBaseModel):
     """
     System-wide health and performance monitoring.
-    
+
     Tracks overall system metrics, resource usage,
     and health indicators for the agent system.
+
+    Global model: No organization_id - shared across all tenants
     """
     __tablename__ = "system_health"
-    
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    
+
+    # Note: id, created_at, updated_at inherited from GlobalBaseModel
+    # No organization_id - this is a system-wide model
+
     # Time period
     timestamp = Column(DateTime(timezone=True), default=func.now(), nullable=False, index=True)
     period_minutes = Column(Integer, default=5)  # 5-minute intervals
@@ -444,17 +452,19 @@ class SystemHealth(Base):
     )
 
 
-class AgentConfiguration(Base):
+class AgentConfiguration(TenantBaseModel):
     """
     Agent configuration and settings management.
-    
+
     Stores configuration templates and settings for different
     agent types and deployment environments.
+
+    Multi-tenant: organization_id inherited from TenantBaseModel
     """
     __tablename__ = "agent_configurations"
-    
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    
+
+    # Note: id, organization_id, created_at, updated_at, created_by_id inherited from TenantBaseModel
+
     # Configuration identification
     name = Column(String(100), nullable=False, index=True)
     version = Column(String(20), nullable=False)
@@ -478,15 +488,12 @@ class AgentConfiguration(Base):
     # Validation
     schema_version = Column(String(20), default="1.0")
     validation_rules = Column(JSONB, default={})
-    
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now())
-    created_by = Column(UUID(as_uuid=True), index=True)
-    
-    # Constraints
+
+    # Note: created_at, updated_at, created_by_id timestamps inherited from TenantBaseModel
+
+    # Constraints (organization_id index auto-created by TenantMixin)
     __table_args__ = (
-        UniqueConstraint('name', 'version', 'agent_type', name='uq_config_name_version_type'),
-        Index('idx_config_active', 'is_active', 'agent_type'),
+        UniqueConstraint('organization_id', 'name', 'version', 'agent_type', name='uq_org_config_name_version_type'),
+        Index('idx_config_org_active', 'organization_id', 'is_active', 'agent_type'),
         Index('idx_config_environment', 'environment', 'is_active'),
     )

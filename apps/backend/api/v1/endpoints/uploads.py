@@ -376,12 +376,35 @@ async def initialize_multipart_upload(
             f"size: {request.file_size}, parts: {part_count}"
         )
 
-        # TODO: Implement multipart upload initialization in storage service
-        # For now, create a placeholder upload session
+        # Initialize multipart upload session in Redis for state tracking
         from uuid import uuid4
         from datetime import timedelta
+        import json
+        from apps.backend.core.cache import cache
 
         upload_id = str(uuid4())
+
+        # Store multipart upload metadata in cache
+        upload_metadata = {
+            "upload_id": upload_id,
+            "filename": request.filename,
+            "file_size": request.file_size,
+            "mime_type": request.mime_type,
+            "part_size": request.part_size,
+            "part_count": part_count,
+            "category": request.category,
+            "title": request.title,
+            "description": request.description,
+            "uploaded_parts": [],
+            "created_at": datetime.utcnow().isoformat(),
+        }
+
+        # Cache for 24 hours
+        await cache.set(
+            f"multipart_upload:{upload_id}",
+            json.dumps(upload_metadata),
+            expire=86400
+        )
 
         return MultipartUploadInitResponse(
             upload_id=upload_id,
@@ -433,9 +456,45 @@ async def upload_multipart_part(
             f"size: {len(file_content)}"
         )
 
-        # TODO: Implement part upload in storage service
+        # Store part in temporary storage and update metadata
         import hashlib
+        import json
+        from apps.backend.core.cache import cache
+
+        # Calculate ETag for the part
         etag = hashlib.md5(file_content).hexdigest()
+
+        # Get upload metadata from cache
+        metadata_key = f"multipart_upload:{upload_id}"
+        metadata_json = await cache.get(metadata_key)
+
+        if not metadata_json:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Upload session not found or expired"
+            )
+
+        metadata = json.loads(metadata_json)
+
+        # Store part data in cache temporarily
+        part_key = f"multipart_part:{upload_id}:{part_number}"
+        await cache.set(part_key, file_content, expire=86400)
+
+        # Update uploaded parts list
+        if "uploaded_parts" not in metadata:
+            metadata["uploaded_parts"] = []
+
+        metadata["uploaded_parts"].append({
+            "part_number": part_number,
+            "etag": etag,
+            "size": len(file_content),
+            "uploaded_at": datetime.utcnow().isoformat()
+        })
+
+        # Save updated metadata
+        await cache.set(metadata_key, json.dumps(metadata), expire=86400)
+
+        logger.info(f"Part {part_number} stored for upload {upload_id}")
 
         return MultipartUploadPartResponse(
             upload_id=upload_id,
@@ -486,16 +545,92 @@ async def complete_multipart_upload(
             f"parts: {len(request.parts)}"
         )
 
-        # TODO: Implement multipart completion in storage service
+        # Complete multipart upload by combining all parts
         from uuid import uuid4
+        import json
+        from io import BytesIO
+        from apps.backend.core.cache import cache
+
+        # Get upload metadata
+        metadata_key = f"multipart_upload:{request.upload_id}"
+        metadata_json = await cache.get(metadata_key)
+
+        if not metadata_json:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Upload session not found or expired"
+            )
+
+        metadata = json.loads(metadata_json)
+
+        # Verify all parts are uploaded
+        uploaded_parts = sorted(metadata.get("uploaded_parts", []), key=lambda x: x["part_number"])
+        expected_parts = metadata["part_count"]
+
+        if len(uploaded_parts) != expected_parts:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Missing parts: expected {expected_parts}, got {len(uploaded_parts)}"
+            )
+
+        # Combine all parts
+        combined_data = BytesIO()
+        total_size = 0
+
+        for part in uploaded_parts:
+            part_key = f"multipart_part:{request.upload_id}:{part['part_number']}"
+            part_data = await cache.get(part_key)
+
+            if not part_data:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Part {part['part_number']} data not found"
+                )
+
+            combined_data.write(part_data if isinstance(part_data, bytes) else part_data.encode())
+            total_size += len(part_data if isinstance(part_data, bytes) else part_data.encode())
+
+        combined_data.seek(0)
+
+        # Upload the combined file to storage
+        file_id = uuid4()
+        upload_options = UploadOptions(
+            file_category=metadata.get("category", "media_resource"),
+            title=metadata.get("title"),
+            description=metadata.get("description"),
+            virus_scan=True,
+            generate_thumbnails=metadata.get("mime_type", "").startswith("image/"),
+        )
+
+        result = await storage.upload_file_multipart(
+            file_id=file_id,
+            filename=metadata["filename"],
+            file_stream=combined_data,
+            content_type=metadata["mime_type"],
+            options=upload_options
+        )
+
+        # Clean up temporary parts from cache
+        for part in uploaded_parts:
+            part_key = f"multipart_part:{request.upload_id}:{part['part_number']}"
+            await cache.delete(part_key)
+
+        await cache.delete(metadata_key)
+
+        # Schedule virus scan if enabled
+        if upload_options.virus_scan:
+            background_tasks.add_task(_schedule_virus_scan, file_id, metadata.get("organization_id"))
+
+        logger.info(f"Multipart upload {request.upload_id} completed: {file_id}")
 
         return FileUploadResponse(
-            file_id=uuid4(),
+            file_id=file_id,
             upload_id=request.upload_id,
-            filename="completed_file",
-            file_size=0,
-            mime_type="application/octet-stream",
-            storage_path="/completed/path",
+            filename=metadata["filename"],
+            file_size=total_size,
+            mime_type=metadata["mime_type"],
+            storage_path=result.storage_path,
+            cdn_url=result.cdn_url,
             status=UploadStatus.COMPLETED,
             created_at=datetime.utcnow(),
             warnings=[],
@@ -617,8 +752,19 @@ async def _schedule_virus_scan(file_id: UUID, organization_id: Optional[str]) ->
     """
     try:
         logger.info(f"Scheduling virus scan for file {file_id}")
-        # TODO: Implement actual virus scanning
-        await asyncio.sleep(0.1)  # Placeholder
-        logger.info(f"Virus scan completed for file {file_id}")
+
+        # Use the virus scanner service
+        from apps.backend.services.storage.virus_scanner import VirusScanner
+
+        scanner = VirusScanner()
+        scan_result = await scanner.scan_file(str(file_id), organization_id)
+
+        if scan_result.is_infected:
+            logger.warning(f"Virus detected in file {file_id}: {scan_result.threat_name}")
+            # Quarantine the file
+            await scanner.quarantine_file(str(file_id))
+        else:
+            logger.info(f"Virus scan clean for file {file_id}")
+
     except Exception as e:
         logger.error(f"Virus scan failed for {file_id}: {str(e)}", exc_info=True)

@@ -79,7 +79,7 @@ async def get_agents_health(current_user: User = Depends(get_current_active_user
 
         logger.info(
             f"Retrieved health for {len(health_responses)} agents",
-            extra_fields={"user_id": getattr(current_user, "id", "unknown")},
+            extra={"user_id": getattr(current_user, "id", "unknown")},
         )
 
         return health_responses
@@ -113,7 +113,7 @@ async def list_agents(current_user: User = Depends(get_current_active_user)):
 
         logger.info(
             f"Listed {len(agents)} agents",
-            extra_fields={
+            extra={
                 "user_id": getattr(current_user, "id", "unknown"),
                 "active_agents": active_count,
                 "inactive_agents": inactive_count,
@@ -158,7 +158,7 @@ async def execute_agent_task(
 
         logger.info(
             f"Agent task queued: {request.agent_type}",
-            extra_fields={
+            extra={
                 "agent_type": request.agent_type,
                 "user_id": getattr(current_user, "id", "unknown"),
                 "task_length": len(request.task),
@@ -166,7 +166,7 @@ async def execute_agent_task(
         )
 
         return BaseResponse(
-            status="success",
+            success=True,
             message=f"Task queued for {request.agent_type} agent",
             data={
                 "agent_type": request.agent_type,
@@ -203,10 +203,10 @@ async def get_agent_status(
 
         logger.info(
             f"Retrieved status for agent {agent_id}",
-            extra_fields={"agent_id": agent_id, "user_id": getattr(current_user, "id", "unknown")},
+            extra={"agent_id": agent_id, "user_id": getattr(current_user, "id", "unknown")},
         )
 
-        return BaseResponse(status="success", data=status_info)
+        return BaseResponse(success=True, message=f"Agent {agent_id} status retrieved successfully", data=status_info)
 
     except (NotFoundError, ExternalServiceError):
         raise
@@ -236,10 +236,10 @@ async def restart_agent(
 
         logger.info(
             f"Agent {agent_id} restarted by admin",
-            extra_fields={"agent_id": agent_id, "admin_id": getattr(current_user, "id", "unknown")},
+            extra={"agent_id": agent_id, "admin_id": getattr(current_user, "id", "unknown")},
         )
 
-        return BaseResponse(status="success", message=f"Agent {agent_id} restarted successfully")
+        return BaseResponse(success=True, message=f"Agent {agent_id} restarted successfully")
 
     except ExternalServiceError:
         raise
@@ -256,10 +256,10 @@ async def initialize_agent_system(current_user: User = Depends(get_admin_user)):
 
         logger.info(
             "Agent system initialized",
-            extra_fields={"admin_id": getattr(current_user, "id", "unknown")},
+            extra={"admin_id": getattr(current_user, "id", "unknown")},
         )
 
-        return BaseResponse(status="success", message="Agent system initialized successfully")
+        return BaseResponse(success=True, message="Agent system initialized successfully")
 
     except Exception as e:
         logger.error(f"Failed to initialize agent system: {e}")
@@ -276,10 +276,10 @@ async def shutdown_agent_system(current_user: User = Depends(get_admin_user)):
 
         logger.warning(
             "Agent system shutdown",
-            extra_fields={"admin_id": getattr(current_user, "id", "unknown")},
+            extra={"admin_id": getattr(current_user, "id", "unknown")},
         )
 
-        return BaseResponse(status="success", message="Agent system shutdown successfully")
+        return BaseResponse(success=True, message="Agent system shutdown successfully")
 
     except Exception as e:
         logger.error(f"Failed to shutdown agent system: {e}")
@@ -298,7 +298,7 @@ async def _execute_agent_task_background(
 
         logger.info(
             f"Agent task completed: {agent_type}",
-            extra_fields={
+            extra={
                 "agent_type": agent_type,
                 "user_id": user_id,
                 "result_status": result.get("status", "unknown"),
@@ -308,5 +308,5 @@ async def _execute_agent_task_background(
     except Exception as e:
         logger.error(
             f"Background agent task failed: {e}",
-            extra_fields={"agent_type": agent_type, "user_id": user_id},
+            extra={"agent_type": agent_type, "user_id": user_id},
         )

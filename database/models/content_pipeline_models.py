@@ -1,6 +1,10 @@
 """
 Enhanced Content Pipeline Database Models
 Provides comprehensive data models for the enhanced content generation system
+
+Multi-tenant: All models use organization_id for tenant isolation
+@version 2.0.0
+@updated 2025-10-10 (Added multi-tenant support)
 """
 
 from sqlalchemy import Column, String, Float, Boolean, DateTime, ForeignKey, JSON, Text, Integer, Index
@@ -9,16 +13,19 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
 
-# Create a shared base - this will be the same as the one in models.py
-from sqlalchemy.ext.declarative import declarative_base
-Base = declarative_base()
+# Import tenant-aware base models
+from database.models.base import TenantBaseModel, GlobalBaseModel
 
 
-class EnhancedContentGeneration(Base):
-    """Model for tracking enhanced content generation requests and results"""
+class EnhancedContentGeneration(TenantBaseModel):
+    """Model for tracking enhanced content generation requests and results
+
+    Multi-tenant: organization_id inherited from TenantBaseModel
+    """
     __tablename__ = 'enhanced_content_generations'
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # Note: id, organization_id, created_at, updated_at inherited from TenantBaseModel
+
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
 
     # Request details
@@ -48,8 +55,7 @@ class EnhancedContentGeneration(Base):
     status = Column(String(50), default='processing')  # processing, completed, failed
     error_message = Column(Text)
 
-    # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
+    # Additional timestamps (created_at, updated_at inherited from TenantBaseModel)
     started_at = Column(DateTime)
     completed_at = Column(DateTime)
 
@@ -62,19 +68,23 @@ class EnhancedContentGeneration(Base):
     personalization_logs = relationship("ContentPersonalizationLog", back_populates="content")
     feedback_records = relationship("ContentFeedback", back_populates="content")
 
-    # Indexes for performance
+    # Indexes for performance (organization_id index auto-created by TenantMixin)
     __table_args__ = (
-        Index('idx_ecg_user_status', 'user_id', 'status'),
-        Index('idx_ecg_created_at', 'created_at'),
-        Index('idx_ecg_quality_score', 'quality_score'),
+        Index('idx_ecg_org_user_status', 'organization_id', 'user_id', 'status'),
+        Index('idx_ecg_org_created', 'organization_id', 'created_at'),
+        Index('idx_ecg_org_quality_score', 'organization_id', 'quality_score'),
     )
 
 
-class ContentQualityMetrics(Base):
-    """Detailed quality metrics for generated content"""
+class ContentQualityMetrics(TenantBaseModel):
+    """Detailed quality metrics for generated content
+
+    Multi-tenant: organization_id inherited from TenantBaseModel
+    """
     __tablename__ = 'content_quality_metrics'
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # Note: id, organization_id, created_at inherited from TenantBaseModel
+
     content_id = Column(UUID(as_uuid=True), ForeignKey('enhanced_content_generations.id'), nullable=False)
 
     # Educational metrics
@@ -106,23 +116,27 @@ class ContentQualityMetrics(Base):
     validation_errors = Column(JSON)
     improvement_suggestions = Column(JSON)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    # Note: created_at inherited from TenantBaseModel
 
     # Relationships
     content = relationship("EnhancedContentGeneration", back_populates="quality_metrics")
 
-    # Indexes
+    # Indexes (organization_id index auto-created by TenantMixin)
     __table_args__ = (
-        Index('idx_cqm_content_score', 'content_id', 'overall_quality_score'),
-        Index('idx_cqm_created_at', 'created_at'),
+        Index('idx_cqm_org_content_score', 'organization_id', 'content_id', 'overall_quality_score'),
+        Index('idx_cqm_org_created', 'organization_id', 'created_at'),
     )
 
 
-class LearningProfile(Base):
-    """User learning profiles for content personalization"""
+class LearningProfile(TenantBaseModel):
+    """User learning profiles for content personalization
+
+    Multi-tenant: organization_id inherited from TenantBaseModel
+    """
     __tablename__ = 'learning_profiles'
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # Note: id, organization_id, created_at, updated_at inherited from TenantBaseModel
+
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), unique=True, nullable=False)
 
     # Learning preferences
@@ -151,21 +165,24 @@ class LearningProfile(Base):
     profile_completeness = Column(Float)  # 0-1 scale of profile completeness
     confidence_score = Column(Float)  # confidence in profile accuracy
 
-    last_updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    # Note: created_at, updated_at inherited from TenantBaseModel (updated_at handles last_updated)
 
-    # Indexes
+    # Indexes (organization_id index auto-created by TenantMixin)
     __table_args__ = (
-        Index('idx_lp_user', 'user_id'),
-        Index('idx_lp_updated', 'last_updated'),
+        Index('idx_lp_org_user', 'organization_id', 'user_id'),
+        Index('idx_lp_org_updated', 'organization_id', 'updated_at'),
     )
 
 
-class ContentPersonalizationLog(Base):
-    """Log of content personalizations applied"""
+class ContentPersonalizationLog(TenantBaseModel):
+    """Log of content personalizations applied
+
+    Multi-tenant: organization_id inherited from TenantBaseModel
+    """
     __tablename__ = 'content_personalization_log'
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # Note: id, organization_id, created_at inherited from TenantBaseModel
+
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
     content_id = Column(UUID(as_uuid=True), ForeignKey('enhanced_content_generations.id'), nullable=False)
 
@@ -182,24 +199,26 @@ class ContentPersonalizationLog(Base):
     user_feedback = Column(JSON)
     user_rating = Column(Float)  # 1-5 scale
 
-    created_at = Column(DateTime, default=datetime.utcnow)
-
     # Relationships
     content = relationship("EnhancedContentGeneration", back_populates="personalization_logs")
 
-    # Indexes
+    # Indexes (organization_id index auto-created by TenantMixin)
     __table_args__ = (
-        Index('idx_cpl_user_date', 'user_id', 'created_at'),
-        Index('idx_cpl_content', 'content_id'),
-        Index('idx_cpl_effectiveness', 'effectiveness_score'),
+        Index('idx_cpl_org_user_date', 'organization_id', 'user_id', 'created_at'),
+        Index('idx_cpl_org_content', 'organization_id', 'content_id'),
+        Index('idx_cpl_org_effectiveness', 'organization_id', 'effectiveness_score'),
     )
 
 
-class ContentFeedback(Base):
-    """User feedback on generated content"""
+class ContentFeedback(TenantBaseModel):
+    """User feedback on generated content
+
+    Multi-tenant: organization_id inherited from TenantBaseModel
+    """
     __tablename__ = 'content_feedback'
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # Note: id, organization_id, created_at inherited from TenantBaseModel
+
     content_id = Column(UUID(as_uuid=True), ForeignKey('enhanced_content_generations.id'), nullable=False)
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
 
@@ -223,24 +242,26 @@ class ContentFeedback(Base):
     completion_rate = Column(Float)  # percentage of content completed
     interaction_count = Column(Integer)  # number of interactions
 
-    created_at = Column(DateTime, default=datetime.utcnow)
-
     # Relationships
     content = relationship("EnhancedContentGeneration", back_populates="feedback_records")
 
-    # Indexes
+    # Indexes (organization_id index auto-created by TenantMixin)
     __table_args__ = (
-        Index('idx_cf_content_rating', 'content_id', 'rating'),
-        Index('idx_cf_user', 'user_id'),
-        Index('idx_cf_created_at', 'created_at'),
+        Index('idx_cf_org_content_rating', 'organization_id', 'content_id', 'rating'),
+        Index('idx_cf_org_user', 'organization_id', 'user_id'),
+        Index('idx_cf_org_created', 'organization_id', 'created_at'),
     )
 
 
-class ContentGenerationBatch(Base):
-    """Batch processing for multiple content generations"""
+class ContentGenerationBatch(TenantBaseModel):
+    """Batch processing for multiple content generations
+
+    Multi-tenant: organization_id inherited from TenantBaseModel
+    """
     __tablename__ = 'content_generation_batches'
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # Note: id, organization_id, created_at, updated_at inherited from TenantBaseModel
+
     batch_name = Column(String(200))
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
 
@@ -257,22 +278,27 @@ class ContentGenerationBatch(Base):
     estimated_completion_time = Column(DateTime)
     actual_completion_time = Column(DateTime)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    # Additional timestamps (created_at, updated_at inherited from TenantBaseModel)
     started_at = Column(DateTime)
     completed_at = Column(DateTime)
 
-    # Indexes
+    # Indexes (organization_id index auto-created by TenantMixin)
     __table_args__ = (
-        Index('idx_cgb_user_status', 'user_id', 'status'),
-        Index('idx_cgb_created_at', 'created_at'),
+        Index('idx_cgb_org_user_status', 'organization_id', 'user_id', 'status'),
+        Index('idx_cgb_org_created', 'organization_id', 'created_at'),
     )
 
 
-class ContentCache(Base):
-    """Cache for frequently accessed content and LLM responses"""
+class ContentCache(GlobalBaseModel):
+    """Cache for frequently accessed content and LLM responses
+
+    Global model: No organization_id - shared system-wide cache
+    """
     __tablename__ = 'content_cache'
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # Note: id, created_at, updated_at inherited from GlobalBaseModel
+    # No organization_id - this is a system-wide cache
+
     cache_key = Column(String(500), unique=True, nullable=False)
     cache_type = Column(String(50))  # content, llm_response, template, etc.
 
@@ -283,8 +309,6 @@ class ContentCache(Base):
     access_count = Column(Integer, default=0)
     last_accessed = Column(DateTime)
     ttl_seconds = Column(Integer, default=3600)
-
-    created_at = Column(DateTime, default=datetime.utcnow)
     expires_at = Column(DateTime)
 
     # Indexes

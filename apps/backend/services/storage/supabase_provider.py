@@ -341,7 +341,7 @@ class SupabaseStorageProvider(StorageService):
             result = await self.upload_file(file_data, filename, options)
             result.upload_id = upload_id
 
-            return result
+            yield result
 
         except Exception as e:
             # Update progress to failed
@@ -785,49 +785,402 @@ class SupabaseStorageProvider(StorageService):
     # Database operations (these would use your existing database models)
 
     async def _create_file_record(self, **kwargs) -> Dict[str, Any]:
-        """Create file record in database"""
-        # This would use your File model from database/models/storage.py
-        # For now, return a mock record
-        return {
-            "id": str(kwargs["file_id"]),
-            "organization_id": self.organization_id,
-            **kwargs
-        }
+        """
+        Create file record in database using SQLAlchemy File model
+
+        Args:
+            **kwargs: File metadata including file_id, filename, storage_path, etc.
+
+        Returns:
+            Created file record as dictionary
+        """
+        from database.models.storage import File, FileStatus, FileCategory
+        from database.connection import get_async_session
+        from sqlalchemy import select
+
+        async for session in get_async_session():
+            try:
+                # Get options if provided
+                options = kwargs.get("options")
+
+                # Create file record
+                file_record = File(
+                    id=kwargs["file_id"],
+                    organization_id=self.organization_id,
+                    filename=kwargs["filename"],
+                    original_filename=kwargs["filename"],
+                    storage_path=kwargs["storage_path"],
+                    bucket_name=kwargs["bucket_name"],
+                    file_size=kwargs["file_size"],
+                    checksum=kwargs.get("checksum"),
+                    mime_type=self.file_validator.get_mime_type(kwargs["filename"]),
+                    file_extension=kwargs["filename"].rsplit(".", 1)[-1] if "." in kwargs["filename"] else None,
+                    status=FileStatus.AVAILABLE,
+                    category=FileCategory(options.file_category) if options and hasattr(options, 'file_category') else FileCategory.MEDIA_RESOURCE,
+                    uploaded_by=self.user_id,
+                    virus_scanned=options.virus_scan if options else False,
+                    tags=options.tags if options and hasattr(options, 'tags') else [],
+                    metadata=options.metadata if options and hasattr(options, 'metadata') else {},
+                )
+
+                session.add(file_record)
+                await session.commit()
+                await session.refresh(file_record)
+
+                logger.debug(f"Created file record in database: {file_record.id}")
+
+                # Convert to dict
+                return {
+                    "id": str(file_record.id),
+                    "organization_id": str(file_record.organization_id),
+                    "filename": file_record.filename,
+                    "original_filename": file_record.original_filename,
+                    "storage_path": file_record.storage_path,
+                    "bucket_name": file_record.bucket_name,
+                    "file_size": file_record.file_size,
+                    "mime_type": file_record.mime_type,
+                    "checksum": file_record.checksum,
+                    "status": file_record.status.value,
+                    "created_at": file_record.created_at.isoformat() if file_record.created_at else None,
+                }
+
+            except Exception as e:
+                await session.rollback()
+                logger.error(f"Error creating file record: {e}")
+                raise StorageError(f"Failed to create file record: {str(e)}")
 
     async def _get_file_record(self, file_id: UUID) -> Optional[Dict[str, Any]]:
-        """Get file record from database"""
-        # This would query your File model
-        # For now, return a mock record
-        return {
-            "id": str(file_id),
-            "organization_id": self.organization_id,
-            "filename": "example.txt",
-            "original_filename": "example.txt",
-            "storage_path": "org_123/files/2025/01/example.txt",
-            "bucket_name": "files",
-            "file_size": 1024,
-            "mime_type": "text/plain",
-            "created_at": "2025-01-27T00:00:00Z",
-            "updated_at": "2025-01-27T00:00:00Z"
-        }
+        """
+        Get file record from database by ID
+
+        Args:
+            file_id: UUID of the file
+
+        Returns:
+            File record as dictionary or None if not found
+        """
+        from database.models.storage import File
+        from database.connection import get_async_session
+        from sqlalchemy import select, and_
+
+        async for session in get_async_session():
+            try:
+                # Query file with organization and deletion filters
+                stmt = select(File).where(
+                    and_(
+                        File.id == file_id,
+                        File.organization_id == self.organization_id,
+                        File.deleted_at.is_(None)  # Exclude soft-deleted files
+                    )
+                )
+
+                result = await session.execute(stmt)
+                file_record = result.scalar_one_or_none()
+
+                if not file_record:
+                    return None
+
+                # Convert to dict
+                return {
+                    "id": str(file_record.id),
+                    "organization_id": str(file_record.organization_id),
+                    "filename": file_record.filename,
+                    "original_filename": file_record.original_filename,
+                    "storage_path": file_record.storage_path,
+                    "bucket_name": file_record.bucket_name,
+                    "file_size": file_record.file_size,
+                    "mime_type": file_record.mime_type,
+                    "status": file_record.status.value,
+                    "category": file_record.category.value,
+                    "cdn_url": file_record.cdn_url,
+                    "thumbnail_url": file_record.thumbnail_url,
+                    "created_at": file_record.created_at.isoformat() if file_record.created_at else None,
+                    "updated_at": file_record.updated_at.isoformat() if file_record.updated_at else None,
+                }
+
+            except Exception as e:
+                logger.error(f"Error getting file record {file_id}: {e}")
+                raise StorageError(f"Failed to get file record: {str(e)}")
 
     async def _list_file_records(self, options: ListOptions) -> List[Dict[str, Any]]:
-        """List file records from database"""
-        # This would query your File model with filters
-        return []
+        """
+        List file records from database with filters
+
+        Args:
+            options: List options with filters
+
+        Returns:
+            List of file records as dictionaries
+        """
+        from database.models.storage import File, FileCategory, FileStatus
+        from database.connection import get_async_session
+        from sqlalchemy import select, and_, or_, desc
+
+        async for session in get_async_session():
+            try:
+                # Build base query with organization filter
+                stmt = select(File).where(
+                    and_(
+                        File.organization_id == self.organization_id,
+                        File.deleted_at.is_(None)  # Exclude soft-deleted
+                    )
+                )
+
+                # Apply filters from options
+                if hasattr(options, 'category') and options.category:
+                    stmt = stmt.where(File.category == FileCategory(options.category))
+
+                if hasattr(options, 'mime_type') and options.mime_type:
+                    stmt = stmt.where(File.mime_type.like(f"{options.mime_type}%"))
+
+                if hasattr(options, 'status') and options.status:
+                    stmt = stmt.where(File.status == FileStatus(options.status))
+
+                if hasattr(options, 'uploaded_by') and options.uploaded_by:
+                    stmt = stmt.where(File.uploaded_by == options.uploaded_by)
+
+                # Apply ordering
+                stmt = stmt.order_by(desc(File.created_at))
+
+                # Apply pagination
+                if hasattr(options, 'limit') and options.limit:
+                    stmt = stmt.limit(options.limit)
+                if hasattr(options, 'offset') and options.offset:
+                    stmt = stmt.offset(options.offset)
+
+                # Execute query
+                result = await session.execute(stmt)
+                files = result.scalars().all()
+
+                # Convert to dict list
+                return [
+                    {
+                        "id": str(f.id),
+                        "filename": f.filename,
+                        "file_size": f.file_size,
+                        "mime_type": f.mime_type,
+                        "status": f.status.value,
+                        "cdn_url": f.cdn_url,
+                        "created_at": f.created_at.isoformat() if f.created_at else None,
+                    }
+                    for f in files
+                ]
+
+            except Exception as e:
+                logger.error(f"Error listing file records: {e}")
+                raise StorageError(f"Failed to list files: {str(e)}")
 
     async def _delete_file_record(self, file_id: UUID) -> None:
-        """Delete file record from database"""
-        pass
+        """
+        Hard delete file record from database
+
+        Args:
+            file_id: UUID of the file to delete
+        """
+        from database.models.storage import File
+        from database.connection import get_async_session
+        from sqlalchemy import select, and_, delete
+
+        async for session in get_async_session():
+            try:
+                # Verify ownership before deleting
+                stmt = select(File).where(
+                    and_(
+                        File.id == file_id,
+                        File.organization_id == self.organization_id
+                    )
+                )
+                result = await session.execute(stmt)
+                file_record = result.scalar_one_or_none()
+
+                if not file_record:
+                    raise FileNotFoundError(f"File {file_id} not found or access denied")
+
+                # Delete record
+                await session.delete(file_record)
+                await session.commit()
+
+                logger.info(f"Hard deleted file record: {file_id}")
+
+            except FileNotFoundError:
+                raise
+            except Exception as e:
+                await session.rollback()
+                logger.error(f"Error deleting file record {file_id}: {e}")
+                raise StorageError(f"Failed to delete file: {str(e)}")
 
     async def _soft_delete_file_record(self, file_id: UUID) -> None:
-        """Soft delete file record in database"""
-        pass
+        """
+        Soft delete file record in database (sets deleted_at timestamp)
+
+        Args:
+            file_id: UUID of the file to soft delete
+        """
+        from database.models.storage import File, FileStatus
+        from database.connection import get_async_session
+        from sqlalchemy import select, and_
+        from datetime import datetime, timezone
+
+        async for session in get_async_session():
+            try:
+                # Find file record
+                stmt = select(File).where(
+                    and_(
+                        File.id == file_id,
+                        File.organization_id == self.organization_id,
+                        File.deleted_at.is_(None)
+                    )
+                )
+                result = await session.execute(stmt)
+                file_record = result.scalar_one_or_none()
+
+                if not file_record:
+                    raise FileNotFoundError(f"File {file_id} not found or already deleted")
+
+                # Soft delete by setting timestamp and status
+                file_record.deleted_at = datetime.now(timezone.utc)
+                file_record.deleted_by = self.user_id
+                file_record.status = FileStatus.DELETED
+
+                await session.commit()
+
+                logger.info(f"Soft deleted file record: {file_id}")
+
+            except FileNotFoundError:
+                raise
+            except Exception as e:
+                await session.rollback()
+                logger.error(f"Error soft deleting file {file_id}: {e}")
+                raise StorageError(f"Failed to soft delete file: {str(e)}")
 
     async def _update_file_path(self, file_id: UUID, new_path: str) -> None:
-        """Update file path in database"""
-        pass
+        """
+        Update file path in database
+
+        Args:
+            file_id: UUID of the file
+            new_path: New storage path
+        """
+        from database.models.storage import File
+        from database.connection import get_async_session
+        from sqlalchemy import select, and_
+
+        async for session in get_async_session():
+            try:
+                # Find file record
+                stmt = select(File).where(
+                    and_(
+                        File.id == file_id,
+                        File.organization_id == self.organization_id
+                    )
+                )
+                result = await session.execute(stmt)
+                file_record = result.scalar_one_or_none()
+
+                if not file_record:
+                    raise FileNotFoundError(f"File {file_id} not found")
+
+                # Update path
+                file_record.storage_path = new_path
+
+                await session.commit()
+
+                logger.debug(f"Updated file path: {file_id} -> {new_path}")
+
+            except FileNotFoundError:
+                raise
+            except Exception as e:
+                await session.rollback()
+                logger.error(f"Error updating file path {file_id}: {e}")
+                raise StorageError(f"Failed to update file path: {str(e)}")
 
     async def _track_file_access(self, file_id: UUID, action: str) -> None:
-        """Track file access for audit"""
-        pass
+        """
+        Track file access in audit log for FERPA/COPPA compliance
+
+        Args:
+            file_id: UUID of the accessed file
+            action: Action performed (view, download, share, delete, etc.)
+        """
+        from database.models.storage import FileAccessLog
+        from database.connection import get_async_session
+
+        async for session in get_async_session():
+            try:
+                # Create access log entry
+                access_log = FileAccessLog(
+                    file_id=file_id,
+                    user_id=self.user_id,
+                    organization_id=self.organization_id,
+                    action=action,
+                    ip_address=getattr(self, '_request_ip', None),  # Set from request context if available
+                    user_agent=getattr(self, '_request_user_agent', None),
+                    access_granted=True,
+                    metadata={}
+                )
+
+                session.add(access_log)
+                await session.commit()
+
+                logger.debug(f"Tracked file access: {file_id} - {action}")
+
+            except Exception as e:
+                await session.rollback()
+                logger.warning(f"Error tracking file access {file_id}: {e}")
+                # Don't raise - audit logging failures shouldn't break operations
+
+    async def _validate_tenant_access(self, file_id: UUID) -> bool:
+        """
+        Validate that the current user/organization has access to the file
+
+        Args:
+            file_id: UUID of the file to check
+
+        Returns:
+            True if access is granted, False otherwise
+
+        Raises:
+            TenantIsolationError: If organization mismatch detected
+            AccessDeniedError: If user doesn't have permission
+        """
+        from database.models.storage import File
+        from database.connection import get_async_session
+        from sqlalchemy import select, and_
+
+        async for session in get_async_session():
+            try:
+                # Query file with organization filter
+                stmt = select(File).where(File.id == file_id)
+                result = await session.execute(stmt)
+                file_record = result.scalar_one_or_none()
+
+                if not file_record:
+                    logger.warning(f"File {file_id} not found for tenant validation")
+                    raise FileNotFoundError(f"File {file_id} not found")
+
+                # Check organization match
+                if str(file_record.organization_id) != str(self.organization_id):
+                    logger.error(
+                        f"Tenant isolation violation: User org {self.organization_id} "
+                        f"attempted to access file from org {file_record.organization_id}"
+                    )
+                    raise TenantIsolationError(
+                        f"Access denied: File belongs to different organization"
+                    )
+
+                # Check if file is deleted
+                if file_record.deleted_at is not None:
+                    logger.warning(f"Access denied: File {file_id} is deleted")
+                    raise AccessDeniedError("File has been deleted")
+
+                # Additional permission checks can be added here
+                # For example, check if user has specific file access rights
+
+                logger.debug(f"Tenant access validated for file {file_id}")
+                return True
+
+            except (TenantIsolationError, AccessDeniedError, FileNotFoundError):
+                raise
+            except Exception as e:
+                logger.error(f"Error validating tenant access for {file_id}: {e}")
+                raise StorageError(f"Failed to validate access: {str(e)}")

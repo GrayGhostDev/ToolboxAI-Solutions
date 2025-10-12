@@ -1,9 +1,16 @@
 """
 Payment API Endpoints
 Handles all payment-related API endpoints including subscriptions, checkout, and webhooks
+
+Multi-Tenant Security:
+- All payment resources (customers, subscriptions, invoices) are organization-scoped
+- organization_id automatically extracted from authenticated user
+- Cross-organization access prevented at both application and database (RLS) levels
+
 @module payments
-@version 1.0.0
+@version 1.1.0 - Multi-tenant isolation added
 @since 2025-09-26
+@updated 2025-10-11
 """
 
 from fastapi import APIRouter, HTTPException, Depends, Request, Header, status, BackgroundTasks
@@ -11,17 +18,19 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, validator
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
+from uuid import UUID
 import logging
 import stripe
 
 from apps.backend.services.stripe_service import stripe_service
 from apps.backend.core.auth import get_current_user, require_auth
 from apps.backend.core.config import settings
+from apps.backend.core.deps import get_current_organization_id  # Multi-tenant filtering
 from apps.backend.core.rate_limiter import rate_limit
 from database.connection import get_session
 from database.models.payment import Customer, Subscription, Payment, Invoice
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, text
 
 logger = logging.getLogger(__name__)
 
@@ -104,15 +113,27 @@ class CreateRefundRequest(BaseModel):
 @rate_limit(max_calls=10, time_window=60)
 async def create_customer(
     request: CreateCustomerRequest,
+    org_id: UUID = Depends(get_current_organization_id),  # Multi-tenant isolation
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
 ):
     """
-    Create a new Stripe customer for the current user
+    Create a new Stripe customer for the current user's organization.
+
+    Multi-Tenant Security:
+    - Customer automatically scoped to user's organization
+    - organization_id stored for future isolation checks
     """
     try:
-        # Check if customer already exists
-        result = await db.execute(select(Customer).filter(Customer.user_id == current_user.id))
+        # Set RLS context for database-level security
+        await db.execute(text(f"SET app.current_organization_id = '{org_id}'"))
+
+        # Check if customer already exists for this organization
+        result = await db.execute(
+            select(Customer).filter(
+                Customer.user_id == current_user.id, Customer.organization_id == org_id  # Organization filter
+            )
+        )
         existing_customer = result.scalar_one_or_none()
 
         if existing_customer and existing_customer.stripe_customer_id:
@@ -130,6 +151,7 @@ async def create_customer(
                 **request.metadata,
                 "user_id": str(current_user.id),
                 "username": current_user.username,
+                "organization_id": str(org_id),  # Track organization in Stripe metadata
             },
         )
 
@@ -145,6 +167,7 @@ async def create_customer(
                 email=request.email or current_user.email,
                 name=request.name or current_user.full_name,
                 metadata=request.metadata,
+                organization_id=org_id,  # Multi-tenant isolation
             )
             db.add(customer)
 
@@ -163,13 +186,26 @@ async def create_customer(
 
 @router.get("/customers/me", response_model=Dict[str, Any])
 async def get_my_customer(
-    current_user=Depends(get_current_user), db: AsyncSession = Depends(get_session)
+    org_id: UUID = Depends(get_current_organization_id),  # Multi-tenant isolation
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
 ):
     """
-    Get the current user's customer information
+    Get the current user's customer information within their organization.
+
+    Multi-Tenant Security:
+    - Only returns customer data for user's organization
     """
     try:
-        result = await db.execute(select(Customer).filter(Customer.user_id == current_user.id))
+        # Set RLS context
+        await db.execute(text(f"SET app.current_organization_id = '{org_id}'"))
+
+        # Query with organization filter
+        result = await db.execute(
+            select(Customer).filter(
+                Customer.user_id == current_user.id, Customer.organization_id == org_id  # Organization filter
+            )
+        )
         customer = result.scalar_one_or_none()
 
         if not customer or not customer.stripe_customer_id:
@@ -196,15 +232,26 @@ async def get_my_customer(
 @rate_limit(max_calls=5, time_window=60)
 async def create_subscription(
     request: CreateSubscriptionRequest,
+    org_id: UUID = Depends(get_current_organization_id),  # Multi-tenant isolation
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
 ):
     """
-    Create a new subscription for the current user
+    Create a new subscription for the current user's organization.
+
+    Multi-Tenant Security:
+    - Subscription automatically scoped to user's organization
     """
     try:
-        # Get customer
-        result = await db.execute(select(Customer).filter(Customer.user_id == current_user.id))
+        # Set RLS context
+        await db.execute(text(f"SET app.current_organization_id = '{org_id}'"))
+
+        # Get customer with organization filter
+        result = await db.execute(
+            select(Customer).filter(
+                Customer.user_id == current_user.id, Customer.organization_id == org_id  # Organization filter
+            )
+        )
         customer = result.scalar_one_or_none()
 
         if not customer or not customer.stripe_customer_id:
@@ -224,10 +271,14 @@ async def create_subscription(
             price_id=request.price_id,
             trial_days=request.trial_days,
             coupon=request.coupon,
-            metadata={"user_id": str(current_user.id), "created_via": "api"},
+            metadata={
+                "user_id": str(current_user.id),
+                "organization_id": str(org_id),  # Track organization
+                "created_via": "api",
+            },
         )
 
-        # Save to database
+        # Save to database with organization_id
         db_subscription = Subscription(
             customer_id=customer.id,
             stripe_subscription_id=subscription["subscription_id"],
@@ -241,6 +292,7 @@ async def create_subscription(
                 else None
             ),
             metadata={"stripe_response": subscription},
+            organization_id=org_id,  # Multi-tenant isolation
         )
         db.add(db_subscription)
         await db.commit()
@@ -256,22 +308,35 @@ async def create_subscription(
 
 @router.get("/subscriptions", response_model=Dict[str, Any])
 async def get_my_subscriptions(
-    current_user=Depends(get_current_user), db: AsyncSession = Depends(get_session)
+    org_id: UUID = Depends(get_current_organization_id),  # Multi-tenant isolation
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
 ):
     """
-    Get all subscriptions for the current user
+    Get all subscriptions for the current user within their organization.
+
+    Multi-Tenant Security:
+    - Only returns subscriptions for user's organization
     """
     try:
-        result = await db.execute(select(Customer).filter(Customer.user_id == current_user.id))
+        # Set RLS context
+        await db.execute(text(f"SET app.current_organization_id = '{org_id}'"))
+
+        # Get customer with organization filter
+        result = await db.execute(
+            select(Customer).filter(
+                Customer.user_id == current_user.id, Customer.organization_id == org_id  # Organization filter
+            )
+        )
         customer = result.scalar_one_or_none()
 
         if not customer:
             return {"subscriptions": []}
 
-        # Get subscriptions from database
+        # Get subscriptions from database with organization filter
         result = await db.execute(
             select(Subscription)
-            .filter(Subscription.customer_id == customer.id)
+            .filter(Subscription.customer_id == customer.id, Subscription.organization_id == org_id)  # Organization filter
             .order_by(Subscription.created_at.desc())
         )
         subscriptions = result.scalars().all()
@@ -305,26 +370,34 @@ async def get_my_subscriptions(
 async def update_subscription(
     subscription_id: str,
     request: UpdateSubscriptionRequest,
+    org_id: UUID = Depends(get_current_organization_id),  # Multi-tenant isolation
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
 ):
     """
-    Update a subscription (upgrade/downgrade/cancel)
+    Update a subscription (upgrade/downgrade/cancel).
+
+    Multi-Tenant Security:
+    - Verifies subscription belongs to user's organization before updating
     """
     try:
-        # Verify ownership
+        # Set RLS context
+        await db.execute(text(f"SET app.current_organization_id = '{org_id}'"))
+
+        # Verify ownership with organization filter
         result = await db.execute(
             select(Subscription)
             .join(Customer)
             .filter(
                 Subscription.stripe_subscription_id == subscription_id,
                 Customer.user_id == current_user.id,
+                Subscription.organization_id == org_id,  # Organization filter
             )
         )
         subscription = result.scalar_one_or_none()
 
         if not subscription:
-            raise HTTPException(status_code=404, detail="Subscription not found")
+            raise HTTPException(status_code=404, detail="Subscription not found or you don't have access")
 
         # Handle cancellation
         if request.cancel_at_period_end is not None:
@@ -363,26 +436,34 @@ async def update_subscription(
 async def cancel_subscription(
     subscription_id: str,
     immediately: bool = False,
+    org_id: UUID = Depends(get_current_organization_id),  # Multi-tenant isolation
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
 ):
     """
-    Cancel a subscription
+    Cancel a subscription.
+
+    Multi-Tenant Security:
+    - Verifies subscription belongs to user's organization before cancelling
     """
     try:
-        # Verify ownership
+        # Set RLS context
+        await db.execute(text(f"SET app.current_organization_id = '{org_id}'"))
+
+        # Verify ownership with organization filter
         result = await db.execute(
             select(Subscription)
             .join(Customer)
             .filter(
                 Subscription.stripe_subscription_id == subscription_id,
                 Customer.user_id == current_user.id,
+                Subscription.organization_id == org_id,  # Organization filter
             )
         )
         subscription = result.scalar_one_or_none()
 
         if not subscription:
-            raise HTTPException(status_code=404, detail="Subscription not found")
+            raise HTTPException(status_code=404, detail="Subscription not found or you don't have access")
 
         # Cancel subscription
         cancelled = await stripe_service.cancel_subscription(
@@ -413,15 +494,26 @@ async def cancel_subscription(
 @rate_limit(max_calls=10, time_window=60)
 async def attach_payment_method(
     request: AttachPaymentMethodRequest,
+    org_id: UUID = Depends(get_current_organization_id),  # Multi-tenant isolation
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
 ):
     """
-    Attach a payment method to the current user
+    Attach a payment method to the current user's organization customer.
+
+    Multi-Tenant Security:
+    - Verifies customer belongs to user's organization
     """
     try:
-        # Get customer
-        result = await db.execute(select(Customer).filter(Customer.user_id == current_user.id))
+        # Set RLS context
+        await db.execute(text(f"SET app.current_organization_id = '{org_id}'"))
+
+        # Get customer with organization filter
+        result = await db.execute(
+            select(Customer).filter(
+                Customer.user_id == current_user.id, Customer.organization_id == org_id  # Organization filter
+            )
+        )
         customer = result.scalar_one_or_none()
 
         if not customer or not customer.stripe_customer_id:
@@ -445,14 +537,26 @@ async def attach_payment_method(
 
 @router.get("/payment-methods", response_model=Dict[str, Any])
 async def get_payment_methods(
-    current_user=Depends(get_current_user), db: AsyncSession = Depends(get_session)
+    org_id: UUID = Depends(get_current_organization_id),  # Multi-tenant isolation
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
 ):
     """
-    Get all payment methods for the current user
+    Get all payment methods for the current user's organization customer.
+
+    Multi-Tenant Security:
+    - Only returns payment methods for user's organization
     """
     try:
-        # Get customer
-        result = await db.execute(select(Customer).filter(Customer.user_id == current_user.id))
+        # Set RLS context
+        await db.execute(text(f"SET app.current_organization_id = '{org_id}'"))
+
+        # Get customer with organization filter
+        result = await db.execute(
+            select(Customer).filter(
+                Customer.user_id == current_user.id, Customer.organization_id == org_id  # Organization filter
+            )
+        )
         customer = result.scalar_one_or_none()
 
         if not customer or not customer.stripe_customer_id:
@@ -475,15 +579,26 @@ async def get_payment_methods(
 @rate_limit(max_calls=10, time_window=60)
 async def create_payment_intent(
     request: CreatePaymentIntentRequest,
+    org_id: UUID = Depends(get_current_organization_id),  # Multi-tenant isolation
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
 ):
     """
-    Create a payment intent for one-time payment
+    Create a payment intent for one-time payment.
+
+    Multi-Tenant Security:
+    - Payment intent linked to user's organization customer
     """
     try:
-        # Get customer if exists
-        result = await db.execute(select(Customer).filter(Customer.user_id == current_user.id))
+        # Set RLS context
+        await db.execute(text(f"SET app.current_organization_id = '{org_id}'"))
+
+        # Get customer if exists with organization filter
+        result = await db.execute(
+            select(Customer).filter(
+                Customer.user_id == current_user.id, Customer.organization_id == org_id  # Organization filter
+            )
+        )
         customer = result.scalar_one_or_none()
 
         # Create payment intent
@@ -492,7 +607,11 @@ async def create_payment_intent(
             currency=request.currency,
             customer_id=customer.stripe_customer_id if customer else None,
             description=request.description,
-            metadata={**request.metadata, "user_id": str(current_user.id)},
+            metadata={
+                **request.metadata,
+                "user_id": str(current_user.id),
+                "organization_id": str(org_id),  # Track organization
+            },
         )
 
         return {"message": "Payment intent created", "payment_intent": payment_intent}
@@ -507,15 +626,26 @@ async def create_payment_intent(
 @rate_limit(max_calls=5, time_window=60)
 async def create_checkout_session(
     request: CreateCheckoutSessionRequest,
+    org_id: UUID = Depends(get_current_organization_id),  # Multi-tenant isolation
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
 ):
     """
-    Create a Stripe Checkout session
+    Create a Stripe Checkout session.
+
+    Multi-Tenant Security:
+    - Checkout session linked to user's organization customer
     """
     try:
-        # Get customer if exists
-        result = await db.execute(select(Customer).filter(Customer.user_id == current_user.id))
+        # Set RLS context
+        await db.execute(text(f"SET app.current_organization_id = '{org_id}'"))
+
+        # Get customer if exists with organization filter
+        result = await db.execute(
+            select(Customer).filter(
+                Customer.user_id == current_user.id, Customer.organization_id == org_id  # Organization filter
+            )
+        )
         customer = result.scalar_one_or_none()
 
         # Create checkout session
@@ -527,7 +657,11 @@ async def create_checkout_session(
             success_url=request.success_url,
             cancel_url=request.cancel_url,
             trial_period_days=request.trial_days,
-            metadata={"user_id": str(current_user.id), "username": current_user.username},
+            metadata={
+                "user_id": str(current_user.id),
+                "username": current_user.username,
+                "organization_id": str(org_id),  # Track organization
+            },
         )
 
         return {
@@ -581,14 +715,27 @@ async def stripe_webhook(
 # Invoice Endpoints
 @router.get("/invoices", response_model=Dict[str, Any])
 async def get_invoices(
-    limit: int = 10, current_user=Depends(get_current_user), db: AsyncSession = Depends(get_session)
+    limit: int = 10,
+    org_id: UUID = Depends(get_current_organization_id),  # Multi-tenant isolation
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
 ):
     """
-    Get invoices for the current user
+    Get invoices for the current user's organization customer.
+
+    Multi-Tenant Security:
+    - Only returns invoices for user's organization
     """
     try:
-        # Get customer
-        result = await db.execute(select(Customer).filter(Customer.user_id == current_user.id))
+        # Set RLS context
+        await db.execute(text(f"SET app.current_organization_id = '{org_id}'"))
+
+        # Get customer with organization filter
+        result = await db.execute(
+            select(Customer).filter(
+                Customer.user_id == current_user.id, Customer.organization_id == org_id  # Organization filter
+            )
+        )
         customer = result.scalar_one_or_none()
 
         if not customer or not customer.stripe_customer_id:
@@ -611,23 +758,31 @@ async def get_invoices(
 @rate_limit(max_calls=5, time_window=60)
 async def create_refund(
     request: CreateRefundRequest,
+    org_id: UUID = Depends(get_current_organization_id),  # Multi-tenant isolation
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_session),
 ):
     """
-    Create a refund for a payment (admin only)
+    Create a refund for a payment (admin only).
+
+    Multi-Tenant Security:
+    - Admin can only refund payments from their organization
     """
     # Check admin privileges
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
 
     try:
+        # Set RLS context
+        await db.execute(text(f"SET app.current_organization_id = '{org_id}'"))
+
         refund = await stripe_service.create_refund(
             charge_id=request.charge_id,
             payment_intent_id=request.payment_id,
             amount=request.amount,
             reason=request.reason,
             metadata={
+                "organization_id": str(org_id),  # Track organization
                 "refunded_by": str(current_user.id),
                 "refunded_at": datetime.now().isoformat(),
             },
@@ -643,20 +798,30 @@ async def create_refund(
 # Revenue Analytics Endpoints (Admin only)
 @router.get("/analytics/revenue", response_model=Dict[str, Any])
 async def get_revenue_analytics(
-    start_date: datetime, end_date: datetime, current_user=Depends(get_current_user)
+    start_date: datetime,
+    end_date: datetime,
+    org_id: UUID = Depends(get_current_organization_id),  # Multi-tenant isolation
+    current_user=Depends(get_current_user),
 ):
     """
-    Get revenue analytics (admin only)
+    Get revenue analytics for the admin's organization.
+
+    Multi-Tenant Security:
+    - Admin only sees revenue for their organization
     """
     # Check admin privileges
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
 
     try:
-        metrics = await stripe_service.get_revenue_metrics(start_date=start_date, end_date=end_date)
+        # Get revenue metrics filtered by organization
+        metrics = await stripe_service.get_revenue_metrics(
+            start_date=start_date, end_date=end_date, organization_id=org_id  # Organization filter
+        )
 
         return {
             "period": {"start": start_date.isoformat(), "end": end_date.isoformat()},
+            "organization_id": str(org_id),
             "metrics": metrics,
         }
 

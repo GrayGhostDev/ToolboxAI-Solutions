@@ -4,23 +4,26 @@ Core Dependencies Module
 Provides common dependencies for FastAPI endpoints.
 """
 
-from typing import Optional, AsyncGenerator
+import logging
+from typing import Optional, AsyncGenerator, Generator
+from uuid import UUID
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 import jwt
 from datetime import datetime, timedelta
 
-from database.database_service import DatabaseService
+from database.session_modern import get_async_session as get_sqlalchemy_async_session
 from database.models import User
+from apps.backend.core.database import SessionLocal
 from toolboxai_settings import settings
 
 # Security scheme
 security = HTTPBearer()
 
-# Database service instance
-db_service = DatabaseService()
+logger = logging.getLogger(__name__)
 
 
 async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
@@ -31,14 +34,15 @@ async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
         AsyncSession: Database session
     """
     try:
-        async with db_service.async_session() as session:
+        async for session in get_sqlalchemy_async_session():
             yield session
     except Exception as e:
+        logger.warning("Async database session unavailable: %s", e)
         # If database is not available, return None
         yield None
 
 
-def get_db() -> Session:
+def get_db() -> Generator[Optional[Session], None, None]:
     """
     Get database session for sync operations.
 
@@ -46,10 +50,14 @@ def get_db() -> Session:
         Session: Database session or None if not available
     """
     try:
-        db = db_service.SessionLocal()
-        return db
-    except Exception:
-        return None
+        db = SessionLocal()
+        try:
+            yield db
+        finally:
+            db.close()
+    except Exception as e:
+        logger.warning("Synchronous database session unavailable: %s", e)
+        yield None
 
 
 async def get_current_user(
@@ -165,3 +173,185 @@ def require_role(allowed_roles: list[str]):
 require_admin = require_role(["admin"])
 require_teacher = require_role(["admin", "teacher"])
 require_teacher_or_student = require_role(["admin", "teacher", "student"])
+
+
+# ============================================================================
+# Multi-Tenant Organization Dependencies
+# ============================================================================
+
+
+async def get_current_organization_id(
+    current_user: User = Depends(get_current_user),
+    db: Optional[AsyncSession] = Depends(get_async_db),
+) -> UUID:
+    """
+    Extract organization_id from current authenticated user.
+
+    This dependency enforces multi-tenant isolation by ensuring all
+    API requests are scoped to the user's organization.
+
+    Args:
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        UUID: Organization ID for the current user
+
+    Raises:
+        HTTPException: If user does not belong to an organization
+
+    Example:
+        @router.get("/agents")
+        async def list_agents(
+            org_id: UUID = Depends(get_current_organization_id),
+            db: AsyncSession = Depends(get_async_db)
+        ):
+            # Query automatically scoped to org_id
+            agents = await db.execute(
+                select(AgentInstance).filter_by(organization_id=org_id)
+            )
+            return agents.scalars().all()
+    """
+    if not hasattr(current_user, 'organization_id') or current_user.organization_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User must belong to an organization to access this resource"
+        )
+
+    # Set PostgreSQL session variable for RLS policies (if database available)
+    if db is not None:
+        try:
+            await db.execute(
+                text(f"SET app.current_organization_id = '{current_user.organization_id}'")
+            )
+        except Exception:
+            # RLS may not be enabled in all environments (dev/test)
+            pass
+
+    return current_user.organization_id
+
+
+def get_current_organization_id_sync(
+    current_user: User = Depends(get_current_user),
+    db: Optional[Session] = Depends(get_db),
+) -> UUID:
+    """
+    Extract organization_id from current user (sync version).
+
+    Synchronous version of get_current_organization_id for sync endpoints.
+
+    Args:
+        current_user: Current authenticated user
+        db: Sync database session
+
+    Returns:
+        UUID: Organization ID for the current user
+
+    Raises:
+        HTTPException: If user does not belong to an organization
+
+    Example:
+        @router.get("/agents")
+        def list_agents_sync(
+            org_id: UUID = Depends(get_current_organization_id_sync),
+            db: Session = Depends(get_db)
+        ):
+            query = TenantAwareQuery(db, AgentInstance, org_id)
+            return query.all()
+    """
+    if not hasattr(current_user, 'organization_id') or current_user.organization_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User must belong to an organization to access this resource"
+        )
+
+    # Set PostgreSQL session variable for RLS policies (if database available)
+    if db is not None:
+        try:
+            db.execute(
+                text(f"SET app.current_organization_id = '{current_user.organization_id}'")
+            )
+        except Exception:
+            # RLS may not be enabled in all environments (dev/test)
+            pass
+
+    return current_user.organization_id
+
+
+async def verify_organization_access(
+    resource_org_id: UUID,
+    current_org_id: UUID = Depends(get_current_organization_id),
+) -> bool:
+    """
+    Verify that current user has access to a resource's organization.
+
+    Use this dependency when you need to explicitly check organization
+    ownership of a specific resource.
+
+    Args:
+        resource_org_id: Organization ID of the resource being accessed
+        current_org_id: Current user's organization ID
+
+    Returns:
+        bool: True if access granted
+
+    Raises:
+        HTTPException: If organization IDs don't match
+
+    Example:
+        @router.get("/agents/{agent_id}")
+        async def get_agent(
+            agent_id: str,
+            org_id: UUID = Depends(get_current_organization_id),
+            db: AsyncSession = Depends(get_async_db)
+        ):
+            agent = await db.get(AgentInstance, agent_id)
+            if not agent:
+                raise HTTPException(404, "Agent not found")
+
+            # Verify organization access
+            await verify_organization_access(agent.organization_id, org_id)
+
+            return agent
+    """
+    if resource_org_id != current_org_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have access to resources from this organization"
+        )
+    return True
+
+
+def require_admin_or_own_organization(
+    current_user: User = Depends(get_current_user),
+    current_org_id: UUID = Depends(get_current_organization_id),
+):
+    """
+    Require user to be admin or accessing their own organization's data.
+
+    This combines role checking with organization checking for admin
+    operations that should be scoped to organization.
+
+    Args:
+        current_user: Current authenticated user
+        current_org_id: Current user's organization ID
+
+    Returns:
+        tuple: (user, org_id)
+
+    Raises:
+        HTTPException: If neither admin nor own organization
+
+    Example:
+        @router.delete("/organizations/{org_id}/data")
+        def delete_org_data(
+            org_id: UUID,
+            user_and_org = Depends(require_admin_or_own_organization)
+        ):
+            user, current_org_id = user_and_org
+            # Admins can delete any org, others only their own
+            if user.role != "admin" and org_id != current_org_id:
+                raise HTTPException(403, "Cannot delete other organization's data")
+            # ... deletion logic
+    """
+    return (current_user, current_org_id)

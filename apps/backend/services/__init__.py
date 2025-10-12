@@ -49,6 +49,12 @@ try:
 except ImportError:
     pusher_service = None
 
+try:
+    from .tenant_manager import TenantManager, get_tenant_manager
+except ImportError:  # pragma: no cover - optional dependency during bootstrap
+    TenantManager = None
+    get_tenant_manager = None
+
 # Export all services - maintaining backwards compatibility
 __all__ = [
     # Email service MODULE (not instance)
@@ -85,4 +91,6 @@ __all__ = [
     # Other services
     "stripe_service",
     "pusher_service",
+    "TenantManager",
+    "get_tenant_manager",
 ]
