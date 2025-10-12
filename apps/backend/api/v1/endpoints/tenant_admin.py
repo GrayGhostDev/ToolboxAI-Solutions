@@ -38,6 +38,7 @@ from sqlalchemy import select, update, delete, func
 from apps.backend.api.auth.auth import get_current_user, require_super_admin
 from apps.backend.core.deps import get_async_session
 from apps.backend.models.schemas import User
+from apps.backend.services.tenant_provisioner import TenantProvisioner
 from database.models.tenant import (
     Organization,
     OrganizationStatus,
@@ -623,18 +624,47 @@ async def provision_tenant(
 
         logger.info(f"Provisioning tenant: {tenant_id}")
 
-        # TODO: Implement actual provisioning logic
-        # - Create admin user
-        # - Initialize default settings
-        # - Send welcome email
+        # Initialize provisioner service
+        provisioner = TenantProvisioner(session)
 
-        admin_user_id = None
+        # Provision tenant with full setup
+        provisioning_result = await provisioner.provision_tenant(
+            organization_id=tenant_id,
+            admin_email=request.admin_email,
+            admin_username=request.admin_username,
+            create_admin=request.create_admin_user,
+            initialize_defaults=request.initialize_defaults,
+            send_welcome_email=request.send_welcome_email
+        )
+
+        # Check for errors
+        if provisioning_result["status"] == "failed":
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Tenant provisioning failed: {'; '.join(provisioning_result['errors'])}"
+            )
+
+        # Extract admin user ID from result
+        admin_user_id = provisioning_result.get("admin_user_id")
+        if admin_user_id:
+            from uuid import UUID
+            admin_user_id = UUID(admin_user_id) if isinstance(admin_user_id, str) else admin_user_id
+
+        # Determine response message
+        if provisioning_result["status"] == "partial_success":
+            message = f"Tenant provisioned with warnings: {'; '.join(provisioning_result['errors'])}"
+        elif provisioning_result["status"] == "already_provisioned":
+            message = provisioning_result["message"]
+        else:
+            message = "Tenant provisioned successfully"
+
+        logger.info(f"Tenant {tenant_id} provisioned: {provisioning_result['status']}")
 
         return TenantProvisionResponse(
             tenant_id=tenant_id,
-            status="provisioned",
+            status=provisioning_result["status"],
             admin_user_id=admin_user_id,
-            message="Tenant provisioned successfully",
+            message=message,
             provisioned_at=datetime.utcnow(),
         )
 
