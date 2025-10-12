@@ -22,26 +22,25 @@ import {
 } from '../usePusher';
 import { WebSocketState } from '../../types/websocket';
 import { PusherChannelType } from '../../types/pusher';
+import { pusherService } from '../../services/pusher';
 
-// Mock the pusher service
-const mockPusherService = {
-  connect: vi.fn(),
-  disconnect: vi.fn(),
-  subscribe: vi.fn(),
-  unsubscribe: vi.fn(),
-  getState: vi.fn(),
-  onStateChange: vi.fn(),
-  onError: vi.fn(),
-  send: vi.fn(),
-  on: vi.fn(),
-  off: vi.fn(),
-  isConnected: vi.fn(),
-  getStats: vi.fn()
-};
-
-vi.mock('../services/pusher', () => ({
-  pusherService: mockPusherService,
-  PusherService: vi.fn().mockImplementation(() => mockPusherService)
+// Mock the pusher service with factory function (hoisted to top)
+vi.mock('../../services/pusher', () => ({
+  pusherService: {
+    connect: vi.fn(),
+    disconnect: vi.fn(),
+    subscribe: vi.fn(),
+    unsubscribe: vi.fn(),
+    getState: vi.fn(),
+    onStateChange: vi.fn(),
+    onError: vi.fn(),
+    send: vi.fn(),
+    on: vi.fn(),
+    off: vi.fn(),
+    isConnected: vi.fn(),
+    getStats: vi.fn()
+  },
+  PusherService: vi.fn()
 }));
 
 // Mock logger
@@ -53,6 +52,9 @@ vi.mock('../../utils/logger', () => ({
     info: vi.fn()
   }
 }));
+
+// Get reference to mocked service
+const mockPusherService = vi.mocked(pusherService);
 
 describe('Enhanced Pusher Hooks', () => {
   beforeEach(() => {

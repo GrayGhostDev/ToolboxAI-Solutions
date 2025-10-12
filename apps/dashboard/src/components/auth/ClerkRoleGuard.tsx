@@ -5,8 +5,8 @@
 
 import React from 'react';
 import { useUser } from '@clerk/clerk-react';
-import { Box, Alert, AlertTitle, Typography, Button } from '@mui/material';
-import { SecurityRounded, ArrowBackRounded } from '@mui/icons-material';
+import { Box, Alert, Text, Button } from '@mantine/core';
+import { IconShield, IconArrowLeft } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import type { UserRole } from '../../types/roles';
 import { ROLE_PERMISSIONS } from '../../types/roles';
@@ -33,14 +33,14 @@ export const ClerkRoleGuard = ({
   if (!isLoaded) {
     return (
       <Box
-        sx={{
+        style={{
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
           minHeight: 200
         }}
       >
-        <Typography>Loading...</Typography>
+        <Text>Loading...</Text>
       </Box>
     );
   }
@@ -49,19 +49,18 @@ export const ClerkRoleGuard = ({
   if (!user) {
     return (
       <Box
-        sx={{
+        style={{
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          p: 3,
+          padding: '1.5rem',
           textAlign: 'center'
         }}
       >
-        <Alert severity="warning" sx={{ maxWidth: 500 }}>
-          <AlertTitle>Authentication Required</AlertTitle>
-          <Typography variant="body2">
+        <Alert color="yellow" title="Authentication Required" style={{ maxWidth: 500 }}>
+          <Text size="sm">
             You need to be signed in to access this content.
-          </Typography>
+          </Text>
         </Alert>
       </Box>
     );
@@ -75,33 +74,38 @@ export const ClerkRoleGuard = ({
   if (allowedRoles && !allowedRoles.includes(userRole)) {
     const accessDeniedContent = (
       <Box
-        sx={{
+        style={{
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          p: 3,
+          padding: '1.5rem',
           textAlign: 'center',
           maxWidth: 600,
-          mx: 'auto'
+          margin: '0 auto'
         }}
       >
-        <Alert severity="error" sx={{ width: '100%', mb: 3 }}>
-          <AlertTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <SecurityRounded />
-            Access Denied
-          </AlertTitle>
-          <Typography variant="body2" sx={{ mb: 2 }}>
+        <Alert
+          color="red"
+          title={
+            <Box style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <IconShield size={20} />
+              <span>Access Denied</span>
+            </Box>
+          }
+          style={{ width: '100%', marginBottom: '1.5rem' }}
+        >
+          <Text size="sm" style={{ marginBottom: '1rem' }}>
             Your current role ({userRole}) does not have permission to access this content.
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
+          </Text>
+          <Text size="sm" c="dimmed">
             Required roles: {allowedRoles.join(', ')}
-          </Typography>
+          </Text>
         </Alert>
 
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
+        <Box style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
           <Button
-            variant="contained"
-            startIcon={<ArrowBackRounded />}
+            variant="filled"
+            leftSection={<IconArrowLeft size={16} />}
             onClick={() => navigate(redirectTo)}
           >
             Go Back
@@ -109,8 +113,8 @@ export const ClerkRoleGuard = ({
 
           {process.env.NODE_ENV === 'development' && (
             <Button
-              variant="outlined"
-              color="warning"
+              variant="outline"
+              color="yellow"
               onClick={() => {
                 // In development, allow role switching for testing
                 console.log('Development mode: Role switching not implemented in this guard');
@@ -141,32 +145,37 @@ export const ClerkRoleGuard = ({
 
       const permissionDeniedContent = (
         <Box
-          sx={{
+          style={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            p: 3,
+            padding: '1.5rem',
             textAlign: 'center',
             maxWidth: 600,
-            mx: 'auto'
+            margin: '0 auto'
           }}
         >
-          <Alert severity="error" sx={{ width: '100%', mb: 3 }}>
-            <AlertTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <SecurityRounded />
-              Insufficient Permissions
-            </AlertTitle>
-            <Typography variant="body2" sx={{ mb: 2 }}>
+          <Alert
+            color="red"
+            title={
+              <Box style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <IconShield size={20} />
+                <span>Insufficient Permissions</span>
+              </Box>
+            }
+            style={{ width: '100%', marginBottom: '1.5rem' }}
+          >
+            <Text size="sm" style={{ marginBottom: '1rem' }}>
               Your current role ({userRole}) does not have the required permissions for this action.
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
+            </Text>
+            <Text size="sm" c="dimmed">
               Missing permissions: {missingPermissions.join(', ')}
-            </Typography>
+            </Text>
           </Alert>
 
           <Button
-            variant="contained"
-            startIcon={<ArrowBackRounded />}
+            variant="filled"
+            leftSection={<IconArrowLeft size={16} />}
             onClick={() => navigate(redirectTo)}
           >
             Go Back

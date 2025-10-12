@@ -220,6 +220,9 @@ export default function AdminDashboard({ section = 'overview' }: AdminDashboardP
                 memoryUsage: typeof data.memoryUsage === 'number' ? Math.max(0, Math.min(100, data.memoryUsage)) : prevMetrics.memoryUsage,
                 storageUsage: typeof data.storageUsage === 'number' ? Math.max(0, Math.min(100, data.storageUsage)) : prevMetrics.storageUsage,
               }));
+            } else {
+              // Log error when invalid data received
+              console.error('Error processing metrics update: Invalid metrics data received');
             }
           } catch (err) {
             console.error('Error processing metrics update:', err);
@@ -390,7 +393,12 @@ export default function AdminDashboard({ section = 'overview' }: AdminDashboardP
               </Tabs.List>
             </Tabs>
             <Tooltip label="Refresh">
-              <ActionIcon onClick={handleRefresh} loading={refreshing} variant="subtle">
+              <ActionIcon
+                onClick={handleRefresh}
+                loading={refreshing}
+                variant="subtle"
+                aria-label="Refresh"
+              >
                 <IconRefresh size={16} />
               </ActionIcon>
             </Tooltip>
