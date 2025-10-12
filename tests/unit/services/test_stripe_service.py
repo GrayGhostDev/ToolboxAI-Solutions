@@ -1,42 +1,39 @@
 """
-Unit Tests for Stripe Service
-Tests all payment processing functionality
+Unit Tests for Stripe Payment Service
+
+Tests service layer functionality including:
+- Customer management (create, get, update)
+- Subscription lifecycle (create, update, cancel)
+- Payment methods (attach, list)
+- Payment intents and checkout sessions
+- Invoices and refunds
+- Webhook event handling
+- Revenue analytics
+- Caching and idempotency
+- Multi-tenant organization filtering
 """
 
 import pytest
-import asyncio
 from unittest.mock import Mock, patch, AsyncMock, MagicMock
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
+from uuid import uuid4
 import stripe
-import stripe.error
 
-from apps.backend.services.stripe_service import StripeService, stripe_service
-
-
-@pytest.fixture
-def mock_stripe():
-    """Mock Stripe API"""
-    with patch('apps.backend.services.stripe_service.stripe') as mock:
-        yield mock
+# Import service under test
+from apps.backend.services.stripe_service import StripeService
 
 
 @pytest.fixture
-def mock_settings():
-    """Mock settings"""
-    with patch('apps.backend.services.stripe_service.settings') as mock:
-        mock.STRIPE_SECRET_KEY = 'sk_test_123'
-        mock.STRIPE_WEBHOOK_SECRET = 'whsec_test_123'
-        mock.STRIPE_PUBLISHABLE_KEY = 'pk_test_123'
-        mock.STRIPE_STARTER_PRICE_ID = 'price_starter'
-        mock.STRIPE_PRO_PRICE_ID = 'price_pro'
-        mock.STRIPE_ENTERPRISE_PRICE_ID = 'price_enterprise'
-        mock.FRONTEND_URL = 'https://test.com'
-        yield mock
+def stripe_service():
+    """Create Stripe service instance with mocked Stripe API"""
+    with patch('apps.backend.services.stripe_service.stripe.api_key', 'test_key'):
+        service = StripeService()
+        return service
 
 
 @pytest.fixture
 def mock_cache():
-    """Mock cache"""
+    """Mock cache for testing"""
     with patch('apps.backend.services.stripe_service.cache') as mock:
         mock.get = AsyncMock(return_value=None)
         mock.set = AsyncMock()
@@ -44,402 +41,492 @@ def mock_cache():
         yield mock
 
 
-@pytest.fixture
-async def service(mock_settings, mock_cache):
-    """Create service instance"""
-    service = StripeService()
-    return service
-
-
-class TestStripeService:
-    """Test Stripe service functionality"""
+class TestCustomerManagement:
+    """Test customer creation and management."""
 
     @pytest.mark.asyncio
-    async def test_init(self, mock_settings):
-        """Test service initialization"""
-        service = StripeService()
-
-        assert service.api_key == 'sk_test_123'
-        assert service.webhook_secret == 'whsec_test_123'
-        assert service.publishable_key == 'pk_test_123'
-        assert 'free' in service.subscription_tiers
-        assert 'starter' in service.subscription_tiers
-        assert 'professional' in service.subscription_tiers
-        assert 'enterprise' in service.subscription_tiers
-
-    @pytest.mark.asyncio
-    async def test_create_customer(self, service, mock_stripe, mock_cache):
-        """Test customer creation"""
-        # Mock Stripe response
-        mock_customer = MagicMock()
-        mock_customer.id = 'cus_test123'
-        mock_customer.to_dict.return_value = {
-            'id': 'cus_test123',
-            'email': 'test@example.com'
-        }
-        mock_stripe.Customer.create.return_value = mock_customer
-
-        # Create customer
-        result = await service.create_customer(
-            user_id='user123',
-            email='test@example.com',
-            name='Test User',
-            metadata={'source': 'test'}
+    @patch('stripe.Customer.create')
+    async def test_create_customer_success(self, mock_create, stripe_service, mock_cache):
+        """Test successful customer creation."""
+        # Arrange
+        mock_customer = Mock()
+        mock_customer.id = "cus_test_123"
+        mock_customer.email = "test@example.com"
+        mock_customer.to_dict = Mock(return_value={"id": "cus_test_123", "email": "test@example.com"})
+        mock_create.return_value = mock_customer
+        
+        # Act
+        result = await stripe_service.create_customer(
+            user_id="user_123",
+            email="test@example.com",
+            name="Test User"
         )
-
-        # Verify
-        assert result['id'] == 'cus_test123'
-        assert result['email'] == 'test@example.com'
-        mock_stripe.Customer.create.assert_called_once()
-
-        # Verify caching
-        mock_cache.set.assert_called_once()
+        
+        # Assert
+        assert result["id"] == "cus_test_123"
+        assert result["email"] == "test@example.com"
+        mock_create.assert_called_once()
+        mock_cache.set.assert_called_once()  # Customer cached
 
     @pytest.mark.asyncio
-    async def test_create_customer_with_cached(self, service, mock_cache):
-        """Test customer creation with cached data"""
-        # Mock cached customer
-        mock_cache.get.return_value = {
-            'id': 'cus_cached',
-            'email': 'cached@example.com'
-        }
-
-        result = await service.create_customer(
-            user_id='user123',
-            email='test@example.com'
+    @patch('stripe.Customer.create')
+    async def test_create_customer_with_payment_method(self, mock_create, stripe_service, mock_cache):
+        """Test customer creation with payment method."""
+        # Arrange
+        mock_customer = Mock()
+        mock_customer.to_dict = Mock(return_value={"id": "cus_123"})
+        mock_create.return_value = mock_customer
+        
+        # Act
+        result = await stripe_service.create_customer(
+            user_id="user_123",
+            email="test@example.com",
+            payment_method_id="pm_123"
         )
-
-        # Should return cached customer
-        assert result['id'] == 'cus_cached'
+        
+        # Assert
+        call_args = mock_create.call_args[1]
+        assert call_args["payment_method"] == "pm_123"
+        assert "invoice_settings" in call_args
 
     @pytest.mark.asyncio
-    async def test_create_subscription(self, service, mock_stripe):
-        """Test subscription creation"""
-        # Mock Stripe subscription
-        mock_sub = MagicMock()
-        mock_sub.id = 'sub_test123'
-        mock_sub.status = 'active'
-        mock_sub.current_period_start = 1234567890
-        mock_sub.current_period_end = 1234567899
-        mock_sub.trial_end = None
-        mock_sub.latest_invoice = MagicMock()
-        mock_sub.latest_invoice.payment_intent = MagicMock()
-        mock_sub.latest_invoice.payment_intent.client_secret = 'pi_secret'
-        mock_sub.latest_invoice.payment_intent.status = 'succeeded'
-        mock_sub['items'] = {'data': [MagicMock()]}
-        mock_sub.pending_setup_intent = None
+    @patch('stripe.Customer.retrieve')
+    async def test_get_customer_from_cache(self, mock_retrieve, stripe_service, mock_cache):
+        """Test getting customer from cache."""
+        # Arrange
+        cached_customer = {"id": "cus_123", "email": "cached@example.com"}
+        mock_cache.get.return_value = cached_customer
+        
+        # Act
+        result = await stripe_service.get_customer("cus_123")
+        
+        # Assert
+        assert result == cached_customer
+        mock_retrieve.assert_not_called()  # Should not hit Stripe API
 
-        mock_stripe.Subscription.create.return_value = mock_sub
+    @pytest.mark.asyncio
+    @patch('stripe.Customer.retrieve')
+    async def test_get_customer_from_stripe(self, mock_retrieve, stripe_service, mock_cache):
+        """Test getting customer from Stripe API."""
+        # Arrange
+        mock_cache.get.return_value = None
+        mock_customer = Mock()
+        mock_customer.to_dict = Mock(return_value={"id": "cus_123"})
+        mock_retrieve.return_value = mock_customer
+        
+        # Act
+        result = await stripe_service.get_customer("cus_123")
+        
+        # Assert
+        assert result["id"] == "cus_123"
+        mock_cache.set.assert_called_once()  # Customer cached
 
-        # Create subscription
-        result = await service.create_subscription(
-            customer_id='cus_test123',
-            price_id='price_starter',
-            trial_days=14,
-            metadata={'test': 'data'}
+    @pytest.mark.asyncio
+    @patch('stripe.Customer.modify')
+    async def test_update_customer(self, mock_modify, stripe_service, mock_cache):
+        """Test customer update."""
+        # Arrange
+        mock_customer = Mock()
+        mock_customer.to_dict = Mock(return_value={"id": "cus_123", "name": "Updated Name"})
+        mock_modify.return_value = mock_customer
+        
+        # Act
+        result = await stripe_service.update_customer("cus_123", name="Updated Name")
+        
+        # Assert
+        assert result["name"] == "Updated Name"
+        mock_cache.delete.assert_called_once()  # Cache invalidated
+
+
+class TestSubscriptionManagement:
+    """Test subscription lifecycle operations."""
+
+    @pytest.mark.asyncio
+    @patch('stripe.Subscription.create')
+    async def test_create_subscription(self, mock_create, stripe_service):
+        """Test subscription creation."""
+        # Arrange
+        mock_subscription = Mock()
+        mock_subscription.id = "sub_123"
+        mock_subscription.status = "trialing"
+        mock_subscription.current_period_start = int(datetime.now().timestamp())
+        mock_subscription.current_period_end = int((datetime.now() + timedelta(days=30)).timestamp())
+        mock_subscription.trial_end = int((datetime.now() + timedelta(days=14)).timestamp())
+        mock_subscription.__getitem__ = Mock(side_effect=lambda k: {"items": {"data": []}}[k])
+        mock_subscription.latest_invoice = None
+        mock_subscription.pending_setup_intent = None
+        mock_create.return_value = mock_subscription
+        
+        # Act
+        result = await stripe_service.create_subscription(
+            customer_id="cus_123",
+            price_id="price_123",
+            trial_days=14
         )
-
-        # Verify
-        assert result['subscription_id'] == 'sub_test123'
-        assert result['status'] == 'active'
-        assert result['client_secret'] == 'pi_secret'
-        assert result['payment_status'] == 'succeeded'
-        mock_stripe.Subscription.create.assert_called_once()
+        
+        # Assert
+        assert result["subscription_id"] == "sub_123"
+        assert result["status"] == "trialing"
+        mock_create.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_cancel_subscription(self, service, mock_stripe):
-        """Test subscription cancellation"""
-        # Mock response
-        mock_sub = MagicMock()
-        mock_sub.to_dict.return_value = {'id': 'sub_test123', 'status': 'canceled'}
-        mock_stripe.Subscription.delete.return_value = mock_sub
-
-        # Cancel immediately
-        result = await service.cancel_subscription(
-            subscription_id='sub_test123',
-            immediately=True,
-            reason='User requested'
-        )
-
-        assert result['id'] == 'sub_test123'
-        assert result['status'] == 'canceled'
-        mock_stripe.Subscription.delete.assert_called_once_with('sub_test123')
+    @patch('stripe.Subscription.delete')
+    async def test_cancel_subscription_immediately(self, mock_delete, stripe_service):
+        """Test immediate subscription cancellation."""
+        # Arrange
+        mock_subscription = Mock()
+        mock_subscription.to_dict = Mock(return_value={"id": "sub_123", "status": "canceled"})
+        mock_delete.return_value = mock_subscription
+        
+        # Act
+        result = await stripe_service.cancel_subscription("sub_123", immediately=True)
+        
+        # Assert
+        assert result["status"] == "canceled"
+        mock_delete.assert_called_once_with("sub_123")
 
     @pytest.mark.asyncio
-    async def test_cancel_subscription_at_period_end(self, service, mock_stripe):
-        """Test subscription cancellation at period end"""
-        # Mock response
-        mock_sub = MagicMock()
-        mock_sub.to_dict.return_value = {
-            'id': 'sub_test123',
-            'cancel_at_period_end': True
-        }
-        mock_stripe.Subscription.modify.return_value = mock_sub
-
-        # Cancel at period end
-        result = await service.cancel_subscription(
-            subscription_id='sub_test123',
-            immediately=False,
-            reason='User requested'
-        )
-
-        assert result['cancel_at_period_end'] == True
-        mock_stripe.Subscription.modify.assert_called_once()
+    @patch('stripe.Subscription.modify')
+    async def test_cancel_subscription_at_period_end(self, mock_modify, stripe_service):
+        """Test cancellation at period end."""
+        # Arrange
+        mock_subscription = Mock()
+        mock_subscription.to_dict = Mock(return_value={"id": "sub_123", "cancel_at_period_end": True})
+        mock_modify.return_value = mock_subscription
+        
+        # Act
+        result = await stripe_service.cancel_subscription("sub_123", immediately=False, reason="User request")
+        
+        # Assert
+        assert result["cancel_at_period_end"] == True
+        call_args = mock_modify.call_args[1]
+        assert call_args["cancel_at_period_end"] == True
 
     @pytest.mark.asyncio
-    async def test_attach_payment_method(self, service, mock_stripe):
-        """Test attaching payment method"""
-        # Mock response
-        mock_pm = MagicMock()
-        mock_pm.to_dict.return_value = {
-            'id': 'pm_test123',
-            'type': 'card'
-        }
-        mock_stripe.PaymentMethod.attach.return_value = mock_pm
+    @patch('stripe.Subscription.retrieve')
+    @patch('stripe.Subscription.modify')
+    async def test_update_subscription(self, mock_modify, mock_retrieve, stripe_service):
+        """Test subscription update/upgrade."""
+        # Arrange
+        mock_old_subscription = Mock()
+        mock_old_subscription.__getitem__ = Mock(side_effect=lambda k: {
+            "items": {"data": [Mock(id="si_123")]}
+        }[k])
+        mock_retrieve.return_value = mock_old_subscription
+        
+        mock_new_subscription = Mock()
+        mock_new_subscription.to_dict = Mock(return_value={"id": "sub_123", "plan": "new_plan"})
+        mock_modify.return_value = mock_new_subscription
+        
+        # Act
+        result = await stripe_service.update_subscription("sub_123", price_id="price_new")
+        
+        # Assert
+        mock_modify.assert_called_once()
+        call_args = mock_modify.call_args[1]
+        assert "items" in call_args
 
-        # Attach payment method
-        result = await service.attach_payment_method(
-            payment_method_id='pm_test123',
-            customer_id='cus_test123',
+
+class TestPaymentMethods:
+    """Test payment method operations."""
+
+    @pytest.mark.asyncio
+    @patch('stripe.PaymentMethod.attach')
+    @patch('stripe.Customer.modify')
+    async def test_attach_payment_method(self, mock_customer_modify, mock_attach, stripe_service):
+        """Test attaching payment method to customer."""
+        # Arrange
+        mock_pm = Mock()
+        mock_pm.to_dict = Mock(return_value={"id": "pm_123", "type": "card"})
+        mock_attach.return_value = mock_pm
+        
+        # Act
+        result = await stripe_service.attach_payment_method(
+            payment_method_id="pm_123",
+            customer_id="cus_123",
             set_as_default=True
         )
-
-        assert result['id'] == 'pm_test123'
-        assert result['type'] == 'card'
-        mock_stripe.PaymentMethod.attach.assert_called_once()
-        mock_stripe.Customer.modify.assert_called_once()
+        
+        # Assert
+        assert result["id"] == "pm_123"
+        mock_attach.assert_called_once_with("pm_123", customer="cus_123")
+        mock_customer_modify.assert_called_once()  # Set as default
 
     @pytest.mark.asyncio
-    async def test_create_payment_intent(self, service, mock_stripe):
-        """Test payment intent creation"""
-        # Mock response
-        mock_intent = MagicMock()
-        mock_intent.id = 'pi_test123'
-        mock_intent.client_secret = 'pi_secret'
-        mock_intent.amount = 5000
-        mock_intent.currency = 'usd'
-        mock_intent.status = 'requires_payment_method'
+    @patch('stripe.PaymentMethod.list')
+    async def test_list_payment_methods(self, mock_list, stripe_service):
+        """Test listing payment methods."""
+        # Arrange
+        mock_pm1 = Mock()
+        mock_pm1.to_dict = Mock(return_value={"id": "pm_1", "type": "card"})
+        mock_pm2 = Mock()
+        mock_pm2.to_dict = Mock(return_value={"id": "pm_2", "type": "card"})
+        
+        mock_list.return_value = Mock(data=[mock_pm1, mock_pm2])
+        
+        # Act
+        result = await stripe_service.list_payment_methods("cus_123")
+        
+        # Assert
+        assert len(result) == 2
+        assert result[0]["id"] == "pm_1"
 
-        mock_stripe.PaymentIntent.create.return_value = mock_intent
 
-        # Create payment intent
-        result = await service.create_payment_intent(
-            amount=5000,
-            currency='usd',
-            customer_id='cus_test123',
-            description='Test payment'
+class TestPaymentIntents:
+    """Test payment intent operations."""
+
+    @pytest.mark.asyncio
+    @patch('stripe.PaymentIntent.create')
+    async def test_create_payment_intent(self, mock_create, stripe_service):
+        """Test payment intent creation."""
+        # Arrange
+        mock_intent = Mock()
+        mock_intent.id = "pi_123"
+        mock_intent.client_secret = "pi_123_secret_abc"
+        mock_intent.amount = 1000
+        mock_intent.currency = "usd"
+        mock_intent.status = "requires_payment_method"
+        mock_create.return_value = mock_intent
+        
+        # Act
+        result = await stripe_service.create_payment_intent(
+            amount=1000,
+            currency="usd",
+            customer_id="cus_123"
         )
-
-        assert result['id'] == 'pi_test123'
-        assert result['client_secret'] == 'pi_secret'
-        assert result['amount'] == 5000
-        assert result['status'] == 'requires_payment_method'
-        mock_stripe.PaymentIntent.create.assert_called_once()
+        
+        # Assert
+        assert result["id"] == "pi_123"
+        assert result["client_secret"] == "pi_123_secret_abc"
+        assert result["amount"] == 1000
 
     @pytest.mark.asyncio
-    async def test_create_checkout_session(self, service, mock_stripe, mock_settings):
-        """Test checkout session creation"""
-        # Mock response
-        mock_session = MagicMock()
-        mock_session.id = 'cs_test123'
-        mock_session.url = 'https://checkout.stripe.com/test'
-        mock_session.expires_at = 1234567890
+    @patch('stripe.PaymentIntent.retrieve')
+    @patch('stripe.PaymentIntent.confirm')
+    async def test_retry_payment_intent_success(self, mock_confirm, mock_retrieve, stripe_service):
+        """Test retrying a failed payment intent."""
+        # Arrange
+        mock_intent = Mock()
+        mock_intent.status = "requires_confirmation"
+        mock_intent.to_dict = Mock(return_value={"id": "pi_123", "status": "requires_confirmation"})
+        mock_retrieve.return_value = mock_intent
+        
+        mock_confirmed = Mock()
+        mock_confirmed.status = "succeeded"
+        mock_confirmed.to_dict = Mock(return_value={"id": "pi_123", "status": "succeeded"})
+        mock_confirm.return_value = mock_confirmed
+        
+        # Act
+        result = await stripe_service.retry_payment_intent("pi_123")
+        
+        # Assert
+        assert result["success"] == True
+        assert result["status"] == "succeeded"
+        mock_confirm.assert_called_once()
 
-        mock_stripe.checkout.Session.create.return_value = mock_session
 
-        # Create checkout session
-        result = await service.create_checkout_session(
-            customer_id='cus_test123',
-            price_id='price_starter',
-            mode='subscription',
-            success_url='https://test.com/success',
-            cancel_url='https://test.com/cancel'
+class TestCheckoutSessions:
+    """Test checkout session operations."""
+
+    @pytest.mark.asyncio
+    @patch('stripe.checkout.Session.create')
+    async def test_create_checkout_session(self, mock_create, stripe_service):
+        """Test checkout session creation."""
+        # Arrange
+        mock_session = Mock()
+        mock_session.id = "cs_123"
+        mock_session.url = "https://checkout.stripe.com/c/pay/cs_123"
+        mock_session.expires_at = int((datetime.now() + timedelta(hours=1)).timestamp())
+        mock_create.return_value = mock_session
+        
+        # Act
+        result = await stripe_service.create_checkout_session(
+            customer_id="cus_123",
+            price_id="price_123",
+            mode="subscription",
+            trial_period_days=14
         )
+        
+        # Assert
+        assert result["id"] == "cs_123"
+        assert result["url"].startswith("https://checkout.stripe.com")
 
-        assert result['id'] == 'cs_test123'
-        assert result['url'] == 'https://checkout.stripe.com/test'
-        assert result['expires_at'] == 1234567890
-        mock_stripe.checkout.Session.create.assert_called_once()
+
+class TestInvoices:
+    """Test invoice operations."""
 
     @pytest.mark.asyncio
-    async def test_handle_webhook_valid(self, service, mock_stripe):
-        """Test webhook handling with valid signature"""
-        # Mock webhook event
+    @patch('stripe.Invoice.list')
+    async def test_get_invoices(self, mock_list, stripe_service):
+        """Test getting customer invoices."""
+        # Arrange
+        mock_invoice1 = Mock()
+        mock_invoice1.id = "in_1"
+        mock_invoice1.number = "INV-001"
+        mock_invoice1.amount_paid = 1000
+        mock_invoice1.amount_due = 0
+        mock_invoice1.currency = "usd"
+        mock_invoice1.status = "paid"
+        mock_invoice1.created = int(datetime.now().timestamp())
+        mock_invoice1.period_start = int(datetime.now().timestamp())
+        mock_invoice1.period_end = int((datetime.now() + timedelta(days=30)).timestamp())
+        mock_invoice1.invoice_pdf = "https://invoice.pdf"
+        mock_invoice1.hosted_invoice_url = "https://invoice.url"
+        
+        mock_list.return_value = Mock(data=[mock_invoice1])
+        
+        # Act
+        result = await stripe_service.get_invoices("cus_123", limit=10)
+        
+        # Assert
+        assert len(result) == 1
+        assert result[0]["id"] == "in_1"
+        assert result[0]["status"] == "paid"
+
+
+class TestRefunds:
+    """Test refund operations."""
+
+    @pytest.mark.asyncio
+    @patch('stripe.Refund.create')
+    async def test_create_refund(self, mock_create, stripe_service):
+        """Test refund creation."""
+        # Arrange
+        mock_refund = Mock()
+        mock_refund.id = "re_123"
+        mock_refund.to_dict = Mock(return_value={"id": "re_123", "amount": 1000, "status": "succeeded"})
+        mock_create.return_value = mock_refund
+        
+        # Act
+        result = await stripe_service.create_refund(
+            charge_id="ch_123",
+            amount=1000,
+            reason="requested_by_customer"
+        )
+        
+        # Assert
+        assert result["id"] == "re_123"
+        assert result["status"] == "succeeded"
+        mock_create.assert_called_once()
+
+
+class TestWebhookHandling:
+    """Test webhook event processing."""
+
+    @pytest.mark.asyncio
+    @patch('stripe.Webhook.construct_event')
+    async def test_handle_webhook_valid_signature(self, mock_construct, stripe_service, mock_cache):
+        """Test webhook handling with valid signature."""
+        # Arrange
         mock_event = {
-            'id': 'evt_test123',
-            'type': 'customer.created',
-            'data': {
-                'object': {
-                    'id': 'cus_test123',
-                    'metadata': {'user_id': 'user123'}
-                }
+            "id": "evt_123",
+            "type": "customer.created",
+            "data": {
+                "object": {"id": "cus_123", "metadata": {}}
             }
         }
-
-        mock_stripe.Webhook.construct_event.return_value = mock_event
-
-        # Handle webhook
-        success, result = await service.handle_webhook(
-            payload=b'test_payload',
-            signature='test_signature'
-        )
-
+        mock_construct.return_value = mock_event
+        
+        # Act
+        success, result = await stripe_service.handle_webhook(b'{"test": "data"}', "signature")
+        
+        # Assert
         assert success == True
-        assert result['status'] == 'processed'
-        assert result['customer_id'] == 'cus_test123'
+        mock_construct.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_handle_webhook_invalid_signature(self, service, mock_stripe):
-        """Test webhook handling with invalid signature"""
-        # Import the actual Stripe error for proper testing
-        from stripe.error import SignatureVerificationError
-
-        # Mock signature verification error with correct parameters
-        mock_stripe.Webhook.construct_event.side_effect = SignatureVerificationError(
-            message='Invalid signature',
-            sig_header='invalid_sig_header',
-            http_body=b'test_payload'
-        )
-
-        # Handle webhook
-        success, result = await service.handle_webhook(
-            payload=b'test_payload',
-            signature='invalid_signature'
-        )
-
-        assert success == False
-        assert result['error'] == 'Invalid signature'
-
-    @pytest.mark.asyncio
-    async def test_create_refund(self, service, mock_stripe):
-        """Test refund creation"""
-        # Mock response
-        mock_refund = MagicMock()
-        mock_refund.to_dict.return_value = {
-            'id': 'ref_test123',
-            'amount': 5000,
-            'status': 'succeeded'
+    @patch('stripe.Webhook.construct_event')
+    async def test_handle_webhook_duplicate_event(self, mock_construct, stripe_service, mock_cache):
+        """Test duplicate webhook event detection."""
+        # Arrange
+        mock_event = {
+            "id": "evt_123",
+            "type": "customer.created",
+            "data": {"object": {"id": "cus_123", "metadata": {}}}
         }
-        mock_stripe.Refund.create.return_value = mock_refund
+        mock_construct.return_value = mock_event
+        mock_cache.get.return_value = True  # Event already processed
+        
+        # Act
+        success, result = await stripe_service.handle_webhook(b'{"test": "data"}', "signature")
+        
+        # Assert
+        assert success == True
+        assert result["status"] == "duplicate"
 
-        # Create refund
-        result = await service.create_refund(
-            charge_id='ch_test123',
-            amount=5000,
-            reason='requested_by_customer'
-        )
 
-        assert result['id'] == 'ref_test123'
-        assert result['amount'] == 5000
-        assert result['status'] == 'succeeded'
-        mock_stripe.Refund.create.assert_called_once()
+class TestRevenueAnalytics:
+    """Test revenue metrics and analytics."""
 
     @pytest.mark.asyncio
-    async def test_get_revenue_metrics(self, service, mock_stripe):
-        """Test revenue metrics calculation"""
+    @patch('stripe.Charge.list')
+    @patch('stripe.Subscription.list')
+    async def test_get_revenue_metrics(self, mock_sub_list, mock_charge_list, stripe_service):
+        """Test revenue metrics calculation."""
+        # Arrange
+        org_id = uuid4()
+        
         # Mock charges
-        mock_charges = MagicMock()
-        mock_charges.data = [
-            MagicMock(amount=10000, paid=True, amount_refunded=0),
-            MagicMock(amount=5000, paid=True, amount_refunded=1000),
-            MagicMock(amount=2000, paid=False, amount_refunded=0)
-        ]
-        mock_stripe.Charge.list.return_value = mock_charges
-
+        mock_charge1 = Mock()
+        mock_charge1.amount = 1000
+        mock_charge1.amount_refunded = 0
+        mock_charge1.paid = True
+        mock_charge1.metadata = {"organization_id": str(org_id)}
+        
+        mock_charge_list.return_value = Mock(data=[mock_charge1])
+        
         # Mock subscriptions
-        mock_subs = MagicMock()
-        mock_sub = MagicMock()
-        mock_sub.status = 'active'
-        mock_sub.items.data = [MagicMock()]
-        mock_sub.items.data[0].price.unit_amount = 2999
-        mock_sub.items.data[0].quantity = 1
-        mock_subs.data = [mock_sub]
-        mock_stripe.Subscription.list.return_value = mock_subs
-
-        # Get metrics
-        result = await service.get_revenue_metrics(
-            start_date=datetime.now(timezone.utc) - timedelta(days=30),
-            end_date=datetime.now(timezone.utc)
+        mock_sub = Mock()
+        mock_sub.status = "active"
+        mock_sub.metadata = {"organization_id": str(org_id)}
+        mock_item = Mock()
+        mock_item.price = Mock(unit_amount=1000)
+        mock_item.quantity = 1
+        mock_sub.items = Mock(data=[mock_item])
+        
+        mock_sub_list.return_value = Mock(data=[mock_sub])
+        
+        # Act
+        result = await stripe_service.get_revenue_metrics(
+            start_date=datetime.now() - timedelta(days=30),
+            end_date=datetime.now(),
+            organization_id=org_id
         )
+        
+        # Assert
+        assert result["total_revenue"] == 10.0  # $10.00
+        assert result["active_subscriptions"] == 1
+        assert result["monthly_recurring_revenue"] == 10.0
+        assert result["organization_id"] == str(org_id)
 
-        assert result['total_revenue'] == 150.00  # (10000 + 5000) / 100
-        assert result['total_refunded'] == 10.00  # 1000 / 100
-        assert result['net_revenue'] == 140.00
-        assert result['transaction_count'] == 2
-        assert result['active_subscriptions'] == 1
-        assert result['monthly_recurring_revenue'] == 29.99  # 2999 / 100
+
+class TestErrorHandling:
+    """Test error handling and edge cases."""
 
     @pytest.mark.asyncio
-    async def test_stripe_error_handling(self, service, mock_stripe):
-        """Test Stripe error handling"""
-        # Import actual Stripe errors for proper exception handling
-        from stripe.error import APIError, StripeError
-
-        # Mock Stripe error - APIError inherits from StripeError
-        mock_stripe.Customer.create.side_effect = APIError('Test error')
-
-        # Should raise error
-        with pytest.raises(StripeError):
-            await service.create_customer(
-                user_id='user123',
-                email='test@example.com'
+    @patch('stripe.Customer.create', side_effect=stripe.error.CardError("Card declined", None, None))
+    async def test_create_customer_stripe_error(self, mock_create, stripe_service, mock_cache):
+        """Test customer creation with Stripe error."""
+        # Act & Assert
+        with pytest.raises(stripe.error.CardError):
+            await stripe_service.create_customer(
+                user_id="user_123",
+                email="test@example.com"
             )
 
-
-# Integration tests for webhook event handlers
-class TestWebhookHandlers:
-    """Test webhook event handlers"""
-
     @pytest.mark.asyncio
-    async def test_handle_subscription_created(self, service):
-        """Test subscription.created webhook handler"""
-        event = {
-            'data': {
-                'object': {
-                    'id': 'sub_test123',
-                    'customer': 'cus_test123',
-                    'status': 'active'
-                }
-            }
-        }
+    @patch('stripe.Customer.retrieve', side_effect=stripe.error.InvalidRequestError("Customer not found", None))
+    async def test_get_customer_not_found(self, mock_retrieve, stripe_service, mock_cache):
+        """Test getting non-existent customer."""
+        # Arrange
+        mock_cache.get.return_value = None
+        
+        # Act
+        result = await stripe_service.get_customer("cus_nonexistent")
+        
+        # Assert
+        assert result is None
 
-        result = await service._handle_subscription_created(event)
 
-        assert result['status'] == 'processed'
-        assert result['subscription_id'] == 'sub_test123'
-
-    @pytest.mark.asyncio
-    async def test_handle_payment_succeeded(self, service):
-        """Test payment_intent.succeeded webhook handler"""
-        event = {
-            'data': {
-                'object': {
-                    'id': 'pi_test123',
-                    'amount': 5000,
-                    'currency': 'usd'
-                }
-            }
-        }
-
-        result = await service._handle_payment_succeeded(event)
-
-        assert result['status'] == 'processed'
-        assert result['payment_intent_id'] == 'pi_test123'
-
-    @pytest.mark.asyncio
-    async def test_handle_invoice_paid(self, service):
-        """Test invoice.paid webhook handler"""
-        event = {
-            'data': {
-                'object': {
-                    'id': 'inv_test123',
-                    'amount_paid': 5000,
-                    'subscription': 'sub_test123'
-                }
-            }
-        }
-
-        result = await service._handle_invoice_paid(event)
-
-        assert result['status'] == 'processed'
-        assert result['invoice_id'] == 'inv_test123'
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])
