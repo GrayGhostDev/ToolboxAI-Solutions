@@ -1058,3 +1058,43 @@ def fix_all_tests():
 
 
 
+
+# ============================================================================
+# Sync Database Fixtures for Integration Tests
+# ============================================================================
+
+@pytest.fixture(scope="session")
+def sync_engine():
+    """Create synchronous database engine for integration tests"""
+    from sqlalchemy import create_engine
+    DATABASE_URL = os.getenv(
+        "DATABASE_URL",
+        "postgresql://dbuser_4qnrmosa:13y70agAhh2LSyjLw3LYtF1kRPra0qnNhdQcng6YNb0lMz5h@localhost:5434/toolboxai_6rmgje4u"
+    )
+    return create_engine(DATABASE_URL)
+
+
+@pytest.fixture(scope="function")
+def sync_db_session(sync_engine):
+    """
+    Create synchronous database session for integration tests.
+    
+    Provides a clean session for each test function with automatic rollback.
+    """
+    from sqlalchemy.orm import sessionmaker, Session
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=sync_engine)
+    session: Session = SessionLocal()
+
+    yield session
+
+    # Cleanup
+    session.rollback()
+    session.close()
+
+
+# Alias for backward compatibility with integration tests
+@pytest.fixture(scope="function")
+def db_session_sync(sync_db_session):
+    """Alias for sync_db_session"""
+    return sync_db_session
+
