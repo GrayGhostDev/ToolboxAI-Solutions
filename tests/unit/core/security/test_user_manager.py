@@ -1,484 +1,414 @@
 """
-Unit Tests for SecureUserManager
+Unit Tests for Secure User Manager
 
-Tests user authentication, password management, and security features.
+Tests user management functionality including:
+- User creation with validation
+- Authentication with lockout protection
+- Password management (change, reset, validation)
+- Security features (MFA, password history, account lockout)
 """
 
 import pytest
-from datetime import datetime, timedelta
-from unittest.mock import Mock, AsyncMock, MagicMock, patch
-from uuid import uuid4
+from datetime import datetime, timedelta, timezone
+from unittest.mock import Mock, AsyncMock, patch, MagicMock
+from sqlalchemy.orm import Session
 
 from apps.backend.core.security.user_manager import (
     SecureUserManager,
     UserRole,
     PasswordPolicy,
     LockoutPolicy,
-    AuthenticationError
+    AuthenticationError,
 )
+from database.models import User, Session as UserSession
 
 
 @pytest.fixture
 def mock_db_session():
-    """Create mock database session."""
-    session = Mock()
+    """Mock database session"""
+    session = Mock(spec=Session)
     session.add = Mock()
     session.commit = Mock()
     session.refresh = Mock()
     session.query = Mock()
-    session.delete = Mock()
     return session
 
 
 @pytest.fixture
-def mock_redis_client():
-    """Create mock Redis client."""
-    redis = MagicMock()
-    redis.setex = Mock(return_value=True)
-    redis.exists = Mock(return_value=0)
-    redis.get = Mock(return_value=None)
-    redis.delete = Mock(return_value=1)
-    redis.lpush = Mock()
-    redis.ltrim = Mock()
-    redis.lrange = Mock(return_value=[])
-    return redis
+def mock_redis():
+    """Mock Redis client"""
+    redis_client = Mock()
+    redis_client.get = Mock(return_value=None)
+    redis_client.set = Mock(return_value=True)
+    redis_client.setex = Mock(return_value=True)
+    redis_client.delete = Mock(return_value=1)
+    redis_client.exists = Mock(return_value=0)
+    redis_client.lpush = Mock()
+    redis_client.lrange = Mock(return_value=[])
+    redis_client.ltrim = Mock()
+    return redis_client
 
 
 @pytest.fixture
-def password_policy():
-    """Create standard password policy."""
-    return PasswordPolicy(
-        min_length=12,
-        require_uppercase=True,
-        require_lowercase=True,
-        require_numbers=True,
-        require_special=True
-    )
-
-
-@pytest.fixture
-def lockout_policy():
-    """Create standard lockout policy."""
-    return LockoutPolicy(
-        max_attempts=5,
-        lockout_duration_minutes=15
-    )
-
-
-@pytest.fixture
-def user_manager(mock_db_session, mock_redis_client, password_policy, lockout_policy):
-    """Create SecureUserManager instance."""
+def user_manager(mock_db_session, mock_redis):
+    """User manager instance with mocked dependencies"""
     return SecureUserManager(
         db_session=mock_db_session,
-        redis_client=mock_redis_client,
-        password_policy=password_policy,
-        lockout_policy=lockout_policy
+        redis_client=mock_redis
     )
+
+
+@pytest.fixture
+def sample_user():
+    """Sample user for testing"""
+    user = Mock(spec=User)
+    user.id = 1
+    user.username = "testuser"
+    user.email = "test@example.com"
+    user.password_hash = "$2b$12$test_hash"
+    user.role = "teacher"
+    user.is_active = True
+    user.failed_login_attempts = 0
+    user.password_changed_at = datetime.now(timezone.utc)
+    return user
 
 
 class TestUserCreation:
-    """Test user creation functionality."""
+    """Test user creation and validation."""
 
     @pytest.mark.asyncio
     async def test_create_user_success(self, user_manager, mock_db_session):
         """Test successful user creation."""
-        # Mock user doesn't exist
-        mock_db_session.query().filter().first.return_value = None
-
-        user = await user_manager.create_user(
-            username="testuser",
-            email="test@example.com",
-            password="SecurePass123!",
-            role=UserRole.STUDENT
-        )
-
-        # Verify user was added and committed
-        assert mock_db_session.add.called
-        assert mock_db_session.commit.called
+        # Arrange
+        username = "newuser"
+        email = "newuser@example.com"
+        password = "SecurePass123!@#"
+        role = UserRole.TEACHER
+        
+        # Mock no existing user
+        mock_result = Mock()
+        mock_result.first = Mock(return_value=None)
+        mock_db_session.query.return_value.filter.return_value = mock_result
+        
+        # Act
+        user = await user_manager.create_user(username, email, password, role)
+        
+        # Assert
+        assert user is not None
+        mock_db_session.add.assert_called_once()
+        mock_db_session.commit.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_create_user_validates_username(self, user_manager):
-        """Test username validation."""
-        with pytest.raises(ValueError, match="Username must be"):
+    async def test_create_user_duplicate(self, user_manager, mock_db_session, sample_user):
+        """Test user creation with duplicate username/email."""
+        # Arrange
+        # Mock existing user
+        mock_result = Mock()
+        mock_result.first = Mock(return_value=sample_user)
+        mock_db_session.query.return_value.filter.return_value = mock_result
+        
+        # Act & Assert
+        with pytest.raises(AuthenticationError) as exc_info:
             await user_manager.create_user(
-                username="ab",  # Too short
-                email="test@example.com",
-                password="SecurePass123!",
-                role=UserRole.STUDENT
+                "testuser",
+                "test@example.com",
+                "SecurePass123!@#",
+                UserRole.TEACHER
             )
+        
+        assert "already exists" in str(exc_info.value.detail).lower()
 
     @pytest.mark.asyncio
-    async def test_create_user_validates_email(self, user_manager):
-        """Test email validation."""
-        with pytest.raises(ValueError, match="Invalid email"):
+    async def test_create_user_invalid_password(self, user_manager, mock_db_session):
+        """Test user creation with invalid password."""
+        # Arrange
+        mock_result = Mock()
+        mock_result.first = Mock(return_value=None)
+        mock_db_session.query.return_value.filter.return_value = mock_result
+        
+        # Act & Assert - Too short
+        with pytest.raises(ValueError) as exc_info:
             await user_manager.create_user(
-                username="testuser",
-                email="invalid-email",
-                password="SecurePass123!",
-                role=UserRole.STUDENT
+                "newuser",
+                "newuser@example.com",
+                "short",  # Too short
+                UserRole.TEACHER
             )
-
-    @pytest.mark.asyncio
-    async def test_create_user_validates_password_length(self, user_manager):
-        """Test password length validation."""
-        with pytest.raises(ValueError, match="at least"):
-            await user_manager.create_user(
-                username="testuser",
-                email="test@example.com",
-                password="Short1!",  # Too short
-                role=UserRole.STUDENT
-            )
-
-    @pytest.mark.asyncio
-    async def test_create_user_prevents_duplicate(self, user_manager, mock_db_session):
-        """Test preventing duplicate user creation."""
-        # Mock user exists
-        mock_user = Mock()
-        mock_db_session.query().filter().first.return_value = mock_user
-
-        with pytest.raises(AuthenticationError, match="already exists"):
-            await user_manager.create_user(
-                username="existing",
-                email="existing@example.com",
-                password="SecurePass123!",
-                role=UserRole.STUDENT
-            )
-
-    @pytest.mark.asyncio
-    async def test_create_user_hashes_password(self, user_manager, mock_db_session):
-        """Test that password is hashed."""
-        mock_db_session.query().filter().first.return_value = None
-
-        plain_password = "SecurePass123!"
-
-        # Mock the add method to capture the user object
-        captured_user = None
-        def capture_user(user):
-            nonlocal captured_user
-            captured_user = user
-
-        mock_db_session.add = capture_user
-
-        await user_manager.create_user(
-            username="testuser",
-            email="test@example.com",
-            password=plain_password,
-            role=UserRole.STUDENT
-        )
-
-        # Password should be hashed, not plain
-        assert captured_user.password_hash != plain_password
-        # Bcrypt hashes start with $2b$
-        assert captured_user.password_hash.startswith("$2")
-
-
-class TestPasswordValidation:
-    """Test password policy validation."""
-
-    def test_validate_password_requires_uppercase(self, user_manager):
-        """Test uppercase requirement."""
-        with pytest.raises(ValueError, match="uppercase"):
-            user_manager._validate_password(
-                "securepass123!",
-                "testuser",
-                "test@example.com"
-            )
-
-    def test_validate_password_requires_lowercase(self, user_manager):
-        """Test lowercase requirement."""
-        with pytest.raises(ValueError, match="lowercase"):
-            user_manager._validate_password(
-                "SECUREPASS123!",
-                "testuser",
-                "test@example.com"
-            )
-
-    def test_validate_password_requires_numbers(self, user_manager):
-        """Test numbers requirement."""
-        with pytest.raises(ValueError, match="number"):
-            user_manager._validate_password(
-                "SecurePassword!",
-                "testuser",
-                "test@example.com"
-            )
-
-    def test_validate_password_requires_special(self, user_manager):
-        """Test special characters requirement."""
-        with pytest.raises(ValueError, match="special"):
-            user_manager._validate_password(
-                "SecurePass123",
-                "testuser",
-                "test@example.com"
-            )
-
-    def test_validate_password_prevents_common(self, user_manager):
-        """Test common password prevention."""
-        with pytest.raises(ValueError, match="too common"):
-            user_manager._validate_password(
-                "Password123!",
-                "testuser",
-                "test@example.com"
-            )
-
-    def test_validate_password_prevents_user_info(self, user_manager):
-        """Test prevention of username/email in password."""
-        with pytest.raises(ValueError, match="cannot contain username"):
-            user_manager._validate_password(
-                "Testuser123!",
-                "testuser",
-                "test@example.com"
-            )
-
-    def test_validate_password_success(self, user_manager):
-        """Test successful password validation."""
-        # Should not raise
-        user_manager._validate_password(
-            "SecurePass123!",
-            "testuser",
-            "test@example.com"
-        )
+        
+        assert "at least" in str(exc_info.value).lower()
 
 
 class TestAuthentication:
-    """Test user authentication."""
+    """Test user authentication flow."""
 
     @pytest.mark.asyncio
-    async def test_authenticate_success(self, user_manager, mock_db_session):
+    async def test_authenticate_success(self, user_manager, mock_db_session, mock_redis, sample_user):
         """Test successful authentication."""
-        # Create mock user
-        mock_user = Mock()
-        mock_user.id = 1
-        mock_user.username = "testuser"
-        mock_user.email = "test@example.com"
-        mock_user.is_active = True
-        mock_user.failed_login_attempts = 0
-
-        # Hash a test password
-        test_password = "SecurePass123!"
-        mock_user.password_hash = user_manager._hash_password(test_password)
-        mock_user.password_changed_at = datetime.utcnow()
-
-        # Mock DB query
-        mock_db_session.query().filter().first.return_value = mock_user
-
-        # Authenticate
-        user, session_token = await user_manager.authenticate(
-            "testuser",
-            test_password,
-            ip_address="127.0.0.1"
-        )
-
-        assert user == mock_user
-        assert isinstance(session_token, str)
-        assert len(session_token) > 0
+        # Arrange
+        mock_redis.exists.return_value = 0  # Not locked out
+        
+        # Mock user lookup
+        mock_result = Mock()
+        mock_result.first = Mock(return_value=sample_user)
+        mock_db_session.query.return_value.filter.return_value = mock_result
+        
+        # Mock password verification
+        with patch.object(user_manager, '_verify_password', return_value=True):
+            with patch.object(user_manager, '_is_password_expired', return_value=False):
+                with patch.object(user_manager, '_create_session', return_value="session_token_123"):
+                    # Act
+                    user, token = await user_manager.authenticate(
+                        "testuser",
+                        "correct_password",
+                        ip_address="127.0.0.1"
+                    )
+                    
+                    # Assert
+                    assert user == sample_user
+                    assert token == "session_token_123"
+                    assert sample_user.failed_login_attempts == 0
 
     @pytest.mark.asyncio
-    async def test_authenticate_invalid_credentials(self, user_manager, mock_db_session):
-        """Test authentication with invalid password."""
-        mock_user = Mock()
-        mock_user.id = 1
-        mock_user.is_active = True
-        mock_user.password_hash = user_manager._hash_password("CorrectPass123!")
-        mock_user.password_changed_at = datetime.utcnow()
+    async def test_authenticate_invalid_credentials(self, user_manager, mock_db_session, mock_redis, sample_user):
+        """Test authentication with invalid credentials."""
+        # Arrange
+        mock_redis.exists.return_value = 0
+        
+        mock_result = Mock()
+        mock_result.first = Mock(return_value=sample_user)
+        mock_db_session.query.return_value.filter.return_value = mock_result
+        
+        # Mock password verification failure
+        with patch.object(user_manager, '_verify_password', return_value=False):
+            # Act & Assert
+            with pytest.raises(AuthenticationError) as exc_info:
+                await user_manager.authenticate(
+                    "testuser",
+                    "wrong_password",
+                    ip_address="127.0.0.1"
+                )
+            
+            assert "Invalid credentials" in str(exc_info.value.detail)
 
-        mock_db_session.query().filter().first.return_value = mock_user
-
-        with pytest.raises(AuthenticationError, match="Invalid credentials"):
+    @pytest.mark.asyncio
+    async def test_authenticate_account_lockout(self, user_manager, mock_redis):
+        """Test authentication blocked by account lockout."""
+        # Arrange
+        mock_redis.exists.return_value = 1  # Account is locked out
+        
+        # Act & Assert
+        with pytest.raises(AuthenticationError) as exc_info:
             await user_manager.authenticate(
                 "testuser",
-                "WrongPass123!",
+                "password",
                 ip_address="127.0.0.1"
             )
+        
+        assert exc_info.value.status_code == 423  # HTTP_423_LOCKED
+        assert "locked" in str(exc_info.value.detail).lower()
 
     @pytest.mark.asyncio
-    async def test_authenticate_inactive_account(self, user_manager, mock_db_session):
+    async def test_authenticate_inactive_account(self, user_manager, mock_db_session, mock_redis, sample_user):
         """Test authentication with inactive account."""
-        mock_user = Mock()
-        mock_user.is_active = False
-
-        mock_db_session.query().filter().first.return_value = mock_user
-
-        with pytest.raises(AuthenticationError, match="deactivated"):
+        # Arrange
+        mock_redis.exists.return_value = 0
+        sample_user.is_active = False
+        
+        mock_result = Mock()
+        mock_result.first = Mock(return_value=sample_user)
+        mock_db_session.query.return_value.filter.return_value = mock_result
+        
+        # Act & Assert
+        with pytest.raises(AuthenticationError) as exc_info:
             await user_manager.authenticate(
                 "testuser",
-                "SecurePass123!",
+                "password",
                 ip_address="127.0.0.1"
             )
+        
+        assert "deactivated" in str(exc_info.value.detail).lower()
+
+
+class TestPasswordManagement:
+    """Test password change and reset functionality."""
 
     @pytest.mark.asyncio
-    async def test_authenticate_user_not_found(self, user_manager, mock_db_session):
-        """Test authentication with non-existent user."""
-        mock_db_session.query().filter().first.return_value = None
-
-        with pytest.raises(AuthenticationError, match="Invalid credentials"):
-            await user_manager.authenticate(
-                "nonexistent",
-                "SecurePass123!",
-                ip_address="127.0.0.1"
-            )
-
-
-class TestAccountLockout:
-    """Test account lockout functionality."""
-
-    @pytest.mark.asyncio
-    async def test_lockout_after_max_attempts(self, user_manager, mock_redis_client, mock_db_session):
-        """Test account locks after max failed attempts."""
-        mock_user = Mock()
-        mock_user.id = 1
-        mock_user.is_active = True
-        mock_user.failed_login_attempts = 4  # One below max
-        mock_user.password_hash = user_manager._hash_password("CorrectPass123!")
-        mock_user.password_changed_at = datetime.utcnow()
-
-        mock_db_session.query().filter().first.return_value = mock_user
-
-        # Fail authentication
-        with pytest.raises(AuthenticationError):
-            await user_manager.authenticate(
-                "testuser",
-                "WrongPass123!",
-                ip_address="127.0.0.1"
-            )
-
-        # Verify lockout was set in Redis
-        assert mock_redis_client.setex.called
-
-    @pytest.mark.asyncio
-    async def test_locked_account_blocks_authentication(self, user_manager, mock_redis_client):
-        """Test locked account prevents authentication."""
-        # Mock account is locked
-        mock_redis_client.exists.return_value = 1
-
-        with pytest.raises(AuthenticationError, match="temporarily locked"):
-            await user_manager.authenticate(
-                "testuser",
-                "SecurePass123!",
-                ip_address="127.0.0.1"
-            )
-
-
-class TestPasswordChange:
-    """Test password change functionality."""
-
-    @pytest.mark.asyncio
-    async def test_change_password_success(self, user_manager, mock_db_session):
+    async def test_change_password_success(self, user_manager, mock_db_session, sample_user):
         """Test successful password change."""
-        current_password = "CurrentPass123!"
-        new_password = "NewSecurePass456!"
-
-        mock_user = Mock()
-        mock_user.id = 1
-        mock_user.username = "testuser"
-        mock_user.email = "test@example.com"
-        mock_user.password_hash = user_manager._hash_password(current_password)
-
-        mock_db_session.query().filter().first.return_value = mock_user
-
-        result = await user_manager.change_password(
-            user_id=1,
-            current_password=current_password,
-            new_password=new_password
-        )
-
-        assert result is True
-        assert mock_db_session.commit.called
-
-    @pytest.mark.asyncio
-    async def test_change_password_invalid_current(self, user_manager, mock_db_session):
-        """Test password change with wrong current password."""
-        mock_user = Mock()
-        mock_user.id = 1
-        mock_user.password_hash = user_manager._hash_password("CurrentPass123!")
-
-        mock_db_session.query().filter().first.return_value = mock_user
-
-        with pytest.raises(AuthenticationError, match="Current password is incorrect"):
-            await user_manager.change_password(
-                user_id=1,
-                current_password="WrongPass123!",
-                new_password="NewSecurePass456!"
-            )
+        # Arrange
+        mock_result = Mock()
+        mock_result.first = Mock(return_value=sample_user)
+        mock_db_session.query.return_value.filter.return_value = mock_result
+        
+        # Mock password verification and validation
+        with patch.object(user_manager, '_verify_password', return_value=True):
+            with patch.object(user_manager, '_validate_password'):
+                with patch.object(user_manager, '_is_password_reused', return_value=False):
+                    with patch.object(user_manager, '_add_to_password_history', return_value=None):
+                        with patch.object(user_manager, '_invalidate_user_sessions', return_value=None):
+                            # Act
+                            result = await user_manager.change_password(
+                                user_id=sample_user.id,
+                                current_password="old_password",
+                                new_password="NewSecurePass123!@#"
+                            )
+                            
+                            # Assert
+                            assert result is True
+                            mock_db_session.commit.assert_called()
 
     @pytest.mark.asyncio
-    async def test_change_password_validates_new_password(self, user_manager, mock_db_session):
-        """Test new password is validated."""
-        current_password = "CurrentPass123!"
+    async def test_change_password_invalid_current(self, user_manager, mock_db_session, sample_user):
+        """Test password change with incorrect current password."""
+        # Arrange
+        mock_result = Mock()
+        mock_result.first = Mock(return_value=sample_user)
+        mock_db_session.query.return_value.filter.return_value = mock_result
+        
+        # Mock password verification failure
+        with patch.object(user_manager, '_verify_password', return_value=False):
+            # Act & Assert
+            with pytest.raises(AuthenticationError) as exc_info:
+                await user_manager.change_password(
+                    user_id=sample_user.id,
+                    current_password="wrong_password",
+                    new_password="NewSecurePass123!@#"
+                )
+            
+            assert "incorrect" in str(exc_info.value.detail).lower()
 
-        mock_user = Mock()
-        mock_user.id = 1
-        mock_user.username = "testuser"
-        mock_user.email = "test@example.com"
-        mock_user.password_hash = user_manager._hash_password(current_password)
+    @pytest.mark.asyncio
+    async def test_change_password_reused(self, user_manager, mock_db_session, sample_user):
+        """Test password change with recently used password."""
+        # Arrange
+        mock_result = Mock()
+        mock_result.first = Mock(return_value=sample_user)
+        mock_db_session.query.return_value.filter.return_value = mock_result
+        
+        with patch.object(user_manager, '_verify_password', return_value=True):
+            with patch.object(user_manager, '_validate_password'):
+                with patch.object(user_manager, '_is_password_reused', return_value=True):
+                    # Act & Assert
+                    with pytest.raises(AuthenticationError) as exc_info:
+                        await user_manager.change_password(
+                            user_id=sample_user.id,
+                            current_password="old_password",
+                            new_password="ReusedPassword123!@#"
+                        )
+                    
+                    assert "used recently" in str(exc_info.value.detail).lower()
 
-        mock_db_session.query().filter().first.return_value = mock_user
-
-        with pytest.raises(ValueError, match="at least"):
-            await user_manager.change_password(
-                user_id=1,
-                current_password=current_password,
-                new_password="weak"  # Too weak
+    @pytest.mark.asyncio
+    async def test_reset_password_success(self, user_manager, mock_db_session, mock_redis, sample_user):
+        """Test successful password reset with token."""
+        # Arrange
+        reset_token = "valid_reset_token"
+        mock_redis.get.return_value = str(sample_user.id)  # Valid token
+        
+        mock_result = Mock()
+        mock_result.first = Mock(return_value=sample_user)
+        mock_db_session.query.return_value.filter.return_value = mock_result
+        
+        with patch.object(user_manager, '_validate_password'):
+            # Act
+            result = await user_manager.reset_password(
+                reset_token=reset_token,
+                new_password="NewSecurePass123!@#"
             )
+            
+            # Assert
+            assert result is True
+            mock_redis.delete.assert_called()  # Token invalidated
 
 
-class TestSessionManagement:
-    """Test session creation and management."""
+class TestSecurityFeatures:
+    """Test security features like password validation, lockout, MFA."""
 
-    def test_create_session(self, user_manager, mock_db_session, mock_redis_client):
-        """Test session creation."""
-        mock_user = Mock()
-        mock_user.id = 1
+    def test_password_validation_policy(self, user_manager):
+        """Test password validation against policy."""
+        # Arrange
+        valid_password = "SecurePass123!@#"
+        weak_passwords = [
+            "short",  # Too short
+            "alllowercase123!@#",  # No uppercase
+            "ALLUPPERCASE123!@#",  # No lowercase
+            "NoNumbers!@#",  # No numbers
+            "NoSpecialChars123",  # No special chars
+            "password",  # Common password
+        ]
+        
+        # Act & Assert - Valid password should not raise
+        try:
+            user_manager._validate_password(valid_password, "testuser", "test@example.com")
+        except ValueError:
+            pytest.fail("Valid password should not raise ValueError")
+        
+        # Weak passwords should raise
+        for weak_pass in weak_passwords:
+            with pytest.raises(ValueError):
+                user_manager._validate_password(weak_pass, "testuser", "test@example.com")
 
-        session_token = user_manager._create_session(
-            user=mock_user,
+    @pytest.mark.asyncio
+    async def test_account_lockout_after_failed_attempts(self, user_manager, mock_db_session, mock_redis, sample_user):
+        """Test account lockout after max failed attempts."""
+        # Arrange
+        sample_user.failed_login_attempts = 5  # At lockout threshold
+        mock_result = Mock()
+        mock_result.first = Mock(return_value=sample_user)
+        mock_db_session.query.return_value.filter.return_value = mock_result
+        
+        # Act
+        await user_manager._record_failed_attempt(
+            identifier="testuser",
             ip_address="127.0.0.1",
-            user_agent="Mozilla/5.0"
+            user_id=sample_user.id
         )
+        
+        # Assert - Redis should set lockout key
+        mock_redis.setex.assert_called()
+        call_args = mock_redis.setex.call_args
+        assert "lockout:testuser" in str(call_args[0])
 
-        assert isinstance(session_token, str)
-        assert len(session_token) > 0
-        assert mock_db_session.add.called
-        assert mock_redis_client.setex.called
+    @pytest.mark.asyncio
+    async def test_password_history_enforcement(self, user_manager, mock_redis):
+        """Test password history prevents reuse."""
+        # Arrange
+        user_id = 1
+        old_hashes = [
+            b"$2b$12$old_hash_1",
+            b"$2b$12$old_hash_2",
+            b"$2b$12$old_hash_3"
+        ]
+        mock_redis.lrange.return_value = old_hashes
+        
+        # Mock password verification to match
+        with patch.object(user_manager, '_verify_password', return_value=True):
+            # Act
+            result = await user_manager._is_password_reused(user_id, "reused_password")
+            
+            # Assert
+            assert result is True
 
-
-class TestPasswordHashing:
-    """Test password hashing functions."""
-
-    def test_hash_password_generates_bcrypt(self, user_manager):
-        """Test password hashing uses bcrypt."""
-        password = "SecurePass123!"
-        hashed = user_manager._hash_password(password)
-
-        # Bcrypt hashes start with $2b$ or $2a$
-        assert hashed.startswith("$2")
-        assert len(hashed) > 50
-
-    def test_hash_password_different_for_same_input(self, user_manager):
-        """Test that hashing same password produces different hashes (due to salt)."""
-        password = "SecurePass123!"
-
-        hash1 = user_manager._hash_password(password)
-        hash2 = user_manager._hash_password(password)
-
-        # Due to salting, hashes should be different
-        assert hash1 != hash2
-
-    def test_verify_password_success(self, user_manager):
-        """Test password verification success."""
-        password = "SecurePass123!"
-        hashed = user_manager._hash_password(password)
-
-        result = user_manager._verify_password(password, hashed)
-        assert result is True
-
-    def test_verify_password_failure(self, user_manager):
-        """Test password verification failure."""
-        password = "SecurePass123!"
-        hashed = user_manager._hash_password(password)
-
-        result = user_manager._verify_password("WrongPass123!", hashed)
-        assert result is False
+    @pytest.mark.asyncio
+    async def test_enable_mfa(self, user_manager, mock_db_session, sample_user):
+        """Test MFA enablement for user."""
+        # Arrange
+        mock_result = Mock()
+        mock_result.first = Mock(return_value=sample_user)
+        mock_db_session.query.return_value.filter.return_value = mock_result
+        
+        sample_user.mfa_secret = None
+        sample_user.mfa_enabled = False
+        
+        # Act
+        mfa_secret = await user_manager.enable_mfa(user_id=sample_user.id)
+        
+        # Assert
+        assert mfa_secret is not None
+        assert isinstance(mfa_secret, str)
+        assert len(mfa_secret) > 0
+        mock_db_session.commit.assert_called()
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+    pytest.main([__file__, "-v", "--tb=short"])

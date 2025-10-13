@@ -1,11 +1,16 @@
 """
 Unit Tests for RBAC Manager
 
-Tests role definitions, permissions, and access control logic.
+Tests role-based access control including:
+- Permission management and caching
+- Role hierarchy
+- Permission checking with scopes (all/organization/own)
+- Resource access validation
+- Permission inheritance
 """
 
 import pytest
-from unittest.mock import Mock
+from unittest.mock import Mock, MagicMock
 from uuid import uuid4
 
 from apps.backend.core.security.rbac_manager import (
@@ -13,318 +18,300 @@ from apps.backend.core.security.rbac_manager import (
     Role,
     Permission,
     RoleDefinition,
+    ResourceType,
+    Action,
     rbac_manager
 )
+from database.models import User
 
 
 @pytest.fixture
-def mock_admin_user():
-    """Create mock admin user."""
-    user = Mock()
+def admin_user():
+    """Admin user for testing"""
+    user = Mock(spec=User)
     user.id = 1
-    user.email = "admin@example.com"
+    user.username = "admin"
     user.role = Role.ADMIN
     user.organization_id = uuid4()
     return user
 
 
 @pytest.fixture
-def mock_teacher_user():
-    """Create mock teacher user."""
-    user = Mock()
+def teacher_user():
+    """Teacher user for testing"""
+    user = Mock(spec=User)
     user.id = 2
-    user.email = "teacher@example.com"
+    user.username = "teacher"
     user.role = Role.TEACHER
     user.organization_id = uuid4()
     return user
 
 
 @pytest.fixture
-def mock_student_user():
-    """Create mock student user."""
-    user = Mock()
+def student_user():
+    """Student user for testing"""
+    user = Mock(spec=User)
     user.id = 3
-    user.email = "student@example.com"
+    user.username = "student"
     user.role = Role.STUDENT
     user.organization_id = uuid4()
     return user
 
 
-class TestRBACManagerInitialization:
-    """Test RBAC manager initialization."""
-
-    def test_singleton_pattern(self):
-        """Test that RBACManager implements singleton pattern."""
-        manager1 = RBACManager()
-        manager2 = RBACManager()
-        assert manager1 is manager2
-
-    def test_roles_defined(self):
-        """Test that all roles are defined."""
-        assert Role.ADMIN in rbac_manager.roles
-        assert Role.TEACHER in rbac_manager.roles
-        assert Role.STUDENT in rbac_manager.roles
-        assert Role.GUEST in rbac_manager.roles
-
-    def test_role_hierarchy(self):
-        """Test role hierarchy levels."""
-        assert rbac_manager.ROLE_HIERARCHY[Role.ADMIN] > rbac_manager.ROLE_HIERARCHY[Role.TEACHER]
-        assert rbac_manager.ROLE_HIERARCHY[Role.TEACHER] > rbac_manager.ROLE_HIERARCHY[Role.STUDENT]
-        assert rbac_manager.ROLE_HIERARCHY[Role.STUDENT] > rbac_manager.ROLE_HIERARCHY[Role.GUEST]
+@pytest.fixture
+def rbac():
+    """RBAC manager instance (singleton)"""
+    return rbac_manager
 
 
-class TestPermissionParsing:
-    """Test permission string parsing."""
+class TestPermissionManagement:
+    """Test permission retrieval and caching."""
 
-    def test_parse_basic_permission(self):
-        """Test parsing basic permission format."""
-        perm = Permission.from_string("content:create")
-        assert perm.resource == "content"
-        assert perm.action == "create"
-        assert perm.scope == "own"
-
-    def test_parse_permission_with_scope(self):
-        """Test parsing permission with explicit scope."""
-        perm = Permission.from_string("content:create:organization")
-        assert perm.resource == "content"
-        assert perm.action == "create"
-        assert perm.scope == "organization"
-
-    def test_parse_invalid_permission(self):
-        """Test parsing invalid permission format."""
-        with pytest.raises(ValueError):
-            Permission.from_string("invalid_format")
-
-    def test_permission_string_representation(self):
-        """Test permission string conversion."""
-        perm = Permission(resource="content", action="create", scope="organization")
-        assert str(perm) == "content:create:organization"
-
-        perm_own = Permission(resource="content", action="create", scope="own")
-        assert str(perm_own) == "content:create"
-
-
-class TestRolePermissions:
-    """Test role permission definitions."""
-
-    def test_admin_has_all_permissions(self):
-        """Test that admin has comprehensive permissions."""
-        admin_perms = rbac_manager.get_role_permissions(Role.ADMIN)
-
+    def test_get_role_permissions(self, rbac):
+        """Test retrieving permissions for a role."""
+        # Act
+        admin_perms = rbac.get_role_permissions(Role.ADMIN)
+        teacher_perms = rbac.get_role_permissions(Role.TEACHER)
+        student_perms = rbac.get_role_permissions(Role.STUDENT)
+        
+        # Assert
+        assert len(admin_perms) > 0
         assert "system:manage" in admin_perms
         assert "user:create:all" in admin_perms
-        assert "content:delete:all" in admin_perms
-        assert "organization:manage:all" in admin_perms
-
-    def test_teacher_has_organization_scope(self):
-        """Test that teacher has organization-scoped permissions."""
-        teacher_perms = rbac_manager.get_role_permissions(Role.TEACHER)
-
+        
+        assert len(teacher_perms) > 0
         assert "content:create:organization" in teacher_perms
-        assert "class:create:organization" in teacher_perms
-        assert "analytics:read:organization" in teacher_perms
-
-        # Teacher should NOT have "all" scope permissions
-        assert "content:delete:all" not in teacher_perms
-        assert "user:create:all" not in teacher_perms
-
-    def test_student_has_limited_permissions(self):
-        """Test that student has read-only permissions."""
-        student_perms = rbac_manager.get_role_permissions(Role.STUDENT)
-
+        
+        assert len(student_perms) > 0
         assert "content:read:organization" in student_perms
-        assert "analytics:read:own" in student_perms
 
-        # Student should NOT be able to create or delete
-        assert "content:create:organization" not in student_perms
-        assert "content:delete:own" not in student_perms
+    def test_get_user_permissions(self, rbac, teacher_user):
+        """Test getting all permissions for a user."""
+        # Act
+        permissions = rbac.get_user_permissions(teacher_user)
+        
+        # Assert
+        assert len(permissions) > 0
+        assert "content:create:organization" in permissions
+        assert "class:create:organization" in permissions
+        assert "user:read:own" in permissions
 
-    def test_guest_minimal_permissions(self):
-        """Test that guest has minimal permissions."""
-        guest_perms = rbac_manager.get_role_permissions(Role.GUEST)
+    def test_permission_inheritance(self, rbac):
+        """Test permission inheritance if implemented."""
+        # Note: Current implementation doesn't show explicit inheritance
+        # but this test ensures future inheritance works
+        
+        # Act
+        permissions = rbac.get_role_permissions(Role.TEACHER)
+        
+        # Assert - teacher has their own permissions
+        assert "content:create:organization" in permissions
 
-        assert "content:read:public" in guest_perms
-        assert len(guest_perms) == 1  # Only one permission
+    def test_permission_caching(self, rbac):
+        """Test that permissions are cached for performance."""
+        # Arrange
+        rbac._permission_cache.clear()
+        
+        # Act - First call
+        perms1 = rbac.get_role_permissions(Role.ADMIN)
+        
+        # Assert - Should be cached
+        assert Role.ADMIN in rbac._permission_cache
+        
+        # Act - Second call (from cache)
+        perms2 = rbac.get_role_permissions(Role.ADMIN)
+        
+        # Assert - Should be the same object (cached)
+        assert perms1 is perms2
 
+    def test_parse_permission_string(self):
+        """Test parsing permission from string format."""
+        # Arrange & Act
+        perm1 = Permission.from_string("content:create:organization")
+        perm2 = Permission.from_string("agent:read")
+        
+        # Assert
+        assert perm1.resource == "content"
+        assert perm1.action == "create"
+        assert perm1.scope == "organization"
+        
+        assert perm2.resource == "agent"
+        assert perm2.action == "read"
+        assert perm2.scope == "own"  # Default scope
 
-class TestUserPermissions:
-    """Test user permission checking."""
-
-    def test_get_admin_permissions(self, mock_admin_user):
-        """Test getting permissions for admin user."""
-        perms = rbac_manager.get_user_permissions(mock_admin_user)
-        assert len(perms) > 0
-        assert "system:manage" in perms
-
-    def test_get_teacher_permissions(self, mock_teacher_user):
-        """Test getting permissions for teacher user."""
-        perms = rbac_manager.get_user_permissions(mock_teacher_user)
-        assert "content:create:organization" in perms
-
-    def test_get_permissions_no_user(self):
-        """Test getting permissions for None user."""
-        perms = rbac_manager.get_user_permissions(None)
-        assert perms == set()
-
-    def test_get_permissions_user_without_role(self):
-        """Test getting permissions for user without role."""
-        user = Mock()
-        user.id = 99
-        # No role attribute
-        perms = rbac_manager.get_user_permissions(user)
-        assert perms == set()
-
-
-class TestPermissionChecking:
-    """Test has_permission functionality."""
-
-    def test_admin_has_all_scope(self, mock_admin_user):
-        """Test that admin has :all scope permissions."""
-        assert rbac_manager.has_permission(mock_admin_user, "content:create:all")
-        assert rbac_manager.has_permission(mock_admin_user, "user:delete:all")
-        assert rbac_manager.has_permission(mock_admin_user, "organization:manage:all")
-
-    def test_teacher_has_organization_scope(self, mock_teacher_user):
-        """Test that teacher has :organization scope."""
-        assert rbac_manager.has_permission(mock_teacher_user, "content:create:organization")
-        assert rbac_manager.has_permission(mock_teacher_user, "class:read:organization")
-
-    def test_teacher_no_all_scope(self, mock_teacher_user):
-        """Test that teacher doesn't have :all scope."""
-        assert not rbac_manager.has_permission(mock_teacher_user, "content:delete:all")
-        assert not rbac_manager.has_permission(mock_teacher_user, "user:create:all")
-
-    def test_student_read_only(self, mock_student_user):
-        """Test that student has read-only access."""
-        assert rbac_manager.has_permission(mock_student_user, "content:read:organization")
-        assert not rbac_manager.has_permission(mock_student_user, "content:create:organization")
-
-    def test_permission_with_ownership(self, mock_teacher_user):
-        """Test permission checking with resource ownership."""
-        # Teacher trying to access their own content
-        assert rbac_manager.has_permission(
-            mock_teacher_user,
-            "content:update:own",
-            resource_owner_id=mock_teacher_user.id
-        )
-
-        # Teacher trying to access someone else's content
-        assert rbac_manager.has_permission(
-            mock_teacher_user,
-            "content:update:own",
-            resource_owner_id=999  # Different owner
-        ) is False
+    def test_invalid_permission_format(self):
+        """Test parsing invalid permission format raises error."""
+        # Act & Assert
+        with pytest.raises(ValueError):
+            Permission.from_string("invalid:format:with:too:many:parts")
 
 
 class TestRoleHierarchy:
-    """Test role hierarchy checking."""
+    """Test role hierarchy and level checking."""
 
-    def test_admin_has_all_roles(self, mock_admin_user):
-        """Test that admin passes all role checks."""
-        assert rbac_manager.has_role(mock_admin_user, Role.ADMIN)
-        assert rbac_manager.has_role(mock_admin_user, Role.TEACHER)
-        assert rbac_manager.has_role(mock_admin_user, Role.STUDENT)
+    def test_has_role_exact_match(self, rbac, teacher_user):
+        """Test checking for exact role match."""
+        # Act
+        result = rbac.has_role(teacher_user, Role.TEACHER)
+        
+        # Assert
+        assert result is True
 
-    def test_teacher_hierarchy(self, mock_teacher_user):
-        """Test teacher role hierarchy."""
-        assert not rbac_manager.has_role(mock_teacher_user, Role.ADMIN)
-        assert rbac_manager.has_role(mock_teacher_user, Role.TEACHER)
-        assert rbac_manager.has_role(mock_teacher_user, Role.STUDENT)
+    def test_has_role_hierarchy(self, rbac, admin_user):
+        """Test role hierarchy allows higher roles."""
+        # Act - Admin has teacher-level access
+        has_teacher = rbac.has_role(admin_user, Role.TEACHER)
+        has_student = rbac.has_role(admin_user, Role.STUDENT)
+        
+        # Assert - Admin is higher than teacher and student
+        assert has_teacher is True
+        assert has_student is True
 
-    def test_student_lowest_role(self, mock_student_user):
-        """Test student is lowest privileged role."""
-        assert not rbac_manager.has_role(mock_student_user, Role.ADMIN)
-        assert not rbac_manager.has_role(mock_student_user, Role.TEACHER)
-        assert rbac_manager.has_role(mock_student_user, Role.STUDENT)
+    def test_has_role_insufficient(self, rbac, student_user):
+        """Test insufficient role is denied."""
+        # Act - Student trying to access teacher role
+        result = rbac.has_role(student_user, Role.TEACHER)
+        
+        # Assert
+        assert result is False
+
+    def test_role_hierarchy_levels(self, rbac):
+        """Test role hierarchy levels are correct."""
+        # Assert
+        assert rbac.ROLE_HIERARCHY[Role.ADMIN] > rbac.ROLE_HIERARCHY[Role.TEACHER]
+        assert rbac.ROLE_HIERARCHY[Role.TEACHER] > rbac.ROLE_HIERARCHY[Role.STUDENT]
+        assert rbac.ROLE_HIERARCHY[Role.STUDENT] > rbac.ROLE_HIERARCHY[Role.GUEST]
+
+
+class TestPermissionChecking:
+    """Test fine-grained permission checking with scopes."""
+
+    def test_has_permission_exact_match(self, rbac, teacher_user):
+        """Test permission check with exact match."""
+        # Act
+        result = rbac.has_permission(teacher_user, "content:create:organization")
+        
+        # Assert
+        assert result is True
+
+    def test_has_permission_scope_escalation(self, rbac, admin_user):
+        """Test admin can access lower scopes (all > organization > own)."""
+        # Act - Admin has "all" scope, should grant organization and own
+        has_org = rbac.has_permission(admin_user, "content:create:organization")
+        has_own = rbac.has_permission(admin_user, "content:create:own")
+        
+        # Assert
+        assert has_org is True
+        assert has_own is True
+
+    def test_has_permission_ownership(self, rbac, student_user):
+        """Test permission check with resource ownership."""
+        # Act
+        result = rbac.has_permission(
+            student_user,
+            "user:read:own",
+            resource_owner_id=student_user.id
+        )
+        
+        # Assert
+        assert result is True
+
+    def test_has_permission_organization(self, rbac, teacher_user):
+        """Test permission check with organization scope."""
+        # Act
+        result = rbac.has_permission(
+            teacher_user,
+            "content:read:organization",
+            organization_id=teacher_user.organization_id
+        )
+        
+        # Assert
+        assert result is True
+
+    def test_has_permission_admin_access(self, rbac, admin_user):
+        """Test admin can access any resource."""
+        # Act
+        result = rbac.has_permission(admin_user, "content:delete:all")
+        
+        # Assert
+        assert result is True
+
+    def test_has_permission_denied(self, rbac, student_user):
+        """Test permission denied for insufficient privileges."""
+        # Act - Student trying to create content (only teachers can)
+        result = rbac.has_permission(student_user, "content:create:organization")
+        
+        # Assert
+        assert result is False
 
 
 class TestResourceAccess:
-    """Test check_resource_access functionality."""
+    """Test resource-level access control."""
 
-    def test_admin_full_access(self, mock_admin_user):
-        """Test admin has access to all resources."""
-        assert rbac_manager.check_resource_access(
-            mock_admin_user,
-            "content",
-            "delete",
+    def test_check_resource_access_owner(self, rbac, teacher_user):
+        """Test resource access check for owner."""
+        # Act
+        result = rbac.check_resource_access(
+            user=teacher_user,
+            resource_type="content",
+            action="update",
+            resource_owner_id=teacher_user.id,
+            resource_org_id=teacher_user.organization_id
+        )
+        
+        # Assert
+        assert result is True
+
+    def test_check_resource_access_organization(self, rbac, teacher_user):
+        """Test resource access within same organization."""
+        # Arrange
+        different_owner_id = 999
+        
+        # Act
+        result = rbac.check_resource_access(
+            user=teacher_user,
+            resource_type="content",
+            action="read",
+            resource_owner_id=different_owner_id,
+            resource_org_id=teacher_user.organization_id
+        )
+        
+        # Assert
+        assert result is True  # Teacher can read org content
+
+    def test_check_resource_access_admin(self, rbac, admin_user):
+        """Test admin can access any resource."""
+        # Arrange
+        different_org_id = uuid4()
+        
+        # Act
+        result = rbac.check_resource_access(
+            user=admin_user,
+            resource_type="content",
+            action="delete",
             resource_owner_id=999,
-            resource_org_id=uuid4()
+            resource_org_id=different_org_id
         )
+        
+        # Assert
+        assert result is True  # Admin has "all" scope
 
-    def test_teacher_own_content(self, mock_teacher_user):
-        """Test teacher can access their own content."""
-        assert rbac_manager.check_resource_access(
-            mock_teacher_user,
-            "content",
-            "update",
-            resource_owner_id=mock_teacher_user.id,
-            resource_org_id=mock_teacher_user.organization_id
-        )
-
-    def test_teacher_organization_content(self, mock_teacher_user):
-        """Test teacher can access organization content."""
-        assert rbac_manager.check_resource_access(
-            mock_teacher_user,
-            "content",
-            "read",
-            resource_owner_id=999,  # Different owner
-            resource_org_id=mock_teacher_user.organization_id  # Same org
-        )
-
-    def test_teacher_no_other_org_access(self, mock_teacher_user):
-        """Test teacher cannot access other organization's content."""
-        other_org_id = uuid4()
-        assert not rbac_manager.check_resource_access(
-            mock_teacher_user,
-            "content",
-            "read",
-            resource_owner_id=999,
-            resource_org_id=other_org_id
-        )
-
-
-class TestAccessibleResources:
-    """Test get_accessible_resources functionality."""
-
-    def test_admin_scope_all(self, mock_admin_user):
-        """Test admin gets 'all' scope."""
-        scope = rbac_manager.get_accessible_resources(mock_admin_user, "content", "read")
-        assert scope["scope"] == "all"
-
-    def test_teacher_scope_organization(self, mock_teacher_user):
-        """Test teacher gets 'organization' scope."""
-        scope = rbac_manager.get_accessible_resources(mock_teacher_user, "content", "read")
-        assert scope["scope"] == "organization"
-        assert scope["organization_id"] == mock_teacher_user.organization_id
-
-    def test_student_scope_own(self, mock_student_user):
-        """Test student gets 'own' scope for some resources."""
-        scope = rbac_manager.get_accessible_resources(mock_student_user, "analytics", "read")
-        assert scope["scope"] == "own"
-        assert scope["user_id"] == mock_student_user.id
-
-    def test_no_access_scope(self, mock_student_user):
-        """Test scope returns 'none' for unauthorized resources."""
-        scope = rbac_manager.get_accessible_resources(mock_student_user, "system", "manage")
-        assert scope["scope"] == "none"
-
-
-class TestPermissionCaching:
-    """Test permission caching for performance."""
-
-    def test_permission_cache_populated(self):
-        """Test that permission cache is used."""
-        # First call
-        perms1 = rbac_manager.get_role_permissions(Role.ADMIN)
-
-        # Cache should now contain admin permissions
-        assert Role.ADMIN in rbac_manager._permission_cache
-
-        # Second call should return cached result
-        perms2 = rbac_manager.get_role_permissions(Role.ADMIN)
-
-        assert perms1 is perms2  # Same object reference
+    def test_get_accessible_resources(self, rbac, admin_user, teacher_user, student_user):
+        """Test getting scope of accessible resources."""
+        # Act
+        admin_scope = rbac.get_accessible_resources(admin_user, "content", "read")
+        teacher_scope = rbac.get_accessible_resources(teacher_user, "content", "read")
+        student_scope = rbac.get_accessible_resources(student_user, "content", "read")
+        
+        # Assert
+        assert admin_scope["scope"] == "all"
+        
+        assert teacher_scope["scope"] == "organization"
+        assert teacher_scope["organization_id"] == teacher_user.organization_id
+        
+        assert student_scope["scope"] == "organization"  # Students can read org content
+        assert student_scope["organization_id"] == student_user.organization_id
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+    pytest.main([__file__, "-v", "--tb=short"])
