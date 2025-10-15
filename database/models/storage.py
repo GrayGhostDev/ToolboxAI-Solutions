@@ -128,7 +128,7 @@ class File(TenantBaseModel, TimestampMixin, AuditMixin):
     title = Column(String(255))
     description = Column(Text)
     tags = Column(JSON, default=list)  # Array of tags
-    metadata = Column(JSON, default=dict)  # Additional metadata
+    file_metadata = Column(JSON, default=dict)  # Additional metadata (renamed from 'metadata' to avoid SQLAlchemy reserved word)
 
     # Access tracking
     download_count = Column(Integer, default=0)
@@ -343,4 +343,4 @@ class FileAccessLog(GlobalBaseModel):
     # Additional context
     access_granted = Column(Boolean, default=True)
     denial_reason = Column(String(255))
-    metadata = Column(JSON, default=dict)
+    access_metadata = Column(JSON, default=dict)  # Renamed from 'metadata' to avoid SQLAlchemy reserved word

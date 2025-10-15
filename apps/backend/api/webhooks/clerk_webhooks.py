@@ -140,9 +140,12 @@ async def handle_user_created(user_data: Dict[str, Any]):
 
         # Create user in local database
         async with get_session() as session:
-            # Check if user already exists
-            existing = await session.execute(f"SELECT id FROM users WHERE clerk_id = '{user_id}'")
-            if existing.scalar():
+            # Check if user already exists using SQLAlchemy ORM
+            from sqlalchemy import select
+            stmt = select(User).where(User.clerk_id == user_id)
+            result = await session.execute(stmt)
+            existing_user = result.scalar_one_or_none()
+            if existing_user:
                 logger.info(f"User {user_id} already exists")
                 return
 
@@ -188,24 +191,29 @@ async def handle_user_updated(user_data: Dict[str, Any]):
         user_id = user_data.get("id")
 
         async with get_session() as session:
-            # Update user in local database
-            result = await session.execute(
-                f"""
-                UPDATE users
-                SET
-                    email = '{user_data.get("email_addresses", [{}])[0].get("email_address", "")}',
-                    username = '{user_data.get("username", "")}',
-                    first_name = '{user_data.get("first_name", "")}',
-                    last_name = '{user_data.get("last_name", "")}',
-                    avatar = '{user_data.get("image_url", "")}',
-                    role = '{user_data.get("public_metadata", {}).get("role", "student")}',
-                    updated_at = NOW()
-                WHERE clerk_id = '{user_id}'
-                """
-            )
-            await session.commit()
+            # Update user in local database using SQLAlchemy ORM
+            from sqlalchemy import select, update
+            from database.models import User
 
-            logger.info(f"Updated user {user_id} in local database")
+            # Get user
+            stmt = select(User).where(User.clerk_id == user_id)
+            result = await session.execute(stmt)
+            user = result.scalar_one_or_none()
+
+            if user:
+                # Update user attributes
+                user.email = user_data.get("email_addresses", [{}])[0].get("email_address", "")
+                user.username = user_data.get("username", "")
+                user.first_name = user_data.get("first_name", "")
+                user.last_name = user_data.get("last_name", "")
+                user.avatar = user_data.get("image_url", "")
+                user.role = user_data.get("public_metadata", {}).get("role", "student")
+                user.updated_at = datetime.utcnow()
+
+                await session.commit()
+                logger.info(f"Updated user {user_id} in local database")
+            else:
+                logger.warning(f"User {user_id} not found for update")
 
     except Exception as e:
         logger.error(f"Failed to update user: {e}")
@@ -225,17 +233,22 @@ async def handle_user_deleted(user_data: Dict[str, Any]):
         user_id = user_data.get("id")
 
         async with get_session() as session:
-            # Soft delete user in local database
-            result = await session.execute(
-                f"""
-                UPDATE users
-                SET is_active = FALSE, deleted_at = NOW()
-                WHERE clerk_id = '{user_id}'
-                """
-            )
-            await session.commit()
+            # Soft delete user in local database using SQLAlchemy ORM
+            from sqlalchemy import select
+            from database.models import User
 
-            logger.info(f"Soft deleted user {user_id} in local database")
+            # Get user
+            stmt = select(User).where(User.clerk_id == user_id)
+            result = await session.execute(stmt)
+            user = result.scalar_one_or_none()
+
+            if user:
+                user.is_active = False
+                user.deleted_at = datetime.utcnow()
+                await session.commit()
+                logger.info(f"Soft deleted user {user_id} in local database")
+            else:
+                logger.warning(f"User {user_id} not found for deletion")
 
     except Exception as e:
         logger.error(f"Failed to delete user: {e}")
@@ -256,18 +269,23 @@ async def handle_session_created(session_data: Dict[str, Any]):
         # Log session creation
         logger.info(f"User {user_id} logged in with session {session_id}")
 
-        # Could update last_login timestamp in database
+        # Update last_login timestamp in database using SQLAlchemy ORM
         from database.connection import get_session
+        from sqlalchemy import select
+        from database.models import User
 
         async with get_session() as session:
-            await session.execute(
-                f"""
-                UPDATE users
-                SET last_login = NOW()
-                WHERE clerk_id = '{user_id}'
-                """
-            )
-            await session.commit()
+            # Get user
+            stmt = select(User).where(User.clerk_id == user_id)
+            result = await session.execute(stmt)
+            user = result.scalar_one_or_none()
+
+            if user:
+                user.last_login = datetime.utcnow()
+                await session.commit()
+                logger.info(f"Updated last_login for user {user_id}")
+            else:
+                logger.warning(f"User {user_id} not found for last_login update")
 
     except Exception as e:
         logger.error(f"Failed to handle session creation: {e}")

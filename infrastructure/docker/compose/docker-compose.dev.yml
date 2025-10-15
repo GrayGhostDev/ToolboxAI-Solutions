@@ -16,6 +16,9 @@ services:
     environment:
       # Use simple password for dev (override secrets)
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpass2024}
+      POSTGRES_USER: ${POSTGRES_USER:-toolboxai}
+      POSTGRES_DB: ${POSTGRES_DB:-toolboxai}
+      POSTGRES_PASSWORD_FILE: ""
       # Enable query logging for development
       POSTGRES_LOG_STATEMENT: all
       POSTGRES_LOG_CONNECTIONS: "on"
@@ -106,6 +109,7 @@ services:
     build:
       context: ../../..
       dockerfile: infrastructure/docker/dockerfiles/dashboard-fixed.Dockerfile
+      target: builder
       args:
         NODE_ENV: development
         # Clerk Authentication Build Args
@@ -124,7 +128,7 @@ services:
         # API Configuration
         VITE_API_BASE_URL: "${VITE_API_BASE_URL:-http://127.0.0.1:8009}"
     ports:
-      - "5180:80"  # Changed port to avoid conflict, using production port
+      - "5179:5179"  # Vite dev server exposed on host
       - "9229:9229"  # Node debugger port
     environment:
       NODE_ENV: development
@@ -165,7 +169,13 @@ services:
     cap_drop: []
     read_only: false
     user: root
-    command: npm run dev
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5179"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5179"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # ----------------------------------------
   # MCP Server (Development)

@@ -95,6 +95,7 @@ class BaseResponse(BaseModel):
 
     success: bool = Field(..., description="Whether the operation was successful")
     message: str = Field(..., description="Human-readable message")
+    data: Optional[Dict[str, Any]] = Field(default=None, description="Optional response data")
     timestamp: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         description="Response timestamp",

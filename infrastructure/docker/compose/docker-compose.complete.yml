@@ -79,10 +79,10 @@ services:
     ports:
       - "8009:8009"
     volumes:
-      - ./apps/backend:/app/apps/backend
-      - ./core:/app/core
-      - ./database:/app/database
-      - ./toolboxai_settings:/app/toolboxai_settings
+      - ../../apps/backend:/app/apps/backend
+      - ../../core:/app/core
+      - ../../database:/app/database
+      - ../../toolboxai_settings:/app/toolboxai_settings
     depends_on:
       redis:
         condition: service_healthy
@@ -145,7 +145,7 @@ services:
     ports:
       - "5179:5179"
     volumes:
-      - ./apps/dashboard:/app
+      - ../../apps/dashboard:/app
       - /app/node_modules
     depends_on:
       - backend
@@ -173,7 +173,7 @@ services:
     ports:
       - "8010:8010"
     volumes:
-      - ./core/mcp:/app/core/mcp
+      - ../../core/mcp:/app/core/mcp
     depends_on:
       - redis
     command: python -m core.mcp.servers.agent_coordinator
@@ -195,7 +195,7 @@ services:
     ports:
       - "8888:8888"
     volumes:
-      - ./core/agents:/app/core/agents
+      - ../../core/agents:/app/core/agents
     depends_on:
       - redis
       - backend
@@ -211,8 +211,8 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./infrastructure/nginx/sites-enabled:/etc/nginx/sites-enabled
+      - ../../nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ../../nginx/sites-enabled:/etc/nginx/sites-enabled
     depends_on:
       - backend
       - dashboard
@@ -226,7 +226,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./infrastructure/docker/config/prometheus/prometheus-runtime.yml:/etc/prometheus/prometheus.yml
+      - ../../docker/config/prometheus/prometheus-runtime.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -245,7 +245,7 @@ services:
       GF_INSTALL_PLUGINS: redis-datasource
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./infrastructure/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ../../grafana/dashboards:/etc/grafana/provisioning/dashboards
     depends_on:
       - prometheus
     networks:
@@ -263,7 +263,7 @@ services:
     ports:
       - "8200:8200"
     volumes:
-      - ./infrastructure/vault:/vault/config
+      - ../../vault:/vault/config
     command: server -dev
     networks:
       - toolboxai-network
@@ -275,4 +275,5 @@ volumes:
 
 networks:
   toolboxai-network:
-    external: true
+    name: toolboxai-network
+    driver: bridge

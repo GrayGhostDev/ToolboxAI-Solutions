@@ -26,19 +26,37 @@ from sqlalchemy.sql import func
 Base = declarative_base()
 
 # Import agent models to ensure they're registered with Base
+__all__ = []  # Will be extended with model names for wildcard imports
+
 try:
     from database.models.agent_models import (
-        AgentInstance, AgentExecution, AgentMetrics, AgentTaskQueue, 
-        SystemHealth, AgentConfiguration, AgentType, AgentStatus, 
-        TaskStatus, TaskPriority
+        AgentInstance,
+        AgentExecution,
+        AgentMetrics,
+        AgentTaskQueue,
+        SystemHealth,
+        AgentConfiguration,
+        AgentType,
+        AgentStatus,
+        TaskStatus,
+        TaskPriority,
     )
-    # Re-export for backward compatibility
-    __all__ = [
-        'AgentInstance', 'AgentExecution', 'AgentMetrics', 'AgentTaskQueue',
-        'SystemHealth', 'AgentConfiguration', 'AgentType', 'AgentStatus',
-        'TaskStatus', 'TaskPriority'
-    ]
-except ImportError as e:
+
+    __all__.extend(
+        [
+            "AgentInstance",
+            "AgentExecution",
+            "AgentMetrics",
+            "AgentTaskQueue",
+            "SystemHealth",
+            "AgentConfiguration",
+            "AgentType",
+            "AgentStatus",
+            "TaskStatus",
+            "TaskPriority",
+        ]
+    )
+except ImportError:
     # Agent models not available
     pass
 
@@ -108,7 +126,21 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False, index=True)
     username = Column(String(50), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
-    role = Column(Enum(UserRole, values_callable=lambda x: [e.value for e in x]), default=UserRole.STUDENT, nullable=False)
+    role = Column(
+        Enum(UserRole, values_callable=lambda x: [e.value for e in x]),
+        default=UserRole.STUDENT,
+        nullable=False,
+    )
+
+    # Multi-tenancy
+    organization_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("organizations.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+        comment="Tenant identifier",
+    )
+    organization_role = Column(String(50), default='member')  # admin, manager, teacher, member
     
     # Profile information
     first_name = Column(String(100))
@@ -138,6 +170,7 @@ class User(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     # Relationships
+    organization = relationship("Organization", backref="users", foreign_keys=[organization_id], lazy="joined")
     enrollments = relationship("Enrollment", back_populates="user", cascade="all, delete-orphan")
     progress_records = relationship("UserProgress", back_populates="user", cascade="all, delete-orphan")
     quiz_attempts = relationship("QuizAttempt", back_populates="user", cascade="all, delete-orphan")
@@ -158,6 +191,7 @@ class User(Base):
     __table_args__ = (
         Index('idx_user_email_active', 'email', 'is_active'),
         Index('idx_user_roblox_id', 'roblox_user_id'),
+        Index('idx_user_org_role', 'organization_id', 'organization_role'),
     )
 
 
@@ -1418,3 +1452,17 @@ class ContentGenerationBatch(Base):
 
     # Relationships
     user = relationship("User", backref="content_generation_batches")
+
+
+# Ensure key models are exported when using `from database.models import *`
+__all__.extend(
+    [
+        "Base",
+        "User",
+        "Content",
+        "Class",
+        "Lesson",
+        "EnhancedContentGeneration",
+        "ContentGenerationBatch",
+    ]
+)

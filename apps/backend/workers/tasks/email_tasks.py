@@ -13,6 +13,7 @@ Features:
 
 import os
 import logging
+import json
 from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
 from dataclasses import dataclass
@@ -324,20 +325,57 @@ def process_email_queue(
         Dict with processing results
     """
     try:
-        # TODO: Implement database email queue
-        # For now, return placeholder
+        from apps.backend.core.database import SessionLocal
+        from database.models import EmailQueue
+        from sqlalchemy import and_
 
         logger.info(f"Processing email queue with batch size {batch_size}")
 
-        # Placeholder implementation
         processed = 0
         failed = 0
 
-        # This would typically:
-        # 1. Query database for pending emails
-        # 2. Process emails in batches
-        # 3. Update email status in database
-        # 4. Handle failures and retries
+        with SessionLocal() as session:
+            # Query for pending emails
+            pending_emails = session.query(EmailQueue).filter(
+                and_(
+                    EmailQueue.status == 'pending',
+                    EmailQueue.retry_count < max_retries
+                )
+            ).limit(batch_size).all()
+
+            for email in pending_emails:
+                try:
+                    # Send email
+                    result = send_email.apply_async(
+                        kwargs={
+                            'to_email': email.to_email,
+                            'subject': email.subject,
+                            'template_name': email.template_name,
+                            'template_context': json.loads(email.template_context) if isinstance(email.template_context, str) else email.template_context,
+                            'organization_id': email.organization_id,
+                        }
+                    ).get(timeout=60)
+
+                    if result.get('status') == 'sent':
+                        email.status = 'sent'
+                        email.sent_at = datetime.utcnow()
+                        processed += 1
+                    else:
+                        email.retry_count += 1
+                        email.last_error = result.get('error', 'Unknown error')
+                        if email.retry_count >= max_retries:
+                            email.status = 'failed'
+                        failed += 1
+
+                except Exception as e:
+                    logger.error(f"Failed to process email {email.id}: {e}")
+                    email.retry_count += 1
+                    email.last_error = str(e)
+                    if email.retry_count >= max_retries:
+                        email.status = 'failed'
+                    failed += 1
+
+            session.commit()
 
         return {
             'status': 'completed',
@@ -386,9 +424,22 @@ def send_notification_email(
         Dict with send result
     """
     try:
-        # TODO: Get user email from database
-        # For now, use placeholder
-        user_email = f"user-{user_id}@example.com"
+        # Get user email from database
+        from apps.backend.core.database import SessionLocal
+        from database.models import User
+
+        with SessionLocal() as session:
+            user = session.query(User).filter_by(id=user_id).first()
+            if not user or not user.email:
+                logger.error(f"User {user_id} not found or has no email")
+                return {
+                    'status': 'failed',
+                    'user_id': user_id,
+                    'error': 'User not found or has no email',
+                    'failed_at': datetime.utcnow().isoformat()
+                }
+
+            user_email = user.email
 
         # Template context
         context = {

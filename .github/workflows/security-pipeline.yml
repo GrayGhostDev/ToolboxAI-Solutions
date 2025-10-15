@@ -49,6 +49,15 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: ToolboxAI Secret Scanner
+        run: |
+          python scripts/security/check_secrets.py --root . --allowlist scripts/security/allowlist.txt --fail-on-detect
+
   # SAST - Static Application Security Testing
   sast:
     name: Static Security Analysis

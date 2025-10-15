@@ -1,0 +1,14 @@
+npm warn config ignoring workspace config at /Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard/.npmrc
+
+> toolboxai-dashboard@1.1.0 test:coverage
+> COVERAGE=true vitest run --coverage
+
+ DEPRECATED  "cache.dir" is deprecated, use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir/vitest"
+
+ RUN  v3.2.4 /Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions/apps/dashboard
+      Coverage enabled with v8
+
+ ✓ src/components/agents/__tests__/AgentTaskDialog.test.tsx > AgentTaskDialog Component > Rendering > renders nothing when agent is null 22ms
+ ✓ src/components/agents/__tests__/AgentTaskDialog.test.tsx > AgentTaskDialog Component > Rendering > renders modal when open and agent is provided 91ms
+ ✓ src/components/agents/__tests__/AgentTaskDialog.test.tsx > AgentTaskDialog Component > Rendering > does not render modal when open is false 8ms
+ ✓ src/components/agents/__tests__/AgentTaskDialog.test.tsx > AgentTaskDialog Component > Rendering > renders agent status badge 39ms

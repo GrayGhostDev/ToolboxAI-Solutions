@@ -157,7 +157,7 @@ class EducationalContent(TenantBaseModel):
     )
 
     # Metadata and Settings
-    metadata: Mapped[Dict[str, Any]] = mapped_column(
+    content_metadata: Mapped[Dict[str, Any]] = mapped_column(
         JSONB,
         nullable=False,
         default=dict,
@@ -366,7 +366,7 @@ class ContentAttachment(TenantBaseModel):
         nullable=True,
     )
 
-    metadata: Mapped[Dict[str, Any]] = mapped_column(
+    attachment_metadata: Mapped[Dict[str, Any]] = mapped_column(
         JSONB,
         nullable=False,
         default=dict,

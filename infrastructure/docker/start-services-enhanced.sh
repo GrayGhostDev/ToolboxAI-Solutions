@@ -12,9 +12,12 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-COMPOSE_FILE="docker-compose.dev.yml"
-PROJECT_DIR="/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
-DOCKER_DIR="$PROJECT_DIR/infrastructure/docker"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+COMPOSE_FILES=(
+    "-f" "$PROJECT_DIR/infrastructure/docker/compose/docker-compose.yml"
+    "-f" "$PROJECT_DIR/infrastructure/docker/compose/docker-compose.dev.yml"
+)
 MAX_WAIT_TIME=300
 CHECK_INTERVAL=5
 
@@ -35,6 +38,21 @@ log_error() {
     echo -e "${RED}[$(date +'%Y-%m-%d %H:%M:%S')] [ERROR]${NC} $1"
 }
 
+if docker compose version >/dev/null 2>&1; then
+    COMPOSE_CMD=(docker compose)
+elif command -v docker-compose >/dev/null 2>&1; then
+    COMPOSE_CMD=(docker-compose)
+else
+    log_error "Docker Compose plugin or docker-compose binary not found"
+    exit 1
+fi
+
+COMPOSE_DISPLAY="${COMPOSE_CMD[*]}"
+
+compose() {
+    "${COMPOSE_CMD[@]}" "${COMPOSE_FILES[@]}" "$@"
+}
+
 # Function to check if docker and docker-compose are available
 check_prerequisites() {
     log_info "Checking prerequisites..."
@@ -44,13 +62,22 @@ check_prerequisites() {
         exit 1
     fi
 
-    if ! command -v docker &> /dev/null || ! docker compose version &> /dev/null; then
-        log_error "Docker Compose is not available"
-        exit 1
-    fi
+    local compose_missing=false
+    for compose_file in "${COMPOSE_FILES[@]}"; do
+        case "$compose_file" in
+            -f)
+                continue
+                ;;
+            *)
+                if [ ! -f "$compose_file" ]; then
+                    log_error "Docker Compose file not found: $compose_file"
+                    compose_missing=true
+                fi
+                ;;
+        esac
+    done
 
-    if [ ! -f "$DOCKER_DIR/$COMPOSE_FILE" ]; then
-        log_error "Docker Compose file not found: $DOCKER_DIR/$COMPOSE_FILE"
+    if [ "$compose_missing" = true ]; then
         exit 1
     fi
 
@@ -66,7 +93,8 @@ check_service_health() {
     log_info "⏳ Waiting for $service to be healthy (timeout: ${MAX_WAIT_TIME}s)..."
 
     while [ $attempt -le $max_attempts ]; do
-        local status=$(docker compose -f "$COMPOSE_FILE" ps "$service" --format "{{.Health}}" 2>/dev/null || echo "unknown")
+        local status
+        status=$(compose ps "$service" --format "{{.Health}}" 2>/dev/null || echo "unknown")
 
         case "$status" in
             "healthy")
@@ -101,7 +129,8 @@ wait_for_service_running() {
     log_info "⏳ Waiting for $service to be running..."
 
     while [ $attempt -le $max_attempts ]; do
-        local status=$(docker compose -f "$COMPOSE_FILE" ps "$service" --format "{{.State}}" 2>/dev/null || echo "unknown")
+        local status
+        status=$(compose ps "$service" --format "{{.State}}" 2>/dev/null || echo "unknown")
 
         if [ "$status" = "running" ]; then
             log_success "✅ $service is running"
@@ -123,7 +152,7 @@ show_service_logs() {
     local lines=${2:-20}
 
     log_info "📋 Last $lines lines of logs for $service:"
-    docker compose -f "$COMPOSE_FILE" logs --tail="$lines" "$service" || true
+    compose logs --tail="$lines" "$service" || true
 }
 
 # Function to start a service with error handling
@@ -134,7 +163,7 @@ start_service() {
 
     if [ "$build" = "true" ]; then
         log_info "🔨 Building $service..."
-        if ! docker compose -f "$COMPOSE_FILE" build "$service" 2>&1 | grep -v "variable is not set" || true; then
+        if ! compose build "$service" 2>&1 | grep -v "variable is not set" || true; then
             log_error "Failed to build $service"
             show_service_logs "$service"
             return 1
@@ -142,7 +171,7 @@ start_service() {
     fi
 
     log_info "🚀 Starting $service..."
-    if ! docker compose -f "$COMPOSE_FILE" up -d "$service" 2>&1 | grep -v "variable is not set" || true; then
+    if ! compose up -d "$service" 2>&1 | grep -v "variable is not set" || true; then
         log_error "Failed to start $service"
         show_service_logs "$service"
         return 1
@@ -174,7 +203,7 @@ start_service() {
 # Function to cleanup existing containers
 cleanup_containers() {
     log_info "🧹 Cleaning up existing containers..."
-    docker compose -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null || true
+    compose down --remove-orphans 2>/dev/null || true
     log_success "✅ Cleanup completed"
 }
 
@@ -182,7 +211,7 @@ cleanup_containers() {
 show_status() {
     log_info "📊 Final Service Status:"
     echo
-    docker compose -f "$COMPOSE_FILE" ps --format "table {{.Service}}\t{{.State}}\t{{.Health}}\t{{.Ports}}"
+    compose ps --format "table {{.Service}}\t{{.State}}\t{{.Health}}\t{{.Ports}}"
     echo
 }
 
@@ -190,20 +219,23 @@ show_status() {
 show_service_urls() {
     log_info "🔗 Service URLs:"
     cat << EOF
-  🗄️  PostgreSQL: localhost:5434
-  🔄  Redis: localhost:6381
-  🚀  FastAPI Backend: http://localhost:8009
-  🤖  MCP Server: http://localhost:9877
+  🗄️  PostgreSQL:        localhost:5434
+  🔄  Redis:             localhost:6381
+  🚀  Backend API:       http://localhost:8009
+  📘  API Docs:          http://localhost:8009/docs
+  🤖  MCP Server:        http://localhost:9877
   🎯  Agent Coordinator: http://localhost:8888
-  🌐  Flask Bridge: http://localhost:5001
-  🖥️  Dashboard Frontend: http://localhost:5179
-  👻  Ghost CMS: http://localhost:8000
+  ⚙️  Celery Flower:     http://localhost:5555
+  🖥️  Dashboard (Vite):  http://localhost:5179
+  🗂️  Adminer:           http://localhost:8080
+  🧭  Redis Commander:   http://localhost:8081
+  ✉️  Mailhog:           http://localhost:8025
 
 📝 Useful commands:
-  View logs: docker compose -f $COMPOSE_FILE logs -f [service-name]
-  Stop all: docker compose -f $COMPOSE_FILE down
-  Restart service: docker compose -f $COMPOSE_FILE restart [service-name]
-  Check status: docker compose -f $COMPOSE_FILE ps
+  View logs: $COMPOSE_DISPLAY ${COMPOSE_FILES[*]} logs -f <service>
+  Stop all: $COMPOSE_DISPLAY ${COMPOSE_FILES[*]} down
+  Restart:  $COMPOSE_DISPLAY ${COMPOSE_FILES[*]} restart <service>
+  Status:   $COMPOSE_DISPLAY ${COMPOSE_FILES[*]} ps
 EOF
 }
 
@@ -213,11 +245,14 @@ main() {
     log_info "🚀 ToolBoxAI Docker Services - Enhanced Startup"
     log_info "============================================"
 
-    # Change to docker directory
-    cd "$DOCKER_DIR"
-
-    # Check prerequisites
+    # Run prerequisites before starting
     check_prerequisites
+
+    # Ensure we operate from project root for any relative commands
+    cd "$PROJECT_DIR" || {
+        log_error "Unable to change directory to project root: $PROJECT_DIR"
+        exit 1
+    }
 
     # Cleanup any existing containers
     cleanup_containers
@@ -232,25 +267,28 @@ main() {
     log_info "📦 Phase 2: Starting core backend services..."
 
     # Phase 2: Core backend services
-    start_service "fastapi-main" true true || exit 1
+    start_service "backend" true true || exit 1
     start_service "mcp-server" true true || exit 1
 
     log_info "📦 Phase 3: Starting orchestration services..."
 
     # Phase 3: Orchestration and agents
     start_service "agent-coordinator" true true || exit 1
-    start_service "educational-agents" true false || exit 1  # May not have health check
 
     log_info "📦 Phase 4: Starting integration services..."
 
-    # Phase 4: Integration services
-    start_service "flask-bridge" true true || exit 1
+    # Phase 4: Background workers and tooling
+    start_service "celery-worker" true true || exit 1
+    start_service "celery-beat" true true || exit 1
+    start_service "flower" false false || exit 1
 
     log_info "📦 Phase 5: Starting frontend and CMS..."
 
-    # Phase 5: Frontend and CMS
-    start_service "dashboard-frontend" true true || exit 1
-    start_service "ghost-backend" false true || exit 1
+    # Phase 5: Frontend and developer tooling
+    start_service "dashboard" true true || exit 1
+    start_service "adminer" false false || exit 1
+    start_service "redis-commander" false false || exit 1
+    start_service "mailhog" false false || exit 1
 
     # Final status
     echo

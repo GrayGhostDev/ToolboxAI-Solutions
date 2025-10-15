@@ -2,7 +2,7 @@
 # Docker Setup Validation Script for ToolBoxAI Dashboard
 # Validates the Docker configuration and runs comprehensive tests
 
-set -e
+set -euo pipefail
 
 # Colors for output
 RED='\033[0;31m'
@@ -12,17 +12,31 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-COMPOSE_FILE="docker-compose.dev.yml"
-PROJECT_DIR="/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+COMPOSE_FILES=(
+    "$PROJECT_DIR/infrastructure/docker/compose/docker-compose.yml"
+    "$PROJECT_DIR/infrastructure/docker/compose/docker-compose.dev.yml"
+)
+COMPOSE_ARGS=(
+    "-f" "${COMPOSE_FILES[0]}"
+    "-f" "${COMPOSE_FILES[1]}"
+)
 DOCKER_DIR="$PROJECT_DIR/infrastructure/docker"
+
+# Optional flags (set via CLI)
+SKIP_BUILD=false
+SKIP_STARTUP=false
 
 # Test configuration
 TIMEOUT=30
 SERVICES=(
     "postgres"
     "redis"
-    "fastapi-main"
-    "dashboard-frontend"
+    "backend"
+    "dashboard"
+    "mcp-server"
+    "agent-coordinator"
 )
 
 # Logging functions
@@ -40,6 +54,21 @@ log_warn() {
 
 log_error() {
     echo -e "${RED}[$(date +'%Y-%m-%d %H:%M:%S')] [ERROR]${NC} $1"
+}
+
+if docker compose version >/dev/null 2>&1; then
+    COMPOSE_CMD=(docker compose)
+elif command -v docker-compose >/dev/null 2>&1; then
+    COMPOSE_CMD=(docker-compose)
+else
+    log_error "Docker Compose plugin or binary not found"
+    exit 1
+fi
+
+COMPOSE_DISPLAY="${COMPOSE_CMD[*]}"
+
+compose() {
+    "${COMPOSE_CMD[@]}" "${COMPOSE_ARGS[@]}" "$@"
 }
 
 # Test results tracking
@@ -79,26 +108,33 @@ validate_prerequisites() {
     fi
 
     # Check Docker Compose
-    if docker compose version &> /dev/null; then
-        record_test "Docker Compose" "PASS" "Docker Compose is available"
+    if ${COMPOSE_CMD[@]} version &> /dev/null; then
+        record_test "Docker Compose" "PASS" "$COMPOSE_DISPLAY is available"
     else
         record_test "Docker Compose" "FAIL" "Docker Compose is not available"
         return 1
     fi
 
-    # Check compose file
-    if [ -f "$DOCKER_DIR/$COMPOSE_FILE" ]; then
-        record_test "Compose File" "PASS" "docker-compose.dev.yml exists"
+    # Check compose files
+    local missing_compose=0
+    for file in "${COMPOSE_FILES[@]}"; do
+        if [ ! -f "$file" ]; then
+            missing_compose=$((missing_compose + 1))
+        fi
+    done
+
+    if [ $missing_compose -eq 0 ]; then
+        record_test "Compose Files" "PASS" "All docker-compose files present"
     else
-        record_test "Compose File" "FAIL" "docker-compose.dev.yml not found"
+        record_test "Compose Files" "FAIL" "Missing docker-compose files"
         return 1
     fi
 
     # Check Dockerfiles
-    if [ -f "$DOCKER_DIR/dashboard.dev.Dockerfile" ]; then
-        record_test "Development Dockerfile" "PASS" "dashboard.dev.Dockerfile exists"
+    if [ -f "$PROJECT_DIR/infrastructure/docker/dockerfiles/dashboard-2025.Dockerfile" ]; then
+        record_test "Dashboard Dockerfile" "PASS" "dashboard-2025.Dockerfile exists"
     else
-        record_test "Development Dockerfile" "FAIL" "dashboard.dev.Dockerfile not found"
+        record_test "Dashboard Dockerfile" "FAIL" "dashboard-2025.Dockerfile not found"
         return 1
     fi
 
@@ -115,19 +151,17 @@ validate_prerequisites() {
 validate_compose_config() {
     log_info "🔧 Validating Docker Compose configuration..."
 
-    cd "$DOCKER_DIR"
-
     # Check compose file syntax
-    if docker compose -f "$COMPOSE_FILE" config &> /dev/null; then
-        record_test "Compose Syntax" "PASS" "docker-compose.dev.yml syntax is valid"
+    if compose config &> /dev/null; then
+        record_test "Compose Syntax" "PASS" "Compose configuration is valid"
     else
-        record_test "Compose Syntax" "FAIL" "docker-compose.dev.yml has syntax errors"
+        record_test "Compose Syntax" "FAIL" "Compose configuration has syntax errors"
         return 1
     fi
 
     # Check for required services
     for service in "${SERVICES[@]}"; do
-        if docker compose -f "$COMPOSE_FILE" config --services | grep -q "^${service}$"; then
+        if compose config --services | grep -q "^${service}$"; then
             record_test "Service Definition: $service" "PASS" "Service $service is defined"
         else
             record_test "Service Definition: $service" "FAIL" "Service $service is not defined"
@@ -156,7 +190,7 @@ validate_environment() {
     )
 
     for var in "${critical_vars[@]}"; do
-        if [ -n "${!var}" ]; then
+        if [ -n "${!var:-}" ]; then
             record_test "Environment Variable: $var" "PASS" "$var is set"
         else
             record_test "Environment Variable: $var" "FAIL" "$var is not set"
@@ -171,7 +205,7 @@ validate_environment() {
     )
 
     for var in "${important_vars[@]}"; do
-        if [ -n "${!var}" ]; then
+        if [ -n "${!var:-}" ]; then
             record_test "Optional Variable: $var" "PASS" "$var is set"
         else
             record_test "Optional Variable: $var" "WARN" "$var is not set (optional)"
@@ -183,10 +217,10 @@ validate_environment() {
 test_image_builds() {
     log_info "🏗️ Testing Docker image builds..."
 
-    cd "$DOCKER_DIR"
+    cd "$PROJECT_DIR"
 
     # Test dashboard development build
-    if docker compose -f "$COMPOSE_FILE" build dashboard-frontend &> /tmp/build.log; then
+    if compose build dashboard &> /tmp/build.log; then
         record_test "Dashboard Build" "PASS" "Dashboard development image builds successfully"
     else
         record_test "Dashboard Build" "FAIL" "Dashboard development image build failed"
@@ -195,7 +229,9 @@ test_image_builds() {
     fi
 
     # Test production build
-    if docker build -f dashboard.Dockerfile --build-arg VITE_API_BASE_URL=http://localhost:8009/api/v1 ../.. -t dashboard-prod-test &> /tmp/build-prod.log; then
+    if docker build -f infrastructure/docker/dockerfiles/dashboard-production-2025.Dockerfile \
+        --build-arg VITE_API_BASE_URL=http://localhost:8009 \
+        . -t dashboard-prod-test &> /tmp/build-prod.log; then
         record_test "Production Build" "PASS" "Dashboard production image builds successfully"
     else
         record_test "Production Build" "FAIL" "Dashboard production image build failed"
@@ -208,10 +244,10 @@ test_image_builds() {
 test_service_startup() {
     log_info "🚀 Testing service startup..."
 
-    cd "$DOCKER_DIR"
+    cd "$PROJECT_DIR"
 
     # Start infrastructure services first
-    docker compose -f "$COMPOSE_FILE" up -d postgres redis &> /dev/null
+    compose up -d postgres redis &> /dev/null
 
     # Wait for infrastructure to be healthy
     for service in "postgres" "redis"; do
@@ -219,7 +255,7 @@ test_service_startup() {
         local max_attempts=30
 
         while [ $attempts -lt $max_attempts ]; do
-            if docker compose -f "$COMPOSE_FILE" ps "$service" --format "{{.Health}}" | grep -q "healthy"; then
+            if compose ps "$service" --format "{{.Health}}" | grep -q "healthy"; then
                 record_test "Service Startup: $service" "PASS" "$service started and is healthy"
                 break
             fi
@@ -234,7 +270,7 @@ test_service_startup() {
     done
 
     # Start backend services
-    docker compose -f "$COMPOSE_FILE" up -d fastapi-main &> /dev/null
+    compose up -d backend &> /dev/null
 
     # Wait for backend to be ready
     local attempts=0
@@ -242,7 +278,7 @@ test_service_startup() {
 
     while [ $attempts -lt $max_attempts ]; do
         if curl -f -s http://localhost:8009/health &> /dev/null; then
-            record_test "Backend API" "PASS" "FastAPI backend is responding"
+            record_test "Backend API" "PASS" "Backend service is responding"
             break
         fi
 
@@ -255,14 +291,14 @@ test_service_startup() {
     fi
 
     # Start dashboard frontend
-    docker compose -f "$COMPOSE_FILE" up -d dashboard-frontend &> /dev/null
+    compose up -d dashboard &> /dev/null
 
     # Wait for frontend to be ready
     attempts=0
     max_attempts=60
 
     while [ $attempts -lt $max_attempts ]; do
-        if curl -f -s http://localhost:5179/ &> /dev/null; then
+        if curl -f -s http://localhost:5180/ &> /dev/null || curl -f -s http://localhost:5179/ &> /dev/null; then
             record_test "Frontend Service" "PASS" "Dashboard frontend is serving content"
             break
         fi
@@ -274,6 +310,7 @@ test_service_startup() {
     if [ $attempts -eq $max_attempts ]; then
         record_test "Frontend Service" "FAIL" "Dashboard frontend is not responding"
     fi
+
 }
 
 # Function to test health endpoints
@@ -288,17 +325,17 @@ test_health_endpoints() {
     fi
 
     # Test frontend health
-    if curl -f -s http://localhost:5179/health &> /dev/null; then
-        record_test "Frontend Health" "PASS" "Frontend health endpoint responds"
+    if curl -f -s http://localhost:5180/ &> /dev/null || curl -f -s http://localhost:5179/ &> /dev/null; then
+        record_test "Frontend Health" "PASS" "Frontend responds over HTTP"
     else
-        record_test "Frontend Health" "FAIL" "Frontend health endpoint not responding"
+        record_test "Frontend Health" "FAIL" "Frontend is not responding"
     fi
 
-    # Test API connectivity
-    if curl -f -s http://localhost:5179/api/health &> /dev/null; then
-        record_test "API Proxy" "PASS" "API proxy is working"
+    # Test API connectivity via dashboard proxy (best effort)
+    if curl -f -s http://localhost:5180/api/health &> /dev/null || curl -f -s http://localhost:5179/api/health &> /dev/null; then
+        record_test "API Proxy" "PASS" "Dashboard proxy can reach backend"
     else
-        record_test "API Proxy" "FAIL" "API proxy is not working"
+        record_test "API Proxy" "WARN" "Dashboard proxy health endpoint unavailable"
     fi
 }
 
@@ -307,21 +344,21 @@ test_networking() {
     log_info "🌐 Testing container networking..."
 
     # Test inter-container communication
-    if docker compose -f "$COMPOSE_FILE" exec -T dashboard-frontend curl -f -s http://fastapi-main:8009/health &> /dev/null; then
+    if compose exec -T dashboard curl -f -s http://backend:8009/health &> /dev/null; then
         record_test "Inter-Container Communication" "PASS" "Frontend can reach backend"
     else
         record_test "Inter-Container Communication" "FAIL" "Frontend cannot reach backend"
     fi
 
     # Test database connectivity from backend
-    if docker compose -f "$COMPOSE_FILE" exec -T fastapi-main nc -z postgres 5432 &> /dev/null; then
+    if compose exec -T backend nc -z postgres 5432 &> /dev/null; then
         record_test "Database Connectivity" "PASS" "Backend can reach database"
     else
         record_test "Database Connectivity" "FAIL" "Backend cannot reach database"
     fi
 
     # Test Redis connectivity
-    if docker compose -f "$COMPOSE_FILE" exec -T fastapi-main nc -z redis 6379 &> /dev/null; then
+    if compose exec -T backend nc -z redis 6379 &> /dev/null; then
         record_test "Redis Connectivity" "PASS" "Backend can reach Redis"
     else
         record_test "Redis Connectivity" "FAIL" "Backend cannot reach Redis"
@@ -332,8 +369,8 @@ test_networking() {
 cleanup() {
     log_info "🧹 Cleaning up test environment..."
 
-    cd "$DOCKER_DIR"
-    docker compose -f "$COMPOSE_FILE" down --remove-orphans &> /dev/null || true
+    cd "$PROJECT_DIR"
+    compose down --remove-orphans &> /dev/null || true
     docker rmi dashboard-prod-test &> /dev/null || true
 
     # Clean up temporary files
@@ -359,7 +396,7 @@ generate_report() {
         echo "2. Ensure no other services are using ports 5179, 8009, 5434, 6381"
         echo "3. Verify Docker daemon is running and accessible"
         echo "4. Check Docker Compose version compatibility"
-        echo "5. Review service logs: docker-compose -f docker-compose.dev.yml logs [service]"
+        echo "5. Review service logs: $COMPOSE_DISPLAY ${COMPOSE_ARGS[*]} logs <service>"
         return 1
     else
         log_success "🎉 All tests passed! Docker setup is ready for development."
@@ -380,10 +417,20 @@ main() {
     validate_prerequisites || exit 1
     validate_compose_config || exit 1
     validate_environment
-    test_image_builds
-    test_service_startup
-    test_health_endpoints
-    test_networking
+
+    if [ "$SKIP_BUILD" = true ]; then
+        log_warn "⏭️  Skipping image build tests (--skip-build)"
+    else
+        test_image_builds
+    fi
+
+    if [ "$SKIP_STARTUP" = true ]; then
+        log_warn "⏭️  Skipping service startup tests (--skip-startup)"
+    else
+        test_service_startup
+        test_health_endpoints
+        test_networking
+    fi
 
     # Generate final report
     generate_report

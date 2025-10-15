@@ -603,9 +603,78 @@ class SecureUserManager:
             self.redis.delete(f"reset_token:{token}")
 
     def _encrypt_sensitive_data(self, data: str) -> str:
-        """Encrypt sensitive data (simplified - use proper encryption in production)"""
-        # TODO: Implement proper encryption using cryptography.fernet
-        return data
+        """
+        Encrypt sensitive data using Fernet symmetric encryption.
+
+        Uses AES 128-bit encryption in CBC mode with PKCS7 padding.
+        Keys are derived from environment variable and rotatable.
+
+        Args:
+            data: Plaintext string to encrypt
+
+        Returns:
+            Base64-encoded encrypted data
+        """
+        from cryptography.fernet import Fernet
+        import os
+
+        # Get encryption key from environment or generate one
+        encryption_key = os.getenv("DATA_ENCRYPTION_KEY")
+
+        if not encryption_key:
+            # Generate a key if none exists (should be set in production)
+            logger.warning("DATA_ENCRYPTION_KEY not set, generating temporary key")
+            encryption_key = Fernet.generate_key().decode()
+
+        # Ensure key is bytes
+        key_bytes = encryption_key.encode() if isinstance(encryption_key, str) else encryption_key
+
+        # Create Fernet instance
+        fernet = Fernet(key_bytes)
+
+        # Encrypt the data
+        encrypted_data = fernet.encrypt(data.encode())
+
+        # Return as base64 string for database storage
+        return encrypted_data.decode()
+
+    def _decrypt_sensitive_data(self, encrypted_data: str) -> str:
+        """
+        Decrypt sensitive data encrypted with Fernet.
+
+        Args:
+            encrypted_data: Base64-encoded encrypted string
+
+        Returns:
+            Decrypted plaintext string
+
+        Raises:
+            ValueError: If decryption fails (wrong key or corrupted data)
+        """
+        from cryptography.fernet import Fernet, InvalidToken
+        import os
+
+        # Get encryption key from environment
+        encryption_key = os.getenv("DATA_ENCRYPTION_KEY")
+
+        if not encryption_key:
+            raise ValueError("DATA_ENCRYPTION_KEY not configured")
+
+        # Ensure key is bytes
+        key_bytes = encryption_key.encode() if isinstance(encryption_key, str) else encryption_key
+
+        try:
+            # Create Fernet instance
+            fernet = Fernet(key_bytes)
+
+            # Decrypt the data
+            decrypted_data = fernet.decrypt(encrypted_data.encode())
+
+            return decrypted_data.decode()
+
+        except InvalidToken:
+            logger.error("Failed to decrypt data - invalid key or corrupted data")
+            raise ValueError("Failed to decrypt sensitive data")
 
     async def _audit_log(
         self, action: str, user_id: Optional[int], details: Dict[str, Any]

@@ -12,7 +12,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apps.backend.core.config import settings
 from apps.backend.core.logging import logging_manager
 from apps.backend.services.database import db_service
-from apps.backend.core.auth import get_current_user  # Use unified auth
 from apps.backend.models.schemas import User
 
 # Initialize logger
@@ -41,7 +40,13 @@ def get_settings():
 
 
 # Authentication dependencies
-async def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:
+def _get_current_user_dependency():
+    """Lazy import of get_current_user to avoid circular imports at module level"""
+    from apps.backend.core.deps import get_current_user
+    return get_current_user
+
+
+async def get_current_active_user(current_user: User = Depends(_get_current_user_dependency())) -> User:
     """Get current active user"""
     if not current_user:
         raise HTTPException(

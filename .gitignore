@@ -351,3 +351,20 @@ apps/dashboard/node_modules.backup.*/
 docs/api/
 openapi.json
 .claude/settings.local.json
+
+# Test outputs and reports (generated)
+*_output.txt
+*_coverage_output.txt
+phase*_coverage_output.txt
+test_run_output.txt
+reports/
+vault_migration_report.json
+
+# Old virtual environments (cleanup artifacts)
+venv_old_*/
+venv_clean*/
+
+# Python package directories (if accidentally copied)
+aiosqlite/
+# Temporary fix scripts (not needed in repo)
+fix_classes*.py

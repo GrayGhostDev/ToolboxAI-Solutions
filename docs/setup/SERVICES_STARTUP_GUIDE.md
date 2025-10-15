@@ -1,110 +1,97 @@
-# ToolboxAI Services - Quick Start Guide
+# ToolboxAI Services - Quick Start Guide (2025)
 
 ## Current Status: Services Not Running
 
-**Issue:** Docker Desktop is not currently running on your system.
+If your local environment is idle, follow the steps below to spin up the entire ToolboxAI development stack with the latest 2025 tooling.
 
-## Steps to Start All Services
+## Step 1: Start Docker Desktop
 
-### Step 1: Start Docker Desktop
-
-**Option A - Using Command Line:**
 ```bash
 open -a Docker
 ```
 
-**Option B - Manual Start:**
-1. Go to your **Applications** folder
-2. Find and double-click **Docker.app**
-3. Wait for Docker to fully start (you'll see a Docker whale icon in your menu bar)
-4. The icon will stop animating when Docker is ready
+Wait until the whale icon in the macOS menu bar stops animating. This usually takes 30–60 seconds.
 
-**Important:** Docker can take 30-60 seconds to fully start up!
+## Step 2: Run the Environment Check (optional but recommended)
 
-### Step 2: Verify Docker is Running
+From the repository root:
 
 ```bash
-docker ps
+./infrastructure/docker/check-setup.sh
 ```
 
-If this shows a table (even if empty), Docker is ready!
+This script verifies Docker availability, required compose files, Dockerfiles, and common port conflicts.
 
-### Step 3: Start All ToolboxAI Services
-
-Run the comprehensive startup script:
+## Step 3: Start All ToolboxAI Services (Recommended Path)
 
 ```bash
-cd /Users/grayghostdataconsultants/GrayGhostDataConsultants/Development/ActiveProjects/Development/Cursor/Customers/ToolboxAI-Solutions
-./check-and-start.sh
+cd /Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions
+./infrastructure/docker/start-docker-dev.sh
 ```
 
-**OR** manually:
+This orchestrated script validates prerequisites, builds images, and starts services in the correct sequence.
+
+### Alternative: Manual Compose Command
 
 ```bash
-cd /Users/grayghostdataconsultants/GrayGhostDataConsultants/Development/ActiveProjects/Development/Cursor/Customers/ToolboxAI-Solutions
-docker-compose -f docker-compose.complete.yml up -d
+cd /Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions
+COMPOSE="docker compose -f infrastructure/docker/compose/docker-compose.yml -f infrastructure/docker/compose/docker-compose.dev.yml"
+$COMPOSE up -d
 ```
 
-## Verify Services are Running
-
-After starting, check status:
+## Verify Services Are Running
 
 ```bash
-docker-compose -f docker-compose.complete.yml ps
+docker compose -f infrastructure/docker/compose/docker-compose.yml -f infrastructure/docker/compose/docker-compose.dev.yml ps
 ```
 
-You should see these services running:
-- ✅ toolboxai-postgres (PostgreSQL 16)
-- ✅ toolboxai-redis
-- ✅ toolboxai-backend
-- ✅ toolboxai-dashboard
-- ✅ toolboxai-mcp
-- ✅ toolboxai-coordinator
-- ✅ toolboxai-nginx
-- ✅ toolboxai-prometheus
-- ✅ toolboxai-grafana
-- ✅ toolboxai-vault
+You should see these services reporting `running` or `healthy`:
+
+- ✅ `postgres` (PostgreSQL 16)
+- ✅ `redis`
+- ✅ `backend`
+- ✅ `dashboard`
+- ✅ `mcp-server`
+- ✅ `agent-coordinator`
+- ✅ `celery-worker`
+- ✅ `celery-beat`
+- ✅ `flower`
+- ✅ `adminer`
+- ✅ `redis-commander`
+- ✅ `mailhog`
 
 ## Access Your Services
 
-Once running, access at:
-
-- **Dashboard:** http://localhost:5179
-- **Backend API:** http://localhost:8009
-- **API Documentation:** http://localhost:8009/docs
-- **Grafana Monitoring:** http://localhost:3001 (admin/admin)
-- **Prometheus:** http://localhost:9090
+- **Dashboard (Vite dev server)**: http://localhost:5179
+- **Backend API**: http://localhost:8009
+- **API Documentation**: http://localhost:8009/docs
+- **MCP Server**: http://localhost:9877
+- **Agent Coordinator**: http://localhost:8888
+- **Celery Flower**: http://localhost:5555
+- **Adminer (Postgres UI)**: http://localhost:8080
+- **Redis Commander**: http://localhost:8081
+- **Mailhog**: http://localhost:8025
 
 ## Common Issues & Solutions
 
-### Issue: "Cannot connect to Docker daemon"
-**Solution:** Docker Desktop isn't running. Start it using step 1 above.
+### "Cannot connect to Docker daemon"
+Docker Desktop is not running. Start it with `open -a Docker` and retry.
 
-### Issue: Port already in use (e.g., 5432)
-**Solution:** 
+### Port already in use (e.g., 5434)
 ```bash
-# Check what's using the port
-lsof -i :5432
-
-# If it's a local PostgreSQL, stop it
-brew services stop postgresql
+lsof -i :5434
 ```
+Stop the conflicting process or update the port mapping in the compose overrides.
 
-### Issue: Services show "starting" but never become healthy
-**Solution:**
+### Service stuck in `starting`
 ```bash
-# Check logs for specific service
-docker-compose -f docker-compose.complete.yml logs postgres
-docker-compose -f docker-compose.complete.yml logs backend
-
-# Restart services
-docker-compose -f docker-compose.complete.yml restart
+docker compose -f infrastructure/docker/compose/docker-compose.yml -f infrastructure/docker/compose/docker-compose.dev.yml logs <service>
 ```
+Look for stack traces or database connection issues.
 
-### Issue: "No space left on device"
-**Solution:**
+### "No space left on device"
+Clean up Docker resources:
 ```bash
-# Clean up Docker resources
 docker system prune -a
 docker volume prune
 ```
@@ -114,68 +101,69 @@ docker volume prune
 ### View Logs
 ```bash
 # All services
-docker-compose -f docker-compose.complete.yml logs -f
+docker compose -f infrastructure/docker/compose/docker-compose.yml -f infrastructure/docker/compose/docker-compose.dev.yml logs -f
 
 # Specific service
-docker-compose -f docker-compose.complete.yml logs -f postgres
-docker-compose -f docker-compose.complete.yml logs -f backend
+docker compose -f infrastructure/docker/compose/docker-compose.yml -f infrastructure/docker/compose/docker-compose.dev.yml logs -f backend
 ```
 
 ### Restart Services
 ```bash
-# All services
-docker-compose -f docker-compose.complete.yml restart
+# Restart all
+docker compose -f infrastructure/docker/compose/docker-compose.yml -f infrastructure/docker/compose/docker-compose.dev.yml restart
 
-# Specific service
-docker-compose -f docker-compose.complete.yml restart postgres
+# Restart single service
+docker compose -f infrastructure/docker/compose/docker-compose.yml -f infrastructure/docker/compose/docker-compose.dev.yml restart dashboard
 ```
 
 ### Stop Services
 ```bash
-# Stop but keep data
-docker-compose -f docker-compose.complete.yml down
+# Stop containers, keep data
+docker compose -f infrastructure/docker/compose/docker-compose.yml -f infrastructure/docker/compose/docker-compose.dev.yml down
 
-# Stop and remove all data
-docker-compose -f docker-compose.complete.yml down -v
+# Stop and remove volumes
+docker compose -f infrastructure/docker/compose/docker-compose.yml -f infrastructure/docker/compose/docker-compose.dev.yml down -v
 ```
 
-### Check Service Health
+### Health Checks
 ```bash
-# PostgreSQL
-docker-compose -f docker-compose.complete.yml exec postgres psql -U eduplatform -d educational_platform_dev -c "SELECT version();"
-
-# Redis
-docker-compose -f docker-compose.complete.yml exec redis redis-cli ping
-
-# Backend API
-curl http://localhost:8009/health
+curl http://localhost:8009/health        # Backend
+curl http://localhost:5179/              # Dashboard
+curl http://localhost:9877/health        # MCP server
+curl http://localhost:8888/health        # Agent coordinator
 ```
 
-## Scripts Available
+## Available Scripts
 
-1. **check-and-start.sh** - Comprehensive startup with health checks
-2. **start-all-services.sh** - Automatic Docker wait and startup
-3. **start-services.sh** - Basic service startup
+1. `./infrastructure/docker/check-setup.sh` – quick validation of Docker prerequisites
+2. `./infrastructure/docker/start-docker-dev.sh` – full validation + startup sequence
+3. `./infrastructure/docker/start-services.sh` – minimal startup helper (no validation)
+4. `./infrastructure/docker/start-services-enhanced.sh` – interactive startup with health monitoring
+5. `./infrastructure/docker/validate-setup.sh` – comprehensive validation + reporting
 
-## PostgreSQL 16 Configuration
+## Postgres & Redis (Development Defaults)
 
-The database is now running **PostgreSQL 16** with:
-- **User:** eduplatform
-- **Password:** eduplatform2024
-- **Database:** educational_platform_dev
-- **Port:** 5432 (exposed to host)
+- **Postgres**
+  - Host: `localhost`
+  - Port: `5434`
+  - Database: `toolboxai`
+  - User: `toolboxai`
+  - Password: `devpass2024`
 
-Extensions installed:
-- uuid-ossp
-- pgcrypto
-- pg_trgm
+- **Redis**
+  - Host: `localhost`
+  - Port: `6381`
+  - Password: _none in dev_
 
-## What to Do Right Now
+## Next Steps
 
-1. **Open Docker Desktop** - Look for it in Applications or use: `open -a Docker`
-2. **Wait for Docker icon** to appear in your menu bar (and stop animating)
-3. **Run the startup script:** `./check-and-start.sh`
-4. **Open browser** to http://localhost:5179
+After services are up, run backend migrations and seed data if needed:
 
-That's it! Your services will be running.
+```bash
+cd /Users/grayghostdata/Desktop/Development/ToolboxAI-Solutions
+source venv/bin/activate
+alembic upgrade head
+python scripts/development/seed_database.py
+```
 
+Happy hacking!

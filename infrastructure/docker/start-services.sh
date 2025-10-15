@@ -1,102 +1,91 @@
 #!/bin/bash
 
-# Start ToolboxAI Docker Services
-set -e
+# ToolboxAI basic Docker startup helper
+set -euo pipefail
 
-COMPOSE_FILE="docker-compose.dev.yml"
-PROJECT_DIR="/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
-DOCKER_DIR="$PROJECT_DIR/infrastructure/docker"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+COMPOSE_DIR="$PROJECT_ROOT/infrastructure/docker/compose"
+COMPOSE_FILES=(-f "$COMPOSE_DIR/docker-compose.yml" -f "$COMPOSE_DIR/docker-compose.dev.yml")
 
-echo "🚀 Starting ToolboxAI Docker Services..."
-cd "$DOCKER_DIR"
+if docker compose version >/dev/null 2>&1; then
+  COMPOSE_CMD=(docker compose)
+elif command -v docker-compose >/dev/null 2>&1; then
+  COMPOSE_CMD=(docker-compose)
+else
+  echo "❌ docker compose not available. Install Docker Desktop 4.29+." >&2
+  exit 1
+fi
 
-# Function to check service health
-check_health() {
-    local service=$1
-    local max_attempts=30
-    local attempt=1
+COMPOSE_DISPLAY="${COMPOSE_CMD[*]}"
 
-    echo "⏳ Waiting for $service to be healthy..."
-    while [ $attempt -le $max_attempts ]; do
-        if docker compose -f $COMPOSE_FILE ps | grep $service | grep -q "healthy"; then
-            echo "✅ $service is healthy"
-            return 0
-        fi
-        echo -n "."
-        sleep 2
-        attempt=$((attempt + 1))
-    done
-    echo "❌ $service failed to become healthy"
-    return 1
+compose() {
+  "${COMPOSE_CMD[@]}" "${COMPOSE_FILES[@]}" "$@"
 }
 
-# Clean up any existing containers
-echo "🧹 Cleaning up existing containers..."
-docker compose -f $COMPOSE_FILE down 2>/dev/null || true
+echo "🚀 Starting ToolboxAI Docker services from $PROJECT_ROOT"
 
-# Start databases first
-echo "📦 Starting database services..."
-docker compose -f $COMPOSE_FILE up -d postgres redis 2>&1 | grep -v "variable is not set" || true
+check_health() {
+  local service="$1"
+  local max_attempts=30
+  local attempt=1
 
-# Wait for databases to be healthy
-check_health "postgres"
-check_health "redis"
+  echo "⏳ Waiting for $service to report healthy..."
+  while [ "$attempt" -le "$max_attempts" ]; do
+    if compose ps --format '{{.Service}}\t{{.Health}}' 2>/dev/null | grep -E "^${service}\s+healthy$" >/dev/null; then
+      echo "✅ $service is healthy"
+      return 0
+    fi
+    sleep 2
+    attempt=$((attempt + 1))
+  done
 
-# Build and start backend services
-echo "🔨 Building backend services..."
-docker compose -f $COMPOSE_FILE build fastapi-main 2>&1 | grep -v "variable is not set" || true
+  echo "❌ $service did not become healthy in time"
+  return 1
+}
 
-echo "🚀 Starting FastAPI backend..."
-docker compose -f $COMPOSE_FILE up -d fastapi-main 2>&1 | grep -v "variable is not set" || true
+echo "🧹 Cleaning up previous containers (if any)..."
+compose down --remove-orphans >/dev/null 2>&1 || true
 
-# Build and start MCP server
-echo "🤖 Building MCP server..."
-docker compose -f $COMPOSE_FILE build mcp-server 2>&1 | grep -v "variable is not set" || true
+echo "📦 Starting data services (postgres, redis)..."
+compose up -d postgres redis 2>&1 | grep -v "variable is not set" || true
+check_health "postgres" || true
+check_health "redis" || true
 
-echo "🚀 Starting MCP server..."
-docker compose -f $COMPOSE_FILE up -d mcp-server 2>&1 | grep -v "variable is not set" || true
+echo "🔨 Building and starting backend..."
+compose up -d --build backend 2>&1 | grep -v "variable is not set" || true
+check_health "backend" || true
 
-# Build and start agent coordinator
-echo "🎯 Building Agent Coordinator..."
-docker compose -f $COMPOSE_FILE build agent-coordinator 2>&1 | grep -v "variable is not set" || true
+echo "🤖 Starting orchestration services..."
+compose up -d mcp-server agent-coordinator 2>&1 | grep -v "variable is not set" || true
+check_health "mcp-server" || true
+check_health "agent-coordinator" || true
 
-echo "🚀 Starting Agent Coordinator..."
-docker compose -f $COMPOSE_FILE up -d agent-coordinator 2>&1 | grep -v "variable is not set" || true
+echo "📮 Starting background workers..."
+compose up -d celery-worker celery-beat flower 2>&1 | grep -v "variable is not set" || true
 
-# Start agent pools
-echo "👥 Starting Agent Pools..."
-docker compose -f $COMPOSE_FILE up -d educational-agents 2>&1 | grep -v "variable is not set" || true
-
-# Start other services
-echo "🌐 Starting Flask Bridge..."
-docker compose -f $COMPOSE_FILE up -d flask-bridge 2>&1 | grep -v "variable is not set" || true
-
-echo "🎨 Starting Dashboard Backend..."
-docker compose -f $COMPOSE_FILE up -d dashboard-backend 2>&1 | grep -v "variable is not set" || true
-
-echo "🖥️ Starting Dashboard Frontend..."
-docker compose -f $COMPOSE_FILE up -d dashboard-frontend 2>&1 | grep -v "variable is not set" || true
-
-echo "👻 Starting Ghost CMS..."
-docker compose -f $COMPOSE_FILE up -d ghost-backend 2>&1 | grep -v "variable is not set" || true
-
-# Show final status
-echo ""
-echo "📊 Service Status:"
-docker compose -f $COMPOSE_FILE ps
+echo "🖥️ Starting dashboard and tooling..."
+compose up -d dashboard adminer redis-commander mailhog 2>&1 | grep -v "variable is not set" || true
+check_health "dashboard" || true
 
 echo ""
-echo "🔍 Service URLs:"
-echo "  - PostgreSQL: localhost:5434"
-echo "  - Redis: localhost:6381"
-echo "  - FastAPI Backend: http://localhost:8008"
-echo "  - MCP Server: ws://localhost:9877"
-echo "  - Agent Coordinator: http://localhost:8888"
-echo "  - Flask Bridge: http://localhost:5001"
-echo "  - Dashboard Backend: http://localhost:8001"
-echo "  - Dashboard Frontend: http://localhost:5176"
-echo "  - Ghost CMS: http://localhost:8000"
+echo "📊 Current service status:"
+compose ps
 
 echo ""
-echo "📝 View logs: docker compose -f $COMPOSE_FILE logs -f [service-name]"
-echo "🛑 Stop all: docker compose -f $COMPOSE_FILE down"
+echo "🔍 Common URLs:"
+cat <<EOF
+  Backend API:       http://localhost:8009
+  API Docs:          http://localhost:8009/docs
+  Dashboard (Vite):  http://localhost:5179
+  MCP Server:        http://localhost:9877
+  Agent Coordinator: http://localhost:8888
+  Flower:            http://localhost:5555
+  Adminer:           http://localhost:8080
+  Redis Commander:   http://localhost:8081
+  Mailhog:           http://localhost:8025
+EOF
+
+echo ""
+echo "📝 Logs: $COMPOSE_DISPLAY ${COMPOSE_FILES[*]} logs -f <service>"
+echo "🛑 Stop: $COMPOSE_DISPLAY ${COMPOSE_FILES[*]} down"

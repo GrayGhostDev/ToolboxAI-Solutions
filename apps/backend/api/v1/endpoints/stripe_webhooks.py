@@ -3,6 +3,11 @@ Stripe Webhook Handlers for Payment Processing
 
 Handles Stripe webhook events for subscription management, payment processing,
 and billing operations with proper signature validation and idempotency.
+
+Multi-Tenant Security:
+- Extracts organization_id from Stripe object metadata
+- Passes organization context to service layer handlers
+- No direct user authentication (webhooks called by Stripe)
 """
 
 import hashlib
@@ -12,6 +17,7 @@ import logging
 import os
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
+from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Header, Request, status
 from pydantic import BaseModel, Field
@@ -47,6 +53,35 @@ class WebhookResponse(BaseModel):
     message: str
     event_id: Optional[str] = None
     processed_at: Optional[str] = None
+
+
+def extract_organization_id(stripe_object: Dict[str, Any]) -> Optional[UUID]:
+    """
+    Extract organization_id from Stripe object metadata.
+
+    Multi-Tenant Security:
+    - Webhooks don't have user authentication context
+    - organization_id must be stored in Stripe metadata when creating resources
+    - Used to set RLS context in database operations
+
+    Args:
+        stripe_object: Stripe object (customer, subscription, invoice, etc.)
+
+    Returns:
+        UUID of organization, or None if not found
+    """
+    metadata = stripe_object.get("metadata", {})
+    org_id_str = metadata.get("organization_id")
+
+    if not org_id_str:
+        logger.warning(f"No organization_id in Stripe object metadata: {stripe_object.get('id')}")
+        return None
+
+    try:
+        return UUID(org_id_str)
+    except (ValueError, TypeError) as e:
+        logger.error(f"Invalid organization_id in metadata: {org_id_str}, error: {e}")
+        return None
 
 
 def verify_stripe_signature(payload: bytes, signature: str, secret: str) -> bool:
@@ -186,82 +221,117 @@ async def handle_stripe_webhook(
 
 
 async def handle_checkout_completed(event: StripeEvent):
-    """Handle successful checkout session completion"""
-    session = event.data.get("object", {})
-    customer_id = session.get("customer")
-    subscription_id = session.get("subscription")
+    """
+    Handle successful checkout session completion
 
-    logger.info(f"Checkout completed for customer {customer_id}, subscription {subscription_id}")
+    Multi-Tenant Security:
+    - Extracts organization_id from checkout session metadata
+    - Passes to service layer for database operations with RLS
+    """
+    from apps.backend.services.stripe_service import StripeService
 
-    # TODO: Implement actual business logic
-    # - Create or update user subscription in database
-    # - Send welcome email
-    # - Grant access to premium features
+    session = event.data["object"]
+    org_id = extract_organization_id(session)
+
+    stripe_service = StripeService()
+    result = await stripe_service._handle_checkout_completed(event.dict(), organization_id=org_id)
+
+    logger.info(f"Checkout completed: {result}")
 
 
 async def handle_subscription_created(event: StripeEvent):
-    """Handle new subscription creation"""
-    subscription = event.data.get("object", {})
-    customer_id = subscription.get("customer")
-    status = subscription.get("status")
+    """
+    Handle new subscription creation
 
-    logger.info(f"Subscription created for customer {customer_id} with status {status}")
+    Multi-Tenant Security:
+    - Extracts organization_id from subscription metadata
+    - Passes to service layer for database operations with RLS
+    """
+    from apps.backend.services.stripe_service import StripeService
 
-    # TODO: Implement actual business logic
-    # - Store subscription details in database
-    # - Update user entitlements
+    subscription = event.data["object"]
+    org_id = extract_organization_id(subscription)
+
+    stripe_service = StripeService()
+    result = await stripe_service._handle_subscription_created(event.dict(), organization_id=org_id)
+
+    logger.info(f"Subscription created: {result}")
 
 
 async def handle_subscription_updated(event: StripeEvent):
-    """Handle subscription updates (plan changes, renewals, etc.)"""
-    subscription = event.data.get("object", {})
-    customer_id = subscription.get("customer")
-    status = subscription.get("status")
+    """
+    Handle subscription updates (plan changes, renewals, etc.)
 
-    logger.info(f"Subscription updated for customer {customer_id} to status {status}")
+    Multi-Tenant Security:
+    - Extracts organization_id from subscription metadata
+    - Passes to service layer for database operations with RLS
+    """
+    from apps.backend.services.stripe_service import StripeService
 
-    # TODO: Implement actual business logic
-    # - Update subscription details in database
-    # - Adjust user entitlements based on new plan
+    subscription = event.data["object"]
+    org_id = extract_organization_id(subscription)
+
+    stripe_service = StripeService()
+    result = await stripe_service._handle_subscription_updated(event.dict(), organization_id=org_id)
+
+    logger.info(f"Subscription updated: {result}")
 
 
 async def handle_subscription_deleted(event: StripeEvent):
-    """Handle subscription cancellation"""
-    subscription = event.data.get("object", {})
-    customer_id = subscription.get("customer")
+    """
+    Handle subscription cancellation
 
-    logger.info(f"Subscription cancelled for customer {customer_id}")
+    Multi-Tenant Security:
+    - Extracts organization_id from subscription metadata
+    - Passes to service layer for database operations with RLS
+    """
+    from apps.backend.services.stripe_service import StripeService
 
-    # TODO: Implement actual business logic
-    # - Mark subscription as cancelled in database
-    # - Revoke premium features
-    # - Send cancellation confirmation email
+    subscription = event.data["object"]
+    org_id = extract_organization_id(subscription)
+
+    stripe_service = StripeService()
+    result = await stripe_service._handle_subscription_deleted(event.dict(), organization_id=org_id)
+
+    logger.info(f"Subscription deleted: {result}")
 
 
 async def handle_payment_succeeded(event: StripeEvent):
-    """Handle successful payment"""
-    invoice = event.data.get("object", {})
-    customer_id = invoice.get("customer")
-    amount_paid = invoice.get("amount_paid", 0) / 100  # Convert from cents
+    """
+    Handle successful payment
 
-    logger.info(f"Payment of ${amount_paid} succeeded for customer {customer_id}")
+    Multi-Tenant Security:
+    - Extracts organization_id from payment intent metadata
+    - Passes to service layer for database operations with RLS
+    """
+    from apps.backend.services.stripe_service import StripeService
 
-    # TODO: Implement actual business logic
-    # - Record payment in database
-    # - Send receipt email
+    payment_intent = event.data["object"]
+    org_id = extract_organization_id(payment_intent)
+
+    stripe_service = StripeService()
+    result = await stripe_service._handle_payment_succeeded(event.dict(), organization_id=org_id)
+
+    logger.info(f"Payment succeeded: {result}")
 
 
 async def handle_payment_failed(event: StripeEvent):
-    """Handle failed payment"""
-    invoice = event.data.get("object", {})
-    customer_id = invoice.get("customer")
+    """
+    Handle failed payment
 
-    logger.info(f"Payment failed for customer {customer_id}")
+    Multi-Tenant Security:
+    - Extracts organization_id from payment intent metadata
+    - Passes to service layer for database operations with RLS
+    """
+    from apps.backend.services.stripe_service import StripeService
 
-    # TODO: Implement actual business logic
-    # - Record failed payment attempt
-    # - Send payment failure notification
-    # - Potentially suspend access after grace period
+    payment_intent = event.data["object"]
+    org_id = extract_organization_id(payment_intent)
+
+    stripe_service = StripeService()
+    result = await stripe_service._handle_payment_failed(event.dict(), organization_id=org_id)
+
+    logger.info(f"Payment failed: {result}")
 
 
 @router.get("/webhook-status")

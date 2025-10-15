@@ -31,9 +31,9 @@ import {
   Flex,
   Textarea,
   NumberInput,
-  TimeInput,
   Notification,
 } from '@mantine/core';
+import { TimeInput } from '@mantine/dates';
 import { notifications } from '@mantine/notifications';
 import {
   IconChevronDown,
@@ -435,7 +435,6 @@ export const SystemSettingsPanel = memo<SystemSettingsPanelProps>(({
               onChange={(value) => handleSettingChange('security', 'passwordMinLength', value)}
               min={6}
               max={20}
-              marks
               label={(value) => value}
               disabled={readOnly}
             />

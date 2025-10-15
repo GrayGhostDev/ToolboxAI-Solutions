@@ -23,7 +23,7 @@ import uuid
 
 # revision identifiers
 revision = '004_add_multi_tenancy'
-down_revision = '003_add_agent_system_tables'
+down_revision = '003_performance_monitoring'
 branch_labels = None
 depends_on = None
 

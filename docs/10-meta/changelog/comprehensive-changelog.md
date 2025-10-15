@@ -13,16 +13,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Accessibility compliance (WCAG 2.2 AA)
 - Multi-language documentation support
 - Real-time documentation analytics
+- Updated Docker startup guide covering new helper scripts and workflows
 
 ### Changed
 - Migrated to modern documentation structure
 - Updated all user guides with interactive elements
 - Enhanced API documentation with examples
+- Refactored Docker helper scripts to use the 2025 compose layout and service naming
 
 ### Fixed
 - Broken internal links
 - Outdated configuration references
 - Missing accessibility features
+- Incorrect compose volume paths and documentation references to legacy scripts
+- Development PostgreSQL service now honors .env credentials to prevent connection failures during local startup
 
 ## [2.0.0] - 2025-09-14
 

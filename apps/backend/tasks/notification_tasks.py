@@ -103,16 +103,30 @@ def send_notification(
                 logger.error(f"Pusher delivery failed: {e}")
                 delivery_results["pusher"] = {"success": False, "error": str(e)}
 
-        # Send via Email (placeholder - implement with actual email service)
+        # Send via Email
         if "email" in channels:
             try:
-                # TODO: Implement actual email sending when service is configured
-                # For now, just log the intention
-                logger.info(f"Email notification queued for user {user_id}: {title}")
+                from apps.backend.workers.tasks.email_tasks import send_notification_email
+
+                # Queue email notification task
+                email_result = send_notification_email.apply_async(
+                    kwargs={
+                        'user_id': user_id,
+                        'notification_type': notification_type,
+                        'title': title,
+                        'message': message,
+                        'action_url': data.get('action_url') if data else None,
+                        'organization_id': data.get('organization_id') if data else None,
+                    },
+                    countdown=5  # Delay email by 5 seconds to ensure Pusher notification arrives first
+                )
+
                 delivery_results["email"] = {
-                    "success": False,
-                    "error": "Email service not configured",
+                    "success": True,
+                    "message_id": str(email_result.id),
+                    "status": "queued"
                 }
+                logger.info(f"Email notification queued for user {user_id}: {title}")
 
             except Exception as e:
                 logger.error(f"Email delivery failed: {e}")
