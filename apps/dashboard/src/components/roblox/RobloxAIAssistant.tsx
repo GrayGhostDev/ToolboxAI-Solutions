@@ -21,8 +21,10 @@ import {
   Alert,
   Tooltip,
   List,
-  Group
+  Group,
+  Fade
 } from '@mantine/core';
+import { Typography, Chip, IconButton, ListItem, ListItemAvatar } from '../../utils/mui-imports';
 import {
   IconSend as Send,
   IconRobot as SmartToy,

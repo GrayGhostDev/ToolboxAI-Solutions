@@ -58,6 +58,8 @@ export {
   Avatar,
   Card,
   List,
+  ListItem,
+  ListItemAvatar,
   Divider,
   TextField,
   Select,
@@ -83,6 +85,7 @@ export {
 export const CardContent = ({ children, ...props }: any) => React.createElement(Box, { p: 'md', ...props }, children);
 export const CardActions = ({ children, ...props }: any) => React.createElement(Box, { p: 'md', pt: 0, ...props }, children);
 export const ListItem = ({ children, ...props }: any) => React.createElement(List.Item, props, children);
+export const ListItemAvatar = ({ children, ...props }: any) => React.createElement(Box, { ...props }, children);
 export const ListItemText = ({ primary, secondary, ...props }: any) =>
   React.createElement(Box, props,
     React.createElement(Text, null, primary),
@@ -124,6 +127,7 @@ export default {
   CardActions,
   List,
   ListItem,
+  ListItemAvatar,
   ListItemText,
   Divider,
   TextField,
