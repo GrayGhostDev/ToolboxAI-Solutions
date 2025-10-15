@@ -89,8 +89,8 @@ export const ClerkProviderWrapper = ({
     // Production URLs from environment
     signInUrl: import.meta.env.VITE_CLERK_SIGN_IN_URL || '/sign-in',
     signUpUrl: import.meta.env.VITE_CLERK_SIGN_UP_URL || '/sign-up',
-    afterSignInUrl: import.meta.env.VITE_CLERK_AFTER_SIGN_IN_URL || '/',
-    afterSignUpUrl: import.meta.env.VITE_CLERK_AFTER_SIGN_UP_URL || '/',
+    fallbackRedirectUrl: import.meta.env.VITE_CLERK_AFTER_SIGN_IN_URL || '/',
+    // fallbackRedirectUrl is used for both sign-in and sign-up when no explicit target is set
 
     // Enhanced localization support
     localization: {

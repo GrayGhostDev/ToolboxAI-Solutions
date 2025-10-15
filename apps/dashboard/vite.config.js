@@ -45,7 +45,19 @@ export default defineConfig({
       // Essential utilities
       'date-fns',
       'dayjs',
-      'zod'
+      'zod',
+
+      // Charts and visualization (fixes 504 errors)
+      'recharts',
+      'react-markdown',
+      'remark-gfm',
+      'react-chartjs-2',
+      'chart.js',
+
+      // 3D libraries
+      'three',
+      '@react-three/fiber',
+      '@react-three/drei'
     ],
     exclude: [
       '@vite/client',
@@ -54,7 +66,12 @@ export default defineConfig({
       '@mui/*',
       '@material-ui/*',
       '@emotion/*'
-    ]
+    ],
+    force: process.env.NODE_ENV === 'development',
+    esbuildOptions: {
+      define: { global: 'globalThis' },
+      target: 'es2020'
+    }
   },
 
   // Path resolution
@@ -71,7 +88,9 @@ export default defineConfig({
       // Enhanced aliases for 2025
       '@assets': path.resolve(__dirname, './src/assets'),
       '@styles': path.resolve(__dirname, './src/styles'),
-      '@config': path.resolve(__dirname, './src/config')
+      '@config': path.resolve(__dirname, './src/config'),
+      // Force single instance of three.js to prevent multiple initialization errors
+      three: path.resolve(__dirname, './node_modules/three')
     },
     dedupe: [
       'react',
@@ -79,7 +98,10 @@ export default defineConfig({
       'react-reconciler',
       'react-redux',
       '@mantine/core',
-      '@mantine/hooks'
+      '@mantine/hooks',
+      'three',
+      '@react-three/fiber',
+      '@react-three/drei'
     ],
     // Enhanced conditions for better module resolution
     conditions: ['import', 'module', 'browser', 'default'],

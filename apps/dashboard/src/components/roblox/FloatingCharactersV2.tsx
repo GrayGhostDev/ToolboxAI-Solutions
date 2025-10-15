@@ -71,10 +71,14 @@ export const FloatingCharactersV2: React.FunctionComponent<FloatingCharactersV2P
 
     const leftArm = new THREE.Mesh(armGeometry, armMaterial);
     leftArm.position.set(-0.6, 0.2, 0);
+    leftArm.castShadow = performanceLevel !== 'low';
+    leftArm.receiveShadow = performanceLevel !== 'low';
     group.add(leftArm);
 
     const rightArm = new THREE.Mesh(armGeometry, armMaterial);
     rightArm.position.set(0.6, 0.2, 0);
+    rightArm.castShadow = performanceLevel !== 'low';
+    rightArm.receiveShadow = performanceLevel !== 'low';
     group.add(rightArm);
 
     // Legs
@@ -89,7 +93,7 @@ export const FloatingCharactersV2: React.FunctionComponent<FloatingCharactersV2P
     rightLeg.position.set(0.25, -0.8, 0);
     group.add(rightLeg);
 
-    // Set position
+    // Set position using setter to avoid read-only property errors
     group.position.set(...position);
 
     // Add floating animation data
@@ -240,14 +244,30 @@ export const FloatingCharactersV2: React.FunctionComponent<FloatingCharactersV2P
 
     animate();
 
+    // Track disposed state to prevent double-dispose in React StrictMode
+    let isDisposed = false;
+
     // Cleanup
     return () => {
+      if (isDisposed) return; // Prevent double disposal
+      isDisposed = true;
+
       cancelAnimationFrame(animationId);
 
-      // Remove all objects
-      charactersRef.current.forEach(char => removeObject(char));
-      if (starsRef.current) removeObject(starsRef.current);
-      cloudsRef.current.forEach(cloud => removeObject(cloud));
+      // Remove all objects safely
+      charactersRef.current.forEach(char => {
+        if (char && char.parent) {
+          removeObject(char);
+        }
+      });
+      if (starsRef.current && starsRef.current.parent) {
+        removeObject(starsRef.current);
+      }
+      cloudsRef.current.forEach(cloud => {
+        if (cloud && cloud.parent) {
+          removeObject(cloud);
+        }
+      });
 
       // Clear references
       charactersRef.current = [];

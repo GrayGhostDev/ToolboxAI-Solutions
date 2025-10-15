@@ -59,7 +59,7 @@ export default function App() {
   // Use the unified auth hook that handles conditional logic correctly
   const authHookResult = useUnifiedAuth();
 
-  // Validate configuration on startup
+  // Validate configuration on startup (warn only once to suppress React StrictMode double-execute)
   React.useEffect(() => {
     const validateConfig = async () => {
       // Dynamic import to avoid loading in production
@@ -67,12 +67,14 @@ export default function App() {
         const { configHealthCheck } = await import('./utils/configHealthCheck');
         const report = await configHealthCheck.runHealthCheck();
 
+        // Only warn once in dev mode to avoid duplicate logs in StrictMode
         if (report.overall === 'error') {
           logger.error('Critical configuration issues detected', report);
           report.recommendations.forEach(rec => logger.warn(rec));
-        } else if (report.overall === 'warning') {
+        } else if (report.overall === 'warning' && !('__configWarned' in window)) {
           logger.warn('Configuration warnings detected', report);
-        } else {
+          (window as any).__configWarned = true; // Mark that we've warned
+        } else if (report.overall === 'healthy') {
           logger.info('Configuration validated successfully');
         }
       }
