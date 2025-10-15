@@ -3,6 +3,9 @@
  * Validates all critical dashboard configurations
  */
 
+// Track if we've already warned to prevent duplicate logs in React StrictMode
+let hasWarnedAboutConfig = false;
+
 interface HealthCheckResult {
   status: 'healthy' | 'warning' | 'error';
   message: string;

@@ -1,6 +1,11 @@
 import React, { createContext, useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 
+// Inject version info for React DevTools integration to avoid semver errors
+if (typeof window !== 'undefined') {
+  window.__THREE_VERSION__ = `0.${THREE.REVISION}.0`;
+}
+
 // Singleton instance storage for WebGL renderer to prevent context limit
 let globalRenderer: THREE.WebGLRenderer | null = null;
 let globalRendererRefCount = 0;

@@ -43,7 +43,19 @@ export default defineConfig({
       // Essential utilities
       'date-fns',
       'dayjs',
-      'zod'
+      'zod',
+
+      // Charts and visualization (fixes 504 errors)
+      'recharts',
+      'react-markdown',
+      'remark-gfm',
+      'react-chartjs-2',
+      'chart.js',
+
+      // 3D libraries
+      'three',
+      '@react-three/fiber',
+      '@react-three/drei'
     ],
     exclude: [
       '@vite/client',
@@ -61,7 +73,12 @@ export default defineConfig({
       // Exclude react-syntax-highlighter to prevent pre-bundling attempts that fail on refractor/core imports
       'react-syntax-highlighter',
       'react-syntax-highlighter/*'
-    ]
+    ],
+    force: process.env.NODE_ENV === 'development',
+    esbuildOptions: {
+      define: { global: 'globalThis' },
+      target: 'es2020'
+    }
   },
 
   // Path resolution
@@ -84,7 +101,9 @@ export default defineConfig({
       'react-syntax-highlighter/dist/esm/prism-light': 'react-syntax-highlighter/dist/cjs/prism-light',
       'react-syntax-highlighter/dist/esm/prism-async-light': 'react-syntax-highlighter/dist/cjs/prism-async-light',
       'react-syntax-highlighter/dist/esm/light': 'react-syntax-highlighter/dist/cjs/light',
-      'react-syntax-highlighter/dist/esm/light-async': 'react-syntax-highlighter/dist/cjs/light-async'
+      'react-syntax-highlighter/dist/esm/light-async': 'react-syntax-highlighter/dist/cjs/light-async',
+      // Force single instance of three.js to prevent multiple initialization errors
+      three: path.resolve(__dirname, './node_modules/three')
     },
     dedupe: [
       'react',
@@ -92,7 +111,10 @@ export default defineConfig({
       'react-reconciler',
       'react-redux',
       '@mantine/core',
-      '@mantine/hooks'
+      '@mantine/hooks',
+      'three',
+      '@react-three/fiber',
+      '@react-three/drei'
     ],
     // Enhanced conditions for better module resolution
     conditions: ['import', 'module', 'browser', 'default'],
