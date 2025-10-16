@@ -9,15 +9,9 @@
   },
   "overrides": {
     "axios": "^1.7.9",
-    
     "prismjs": "^1.30.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "refractor": "^3.6.0",
-    "react-syntax-highlighter": {
-      "refractor": "^3.6.0",
-      "prismjs": "^1.30.0"
-    },
     "@react-three/drei": {
       "@react-three/fiber": "$@react-three/fiber",
       "react": "$react",
@@ -109,6 +103,7 @@
     "react-window": "^2.1.0",
     "react-window-infinite-loader": "^2.0.0",
     "recharts": "^2.15.4",
+    "refractor": "^5.0.0",
     "three": "^0.160.1",
     "tinyexec": "^0.3.2",
     "web-vitals": "^3.5.2",
@@ -152,10 +147,11 @@
     "playwright": "^1.55.0",
     "postcss-preset-mantine": "^1.18.0",
     "postcss-simple-vars": "^7.0.1",
+    "rollup": "^4.52.3",
     "storybook": "^8.6.14",
     "terser": "^5.44.0",
     "typescript": "^5.5.4",
-    "vite": "^6.0.1",
+    "vite": "^6.4.0",
     "vitest": "^3.2.4"
   }
 }
