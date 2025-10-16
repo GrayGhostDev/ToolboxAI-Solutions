@@ -42,34 +42,6 @@
     "VITE_SENTRY_DSN": "@vite_sentry_dsn"
   },
 
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "https://your-backend-api.com/api/$1"
-    },
-    {
-      "src": "/health",
-      "dest": "https://your-backend-api.com/health"
-    },
-    {
-      "src": "/pusher/(.*)",
-      "dest": "https://your-backend-api.com/pusher/$1"
-    },
-    {
-      "src": "/assets/(.*)",
-      "headers": {
-        "cache-control": "public, max-age=31536000, immutable"
-      }
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ],
-
   "headers": [
     {
       "source": "/(.*)",
