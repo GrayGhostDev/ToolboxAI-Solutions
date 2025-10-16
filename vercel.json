@@ -1,7 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "name": "toolbox-production-final",
   "buildCommand": "npm run dashboard:build",
   "outputDirectory": "apps/dashboard/dist",
   "installCommand": "npm install",
