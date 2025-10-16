@@ -1,0 +1,128 @@
+# Vercel Ignore File
+# Files and directories to exclude from Vercel deployments
+
+# Development files
+.git/
+.github/
+.vscode/
+.idea/
+*.log
+*.tmp
+
+# Python backend (not deployed to Vercel)
+apps/backend/
+venv/
+venv_old_python39/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist-python/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Database
+database/
+*.db
+*.sqlite
+*.sqlite3
+
+# Docker
+infrastructure/docker/
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# Roblox
+roblox/
+
+# Scripts (except deployment)
+scripts/database/
+scripts/docker/
+scripts/maintenance/
+scripts/testing/
+
+# Tests
+tests/
+apps/dashboard/src/__tests__/
+apps/dashboard/src/test/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+test-reports/
+playwright-report/
+coverage/
+
+# Documentation (keep only essential)
+docs/
+Archive/
+*.md
+!README.md
+!VERCEL_QUICKSTART.md
+
+# Build artifacts (will be rebuilt by Vercel)
+apps/dashboard/dist/
+apps/dashboard/build/
+apps/dashboard/node_modules/.vite/
+apps/dashboard/node_modules/.cache/
+
+# Environment files (use Vercel's environment variables)
+.env
+.env.local
+.env.development
+.env.production
+.env.*.local
+!.env.example
+!.env.vercel.example
+
+# Dependencies (will be installed by Vercel)
+node_modules/
+
+# Temporary files
+tmp/
+temp/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# IDE
+*.sublime-*
+.vscode/
+.idea/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Misc
+.cache/
+.parcel-cache/
+.npm/
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
+
+# Storybook
+.storybook/
+storybook-static/
+
+# Config files not needed for deployment
+.editorconfig
+.nvmrc
+.python-version
+render.yaml
+Makefile
+pyproject.toml
+requirements.txt
+pytest.ini
