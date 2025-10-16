@@ -77,12 +77,6 @@
     }
   ],
 
-  "functions": {
-    "apps/dashboard/dist/**": {
-      "maxDuration": 10
-    }
-  },
-
   "regions": ["iad1"],
 
   "trailingSlash": false,
