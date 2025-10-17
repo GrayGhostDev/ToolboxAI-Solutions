@@ -152,5 +152,8 @@
     "typescript": "^5.5.4",
     "vite": "^6.4.0",
     "vitest": "^3.2.4"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.52.3"
   }
 }
