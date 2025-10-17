@@ -21,8 +21,19 @@ import {
   Alert,
   Tooltip,
   List,
-  Group
+  Group,
+  Chip,
+  Textarea
 } from '@mantine/core';
+// Temporary MUI compatibility components (to be migrated)
+const Typography = Text;
+const IconButton = ActionIcon;
+const TextField = Textarea;
+const ListItem = ({ children, ...props }: any) => <Box {...props}>{children}</Box>;
+const ListItemAvatar = ({ children }: any) => <Box>{children}</Box>;
+const InputAdornment = ({ children }: any) => <Box>{children}</Box>;
+const CircularProgress = Loader;
+const Fade = Transition.Fade;
 import {
   IconSend as Send,
   IconRobot as SmartToy,
@@ -37,11 +48,13 @@ import {
   IconChevronDown as ExpandMore,
   IconChevronUp as ExpandLess,
   IconSparkles as AutoAwesome,
-  IconCode as Code
+  IconCode as CodeIcon
 } from '@tabler/icons-react';
 import ReactMarkdown from 'react-markdown';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+// Temporarily disabled react-syntax-highlighter due to refractor v5 compatibility issues
+// import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+// import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { Code } from '@mantine/core';
 import { useAppSelector, useAppDispatch } from '../../store';
 import { addNotification } from '../../store/slices/uiSlice';
 import { apiClient } from '../../services/api';
@@ -775,18 +788,23 @@ IMPORTANT: When you have enough information to create an environment, end your r
             const inline = (props as any).inline;
             const match = /language-(\w+)/.exec(className || '');
             return !inline && match ? (
-              <SyntaxHighlighter
-                style={vscDarkPlus as { [key: string]: React.CSSProperties }}
-                language={match[1]}
-                PreTag="div"
+              <Code
+                block
+                style={{
+                  backgroundColor: '#1e1e1e',
+                  color: '#d4d4d4',
+                  padding: '1rem',
+                  borderRadius: '4px',
+                  overflow: 'auto'
+                }}
                 {...props}
               >
                 {String(children).replace(/\n$/, '')}
-              </SyntaxHighlighter>
+              </Code>
             ) : (
-              <code className={className} {...props}>
+              <Code {...props}>
                 {children}
-              </code>
+              </Code>
             );
           }
         }}
@@ -813,11 +831,11 @@ IMPORTANT: When you have enough information to create an environment, end your r
               <SmartToy />
             </Avatar>
             <Box>
-              <Typography variant="h6">Roblox AI Assistant</Typography>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <Typography variant="caption" color="text.secondary">
+              <Text size="lg" fw={600}>Roblox AI Assistant</Text>
+              <Group gap="xs" align="center">
+                <Text size="xs" c="dimmed">
                   {isStreaming ? 'Typing...' : 'Ready to help'}
-                </Typography>
+                </Text>
                 {/* Connection Status Indicator */}
                 <Chip
                   size="small"
@@ -832,7 +850,7 @@ IMPORTANT: When you have enough information to create an environment, end your r
                   variant="outlined"
                   sx={{ fontSize: '0.6rem', height: '16px' }}
                 />
-              </Stack>
+              </Group>
             </Box>
           </Stack>
           <Stack direction="row" spacing={1}>
@@ -945,7 +963,7 @@ IMPORTANT: When you have enough information to create an environment, end your r
                       View 3D Environment
                     </Button>
                     <Button
-                      startIcon={<Code />}
+                      startIcon={<CodeIcon />}
                       size="small"
                       variant="outlined"
                       sx={{ mt: 1, ml: 1 }}
