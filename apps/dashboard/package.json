@@ -23,7 +23,7 @@
     "install:clean": "rm -rf node_modules package-lock.json && npm install --no-bin-links",
     "postinstall": "node postinstall.js || echo 'Postinstall script warning (non-critical)'",
     "dev": "vite",
-    "build": "vite build",
+    "build": "npx vite build",
     "build:validate": "node scripts/build.js --validate-only",
     "build:production": "node scripts/build.js --production",
     "build:analyze": "vite build --mode analyze && vite-bundle-visualizer",

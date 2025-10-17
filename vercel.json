@@ -3,7 +3,7 @@
   "version": 2,
   "buildCommand": "npm run dashboard:build",
   "outputDirectory": "apps/dashboard/dist",
-  "installCommand": "npm ci --include=dev --workspaces && npm install @rollup/rollup-linux-x64-gnu --no-save",
+  "installCommand": "npm ci --include=dev --workspaces",
   "framework": null,
   "devCommand": "npm run dashboard:dev",
 
