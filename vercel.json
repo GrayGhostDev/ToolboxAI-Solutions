@@ -3,7 +3,7 @@
   "version": 2,
   "buildCommand": "npm run dashboard:build",
   "outputDirectory": "apps/dashboard/dist",
-  "installCommand": "npm install --include=dev --workspaces",
+  "installCommand": "npm ci",
   "framework": null,
   "devCommand": "npm run dashboard:dev",
 
