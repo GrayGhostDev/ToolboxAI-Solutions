@@ -643,3 +643,4 @@ export const FloatingCharactersV2: React.FunctionComponent<FloatingCharactersV2P
     </ThreeJSErrorBoundary>
   );
 };
+export default FloatingCharactersV2;
