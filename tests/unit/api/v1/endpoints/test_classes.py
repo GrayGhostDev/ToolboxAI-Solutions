@@ -286,12 +286,8 @@ class TestGetClassDetails:
         # Setup execute to return different results based on call order
         mock_session.execute = AsyncMock(side_effect=[class_result, count_result, teacher_result])
 
-        mock_db_service.async_session_scope = AsyncMock(return_value=mock_session)
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-
         # Execute
-        result = await get_class_details(class_id=class_id, current_user=mock_current_user_teacher)
+        result = await get_class_details(class_id=class_id, current_user=mock_current_user_teacher, session=mock_session)
 
         # Assert
         assert isinstance(result, ClassDetails)
@@ -314,14 +310,10 @@ class TestGetClassDetails:
         class_result.scalar_one_or_none = Mock(return_value=None)
         mock_session.execute = AsyncMock(return_value=class_result)
 
-        mock_db_service.async_session_scope = AsyncMock(return_value=mock_session)
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-
         # Execute & Assert
         with pytest.raises(HTTPException) as exc_info:
             await get_class_details(
-                class_id=str(uuid4()), current_user=mock_current_user_teacher
+                class_id=str(uuid4()), current_user=mock_current_user_teacher, session=mock_session
             )
 
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
@@ -372,12 +364,8 @@ class TestGetClassStudents:
 
         mock_session.execute = AsyncMock(side_effect=[class_result, students_result])
 
-        mock_db_service.async_session_scope = AsyncMock(return_value=mock_session)
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-
         # Execute
-        result = await get_class_students(class_id=class_id, current_user=mock_current_user_teacher)
+        result = await get_class_students(class_id=class_id, current_user=mock_current_user_teacher, session=mock_session)
 
         # Assert
         assert isinstance(result, list)
@@ -430,13 +418,9 @@ class TestCreateClass:
         mock_session.refresh = AsyncMock()
         mock_session.commit = AsyncMock()
 
-        mock_db_service.async_session_scope = AsyncMock(return_value=mock_session)
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-
         with patch("apps.backend.api.v1.endpoints.classes.Class", return_value=mock_class):
             # Execute
-            result = await create_class(class_data=class_data, current_user=mock_current_user_teacher)
+            result = await create_class(class_data=class_data, current_user=mock_current_user_teacher, session=mock_session)
 
         # Assert
         assert isinstance(result, ClassSummary)
@@ -501,14 +485,10 @@ class TestUpdateClass:
         mock_session.refresh = AsyncMock()
         mock_session.commit = AsyncMock()
 
-        mock_db_service.async_session_scope = AsyncMock(return_value=mock_session)
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-
         # Execute
         result = await update_class(
             class_id=class_id, class_data=update_data, current_user=mock_current_user_teacher
-        )
+        , session=mock_session)
 
         # Assert
         assert isinstance(result, ClassSummary)
@@ -530,14 +510,10 @@ class TestUpdateClass:
         class_result.scalar_one_or_none = Mock(return_value=None)
         mock_session.execute = AsyncMock(return_value=class_result)
 
-        mock_db_service.async_session_scope = AsyncMock(return_value=mock_session)
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-
         # Execute & Assert
         with pytest.raises(HTTPException) as exc_info:
             await update_class(
-                class_id=str(uuid4()), class_data=update_data, current_user=mock_current_user_teacher
+                class_id=str(uuid4()), class_data=update_data, current_user=mock_current_user_teacher, session=mock_session
             )
 
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
@@ -592,14 +568,10 @@ class TestEnrollStudent:
         mock_session.add = Mock()
         mock_session.commit = AsyncMock()
 
-        mock_db_service.async_session_scope = AsyncMock(return_value=mock_session)
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-
         # Execute
         result = await enroll_student(
             class_id=class_id, student_id=student_id, current_user=mock_current_user_teacher
-        )
+        , session=mock_session)
 
         # Assert
         assert "message" in result
@@ -642,14 +614,10 @@ class TestEnrollStudent:
             side_effect=[class_result, student_result, existing_result]
         )
 
-        mock_db_service.async_session_scope = AsyncMock(return_value=mock_session)
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-
         # Execute & Assert
         with pytest.raises(HTTPException) as exc_info:
             await enroll_student(
-                class_id=class_id, student_id=student_id, current_user=mock_current_user_teacher
+                class_id=class_id, student_id=student_id, current_user=mock_current_user_teacher, session=mock_session
             )
 
         assert exc_info.value.status_code == status.HTTP_400_BAD_REQUEST
@@ -706,14 +674,10 @@ class TestUnenrollStudent:
         mock_session.execute = AsyncMock(side_effect=[class_result, enrollment_result])
         mock_session.commit = AsyncMock()
 
-        mock_db_service.async_session_scope = AsyncMock(return_value=mock_session)
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-
         # Execute
         result = await unenroll_student(
             class_id=class_id, student_id=student_id, current_user=mock_current_user_teacher
-        )
+        , session=mock_session)
 
         # Assert
         assert "message" in result
@@ -748,14 +712,10 @@ class TestUnenrollStudent:
 
         mock_session.execute = AsyncMock(side_effect=[class_result, enrollment_result])
 
-        mock_db_service.async_session_scope = AsyncMock(return_value=mock_session)
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-
         # Execute & Assert
         with pytest.raises(HTTPException) as exc_info:
             await unenroll_student(
-                class_id=class_id, student_id=student_id, current_user=mock_current_user_teacher
+                class_id=class_id, student_id=student_id, current_user=mock_current_user_teacher, session=mock_session
             )
 
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
@@ -805,14 +765,10 @@ class TestBatchEnrollStudents:
         mock_session.add = Mock()
         mock_session.commit = AsyncMock()
 
-        mock_db_service.async_session_scope = AsyncMock(return_value=mock_session)
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-
         # Execute
         result = await batch_enroll_students(
             class_id=class_id, student_ids=student_ids, current_user=mock_current_user_teacher
-        )
+        , session=mock_session)
 
         # Assert
         assert "summary" in result
@@ -865,12 +821,8 @@ class TestDeleteClass:
         mock_session.delete = AsyncMock()
         mock_session.commit = AsyncMock()
 
-        mock_db_service.async_session_scope = AsyncMock(return_value=mock_session)
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-
         # Execute
-        result = await delete_class(class_id=class_id, current_user=mock_current_user_admin)
+        result = await delete_class(class_id=class_id, current_user=mock_current_user_admin, session=mock_session)
 
         # Assert
         assert "message" in result
@@ -901,12 +853,8 @@ class TestDeleteClass:
         class_result.scalar_one_or_none = Mock(return_value=None)
         mock_session.execute = AsyncMock(return_value=class_result)
 
-        mock_db_service.async_session_scope = AsyncMock(return_value=mock_session)
-        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_session.__aexit__ = AsyncMock(return_value=None)
-
         # Execute & Assert
         with pytest.raises(HTTPException) as exc_info:
-            await delete_class(class_id=str(uuid4()), current_user=mock_current_user_admin)
+            await delete_class(class_id=str(uuid4()), current_user=mock_current_user_admin, session=mock_session)
 
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND

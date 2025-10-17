@@ -162,7 +162,6 @@ COPY --chown=celery:celery apps /app/apps
 COPY --chown=celery:celery core /app/core
 COPY --chown=celery:celery database /app/database
 COPY --chown=celery:celery toolboxai_settings /app/toolboxai_settings
-COPY --chown=celery:celery toolboxai_utils /app/toolboxai_utils
 
 # Production optimizations
 ENV CELERY_OPTIMIZATION=fair \

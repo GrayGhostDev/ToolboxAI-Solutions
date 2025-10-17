@@ -1,8 +1,6 @@
 import * as React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
-  Drawer,
-  NavLink,
   Box,
   Text,
   Progress,
@@ -31,8 +29,6 @@ import {
 } from '@tabler/icons-react';
 import { type UserRole } from '../../types';
 import { useAppSelector } from '../../store';
-
-const drawerWidth = 240;
 
 interface Props {
   role: UserRole;
@@ -81,7 +77,6 @@ const roleMenus: Record<UserRole, { label: string; icon: React.ReactNode; path: 
 
 export default function Sidebar({ role }: Props) {
   const location = useLocation();
-  const sidebarOpen = useAppSelector((s) => s.ui.sidebarOpen);
   const xp = useAppSelector((s) => s.gamification.xp);
   const level = useAppSelector((s) => s.gamification.level);
   const nextLevelXP = useAppSelector((s) => s.gamification.nextLevelXP);
@@ -94,22 +89,16 @@ export default function Sidebar({ role }: Props) {
   const menuItems = roleMenus[role] || roleMenus.student;
 
   return (
-    <Drawer
-      opened={sidebarOpen}
-      onClose={() => {}} // Controlled by Redux
-      size={drawerWidth}
-      position="left"
-      withCloseButton={false}
-      zIndex={100}
-      styles={{
-        drawer: {
-          background: 'linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%)',
-          borderRight: '2px solid var(--mantine-color-cyan-6)',
-          boxShadow: '0 0 20px rgba(0, 188, 212, 0.3)',
-        },
+    <Box
+      style={{
+        height: '100vh',
+        width: '100%',
+        background: 'linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%)',
+        borderRight: '2px solid var(--mantine-color-cyan-6)',
+        boxShadow: '0 0 20px rgba(0, 188, 212, 0.3)',
       }}
     >
-      <ScrollArea h="100vh">
+      <ScrollArea h="100vh" style={{ width: '100%' }}>
         {/* Space for toolbar */}
         <Box h={64} />
 
@@ -174,35 +163,55 @@ export default function Sidebar({ role }: Props) {
         <Stack spacing={4} p="xs" mt="sm">
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path;
+            const testId = `nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`;
             return (
-              <NavLink
+              <Box
                 key={item.path}
                 component={Link}
                 to={item.path}
-                label={item.label}
-                icon={item.icon}
-                active={isActive}
-                styles={{
-                  root: {
-                    borderRadius: 'var(--mantine-radius-md)',
-                    transition: 'all 0.3s ease',
+                data-testid={testId}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '10px 12px',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  backgroundColor: 'transparent',
+                  backgroundImage: isActive
+                    ? 'linear-gradient(135deg, #00bcd4, #e91e63)'
+                    : 'none',
+                  boxShadow: isActive
+                    ? '0 4px 15px rgba(0, 188, 212, 0.4)'
+                    : 'none',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.backgroundImage = 'linear-gradient(135deg, rgba(0, 188, 212, 0.1), rgba(0, 188, 212, 0.15))';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.backgroundImage = 'none';
+                  }
+                }}
+              >
+                <Box style={{ color: 'white', display: 'flex', alignItems: 'center' }}>
+                  {item.icon}
+                </Box>
+                <Text
+                  style={{
                     color: 'white',
-                    ...(isActive ? {
-                      background: 'linear-gradient(135deg, #00bcd4, #e91e63)',
-                      boxShadow: '0 4px 15px rgba(0, 188, 212, 0.4)',
-                    } : {
-                      background: 'transparent',
-                    }),
-                  },
-                  label: {
                     fontSize: '0.875rem',
                     fontWeight: isActive ? 600 : 400,
-                  },
-                  icon: {
-                    color: 'inherit',
-                  },
-                }}
-              />
+                    flex: 1,
+                  }}
+                >
+                  {item.label}
+                </Text>
+              </Box>
             );
           })}
         </Stack>
@@ -239,6 +248,6 @@ export default function Sidebar({ role }: Props) {
           </>
         )}
       </ScrollArea>
-    </Drawer>
+    </Box>
   );
 }

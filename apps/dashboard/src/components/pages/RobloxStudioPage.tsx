@@ -1,8 +1,9 @@
+import React, { Component, Suspense, useState, useEffect, useCallback } from 'react';
 import {
   Box, Button, Text, Paper, Stack, SimpleGrid, Container, ActionIcon, Avatar, Card,
   Group, List, Divider, TextInput, Select, Badge, Alert, Loader,
   Progress, Modal, Drawer, Tabs, Menu, Tooltip, Checkbox, Radio,
-  Switch, Slider, Rating, Skeleton, Table, useMantineTheme
+  Switch, Slider, Rating, Skeleton, Table, useMantineTheme, Typography
 } from '@mantine/core';
 
 // Helper function for color transparency (replaces MUI alpha)
@@ -23,9 +24,6 @@ const alpha = (color: string, opacity: number) => {
  * Ensures the component is displayed properly without overlaying other content
  * Includes Celery task progress tracking for script optimization jobs
  */
-
-import React, { Component, Suspense, useState, useEffect, useCallback } from 'react';
-import { Loader, Alert } from '@mantine/core';
 import RobloxStudioIntegration from '../roblox/RobloxStudioIntegration';
 import { useMultipleCeleryTasks } from '../../hooks/pusher/useCeleryTaskProgress';
 import { TaskProgressList } from '../common/TaskProgressList';

@@ -173,7 +173,7 @@ export const FloatingCharactersV2: React.FunctionComponent<FloatingCharactersV2P
       emissiveIntensity: 0.05
     });
     const head = new THREE.Mesh(headGeometry, headMaterial);
-    head.position.y = 1;
+    head.position.setY(1);
     group.add(head);
 
     // Arms
@@ -336,7 +336,7 @@ export const FloatingCharactersV2: React.FunctionComponent<FloatingCharactersV2P
         character.rotation.y += rotationSpeed * settings.animationSpeed;
 
         // Slight tilt
-        character.rotation.z = Math.sin(time * floatSpeed * 0.5 + floatOffset) * 0.1;
+        character.rotation.setZ(Math.sin(time * floatSpeed * 0.5 + floatOffset) * 0.1);
       });
 
       // Rotate stars
@@ -349,7 +349,7 @@ export const FloatingCharactersV2: React.FunctionComponent<FloatingCharactersV2P
         cloudsRef.current.forEach((cloud) => {
           cloud.position.x += cloud.userData.driftSpeed * settings.animationSpeed;
           if (cloud.position.x > 15) {
-            cloud.position.x = -15;
+            cloud.position.setX(-15);
           }
         });
       }
@@ -421,7 +421,7 @@ export const FloatingCharactersV2: React.FunctionComponent<FloatingCharactersV2P
 
     // Reset cloud positions
     cloudsRef.current.forEach((cloud) => {
-      cloud.position.x = (Math.random() - 0.5) * 10;
+      cloud.position.setX((Math.random() - 0.5) * 10);
     });
   };
 

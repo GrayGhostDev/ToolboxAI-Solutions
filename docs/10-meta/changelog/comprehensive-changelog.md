@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing accessibility features
 - Incorrect compose volume paths and documentation references to legacy scripts
 - Development PostgreSQL service now honors .env credentials to prevent connection failures during local startup
+- Removed legacy toolboxai_utils references so Docker builds no longer expect the deleted utils package
+- Swapped the dashboard dev container to a lightweight Node image so Vite starts instantly without building the production bundle
 
 ## [2.0.0] - 2025-09-14
 

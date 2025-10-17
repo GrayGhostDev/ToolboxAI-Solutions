@@ -31,7 +31,6 @@ import {
 } from '@tabler/icons-react';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { addNotification } from '../../store/slices/uiSlice';
-import { setClasses, removeClass, setClassOnlineStatus } from '../../store/slices/classesSlice';
 import { listClasses, createClass, updateClass, deleteClass } from '../../services/api';
 import { getClassDetailsRoute } from '../../config/routes';
 import CreateClassDialog from '../dialogs/CreateClassDialog';
@@ -60,6 +59,7 @@ export default function Classes() {
   const [createClassOpen, setCreateClassOpen] = React.useState(false);
   const [editClassOpen, setEditClassOpen] = React.useState(false);
   const [editingClass, setEditingClass] = React.useState<ClassCardData | null>(null);
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
   // Filter states
   const [filterGrade, setFilterGrade] = React.useState<string>('all');
   const [filterStatus, setFilterStatus] = React.useState<string>('all');
@@ -78,10 +78,26 @@ export default function Classes() {
   }, [classesData]);
 
   const transformAndSetClasses = (data: any) => {
-    // Handle both mock data format and API response format
-    const transformedClasses: ClassCardData[] = data.classes?.map((classItem: any) => ({
-      id: classItem.id,
-      name: classItem.name,
+    // Ensure we have valid data
+    if (!data) {
+      setClasses([]);
+      return;
+    }
+
+    // Handle both array format and object with classes property
+    let classesArray = [];
+    if (Array.isArray(data)) {
+      classesArray = data;
+    } else if (data.classes && Array.isArray(data.classes)) {
+      classesArray = data.classes;
+    } else if (data.data && Array.isArray(data.data)) {
+      classesArray = data.data;
+    }
+
+    // Transform classes with defensive checks
+    const transformedClasses: ClassCardData[] = classesArray.map((classItem: any) => ({
+      id: classItem.id || `class-${Date.now()}`,
+      name: classItem.name || 'Unnamed Class',
       grade: classItem.grade || classItem.grade_level || 0,
       studentCount: classItem.students || classItem.student_count || classItem.studentCount || 0,
       schedule: classItem.schedule || classItem.teacher || 'Schedule not set',
@@ -90,26 +106,29 @@ export default function Classes() {
       nextLesson: classItem.next_lesson || classItem.next_session || 'No upcoming lessons',
       isOnline: classItem.is_online || classItem.status === 'active' || false,
       studentAvatars: classItem.student_avatars || [],
-    })) || [];
+    }));
 
     setClasses(transformedClasses);
-    dispatch(setClasses(transformedClasses));
   };
 
   // Show error notification if there's an error
   React.useEffect(() => {
     if (error) {
+      const errorMessage = typeof error === 'string'
+        ? error
+        : (error as any)?.message || 'Failed to load classes. Please try again.';
+
       dispatch(
         addNotification({
           type: 'error',
-          message: 'Failed to load classes. Please try again.',
+          message: errorMessage,
         })
       );
     }
   }, [error, dispatch]);
 
   const fetchClasses = async () => {
-    setLoading(true);
+    setIsRefreshing(true);
 
     // Check if we're in bypass mode
     const bypassAuth = import.meta.env.VITE_BYPASS_AUTH === 'true';
@@ -171,8 +190,7 @@ export default function Classes() {
       }));
 
       setClasses(transformedClasses);
-      dispatch(setClasses(transformedClasses));
-      setLoading(false);
+      setIsRefreshing(false);
       return;
     }
 
@@ -224,7 +242,7 @@ export default function Classes() {
       );
       setClasses([]); // Set empty array instead of mock data
     } finally {
-      setLoading(false);
+      setIsRefreshing(false);
     }
   };
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, classData: ClassCardData) => {
@@ -687,7 +705,7 @@ export default function Classes() {
         onClose={() => setCreateClassOpen(false)}
         onSave={async (classData) => {
           try {
-            setLoading(true);
+            setIsRefreshing(true);
             const newClass = await createClass(classData);
             // Normalize backend snake_case fields safely
             const newClassAny: any = newClass as any;
@@ -734,7 +752,7 @@ export default function Classes() {
               })
             );
           } finally {
-            setLoading(false);
+            setIsRefreshing(false);
           }
         }}
       />
@@ -758,7 +776,7 @@ export default function Classes() {
           }}
           onSave={async (classData) => {
             try {
-              setLoading(true);
+              setIsRefreshing(true);
               const updatedClass = await updateClass(editingClass.id, classData);
               // Update the class in the local state
               const updatedClassAny: any = updatedClass as any;
@@ -803,7 +821,7 @@ export default function Classes() {
                 })
               );
             } finally {
-              setLoading(false);
+              setIsRefreshing(false);
             }
           }}
         />

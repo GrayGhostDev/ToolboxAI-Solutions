@@ -36,14 +36,14 @@ import { type DashboardOverview } from '../../types/api';
 import { ROUTES } from '../../config/routes';
 
 // Lazy load heavy components to improve initial load time
-const ProgressCharts = lazy(() => import('../widgets/ProgressCharts').then(m => ({ default: m.ProgressCharts })));
-const RealTimeAnalytics = lazy(() => import('../widgets/RealTimeAnalytics'));
-const ConnectionStatus = lazy(() => import('../widgets/ConnectionStatus'));
-const CreateLessonDialog = lazy(() => import('../dialogs/CreateLessonDialog'));
+const ProgressCharts = lazy(() => import('../widgets/ProgressCharts').then(m => ({ default: m.ProgressCharts })).catch(() => ({ default: () => <Text c="dimmed" size="sm">Charts temporarily unavailable</Text> })));
+const RealTimeAnalytics = lazy(() => import('../widgets/RealTimeAnalytics').catch(() => ({ default: () => <Text c="dimmed" size="sm">Real-time analytics temporarily unavailable</Text> })));
+const ConnectionStatus = lazy(() => import('../widgets/ConnectionStatus').catch(() => ({ default: () => <Badge color="gray">Offline</Badge> })));
+const CreateLessonDialog = lazy(() => import('../dialogs/CreateLessonDialog').catch(() => ({ default: () => null })));
 
 // Lazy load Roblox components that use 3D rendering
-const RobloxToolsSection = lazy(() => import('./components/RobloxToolsSection'));
-const RobloxNavigationHub = lazy(() => import('./components/RobloxNavigationHub'));
+const RobloxToolsSection = lazy(() => import('./components/RobloxToolsSection').catch(() => ({ default: () => <Text c="dimmed" size="sm">Roblox tools temporarily unavailable</Text> })));
+const RobloxNavigationHub = lazy(() => import('./components/RobloxNavigationHub').catch(() => ({ default: () => <Text c="dimmed" size="sm">Roblox navigation temporarily unavailable</Text> })));
 
 // Simple skeleton for lazy components
 const ComponentSkeleton = ({ height = 200 }: { height?: number }) => (

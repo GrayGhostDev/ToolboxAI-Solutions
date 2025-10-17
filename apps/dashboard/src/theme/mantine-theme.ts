@@ -243,6 +243,42 @@ export const mantineTheme = createTheme({
         },
       }),
     },
+    NavLink: {
+      defaultProps: {
+        variant: 'light',
+      },
+      styles: () => ({
+        root: {
+          color: 'white',
+          '&[data-active]': {
+            color: 'white',
+          },
+          '&:hover': {
+            color: 'white',
+          },
+        },
+        label: {
+          color: 'white !important',
+          fontWeight: 400,
+          '&[data-active]': {
+            fontWeight: 600,
+          },
+        },
+        icon: {
+          color: 'white !important',
+        },
+      }),
+    },
+    Drawer: {
+      styles: () => ({
+        content: {
+          color: 'white',
+        },
+        body: {
+          color: 'white',
+        },
+      }),
+    },
   },
 
   // Other theme properties

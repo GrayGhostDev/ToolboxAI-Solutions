@@ -47,7 +47,7 @@ import { Roblox3DNavigation } from '../roblox/Roblox3DNavigation';
 import { RobloxProgressBar } from '../roblox/RobloxProgressBar';
 import { RobloxAchievementBadge } from '../roblox/RobloxAchievementBadge';
 import { Simple3DIcon } from '../roblox/Simple3DIcon';
-import { Real3DIcon } from '../roblox/Real3DIcon';
+import { Real3DIcon } from '../roblox/Safe3DIcon';
 import { robloxColors } from '../../theme/robloxTheme';
 import { getDashboardOverview } from '../../services/api';
 

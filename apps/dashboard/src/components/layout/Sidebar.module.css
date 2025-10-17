@@ -1,0 +1,54 @@
+/* Force white color on all NavLink elements with maximum specificity */
+.navLinkWrapper :global(.mantine-NavLink-root),
+.navLinkWrapper :global(.mantine-NavLink-root):link,
+.navLinkWrapper :global(.mantine-NavLink-root):visited,
+.navLinkWrapper :global(.mantine-NavLink-root):hover,
+.navLinkWrapper :global(.mantine-NavLink-root):active,
+.navLinkWrapper :global(.mantine-NavLink-root):focus,
+.navLinkWrapper :global(.mantine-NavLink-root[data-active]) {
+  color: #ffffff !important;
+  display: flex !important;
+  visibility: visible !important;
+}
+
+.navLinkWrapper :global(.mantine-NavLink-label),
+.navLinkWrapper :global(.mantine-NavLink-root):hover :global(.mantine-NavLink-label),
+.navLinkWrapper :global(.mantine-NavLink-root[data-active]) :global(.mantine-NavLink-label),
+.navLinkWrapper :global(.mantine-NavLink-root):link :global(.mantine-NavLink-label),
+.navLinkWrapper :global(.mantine-NavLink-root):visited :global(.mantine-NavLink-label) {
+  color: #ffffff !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+  font-size: 0.875rem !important;
+}
+
+.navLinkWrapper :global(.mantine-NavLink-icon),
+.navLinkWrapper :global(.mantine-NavLink-root):hover :global(.mantine-NavLink-icon),
+.navLinkWrapper :global(.mantine-NavLink-root[data-active]) :global(.mantine-NavLink-icon),
+.navLinkWrapper :global(.mantine-NavLink-root):link :global(.mantine-NavLink-icon),
+.navLinkWrapper :global(.mantine-NavLink-root):visited :global(.mantine-NavLink-icon) {
+  color: #ffffff !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+}
+
+/* Nuclear option - force all children to be white and visible */
+.navLinkWrapper :global(.mantine-NavLink-root) *,
+.navLinkWrapper :global(.mantine-NavLink-root) *::before,
+.navLinkWrapper :global(.mantine-NavLink-root) *::after {
+  color: #ffffff !important;
+  visibility: visible !important;
+}
+
+/* Force all text and SVG elements to be visible */
+.navLinkWrapper :global(.mantine-NavLink-root) span,
+.navLinkWrapper :global(.mantine-NavLink-root) svg,
+.navLinkWrapper :global(.mantine-NavLink-root) path {
+  color: #ffffff !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}

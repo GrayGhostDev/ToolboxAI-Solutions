@@ -37,7 +37,10 @@ yarn-debug.log*
 yarn-error.log*
 
 # IDEs
-.vscode/
+# Track .vscode/ workspace settings for team consistency
+# Only exclude user-specific local settings
+.vscode/settings.local.json
+.vscode/*.log
 .idea/
 *.swp
 *.swo
@@ -368,3 +371,4 @@ venv_clean*/
 aiosqlite/
 # Temporary fix scripts (not needed in repo)
 fix_classes*.py
+.vercel

@@ -26,7 +26,7 @@ import { NetworkError } from './components/ErrorComponents';
 import { SessionMonitor, NetworkStatus } from './components/auth/AuthRecovery';
 // Lazy load heavy 3D components to improve initial load time
 const ThreeProvider = React.lazy(() => import('./components/three/ThreeProvider').then(m => ({ default: m.ThreeProvider })));
-const Scene3D = React.lazy(() => import('./components/three/Scene3D').then(m => ({ default: m.Scene3D })));
+// Scene3D removed - deprecated component archived
 const FloatingCharactersV2 = React.lazy(() => import('./components/roblox/FloatingCharactersV2').then(m => ({ default: m.FloatingCharactersV2 })));
 const Canvas2D = React.lazy(() => import('./components/three/fallbacks/Canvas2D').then(m => ({ default: m.Canvas2D })));
 const PerformanceMonitor = React.lazy(() => import('./components/common/PerformanceMonitor').then(m => ({ default: m.PerformanceMonitor })));
@@ -36,8 +36,7 @@ const MigrationControlPanel = React.lazy(() => import('./components/migration/Mi
 const RoutePerformanceMonitor = React.lazy(() => import('./components/performance/RoutePerformanceMonitor').then(m => ({ default: m.RoutePerformanceMonitor })));
 const RoutePreloader = React.lazy(() => import('./components/performance/RoutePreloader').then(m => ({ default: m.RoutePreloader })));
 
-// Keep old FloatingCharacters as fallback
-const FloatingCharacters = React.lazy(() => import('./components/roblox/FloatingCharacters').then(module => ({ default: module.FloatingCharacters })));
+// FloatingCharacters removed - deprecated component archived
 
 // Cookie banner - only in production
 const CookieBannerLazy = React.lazy(() => import('./components/consent/CookieBanner').then(m => ({ default: m.default })));
@@ -182,22 +181,19 @@ export default function App() {
                 <Canvas2D particleCount={30} animate={true} />
               </React.Suspense>
             }>
+              {/* Scene3D removed - deprecated. FloatingCharactersV2 renders its own Canvas */}
               <React.Suspense fallback={null}>
-                <Scene3D>
-                  <React.Suspense fallback={null}>
-                    <FloatingCharactersV2
-                      characters={[
-                        { type: 'astronaut', position: [-4, 2, -3] },
-                        { type: 'robot', position: [4, 1, -2] },
-                        { type: 'wizard', position: [0, 3, -4] },
-                        { type: 'pirate', position: [-3, -1, -2] },
-                        { type: 'ninja', position: [3, 0, -3] }
-                      ]}
-                      showStars={true}
-                      showClouds={true}
-                    />
-                  </React.Suspense>
-                </Scene3D>
+                <FloatingCharactersV2
+                  characters={[
+                    { type: 'astronaut', position: [-4, 2, -3] },
+                    { type: 'robot', position: [4, 1, -2] },
+                    { type: 'wizard', position: [0, 3, -4] },
+                    { type: 'pirate', position: [-3, -1, -2] },
+                    { type: 'ninja', position: [3, 0, -3] }
+                  ]}
+                  showStars={true}
+                  showClouds={true}
+                />
               </React.Suspense>
             </ThreeProvider>
           </React.Suspense>

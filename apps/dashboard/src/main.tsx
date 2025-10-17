@@ -1,5 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+// Initialize console filter before any components load (suppress Mantine + React 19 warnings)
+import { initConsoleFilter } from './utils/consoleFilter';
+initConsoleFilter();
+
 // HMR test comment - Hot module replacement working!
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
@@ -65,28 +69,36 @@ const RootApp = () => {
   );
 };
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <MantineProvider theme={theme} defaultColorScheme="light">
-      <Notifications position="top-right" limit={5} />
-      <ErrorBoundary
-        level="page"
-        enableRecovery={true}
-        enableReporting={true}
-        onError={(error, errorInfo) => {
-          logger.error('Application Error', { error, errorInfo });
-          // In production, report to error tracking service
-        }}
-      >
-        <BrowserRouter
-          future={{
-            v7_startTransition: true,
-            v7_relativeSplatPath: true
+// Prevent multiple root creation in development (React 19 + HMR)
+const rootElement = document.getElementById('root')!;
+
+// Check if root already exists (for HMR)
+if (!rootElement.hasAttribute('data-react-root')) {
+  rootElement.setAttribute('data-react-root', 'true');
+
+  ReactDOM.createRoot(rootElement).render(
+    <React.StrictMode>
+      <MantineProvider theme={theme} defaultColorScheme="light">
+        <Notifications position="top-right" limit={5} />
+        <ErrorBoundary
+          level="page"
+          enableRecovery={true}
+          enableReporting={true}
+          onError={(error, errorInfo) => {
+            logger.error('Application Error', { error, errorInfo });
+            // In production, report to error tracking service
           }}
         >
-          <RootApp />
-        </BrowserRouter>
-      </ErrorBoundary>
-    </MantineProvider>
-  </React.StrictMode>
-);
+          <BrowserRouter
+            future={{
+              v7_startTransition: true,
+              v7_relativeSplatPath: true
+            }}
+          >
+            <RootApp />
+          </BrowserRouter>
+        </ErrorBoundary>
+      </MantineProvider>
+    </React.StrictMode>
+  );
+}

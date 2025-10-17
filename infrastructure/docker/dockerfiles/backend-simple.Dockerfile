@@ -39,7 +39,6 @@ COPY apps/backend apps/backend
 COPY core core
 COPY database database
 COPY toolboxai_settings toolboxai_settings
-COPY toolboxai_utils toolboxai_utils
 
 # Create necessary directories
 RUN mkdir -p /app/logs /app/temp && \

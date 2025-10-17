@@ -121,6 +121,11 @@ export const createWebSocketMiddleware = (
   webSocketService: WebSocketService
 ): Middleware => {
   return store => next => (action: any) => {
+    // Ensure action has a type property
+    if (!action || typeof action.type !== 'string') {
+      return next(action);
+    }
+
     // Handle WebSocket-specific actions
     switch (action.type) {
       case WEBSOCKET_CONNECT: {

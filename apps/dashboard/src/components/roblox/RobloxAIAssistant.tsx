@@ -15,7 +15,7 @@ import {
   Badge,
   Stack,
   Loader,
-  Transition,
+  Collapse,
   Button,
   Divider,
   Alert,
@@ -33,7 +33,7 @@ const ListItem = ({ children, ...props }: any) => <Box {...props}>{children}</Bo
 const ListItemAvatar = ({ children }: any) => <Box>{children}</Box>;
 const InputAdornment = ({ children }: any) => <Box>{children}</Box>;
 const CircularProgress = Loader;
-const Fade = Transition.Fade;
+const Fade = ({ children, in: inProp }: { children: React.ReactNode; in: boolean }) => <Collapse in={inProp}>{children}</Collapse>;
 import {
   IconSend as Send,
   IconRobot as SmartToy,
@@ -58,7 +58,7 @@ import { Code } from '@mantine/core';
 import { useAppSelector, useAppDispatch } from '../../store';
 import { addNotification } from '../../store/slices/uiSlice';
 import { apiClient } from '../../services/api';
-import { ENABLE_WEBSOCKET } from '../../config';
+import { ENABLE_WEBSOCKET, AUTH_TOKEN_KEY } from '../../config';
 import { pusherService } from '../../services/pusher';
 import { WebSocketMessageType } from '../../types/websocket';
 import EnvironmentPreview from './EnvironmentPreview';
@@ -611,7 +611,7 @@ IMPORTANT: When you have enough information to create an environment, end your r
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token') || 'dev-token'}`
+            'Authorization': `Bearer ${localStorage.getItem(AUTH_TOKEN_KEY) || 'dev-token'}`
           },
           body: JSON.stringify({
             conversation_id: conversation.id,

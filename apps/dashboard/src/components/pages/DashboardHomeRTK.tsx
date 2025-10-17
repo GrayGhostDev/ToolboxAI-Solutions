@@ -58,7 +58,7 @@ import ConnectionStatus from '../widgets/ConnectionStatus';
 // Roblox-themed components
 import RobloxCharacterAvatar from '../roblox/RobloxCharacterAvatar';
 import { Roblox3DButton } from '../roblox/Roblox3DButton';
-import { Real3DIcon } from '../roblox/Real3DIcon';
+import { Real3DIcon } from '../roblox/Safe3DIcon';
 import { robloxColors } from '../../theme/robloxTheme';
 
 interface DashboardHomeRTKProps {

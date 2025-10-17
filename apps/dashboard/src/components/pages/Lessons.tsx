@@ -85,7 +85,20 @@ export default function Lessons() {
     { mockEndpoint: '/lessons', showNotification: false }
   );
 
-  const lessons = lessonsData || [];
+  // Ensure lessons is always an array
+  const lessons = React.useMemo(() => {
+    if (!lessonsData) return [];
+    if (Array.isArray(lessonsData)) return lessonsData;
+    // Handle case where API returns data wrapped in an object
+    if (typeof lessonsData === 'object' && 'data' in lessonsData && Array.isArray(lessonsData.data)) {
+      return lessonsData.data;
+    }
+    // Handle case where API returns items array
+    if (typeof lessonsData === 'object' && 'items' in lessonsData && Array.isArray(lessonsData.items)) {
+      return lessonsData.items;
+    }
+    return [];
+  }, [lessonsData]);
 
   // Handle error from the hook
   React.useEffect(() => {

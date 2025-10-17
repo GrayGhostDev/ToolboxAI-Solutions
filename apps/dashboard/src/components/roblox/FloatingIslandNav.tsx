@@ -4,6 +4,7 @@ import { Box, Card, Text, useMantineTheme } from '@mantine/core';
 import { OrbitControls, Text as ThreeText, Float, Cloud, Stars, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
 import { useNavigate } from 'react-router-dom';
+import ThreeJSErrorBoundary from '../common/ThreeJSErrorBoundary';
 
 // Floating animation keyframes
 const floatAnimationKeyframes = `
@@ -20,8 +21,9 @@ function Island({ position, color, label, onClick, isHovered, scale = 1 }) {
 
   useFrame((state) => {
     if (meshRef.current) {
+      // Use proper Three.js methods instead of direct assignment
       meshRef.current.rotation.y += 0.002;
-      meshRef.current.position.y = Math.sin(state.clock.elapsedTime + position[0]) * 0.1;
+      meshRef.current.position.setY(Math.sin(state.clock.elapsedTime + position[0]) * 0.1);
     }
   });
 
@@ -138,13 +140,19 @@ function FlyingCharacter({ targetPosition }) {
 
   useFrame((state) => {
     if (meshRef.current && targetPosition) {
-      // Smooth movement to target
-      meshRef.current.position.x += (targetPosition[0] - meshRef.current.position.x) * 0.05;
-      meshRef.current.position.y = 2 + Math.sin(state.clock.elapsedTime * 2) * 0.3;
-      meshRef.current.position.z += (targetPosition[2] - meshRef.current.position.z) * 0.05;
+      // Smooth movement to target - use proper Three.js methods
+      meshRef.current.position.setX(
+        meshRef.current.position.x + (targetPosition[0] - meshRef.current.position.x) * 0.05
+      );
+      meshRef.current.position.setY(
+        2 + Math.sin(state.clock.elapsedTime * 2) * 0.3
+      );
+      meshRef.current.position.setZ(
+        meshRef.current.position.z + (targetPosition[2] - meshRef.current.position.z) * 0.05
+      );
 
       // Rotation
-      meshRef.current.rotation.y = state.clock.elapsedTime;
+      meshRef.current.rotation.setY(state.clock.elapsedTime);
     }
   });
 
@@ -249,76 +257,90 @@ export const FloatingIslandNav: React.FunctionComponent<FloatingIslandNavProps> 
           </Text>
         </Box>
 
-        <Canvas
-          shadows
-          camera={{ position: [0, 5, 8], fov: 60 }}
-          style={{ borderRadius: theme.radius.xl }}
-        >
-          <ambientLight intensity={0.5} />
-          <directionalLight
-            position={[10, 10, 5]}
-            intensity={1}
-            castShadow
-            shadow-mapSize={[2048, 2048]}
-          />
-          <pointLight position={[-10, -10, -10]} intensity={0.3} color="#FFD700" />
-
-          {/* Sky and environment */}
-          <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade />
-          <Cloud position={[-4, 3, -2]} speed={0.2} opacity={0.5} />
-          <Cloud position={[4, 4, -1]} speed={0.1} opacity={0.4} />
-          <Cloud position={[0, 3.5, 1]} speed={0.15} opacity={0.3} />
-
-          {/* Islands */}
-          {islands.map((island, index) => (
-            <Island
-              key={index}
-              position={island.position}
-              color={island.color}
-              label={island.label}
-              onClick={() => handleIslandClick(index, island.route)}
-              isHovered={hoveredIsland === index}
-              scale={selectedIsland === index ? 1.3 : 1}
+        {/* 3D Scene with Error Boundary */}
+        <ThreeJSErrorBoundary>
+          <Canvas
+            camera={{ position: [0, 5, 10], fov: 60 }}
+            shadows
+            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+          >
+            <ambientLight intensity={0.6} />
+            <directionalLight
+              position={[10, 10, 5]}
+              intensity={1}
+              castShadow
+              shadow-mapSize-width={1024}
+              shadow-mapSize-height={1024}
             />
-          ))}
+            <fog attach="fog" args={['#FFB6C1', 5, 30]} />
 
-          {/* Bridges between islands */}
-          <Bridge
-            start={islands[0].position}
-            end={islands[1].position}
-            visible={hoveredIsland === 0 || hoveredIsland === 1}
-          />
-          <Bridge
-            start={islands[1].position}
-            end={islands[2].position}
-            visible={hoveredIsland === 1 || hoveredIsland === 2}
-          />
-          <Bridge
-            start={islands[0].position}
-            end={islands[4].position}
-            visible={hoveredIsland === 0 || hoveredIsland === 4}
-          />
-          <Bridge
-            start={islands[2].position}
-            end={islands[5].position}
-            visible={hoveredIsland === 2 || hoveredIsland === 5}
-          />
+            {/* Sky gradient using Stars component */}
+            <Stars
+              radius={100}
+              depth={50}
+              count={5000}
+              factor={4}
+              saturation={0}
+              fade
+            />
 
-          {/* Flying character */}
-          <FlyingCharacter
-            targetPosition={selectedIsland !== null ? islands[selectedIsland].position : [0, 2, 0]}
-          />
+            {/* Floating islands */}
+            {islands.map((island, index) => (
+              <Island
+                key={index}
+                position={island.position}
+                color={island.color}
+                label={island.label}
+                onClick={() => handleIslandClick(index, island.route)}
+                isHovered={hoveredIsland === index}
+                scale={selectedIsland === index ? 1.3 : 1}
+              />
+            ))}
 
-          {/* Camera controls */}
-          <OrbitControls
-            enablePan={false}
-            enableZoom={false}
-            minPolarAngle={Math.PI / 4}
-            maxPolarAngle={Math.PI / 2.5}
-            autoRotate
-            autoRotateSpeed={0.5}
-          />
-        </Canvas>
+            {/* Bridges between islands */}
+            {islands.map((island, index) => {
+              if (index === 0) return null;
+              return (
+                <Bridge
+                  key={`bridge-${index}`}
+                  start={islands[index - 1].position}
+                  end={island.position}
+                  visible={index <= selectedIsland}
+                />
+              );
+            })}
+
+            {/* Flying character */}
+            <FlyingCharacter targetPosition={islands[selectedIsland]?.position} />
+
+            {/* Clouds */}
+            <Cloud
+              opacity={0.3}
+              speed={0.2}
+              width={10}
+              depth={1.5}
+              segments={20}
+              position={[5, 6, -10]}
+            />
+            <Cloud
+              opacity={0.3}
+              speed={0.2}
+              width={10}
+              depth={1.5}
+              segments={20}
+              position={[-5, 8, -15]}
+            />
+
+            {/* Camera controls */}
+            <OrbitControls
+              enablePan={false}
+              enableZoom={true}
+              minDistance={5}
+              maxDistance={20}
+              maxPolarAngle={Math.PI / 2}
+            />
+          </Canvas>
+        </ThreeJSErrorBoundary>
 
         {/* Particle effects overlay */}
         <Box

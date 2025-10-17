@@ -151,7 +151,6 @@ COPY --chown=celerybeat:celerybeat apps /app/apps
 COPY --chown=celerybeat:celerybeat core /app/core
 COPY --chown=celerybeat:celerybeat database /app/database
 COPY --chown=celerybeat:celerybeat toolboxai_settings /app/toolboxai_settings
-COPY --chown=celerybeat:celerybeat toolboxai_utils /app/toolboxai_utils
 
 # Production environment variables (based on official docs)
 ENV CELERY_BEAT_LOG_LEVEL=INFO \

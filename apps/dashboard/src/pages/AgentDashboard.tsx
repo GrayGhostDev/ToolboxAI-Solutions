@@ -115,7 +115,7 @@ interface TaskInfo {
 
 const AgentDashboard: React.FunctionComponent = () => {
   const navigate = useNavigate();
-  const { user, hasRole } = useAuth();
+  const { user, hasPermission } = useAuth();
   const settings = useSelector((state: RootState) => state.settings);
 
   // State
@@ -131,10 +131,10 @@ const AgentDashboard: React.FunctionComponent = () => {
 
   // Check access permissions
   const canAccess = useCallback(() => {
-    if (hasRole('admin')) return true;
-    if (hasRole('teacher') && settings?.agentDashboard?.teacherAccess) return true;
+    if (hasPermission('admin')) return true;
+    if (hasPermission('teacher') && settings?.agentDashboard?.teacherAccess) return true;
     return false;
-  }, [hasRole, settings]);
+  }, [hasPermission, settings]);
 
   // Redirect if no access
   useEffect(() => {
@@ -330,7 +330,7 @@ const AgentDashboard: React.FunctionComponent = () => {
           >
             Refresh
           </Button>
-          {hasRole('admin') && (
+          {hasPermission('admin') && (
             <Button
               variant="light"
               leftIcon={<IconSettings size={16} />}

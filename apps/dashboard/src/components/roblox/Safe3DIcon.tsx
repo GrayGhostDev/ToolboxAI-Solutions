@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Box } from '@mantine/core';
 import { Procedural3DIcon } from './Procedural3DIcon';
+import ThreeJSErrorBoundary from '../common/ThreeJSErrorBoundary';
 interface Safe3DIconProps {
   iconName: string;
   size?: 'small' | 'medium' | 'large';
@@ -28,13 +29,15 @@ export const Safe3DIcon: React.FunctionComponent<Safe3DIconProps> = ({
   // Always use procedural icons for now since we don't have image assets
   if (true || useProceduralIcon || imageError) {
     return (
-      <Procedural3DIcon
-        iconName={iconName}
-        size={size}
-        color={color}
-        animated={animated}
-        style={style}
-      />
+      <ThreeJSErrorBoundary>
+        <Procedural3DIcon
+          iconName={iconName}
+          size={size}
+          color={color}
+          animated={animated}
+          style={style}
+        />
+      </ThreeJSErrorBoundary>
     );
   }
   // This code path won't be reached but keeping for future when we have real assets

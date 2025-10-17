@@ -146,7 +146,6 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY --chown=mcp:mcp core ./core
 COPY --chown=mcp:mcp database ./database
 COPY --chown=mcp:mcp toolboxai_settings ./toolboxai_settings
-COPY --chown=mcp:mcp toolboxai_utils ./toolboxai_utils
 
 # Create necessary directories with proper permissions
 RUN mkdir -p /app/logs /data/contexts /data/agents /tmp/mcp && \

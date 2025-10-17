@@ -120,16 +120,17 @@ export const ClerkProviderWrapper = ({
     }
   };
 
+  // Wrap with error boundary but keep ClerkProvider as direct child to prevent duplication
   return (
     <ClerkErrorBoundary fallback={ClerkErrorFallback}>
-      <Suspense fallback={<ClerkLoadingFallback />}>
-        <ClerkProvider
-          publishableKey={validatedKey}
-          {...clerkConfig}
-        >
+      <ClerkProvider
+        publishableKey={validatedKey}
+        {...clerkConfig}
+      >
+        <Suspense fallback={<ClerkLoadingFallback />}>
           {children}
-        </ClerkProvider>
-      </Suspense>
+        </Suspense>
+      </ClerkProvider>
     </ClerkErrorBoundary>
   );
 };

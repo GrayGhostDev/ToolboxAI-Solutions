@@ -105,7 +105,7 @@ class ApiClient {
       async (error) => {
         const originalRequest = error.config;
         // Handle 401 Unauthorized - Token refresh
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
           originalRequest._retry = true;
           try {
             // Use the centralized token refresh manager
@@ -134,8 +134,8 @@ class ApiClient {
           const data = error.response.data;
           // Log error for debugging in development
           if (process.env.NODE_ENV === 'development') {
-            const requestUrl = error.config?.url || '';
-            const requestMethod = error.config?.method?.toUpperCase() || '';
+            const requestUrl = originalRequest?.url || '';
+            const requestMethod = originalRequest?.method?.toUpperCase() || '';
             logger.error(`[${requestMethod} ${requestUrl}] Error ${status}`, data);
           }
           // Extract error message from response
@@ -166,19 +166,19 @@ class ApiClient {
             // Provide status-specific messages
             switch (status) {
               case 400: {
-                errorMessage = error.config?.url?.includes('/auth/')
+                errorMessage = originalRequest?.url?.includes('/auth/')
                   ? 'Invalid credentials or request format.'
                   : 'Invalid request. Please check your input.';
                 break;
               }
               case 403: {
-                errorMessage = error.config?.url?.includes('/admin/')
+                errorMessage = originalRequest?.url?.includes('/admin/')
                   ? 'Administrator access required.'
                   : 'You do not have permission to perform this action.';
                 break;
               }
               case 404: {
-                const resource = error.config?.url?.split('/').filter(Boolean).pop() || 'resource';
+                const resource = originalRequest?.url?.split('/').filter(Boolean).pop() || 'resource';
                 errorMessage = `The requested ${resource} was not found.`;
                 break;
               }

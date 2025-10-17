@@ -153,7 +153,6 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY --chown=coordinator:coordinator core ./core
 COPY --chown=coordinator:coordinator database ./database
 COPY --chown=coordinator:coordinator toolboxai_settings ./toolboxai_settings
-COPY --chown=coordinator:coordinator toolboxai_utils ./toolboxai_utils
 
 # Create necessary directories with proper permissions
 RUN mkdir -p /app/logs /data/agents /tmp/coordinator && \

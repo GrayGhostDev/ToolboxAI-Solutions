@@ -9,11 +9,48 @@ const __dirname = path.dirname(__filename);
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    react()
+    react(),
+    // Custom plugin to handle missing refractor/lang imports in both dev and build
+    {
+      name: 'ignore-refractor-langs',
+      enforce: 'pre',
+      resolveId(id) {
+        const cleanId = id.split('?')[0];
+
+        // Intercept refractor/lang imports that don't exist in refractor v5
+        if (cleanId.startsWith('refractor/lang/') || cleanId.includes('/refractor/lang/')) {
+          return '\0virtual:refractor-lang-stub';
+        }
+        return null;
+      },
+      load(id) {
+        // Provide empty stub for refractor language imports
+        if (id === '\0virtual:refractor-lang-stub') {
+          return 'export default function() {}';
+        }
+        return null;
+      }
+    }
   ],
 
   // Optimization for production Mantine integration
   optimizeDeps: {
+    esbuildOptions: {
+      plugins: [
+        {
+          name: 'stub-refractor-langs',
+          setup(build) {
+            // Intercept all refractor/lang/* imports and redirect to stub
+            build.onResolve({ filter: /^refractor\/lang\// }, () => {
+              return {
+                path: path.resolve(__dirname, 'src/utils/refractor-lang-stub.js'),
+                external: false
+              };
+            });
+          }
+        }
+      ]
+    },
     include: [
       // Core React ecosystem
       'react',
@@ -78,13 +115,7 @@ export default defineConfig({
       // Enhanced aliases for 2025
       '@assets': path.resolve(__dirname, './src/assets'),
       '@styles': path.resolve(__dirname, './src/styles'),
-      '@config': path.resolve(__dirname, './src/config'),
-      // Force react-syntax-highlighter to use CJS versions (better compatibility)
-      'react-syntax-highlighter/dist/esm/prism': 'react-syntax-highlighter/dist/cjs/prism',
-      'react-syntax-highlighter/dist/esm/prism-light': 'react-syntax-highlighter/dist/cjs/prism-light',
-      'react-syntax-highlighter/dist/esm/prism-async-light': 'react-syntax-highlighter/dist/cjs/prism-async-light',
-      'react-syntax-highlighter/dist/esm/light': 'react-syntax-highlighter/dist/cjs/light',
-      'react-syntax-highlighter/dist/esm/light-async': 'react-syntax-highlighter/dist/cjs/light-async'
+      '@config': path.resolve(__dirname, './src/config')
     },
     dedupe: [
       'react',
@@ -229,70 +260,57 @@ export default defineConfig({
         // Uncomment to load from CDN in production
         // 'react',
         // 'react-dom'
-        // Externalize refractor to avoid default export issues
-        'refractor',
-        'refractor/core'
       ],
 
       // Enhanced module resolution
       plugins: [
-        // Custom plugin to handle missing highlight.js language files and refractor/core
+        // Custom plugin to handle missing language files
         {
-          name: 'ignore-missing-highlight-langs',
+          name: 'ignore-missing-langs',
           enforce: 'pre', // Run this plugin before others
-          resolveId(id, importer) {
+          resolveId(id) {
+            // Strip query strings from id for checking
+            const cleanId = id.split('?')[0];
+
             // Externalize missing highlight.js language files that were removed in v11+
-            if (id.includes('highlight.js/lib/languages/c-like') ||
-                id.includes('highlight.js/lib/languages/htmlbars') ||
-                id.includes('highlight.js/lib/languages/sql_more') ||
-                id.includes('highlight.js/es/languages/c-like') ||
-                id.includes('highlight.js/es/languages/htmlbars') ||
-                id.includes('highlight.js/es/languages/sql_more')) {
+            if (cleanId.includes('highlight.js/lib/languages/c-like') ||
+                cleanId.includes('highlight.js/lib/languages/htmlbars') ||
+                cleanId.includes('highlight.js/lib/languages/sql_more') ||
+                cleanId.includes('highlight.js/es/languages/c-like') ||
+                cleanId.includes('highlight.js/es/languages/htmlbars') ||
+                cleanId.includes('highlight.js/es/languages/sql_more')) {
               // Return as external to prevent bundling errors
-              return { id, external: true };
+              return { id: cleanId, external: true };
             }
-            // Handle refractor/core imports - refractor v4+ removed /core export
-            if (id === 'refractor/core' || id === 'refractor/core.js') {
-              return '\0virtual:refractor-core';
+
+            // Externalize all refractor/lang imports - these don't exist in refractor v5
+            // refractor v4+ uses different structure, v5 has all languages in main export
+            if (cleanId.startsWith('refractor/lang/') || cleanId.includes('refractor/lang/')) {
+              // Return a virtual module ID that we'll handle in load()
+              return '\0virtual:refractor-lang-stub';
             }
-            // Handle direct refractor imports - refractor doesn't have default export
-            // Only intercept when imported from react-syntax-highlighter
-            if (id === 'refractor' && importer && importer.includes('react-syntax-highlighter')) {
-              return '\0virtual:refractor-main';
-            }
-            // Redirect problematic ESM imports to CJS versions
-            if (id.includes('react-syntax-highlighter/dist/esm')) {
-              return id.replace('/dist/esm/', '/dist/cjs/');
-            }
+
             return null;
           },
           load(id) {
+            // Strip query strings from id for checking
+            const cleanId = id.split('?')[0];
+
             // Provide empty module for externalized missing language files
-            if (id.includes('highlight.js/lib/languages/c-like') ||
-                id.includes('highlight.js/lib/languages/htmlbars') ||
-                id.includes('highlight.js/lib/languages/sql_more') ||
-                id.includes('highlight.js/es/languages/c-like') ||
-                id.includes('highlight.js/es/languages/htmlbars') ||
-                id.includes('highlight.js/es/languages/sql_more')) {
+            if (cleanId.includes('highlight.js/lib/languages/c-like') ||
+                cleanId.includes('highlight.js/lib/languages/htmlbars') ||
+                cleanId.includes('highlight.js/lib/languages/sql_more') ||
+                cleanId.includes('highlight.js/es/languages/c-like') ||
+                cleanId.includes('highlight.js/es/languages/htmlbars') ||
+                cleanId.includes('highlight.js/es/languages/sql_more')) {
               return 'export default function() {}';
             }
-            // Provide stub for refractor/core that mimics the old API
-            if (id === '\0virtual:refractor-core') {
-              const refractorPath = path.resolve(__dirname, 'node_modules/refractor/index.js');
-              return `
-                import { refractor } from '${refractorPath}';
-                export default refractor;
-              `;
+
+            // Provide stub for refractor language imports
+            if (id === '\0virtual:refractor-lang-stub') {
+              return 'export default function() {}';
             }
-            // Provide default export wrapper for main refractor package
-            if (id === '\0virtual:refractor-main') {
-              const refractorPath = path.resolve(__dirname, 'node_modules/refractor/index.js');
-              return `
-                import { refractor } from '${refractorPath}';
-                export default refractor;
-                export * from '${refractorPath}';
-              `;
-            }
+
             return null;
           }
         }

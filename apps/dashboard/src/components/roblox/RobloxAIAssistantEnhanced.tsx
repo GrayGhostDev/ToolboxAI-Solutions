@@ -26,7 +26,6 @@ import {
   Menu,
   Title,
   Textarea,
-  notifications,
   useMantineTheme
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
@@ -55,7 +54,6 @@ import {
   IconCopy,
   IconDownload,
 } from '@tabler/icons-react';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { useAppDispatch } from '../../store';
 import { addNotification } from '../../store/slices/uiSlice';
 // Types

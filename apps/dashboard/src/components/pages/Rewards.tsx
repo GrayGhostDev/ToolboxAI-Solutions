@@ -96,7 +96,28 @@ export default function Rewards() {
     }
   );
 
-  const availableRewards: Reward[] = (rewardsData as Reward[]) || [];
+  // Defensive data transformation - handle multiple API response formats
+  const availableRewards: Reward[] = React.useMemo(() => {
+    if (!rewardsData) return [];
+    if (Array.isArray(rewardsData)) return rewardsData;
+
+    // Handle case where API returns data wrapped in an object
+    if (typeof rewardsData === 'object' && 'data' in rewardsData && Array.isArray(rewardsData.data)) {
+      return rewardsData.data;
+    }
+
+    // Handle case where API returns items array
+    if (typeof rewardsData === 'object' && 'items' in rewardsData && Array.isArray(rewardsData.items)) {
+      return rewardsData.items;
+    }
+
+    // Handle case where API returns rewards array
+    if (typeof rewardsData === 'object' && 'rewards' in rewardsData && Array.isArray(rewardsData.rewards)) {
+      return rewardsData.rewards;
+    }
+
+    return [];
+  }, [rewardsData]);
 
   // TODO: Fetch reward history from API
   const rewardHistory: RewardHistory[] = [];
