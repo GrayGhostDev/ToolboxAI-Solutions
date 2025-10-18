@@ -14,7 +14,7 @@ interface Props {
 
 export default function AppLayout({ role, children, isRobloxPage = false }: Props) {
   const sidebarOpen = useAppSelector((s) => s.ui.sidebarOpen);
-  const sidebarWidth = 260;
+  const sidebarWidth = 220;
 
   return (
     <Box
