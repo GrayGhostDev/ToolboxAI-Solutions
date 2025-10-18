@@ -36,7 +36,7 @@ import {
 } from '@tabler/icons-react';
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { listLessons, deleteLesson } from '../../services/api';
+import { listLessons, deleteLesson, duplicateLesson } from '../../services/api';
 import { useApiCallOnMount } from '../../hooks/useApiCall';
 import { useAppDispatch } from '../../store';
 import { addNotification } from '../../store/slices/uiSlice';
@@ -319,15 +319,24 @@ export default function Lessons() {
                           </MenuItem>
                           <MenuItem
                             leftSection={<IconCopy size={16} />}
-                            onClick={() => {
-                              // TODO: Implement actual duplication API call
-                              dispatch(
-                                addNotification({
-                                  type: 'success',
-                                  message: `Lesson "${lesson.title}" duplicated!`,
-                                })
-                              );
-                              refetchLessons();
+                            onClick={async () => {
+                              try {
+                                const duplicated = await duplicateLesson(lesson.id);
+                                dispatch(
+                                  addNotification({
+                                    type: 'success',
+                                    message: `Lesson "${duplicated.title || lesson.title}" duplicated!`,
+                                  })
+                                );
+                                refetchLessons();
+                              } catch (err) {
+                                dispatch(
+                                  addNotification({
+                                    type: 'error',
+                                    message: 'Failed to duplicate lesson',
+                                  })
+                                );
+                              }
                             }}
                           >
                             Duplicate

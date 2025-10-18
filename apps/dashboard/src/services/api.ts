@@ -460,6 +460,12 @@ class ApiClient {
       url: `/api/v1/lessons/${id}`,
     });
   }
+  async duplicateLesson(id: string): Promise<Lesson> {
+    return this.request<Lesson>({
+      method: 'POST',
+      url: `/api/v1/lessons/${id}/duplicate`,
+    });
+  }
   // Classes
   async listClasses(): Promise<ClassSummary[]> {
     return this.request<ClassSummary[]>({
@@ -848,6 +854,7 @@ export const getLesson = apiClient.getLesson.bind(apiClient);
 export const createLesson = apiClient.createLesson.bind(apiClient);
 export const updateLesson = apiClient.updateLesson.bind(apiClient);
 export const deleteLesson = apiClient.deleteLesson.bind(apiClient);
+export const duplicateLesson = apiClient.duplicateLesson.bind(apiClient);
 export const listClasses = apiClient.listClasses.bind(apiClient);
 export const getClass = apiClient.getClass.bind(apiClient);
 export const createClass = apiClient.createClass.bind(apiClient);
