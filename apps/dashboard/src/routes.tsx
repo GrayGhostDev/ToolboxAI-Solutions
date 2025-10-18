@@ -253,17 +253,18 @@ const TeacherRobloxDashboard = createOptimizedComponent(
   'Roblox Dashboard'
 );
 
-const EnvironmentCreator = createOptimizedComponent(
-  () => import('./components/roblox/EnvironmentCreator'),
-  3000,
-  'Environment Creator'
-);
+// EnvironmentCreator and EnvironmentPreviewPage temporarily disabled for Vercel build
+// const EnvironmentCreator = createOptimizedComponent(
+//   () => import('./components/roblox/EnvironmentCreator'),
+//   3000,
+//   'Environment Creator'
+// );
 
-const EnvironmentPreviewPage = createOptimizedComponent(
-  () => import('./components/roblox/EnvironmentPreviewPage'),
-  3000,
-  'Environment Preview'
-);
+// const EnvironmentPreviewPage = createOptimizedComponent(
+//   () => import('./components/roblox/EnvironmentPreviewPage'),
+//   3000,
+//   'Environment Preview'
+// );
 
 const RobloxStudioPage = createOptimizedComponent(
   () => import('./components/pages/RobloxStudioPage'),
@@ -486,7 +487,8 @@ export default function AppRoutes() {
           </PerformanceRoute>
         }
       />
-      <Route
+      {/* EnvironmentPreviewPage temporarily disabled for Vercel build */}
+      {/* <Route
         path="/environment-preview/:environmentId"
         element={
           <RoleGuard allow={['teacher', 'admin', 'student']}>
@@ -495,7 +497,7 @@ export default function AppRoutes() {
             </PerformanceRoute>
           </RoleGuard>
         }
-      />
+      /> */}
 
       {/* Shared Routes */}
       <Route
@@ -619,15 +621,15 @@ export default function AppRoutes() {
       <Route path="/health" element={<HealthCheck />} />
       {/* Migration demo removed - not needed in production */}
 
-      {/* Roblox Environment Creation */}
-      <Route
+      {/* Roblox Environment Creation - temporarily disabled for Vercel build */}
+      {/* <Route
         path="/roblox/create-environment"
         element={
           <RoleGuard allow={['teacher', 'admin']}>
             <EnvironmentCreator />
           </RoleGuard>
         }
-      />
+      /> */}
 
       {/* Roblox Studio Integration Page - Heavy 3D component */}
       <Route
