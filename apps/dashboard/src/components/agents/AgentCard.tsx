@@ -112,7 +112,7 @@ export const AgentCard = ({
         e.currentTarget.style.boxShadow = 'none';
       }}
     >
-      <Stack style={{ flexGrow: 1 }} spacing="md">
+      <Stack style={{ flexGrow: 1 }} gap="md">
         {/* Header */}
         <Flex justify="space-between" align="flex-start">
           <Box>
@@ -209,7 +209,7 @@ export const AgentCard = ({
       </Stack>
 
       <Flex justify="space-between" align="center" style={{ marginTop: 'auto', paddingTop: 12 }}>
-        <Group spacing="xs">
+        <Group gap="xs">
           <Tooltip label="View Metrics">
             <ActionIcon size="sm" variant="subtle" onClick={(e) => { e.stopPropagation(); /* Handle metrics view */ }}>
               <IconChartBar size={16} />

@@ -128,7 +128,7 @@ export const AgentMetricsPanel = ({
       {!systemMetrics ? (
         <Text>No metrics data available</Text>
       ) : (
-        <Stack spacing="lg">
+        <Stack gap="lg">
           {/* System Overview */}
           <Card padding="md" withBorder>
             <Title order={5} mb="md">
@@ -177,7 +177,7 @@ export const AgentMetricsPanel = ({
               <Title order={5} mb="md">
                 Agent Status Breakdown
               </Title>
-              <Stack spacing="sm">
+              <Stack gap="sm">
                 <Group justify="space-between">
                   <Box>
                     <Text fw={500}>Idle: {systemMetrics.agents.idle}</Text>
@@ -225,7 +225,7 @@ export const AgentMetricsPanel = ({
               <Title order={5} mb="md">
                 Task Statistics
               </Title>
-              <Stack spacing="sm">
+              <Stack gap="sm">
                 <Group justify="space-between">
                   <Text fw={500}>Completed: {systemMetrics.tasks.completed}</Text>
                   <Text size="sm" c="dimmed">Successfully completed tasks</Text>
@@ -316,7 +316,7 @@ export const AgentMetricsPanel = ({
                         </Text>
                       </Table.Td>
                       <Table.Td ta="right">
-                        <Group spacing="xs" justify="flex-end" style={{ minWidth: 80 }}>
+                        <Group gap="xs" justify="flex-end" style={{ minWidth: 80 }}>
                           <Progress
                             value={agent.resource_usage.cpu_percent}
                             color={getPerformanceColor(100 - agent.resource_usage.cpu_percent)}

@@ -362,7 +362,7 @@ export const AgentTaskDialog = ({
           No task types available for this agent type.
         </Alert>
       ) : (
-        <Stack spacing="md">
+        <Stack gap="md">
           {/* Task Type Selection */}
           <Select
             label="Task Type"
