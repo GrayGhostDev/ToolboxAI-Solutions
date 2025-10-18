@@ -65,7 +65,7 @@ import { useSelector } from 'react-redux';
 import { type RootState } from '@/store';
 import { useAuth } from '@/hooks/useAuth';
 import { orchestratorApi } from '@/services/orchestratorApi';
-import { pusherService } from '@/services/pusher';
+import { usePusherChannel } from '@/hooks/usePusher';
 import { showNotification } from '@mantine/notifications';
 
 interface AgentInfo {
@@ -192,44 +192,40 @@ const AgentDashboard: React.FunctionComponent = () => {
   }, [autoRefresh, refreshInterval, fetchSystemStatus]);
 
   // Subscribe to Pusher for real-time updates
-  useEffect(() => {
-    const channel = pusherService.subscribe('agent-system');
-
-    channel.bind('task-update', (data: any) => {
-      // Update task in recentTasks if it exists
-      setRecentTasks(prev => {
-        const index = prev.findIndex(t => t.task_id === data.task_id);
-        if (index !== -1) {
-          const updated = [...prev];
-          updated[index] = { ...updated[index], ...data };
-          return updated;
-        }
-        return [data, ...prev].slice(0, 10); // Keep last 10 tasks
-      });
-    });
-
-    channel.bind('agent-status', (data: any) => {
-      // Update agent status
-      setAgents(prev => {
-        const index = prev.findIndex(a => a.name === data.agent_name);
-        if (index !== -1) {
-          const updated = [...prev];
-          updated[index] = { ...updated[index], status: data.status };
-          return updated;
-        }
-        return prev;
-      });
-    });
-
-    channel.bind('system-metrics', (data: any) => {
-      // Update system metrics
-      setSystemStatus(prev => prev ? { ...prev, ...data } : null);
-    });
-
-    return () => {
-      pusherService.unsubscribe('agent-system');
-    };
-  }, []);
+  usePusherChannel(
+    'agent-system',
+    {
+      'task-update': (data: any) => {
+        // Update task in recentTasks if it exists
+        setRecentTasks(prev => {
+          const index = prev.findIndex(t => t.task_id === data.task_id);
+          if (index !== -1) {
+            const updated = [...prev];
+            updated[index] = { ...updated[index], ...data };
+            return updated;
+          }
+          return [data, ...prev].slice(0, 10); // Keep last 10 tasks
+        });
+      },
+      'agent-status': (data: any) => {
+        // Update agent status
+        setAgents(prev => {
+          const index = prev.findIndex(a => a.name === data.agent_name);
+          if (index !== -1) {
+            const updated = [...prev];
+            updated[index] = { ...updated[index], status: data.status };
+            return updated;
+          }
+          return prev;
+        });
+      },
+      'system-metrics': (data: any) => {
+        // Update system metrics
+        setSystemStatus(prev => prev ? { ...prev, ...data } : null);
+      }
+    },
+    { dependencies: [] }
+  );
 
   // Submit test task
   const submitTestTask = async () => {
@@ -293,9 +289,9 @@ const AgentDashboard: React.FunctionComponent = () => {
   if (loading) {
     return (
       <Container size="xl" p="md">
-        <Stack spacing="md">
+        <Stack gap="md">
           <Skeleton height={60} />
-          <SimpleGrid cols={4} spacing="md">
+          <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="md">
             {[1, 2, 3, 4].map(i => (
               <Skeleton key={i} height={120} />
             ))}
@@ -317,15 +313,15 @@ const AgentDashboard: React.FunctionComponent = () => {
   return (
     <Container size="xl" p="md">
       {/* Header */}
-      <Group position="apart" mb="xl">
+      <Group justify="space-between" mb="xl">
         <Title order={2}>
           <IconBrain size={28} style={{ verticalAlign: 'middle', marginRight: 8 }} />
           Agent System Dashboard
         </Title>
-        <Group>
+        <Group gap="sm">
           <Button
             variant="subtle"
-            leftIcon={<IconRefresh size={16} />}
+            leftSection={<IconRefresh size={16} />}
             onClick={fetchSystemStatus}
           >
             Refresh
@@ -333,7 +329,7 @@ const AgentDashboard: React.FunctionComponent = () => {
           {hasPermission('admin') && (
             <Button
               variant="light"
-              leftIcon={<IconSettings size={16} />}
+              leftSection={<IconSettings size={16} />}
               onClick={() => navigate('/settings/agents')}
             >
               Settings
@@ -343,27 +339,27 @@ const AgentDashboard: React.FunctionComponent = () => {
       </Group>
 
       {/* System Overview */}
-      <SimpleGrid cols={4} spacing="md" mb="xl">
+      <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="md" mb="xl">
         <Card shadow="sm">
-          <Group position="apart">
+          <Group justify="space-between">
             <div>
-              <Text color="dimmed" size="xs" tt="uppercase" fw={700}>
+              <Text c="dimmed" size="xs" tt="uppercase" fw={700}>
                 System Status
               </Text>
-              <Group spacing="xs" mt="xs">
+              <Group gap="xs" mt="xs">
                 {systemStatus?.orchestrator.is_running ? (
                   <>
                     <IconCircleCheck size={20} color="green" />
-                    <Text size="lg" fw={500} color="green">Running</Text>
+                    <Text size="lg" fw={500} c="green">Running</Text>
                   </>
                 ) : (
                   <>
                     <IconAlertTriangle size={20} color="red" />
-                    <Text size="lg" fw={500} color="red">Stopped</Text>
+                    <Text size="lg" fw={500} c="red">Stopped</Text>
                   </>
                 )}
               </Group>
-              <Text size="xs" color="dimmed" mt="xs">
+              <Text size="xs" c="dimmed" mt="xs">
                 Uptime: {formatUptime(systemStatus?.orchestrator.uptime || 0)}
               </Text>
             </div>
@@ -372,13 +368,13 @@ const AgentDashboard: React.FunctionComponent = () => {
         </Card>
 
         <Card shadow="sm">
-          <Group position="apart">
+          <Group justify="space-between">
             <div>
-              <Text color="dimmed" size="xs" tt="uppercase" fw={700}>
+              <Text c="dimmed" size="xs" tt="uppercase" fw={700}>
                 Total Agents
               </Text>
               <Text size="xl" fw={700}>{agents.length}</Text>
-              <Text size="xs" color="dimmed" mt="xs">
+              <Text size="xs" c="dimmed" mt="xs">
                 Across {Object.keys(systemStatus?.agents || {}).length} categories
               </Text>
             </div>
@@ -387,15 +383,15 @@ const AgentDashboard: React.FunctionComponent = () => {
         </Card>
 
         <Card shadow="sm">
-          <Group position="apart">
+          <Group justify="space-between">
             <div>
-              <Text color="dimmed" size="xs" tt="uppercase" fw={700}>
+              <Text c="dimmed" size="xs" tt="uppercase" fw={700}>
                 Tasks Processed
               </Text>
               <Text size="xl" fw={700}>
                 {systemStatus?.orchestrator.total_processed || 0}
               </Text>
-              <Group spacing="xs" mt="xs">
+              <Group gap="xs" mt="xs">
                 <Badge color="yellow" size="sm">
                   {systemStatus?.tasks.active || 0} active
                 </Badge>
@@ -409,14 +405,14 @@ const AgentDashboard: React.FunctionComponent = () => {
         </Card>
 
         <Card shadow="sm">
-          <Group position="apart">
+          <Group justify="space-between">
             <div>
-              <Text color="dimmed" size="xs" tt="uppercase" fw={700}>
+              <Text c="dimmed" size="xs" tt="uppercase" fw={700}>
                 Resource Usage
               </Text>
-              <Stack spacing="xs" mt="xs">
+              <Stack gap="xs" mt="xs">
                 <div>
-                  <Text size="xs" color="dimmed">CPU</Text>
+                  <Text size="xs" c="dimmed">CPU</Text>
                   <Progress
                     value={systemStatus?.resources.cpu_percent || 0}
                     color={systemStatus?.resources.cpu_percent > 80 ? 'red' : 'blue'}
@@ -424,7 +420,7 @@ const AgentDashboard: React.FunctionComponent = () => {
                   />
                 </div>
                 <div>
-                  <Text size="xs" color="dimmed">Memory</Text>
+                  <Text size="xs" c="dimmed">Memory</Text>
                   <Progress
                     value={systemStatus?.resources.memory_percent || 0}
                     color={systemStatus?.resources.memory_percent > 80 ? 'red' : 'green'}
@@ -440,30 +436,30 @@ const AgentDashboard: React.FunctionComponent = () => {
 
       {/* Agents Grid */}
       <Card shadow="sm" mb="xl">
-        <Group position="apart" mb="md">
+        <Group justify="space-between" mb="md">
           <Text size="lg" fw={600}>Registered Agents</Text>
           <Button
             variant="light"
-            leftIcon={<IconPlayerPlay size={16} />}
+            leftSection={<IconPlayerPlay size={16} />}
             onClick={submitTestTask}
           >
             Submit Test Task
           </Button>
         </Group>
 
-        <SimpleGrid cols={3} spacing="md">
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
           {agents.map((agent) => (
             <Card key={agent.name} shadow="xs" p="sm" withBorder>
-              <Group position="apart" mb="xs">
+              <Group justify="space-between" mb="xs">
                 <Text fw={500}>{agent.name}</Text>
                 <Badge color={getStatusColor(agent.status)} size="sm">
                   {agent.status}
                 </Badge>
               </Group>
-              <Text size="xs" color="dimmed" mb="xs">
+              <Text size="xs" c="dimmed" mb="xs">
                 {agent.description}
               </Text>
-              <Text size="xs" color="dimmed">
+              <Text size="xs" c="dimmed">
                 {agent.capabilities.length} capabilities
               </Text>
             </Card>
@@ -475,15 +471,15 @@ const AgentDashboard: React.FunctionComponent = () => {
       <Card shadow="sm">
         <Text size="lg" fw={600} mb="md">Recent Tasks</Text>
         {recentTasks.length === 0 ? (
-          <Text color="dimmed" ta="center" py="xl">
+          <Text c="dimmed" ta="center" py="xl">
             No recent tasks
           </Text>
         ) : (
-          <Stack spacing="xs">
+          <Stack gap="xs">
             {recentTasks.map((task) => (
               <Card key={task.task_id} shadow="xs" p="xs" withBorder>
-                <Group position="apart">
-                  <Group spacing="xs">
+                <Group justify="space-between">
+                  <Group gap="xs">
                     <Text size="xs" fw={500} style={{ fontFamily: 'monospace' }}>
                       {task.task_id.substring(0, 8)}...
                     </Text>
@@ -494,12 +490,12 @@ const AgentDashboard: React.FunctionComponent = () => {
                       {task.status}
                     </Badge>
                   </Group>
-                  <Text size="xs" color="dimmed">
+                  <Text size="xs" c="dimmed">
                     {new Date(task.created_at).toLocaleTimeString()}
                   </Text>
                 </Group>
                 {task.message && (
-                  <Text size="xs" color="dimmed" mt="xs">
+                  <Text size="xs" c="dimmed" mt="xs">
                     {task.message}
                   </Text>
                 )}
