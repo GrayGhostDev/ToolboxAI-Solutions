@@ -1,34 +1,16 @@
 import {
-  Box,
   Button,
   Text,
-  Paper,
   Stack,
   Grid,
-  Container,
   ActionIcon,
-  Avatar,
   Card,
   Group,
   TextInput,
   Badge,
-  Alert,
   Loader,
-  Progress,
-  Modal,
-  Drawer,
-  Tabs,
   Menu,
-  Tooltip,
-  Checkbox,
-  Radio,
-  Switch,
-  Slider,
-  Rating,
-  Autocomplete,
-  Skeleton,
   Table,
-  Divider
 } from '@mantine/core';
 import {
   IconSearch,
@@ -38,7 +20,7 @@ import {
   IconEdit,
   IconTrash,
   IconRocket,
-  IconCopy
+  IconCopy,
 } from '@tabler/icons-react';
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -50,7 +32,6 @@ import CreateLessonDialog from '../dialogs/CreateLessonDialog';
 import { type Lesson } from '../../types/api';
 import { useMultipleCeleryTasks } from '../../hooks/pusher/useCeleryTaskProgress';
 import { TaskProgressList } from '../common/TaskProgressList';
-import { showTaskNotification } from '../common/TaskProgressToast';
 
 export default function Lessons() {
   const dispatch = useAppDispatch();
@@ -63,14 +44,8 @@ export default function Lessons() {
   const organizationId = 'default_org'; // TODO: Get from auth context
 
   // Track all Celery tasks for this organization
-  const {
-    tasks,
-    addTask,
-    removeTask,
-    activeTasks,
-    completedTasks,
-    failedTasks
-  } = useMultipleCeleryTasks(organizationId);
+  const { tasks, removeTask, activeTasks, completedTasks } =
+    useMultipleCeleryTasks(organizationId);
 
   // Show task panel when there are active tasks
   React.useEffect(() => {
@@ -80,21 +55,31 @@ export default function Lessons() {
   }, [activeTasks.length]);
 
   // Use the API hook for fetching lessons
-  const { data: lessonsData, loading, error, refetch } = useApiCallOnMount(
-    listLessons,
-    { mockEndpoint: '/lessons', showNotification: false }
-  );
+  const {
+    data: lessonsData,
+    loading,
+    error,
+    execute: refetchLessons,
+  } = useApiCallOnMount(listLessons, { mockEndpoint: '/lessons', showNotification: false });
 
   // Ensure lessons is always an array
   const lessons = React.useMemo(() => {
     if (!lessonsData) return [];
     if (Array.isArray(lessonsData)) return lessonsData;
     // Handle case where API returns data wrapped in an object
-    if (typeof lessonsData === 'object' && 'data' in lessonsData && Array.isArray(lessonsData.data)) {
+    if (
+      typeof lessonsData === 'object' &&
+      'data' in lessonsData &&
+      Array.isArray(lessonsData.data)
+    ) {
       return lessonsData.data;
     }
     // Handle case where API returns items array
-    if (typeof lessonsData === 'object' && 'items' in lessonsData && Array.isArray(lessonsData.items)) {
+    if (
+      typeof lessonsData === 'object' &&
+      'items' in lessonsData &&
+      Array.isArray(lessonsData.items)
+    ) {
       return lessonsData.items;
     }
     return [];
@@ -108,9 +93,9 @@ export default function Lessons() {
       if (typeof errorDetail === 'string') {
         errorMessage = errorDetail;
       } else if (Array.isArray(errorDetail)) {
-        errorMessage = errorDetail.map((err: any) =>
-          err.msg || err.message || 'Validation error'
-        ).join(', ');
+        errorMessage = errorDetail
+          .map((err: any) => err.msg || err.message || 'Validation error')
+          .join(', ');
       }
       dispatch(
         addNotification({
@@ -151,7 +136,7 @@ export default function Lessons() {
           message: `Lesson "${lesson.title}" deleted successfully`,
         })
       );
-      refetch();
+      refetchLessons();
     } catch (error) {
       dispatch(
         addNotification({
@@ -161,18 +146,22 @@ export default function Lessons() {
       );
     }
   };
-  const filteredLessons = lessons.filter((lesson) =>
-    lesson.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lesson.subject.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredLessons = lessons.filter(
+    (lesson) =>
+      lesson.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lesson.subject.toLowerCase().includes(searchTerm.toLowerCase())
   );
   // Handle task removal
-  const handleRemoveTask = React.useCallback((taskId: string) => {
-    removeTask(taskId);
-  }, [removeTask]);
+  const handleRemoveTask = React.useCallback(
+    (taskId: string) => {
+      removeTask(taskId);
+    },
+    [removeTask]
+  );
 
   // Handle clear completed tasks
   const handleClearCompleted = React.useCallback(() => {
-    completedTasks.forEach(task => removeTask(task.taskId));
+    completedTasks.forEach((task) => removeTask(task.taskId));
   }, [completedTasks, removeTask]);
 
   return (
@@ -262,19 +251,12 @@ export default function Lessons() {
                       </Stack>
                     </Table.Td>
                     <Table.Td>
-                      <Badge
-                        size="sm"
-                        color="blue"
-                        variant="outline"
-                      >
+                      <Badge size="sm" color="blue" variant="outline">
                         {lesson.subject}
                       </Badge>
                     </Table.Td>
                     <Table.Td>
-                      <Badge
-                        size="sm"
-                        color={lesson.status === 'published' ? 'green' : 'gray'}
-                      >
+                      <Badge size="sm" color={lesson.status === 'published' ? 'green' : 'gray'}>
                         {lesson.status}
                       </Badge>
                     </Table.Td>
@@ -283,11 +265,7 @@ export default function Lessons() {
                     </Table.Td>
                     <Table.Td>
                       {lesson.robloxWorldId ? (
-                        <Badge
-                          size="sm"
-                          color="green"
-                          leftSection={<IconRocket size={12} />}
-                        >
+                        <Badge size="sm" color="green" leftSection={<IconRocket size={12} />}>
                           Connected
                         </Badge>
                       ) : (
@@ -303,10 +281,7 @@ export default function Lessons() {
                     <Table.Td style={{ textAlign: 'right' }}>
                       <Menu position="bottom-end">
                         <Menu.Target>
-                          <ActionIcon
-                            size="sm"
-                            variant="subtle"
-                          >
+                          <ActionIcon size="sm" variant="subtle">
                             <IconDotsVertical size={16} />
                           </ActionIcon>
                         </Menu.Target>
@@ -333,14 +308,14 @@ export default function Lessons() {
                           <Menu.Item
                             leftSection={<IconCopy size={16} />}
                             onClick={() => {
-                              const duplicatedLesson = { ...lesson, title: `${lesson.title} (Copy)` };
+                              // TODO: Implement actual duplication API call
                               dispatch(
                                 addNotification({
                                   type: 'success',
                                   message: `Lesson "${lesson.title}" duplicated!`,
                                 })
                               );
-                              refetch();
+                              refetchLessons();
                             }}
                           >
                             Duplicate
@@ -373,7 +348,7 @@ export default function Lessons() {
       <CreateLessonDialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
-        onSuccess={refetch}
+        onSuccess={refetchLessons}
       />
     </Grid>
   );
