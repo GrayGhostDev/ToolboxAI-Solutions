@@ -60,14 +60,14 @@ import {
   setPluginStatus
 } from '../../store/slices/robloxSlice';
 
-// Import Roblox components
-import { RobloxControlPanel } from '../roblox/RobloxControlPanel';
-import { ContentGenerationMonitor } from '../roblox/ContentGenerationMonitor';
-import { StudentProgressDashboard } from '../roblox/StudentProgressDashboard';
-import { RobloxSessionManager } from '../roblox/RobloxSessionManager';
-import { QuizResultsAnalytics } from '../roblox/QuizResultsAnalytics';
-import RobloxEnvironmentPreview from '../roblox/RobloxEnvironmentPreview';
-import { RobloxAIAssistant } from '../roblox/RobloxAIAssistant';
+// Lazy load Roblox components for optimal performance
+const RobloxAIAssistant = React.lazy(() => import('../roblox/RobloxAIAssistant').then(m => ({ default: m.RobloxAIAssistant })));
+const RobloxControlPanel = React.lazy(() => import('../roblox/RobloxControlPanel').then(m => ({ default: m.RobloxControlPanel })));
+const ContentGenerationMonitor = React.lazy(() => import('../roblox/ContentGenerationMonitor').then(m => ({ default: m.ContentGenerationMonitor })));
+const StudentProgressDashboard = React.lazy(() => import('../roblox/StudentProgressDashboard').then(m => ({ default: m.StudentProgressDashboard })));
+const RobloxSessionManager = React.lazy(() => import('../roblox/RobloxSessionManager').then(m => ({ default: m.RobloxSessionManager })));
+const QuizResultsAnalytics = React.lazy(() => import('../roblox/QuizResultsAnalytics').then(m => ({ default: m.QuizResultsAnalytics })));
+const RobloxEnvironmentPreview = React.lazy(() => import('../roblox/RobloxEnvironmentPreview'));
 // import { AIAssistantTest } from '../test/AIAssistantTest'; // File does not exist
 import { IconSparkles, IconCircle, IconDeviceGamepad, IconBrain, IconWorld, IconClipboardCheck } from '@tabler/icons-react';
 import { api } from '../../services/api';
@@ -379,31 +379,45 @@ export default function TeacherRobloxDashboard() {
       {/* Tab Panels */}
       <Box style={{ flex: 1, overflow: 'hidden' }}>
         <TabPanel activeValue={activeTab} tabValue="ai-assistant">
-          <RobloxAIAssistant />
+          <React.Suspense fallback={<Box p="lg"><Loader size="lg" /><Text size="sm" c="dimmed" mt="md">Loading AI Assistant...</Text></Box>}>
+            <RobloxAIAssistant />
+          </React.Suspense>
         </TabPanel>
 
         <TabPanel activeValue={activeTab} tabValue="control-panel">
-          <RobloxControlPanel />
+          <React.Suspense fallback={<Box p="lg"><Loader size="lg" /><Text size="sm" c="dimmed" mt="md">Loading Control Panel...</Text></Box>}>
+            <RobloxControlPanel />
+          </React.Suspense>
         </TabPanel>
 
         <TabPanel activeValue={activeTab} tabValue="content-monitor">
-          <ContentGenerationMonitor />
+          <React.Suspense fallback={<Box p="lg"><Loader size="lg" /><Text size="sm" c="dimmed" mt="md">Loading Content Monitor...</Text></Box>}>
+            <ContentGenerationMonitor />
+          </React.Suspense>
         </TabPanel>
 
         <TabPanel activeValue={activeTab} tabValue="student-progress">
-          <StudentProgressDashboard />
+          <React.Suspense fallback={<Box p="lg"><Loader size="lg" /><Text size="sm" c="dimmed" mt="md">Loading Student Progress...</Text></Box>}>
+            <StudentProgressDashboard />
+          </React.Suspense>
         </TabPanel>
 
         <TabPanel activeValue={activeTab} tabValue="sessions">
-          <RobloxSessionManager />
+          <React.Suspense fallback={<Box p="lg"><Loader size="lg" /><Text size="sm" c="dimmed" mt="md">Loading Session Manager...</Text></Box>}>
+            <RobloxSessionManager />
+          </React.Suspense>
         </TabPanel>
 
         <TabPanel activeValue={activeTab} tabValue="quiz-analytics">
-          <QuizResultsAnalytics />
+          <React.Suspense fallback={<Box p="lg"><Loader size="lg" /><Text size="sm" c="dimmed" mt="md">Loading Quiz Analytics...</Text></Box>}>
+            <QuizResultsAnalytics />
+          </React.Suspense>
         </TabPanel>
 
         <TabPanel activeValue={activeTab} tabValue="environment-preview">
-          <RobloxEnvironmentPreview />
+          <React.Suspense fallback={<Box p="lg"><Loader size="lg" /><Text size="sm" c="dimmed" mt="md">Loading Environment Preview...</Text></Box>}>
+            <RobloxEnvironmentPreview />
+          </React.Suspense>
         </TabPanel>
       </Box>
     </Box>
