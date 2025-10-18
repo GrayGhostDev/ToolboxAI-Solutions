@@ -12,6 +12,18 @@ import {
   Menu,
   Table,
 } from '@mantine/core';
+
+// Type assertion helper for Mantine compound components
+const GridCol = Grid.Col as any;
+const CardSection = Card.Section as any;
+const TableThead = Table.Thead as any;
+const TableTbody = Table.Tbody as any;
+const TableTr = Table.Tr as any;
+const TableTh = Table.Th as any;
+const TableTd = Table.Td as any;
+const MenuTarget = Menu.Target as any;
+const MenuDropdown = Menu.Dropdown as any;
+const MenuItem = Menu.Item as any;
 import {
   IconSearch,
   IconPlus,
@@ -60,7 +72,7 @@ export default function Lessons() {
     loading,
     error,
     execute: refetchLessons,
-  } = useApiCallOnMount(listLessons, { mockEndpoint: '/lessons', showNotification: false });
+  } = useApiCallOnMount(() => listLessons() as any, { mockEndpoint: '/lessons', showNotification: false });
 
   // Ensure lessons is always an array
   const lessons = React.useMemo(() => {
@@ -147,7 +159,7 @@ export default function Lessons() {
     }
   };
   const filteredLessons = lessons.filter(
-    (lesson) =>
+    (lesson: Lesson) =>
       lesson.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       lesson.subject.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -166,9 +178,9 @@ export default function Lessons() {
 
   return (
     <Grid gutter="md">
-      <Grid.Col span={12}>
+      <GridCol span={12}>
         <Card>
-          <Card.Section p="md">
+          <CardSection p="md">
             <Group justify="space-between" align="center">
               <Text size="xl" fw={600}>
                 Lessons
@@ -178,7 +190,7 @@ export default function Lessons() {
                   size="sm"
                   placeholder="Search lessons..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.currentTarget.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.currentTarget.value)}
                   style={{ minWidth: 250 }}
                   leftSection={<IconSearch size={16} />}
                 />
@@ -191,13 +203,13 @@ export default function Lessons() {
                 </Button>
               </Group>
             </Group>
-          </Card.Section>
+          </CardSection>
         </Card>
-      </Grid.Col>
+      </GridCol>
 
       {/* Task Progress Panel */}
       {showTaskPanel && tasks.length > 0 && (
-        <Grid.Col span={12}>
+        <GridCol span={12}>
           <TaskProgressList
             tasks={tasks}
             onRemove={handleRemoveTask}
@@ -206,41 +218,41 @@ export default function Lessons() {
             showCompact={false}
             title="Content Generation Tasks"
           />
-        </Grid.Col>
+        </GridCol>
       )}
-      <Grid.Col span={12}>
+      <GridCol span={12}>
         <Card>
           <Table>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Title</Table.Th>
-                <Table.Th>Subject</Table.Th>
-                <Table.Th>Status</Table.Th>
-                <Table.Th>Classes</Table.Th>
-                <Table.Th>Roblox</Table.Th>
-                <Table.Th style={{ textAlign: 'right' }}>Actions</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
+            <TableThead>
+              <TableTr>
+                <TableTh>Title</TableTh>
+                <TableTh>Subject</TableTh>
+                <TableTh>Status</TableTh>
+                <TableTh>Classes</TableTh>
+                <TableTh>Roblox</TableTh>
+                <TableTh style={{ textAlign: 'right' }}>Actions</TableTh>
+              </TableTr>
+            </TableThead>
+            <TableTbody>
               {loading ? (
-                <Table.Tr>
-                  <Table.Td colSpan={6} style={{ textAlign: 'center' }}>
+                <TableTr>
+                  <TableTd colSpan={6} style={{ textAlign: 'center' }}>
                     <Group justify="center">
                       <Loader size="sm" />
                       <Text>Loading...</Text>
                     </Group>
-                  </Table.Td>
-                </Table.Tr>
+                  </TableTd>
+                </TableTr>
               ) : filteredLessons.length === 0 ? (
-                <Table.Tr>
-                  <Table.Td colSpan={6} style={{ textAlign: 'center' }}>
+                <TableTr>
+                  <TableTd colSpan={6} style={{ textAlign: 'center' }}>
                     <Text>No lessons found</Text>
-                  </Table.Td>
-                </Table.Tr>
+                  </TableTd>
+                </TableTr>
               ) : (
-                filteredLessons.map((lesson) => (
-                  <Table.Tr key={lesson.id}>
-                    <Table.Td>
+                filteredLessons.map((lesson: Lesson) => (
+                  <TableTr key={lesson.id}>
+                    <TableTd>
                       <Stack gap="xs">
                         <Text size="sm" fw={500}>
                           {lesson.title}
@@ -249,21 +261,21 @@ export default function Lessons() {
                           {lesson.description}
                         </Text>
                       </Stack>
-                    </Table.Td>
-                    <Table.Td>
+                    </TableTd>
+                    <TableTd>
                       <Badge size="sm" color="blue" variant="outline">
                         {lesson.subject}
                       </Badge>
-                    </Table.Td>
-                    <Table.Td>
+                    </TableTd>
+                    <TableTd>
                       <Badge size="sm" color={lesson.status === 'published' ? 'green' : 'gray'}>
                         {lesson.status}
                       </Badge>
-                    </Table.Td>
-                    <Table.Td>
+                    </TableTd>
+                    <TableTd>
                       <Text>{lesson.classIds?.length || 0}</Text>
-                    </Table.Td>
-                    <Table.Td>
+                    </TableTd>
+                    <TableTd>
                       {lesson.robloxWorldId ? (
                         <Badge size="sm" color="green" leftSection={<IconRocket size={12} />}>
                           Connected
@@ -277,22 +289,22 @@ export default function Lessons() {
                           Push
                         </Button>
                       )}
-                    </Table.Td>
-                    <Table.Td style={{ textAlign: 'right' }}>
+                    </TableTd>
+                    <TableTd style={{ textAlign: 'right' }}>
                       <Menu position="bottom-end">
-                        <Menu.Target>
+                        <MenuTarget>
                           <ActionIcon size="sm" variant="subtle">
                             <IconDotsVertical size={16} />
                           </ActionIcon>
-                        </Menu.Target>
-                        <Menu.Dropdown>
-                          <Menu.Item
+                        </MenuTarget>
+                        <MenuDropdown>
+                          <MenuItem
                             leftSection={<IconEye size={16} />}
                             onClick={() => navigate(`/lessons/${lesson.id}`)}
                           >
                             View Details
-                          </Menu.Item>
-                          <Menu.Item
+                          </MenuItem>
+                          <MenuItem
                             leftSection={<IconEdit size={16} />}
                             onClick={() => {
                               dispatch(
@@ -304,8 +316,8 @@ export default function Lessons() {
                             }}
                           >
                             Edit
-                          </Menu.Item>
-                          <Menu.Item
+                          </MenuItem>
+                          <MenuItem
                             leftSection={<IconCopy size={16} />}
                             onClick={() => {
                               // TODO: Implement actual duplication API call
@@ -319,32 +331,32 @@ export default function Lessons() {
                             }}
                           >
                             Duplicate
-                          </Menu.Item>
+                          </MenuItem>
                           {!lesson.robloxWorldId && (
-                            <Menu.Item
+                            <MenuItem
                               leftSection={<IconRocket size={16} />}
                               onClick={() => handlePushToRoblox(lesson)}
                             >
                               Push to Roblox
-                            </Menu.Item>
+                            </MenuItem>
                           )}
-                          <Menu.Item
+                          <MenuItem
                             leftSection={<IconTrash size={16} />}
                             color="red"
                             onClick={() => handleDelete(lesson)}
                           >
                             Delete
-                          </Menu.Item>
-                        </Menu.Dropdown>
+                          </MenuItem>
+                        </MenuDropdown>
                       </Menu>
-                    </Table.Td>
-                  </Table.Tr>
+                    </TableTd>
+                  </TableTr>
                 ))
               )}
-            </Table.Tbody>
+            </TableTbody>
           </Table>
         </Card>
-      </Grid.Col>
+      </GridCol>
       <CreateLessonDialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
