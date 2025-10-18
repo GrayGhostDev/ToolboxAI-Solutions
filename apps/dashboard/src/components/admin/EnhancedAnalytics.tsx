@@ -280,11 +280,9 @@ export function EnhancedAnalytics({
       {/* Navigation Tabs */}
       <Card sx={{ mb: 3 }}>
         <CardContent sx={{ p: 0 }}>
-          <Tabs 
-            value={currentTab} 
+          <Tabs
+            value={currentTab}
             onChange={(_, newValue) => setCurrentTab(newValue)}
-            variant="scrollable"
-            scrollButtons="auto"
           >
             {tabs.map((tab, index) => (
               <Tab 

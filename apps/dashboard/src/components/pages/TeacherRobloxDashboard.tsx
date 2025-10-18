@@ -1,8 +1,8 @@
 import {
-  Box, Button, Text, Title, Paper, Stack, SimpleGrid, Container, ActionIcon, Avatar, Card,
-  Group, List, Divider, TextInput, Select, Badge, Alert, Loader,
+  Box, Button, Text, Title, Paper, SimpleGrid, Container, ActionIcon, Avatar, Card,
+  Group, List, Divider, TextInput, Select, Badge, Alert, Loader, Grid,
   Progress, Modal, Drawer, Tabs, Menu, Tooltip, Checkbox, Radio,
-  Switch, Slider, Rating, Skeleton, Table, useMantineTheme, Chip
+  Switch, Slider, Rating, Skeleton, Table, useMantineTheme
 } from '@mantine/core';
 
 // Helper function for color transparency (replaces MUI alpha)
@@ -70,27 +70,37 @@ import RobloxEnvironmentPreview from '../roblox/RobloxEnvironmentPreview';
 import { RobloxAIAssistant } from '../roblox/RobloxAIAssistant';
 // import { AIAssistantTest } from '../test/AIAssistantTest'; // File does not exist
 import { IconSparkles, IconCircle, IconDeviceGamepad, IconBrain, IconWorld, IconClipboardCheck } from '@tabler/icons-react';
+import { api } from '../../services/api';
+
+type TabKey =
+  | 'ai-assistant'
+  | 'control-panel'
+  | 'content-monitor'
+  | 'student-progress'
+  | 'sessions'
+  | 'quiz-analytics'
+  | 'environment-preview';
 
 interface TabPanelProps {
   children?: React.ReactNode;
-  index: number;
-  value: number;
+  activeValue: TabKey;
+  tabValue: TabKey;
 }
 
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
+function TabPanel({ children, activeValue, tabValue, ...other }: TabPanelProps) {
+  const isActive = activeValue === tabValue;
 
   return (
     <Box
       role="tabpanel"
-      hidden={value !== index}
-      id={`roblox-tabpanel-${index}`}
-      aria-labelledby={`roblox-tab-${index}`}
+      hidden={!isActive}
+      id={`roblox-tabpanel-${tabValue}`}
+      aria-labelledby={`roblox-tab-${tabValue}`}
       {...other}
       style={{ height: '100%' }}
     >
-      {value === index && (
-        <Box style={{ height: '100%', pt: 2 }}>
+      {isActive && (
+        <Box style={{ height: '100%', paddingTop: 8 }}>
           {children}
         </Box>
       )}
@@ -107,7 +117,7 @@ export default function TeacherRobloxDashboard() {
   const bypassAuth = import.meta.env.VITE_BYPASS_AUTH === 'true';
   const useMockData = import.meta.env.VITE_USE_MOCK_DATA === 'true';
 
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState<TabKey>('ai-assistant');
   const [showHelp, setShowHelp] = useState(false);
 
   // Redux state
@@ -140,26 +150,51 @@ export default function TeacherRobloxDashboard() {
       return;
     }
 
-    const checkPluginStatus = () => {
-      // This would normally make an API call to check plugin status
-      // For now, we'll simulate it
-      const mockStatus = {
-        connected: Math.random() > 0.3, // 70% chance of being connected
-        version: '1.0.0',
-        lastHeartbeat: new Date().toISOString(),
-        capabilities: ['content-generation', 'real-time-sync', 'quiz-management']
-      };
-      dispatch(setPluginStatus(mockStatus));
+    let isMounted = true;
+
+    const defaultCapabilities = ['content-generation', 'real-time-sync', 'quiz-management'];
+
+    const fetchPluginStatus = async () => {
+      try {
+        const status = await api.checkRobloxPluginStatus();
+        if (!isMounted) return;
+
+        dispatch(
+          setPluginStatus({
+            connected: Boolean(status.connected),
+            version: status.version,
+            lastHeartbeat: new Date().toISOString(),
+            capabilities: (status as any).capabilities ?? defaultCapabilities
+          })
+        );
+      } catch (err) {
+        if (!isMounted) return;
+
+        dispatch(
+          setPluginStatus({
+            connected: false,
+            version: undefined,
+            lastHeartbeat: new Date().toISOString(),
+            capabilities: defaultCapabilities
+          })
+        );
+      }
     };
 
-    checkPluginStatus();
-    const interval = setInterval(checkPluginStatus, 30000); // Check every 30 seconds
+    void fetchPluginStatus();
+    const interval = setInterval(fetchPluginStatus, 30000);
 
-    return () => clearInterval(interval);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, [dispatch, bypassAuth, useMockData]);
 
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
+  const handleTabChange = (newValue: string | null) => {
+    if (!newValue) {
+      return;
+    }
+    setActiveTab(newValue as TabKey);
   };
 
   const handleRefresh = () => {
@@ -170,107 +205,100 @@ export default function TeacherRobloxDashboard() {
   return (
     <Box style={{ height: 'calc(100vh - 100px)', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
-      <Paper style={{ p: 2, mb: 2 }}>
-        <SimpleGrid spacing={2} alignItems="center">
-          <Box xs={12} md={6}>
-            <Box style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <IconDeviceGamepad color="blue" style={{ fontSize: 40 }} />
+      <Paper p="md" mb="md">
+        <Grid align="center">
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <Group align="flex-start" gap="sm">
+              <IconDeviceGamepad size={36} color={theme.colors.brand?.[6] || theme.colors.blue[6]} />
               <Box>
                 <Title order={4}>Roblox Studio Integration</Title>
-                <Text size="sm" color="text.secondary">
+                <Text size="sm" c="dimmed">
                   Manage educational content and monitor student progress in real-time
                 </Text>
               </Box>
-            </Box>
-          </Box>
+            </Group>
+          </Grid.Col>
 
-          <Box xs={12} md={6}>
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
-              {/* Status Indicators */}
-              <Chip
-                icon={<IconCircle style={{ fontSize: 12 }} />}
-                label={isConnected ? 'IconDashboard Connected' : 'IconDashboard Offline'}
-                color={isConnected ? 'success' : 'error'}
-                size="small"
-              />
-              <Chip
-                icon={<IconCircle style={{ fontSize: 12 }} />}
-                label={stats.pluginConnected ? 'Plugin Connected' : 'Plugin Offline'}
-                color={stats.pluginConnected ? 'success' : 'error'}
-                size="small"
-              />
-
-              {/* Actions */}
-              <ActionIcon onClick={() => handleRefresh()} size="sm">
-                <IconRefresh />
-              </ActionIcon>
-              <ActionIcon onClick={() => setShowHelp(!showHelp)} size="sm">
-                <IconHelp />
-              </ActionIcon>
-            </Stack>
-          </Box>
-        </SimpleGrid>
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <Group justify="flex-end" gap="sm" wrap="wrap">
+              <Badge
+                variant="light"
+                color={isConnected ? 'green' : 'red'}
+                leftSection={<IconCircle size={12} />}
+              >
+                {isConnected ? 'Realtime Connected' : 'Realtime Offline'}
+              </Badge>
+              <Badge
+                variant="light"
+                color={stats.pluginConnected ? 'green' : 'red'}
+                leftSection={<IconCircle size={12} />}
+              >
+                {stats.pluginConnected ? 'Plugin Connected' : 'Plugin Offline'}
+              </Badge>
+              <Group gap="xs">
+                <ActionIcon onClick={handleRefresh} size="sm" variant="light">
+                  <IconRefresh size={16} />
+                </ActionIcon>
+                <ActionIcon onClick={() => setShowHelp(!showHelp)} size="sm" variant="light">
+                  <IconHelp size={16} />
+                </ActionIcon>
+              </Group>
+            </Group>
+          </Grid.Col>
+        </Grid>
 
         {/* Quick Stats */}
-        <SimpleGrid spacing={2} style={{ mt: 1 }}>
-          <Box xs={6} sm={3}>
-            <Card style={{ backgroundColor: alpha(theme.colors.brand[6], 0.1), padding: 8 }}>
-              <Group align="center" justify="space-between">
-                <Box>
-                  <Title order={5}>{stats.activeGenerations}</Title>
-                  <Text size="xs" c="dimmed">
-                    Active Generations
-                  </Text>
-                </Box>
-                <IconBrain color="blue" />
-              </Group>
-            </Card>
-          </Box>
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="sm" mt="sm">
+          <Card style={{ backgroundColor: alpha(theme.colors.brand[6], 0.1) }} p="sm">
+            <Group align="center" justify="space-between">
+              <Box>
+                <Title order={5}>{stats.activeGenerations}</Title>
+                <Text size="xs" c="dimmed">
+                  Active Generations
+                </Text>
+              </Box>
+              <IconBrain color={theme.colors.brand[6]} />
+            </Group>
+          </Card>
 
-          <Box xs={6} sm={3}>
-            <Card style={{ backgroundColor: alpha(theme.colors.green[6], 0.1), padding: 8 }}>
-              <Group align="center" justify="space-between">
-                <Box>
-                  <Title order={5}>{stats.activeSessions}</Title>
-                  <Text size="xs" c="dimmed">
-                    Active Sessions
-                  </Text>
-                </Box>
-                <IconDeviceGamepad color="green" />
-              </Group>
-            </Card>
-          </Box>
+          <Card style={{ backgroundColor: alpha(theme.colors.green[6], 0.1) }} p="sm">
+            <Group align="center" justify="space-between">
+              <Box>
+                <Title order={5}>{stats.activeSessions}</Title>
+                <Text size="xs" c="dimmed">
+                  Active Sessions
+                </Text>
+              </Box>
+              <IconDeviceGamepad color={theme.colors.green[6]} />
+            </Group>
+          </Card>
 
-          <Box xs={6} sm={3}>
-            <Card style={{ backgroundColor: alpha(theme.colors.blue[6], 0.1), padding: 8 }}>
-              <Group align="center" justify="space-between">
-                <Box>
-                  <Title order={5}>{stats.onlineStudents}</Title>
-                  <Text size="xs" c="dimmed">
-                    Online Students
-                  </Text>
-                </Box>
-                <IconUsers color="cyan" />
-              </Group>
-            </Card>
-          </Box>
+          <Card style={{ backgroundColor: alpha(theme.colors.blue[6], 0.1) }} p="sm">
+            <Group align="center" justify="space-between">
+              <Box>
+                <Title order={5}>{stats.onlineStudents}</Title>
+                <Text size="xs" c="dimmed">
+                  Online Students
+                </Text>
+              </Box>
+              <IconUsers color={theme.colors.blue[6]} />
+            </Group>
+          </Card>
 
-          <Box xs={6} sm={3}>
-            <Card style={{ backgroundColor: alpha(theme.colors.orange[6], 0.1), padding: 8 }}>
-              <Group align="center" justify="space-between">
-                <Box>
-                  <Title order={5}>{stats.totalStudents}</Title>
-                  <Text size="xs" c="dimmed">
-                    Total Students
-                  </Text>
-                </Box>
-                <Badge color="green" size="lg">
-                  {stats.onlineStudents}
-                  <IconUsers color="yellow" style={{ marginLeft: 4 }} />
-                </Badge>
+          <Card style={{ backgroundColor: alpha(theme.colors.orange[6], 0.1) }} p="sm">
+            <Group align="center" justify="space-between">
+              <Box>
+                <Title order={5}>{stats.totalStudents}</Title>
+                <Text size="xs" c="dimmed">
+                  Total Students
+                </Text>
+              </Box>
+              <Group gap={4} align="center">
+                <Text fw={600}>{stats.onlineStudents}</Text>
+                <IconUsers size={16} color={theme.colors.orange[6]} />
               </Group>
-            </Card>
-          </Box>
+            </Group>
+          </Card>
         </SimpleGrid>
       </Paper>
 
@@ -300,44 +328,49 @@ export default function TeacherRobloxDashboard() {
         <Tabs
           value={activeTab}
           onChange={handleTabChange}
-          variant="scrollable"
-          scrollButtons="auto"
           aria-label="Roblox dashboard tabs"
         >
           <Tabs.Tab
+            id="roblox-tab-ai-assistant"
             icon={<IconSparkles />}
             label="AI Assistant"
-            value="0"
+            value="ai-assistant"
           />
           <Tabs.Tab
+            id="roblox-tab-control-panel"
             icon={<IconDashboard />}
             label="Control Panel"
-            value="1"
+            value="control-panel"
           />
           <Tabs.Tab
+            id="roblox-tab-content-monitor"
             icon={<IconBrain />}
             label="Content Monitor"
-            value="2"
+            value="content-monitor"
           />
           <Tabs.Tab
+            id="roblox-tab-student-progress"
             icon={<IconUsers />}
             label="Student Progress"
-            value="3"
+            value="student-progress"
           />
           <Tabs.Tab
+            id="roblox-tab-sessions"
             icon={<IconDeviceGamepad />}
             label="Sessions"
-            value="4"
+            value="sessions"
           />
           <Tabs.Tab
+            id="roblox-tab-quiz-analytics"
             icon={<IconClipboardCheck />}
             label="Quiz Analytics"
-            value="5"
+            value="quiz-analytics"
           />
           <Tabs.Tab
+            id="roblox-tab-environment-preview"
             icon={<IconWorld />}
             label="Environment Preview"
-            value="6"
+            value="environment-preview"
           />
           {/* Removed AI Test tab - component does not exist */}
         </Tabs>
@@ -345,31 +378,31 @@ export default function TeacherRobloxDashboard() {
 
       {/* Tab Panels */}
       <Box style={{ flex: 1, overflow: 'hidden' }}>
-        <TabPanel value={activeTab} index={0}>
+        <TabPanel activeValue={activeTab} tabValue="ai-assistant">
           <RobloxAIAssistant />
         </TabPanel>
 
-        <TabPanel value={activeTab} index={1}>
+        <TabPanel activeValue={activeTab} tabValue="control-panel">
           <RobloxControlPanel />
         </TabPanel>
 
-        <TabPanel value={activeTab} index={2}>
+        <TabPanel activeValue={activeTab} tabValue="content-monitor">
           <ContentGenerationMonitor />
         </TabPanel>
 
-        <TabPanel value={activeTab} index={3}>
+        <TabPanel activeValue={activeTab} tabValue="student-progress">
           <StudentProgressDashboard />
         </TabPanel>
 
-        <TabPanel value={activeTab} index={4}>
+        <TabPanel activeValue={activeTab} tabValue="sessions">
           <RobloxSessionManager />
         </TabPanel>
 
-        <TabPanel value={activeTab} index={5}>
+        <TabPanel activeValue={activeTab} tabValue="quiz-analytics">
           <QuizResultsAnalytics />
         </TabPanel>
 
-        <TabPanel value={activeTab} index={6}>
+        <TabPanel activeValue={activeTab} tabValue="environment-preview">
           <RobloxEnvironmentPreview />
         </TabPanel>
       </Box>

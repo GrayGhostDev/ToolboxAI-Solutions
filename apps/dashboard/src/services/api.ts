@@ -57,39 +57,39 @@ class ApiClient {
     this.client.interceptors.response.use(
       (response) => {
         // Handle successful responses with notifications for important actions
-        if (response.config.method && ['post', 'put', 'delete'].includes(response.config.method.toLowerCase())) {
-          const url = response.config.url || '';
+        if (response.config?.method && ['post', 'put', 'delete'].includes(response.config.method.toLowerCase())) {
+          const url = response.config?.url || '';
           let message = '';
           // Determine success message based on endpoint
           if (url.includes('/register')) {
             message = 'Registration successful! Welcome to ToolBoxAI.';
           } else if (url.includes('/login')) {
             message = 'Welcome back! Successfully logged in.';
-          } else if (url.includes('/assessments') && response.config.method === 'post') {
+          } else if (url.includes('/assessments') && response.config?.method === 'post') {
             message = 'Assessment created successfully!';
           } else if (url.includes('/submit')) {
             message = 'Assessment submitted successfully!';
-          } else if (url.includes('/messages') && response.config.method === 'post') {
+          } else if (url.includes('/messages') && response.config?.method === 'post') {
             message = 'Message sent successfully!';
           } else if (url.includes('/consent')) {
             message = 'Consent recorded successfully!';
-          } else if (url.includes('/schools') && response.config.method === 'post') {
+          } else if (url.includes('/schools') && response.config?.method === 'post') {
             message = 'School created successfully!';
-          } else if (url.includes('/schools') && response.config.method === 'put') {
+          } else if (url.includes('/schools') && response.config?.method === 'put') {
             message = 'School updated successfully!';
-          } else if (url.includes('/schools') && response.config.method === 'delete') {
+          } else if (url.includes('/schools') && response.config?.method === 'delete') {
             message = 'School deleted successfully!';
-          } else if (url.includes('/users') && response.config.method === 'post') {
+          } else if (url.includes('/users') && response.config?.method === 'post') {
             message = 'User created successfully!';
-          } else if (url.includes('/users') && response.config.method === 'put') {
+          } else if (url.includes('/users') && response.config?.method === 'put') {
             message = 'User updated successfully!';
-          } else if (url.includes('/users') && response.config.method === 'delete') {
+          } else if (url.includes('/users') && response.config?.method === 'delete') {
             message = 'User deleted successfully!';
-          } else if (url.includes('/classes') && response.config.method === 'post') {
+          } else if (url.includes('/classes') && response.config?.method === 'post') {
             message = 'Class created successfully!';
-          } else if (url.includes('/classes') && response.config.method === 'put') {
+          } else if (url.includes('/classes') && response.config?.method === 'put') {
             message = 'Class updated successfully!';
-          } else if (url.includes('/classes') && response.config.method === 'delete') {
+          } else if (url.includes('/classes') && response.config?.method === 'delete') {
             message = 'Class deleted successfully!';
           }
           if (message) {
