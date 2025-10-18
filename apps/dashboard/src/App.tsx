@@ -22,12 +22,11 @@ import ErrorBoundary from './components/ErrorBoundary';
 // WebSocket removed - using Pusher for real-time features
 import { pusherService } from './services/pusher';
 import { PusherProvider } from './contexts/PusherContext';
-import { NetworkError } from './components/ErrorComponents';
 import { SessionMonitor, NetworkStatus } from './components/auth/AuthRecovery';
 // Lazy load heavy 3D components to improve initial load time
 const ThreeProvider = React.lazy(() => import('./components/three/ThreeProvider').then(m => ({ default: m.ThreeProvider })));
 // Scene3D removed - deprecated component archived
-const FloatingCharactersV2 = React.lazy(() => import('./components/roblox/FloatingCharactersV2'));
+const FloatingCharactersV2 = React.lazy(() => import('./components/roblox/FloatingCharactersV2.tsx'));
 const Canvas2D = React.lazy(() => import('./components/three/fallbacks/Canvas2D').then(m => ({ default: m.Canvas2D })));
 const PerformanceMonitor = React.lazy(() => import('./components/common/PerformanceMonitor').then(m => ({ default: m.PerformanceMonitor })));
 
@@ -60,7 +59,7 @@ export default function App() {
   const bypassAuth = import.meta.env.VITE_BYPASS_AUTH === 'true';
 
   // Use the unified auth hook that handles conditional logic correctly
-  const authHookResult = useUnifiedAuth();
+  useUnifiedAuth();
 
   // Validate configuration on startup
   React.useEffect(() => {
