@@ -4,7 +4,8 @@ import Topbar from './Topbar';
 import Sidebar from './Sidebar';
 import { type UserRole } from '../../types';
 import { useAppSelector } from '../../store';
-import { ParticleEffects } from '../roblox/ParticleEffects';
+// ParticleEffects temporarily disabled for Vercel build
+// import { ParticleEffects } from '../roblox/ParticleEffects';
 
 interface Props {
   role: UserRole;
@@ -48,15 +49,15 @@ export default function AppLayout({ role, children, isRobloxPage = false }: Prop
           },
         }}
       >
-        {/* Particle Effects for enhanced visuals - Disabled on Roblox page */}
-        {!isRobloxPage && (
+        {/* Particle Effects for enhanced visuals - Temporarily disabled for Vercel build */}
+        {/* {!isRobloxPage && (
           <ParticleEffects
             variant="mixed"
             intensity="low"
             position="absolute"
             zIndex={0}
           />
-        )}
+        )} */}
 
         {/* Spacer for Topbar - equivalent to MUI Toolbar */}
         <Box style={{ height: '64px' }} />
