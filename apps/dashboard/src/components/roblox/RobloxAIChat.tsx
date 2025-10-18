@@ -42,7 +42,7 @@ export const RobloxAIChat: React.FC = () => {
     {
       id: '1',
       role: 'assistant',
-      content: \`Hello \${currentUser.firstName || currentUser.displayName}! I'm your AI assistant for creating Roblox educational environments.
+      content: `Hello ${currentUser.firstName || currentUser.displayName}! I'm your AI assistant for creating Roblox educational environments.
 
 I can help you create immersive 3D learning experiences. To get started, tell me:
 
@@ -51,7 +51,7 @@ I can help you create immersive 3D learning experiences. To get started, tell me
 • What learning objectives do you have in mind?
 • What kind of environment or theme would work best?
 
-Example: "Create a physics lab for 8th graders to learn Newton's laws of motion in a space station."\`,
+Example: "Create a physics lab for 8th graders to learn Newton's laws of motion in a space station."`,
       timestamp: new Date(),
     },
   ]);
@@ -115,7 +115,7 @@ Example: "Create a physics lab for 8th graders to learn Newton's laws of motion 
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: \`Error: \${errorMsg}. The AI chat endpoint may not be configured yet. Try the "Documentation" tab for manual creation guidance.\`,
+        content: `Error: ${errorMsg}. The AI chat endpoint may not be configured yet. Try the "Documentation" tab for manual creation guidance.`,
         timestamp: new Date(),
       }]);
       setError(errorMsg);

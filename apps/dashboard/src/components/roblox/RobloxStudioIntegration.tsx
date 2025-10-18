@@ -19,16 +19,13 @@ import {
   ActionIcon,
   Tooltip,
   Progress,
-  Divider,
   Group,
   Tabs,
   Timeline,
-  Avatar,
   ThemeIcon,
   SimpleGrid,
   TextInput,
   Select,
-  SegmentedControl,
   useMantineTheme
 } from '@mantine/core';
 import {
@@ -53,17 +50,8 @@ import {
   IconX,
   IconSearch,
   IconFilter,
-  IconSortAscending,
-  IconTrash
+  IconSortAscending
 } from '@tabler/icons-react';
-
-// Type assertion helpers for Mantine compound components
-const GridCol = Grid.Col as any;
-const CardSection = Card.Section as any;
-const TabsList = Tabs.List as any;
-const TabsTab = Tabs.Tab as any;
-const TabsPanel = Tabs.Panel as any;
-const TimelineItem = Timeline.Item as any;
 
 import { RobloxAIChat } from './RobloxAIChat';
 import { useAppSelector } from '../../store';
@@ -288,12 +276,18 @@ export const RobloxStudioIntegration: React.FunctionComponent<Record<string, any
     // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(env =>
-        env.name.toLowerCase().includes(query) ||
-        env.metadata?.theme.toLowerCase().includes(query) ||
-        env.metadata?.mapType.toLowerCase().includes(query) ||
-        env.metadata?.learningObjectives.some(obj => obj.toLowerCase().includes(query))
-      );
+      filtered = filtered.filter(env => {
+        const theme = env.metadata?.theme?.toLowerCase() ?? '';
+        const mapType = env.metadata?.mapType?.toLowerCase() ?? '';
+        const objectives = env.metadata?.learningObjectives ?? [];
+
+        return (
+          env.name.toLowerCase().includes(query) ||
+          theme.includes(query) ||
+          mapType.includes(query) ||
+          objectives.some(obj => obj.toLowerCase().includes(query))
+        );
+      });
     }
 
     // Apply status filter
@@ -459,22 +453,22 @@ export const RobloxStudioIntegration: React.FunctionComponent<Record<string, any
 
       {/* Main Content with Tabs */}
       <Tabs value={activeTab} onChange={(value) => setActiveTab(value || 'create')} style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <TabsList>
-          <TabsTab value="create" leftSection={<IconSparkles size={16} />}>
+        <Tabs.List>
+          <Tabs.Tab value="create" leftSection={<IconSparkles size={16} />}>
             Create Environment
-          </TabsTab>
-          <TabsTab value="manage" leftSection={<IconWorld size={16} />}>
+          </Tabs.Tab>
+          <Tabs.Tab value="manage" leftSection={<IconWorld size={16} />}>
             Manage ({environments.length})
-          </TabsTab>
-          <TabsTab value="docs" leftSection={<IconBook size={16} />}>
+          </Tabs.Tab>
+          <Tabs.Tab value="docs" leftSection={<IconBook size={16} />}>
             Documentation
-          </TabsTab>
-        </TabsList>
+          </Tabs.Tab>
+        </Tabs.List>
 
         {/* Create Tab */}
-        <TabsPanel value="create" style={{ flex: 1, display: 'flex', overflow: 'hidden', paddingTop: 16 }}>
+        <Tabs.Panel value="create" style={{ flex: 1, display: 'flex', overflow: 'hidden', paddingTop: 16 }}>
           <Grid style={{ flex: 1, overflow: 'hidden', height: '100%' }}>
-            <GridCol span={12}>
+            <Grid.Col span={12}>
               <Paper shadow="sm" style={{
                 height: '100%',
                 display: 'flex',
@@ -483,12 +477,12 @@ export const RobloxStudioIntegration: React.FunctionComponent<Record<string, any
               }}>
                 <RobloxAIChat />
               </Paper>
-            </GridCol>
+            </Grid.Col>
           </Grid>
-        </TabsPanel>
+        </Tabs.Panel>
 
         {/* Manage Tab */}
-        <TabsPanel value="manage" style={{ flex: 1, overflow: 'auto', paddingTop: 16 }}>
+        <Tabs.Panel value="manage" style={{ flex: 1, overflow: 'auto', paddingTop: 16 }}>
           <Box style={{ padding: theme.spacing.sm }}>
             {/* Search and Filter Controls */}
             {environments.length > 0 && (
@@ -613,7 +607,7 @@ export const RobloxStudioIntegration: React.FunctionComponent<Record<string, any
                     }}
                     onClick={() => setSelectedEnvironment(environment.id)}
                   >
-                    <CardSection withBorder inheritPadding py="xs">
+                    <Card.Section withBorder inheritPadding py="xs">
                       <Group justify="space-between" align="center">
                         <Text fw={600} lineClamp={1}>
                           {environment.name}
@@ -633,7 +627,7 @@ export const RobloxStudioIntegration: React.FunctionComponent<Record<string, any
                           {environment.status}
                         </Badge>
                       </Group>
-                    </CardSection>
+                    </Card.Section>
 
                     {environment.metadata && (
                       <Box my="md">
@@ -677,7 +671,7 @@ export const RobloxStudioIntegration: React.FunctionComponent<Record<string, any
                     )}
 
                     {environment.status === 'ready' && (
-                      <CardSection inheritPadding py="xs">
+                      <Card.Section inheritPadding py="xs">
                         <Group gap="xs">
                           <Button
                             size="xs"
@@ -735,17 +729,17 @@ export const RobloxStudioIntegration: React.FunctionComponent<Record<string, any
                             </ActionIcon>
                           </Tooltip>
                         </Group>
-                      </CardSection>
+                      </Card.Section>
                     )}
                   </Card>
                 ))}
               </SimpleGrid>
             )}
           </Box>
-        </TabsPanel>
+        </Tabs.Panel>
 
         {/* Documentation Tab */}
-        <TabsPanel value="docs" style={{ flex: 1, overflow: 'auto', paddingTop: 16 }}>
+        <Tabs.Panel value="docs" style={{ flex: 1, overflow: 'auto', paddingTop: 16 }}>
           <Box style={{ padding: theme.spacing.md }}>
             <Stack gap="lg">
               {/* Getting Started */}
@@ -755,7 +749,7 @@ export const RobloxStudioIntegration: React.FunctionComponent<Record<string, any
                 </Text>
 
                 <Timeline active={3} bulletSize={24} lineWidth={2}>
-                  <TimelineItem bullet={<IconCloudUpload size={12} />} title="Install Plugin">
+                  <Timeline.Item bullet={<IconCloudUpload size={12} />} title="Install Plugin">
                     <Text c="dimmed" size="sm" mb="xs">
                       Download and install the ToolboxAI plugin from the Roblox Creator Store or directly from Roblox Studio.
                     </Text>
@@ -771,9 +765,9 @@ export const RobloxStudioIntegration: React.FunctionComponent<Record<string, any
                     <Text size="xs" c="dimmed" mt="md">
                       <strong>Alternative:</strong> In Roblox Studio, go to Plugins → Manage Plugins → Search for "ToolboxAI"
                     </Text>
-                  </TimelineItem>
+                  </Timeline.Item>
 
-                  <TimelineItem bullet={<IconSparkles size={12} />} title="Create Environment">
+                  <Timeline.Item bullet={<IconSparkles size={12} />} title="Create Environment">
                     <Text c="dimmed" size="sm" mb="xs">
                       Use the AI chat in the "Create Environment" tab to describe your educational environment. Specify:
                     </Text>
@@ -784,18 +778,18 @@ export const RobloxStudioIntegration: React.FunctionComponent<Record<string, any
                       <Text size="xs" c="dimmed">• Interactive elements needed (puzzles, experiments, games)</Text>
                       <Text size="xs" c="dimmed">• Difficulty level (easy, medium, hard)</Text>
                     </Stack>
-                  </TimelineItem>
+                  </Timeline.Item>
 
-                  <TimelineItem bullet={<IconPlayerPlay size={12} />} title="Deploy to Studio">
+                  <Timeline.Item bullet={<IconPlayerPlay size={12} />} title="Deploy to Studio">
                     <Text c="dimmed" size="sm" mb="xs">
                       Once your environment is generated (status shows "Ready"), click the "Deploy" button to send it directly to your open Roblox Studio instance.
                     </Text>
                     <Text size="xs" c="dimmed" mt="xs">
                       <strong>Note:</strong> Ensure Roblox Studio is running and the ToolboxAI plugin is active.
                     </Text>
-                  </TimelineItem>
+                  </Timeline.Item>
 
-                  <TimelineItem bullet={<IconSettings size={12} />} title="Customize & Refine">
+                  <Timeline.Item bullet={<IconSettings size={12} />} title="Customize & Refine">
                     <Text c="dimmed" size="sm" mb="xs">
                       In Roblox Studio, customize the generated environment:
                     </Text>
@@ -805,13 +799,13 @@ export const RobloxStudioIntegration: React.FunctionComponent<Record<string, any
                       <Text size="xs" c="dimmed">• Add custom assets and decorations</Text>
                       <Text size="xs" c="dimmed">• Test gameplay and learning flow</Text>
                     </Stack>
-                  </TimelineItem>
+                  </Timeline.Item>
 
-                  <TimelineItem bullet={<IconRocket size={12} />} title="Publish & Share">
+                  <Timeline.Item bullet={<IconRocket size={12} />} title="Publish & Share">
                     <Text c="dimmed" size="sm">
                       Publish your environment to Roblox using Studio's publish feature. Share the game link with your students or use the "Share" button to distribute via various channels.
                     </Text>
-                  </TimelineItem>
+                  </Timeline.Item>
                 </Timeline>
               </Paper>
 
@@ -1154,7 +1148,7 @@ export const RobloxStudioIntegration: React.FunctionComponent<Record<string, any
               </Paper>
             </Stack>
           </Box>
-        </TabsPanel>
+        </Tabs.Panel>
       </Tabs>
     </Box>
   );
