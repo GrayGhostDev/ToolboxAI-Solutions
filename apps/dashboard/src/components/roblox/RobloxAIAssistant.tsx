@@ -6,34 +6,22 @@
  */
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Box,
-  Paper,
-  TextInput,
+  Alert,
   ActionIcon,
-  Text,
   Avatar,
   Badge,
-  Stack,
-  Loader,
-  Collapse,
+  Box,
   Button,
-  Divider,
-  Alert,
-  Tooltip,
-  List,
   Group,
-  Chip,
-  Textarea
+  Loader,
+  Paper,
+  ScrollArea,
+  Stack,
+  Text,
+  Textarea,
+  Tooltip,
+  useMantineTheme,
 } from '@mantine/core';
-// Temporary MUI compatibility components (to be migrated)
-const Typography = Text;
-const IconButton = ActionIcon;
-const TextField = Textarea;
-const ListItem = ({ children, ...props }: any) => <Box {...props}>{children}</Box>;
-const ListItemAvatar = ({ children }: any) => <Box>{children}</Box>;
-const InputAdornment = ({ children }: any) => <Box>{children}</Box>;
-const CircularProgress = Loader;
-const Fade = ({ children, in: inProp }: { children: React.ReactNode; in: boolean }) => <Collapse in={inProp}>{children}</Collapse>;
 import {
   IconSend as Send,
   IconRobot as SmartToy,
@@ -44,16 +32,12 @@ import {
   IconQuestionMark as Quiz,
   IconMountain as Terrain,
   IconX as Clear,
-  IconRefresh as Refresh,
   IconChevronDown as ExpandMore,
   IconChevronUp as ExpandLess,
   IconSparkles as AutoAwesome,
-  IconCode as CodeIcon
+  IconCode as CodeIcon,
 } from '@tabler/icons-react';
 import ReactMarkdown from 'react-markdown';
-// Temporarily disabled react-syntax-highlighter due to refractor v5 compatibility issues
-// import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-// import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Code } from '@mantine/core';
 import { useAppSelector, useAppDispatch } from '../../store';
 import { addNotification } from '../../store/slices/uiSlice';
@@ -62,6 +46,13 @@ import { ENABLE_WEBSOCKET, AUTH_TOKEN_KEY } from '../../config';
 import { pusherService } from '../../services/pusher';
 import { WebSocketMessageType } from '../../types/websocket';
 import EnvironmentPreview from './EnvironmentPreview';
+
+// Unique ID generator with counter to avoid Date.now() collisions
+let messageIdCounter = 0;
+const generateMessageId = (): string => {
+  return `msg_${Date.now()}_${++messageIdCounter}`;
+};
+
 // Types
 interface Message {
   id: string;
@@ -80,13 +71,15 @@ interface Message {
 }
 // Helper function to validate message structure
 const isValidMessage = (message: any): message is Message => {
-  return message &&
-         typeof message === 'object' &&
-         typeof message.id === 'string' &&
-         typeof message.role === 'string' &&
-         ['user', 'assistant', 'system'].includes(message.role) &&
-         typeof message.content === 'string' &&
-         message.timestamp instanceof Date;
+  return (
+    message &&
+    typeof message === 'object' &&
+    typeof message.id === 'string' &&
+    typeof message.role === 'string' &&
+    ['user', 'assistant', 'system'].includes(message.role) &&
+    typeof message.content === 'string' &&
+    message.timestamp instanceof Date
+  );
 };
 interface Conversation {
   id: string;
@@ -106,23 +99,23 @@ const SUGGESTED_PROMPTS: SuggestedPrompt[] = [
   {
     icon: <School />,
     text: 'Create a 4th grade fractions pizza shop game',
-    category: 'lesson'
+    category: 'lesson',
   },
   {
     icon: <Terrain />,
     text: 'Build a 6th grade Ancient Egypt exploration world',
-    category: 'environment'
+    category: 'environment',
   },
   {
     icon: <Quiz />,
     text: 'Design a 5th grade solar system simulation',
-    category: 'quiz'
+    category: 'quiz',
   },
   {
     icon: <AutoAwesome />,
     text: 'Make a 7th grade chemistry lab with experiments',
-    category: 'environment'
-  }
+    category: 'environment',
+  },
 ];
 export const RobloxAIAssistant: React.FunctionComponent<Record<string, any>> = () => {
   // State
@@ -133,7 +126,9 @@ export const RobloxAIAssistant: React.FunctionComponent<Record<string, any>> = (
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'connecting'>('disconnected');
+  const [connectionStatus, setConnectionStatus] = useState<
+    'connected' | 'disconnected' | 'connecting'
+  >('disconnected');
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [isExpanded, setIsExpanded] = useState(true);
   const [showEnvironmentPreview, setShowEnvironmentPreview] = useState(false);
@@ -144,12 +139,15 @@ export const RobloxAIAssistant: React.FunctionComponent<Record<string, any>> = (
   const fileInputRef = useRef<HTMLInputElement>(null);
   // Redux
   const dispatch = useAppDispatch();
-  const currentUser = useAppSelector(state => state.user);
+  const currentUser = useAppSelector((state) => state.user);
   // Real-time LLM response generation
-  const generateLLMResponse = async (userMessage: string, conversationHistory: Message[] = []): Promise<string> => {
+  const generateLLMResponse = async (
+    userMessage: string,
+    conversationHistory: Message[] = []
+  ): Promise<string> => {
     try {
       // Create context from conversation history
-      const context = conversationHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n');
+      const context = conversationHistory.map((msg) => `${msg.role}: ${msg.content}`).join('\n');
       // System prompt for educational Roblox environment creation
       const systemPrompt = `You are an AI assistant specialized in creating educational Roblox environments. Your role is to:
 1. Analyze user requests for educational content
@@ -173,16 +171,21 @@ IMPORTANT: When you have enough information to create an environment, end your r
         method: 'POST',
         url: '/api/v1/ai-chat/generate',
         data: {
-          message: userMessage // Backend expects just the user message string
+          message: userMessage, // Backend expects just the user message string
         },
-        timeout: 60000 // 60 seconds timeout for AI generation
+        timeout: 60000, // 60 seconds timeout for AI generation
       });
-      return (response as any).content || 'I\'m here to help you create educational Roblox environments. What would you like to build?';
+      return (
+        (response as any).content ||
+        "I'm here to help you create educational Roblox environments. What would you like to build?"
+      );
     } catch (error) {
       console.error('LLM response generation failed:', error);
       // Check if it's a timeout error
       if (error && typeof error === 'object' && 'code' in error && error.code === 'ECONNABORTED') {
-        setError('AI response is taking longer than expected. Please try again or check your connection.');
+        setError(
+          'AI response is taking longer than expected. Please try again or check your connection.'
+        );
       } else if (error && typeof error === 'object' && 'response' in error) {
         const status = (error as any).response?.status;
         if (status === 500) {
@@ -202,19 +205,26 @@ IMPORTANT: When you have enough information to create an environment, end your r
     const message = userMessage.toLowerCase();
     // Detect key elements
     const gradeMatch = message.match(/\b(\d+)(st|nd|rd|th)?\s*grade\b|\bgrade\s*(\d+)\b/);
-    const grade = gradeMatch ? (gradeMatch[1] || gradeMatch[3]) : null;
+    const grade = gradeMatch ? gradeMatch[1] || gradeMatch[3] : null;
     const subjects = {
-      'math': 'Mathematics', 'science': 'Science', 'history': 'History',
-      'english': 'English', 'geography': 'Geography', 'physics': 'Physics'
+      math: 'Mathematics',
+      science: 'Science',
+      history: 'History',
+      english: 'English',
+      geography: 'Geography',
+      physics: 'Physics',
     };
     const detectedSubject = Object.entries(subjects).find(([key]) => message.includes(key))?.[1];
     const topics = {
-      'presidents': 'US Presidents', 'ww2': 'World War 2', 'fractions': 'Fractions',
-      'solar system': 'Solar System', 'civil war': 'Civil War'
+      presidents: 'US Presidents',
+      ww2: 'World War 2',
+      fractions: 'Fractions',
+      'solar system': 'Solar System',
+      'civil war': 'Civil War',
     };
     const detectedTopic = Object.entries(topics).find(([key]) => message.includes(key))?.[1];
     if (message.includes('create') || message.includes('build') || message.includes('make')) {
-      let response = 'Great! I\'d love to help you create that educational Roblox environment! ';
+      let response = "Great! I'd love to help you create that educational Roblox environment! ";
       if (detectedSubject && grade && detectedTopic) {
         response += `A ${detectedSubject} environment for ${grade}${getOrdinalSuffix(parseInt(grade))} grade focusing on ${detectedTopic} sounds fantastic!\n\n`;
         response += 'To make this perfect for your students, I need to know:\n\n';
@@ -227,17 +237,24 @@ IMPORTANT: When you have enough information to create an environment, end your r
         if (!grade) response += '📚 **Grade Level**: What grade are your students?\n';
         if (!detectedSubject) response += '📖 **Subject**: What subject are you teaching?\n';
         if (!detectedTopic) response += '🎯 **Topic**: What specific concept should they learn?\n';
-        response += '\nOnce I have these details, I\'ll create a personalized Roblox environment!';
+        response += "\nOnce I have these details, I'll create a personalized Roblox environment!";
       }
       return response;
     }
     // Handle follow-up responses
-    if (message.includes('students') || message.includes('minutes') || message.includes('individual') || message.includes('team')) {
-      return 'Perfect! That\'s helpful information. Do you have any other specific requirements for the environment? For example:\n\n' +
-             '• Should it include quizzes or assessments?\n' +
-             '• Any specific activities or interactions you want?\n' +
-             '• Should it connect to your curriculum standards?\n\n' +
-             'Once I have all the details, I\'ll start creating your personalized Roblox environment!';
+    if (
+      message.includes('students') ||
+      message.includes('minutes') ||
+      message.includes('individual') ||
+      message.includes('team')
+    ) {
+      return (
+        "Perfect! That's helpful information. Do you have any other specific requirements for the environment? For example:\n\n" +
+        '• Should it include quizzes or assessments?\n' +
+        '• Any specific activities or interactions you want?\n' +
+        '• Should it connect to your curriculum standards?\n\n' +
+        "Once I have all the details, I'll start creating your personalized Roblox environment!"
+      );
     }
     return "I'm here to help you create educational Roblox environments! Try saying something like 'Create a 4th grade History world about US Presidents' and I'll guide you through the process!";
   };
@@ -252,18 +269,31 @@ IMPORTANT: When you have enough information to create an environment, end your r
   // Check if user is providing follow-up details
   const isFollowUpResponse = (message: string): boolean => {
     const indicators = [
-      'grade', 'students', 'minutes', 'hour', 'objective', 'goal',
-      'collaboration', 'individual', 'team', 'class size', 'duration'
+      'grade',
+      'students',
+      'minutes',
+      'hour',
+      'objective',
+      'goal',
+      'collaboration',
+      'individual',
+      'team',
+      'class size',
+      'duration',
     ];
-    return indicators.some(indicator => message.toLowerCase().includes(indicator));
+    return indicators.some((indicator) => message.toLowerCase().includes(indicator));
   };
   // Check if user has provided enough details to create environment
   const hasEnoughDetails = (message: string, conversationHistory: Message[]): boolean => {
-    const allText = conversationHistory.map(m => m.content).join(' ') + ' ' + message;
+    const allText = conversationHistory.map((m) => m.content).join(' ') + ' ' + message;
     const text = allText.toLowerCase();
     // Check for essential details
-    const hasGrade = /\b(\d+)(st|nd|rd|th)?\s*grade\b|\bgrade\s*(\d+)\b|\b(k|kindergarten)\b/.test(text);
-    const hasSubject = /(math|science|history|english|geography|physics|chemistry|biology)/.test(text);
+    const hasGrade = /\b(\d+)(st|nd|rd|th)?\s*grade\b|\bgrade\s*(\d+)\b|\b(k|kindergarten)\b/.test(
+      text
+    );
+    const hasSubject = /(math|science|history|english|geography|physics|chemistry|biology)/.test(
+      text
+    );
     const hasDuration = /(\d+\s*(min|minute|hour)|short|long|quick)/.test(text);
     const hasObjective = /(learn|teach|understand|practice|explore|objective|goal)/.test(text);
     // Need at least 3 out of 4 key details
@@ -272,33 +302,51 @@ IMPORTANT: When you have enough information to create an environment, end your r
   };
   // Extract environment details from conversation
   const extractEnvironmentDetails = (conversationHistory: Message[]): any => {
-    const allText = conversationHistory.map(m => m.content).join(' ').toLowerCase();
+    const allText = conversationHistory
+      .map((m) => m.content)
+      .join(' ')
+      .toLowerCase();
     // Extract grade level
-    const gradeMatch = allText.match(/\b(\d+)(st|nd|rd|th)?\s*grade\b|\bgrade\s*(\d+)\b|\b(k|kindergarten)\b/);
-    const grade = gradeMatch ? (gradeMatch[1] || gradeMatch[3] || 'K') : '';
+    const gradeMatch = allText.match(
+      /\b(\d+)(st|nd|rd|th)?\s*grade\b|\bgrade\s*(\d+)\b|\b(k|kindergarten)\b/
+    );
+    const grade = gradeMatch ? gradeMatch[1] || gradeMatch[3] || 'K' : '';
     // Extract subject
     const subjects = {
-      'math': 'Mathematics', 'science': 'Science', 'history': 'History',
-      'english': 'English', 'geography': 'Geography', 'physics': 'Physics',
-      'chemistry': 'Chemistry', 'biology': 'Biology'
+      math: 'Mathematics',
+      science: 'Science',
+      history: 'History',
+      english: 'English',
+      geography: 'Geography',
+      physics: 'Physics',
+      chemistry: 'Chemistry',
+      biology: 'Biology',
     };
-    const detectedSubject = Object.entries(subjects).find(([key]) => allText.includes(key))?.[1] || '';
+    const detectedSubject =
+      Object.entries(subjects).find(([key]) => allText.includes(key))?.[1] || '';
     // Extract topic/theme
     const topics = {
-      'presidents': 'US Presidents', 'ww2': 'World War 2', 'fractions': 'Fractions',
-      'solar system': 'Solar System', 'civil war': 'Civil War', 'ancient egypt': 'Ancient Egypt',
-      'chemistry lab': 'Chemistry Lab', 'pizza shop': 'Pizza Shop', 'pizza': 'Pizza'
+      presidents: 'US Presidents',
+      ww2: 'World War 2',
+      fractions: 'Fractions',
+      'solar system': 'Solar System',
+      'civil war': 'Civil War',
+      'ancient egypt': 'Ancient Egypt',
+      'chemistry lab': 'Chemistry Lab',
+      'pizza shop': 'Pizza Shop',
+      pizza: 'Pizza',
     };
     const detectedTopic = Object.entries(topics).find(([key]) => allText.includes(key))?.[1] || '';
     // Extract player count
     const playerMatch = allText.match(/(\d+)\s*students?|\b(\d+)\s*players?/);
-    const maxPlayers = playerMatch ? parseInt(playerMatch[1] || playerMatch[2]) : 20;
+    const maxPlayers = playerMatch ? parseInt(playerMatch[1] || playerMatch[2] || '20', 10) : 20;
     // Generate environment name
-    const name = `${grade ? grade + 'th ' : ''}${detectedSubject || 'Educational'} ${detectedTopic || 'Environment'}`.trim();
+    const name =
+      `${grade ? grade + 'th ' : ''}${detectedSubject || 'Educational'} ${detectedTopic || 'Environment'}`.trim();
     // Generate description
     const description = conversationHistory
-      .filter(m => m.role === 'user')
-      .map(m => m.content)
+      .filter((m) => m.role === 'user')
+      .map((m) => m.content)
       .join(' ')
       .replace(/create|build|make|design/i, '')
       .trim();
@@ -311,8 +359,8 @@ IMPORTANT: When you have enough information to create an environment, end your r
       settings: {
         educational_mode: true,
         collaborative: allText.includes('team') || allText.includes('together'),
-        assessment: allText.includes('quiz') || allText.includes('test')
-      }
+        assessment: allText.includes('quiz') || allText.includes('test'),
+      },
     };
   };
   // Create environment from conversation
@@ -321,24 +369,24 @@ IMPORTANT: When you have enough information to create an environment, end your r
       const environmentDetails = extractEnvironmentDetails(conversationHistory);
       // Show creation progress
       const progressMessage: Message = {
-        id: `msg_${Date.now()}`,
+        id: generateMessageId(),
         role: 'assistant',
         content: `🚀 **Creating Your Environment...**\n\nI'm now creating your "${environmentDetails.name}" environment based on our conversation. This will take a few moments.\n\n**Environment Details:**\n• Name: ${environmentDetails.name}\n• Grade Level: ${environmentDetails.grade_level || 'Any'}\n• Subject: ${environmentDetails.subject || 'General'}\n• Max Players: ${environmentDetails.max_players}\n\nPlease wait while I generate the environment and connect it to Roblox Studio...`,
         timestamp: new Date(),
-        metadata: { generated: true, progress: 0 }
+        metadata: { generated: true, progress: 0 },
       };
-      setMessages(prev => [...prev, progressMessage]);
+      setMessages((prev) => [...prev, progressMessage]);
       // Call the environment creation API
       const response = await apiClient.request<any>({
         method: 'POST',
         url: '/api/v1/roblox/environment/create',
         data: environmentDetails,
-        timeout: 120000 // 2 minutes timeout for environment creation
+        timeout: 120000, // 2 minutes timeout for environment creation
       });
       if (response.success) {
         // Success message with preview and deploy options
         const successMessage: Message = {
-          id: `msg_${Date.now()}`,
+          id: generateMessageId(),
           role: 'assistant',
           content: `🎉 **Environment Created Successfully!**\n\nYour "${environmentDetails.name}" environment has been created and is ready in Roblox Studio!\n\n**Environment Details:**\n• Environment ID: ${response.environment_name}\n• Project Path: ${response.project_path || 'Generated'}\n• Rojo URL: ${response.rojo_url || 'Not available'}\n\n**Next Steps:**\n• Preview your environment below\n• Download the .rbxl file\n• Deploy to Roblox Studio\n\nYour environment is now ready for your students to explore!`,
           timestamp: new Date(),
@@ -350,11 +398,11 @@ IMPORTANT: When you have enough information to create an environment, end your r
               title: environmentDetails.name,
               previewUrl: `/environment-preview/${response.environment_name}`,
               downloadUrl: response.rojo_url,
-              environmentDetails: environmentDetails
-            }
-          }
+              environmentDetails: environmentDetails,
+            },
+          },
         };
-        setMessages(prev => [...prev, successMessage]);
+        setMessages((prev) => [...prev, successMessage]);
         // Show environment preview
         setCurrentEnvironmentId(response.environment_name);
         setCurrentEnvironmentDetails(environmentDetails);
@@ -362,24 +410,25 @@ IMPORTANT: When you have enough information to create an environment, end your r
       } else {
         // Error message
         const errorMessage: Message = {
-          id: `msg_${Date.now()}`,
+          id: generateMessageId(),
           role: 'assistant',
           content: `❌ **Environment Creation Failed**\n\nI encountered an issue while creating your environment: ${response.error || 'Unknown error'}\n\n**Troubleshooting:**\n• Make sure Roblox Studio is open with the Rojo plugin installed\n• Check that the Rojo server is running\n• Try again with a simpler description\n\nWould you like to try again or modify your request?`,
           timestamp: new Date(),
-          metadata: { generated: true, error: true }
+          metadata: { generated: true, error: true },
         };
-        setMessages(prev => [...prev, errorMessage]);
+        setMessages((prev) => [...prev, errorMessage]);
       }
     } catch (error) {
       console.error('Environment creation failed:', error);
       const errorMessage: Message = {
-        id: `msg_${Date.now()}`,
+        id: generateMessageId(),
         role: 'assistant',
-        content: '❌ **Environment Creation Failed**\n\nI encountered an error while creating your environment. This might be due to:\n\n• Roblox Studio not being open\n• Rojo plugin not installed or running\n• Network connectivity issues\n\n**Please try:**\n1. Opening Roblox Studio\n2. Installing the Rojo plugin\n3. Starting the Rojo server\n4. Trying your request again\n\nI\'m here to help you create amazing educational environments!',
+        content:
+          "❌ **Environment Creation Failed**\n\nI encountered an error while creating your environment. This might be due to:\n\n• Roblox Studio not being open\n• Rojo plugin not installed or running\n• Network connectivity issues\n\n**Please try:**\n1. Opening Roblox Studio\n2. Installing the Rojo plugin\n3. Starting the Rojo server\n4. Trying your request again\n\nI'm here to help you create amazing educational environments!",
         timestamp: new Date(),
-        metadata: { generated: true, error: true }
+        metadata: { generated: true, error: true },
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages((prev) => [...prev, errorMessage]);
     }
   };
   // Pusher connection for real-time chat
@@ -434,20 +483,20 @@ IMPORTANT: When you have enough information to create an environment, end your r
         break;
       }
       case 'stream_token': {
-        setStreamingContent(prev => prev + data.content);
+        setStreamingContent((prev) => prev + data.content);
         break;
       }
       case 'stream_end': {
         setIsStreaming(false);
         if (streamingContent.trim()) {
           const aiMessage: Message = {
-            id: `msg_${Date.now()}`,
+            id: generateMessageId(),
             role: 'assistant',
             content: streamingContent.trim(),
             timestamp: new Date(),
-            metadata: { generated: true }
+            metadata: { generated: true },
           };
-          setMessages(prev => [...prev, aiMessage]);
+          setMessages((prev) => [...prev, aiMessage]);
         }
         setStreamingContent('');
         break;
@@ -457,7 +506,11 @@ IMPORTANT: When you have enough information to create an environment, end your r
         // Handle different payload structures
         let messageData = null;
         // Case 1: Full message object in payload.message
-        if (data.payload?.message && typeof data.payload.message === 'object' && data.payload.message.id) {
+        if (
+          data.payload?.message &&
+          typeof data.payload.message === 'object' &&
+          data.payload.message.id
+        ) {
           messageData = data.payload.message;
         }
         // Case 2: Simple string message (user message echo)
@@ -471,7 +524,7 @@ IMPORTANT: When you have enough information to create an environment, end your r
           messageData = data.payload;
         }
         if (messageData && isValidMessage(messageData)) {
-          setMessages(prev => [...prev, messageData]);
+          setMessages((prev) => [...prev, messageData]);
         } else {
           console.warn('Invalid message received:', data.payload);
           // Try to create a valid message from the payload
@@ -479,13 +532,14 @@ IMPORTANT: When you have enough information to create an environment, end your r
             const message = {
               id: data.payload.id || `msg_${Date.now()}`,
               role: data.payload.role || 'assistant',
-              content: data.payload.content || data.payload.text || data.payload.message || 'No content',
+              content:
+                data.payload.content || data.payload.text || data.payload.message || 'No content',
               timestamp: data.payload.timestamp ? new Date(data.payload.timestamp) : new Date(),
-              metadata: data.payload.metadata || {}
+              metadata: data.payload.metadata || {},
             };
             console.log('Created message from payload:', message);
             if (isValidMessage(message)) {
-              setMessages(prev => [...prev, message]);
+              setMessages((prev) => [...prev, message]);
             }
           }
         }
@@ -501,7 +555,7 @@ IMPORTANT: When you have enough information to create an environment, end your r
             aiMessage.timestamp = new Date(aiMessage.timestamp);
           }
           console.log('Adding AI response to messages:', aiMessage);
-          setMessages(prev => [...prev, aiMessage]);
+          setMessages((prev) => [...prev, aiMessage]);
         } else {
           console.warn('Invalid AI response message:', data.payload);
         }
@@ -533,9 +587,9 @@ IMPORTANT: When you have enough information to create an environment, end your r
           title: 'Roblox Educational Assistant',
           context: {
             user_role: userRole,
-            subject_preferences: []
-          }
-        }
+            subject_preferences: [],
+          },
+        },
       });
       console.log('Conversation created:', response);
       console.log('Messages from conversation:', response.messages);
@@ -557,7 +611,10 @@ IMPORTANT: When you have enough information to create an environment, end your r
   // Send message
   const sendMessage = async (message: string) => {
     if (!message.trim() || !conversation) {
-      console.log('Cannot send message:', { message: message.trim(), conversation: !!conversation });
+      console.log('Cannot send message:', {
+        message: message.trim(),
+        conversation: !!conversation,
+      });
       return;
     }
     console.log('Sending message:', message);
@@ -569,23 +626,27 @@ IMPORTANT: When you have enough information to create an environment, end your r
       setShowSuggestions(false);
       // Add user message immediately
       const userMessage: Message = {
-        id: `msg_${Date.now()}`,
+        id: generateMessageId(),
         role: 'user',
         content: message,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-      setMessages(prev => [...prev, userMessage]);
+      setMessages((prev) => [...prev, userMessage]);
       setInputValue('');
       // Send via Pusher for real-time updates (if enabled)
       if (ENABLE_WEBSOCKET && pusherService.isConnected()) {
         try {
           console.log('Sending user message notification via Pusher...');
-          await pusherService.send(WebSocketMessageType.AI_MESSAGE, {
-            conversation_id: conversation.id,
-            message: message
-          }, {
-            channel: `ai-chat-${conversation.id}`
-          });
+          await pusherService.send(
+            WebSocketMessageType.AI_MESSAGE,
+            {
+              conversation_id: conversation.id,
+              message: message,
+            },
+            {
+              channel: `ai-chat-${conversation.id}`,
+            }
+          );
           console.log('User message notification sent via Pusher');
         } catch (pusherError) {
           console.error('Pusher notification failed:', pusherError);
@@ -596,28 +657,31 @@ IMPORTANT: When you have enough information to create an environment, end your r
       try {
         console.log('Calling AI generation API with streaming...');
         // Create a temporary AI message for streaming content
-        const aiMessageId = `msg_${Date.now()}`;
+        const aiMessageId = generateMessageId();
         const tempAiMessage: Message = {
           id: aiMessageId,
           role: 'assistant',
           content: '',
           timestamp: new Date(),
-          metadata: { generated: true, streaming: true }
+          metadata: { generated: true, streaming: true },
         };
         // Add the temporary message immediately for visual feedback
-        setMessages(prev => [...prev, tempAiMessage]);
+        setMessages((prev) => [...prev, tempAiMessage]);
         // Use fetch for streaming response
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8009'}/api/v1/ai-chat/generate`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem(AUTH_TOKEN_KEY) || 'dev-token'}`
-          },
-          body: JSON.stringify({
-            conversation_id: conversation.id,
-            message: message
-          })
-        });
+        const response = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8009'}/api/v1/ai-chat/generate`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${localStorage.getItem(AUTH_TOKEN_KEY) || 'dev-token'}`,
+            },
+            body: JSON.stringify({
+              conversation_id: conversation.id,
+              message: message,
+            }),
+          }
+        );
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -629,39 +693,41 @@ IMPORTANT: When you have enough information to create an environment, end your r
             const { done, value } = await reader.read();
             if (done) break;
             const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\n').filter(line => line.trim());
+            const lines = chunk.split('\n').filter((line) => line.trim());
             for (const line of lines) {
               try {
                 const data = JSON.parse(line);
                 if (data.type === 'token') {
                   streamedContent += data.content;
                   // Update the message content in real-time
-                  setMessages(prev => prev.map(msg =>
-                    msg.id === aiMessageId
-                      ? { ...msg, content: streamedContent }
-                      : msg
-                  ));
+                  setMessages((prev) =>
+                    prev.map((msg) =>
+                      msg.id === aiMessageId ? { ...msg, content: streamedContent } : msg
+                    )
+                  );
                 } else if (data.type === 'complete') {
                   // Final message received
                   const finalMessage = data.message;
-                  setMessages(prev => prev.map(msg =>
-                    msg.id === aiMessageId
-                      ? {
-                          ...msg,
-                          content: finalMessage.content,
-                          timestamp: new Date(finalMessage.timestamp),
-                          metadata: { ...finalMessage.metadata, streaming: false }
-                        }
-                      : msg
-                  ));
+                  setMessages((prev) =>
+                    prev.map((msg) =>
+                      msg.id === aiMessageId
+                        ? {
+                            ...msg,
+                            content: finalMessage.content,
+                            timestamp: new Date(finalMessage.timestamp),
+                            metadata: { ...finalMessage.metadata, streaming: false },
+                          }
+                        : msg
+                    )
+                  );
                   console.log('AI streaming completed');
                 } else if (data.type === 'error') {
                   console.error('Streaming error:', data.error);
-                  setMessages(prev => prev.map(msg =>
-                    msg.id === aiMessageId
-                      ? { ...msg, content: `Error: ${data.error}` }
-                      : msg
-                  ));
+                  setMessages((prev) =>
+                    prev.map((msg) =>
+                      msg.id === aiMessageId ? { ...msg, content: `Error: ${data.error}` } : msg
+                    )
+                  );
                 }
               } catch (e) {
                 // Ignore JSON parse errors for incomplete chunks
@@ -673,17 +739,26 @@ IMPORTANT: When you have enough information to create an environment, end your r
         // Check if this should trigger environment creation
         if (streamedContent && streamedContent.includes('CREATING_ENVIRONMENT_NOW')) {
           console.log('Triggering environment creation from conversation');
-          await createEnvironmentFromConversation([...messages, userMessage, {
-            id: `msg_${Date.now()}`,
-            role: 'assistant',
-            content: streamedContent,
-            timestamp: new Date()
-          }]);
+          await createEnvironmentFromConversation([
+            ...messages,
+            userMessage,
+            {
+              id: generateMessageId(),
+              role: 'assistant',
+              content: streamedContent,
+              timestamp: new Date(),
+            },
+          ]);
         }
       } catch (httpError) {
         console.error('AI generation API failed:', httpError);
         // Provide more specific error messages
-        if (httpError && typeof httpError === 'object' && 'code' in httpError && httpError.code === 'ECONNABORTED') {
+        if (
+          httpError &&
+          typeof httpError === 'object' &&
+          'code' in httpError &&
+          httpError.code === 'ECONNABORTED'
+        ) {
           setError('AI generation timed out. Please check your connection and try again.');
         } else if (httpError && typeof httpError === 'object' && 'response' in httpError) {
           const status = (httpError as any).response?.status;
@@ -699,7 +774,7 @@ IMPORTANT: When you have enough information to create an environment, end your r
         }
       }
       // Use real-time LLM response - DISABLED (using HTTP API response above)
-        /*setTimeout(async () => {
+      /*setTimeout(async () => {
           try {
             let aiContent: string;
             // Generate LLM response which will analyze input and trigger environment creation if ready
@@ -711,7 +786,7 @@ IMPORTANT: When you have enough information to create an environment, end your r
               const displayContent = aiContent.replace('CREATING_ENVIRONMENT_NOW', '').trim();
               // Add the AI response first
               const aiMessage: Message = {
-                id: `msg_${Date.now()}`,
+                id: generateMessageId(),
                 role: 'assistant',
                 content: displayContent,
                 timestamp: new Date(),
@@ -725,7 +800,7 @@ IMPORTANT: When you have enough information to create an environment, end your r
               return; // Don't add the message again below
             }
             const aiMessage: Message = {
-              id: `msg_${Date.now()}`,
+              id: generateMessageId(),
               role: 'assistant',
               content: aiContent,
               timestamp: new Date(),
@@ -735,7 +810,7 @@ IMPORTANT: When you have enough information to create an environment, end your r
           } catch (error) {
             console.error('AI response generation failed:', error);
             const errorMessage: Message = {
-              id: `msg_${Date.now()}`,
+              id: generateMessageId(),
               role: 'assistant',
               content: 'I apologize, but I\'m having trouble processing your request right now. Please try again or rephrase your question.',
               timestamp: new Date(),
@@ -752,7 +827,7 @@ IMPORTANT: When you have enough information to create an environment, end your r
   };
   // Handle suggested prompt click
   const handleSuggestedPrompt = (prompt: string) => {
-    sendMessage(prompt);
+    void sendMessage(prompt);
   };
   // Handle file attachment
   const handleFileAttach = () => {
@@ -763,13 +838,13 @@ IMPORTANT: When you have enough information to create an environment, end your r
     if (!file) return;
     // Handle file upload (implement actual upload logic)
     const message = `I've uploaded a file: ${file.name}. Please analyze it for educational content.`;
-    sendMessage(message);
+    void sendMessage(message);
   };
   // Handle enter key
-  const handleKeyPress = (event: React.KeyboardEvent) => {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
-      sendMessage(inputValue);
+      void sendMessage(inputValue);
     }
   };
   // Clear conversation
@@ -777,17 +852,19 @@ IMPORTANT: When you have enough information to create an environment, end your r
     setMessages([]);
     setError(null);
     setShowSuggestions(true);
-    initializeConversation();
+    void initializeConversation();
   };
+  const theme = useMantineTheme();
+
   // Render message content with markdown
-  const renderMessageContent = (content: string) => {
-    return (
-      <ReactMarkdown
-        components={{
-          code({ node, className, children, ...props }: any) {
-            const inline = (props as any).inline;
-            const match = /language-(\w+)/.exec(className || '');
-            return !inline && match ? (
+  const renderMessageContent = (content: string) => (
+    <ReactMarkdown
+      components={{
+        code({ className, children, ...props }: any) {
+          const inline = (props as any).inline;
+          const match = /language-(\w+)/.exec(className || '');
+          if (!inline && match) {
+            return (
               <Code
                 block
                 style={{
@@ -795,250 +872,238 @@ IMPORTANT: When you have enough information to create an environment, end your r
                   color: '#d4d4d4',
                   padding: '1rem',
                   borderRadius: '4px',
-                  overflow: 'auto'
+                  overflow: 'auto',
                 }}
                 {...props}
               >
                 {String(children).replace(/\n$/, '')}
               </Code>
-            ) : (
-              <Code {...props}>
-                {children}
-              </Code>
             );
           }
-        }}
-      >
-        {content}
-      </ReactMarkdown>
+          return <Code {...props}>{children}</Code>;
+        },
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
+
+  const handleDeployEnvironment = async (contentId?: string) => {
+    if (!contentId) return;
+    try {
+      await apiClient.request({
+        method: 'POST',
+        url: `/api/v1/roblox/deploy/${contentId}`,
+      });
+      dispatch(
+        addNotification({
+          type: 'success',
+          message: 'Environment deployed to Roblox Studio!',
+          autoHide: true,
+        })
+      );
+    } catch (deployError) {
+      dispatch(
+        addNotification({
+          type: 'error',
+          message: 'Failed to deploy to Roblox Studio',
+          autoHide: true,
+        })
+      );
+      console.error('Deploy to Roblox failed:', deployError);
+    }
+  };
+
+  const renderPreviewActions = (message: Message) => {
+    const preview = message.metadata?.preview;
+    if (!preview?.contentId) return null;
+
+    return (
+      <Group gap="xs" mt="sm">
+        <Button
+          size="xs"
+          variant="light"
+          leftSection={<Preview size={14} />}
+          onClick={() => window.open(`/environment-preview/${preview.contentId}`, '_blank')}
+        >
+          View 3D Environment
+        </Button>
+        <Button
+          size="xs"
+          variant="outline"
+          leftSection={<CodeIcon size={14} />}
+          onClick={() => void handleDeployEnvironment(preview.contentId)}
+        >
+          Deploy to Roblox
+        </Button>
+      </Group>
     );
   };
+
+  const renderMessageBubble = (message: Message) => {
+    const isUser = message.role === 'user';
+    const label = isUser ? 'You' : 'AI Assistant';
+    const avatar = (
+      <Avatar radius="xl" color={isUser ? 'gray' : 'brand'}>
+        {isUser ? <Person size={16} /> : <SmartToy size={16} />}
+      </Avatar>
+    );
+
+    return (
+      <Box key={message.id}>
+        <Group align="flex-start" justify={isUser ? 'flex-end' : 'flex-start'} gap="sm">
+          {!isUser && avatar}
+          <Box style={{ maxWidth: '75%' }}>
+            <Text size="xs" c="dimmed" mb={4}>
+              {label}
+            </Text>
+            <Paper
+              shadow="xs"
+              radius="md"
+              withBorder
+              p="sm"
+              style={{
+                backgroundColor: isUser ? theme.colors.gray[0] : theme.white,
+              }}
+            >
+              {renderMessageContent(message.content)}
+              {renderPreviewActions(message)}
+            </Paper>
+          </Box>
+          {isUser && avatar}
+        </Group>
+      </Box>
+    );
+  };
+
+  const renderStreamingMessage = () => (
+    <Box>
+      <Group align="flex-start" gap="sm">
+        <Avatar radius="xl" color="brand">
+          <SmartToy size={16} />
+        </Avatar>
+        <Box style={{ maxWidth: '75%' }}>
+          <Text size="xs" c="dimmed" mb={4}>
+            AI Assistant
+          </Text>
+          <Paper shadow="xs" radius="md" withBorder p="sm">
+            {renderMessageContent(streamingContent)}
+            <Loader size="sm" mt="sm" />
+          </Paper>
+        </Box>
+      </Group>
+    </Box>
+  );
+
+  const statusBadge = (() => {
+    switch (connectionStatus) {
+      case 'connected':
+        return { label: 'Connected', color: 'green' as const };
+      case 'connecting':
+        return { label: 'Connecting…', color: 'yellow' as const };
+      default:
+        return { label: 'Offline', color: 'gray' as const };
+    }
+  })();
+
   return (
     <Paper
-      elevation={3}
-      sx={{
+      withBorder
+      shadow="md"
+      radius="lg"
+      style={{
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        bgcolor: 'background.paper'
+        overflow: 'hidden',
       }}
     >
-      {/* Header */}
-      <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <Avatar sx={{ bgcolor: 'primary.main' }}>
-              <SmartToy />
+      <Box px="md" py="sm" style={{ borderBottom: `1px solid ${theme.colors.gray[3]}` }}>
+        <Group justify="space-between" align="center">
+          <Group align="center" gap="sm">
+            <Avatar radius="xl" color="brand">
+              <SmartToy size={18} />
             </Avatar>
             <Box>
-              <Text size="lg" fw={600}>Roblox AI Assistant</Text>
-              <Group gap="xs" align="center">
+              <Text size="lg" fw={600}>
+                Roblox AI Assistant
+              </Text>
+              <Group gap={6} align="center">
                 <Text size="xs" c="dimmed">
-                  {isStreaming ? 'Typing...' : 'Ready to help'}
+                  {isStreaming ? 'Typing…' : 'Ready to help'}
                 </Text>
-                {/* Connection Status Indicator */}
-                <Chip
-                  size="small"
-                  label={
-                    connectionStatus === 'connected' ? 'Connected' :
-                    connectionStatus === 'connecting' ? 'Connecting...' : 'Offline'
-                  }
-                  color={
-                    connectionStatus === 'connected' ? 'success' :
-                    connectionStatus === 'connecting' ? 'warning' : 'default'
-                  }
-                  variant="outlined"
-                  sx={{ fontSize: '0.6rem', height: '16px' }}
-                />
+                <Badge variant="light" color={statusBadge.color} size="sm">
+                  {statusBadge.label}
+                </Badge>
               </Group>
             </Box>
-          </Stack>
-          <Stack direction="row" spacing={1}>
-            <Tooltip title="Clear conversation">
-              <IconButton onClick={(e: React.MouseEvent) => clearConversation} size="small">
-                <Clear />
-              </IconButton>
+          </Group>
+          <Group gap="xs">
+            <Tooltip label="Clear conversation">
+              <ActionIcon
+                variant="subtle"
+                onClick={clearConversation}
+                disabled={isLoading || isStreaming}
+              >
+                <Clear size={16} />
+              </ActionIcon>
             </Tooltip>
-            <Tooltip title={isExpanded ? 'Collapse' : 'Expand'}>
-              <IconButton onClick={(e: React.MouseEvent) => () => setIsExpanded(!isExpanded)} size="small">
-                {isExpanded ? <ExpandLess /> : <ExpandMore />}
-              </IconButton>
+            <Tooltip label={isExpanded ? 'Collapse' : 'Expand'}>
+              <ActionIcon variant="subtle" onClick={() => setIsExpanded((prev) => !prev)}>
+                {isExpanded ? <ExpandLess size={16} /> : <ExpandMore size={16} />}
+              </ActionIcon>
             </Tooltip>
-          </Stack>
-        </Stack>
+          </Group>
+        </Group>
       </Box>
-      {/* Messages Area */}
-      <Box
-        sx={{
-          flex: 1,
-          overflowY: 'auto',
-          p: 2,
-          display: isExpanded ? 'block' : 'none'
-        }}
-      >
-        {/* Suggested Prompts */}
-        {showSuggestions && messages.length <= 1 && (
-          <Fade in={showSuggestions}>
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Quick Actions:
-              </Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ gap: 1 }}>
-                {SUGGESTED_PROMPTS.map((prompt, index) => (
-                  <Chip
-                    key={index}
-                    icon={prompt.icon as React.ReactElement}
-                    label={prompt.text}
-                    onClick={(e: React.MouseEvent) => () => handleSuggestedPrompt(prompt.text)}
-                    sx={{
-                      cursor: 'pointer',
-                      '&:hover': {
-                        bgcolor: 'action.hover'
-                      }
-                    }}
-                  />
+
+      {isExpanded && (
+        <Box
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+          }}
+        >
+          {showSuggestions && messages.length <= 1 && (
+            <Box px="md" py="sm">
+              <Text size="xs" c="dimmed" mb={6}>
+                Quick Actions
+              </Text>
+              <Group gap="xs">
+                {SUGGESTED_PROMPTS.map((prompt) => (
+                  <Button
+                    key={prompt.text}
+                    size="xs"
+                    variant="light"
+                    leftSection={prompt.icon as React.ReactElement}
+                    onClick={() => handleSuggestedPrompt(prompt.text)}
+                  >
+                    {prompt.text}
+                  </Button>
                 ))}
-              </Stack>
+              </Group>
             </Box>
-          </Fade>
-        )}
-        {/* Messages List */}
-        <List sx={{ width: '100%' }}>
-          {(() => {
-            const validMessages = messages.filter(isValidMessage);
-            console.log('Rendering messages:', validMessages.length, 'valid messages out of', messages.length, 'total');
-            return validMessages.map((message) => (
-            <ListItem
-              key={message.id}
-              alignItems="flex-start"
-              sx={{
-                flexDirection: message.role === 'user' ? 'row-reverse' : 'row',
-                gap: 1
-              }}
-            >
-              <ListItemAvatar>
-                <Avatar
-                  sx={{
-                    bgcolor: message.role === 'user' ? 'secondary.main' : 'primary.main'
-                  }}
-                >
-                  {message.role === 'user' ? <Person /> : <SmartToy />}
-                </Avatar>
-              </ListItemAvatar>
-              <Paper
-                elevation={1}
-                sx={{
-                  p: 2,
-                  maxWidth: '70%',
-                  bgcolor: message.role === 'user' ? 'action.hover' : 'background.default'
-                }}
-              >
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  display="block"
-                  gutterBottom
-                >
-                  {message.role === 'user' ? 'You' : 'AI Assistant'}
-                </Typography>
-                <Box sx={{ '& p': { my: 1 } }}>
-                  {renderMessageContent(message.content)}
-                </Box>
-                {/* Preview and Deploy buttons */}
-                {message.metadata?.preview && (
-                  <>
-                    <Button
-                      startIcon={<Preview />}
-                      size="small"
-                      variant="contained"
-                      color="primary"
-                      sx={{ mt: 1 }}
-                      onClick={(e: React.MouseEvent) => () => {
-                        const contentId = message.metadata?.preview?.contentId;
-                        if (contentId) {
-                          window.open(`/environment-preview/${contentId}`, '_blank');
-                        }
-                      }}
-                    >
-                      View 3D Environment
-                    </Button>
-                    <Button
-                      startIcon={<CodeIcon />}
-                      size="small"
-                      variant="outlined"
-                      sx={{ mt: 1, ml: 1 }}
-                      onClick={(e: React.MouseEvent) => async () => {
-                        try {
-                          const contentId = message.metadata?.preview?.contentId;
-                          await apiClient['request']<any>({
-                            method: 'POST',
-                            url: `/api/v1/roblox/deploy/${contentId}`,
-                          });
-                          dispatch(addNotification({
-                            type: 'success',
-                            message: 'Environment deployed to Roblox Studio!',
-                            autoHide: true,
-                          }));
-                        } catch (error) {
-                          dispatch(addNotification({
-                            type: 'error',
-                            message: 'Failed to deploy to Roblox Studio',
-                            autoHide: true,
-                          }));
-                        }
-                      }}
-                    >
-                      Deploy to Roblox
-                    </Button>
-                  </>
-                )}
-              </Paper>
-            </ListItem>
-            ));
-          })()}
-          {/* Streaming Message */}
-          {isStreaming && streamingContent && (
-            <ListItem alignItems="flex-start">
-              <ListItemAvatar>
-                <Avatar sx={{ bgcolor: 'primary.main' }}>
-                  <SmartToy />
-                </Avatar>
-              </ListItemAvatar>
-              <Paper
-                elevation={1}
-                sx={{
-                  p: 2,
-                  maxWidth: '70%',
-                  bgcolor: 'background.default'
-                }}
-              >
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  display="block"
-                  gutterBottom
-                >
-                  AI Assistant
-                </Typography>
-                <Box sx={{ '& p': { my: 1 } }}>
-                  {renderMessageContent(streamingContent)}
-                  <CircularProgress size={16} sx={{ ml: 1 }} />
-                </Box>
-              </Paper>
-            </ListItem>
           )}
-        </List>
-        {/* Error Alert */}
-        {error && (
-          <Alert severity="error" onClose={() => setError(null)} sx={{ mt: 2 }}>
-            {error}
-          </Alert>
-        )}
-        <div ref={messagesEndRef} />
-      </Box>
-      {/* Environment Preview */}
+
+          <ScrollArea style={{ flex: 1 }}>
+            <Stack gap="sm" px="md" py="sm">
+              {messages.filter(isValidMessage).map(renderMessageBubble)}
+              {isStreaming && streamingContent && renderStreamingMessage()}
+              {error && (
+                <Alert color="red" variant="light" withCloseButton onClose={() => setError(null)}>
+                  {error}
+                </Alert>
+              )}
+              <div ref={messagesEndRef} />
+            </Stack>
+          </ScrollArea>
+        </Box>
+      )}
+
       {showEnvironmentPreview && currentEnvironmentId && (
-        <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+        <Box px="md" py="sm" style={{ borderTop: `1px solid ${theme.colors.gray[3]}` }}>
           <EnvironmentPreview
             environmentId={currentEnvironmentId}
             environmentDetails={currentEnvironmentDetails}
@@ -1050,62 +1115,52 @@ IMPORTANT: When you have enough information to create an environment, end your r
           />
         </Box>
       )}
-      {/* Input Area */}
-      <Box
-        sx={{
-          p: 2,
-          borderTop: 1,
-          borderColor: 'divider',
-          display: isExpanded ? 'block' : 'none'
-        }}
-      >
-        <Stack direction="row" spacing={1}>
-          <TextField
-            fullWidth
-            multiline
-            maxRows={4}
-            placeholder="Ask me anything about creating Roblox educational content..."
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={handleKeyPress}
-            disabled={isLoading || isStreaming}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <IconButton onClick={(e: React.MouseEvent) => handleFileAttach} size="small" disabled={isLoading}>
-                    <AttachFile />
-                  </IconButton>
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={(e: React.MouseEvent) => () => sendMessage(inputValue)}
-                    disabled={!inputValue.trim() || isLoading || isStreaming}
-                    color="primary"
-                  >
-                    {isLoading ? <CircularProgress size={20} /> : <Send />}
-                  </IconButton>
-                </InputAdornment>
-              )
-            }}
+
+      {isExpanded && (
+        <Box px="md" py="sm" style={{ borderTop: `1px solid ${theme.colors.gray[3]}` }}>
+          <Group align="flex-end" gap="xs">
+            <Textarea
+              placeholder="Ask me anything about creating Roblox educational content..."
+              value={inputValue}
+              onChange={(event) => setInputValue(event.currentTarget.value)}
+              onKeyDown={handleKeyDown}
+              minRows={1}
+              maxRows={4}
+              autosize
+              disabled={isLoading || isStreaming}
+              style={{ flex: 1 }}
+            />
+            <Tooltip label="Attach file">
+              <ActionIcon variant="subtle" onClick={handleFileAttach} disabled={isLoading}>
+                <AttachFile size={18} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="Send message">
+              <ActionIcon
+                color="brand"
+                radius="xl"
+                size="lg"
+                onClick={() => void sendMessage(inputValue)}
+                disabled={!inputValue.trim() || isLoading || isStreaming}
+              >
+                {isLoading ? <Loader size="sm" /> : <Send size={18} />}
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+          <input
+            ref={fileInputRef}
+            type="file"
+            hidden
+            accept=".txt,.pdf,.doc,.docx,.json"
+            onChange={handleFileSelect}
           />
-        </Stack>
-        {/* Hidden file input */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          hidden
-          accept=".txt,.pdf,.doc,.docx,.json"
-          onChange={handleFileSelect}
-        />
-        {/* Status */}
-        {isStreaming && (
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
-            AI is thinking...
-          </Typography>
-        )}
-      </Box>
+          {isStreaming && (
+            <Text size="xs" c="dimmed" mt="xs">
+              AI is thinking...
+            </Text>
+          )}
+        </Box>
+      )}
     </Paper>
   );
 };
