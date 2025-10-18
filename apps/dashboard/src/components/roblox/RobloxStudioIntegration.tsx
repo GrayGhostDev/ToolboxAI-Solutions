@@ -612,87 +612,412 @@ export const RobloxStudioIntegration: React.FunctionComponent<Record<string, any
         {/* Documentation Tab */}
         <TabsPanel value="docs" style={{ flex: 1, overflow: 'auto', paddingTop: 16 }}>
           <Box style={{ padding: theme.spacing.md }}>
-            <Paper p="xl" radius="md" withBorder>
-              <Text size="xl" fw={700} mb="md">
-                Getting Started with Roblox Studio Integration
-              </Text>
+            <Stack gap="lg">
+              {/* Getting Started */}
+              <Paper p="xl" radius="md" withBorder>
+                <Text size="xl" fw={700} mb="md">
+                  Getting Started with Roblox Studio Integration
+                </Text>
 
-              <Timeline active={1} bulletSize={24} lineWidth={2}>
-                <TimelineItem bullet={<IconCloudUpload size={12} />} title="Install Plugin">
-                  <Text c="dimmed" size="sm">
-                    Download and install the ToolboxAI plugin from the Roblox Creator Store
+                <Timeline active={3} bulletSize={24} lineWidth={2}>
+                  <TimelineItem bullet={<IconCloudUpload size={12} />} title="Install Plugin">
+                    <Text c="dimmed" size="sm" mb="xs">
+                      Download and install the ToolboxAI plugin from the Roblox Creator Store or directly from Roblox Studio.
+                    </Text>
+                    <Button
+                      size="xs"
+                      variant="light"
+                      mt="xs"
+                      leftSection={<IconCloudUpload size={14} />}
+                      onClick={installPlugin}
+                    >
+                      Get Plugin
+                    </Button>
+                    <Text size="xs" c="dimmed" mt="md">
+                      <strong>Alternative:</strong> In Roblox Studio, go to Plugins → Manage Plugins → Search for "ToolboxAI"
+                    </Text>
+                  </TimelineItem>
+
+                  <TimelineItem bullet={<IconSparkles size={12} />} title="Create Environment">
+                    <Text c="dimmed" size="sm" mb="xs">
+                      Use the AI chat in the "Create Environment" tab to describe your educational environment. Specify:
+                    </Text>
+                    <Stack gap="xs" ml="md" mt="xs">
+                      <Text size="xs" c="dimmed">• Learning objectives (e.g., "teach Newton's laws of motion")</Text>
+                      <Text size="xs" c="dimmed">• Target age group or grade level</Text>
+                      <Text size="xs" c="dimmed">• Environment theme (sci-fi, medieval, modern, etc.)</Text>
+                      <Text size="xs" c="dimmed">• Interactive elements needed (puzzles, experiments, games)</Text>
+                      <Text size="xs" c="dimmed">• Difficulty level (easy, medium, hard)</Text>
+                    </Stack>
+                  </TimelineItem>
+
+                  <TimelineItem bullet={<IconPlayerPlay size={12} />} title="Deploy to Studio">
+                    <Text c="dimmed" size="sm" mb="xs">
+                      Once your environment is generated (status shows "Ready"), click the "Deploy" button to send it directly to your open Roblox Studio instance.
+                    </Text>
+                    <Text size="xs" c="dimmed" mt="xs">
+                      <strong>Note:</strong> Ensure Roblox Studio is running and the ToolboxAI plugin is active.
+                    </Text>
+                  </TimelineItem>
+
+                  <TimelineItem bullet={<IconSettings size={12} />} title="Customize & Refine">
+                    <Text c="dimmed" size="sm" mb="xs">
+                      In Roblox Studio, customize the generated environment:
+                    </Text>
+                    <Stack gap="xs" ml="md" mt="xs">
+                      <Text size="xs" c="dimmed">• Adjust lighting and atmosphere</Text>
+                      <Text size="xs" c="dimmed">• Fine-tune scripts and interactions</Text>
+                      <Text size="xs" c="dimmed">• Add custom assets and decorations</Text>
+                      <Text size="xs" c="dimmed">• Test gameplay and learning flow</Text>
+                    </Stack>
+                  </TimelineItem>
+
+                  <TimelineItem bullet={<IconRocket size={12} />} title="Publish & Share">
+                    <Text c="dimmed" size="sm">
+                      Publish your environment to Roblox using Studio's publish feature. Share the game link with your students or use the "Share" button to distribute via various channels.
+                    </Text>
+                  </TimelineItem>
+                </Timeline>
+              </Paper>
+
+              {/* System Requirements */}
+              <Paper p="xl" radius="md" withBorder>
+                <Group mb="md">
+                  <ThemeIcon size="lg" variant="light" color="blue">
+                    <IconSettings size={20} />
+                  </ThemeIcon>
+                  <Text size="lg" fw={600}>
+                    System Requirements
                   </Text>
+                </Group>
+
+                <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
+                  <div>
+                    <Text size="sm" fw={600} mb="xs">Roblox Studio</Text>
+                    <Stack gap="xs">
+                      <Text size="xs" c="dimmed">• Version: Latest stable release recommended</Text>
+                      <Text size="xs" c="dimmed">• Operating System: Windows 10+ or macOS 10.13+</Text>
+                      <Text size="xs" c="dimmed">• RAM: 4GB minimum, 8GB recommended</Text>
+                      <Text size="xs" c="dimmed">• Storage: 2GB free space for plugin and assets</Text>
+                    </Stack>
+                  </div>
+                  <div>
+                    <Text size="sm" fw={600} mb="xs">Browser Requirements</Text>
+                    <Stack gap="xs">
+                      <Text size="xs" c="dimmed">• Chrome 90+, Firefox 88+, Safari 14+, Edge 90+</Text>
+                      <Text size="xs" c="dimmed">• JavaScript enabled</Text>
+                      <Text size="xs" c="dimmed">• Stable internet connection</Text>
+                      <Text size="xs" c="dimmed">• Minimum 5 Mbps upload/download speed</Text>
+                    </Stack>
+                  </div>
+                </SimpleGrid>
+              </Paper>
+
+              {/* Features */}
+              <Paper p="xl" radius="md" withBorder>
+                <Group mb="md">
+                  <ThemeIcon size="lg" variant="light" color="violet">
+                    <IconSparkles size={20} />
+                  </ThemeIcon>
+                  <Text size="lg" fw={600}>
+                    Key Features
+                  </Text>
+                </Group>
+
+                <Stack gap="md">
+                  <Group align="flex-start">
+                    <ThemeIcon color="blue" variant="light">
+                      <IconSparkles size={16} />
+                    </ThemeIcon>
+                    <div style={{ flex: 1 }}>
+                      <Text fw={500}>AI-Powered Environment Generation</Text>
+                      <Text size="sm" c="dimmed">
+                        Leverage advanced AI to create fully immersive 3D learning environments tailored to your curriculum. The AI understands educational concepts and automatically generates appropriate terrain, structures, interactive elements, and Lua scripts aligned with your learning objectives.
+                      </Text>
+                    </div>
+                  </Group>
+
+                  <Group align="flex-start">
+                    <ThemeIcon color="violet" variant="light">
+                      <IconCode size={16} />
+                    </ThemeIcon>
+                    <div style={{ flex: 1 }}>
+                      <Text fw={500}>Automatic Script Optimization</Text>
+                      <Text size="sm" c="dimmed">
+                        All generated Lua scripts are automatically optimized for performance, following Roblox best practices. Includes proper event handling, memory management, and efficient algorithms to ensure smooth gameplay even on lower-end devices.
+                      </Text>
+                    </div>
+                  </Group>
+
+                  <Group align="flex-start">
+                    <ThemeIcon color="grape" variant="light">
+                      <IconWorld size={16} />
+                    </ThemeIcon>
+                    <div style={{ flex: 1 }}>
+                      <Text fw={500}>Environment Management Dashboard</Text>
+                      <Text size="sm" c="dimmed">
+                        Track all your generated environments in one place. View status, preview before deployment, download .rbxl files for offline editing, and manage multiple projects simultaneously with version control.
+                      </Text>
+                    </div>
+                  </Group>
+
+                  <Group align="flex-start">
+                    <ThemeIcon color="teal" variant="light">
+                      <IconPlayerPlay size={16} />
+                    </ThemeIcon>
+                    <div style={{ flex: 1 }}>
+                      <Text fw={500}>One-Click Deployment</Text>
+                      <Text size="sm" c="dimmed">
+                        Seamlessly deploy generated environments directly to your open Roblox Studio instance. No manual file management or complex setup required - just click "Deploy" and the environment loads instantly.
+                      </Text>
+                    </div>
+                  </Group>
+
+                  <Group align="flex-start">
+                    <ThemeIcon color="orange" variant="light">
+                      <IconShare size={16} />
+                    </ThemeIcon>
+                    <div style={{ flex: 1 }}>
+                      <Text fw={500}>Collaborative Sharing</Text>
+                      <Text size="sm" c="dimmed">
+                        Share your environments with other educators, co-teachers, or students. Generate shareable links, export to common formats, and collaborate on environment improvements with built-in version tracking.
+                      </Text>
+                    </div>
+                  </Group>
+                </Stack>
+              </Paper>
+
+              {/* Troubleshooting */}
+              <Paper p="xl" radius="md" withBorder>
+                <Group mb="md">
+                  <ThemeIcon size="lg" variant="light" color="yellow">
+                    <IconAlertTriangle size={20} />
+                  </ThemeIcon>
+                  <Text size="lg" fw={600}>
+                    Troubleshooting Common Issues
+                  </Text>
+                </Group>
+
+                <Stack gap="lg">
+                  <div>
+                    <Text fw={600} size="sm" mb="xs">Plugin Not Connecting</Text>
+                    <Stack gap="xs" ml="md">
+                      <Text size="xs" c="dimmed">1. Ensure Roblox Studio is running and fully loaded</Text>
+                      <Text size="xs" c="dimmed">2. Check that the ToolboxAI plugin is installed and enabled (Plugins → Manage Plugins)</Text>
+                      <Text size="xs" c="dimmed">3. Try restarting Roblox Studio</Text>
+                      <Text size="xs" c="dimmed">4. Verify your firewall isn't blocking the connection (allow port 34872)</Text>
+                      <Text size="xs" c="dimmed">5. Check the plugin version matches your Studio version</Text>
+                    </Stack>
+                  </div>
+
+                  <div>
+                    <Text fw={600} size="sm" mb="xs">Environment Generation Failed</Text>
+                    <Stack gap="xs" ml="md">
+                      <Text size="xs" c="dimmed">1. Check your internet connection stability</Text>
+                      <Text size="xs" c="dimmed">2. Verify you have sufficient credits/quota in your account</Text>
+                      <Text size="xs" c="dimmed">3. Ensure your description includes clear learning objectives</Text>
+                      <Text size="xs" c="dimmed">4. Try simplifying your request if it's too complex</Text>
+                      <Text size="xs" c="dimmed">5. Contact support if the error persists</Text>
+                    </Stack>
+                  </div>
+
+                  <div>
+                    <Text fw={600} size="sm" mb="xs">Deployment Issues</Text>
+                    <Stack gap="xs" ml="md">
+                      <Text size="xs" c="dimmed">1. Confirm the environment status is "Ready" before deploying</Text>
+                      <Text size="xs" c="dimmed">2. Check that you have a place open in Roblox Studio</Text>
+                      <Text size="xs" c="dimmed">3. Ensure sufficient storage space in Studio workspace</Text>
+                      <Text size="xs" c="dimmed">4. Try downloading the .rbxl file and importing manually if automatic deployment fails</Text>
+                    </Stack>
+                  </div>
+
+                  <div>
+                    <Text fw={600} size="sm" mb="xs">Performance Issues in Generated Environment</Text>
+                    <Stack gap="xs" ml="md">
+                      <Text size="xs" c="dimmed">1. Reduce part count by using meshes instead of unions where possible</Text>
+                      <Text size="xs" c="dimmed">2. Enable streaming in your place settings for large environments</Text>
+                      <Text size="xs" c="dimmed">3. Optimize lighting by using ShadowMap instead of Future lighting</Text>
+                      <Text size="xs" c="dimmed">4. Use the Performance Profiler in Studio to identify bottlenecks</Text>
+                    </Stack>
+                  </div>
+                </Stack>
+              </Paper>
+
+              {/* FAQ */}
+              <Paper p="xl" radius="md" withBorder>
+                <Group mb="md">
+                  <ThemeIcon size="lg" variant="light" color="green">
+                    <IconBook size={20} />
+                  </ThemeIcon>
+                  <Text size="lg" fw={600}>
+                    Frequently Asked Questions
+                  </Text>
+                </Group>
+
+                <Stack gap="lg">
+                  <div>
+                    <Text fw={600} size="sm" mb="xs">How long does it take to generate an environment?</Text>
+                    <Text size="xs" c="dimmed">
+                      Generation time varies based on complexity, typically ranging from 2-10 minutes. Simple classroom environments may take 2-3 minutes, while complex multi-level experiences with extensive scripting can take up to 10 minutes. You'll see real-time progress updates during generation.
+                    </Text>
+                  </div>
+
+                  <div>
+                    <Text fw={600} size="sm" mb="xs">Can I edit the generated environment?</Text>
+                    <Text size="xs" c="dimmed">
+                      Absolutely! Once deployed to Studio, you have full access to modify terrain, scripts, assets, lighting, and any other aspect. The AI-generated environment serves as a starting point that you can customize to perfectly match your needs.
+                    </Text>
+                  </div>
+
+                  <div>
+                    <Text fw={600} size="sm" mb="xs">What types of educational environments can I create?</Text>
+                    <Text size="xs" c="dimmed">
+                      You can create virtually any type of educational environment: science labs, historical recreations, mathematics visualizations, language learning scenarios, coding challenges, virtual field trips, simulation experiences, and more. The AI adapts to your subject matter and grade level.
+                    </Text>
+                  </div>
+
+                  <div>
+                    <Text fw={600} size="sm" mb="xs">Is there a limit to how many environments I can create?</Text>
+                    <Text size="xs" c="dimmed">
+                      Limits depend on your subscription tier. Free accounts can create up to 3 environments per month, while premium accounts have higher limits or unlimited creation. Check your account dashboard for your current usage and limits.
+                    </Text>
+                  </div>
+
+                  <div>
+                    <Text fw={600} size="sm" mb="xs">Can students access the environments I create?</Text>
+                    <Text size="xs" c="dimmed">
+                      Yes! Once you publish your environment to Roblox, students can access it just like any other Roblox experience. You can share the game link, create a private server, or publish it publicly. You maintain full control over access and permissions.
+                    </Text>
+                  </div>
+
+                  <div>
+                    <Text fw={600} size="sm" mb="xs">What happens if I lose internet connection during generation?</Text>
+                    <Text size="xs" c="dimmed">
+                      Your generation request continues on our servers. When you reconnect, refresh the "Manage" tab to see the current status. If the generation completed while you were offline, you'll find it ready for deployment.
+                    </Text>
+                  </div>
+
+                  <div>
+                    <Text fw={600} size="sm" mb="xs">Are the generated scripts secure and safe?</Text>
+                    <Text size="xs" c="dimmed">
+                      Yes, all generated scripts follow Roblox security best practices. They don't include any malicious code, backdoors, or vulnerabilities. However, we recommend reviewing scripts before publishing, especially for environments accessible to students.
+                    </Text>
+                  </div>
+                </Stack>
+              </Paper>
+
+              {/* Best Practices */}
+              <Paper p="xl" radius="md" withBorder>
+                <Group mb="md">
+                  <ThemeIcon size="lg" variant="light" color="cyan">
+                    <IconChecks size={20} />
+                  </ThemeIcon>
+                  <Text size="lg" fw={600}>
+                    Best Practices
+                  </Text>
+                </Group>
+
+                <Stack gap="md">
+                  <div>
+                    <Text fw={500} size="sm" mb="xs">Writing Effective Environment Descriptions</Text>
+                    <Text size="xs" c="dimmed" mb="xs">
+                      Be specific about learning objectives, target audience, and desired interactions. Instead of "science environment," try "interactive physics lab for 8th graders demonstrating Newton's three laws of motion with hands-on experiments."
+                    </Text>
+                  </div>
+
+                  <div>
+                    <Text fw={500} size="sm" mb="xs">Testing Before Student Access</Text>
+                    <Text size="xs" c="dimmed" mb="xs">
+                      Always test environments in Studio first. Check for gameplay bugs, performance issues, and ensure learning objectives are clear. Test on both high and low-end devices if possible.
+                    </Text>
+                  </div>
+
+                  <div>
+                    <Text fw={500} size="sm" mb="xs">Version Control</Text>
+                    <Text size="xs" c="dimmed" mb="xs">
+                      Use Studio's version history to save iterations of your environment. This allows you to revert changes if needed and track improvements over time.
+                    </Text>
+                  </div>
+
+                  <div>
+                    <Text fw={500} size="sm" mb="xs">Accessibility Considerations</Text>
+                    <Text size="xs" c="dimmed" mb="xs">
+                      Ensure generated environments are accessible to all students. Add text labels for audio cues, provide alternative input methods, and test colorblind-friendly visual designs.
+                    </Text>
+                  </div>
+
+                  <div>
+                    <Text fw={500} size="sm" mb="xs">Regular Updates</Text>
+                    <Text size="xs" c="dimmed" mb="xs">
+                      Keep the ToolboxAI plugin updated to access new features and improvements. Enable auto-update in the plugin settings for seamless updates.
+                    </Text>
+                  </div>
+                </Stack>
+              </Paper>
+
+              {/* Additional Resources */}
+              <Paper p="xl" radius="md" withBorder style={{
+                background: 'linear-gradient(135deg, rgba(6, 147, 227, 0.05) 0%, rgba(155, 81, 224, 0.05) 100%)'
+              }}>
+                <Group mb="md">
+                  <ThemeIcon size="lg" variant="gradient" gradient={{ from: 'blue', to: 'violet' }}>
+                    <IconBook size={20} />
+                  </ThemeIcon>
+                  <Text size="lg" fw={600}>
+                    Additional Resources
+                  </Text>
+                </Group>
+
+                <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
                   <Button
-                    size="xs"
                     variant="light"
-                    mt="xs"
-                    leftSection={<IconCloudUpload size={14} />}
-                    onClick={installPlugin}
+                    color="blue"
+                    fullWidth
+                    leftSection={<IconBook size={16} />}
+                    component="a"
+                    href="https://create.roblox.com/docs"
+                    target="_blank"
                   >
-                    Get Plugin
+                    Roblox Creator Documentation
                   </Button>
-                </TimelineItem>
+                  <Button
+                    variant="light"
+                    color="violet"
+                    fullWidth
+                    leftSection={<IconCode size={16} />}
+                    component="a"
+                    href="https://create.roblox.com/docs/scripting"
+                    target="_blank"
+                  >
+                    Lua Scripting Guide
+                  </Button>
+                  <Button
+                    variant="light"
+                    color="grape"
+                    fullWidth
+                    leftSection={<IconWorld size={16} />}
+                    component="a"
+                    href="https://devforum.roblox.com"
+                    target="_blank"
+                  >
+                    Roblox Developer Forum
+                  </Button>
+                  <Button
+                    variant="light"
+                    color="teal"
+                    fullWidth
+                    leftSection={<IconRocket size={16} />}
+                    onClick={() => setActiveTab('create')}
+                  >
+                    Start Creating
+                  </Button>
+                </SimpleGrid>
 
-                <TimelineItem bullet={<IconSparkles size={12} />} title="Create Environment">
-                  <Text c="dimmed" size="sm">
-                    Use the AI chat to describe your educational environment and let AI generate it
-                  </Text>
-                </TimelineItem>
-
-                <TimelineItem bullet={<IconPlayerPlay size={12} />} title="Deploy to Studio">
-                  <Text c="dimmed" size="sm">
-                    Once generated, deploy your environment directly to Roblox Studio with one click
-                  </Text>
-                </TimelineItem>
-
-                <TimelineItem bullet={<IconRocket size={12} />} title="Publish & Share">
-                  <Text c="dimmed" size="sm">
-                    Customize in Studio, then publish to Roblox for your students to experience
-                  </Text>
-                </TimelineItem>
-              </Timeline>
-
-              <Divider my="xl" />
-
-              <Text size="lg" fw={600} mb="md">
-                Features
-              </Text>
-              <Stack gap="md">
-                <Group>
-                  <ThemeIcon color="blue" variant="light">
-                    <IconSparkles size={16} />
-                  </ThemeIcon>
-                  <div style={{ flex: 1 }}>
-                    <Text fw={500}>AI-Powered Generation</Text>
-                    <Text size="sm" c="dimmed">
-                      Describe your learning objectives and let AI create engaging 3D environments
-                    </Text>
-                  </div>
-                </Group>
-                <Group>
-                  <ThemeIcon color="violet" variant="light">
-                    <IconCode size={16} />
-                  </ThemeIcon>
-                  <div style={{ flex: 1 }}>
-                    <Text fw={500}>Script Optimization</Text>
-                    <Text size="sm" c="dimmed">
-                      Automatically optimize Lua scripts for performance and best practices
-                    </Text>
-                  </div>
-                </Group>
-                <Group>
-                  <ThemeIcon color="grape" variant="light">
-                    <IconWorld size={16} />
-                  </ThemeIcon>
-                  <div style={{ flex: 1 }}>
-                    <Text fw={500}>Environment Management</Text>
-                    <Text size="sm" c="dimmed">
-                      Track, deploy, and share your generated environments across projects
-                    </Text>
-                  </div>
-                </Group>
-              </Stack>
-            </Paper>
+                <Text size="xs" c="dimmed" mt="lg" style={{ textAlign: 'center' }}>
+                  Need help? Contact our support team at support@toolboxai.com
+                </Text>
+              </Paper>
+            </Stack>
           </Box>
         </TabsPanel>
       </Tabs>
