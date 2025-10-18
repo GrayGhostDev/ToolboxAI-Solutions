@@ -86,6 +86,25 @@ except ImportError:
 
             return MockUser()
 
+# Optional authentication for development mode
+async def get_current_user_optional(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+) -> User:
+    """Get current user or return dev user in development"""
+    try:
+        return await get_current_user(credentials)
+    except Exception as e:
+        # In development, return a default user
+        if os.getenv("ENVIRONMENT", "production") == "development":
+            logger.warning(f"Auth failed, using dev user: {e}")
+            return User(
+                id="dev-user-001",
+                username="dev_user",
+                email="dev@toolboxai.com",
+                role="teacher",
+            )
+        raise
+
 
 # Model imports
 try:
@@ -1023,7 +1042,7 @@ router = APIRouter(prefix="/ai-chat", tags=["AI Chat"])
     "/conversations", response_model=ConversationResponse, status_code=status.HTTP_201_CREATED
 )
 async def create_conversation(
-    request: CreateConversationRequest, current_user: User = Depends(get_current_user)
+    request: CreateConversationRequest, current_user: User = Depends(get_current_user_optional)
 ) -> ConversationResponse:
     """Create a new AI chat conversation"""
 
@@ -1111,7 +1130,7 @@ async def send_message(
 
 @router.post("/generate")
 async def generate_ai_response_endpoint(
-    request: SendMessageRequest, current_user: User = Depends(get_current_user)
+    request: SendMessageRequest, current_user: User = Depends(get_current_user_optional)
 ):
     """
     Generate AI-powered educational content with streaming response.
