@@ -26,6 +26,9 @@ import {
   Avatar,
   ThemeIcon,
   SimpleGrid,
+  TextInput,
+  Select,
+  SegmentedControl,
   useMantineTheme
 } from '@mantine/core';
 import {
@@ -47,7 +50,11 @@ import {
   IconBrandRoblox,
   IconChecks,
   IconClock,
-  IconX
+  IconX,
+  IconSearch,
+  IconFilter,
+  IconSortAscending,
+  IconTrash
 } from '@tabler/icons-react';
 
 // Type assertion helpers for Mantine compound components
@@ -99,6 +106,11 @@ export const RobloxStudioIntegration: React.FunctionComponent<Record<string, any
   const [error, setError] = useState<string | null>(null);
   const [selectedEnvironment, setSelectedEnvironment] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('create');
+
+  // Manage tab state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<string>('name');
 
   // Check plugin status
   const checkPluginStatus = useCallback(async () => {
@@ -268,6 +280,45 @@ export const RobloxStudioIntegration: React.FunctionComponent<Record<string, any
     generating: environments.filter(e => e.status === 'generating').length,
     error: environments.filter(e => e.status === 'error').length
   };
+
+  // Filter and sort environments
+  const filteredEnvironments = React.useMemo(() => {
+    let filtered = environments;
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(env =>
+        env.name.toLowerCase().includes(query) ||
+        env.metadata?.theme.toLowerCase().includes(query) ||
+        env.metadata?.mapType.toLowerCase().includes(query) ||
+        env.metadata?.learningObjectives.some(obj => obj.toLowerCase().includes(query))
+      );
+    }
+
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(env => env.status === statusFilter);
+    }
+
+    // Apply sorting
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.name.localeCompare(b.name);
+        case 'name-desc':
+          return b.name.localeCompare(a.name);
+        case 'status':
+          return a.status.localeCompare(b.status);
+        case 'difficulty':
+          return (a.metadata?.difficulty || '').localeCompare(b.metadata?.difficulty || '');
+        default:
+          return 0;
+      }
+    });
+
+    return sorted;
+  }, [environments, searchQuery, statusFilter, sortBy]);
 
   return (
     <Box style={{
@@ -439,6 +490,69 @@ export const RobloxStudioIntegration: React.FunctionComponent<Record<string, any
         {/* Manage Tab */}
         <TabsPanel value="manage" style={{ flex: 1, overflow: 'auto', paddingTop: 16 }}>
           <Box style={{ padding: theme.spacing.sm }}>
+            {/* Search and Filter Controls */}
+            {environments.length > 0 && (
+              <Paper p="md" mb="md" withBorder>
+                <Stack gap="md">
+                  <Group align="flex-end">
+                    <TextInput
+                      placeholder="Search by name, theme, or learning objectives..."
+                      leftSection={<IconSearch size={16} />}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      style={{ flex: 1 }}
+                    />
+                    <Select
+                      placeholder="Filter by Status"
+                      leftSection={<IconFilter size={16} />}
+                      value={statusFilter}
+                      onChange={(value) => setStatusFilter(value || 'all')}
+                      data={[
+                        { value: 'all', label: 'All Status' },
+                        { value: 'ready', label: 'Ready' },
+                        { value: 'generating', label: 'Generating' },
+                        { value: 'error', label: 'Error' }
+                      ]}
+                      style={{ minWidth: 160 }}
+                    />
+                    <Select
+                      placeholder="Sort By"
+                      leftSection={<IconSortAscending size={16} />}
+                      value={sortBy}
+                      onChange={(value) => setSortBy(value || 'name')}
+                      data={[
+                        { value: 'name', label: 'Name (A-Z)' },
+                        { value: 'name-desc', label: 'Name (Z-A)' },
+                        { value: 'status', label: 'Status' },
+                        { value: 'difficulty', label: 'Difficulty' }
+                      ]}
+                      style={{ minWidth: 160 }}
+                    />
+                  </Group>
+
+                  {(searchQuery || statusFilter !== 'all') && (
+                    <Group gap="xs">
+                      <Text size="sm" c="dimmed">
+                        Showing {filteredEnvironments.length} of {environments.length} environments
+                      </Text>
+                      {(searchQuery || statusFilter !== 'all') && (
+                        <Button
+                          size="xs"
+                          variant="subtle"
+                          onClick={() => {
+                            setSearchQuery('');
+                            setStatusFilter('all');
+                          }}
+                        >
+                          Clear filters
+                        </Button>
+                      )}
+                    </Group>
+                  )}
+                </Stack>
+              </Paper>
+            )}
+
             {environments.length === 0 ? (
               <Paper p="xl" radius="md" withBorder style={{ textAlign: 'center' }}>
                 <ThemeIcon size={64} radius="xl" variant="light" color="blue" style={{ margin: '0 auto 1rem' }}>
@@ -459,9 +573,30 @@ export const RobloxStudioIntegration: React.FunctionComponent<Record<string, any
                   Create Your First Environment
                 </Button>
               </Paper>
+            ) : filteredEnvironments.length === 0 ? (
+              <Paper p="xl" radius="md" withBorder style={{ textAlign: 'center' }}>
+                <ThemeIcon size={64} radius="xl" variant="light" color="yellow" style={{ margin: '0 auto 1rem' }}>
+                  <IconSearch size={32} />
+                </ThemeIcon>
+                <Text size="lg" fw={600} mb="xs">
+                  No environments found
+                </Text>
+                <Text size="sm" c="dimmed" mb="lg">
+                  Try adjusting your search or filters to find what you're looking for
+                </Text>
+                <Button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setStatusFilter('all');
+                  }}
+                  variant="light"
+                >
+                  Clear filters
+                </Button>
+              </Paper>
             ) : (
               <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="md">
-                {environments.map((environment) => (
+                {filteredEnvironments.map((environment) => (
                   <Card
                     key={environment.id}
                     shadow="sm"
