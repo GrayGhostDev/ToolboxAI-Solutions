@@ -1,12 +1,33 @@
 /**
  * RobloxStudioIntegration Component
  *
- * Main integration component that combines the AI chat interface with
- * Roblox Studio plugin communication and environment management.
+ * Enhanced integration component with modern UI/UX combining AI chat interface
+ * with Roblox Studio plugin communication and environment management.
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Box, Grid, Paper, Text, Button, Alert, Badge, Stack, Card, ActionIcon, Tooltip, Progress, Divider, Group, useMantineTheme } from '@mantine/core';
+import {
+  Box,
+  Grid,
+  Paper,
+  Text,
+  Button,
+  Alert,
+  Badge,
+  Stack,
+  Card,
+  ActionIcon,
+  Tooltip,
+  Progress,
+  Divider,
+  Group,
+  Tabs,
+  Timeline,
+  Avatar,
+  ThemeIcon,
+  SimpleGrid,
+  useMantineTheme
+} from '@mantine/core';
 import {
   IconPlayerPlay,
   IconDownload,
@@ -18,8 +39,24 @@ import {
   IconCloudUpload,
   IconCircleCheck,
   IconExclamationMark,
-  IconAlertTriangle
+  IconAlertTriangle,
+  IconRocket,
+  IconBook,
+  IconWorld,
+  IconSparkles,
+  IconBrandRoblox,
+  IconChecks,
+  IconClock,
+  IconX
 } from '@tabler/icons-react';
+
+// Type assertion helpers for Mantine compound components
+const GridCol = Grid.Col as any;
+const CardSection = Card.Section as any;
+const TabsList = Tabs.List as any;
+const TabsTab = Tabs.Tab as any;
+const TabsPanel = Tabs.Panel as any;
+const TimelineItem = Timeline.Item as any;
 
 import { RobloxAIChat } from './RobloxAIChat';
 import { useAppSelector } from '../../store';
@@ -61,6 +98,7 @@ export const RobloxStudioIntegration: React.FunctionComponent<Record<string, any
   const [isCheckingPlugin, setIsCheckingPlugin] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedEnvironment, setSelectedEnvironment] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>('create');
 
   // Check plugin status
   const checkPluginStatus = useCallback(async () => {
@@ -163,11 +201,7 @@ export const RobloxStudioIntegration: React.FunctionComponent<Record<string, any
 
     try {
       await api.deployToRoblox(environmentId);
-
-      // Show success message
       setError(null);
-
-      // Optionally refresh environments
       loadEnvironments();
     } catch (err) {
       console.error('Failed to deploy to Studio:', err);
@@ -206,13 +240,10 @@ export const RobloxStudioIntegration: React.FunctionComponent<Record<string, any
           url: environment.previewUrl
         });
       } catch (err) {
-        // Fallback to clipboard
         navigator.clipboard?.writeText(environment.previewUrl);
       }
     } else if (environment.previewUrl) {
-      // Fallback to clipboard
       navigator.clipboard?.writeText(environment.previewUrl);
-      // Could show a toast notification here
     }
   }, []);
 
@@ -230,6 +261,14 @@ export const RobloxStudioIntegration: React.FunctionComponent<Record<string, any
     }
   }, []);
 
+  // Get environment counts
+  const envCounts = {
+    total: environments.length,
+    ready: environments.filter(e => e.status === 'ready').length,
+    generating: environments.filter(e => e.status === 'generating').length,
+    error: environments.filter(e => e.status === 'error').length
+  };
+
   return (
     <Box style={{
       height: '100%',
@@ -238,249 +277,425 @@ export const RobloxStudioIntegration: React.FunctionComponent<Record<string, any
       flexDirection: 'column',
       overflow: 'hidden'
     }}>
-      {/* Header */}
-      <Paper shadow="xs" style={{
-        padding: theme.spacing.md,
-        marginBottom: theme.spacing.md,
-        backgroundColor: theme.colors.gray[0]
+      {/* Enhanced Header with Stats */}
+      <Paper shadow="md" p="lg" mb="md" style={{
+        background: 'linear-gradient(135deg, rgba(6, 147, 227, 0.1) 0%, rgba(155, 81, 224, 0.1) 100%)',
+        borderLeft: `4px solid ${theme.colors.blue[6]}`
       }}>
-        <Group position="apart" align="center">
+        <Group justify="space-between" align="flex-start">
           <div>
-            <Text size="xl" weight={700} mb="xs">
-              Roblox Studio Integration
-            </Text>
-            <Text size="sm" color="dimmed">
-              Create, manage, and deploy educational Roblox environments
-            </Text>
+            <Group gap="sm" mb="xs">
+              <ThemeIcon size="xl" variant="gradient" gradient={{ from: 'blue', to: 'violet' }}>
+                <IconBrandRoblox size={24} />
+              </ThemeIcon>
+              <div>
+                <Text size="xl" fw={700} mb={4}>
+                  Roblox Studio Integration
+                </Text>
+                <Text size="sm" c="dimmed">
+                  Create, manage, and deploy educational Roblox environments with AI
+                </Text>
+              </div>
+            </Group>
+
+            {/* Quick Stats */}
+            <SimpleGrid cols={4} spacing="md" mt="md">
+              <Paper p="xs" radius="md" withBorder>
+                <Group gap="xs">
+                  <ThemeIcon size="sm" color="blue" variant="light">
+                    <IconWorld size={14} />
+                  </ThemeIcon>
+                  <div>
+                    <Text size="xs" c="dimmed">Total</Text>
+                    <Text size="lg" fw={600}>{envCounts.total}</Text>
+                  </div>
+                </Group>
+              </Paper>
+              <Paper p="xs" radius="md" withBorder>
+                <Group gap="xs">
+                  <ThemeIcon size="sm" color="green" variant="light">
+                    <IconChecks size={14} />
+                  </ThemeIcon>
+                  <div>
+                    <Text size="xs" c="dimmed">Ready</Text>
+                    <Text size="lg" fw={600}>{envCounts.ready}</Text>
+                  </div>
+                </Group>
+              </Paper>
+              <Paper p="xs" radius="md" withBorder>
+                <Group gap="xs">
+                  <ThemeIcon size="sm" color="yellow" variant="light">
+                    <IconClock size={14} />
+                  </ThemeIcon>
+                  <div>
+                    <Text size="xs" c="dimmed">Generating</Text>
+                    <Text size="lg" fw={600}>{envCounts.generating}</Text>
+                  </div>
+                </Group>
+              </Paper>
+              <Paper p="xs" radius="md" withBorder>
+                <Group gap="xs">
+                  <ThemeIcon size="sm" color="red" variant="light">
+                    <IconX size={14} />
+                  </ThemeIcon>
+                  <div>
+                    <Text size="xs" c="dimmed">Errors</Text>
+                    <Text size="lg" fw={600}>{envCounts.error}</Text>
+                  </div>
+                </Group>
+              </Paper>
+            </SimpleGrid>
           </div>
 
           {/* Plugin Status */}
-          <Group spacing={theme.spacing.md}>
+          <Stack gap="sm" align="flex-end">
             <Badge
-              leftSection={pluginStatus.connected ? <IconCircleCheck size={14} /> : <IconExclamationMark size={14} />}
+              size="lg"
+              leftSection={pluginStatus.connected ? <IconCircleCheck size={16} /> : <IconExclamationMark size={16} />}
               color={pluginStatus.connected ? 'green' : 'red'}
-              variant="outline"
+              variant="dot"
             >
               {pluginStatus.connected ? 'Plugin Connected' : 'Plugin Disconnected'}
             </Badge>
 
-            <Button
-              variant="outline"
-              onClick={checkPluginStatus}
-              disabled={isCheckingPlugin}
-              leftIcon={<IconRefresh />}
-            >
-              {isCheckingPlugin ? 'Checking...' : 'Refresh'}
-            </Button>
-
-            {!pluginStatus.connected && (
+            <Group gap="xs">
               <Button
-                onClick={installPlugin}
-                leftIcon={<IconCloudUpload />}
+                size="xs"
+                variant="light"
+                onClick={checkPluginStatus}
+                disabled={isCheckingPlugin}
+                leftSection={<IconRefresh size={14} />}
               >
-                Install Plugin
+                {isCheckingPlugin ? 'Checking...' : 'Refresh'}
               </Button>
-            )}
-          </Group>
-        </Group>
 
-        {/* Plugin Status Details */}
-        {pluginStatus.connected && pluginStatus.version && (
-          <Box mt="xs">
-            <Text size="xs" color="dimmed">
-              Plugin Version: {pluginStatus.version}
-              {pluginStatus.studioVersion && ` | Studio Version: ${pluginStatus.studioVersion}`}
-            </Text>
-          </Box>
-        )}
+              {!pluginStatus.connected && (
+                <Button
+                  size="xs"
+                  onClick={installPlugin}
+                  leftSection={<IconCloudUpload size={14} />}
+                  gradient={{ from: 'blue', to: 'violet' }}
+                  variant="gradient"
+                >
+                  Install Plugin
+                </Button>
+              )}
+            </Group>
+
+            {pluginStatus.connected && pluginStatus.version && (
+              <Text size="xs" c="dimmed">
+                v{pluginStatus.version}
+                {pluginStatus.studioVersion && ` • Studio ${pluginStatus.studioVersion}`}
+              </Text>
+            )}
+          </Stack>
+        </Group>
       </Paper>
 
       {/* Error Alert */}
       {error && (
         <Alert
           color="red"
+          mb="md"
+          title="Error"
+          icon={<IconAlertTriangle />}
           onClose={() => setError(null)}
-          style={{ marginBottom: theme.spacing.md }}
-          withCloseButton
+          closeButtonLabel="Close"
         >
           {error}
         </Alert>
       )}
 
-      {/* Main Content */}
-      <Grid style={{
-        flex: 1,
-        overflow: 'hidden',
-        height: '100%'
-      }}>
-        {/* AI Chat Interface */}
-        <Grid.Col span={12} md={6}>
-          <Paper shadow="sm" style={{
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden'
-          }}>
-            <RobloxAIChat />
-          </Paper>
-        </Grid.Col>
+      {/* Main Content with Tabs */}
+      <Tabs value={activeTab} onChange={(value) => setActiveTab(value || 'create')} style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <TabsList>
+          <TabsTab value="create" leftSection={<IconSparkles size={16} />}>
+            Create Environment
+          </TabsTab>
+          <TabsTab value="manage" leftSection={<IconWorld size={16} />}>
+            Manage ({environments.length})
+          </TabsTab>
+          <TabsTab value="docs" leftSection={<IconBook size={16} />}>
+            Documentation
+          </TabsTab>
+        </TabsList>
 
-        {/* Environment Management */}
-        <Grid.Col span={12} md={6}>
-          <Paper shadow="sm" style={{
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden'
-          }}>
-            <Box style={{ padding: theme.spacing.md, borderBottom: `1px solid ${theme.colors.gray[3]}` }}>
-              <Text size="lg" weight={600}>Generated Environments</Text>
-              <Text size="sm" color="dimmed">
-                Manage and deploy your AI-generated Roblox worlds
-              </Text>
-            </Box>
+        {/* Create Tab */}
+        <TabsPanel value="create" style={{ flex: 1, display: 'flex', overflow: 'hidden', paddingTop: 16 }}>
+          <Grid style={{ flex: 1, overflow: 'hidden', height: '100%' }}>
+            <GridCol span={12}>
+              <Paper shadow="sm" style={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden'
+              }}>
+                <RobloxAIChat />
+              </Paper>
+            </GridCol>
+          </Grid>
+        </TabsPanel>
 
-            <Box style={{ flex: 1, overflow: 'auto', padding: theme.spacing.md }}>
-              {environments.length === 0 ? (
-                <Box style={{ textAlign: 'center', padding: theme.spacing.xl }}>
-                  <Text size="lg" color="dimmed" mb="xs">
-                    No environments generated yet
-                  </Text>
-                  <Text size="sm" color="dimmed">
-                    Use the AI chat to create your first Roblox environment
-                  </Text>
-                </Box>
-              ) : (
-                <Stack spacing={theme.spacing.md}>
-                  {environments.map((environment) => (
-                    <Card
-                      key={environment.id}
-                      withBorder
-                      style={{
-                        cursor: 'pointer',
-                        borderColor: selectedEnvironment === environment.id
-                          ? theme.colors.blue[4]
-                          : theme.colors.gray[3],
-                        borderWidth: selectedEnvironment === environment.id ? 2 : 1,
-                      }}
-                      onClick={() => setSelectedEnvironment(environment.id)}
-                    >
-                      <Card.Section withBorder inheritPadding py="xs">
-                        <Group position="apart" align="center">
-                          <Text weight={600} style={{ flex: 1 }} truncate>
-                            {environment.name}
-                          </Text>
+        {/* Manage Tab */}
+        <TabsPanel value="manage" style={{ flex: 1, overflow: 'auto', paddingTop: 16 }}>
+          <Box style={{ padding: theme.spacing.sm }}>
+            {environments.length === 0 ? (
+              <Paper p="xl" radius="md" withBorder style={{ textAlign: 'center' }}>
+                <ThemeIcon size={64} radius="xl" variant="light" color="blue" style={{ margin: '0 auto 1rem' }}>
+                  <IconRocket size={32} />
+                </ThemeIcon>
+                <Text size="lg" fw={600} mb="xs">
+                  No environments created yet
+                </Text>
+                <Text size="sm" c="dimmed" mb="lg">
+                  Use the AI chat in the "Create Environment" tab to generate your first Roblox world
+                </Text>
+                <Button
+                  onClick={() => setActiveTab('create')}
+                  leftSection={<IconSparkles size={16} />}
+                  variant="gradient"
+                  gradient={{ from: 'blue', to: 'violet' }}
+                >
+                  Create Your First Environment
+                </Button>
+              </Paper>
+            ) : (
+              <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="md">
+                {environments.map((environment) => (
+                  <Card
+                    key={environment.id}
+                    shadow="sm"
+                    padding="lg"
+                    radius="md"
+                    withBorder
+                    style={{
+                      cursor: 'pointer',
+                      borderColor: selectedEnvironment === environment.id
+                        ? theme.colors.blue[4]
+                        : undefined,
+                      borderWidth: selectedEnvironment === environment.id ? 2 : 1,
+                      transition: 'all 0.2s ease'
+                    }}
+                    onClick={() => setSelectedEnvironment(environment.id)}
+                  >
+                    <CardSection withBorder inheritPadding py="xs">
+                      <Group justify="space-between" align="center">
+                        <Text fw={600} lineClamp={1}>
+                          {environment.name}
+                        </Text>
 
-                          <Badge
-                            size="sm"
-                            color={
-                              environment.status === 'ready' ? 'green' :
-                              environment.status === 'error' ? 'red' : 'yellow'
-                            }
-                            leftSection={
-                              environment.status === 'ready' ? <IconCircleCheck size={12} /> :
-                              environment.status === 'error' ? <IconExclamationMark size={12} /> : <IconAlertTriangle size={12} />
-                            }
-                          >
-                            {environment.status}
+                        <Badge
+                          size="sm"
+                          color={
+                            environment.status === 'ready' ? 'green' :
+                            environment.status === 'error' ? 'red' : 'yellow'
+                          }
+                          leftSection={
+                            environment.status === 'ready' ? <IconCircleCheck size={12} /> :
+                            environment.status === 'error' ? <IconExclamationMark size={12} /> : <IconClock size={12} />
+                          }
+                        >
+                          {environment.status}
+                        </Badge>
+                      </Group>
+                    </CardSection>
+
+                    {environment.metadata && (
+                      <Box my="md">
+                        <Group gap="xs" mb="xs">
+                          <Badge size="xs" variant="light" color="blue">
+                            {environment.metadata.theme}
+                          </Badge>
+                          <Badge size="xs" variant="light" color="violet">
+                            {environment.metadata.mapType}
+                          </Badge>
+                          <Badge size="xs" variant="light" color="grape">
+                            {environment.metadata.difficulty}
                           </Badge>
                         </Group>
-                      </Card.Section>
-
-                      {environment.metadata && (
-                        <Box mb="md">
-                          <Text size="sm" color="dimmed" mb="xs">
-                            Theme: {environment.metadata.theme} | Type: {environment.metadata.mapType}
+                        {environment.metadata.learningObjectives.length > 0 && (
+                          <Text size="xs" c="dimmed" lineClamp={2}>
+                            {environment.metadata.learningObjectives.join(', ')}
                           </Text>
-                          {environment.metadata.learningObjectives.length > 0 && (
-                            <Text size="sm" color="dimmed">
-                              Objectives: {environment.metadata.learningObjectives.join(', ')}
-                            </Text>
-                          )}
-                        </Box>
-                      )}
+                        )}
+                      </Box>
+                    )}
 
-                      {environment.status === 'generating' && environment.progress !== undefined && (
-                        <Box mb="md">
-                          <Progress
-                            value={environment.progress}
-                            mb="xs"
-                          />
-                          <Text size="xs" color="dimmed">
-                            Generating... {environment.progress}%
+                    {environment.status === 'generating' && environment.progress !== undefined && (
+                      <Box mb="md">
+                        <Group justify="space-between" mb="xs">
+                          <Text size="xs" c="dimmed">
+                            Generating...
                           </Text>
-                        </Box>
-                      )}
+                          <Text size="xs" fw={600}>
+                            {environment.progress}%
+                          </Text>
+                        </Group>
+                        <Progress value={environment.progress} color="blue" size="sm" />
+                      </Box>
+                    )}
 
-                      {environment.status === 'error' && environment.error && (
-                        <Alert color="red" mb="md">
-                          {environment.error}
-                        </Alert>
-                      )}
+                    {environment.status === 'error' && environment.error && (
+                      <Alert color="red" mb="md" variant="light">
+                        {environment.error}
+                      </Alert>
+                    )}
 
-                      {environment.status === 'ready' && (
-                        <Card.Section inheritPadding py="xs">
-                          <Group spacing={theme.spacing.xs}>
-                            <Button
-                              size="xs"
-                              leftIcon={<IconPlayerPlay />}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deployToStudio(environment.id);
-                              }}
-                              disabled={!pluginStatus.connected}
-                            >
-                              Deploy to Studio
-                            </Button>
+                    {environment.status === 'ready' && (
+                      <CardSection inheritPadding py="xs">
+                        <Group gap="xs">
+                          <Button
+                            size="xs"
+                            leftSection={<IconPlayerPlay size={14} />}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deployToStudio(environment.id);
+                            }}
+                            disabled={!pluginStatus.connected}
+                            fullWidth
+                            variant="gradient"
+                            gradient={{ from: 'blue', to: 'violet' }}
+                          >
+                            Deploy
+                          </Button>
 
-                            <Button
-                              size="xs"
-                              variant="outline"
-                              leftIcon={<IconDownload />}
+                          <Tooltip label="Download">
+                            <ActionIcon
+                              variant="light"
+                              color="blue"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 downloadEnvironment(environment.id);
                               }}
                             >
-                              Download
-                            </Button>
+                              <IconDownload size={16} />
+                            </ActionIcon>
+                          </Tooltip>
 
-                            {environment.previewUrl && (
-                              <Button
-                                size="xs"
-                                variant="outline"
-                                leftIcon={<IconEye />}
+                          {environment.previewUrl && (
+                            <Tooltip label="Preview">
+                              <ActionIcon
+                                variant="light"
+                                color="violet"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   window.open(environment.previewUrl, '_blank');
                                 }}
                               >
-                                Preview
-                              </Button>
-                            )}
-
-                            <Tooltip label="Share">
-                              <ActionIcon
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  shareEnvironment(environment);
-                                }}
-                              >
-                                <IconShare />
+                                <IconEye size={16} />
                               </ActionIcon>
                             </Tooltip>
-                          </Group>
-                        </Card.Section>
-                      )}
-                    </Card>
-                  ))}
-                </Stack>
-              )}
-            </Box>
-          </Paper>
-        </Grid.Col>
-      </Grid>
+                          )}
+
+                          <Tooltip label="Share">
+                            <ActionIcon
+                              variant="light"
+                              color="grape"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                shareEnvironment(environment);
+                              }}
+                            >
+                              <IconShare size={16} />
+                            </ActionIcon>
+                          </Tooltip>
+                        </Group>
+                      </CardSection>
+                    )}
+                  </Card>
+                ))}
+              </SimpleGrid>
+            )}
+          </Box>
+        </TabsPanel>
+
+        {/* Documentation Tab */}
+        <TabsPanel value="docs" style={{ flex: 1, overflow: 'auto', paddingTop: 16 }}>
+          <Box style={{ padding: theme.spacing.md }}>
+            <Paper p="xl" radius="md" withBorder>
+              <Text size="xl" fw={700} mb="md">
+                Getting Started with Roblox Studio Integration
+              </Text>
+
+              <Timeline active={1} bulletSize={24} lineWidth={2}>
+                <TimelineItem bullet={<IconCloudUpload size={12} />} title="Install Plugin">
+                  <Text c="dimmed" size="sm">
+                    Download and install the ToolboxAI plugin from the Roblox Creator Store
+                  </Text>
+                  <Button
+                    size="xs"
+                    variant="light"
+                    mt="xs"
+                    leftSection={<IconCloudUpload size={14} />}
+                    onClick={installPlugin}
+                  >
+                    Get Plugin
+                  </Button>
+                </TimelineItem>
+
+                <TimelineItem bullet={<IconSparkles size={12} />} title="Create Environment">
+                  <Text c="dimmed" size="sm">
+                    Use the AI chat to describe your educational environment and let AI generate it
+                  </Text>
+                </TimelineItem>
+
+                <TimelineItem bullet={<IconPlayerPlay size={12} />} title="Deploy to Studio">
+                  <Text c="dimmed" size="sm">
+                    Once generated, deploy your environment directly to Roblox Studio with one click
+                  </Text>
+                </TimelineItem>
+
+                <TimelineItem bullet={<IconRocket size={12} />} title="Publish & Share">
+                  <Text c="dimmed" size="sm">
+                    Customize in Studio, then publish to Roblox for your students to experience
+                  </Text>
+                </TimelineItem>
+              </Timeline>
+
+              <Divider my="xl" />
+
+              <Text size="lg" fw={600} mb="md">
+                Features
+              </Text>
+              <Stack gap="md">
+                <Group>
+                  <ThemeIcon color="blue" variant="light">
+                    <IconSparkles size={16} />
+                  </ThemeIcon>
+                  <div style={{ flex: 1 }}>
+                    <Text fw={500}>AI-Powered Generation</Text>
+                    <Text size="sm" c="dimmed">
+                      Describe your learning objectives and let AI create engaging 3D environments
+                    </Text>
+                  </div>
+                </Group>
+                <Group>
+                  <ThemeIcon color="violet" variant="light">
+                    <IconCode size={16} />
+                  </ThemeIcon>
+                  <div style={{ flex: 1 }}>
+                    <Text fw={500}>Script Optimization</Text>
+                    <Text size="sm" c="dimmed">
+                      Automatically optimize Lua scripts for performance and best practices
+                    </Text>
+                  </div>
+                </Group>
+                <Group>
+                  <ThemeIcon color="grape" variant="light">
+                    <IconWorld size={16} />
+                  </ThemeIcon>
+                  <div style={{ flex: 1 }}>
+                    <Text fw={500}>Environment Management</Text>
+                    <Text size="sm" c="dimmed">
+                      Track, deploy, and share your generated environments across projects
+                    </Text>
+                  </div>
+                </Group>
+              </Stack>
+            </Paper>
+          </Box>
+        </TabsPanel>
+      </Tabs>
     </Box>
   );
 };
