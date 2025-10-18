@@ -402,7 +402,7 @@ export const AgentDashboard= () => {
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="md">
           {[1, 2, 3, 4].map(i => (
             <Card key={i} padding="md" withBorder>
-              <Stack spacing="sm">
+              <Stack gap="sm">
                 <Skeleton height={20} width="60%" />
                 <Skeleton height={60} />
                 <Skeleton height={16} width="40%" />
@@ -421,7 +421,7 @@ export const AgentDashboard= () => {
         <Title order={2}>
           Agent Dashboard
         </Title>
-        <Group spacing="sm">
+        <Group gap="sm">
           <SystemHealthIndicator
             status={systemMetrics?.system.status || 'error'}
             isConnected={isConnected}
@@ -455,8 +455,8 @@ export const AgentDashboard= () => {
       {systemMetrics && (
         <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md" mb="xl">
           <Card padding="md" withBorder>
-            <Stack spacing="xs">
-              <Group spacing="xs">
+            <Stack gap="xs">
+              <Group gap="xs">
                 <IconCpu color="var(--mantine-color-blue-6)" />
                 <Text size="lg" fw={600}>Total Agents</Text>
               </Group>
@@ -470,8 +470,8 @@ export const AgentDashboard= () => {
           </Card>
 
           <Card padding="md" withBorder>
-            <Stack spacing="xs">
-              <Group spacing="xs">
+            <Stack gap="xs">
+              <Group gap="xs">
                 <IconBolt color="var(--mantine-color-green-6)" />
                 <Text size="lg" fw={600}>Utilization</Text>
               </Group>
@@ -488,8 +488,8 @@ export const AgentDashboard= () => {
           </Card>
 
           <Card padding="md" withBorder>
-            <Stack spacing="xs">
-              <Group spacing="xs">
+            <Stack gap="xs">
+              <Group gap="xs">
                 <IconTrendingUp color="var(--mantine-color-cyan-6)" />
                 <Text size="lg" fw={600}>Success Rate</Text>
               </Group>
@@ -503,8 +503,8 @@ export const AgentDashboard= () => {
           </Card>
 
           <Card padding="md" withBorder>
-            <Stack spacing="xs">
-              <Group spacing="xs">
+            <Stack gap="xs">
+              <Group gap="xs">
                 <IconClock color="var(--mantine-color-orange-6)" />
                 <Text size="lg" fw={600}>Queue</Text>
               </Group>
@@ -549,11 +549,11 @@ export const AgentDashboard= () => {
           <Title order={3} mb="md">
             Agents by Type
           </Title>
-          <Stack spacing="md">
+          <Stack gap="md">
             {Object.entries(agentsByType).map(([type, typeAgents]) => (
               <Card key={type} padding="md" withBorder>
-                <Stack spacing="md">
-                  <Group spacing="sm">
+                <Stack gap="md">
+                  <Group gap="sm">
                     <Text size="lg" fw={600}>
                       {type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                     </Text>
