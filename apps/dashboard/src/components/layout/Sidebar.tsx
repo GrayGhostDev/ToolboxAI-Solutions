@@ -92,13 +92,19 @@ export default function Sidebar({ role }: Props) {
     <Box
       style={{
         height: '100vh',
-        width: '100%',
+        width: '260px',
+        minWidth: '260px',
+        maxWidth: '260px',
         background: 'linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%)',
         borderRight: '2px solid var(--mantine-color-cyan-6)',
         boxShadow: '0 0 20px rgba(0, 188, 212, 0.3)',
+        position: 'fixed',
+        left: 0,
+        top: 0,
+        zIndex: 100,
       }}
     >
-      <ScrollArea h="100vh" style={{ width: '100%' }}>
+      <ScrollArea h="100vh" style={{ width: '260px' }}>
         {/* Space for toolbar */}
         <Box h={64} />
 
