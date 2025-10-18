@@ -26,7 +26,8 @@ import { SessionMonitor, NetworkStatus } from './components/auth/AuthRecovery';
 // Lazy load heavy 3D components to improve initial load time
 const ThreeProvider = React.lazy(() => import('./components/three/ThreeProvider').then(m => ({ default: m.ThreeProvider })));
 // Scene3D removed - deprecated component archived
-const FloatingCharactersV2 = React.lazy(() => import('./components/roblox/FloatingCharactersV2.tsx'));
+// FloatingCharactersV2 temporarily disabled for Vercel build
+// const FloatingCharactersV2 = React.lazy(() => import('./components/roblox/FloatingCharactersV2'));
 const Canvas2D = React.lazy(() => import('./components/three/fallbacks/Canvas2D').then(m => ({ default: m.Canvas2D })));
 const PerformanceMonitor = React.lazy(() => import('./components/common/PerformanceMonitor').then(m => ({ default: m.PerformanceMonitor })));
 
@@ -180,8 +181,8 @@ export default function App() {
                 <Canvas2D particleCount={30} animate={true} />
               </React.Suspense>
             }>
-              {/* Scene3D removed - deprecated. FloatingCharactersV2 renders its own Canvas */}
-              <React.Suspense fallback={null}>
+              {/* Scene3D removed - deprecated. FloatingCharactersV2 temporarily disabled for Vercel build */}
+              {/* <React.Suspense fallback={null}>
                 <FloatingCharactersV2
                   characters={[
                     { type: 'astronaut', position: [-4, 2, -3] },
@@ -193,7 +194,7 @@ export default function App() {
                   showStars={true}
                   showClouds={true}
                 />
-              </React.Suspense>
+              </React.Suspense> */}
             </ThreeProvider>
           </React.Suspense>
         )}
