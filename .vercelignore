@@ -36,8 +36,8 @@ docker-compose*.yml
 Dockerfile*
 .dockerignore
 
-# Roblox
-roblox/
+# Roblox (Luau scripts directory only, not dashboard components)
+/roblox/
 
 # Scripts (except deployment)
 scripts/database/
