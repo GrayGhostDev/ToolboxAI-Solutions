@@ -17,10 +17,9 @@ import {
   Avatar,
   Group,
   Divider,
-  Pill,
   Title,
   ScrollArea,
-  UnstyledButton,
+  Button,
 } from '@mantine/core';
 import {
   IconUser,
@@ -107,13 +106,15 @@ export const ActivityFeed = memo<ActivityFeedProps>(({
 
   // Auto-refresh
   useEffect(() => {
-    if (autoRefresh && onRefresh) {
-      const interval = setInterval(() => {
-        onRefresh();
-      }, refreshInterval);
-
-      return () => clearInterval(interval);
+    if (!autoRefresh || !onRefresh) {
+      return undefined;
     }
+
+    const interval = setInterval(() => {
+      void onRefresh();
+    }, refreshInterval);
+
+    return () => clearInterval(interval);
   }, [autoRefresh, refreshInterval, onRefresh]);
 
   // Update activities when prop changes
@@ -160,7 +161,7 @@ export const ActivityFeed = memo<ActivityFeedProps>(({
     }
   };
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, activity: Activity) => {
+  const handleMenuOpen = (activity: Activity) => {
     setMenuOpened(true);
     setSelectedActivity(activity);
   };
@@ -237,7 +238,7 @@ export const ActivityFeed = memo<ActivityFeedProps>(({
               </ActionIcon>
             )}
             {onRefresh && (
-              <ActionIcon size="sm" variant="subtle" onClick={() => onRefresh()}>
+              <ActionIcon size="sm" variant="subtle" onClick={() => void onRefresh?.()}>
                 <IconRefresh size={16} />
               </ActionIcon>
             )}
@@ -247,22 +248,24 @@ export const ActivityFeed = memo<ActivityFeedProps>(({
         {/* Filter chips */}
         {showFilters && (
           <Group gap="xs" mt="sm">
-            <Pill
-              style={{ cursor: 'pointer' }}
-              variant={!filteredType ? 'filled' : 'outline'}
+            <Button
+              size="xs"
+              radius="xl"
+              variant={!filteredType ? 'filled' : 'light'}
               onClick={() => setFilteredType(null)}
             >
               All
-            </Pill>
-            {['user', 'system', 'education', 'achievement'].map(type => (
-              <Pill
+            </Button>
+            {['user', 'system', 'education', 'achievement'].map((type) => (
+              <Button
                 key={type}
-                style={{ cursor: 'pointer' }}
-                variant={filteredType === type ? 'filled' : 'outline'}
+                size="xs"
+                radius="xl"
+                variant={filteredType === type ? 'filled' : 'light'}
                 onClick={() => setFilteredType(type)}
               >
                 {type.charAt(0).toUpperCase() + type.slice(1)}
-              </Pill>
+              </Button>
             ))}
           </Group>
         )}
@@ -288,26 +291,33 @@ export const ActivityFeed = memo<ActivityFeedProps>(({
                   transition={{ delay: index * 0.05 }}
                 >
                   <Container>
-                    <UnstyledButton
-                    w="100%"
-                    onClick={() => onActivityClick?.(activity)}
-                    style={{
-                      opacity: activity.read ? 0.7 : 1,
-                      backgroundColor: activity.read
-                        ? 'transparent'
-                        : `color-mix(in srgb, ${theme.colors.blue[6]} 5%, transparent)`,
-                      borderRadius: theme.radius.sm,
-                      padding: theme.spacing.sm,
-                      border: `1px solid ${activity.read ? 'transparent' : `color-mix(in srgb, ${theme.colors.blue[6]} 10%, transparent)`}`,
-                    }}
-                    styles={{
-                      root: {
-                        '&:hover': {
-                          backgroundColor: `color-mix(in srgb, ${theme.colors.blue[6]} 10%, transparent)`,
-                        },
-                      },
-                    }}
-                  >
+                    <Paper
+                      component="button"
+                      type="button"
+                      onClick={() => onActivityClick?.(activity)}
+                      withBorder={!activity.read}
+                      style={{
+                        width: '100%',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        opacity: activity.read ? 0.7 : 1,
+                        backgroundColor: activity.read
+                          ? 'transparent'
+                          : `color-mix(in srgb, ${theme.colors.blue[6]} 6%, transparent)`,
+                        borderRadius: theme.radius.sm,
+                        padding: theme.spacing.sm,
+                        borderColor: activity.read ? 'transparent' : `color-mix(in srgb, ${theme.colors.blue[6]} 12%, transparent)`,
+                        transition: 'background-color 120ms ease, transform 120ms ease',
+                      }}
+                      onMouseEnter={(event: React.MouseEvent<HTMLButtonElement>) => {
+                        event.currentTarget.style.backgroundColor = `color-mix(in srgb, ${theme.colors.blue[6]} 10%, transparent)`;
+                      }}
+                      onMouseLeave={(event: React.MouseEvent<HTMLButtonElement>) => {
+                        event.currentTarget.style.backgroundColor = activity.read
+                          ? 'transparent'
+                          : `color-mix(in srgb, ${theme.colors.blue[6]} 6%, transparent)`;
+                      }}
+                    >
                     <Group gap="md" align="flex-start">
                       <Avatar
                         size="md"
@@ -344,11 +354,11 @@ export const ActivityFeed = memo<ActivityFeedProps>(({
                           <Text size="sm" c="dimmed">
                             {activity.description}
                           </Text>
-                          <Group gap="xs" align="center">
-                            {activity.user && (
-                              <Pill size="xs" variant="outline">
+                         <Group gap="xs" align="center">
+                           {activity.user && (
+                              <Badge size="sm" variant="light" color="gray">
                                 {activity.user.name}
-                              </Pill>
+                              </Badge>
                             )}
                             <Text size="xs" c="dimmed">
                               {formatDistanceToNow(new Date(activity.timestamp), {
@@ -364,13 +374,13 @@ export const ActivityFeed = memo<ActivityFeedProps>(({
                         variant="subtle"
                         onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                           e.stopPropagation();
-                          handleMenuOpen(e, activity);
+                          handleMenuOpen(activity);
                         }}
                       >
                         <IconDotsVertical size={16} />
                       </ActionIcon>
                     </Group>
-                    </UnstyledButton>
+                    </Paper>
                   </Container>
                 </MotionBox>
               ))
@@ -398,42 +408,31 @@ export const ActivityFeed = memo<ActivityFeedProps>(({
             }}
           >
             <Stack gap="xs">
-              <UnstyledButton
+              <Button
+                variant="subtle"
+                color="gray"
                 onClick={handleMarkAsRead}
-                style={{ padding: theme.spacing.xs, borderRadius: theme.radius.sm }}
-                styles={{
-                  root: {
-                    '&:hover': { backgroundColor: theme.colors.gray[1] }
-                  }
-                }}
+                fullWidth
               >
-                <Text size="sm">
-                  {selectedActivity?.read ? 'Mark as unread' : 'Mark as read'}
-                </Text>
-              </UnstyledButton>
-              <UnstyledButton
+                {selectedActivity?.read ? 'Mark as unread' : 'Mark as read'}
+              </Button>
+              <Button
+                variant="subtle"
+                color="red"
                 onClick={handleDelete}
-                style={{ padding: theme.spacing.xs, borderRadius: theme.radius.sm }}
-                styles={{
-                  root: {
-                    '&:hover': { backgroundColor: theme.colors.red[1] }
-                  }
-                }}
+                fullWidth
               >
-                <Text size="sm" c="red">Delete</Text>
-              </UnstyledButton>
+                Delete
+              </Button>
               <Divider />
-              <UnstyledButton
+              <Button
+                variant="subtle"
+                color="gray"
                 onClick={handleMenuClose}
-                style={{ padding: theme.spacing.xs, borderRadius: theme.radius.sm }}
-                styles={{
-                  root: {
-                    '&:hover': { backgroundColor: theme.colors.gray[1] }
-                  }
-                }}
+                fullWidth
               >
-                <Text size="sm">View details</Text>
-              </UnstyledButton>
+                View details
+              </Button>
             </Stack>
           </Paper>
         </Container>

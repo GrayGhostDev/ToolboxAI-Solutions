@@ -1,0 +1,62 @@
+{
+  // ====================================================================
+  // Recommended VS Code Extensions for ToolboxAI-Solutions
+  // ====================================================================
+
+  "recommendations": [
+    // Python Development
+    "ms-python.python",                    // Python language support
+    "ms-python.vscode-pylance",           // Fast Python language server
+    "ms-python.debugpy",                  // Python debugger
+    "charliermarsh.ruff",                 // Fast Python linter (Ruff)
+
+    // TypeScript/JavaScript Development
+    "dbaeumer.vscode-eslint",             // ESLint integration
+    "esbenp.prettier-vscode",             // Code formatter
+    "bradlc.vscode-tailwindcss",          // Tailwind CSS IntelliSense (for Mantine)
+
+    // Roblox/Lua Development
+    "nightrains.robloxlsp",               // Roblox LSP for Luau
+    "johnnymorganz.stylua",               // Lua code formatter
+
+    // Docker & DevOps
+    "ms-azuretools.vscode-docker",        // Docker support
+    "ms-vscode-remote.remote-containers", // Dev Containers
+
+    // Database Tools
+    "mtxr.sqltools",                      // SQL database tools
+    "mtxr.sqltools-driver-pg",           // PostgreSQL driver
+
+    // Git & Version Control
+    "eamodio.gitlens",                    // Enhanced Git features
+    "github.vscode-pull-request-github",  // GitHub PR integration
+
+    // Testing
+    "littlefoxteam.vscode-python-test-adapter", // Python test explorer
+    "hbenl.vscode-test-explorer",        // Test explorer UI
+
+    // Productivity
+    "streetsidesoftware.code-spell-checker", // Spell checker
+    "gruntfuggly.todo-tree",             // TODO/FIXME highlighter
+    "wayou.vscode-todo-highlight",       // TODO highlighting
+
+    // API Development
+    "humao.rest-client",                  // REST API client
+    "42crunch.vscode-openapi",           // OpenAPI/Swagger support
+
+    // Markdown & Documentation
+    "yzhang.markdown-all-in-one",        // Markdown enhancement
+    "davidanson.vscode-markdownlint",    // Markdown linting
+
+    // Configuration Files
+    "redhat.vscode-yaml",                 // YAML language support
+    "tamasfe.even-better-toml"           // TOML language support
+  ],
+
+  // Extensions that are not recommended (can cause conflicts)
+  "unwantedRecommendations": [
+    "ms-python.vscode-pylint",            // Conflicts with Ruff
+    "ms-python.black-formatter",          // Redundant with Ruff
+    "ms-python.flake8"                    // Redundant with Ruff
+  ]
+}

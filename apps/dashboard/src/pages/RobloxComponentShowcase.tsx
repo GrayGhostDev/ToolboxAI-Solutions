@@ -29,16 +29,16 @@ import {
   IconSparkles,
 } from '@tabler/icons-react';
 
-// Import Roblox components directly with explicit .tsx extensions (Vercel requirement)
-import { Roblox3DButton } from '@/components/roblox/Roblox3DButton.tsx';
-import { Roblox3DNavigation } from '@/components/roblox/Roblox3DNavigation.tsx';
-import { Roblox3DTabs } from '@/components/roblox/Roblox3DTabs.tsx';
-import { Roblox3DMetricCard } from '@/components/roblox/Roblox3DMetricCard.tsx';
-import { RobloxProgressBar } from '@/components/roblox/RobloxProgressBar.tsx';
-import { RobloxAchievementBadge } from '@/components/roblox/RobloxAchievementBadge.tsx';
-import { RobloxCharacterAvatar } from '@/components/roblox/RobloxCharacterAvatar.tsx';
-import { ParticleEffects } from '@/components/roblox/ParticleEffects.tsx';
-import { Roblox3DLoader } from '@/components/roblox/Roblox3DLoader.tsx';
+// Import Roblox components directly (Vite auto-resolves extensions)
+import { Roblox3DButton } from '@/components/roblox/Roblox3DButton';
+import { Roblox3DNavigation } from '@/components/roblox/Roblox3DNavigation';
+import { Roblox3DTabs } from '@/components/roblox/Roblox3DTabs';
+import { Roblox3DMetricCard } from '@/components/roblox/Roblox3DMetricCard';
+import { RobloxProgressBar } from '@/components/roblox/RobloxProgressBar';
+import { RobloxAchievementBadge } from '@/components/roblox/RobloxAchievementBadge';
+import { RobloxCharacterAvatar } from '@/components/roblox/RobloxCharacterAvatar';
+import { ParticleEffects } from '@/components/roblox/ParticleEffects';
+import { Roblox3DLoader } from '@/components/roblox/Roblox3DLoader';
 
 // Import theme colors
 import { robloxColors } from '@/theme/robloxTheme';

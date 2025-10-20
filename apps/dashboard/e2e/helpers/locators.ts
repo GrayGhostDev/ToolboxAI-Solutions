@@ -158,7 +158,7 @@ export class LocatorHelper {
    */
   async getByAccessibleName(name: string | RegExp): Promise<Locator> {
     // Try multiple strategies to find by accessible name
-    const strategies = [
+    const strategies: Array<() => Locator> = [
       () => this.page.getByRole('button', { name }),
       () => this.page.getByRole('link', { name }),
       () => this.page.getByRole('textbox', { name }),
@@ -176,7 +176,11 @@ export class LocatorHelper {
     }
 
     // Return first strategy result for error messages
-    return strategies[0]();
+    const fallbackStrategy = strategies[0];
+    if (!fallbackStrategy) {
+      throw new Error('No locator strategies defined for accessible name lookup');
+    }
+    return fallbackStrategy();
   }
 
   /**
@@ -184,7 +188,7 @@ export class LocatorHelper {
    */
   async getFormField(identifier: string | RegExp): Promise<Locator> {
     // Try multiple strategies
-    const strategies = [
+    const strategies: Array<() => Locator> = [
       () => this.page.getByLabel(identifier),
       () => this.page.getByPlaceholder(identifier),
       () => this.page.locator(`input[name="${identifier}"]`),
@@ -200,7 +204,11 @@ export class LocatorHelper {
       }
     }
 
-    return strategies[0]();
+    const fallbackStrategy = strategies[0];
+    if (!fallbackStrategy) {
+      throw new Error('No locator strategies defined for form field lookup');
+    }
+    return fallbackStrategy();
   }
 
   /**
@@ -230,7 +238,8 @@ export class LocatorHelper {
    * Smart click with retry and wait for stability
    */
   async smartClick(locator: Locator, options?: { force?: boolean; retries?: number }): Promise<void> {
-    const maxRetries = options?.retries || 3;
+    const maxRetries = options?.retries ?? 3;
+    const forceClick = options?.force ?? false;
 
     for (let i = 0; i < maxRetries; i++) {
       try {
@@ -238,7 +247,7 @@ export class LocatorHelper {
         await this.waitForElementStable(locator);
 
         // Check if interactive
-        if (!options?.force) {
+        if (!forceClick) {
           const interactive = await this.isInteractive(locator);
           if (!interactive) {
             throw new Error('Element is not interactive');
@@ -246,7 +255,8 @@ export class LocatorHelper {
         }
 
         // Attempt click
-        await locator.click({ force: options?.force });
+        const clickOptions: Parameters<Locator['click']>[0] = forceClick ? { force: true } : {};
+        await locator.click(clickOptions);
         return; // Success
       } catch (error) {
         if (i === maxRetries - 1) {

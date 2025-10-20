@@ -51,8 +51,8 @@ export class AdminDashboardPage extends DashboardPage {
   /**
    * Navigate to admin dashboard
    */
-  async goto() {
-    await super.goto('/admin/dashboard');
+  override async goto(path: string = '/admin/dashboard') {
+    await super.goto(path);
   }
 
   /**
@@ -239,15 +239,15 @@ export class AdminDashboardPage extends DashboardPage {
    */
   async verifyAllTabsAccessible() {
     const tabs = [
-      { tab: this.overviewTab, name: 'Overview' },
-      { tab: this.usersTab, name: 'Users' },
-      { tab: this.contentTab, name: 'Content' },
-      { tab: this.securityTab, name: 'Security' },
-      { tab: this.settingsTab, name: 'Settings' }
+      this.overviewTab,
+      this.usersTab,
+      this.contentTab,
+      this.securityTab,
+      this.settingsTab
     ];
 
-    for (const { tab, name } of tabs) {
-      await tab().click();
+    for (const tabFactory of tabs) {
+      await tabFactory().click();
       await this.page.waitForLoadState('networkidle');
       // Verify we can access the tab without errors
       await expect(this.page.getByText(/error|unauthorized|forbidden/i)).not.toBeVisible();

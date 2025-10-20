@@ -1,0 +1,90 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "buildCommand": "npm run dashboard:build",
+  "outputDirectory": "apps/dashboard/dist",
+  "installCommand": "npm ci --include=dev --workspaces && npm install @rollup/rollup-linux-x64-gnu --no-save",
+  "framework": null,
+  "devCommand": "npm run dashboard:dev",
+
+  "build": {
+    "env": {
+      "NODE_VERSION": "22",
+      "NPM_VERSION": "10",
+      "NODE_ENV": "production",
+      "COVERAGE": "false"
+    }
+  },
+
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*).html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    }
+  ],
+
+  "redirects": [
+    {
+      "source": "/dashboard",
+      "destination": "/",
+      "permanent": false
+    }
+  ],
+
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://your-backend-api.com/api/:path*"
+    }
+  ],
+
+  "regions": ["iad1"],
+
+  "trailingSlash": false,
+
+  "cleanUrls": true,
+
+  "github": {
+    "silent": false,
+    "autoAlias": true
+  }
+}

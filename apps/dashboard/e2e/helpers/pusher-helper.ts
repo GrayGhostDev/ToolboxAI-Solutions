@@ -14,7 +14,6 @@ export interface PusherMessage {
 
 export class PusherTestHelper {
   private page: Page;
-  private messages: PusherMessage[] = [];
 
   constructor(page: Page) {
     this.page = page;
@@ -353,8 +352,8 @@ export class PusherTestHelper {
           this.channels = new Map();
           this.connection = {
             state: 'connecting',
-            bind: (event: string, callback: Function) => {},
-            emit: (event: string, data: any) => {}
+            bind: (_event: string, _callback: Function) => {},
+            emit: (_event: string, _data: any) => {}
           };
 
           // Simulate connection after a delay

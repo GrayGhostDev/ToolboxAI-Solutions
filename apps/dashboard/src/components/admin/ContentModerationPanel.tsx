@@ -3,7 +3,7 @@
  * Content moderation and review interface for administrators
  */
 
-import React, { memo, useState, useCallback, useEffect } from 'react';
+import { memo, useState, useEffect, type ChangeEvent } from 'react';
 import {
   Box,
   Paper,
@@ -20,26 +20,19 @@ import {
   Grid,
   Tabs,
   Badge,
-  Loader,
   Avatar,
   ActionIcon,
   Group,
-  Space,
   Divider,
-  Pagination,
-  Chip,
   useMantineTheme,
   Progress,
 } from '@mantine/core';
 import {
   IconSearch,
-  IconFilter,
   IconCheck,
   IconX,
-  IconFlag,
   IconEye,
   IconTrash,
-  IconAlertTriangle,
   IconInfoCircle,
   IconSchool,
   IconClipboardList,
@@ -48,15 +41,17 @@ import {
   IconVideo,
   IconFileText,
   IconCode,
-  IconReportAnalytics,
   IconGavel,
   IconSparkles,
   IconThumbUp,
-  IconThumbDown,
 } from '@tabler/icons-react';
 import { format } from 'date-fns';
-import { api } from '@/services/api';
-import { usePusher } from '@/hooks/usePusher';
+import { usePusherChannel } from '@/hooks/usePusher';
+
+const TabsList: any = (Tabs as any).List;
+const TabsTab: any = (Tabs as any).Tab;
+const GridCol: any = (Grid as any).Col;
+const CardSection: any = (Card as any).Section;
 
 export type ContentType = 'lesson' | 'assessment' | 'message' | 'image' | 'video' | 'document' | 'code';
 export type ContentStatus = 'pending' | 'approved' | 'rejected' | 'flagged' | 'under_review';
@@ -128,12 +123,11 @@ export const ContentModerationPanel = memo<ContentModerationPanelProps>(({
 
   // Pagination
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const rowsPerPage = 10;
 
   // Search and filter
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<ContentType | 'all'>('all');
-  const [filterStatus, setFilterStatus] = useState<ContentStatus | 'all'>('pending');
 
   // Selection
   const [selected, setSelected] = useState<string[]>([]);
@@ -144,32 +138,22 @@ export const ContentModerationPanel = memo<ContentModerationPanelProps>(({
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
 
-  // Setup Pusher for real-time updates
-  const { subscribe, unsubscribe } = usePusher();
-
-  useEffect(() => {
-    const channel = 'content-moderation';
-
-    const handleNewContent = (data: ContentItem) => {
-      setContent(prev => [data, ...prev]);
-    };
-
-    const handleContentUpdate = (data: { id: string; status: ContentStatus }) => {
-      setContent(prev =>
-        prev.map(item =>
-          item.id === data.id ? { ...item, status: data.status } : item
-        )
-      );
-    };
-
-    subscribe(channel, 'new-content', handleNewContent);
-    subscribe(channel, 'content-updated', handleContentUpdate);
-
-    return () => {
-      unsubscribe(channel, 'new-content', handleNewContent);
-      unsubscribe(channel, 'content-updated', handleContentUpdate);
-    };
-  }, [subscribe, unsubscribe]);
+  usePusherChannel(
+    'content-moderation',
+    {
+      'new-content': (data: ContentItem) => {
+        setContent((prev) => [data, ...prev]);
+      },
+      'content-updated': (data: { id: string; status: ContentStatus }) => {
+        setContent((prev) =>
+          prev.map((item) =>
+            item.id === data.id ? { ...item, status: data.status } : item
+          )
+        );
+      },
+    },
+    { dependencies: [] }
+  );
 
   // Fetch content
   useEffect(() => {
@@ -421,9 +405,8 @@ export const ContentModerationPanel = memo<ContentModerationPanelProps>(({
       : true;
 
     const matchesType = filterType === 'all' || item.type === filterType;
-    const matchesStatus = filterStatus === 'all' || item.status === filterStatus;
 
-    return matchesSearch && matchesType && matchesStatus;
+    return matchesSearch && matchesType;
   });
 
   const getTabContent = () => {
@@ -442,10 +425,17 @@ export const ContentModerationPanel = memo<ContentModerationPanelProps>(({
   };
 
   const tabContent = getTabContent();
+  const totalPages = Math.max(1, Math.ceil(tabContent.length / rowsPerPage));
   const paginatedContent = tabContent.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
+
+  useEffect(() => {
+    if (page > totalPages - 1) {
+      setPage(Math.max(totalPages - 1, 0));
+    }
+  }, [page, totalPages]);
 
   return (
     <Paper style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -489,37 +479,38 @@ export const ContentModerationPanel = memo<ContentModerationPanelProps>(({
         </Group>
 
         {/* Tabs */}
-        <Tabs value={tabValue.toString()} onChange={(value) => setTabValue(parseInt(value))} mt="md">
-          <Tabs.List>
-            <Tabs.Tab value="0">
-              <Badge
-                count={content.filter(c => c.status === 'pending').length}
-                color="yellow"
-                size="sm"
-              >
-                Pending Review
-              </Badge>
-            </Tabs.Tab>
-            <Tabs.Tab value="1">
-              <Badge
-                count={content.filter(c => c.status === 'flagged').length}
-                color="red"
-                size="sm"
-              >
-                Flagged
-              </Badge>
-            </Tabs.Tab>
-            <Tabs.Tab value="2">
-              <Badge
-                count={content.filter(c => c.status === 'under_review').length}
-                color="blue"
-                size="sm"
-              >
-                Under Review
-              </Badge>
-            </Tabs.Tab>
-            <Tabs.Tab value="3">All Content</Tabs.Tab>
-          </Tabs.List>
+        <Tabs
+          value={tabValue.toString()}
+          onChange={(value: string | null) => setTabValue(Number(value ?? 0))}
+          mt="md"
+        >
+          <TabsList>
+            <TabsTab value="0">
+              <Group gap={6} align="center">
+                <span>Pending Review</span>
+                <Badge size="sm" color="yellow" variant="light">
+                  {content.filter((c) => c.status === 'pending').length}
+                </Badge>
+              </Group>
+            </TabsTab>
+            <TabsTab value="1">
+              <Group gap={6} align="center">
+                <span>Flagged</span>
+                <Badge size="sm" color="red" variant="light">
+                  {content.filter((c) => c.status === 'flagged').length}
+                </Badge>
+              </Group>
+            </TabsTab>
+            <TabsTab value="2">
+              <Group gap={6} align="center">
+                <span>Under Review</span>
+                <Badge size="sm" color="blue" variant="light">
+                  {content.filter((c) => c.status === 'under_review').length}
+                </Badge>
+              </Group>
+            </TabsTab>
+            <TabsTab value="3">All Content</TabsTab>
+          </TabsList>
         </Tabs>
 
         {/* Filters */}
@@ -528,7 +519,7 @@ export const ContentModerationPanel = memo<ContentModerationPanelProps>(({
             size="sm"
             placeholder="Search content..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.currentTarget.value)}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => setSearchTerm(event.currentTarget.value)}
             leftSection={<IconSearch size={16} />}
             style={{ flex: 1, maxWidth: 300 }}
           />
@@ -536,7 +527,7 @@ export const ContentModerationPanel = memo<ContentModerationPanelProps>(({
             size="sm"
             placeholder="Type"
             value={filterType}
-            onChange={(value) => setFilterType(value as ContentType | 'all')}
+            onChange={(value: string | null) => setFilterType((value as ContentType | null) ?? 'all')}
             data={[
               { value: 'all', label: 'All Types' },
               { value: 'lesson', label: 'Lesson' },
@@ -564,7 +555,7 @@ export const ContentModerationPanel = memo<ContentModerationPanelProps>(({
       <Box style={{ flex: 1, overflow: 'auto' }} p="md">
         <Grid>
           {paginatedContent.map(item => (
-            <Grid.Col span={{ base: 12, md: 6, lg: 4 }} key={item.id}>
+            <GridCol span={{ base: 12, md: 6, lg: 4 }} key={item.id}>
               <Card
                 style={{
                   height: '100%',
@@ -574,31 +565,33 @@ export const ContentModerationPanel = memo<ContentModerationPanelProps>(({
                 }}
               >
                 {item.thumbnail && (
-                  <Card.Section>
+                  <CardSection>
                     <img
                       src={item.thumbnail}
                       alt={item.title}
                       style={{ height: 140, width: '100%', objectFit: 'cover' }}
                     />
-                  </Card.Section>
+                  </CardSection>
                 )}
-                <Card.Section p="md" style={{ flex: 1 }}>
+                <CardSection p="md" style={{ flex: 1 }}>
                   <Stack gap="xs">
                     {/* Header */}
                     <Group justify="space-between" align="center">
-                      <Chip
-                        leftSection={getContentIcon(item.type)}
+                      <Badge
                         size="sm"
-                        variant="outline"
+                        variant="light"
+                        color="gray"
+                        leftSection={getContentIcon(item.type)}
+                        style={{ textTransform: 'capitalize' }}
                       >
                         {item.type}
-                      </Chip>
-                      <Chip
+                      </Badge>
+                      <Badge
                         size="sm"
-                        style={{ backgroundColor: getStatusColor(item.status), color: 'white' }}
+                        style={{ backgroundColor: getStatusColor(item.status), color: 'white', textTransform: 'capitalize' }}
                       >
                         {item.status}
-                      </Chip>
+                      </Badge>
                     </Group>
 
                     {/* Title and description */}
@@ -666,8 +659,8 @@ export const ContentModerationPanel = memo<ContentModerationPanelProps>(({
                       </Alert>
                     )}
                   </Stack>
-                </Card.Section>
-                <Card.Section p="xs" style={{ borderTop: `1px solid ${theme.colors.gray[3]}` }}>
+                </CardSection>
+                <CardSection p="xs" style={{ borderTop: `1px solid ${theme.colors.gray[3]}` }}>
                   <Group justify="space-between" align="center">
                     <Group gap="xs">
                       {allowBulkActions && (
@@ -688,6 +681,7 @@ export const ContentModerationPanel = memo<ContentModerationPanelProps>(({
                         onClick={() => {
                           setSelectedContent(item);
                           setViewDialogOpen(true);
+                          onContentView?.(item);
                         }}
                       >
                         <IconEye size={16} />
@@ -725,9 +719,9 @@ export const ContentModerationPanel = memo<ContentModerationPanelProps>(({
                       <IconTrash size={16} />
                     </ActionIcon>
                   </Group>
-                </Card.Section>
+                </CardSection>
               </Card>
-            </Grid.Col>
+            </GridCol>
           ))}
         </Grid>
       </Box>
@@ -736,14 +730,30 @@ export const ContentModerationPanel = memo<ContentModerationPanelProps>(({
       <Box p="md" style={{ borderTop: `1px solid ${theme.colors.gray[3]}` }}>
         <Group justify="space-between" align="center">
           <Text size="sm" c="dimmed">
-            Showing {page * rowsPerPage + 1}-{Math.min((page + 1) * rowsPerPage, tabContent.length)} of {tabContent.length} items
+            Showing {tabContent.length === 0 ? 0 : page * rowsPerPage + 1}-
+            {Math.min((page + 1) * rowsPerPage, tabContent.length)} of {tabContent.length} items
           </Text>
-          <Pagination
-            total={Math.ceil(tabContent.length / rowsPerPage)}
-            value={page + 1}
-            onChange={(newPage) => setPage(newPage - 1)}
-            size="sm"
-          />
+          <Group gap="xs">
+            <Button
+              size="xs"
+              variant="light"
+              onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
+              disabled={page === 0}
+            >
+              Previous
+            </Button>
+            <Text size="sm" c="dimmed">
+              {page + 1} / {totalPages}
+            </Text>
+            <Button
+              size="xs"
+              variant="light"
+              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages - 1))}
+              disabled={page >= totalPages - 1}
+            >
+              Next
+            </Button>
+          </Group>
         </Group>
       </Box>
 
@@ -768,16 +778,16 @@ export const ContentModerationPanel = memo<ContentModerationPanelProps>(({
             <Divider />
             <Text size="sm" fw={600}>Metadata</Text>
             <Grid>
-              <Grid.Col span={6}>
+              <GridCol span={6}>
                 <Text size="xs" c="dimmed">Author</Text>
                 <Text size="sm">{selectedContent.author.name}</Text>
-              </Grid.Col>
-              <Grid.Col span={6}>
+              </GridCol>
+              <GridCol span={6}>
                 <Text size="xs" c="dimmed">Created</Text>
                 <Text size="sm">
                   {format(new Date(selectedContent.createdAt), 'PPp')}
                 </Text>
-              </Grid.Col>
+              </GridCol>
             </Grid>
             <Group justify="flex-end" mt="md">
               <Button variant="light" onClick={() => setViewDialogOpen(false)}>
@@ -803,7 +813,7 @@ export const ContentModerationPanel = memo<ContentModerationPanelProps>(({
             label="Reason"
             placeholder="Select reason"
             value={rejectReason}
-            onChange={(value) => setRejectReason(value || '')}
+            onChange={(value: string | null) => setRejectReason(value ?? '')}
             data={[
               { value: 'inappropriate', label: 'Inappropriate Content' },
               { value: 'spam', label: 'Spam' },

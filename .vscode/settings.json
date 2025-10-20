@@ -1,0 +1,190 @@
+{
+  // ====================================================================
+  // VS Code Performance Optimization Settings
+  // Based on: https://github.com/microsoft/vscode-cpptools/wiki/Optimizing-your-configuration
+  // Applied to: Python/TypeScript/Lua monorepo
+  // ====================================================================
+
+  // Files to completely hide from the file explorer
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/node_modules": true,
+    "**/.venv": true,
+    "**/venv": true,
+    "**/venv_old_*": true,
+    "**/venv_clean*": true,
+    "**/.pytest_cache": true,
+    "**/.mypy_cache": true,
+    "**/.hypothesis": true,
+    "**/htmlcov": true,
+    "**/.coverage": true,
+    "**/.coverage.*": true,
+    "**/*.pyc": true,
+    "**/*.pyo": true,
+    "**/.nyc_output": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/.turbo": true,
+    "**/.next": true,
+    "**/.nuxt": true,
+    "**/.cache": true,
+    "**/.parcel-cache": true,
+    "**/.eslintcache": true,
+    "**/*.tsbuildinfo": true,
+    "**/.tsbuildinfo": true,
+    "**/cypress/screenshots": true,
+    "**/cypress/videos": true,
+    "**/playwright-report": true,
+    "**/test-results": true,
+    "**/*.egg-info": true,
+    "**/.eggs": true,
+    "**/wheels": true,
+    "**/sdist": true
+  },
+
+  // Files to exclude from search operations
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/venv": true,
+    "**/.venv": true,
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/.mypy_cache": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/.git": true,
+    "**/htmlcov": true,
+    "**/.coverage": true,
+    "**/test-results": true,
+    "**/test-reports": true,
+    "**/*.egg-info": true,
+    "**/Archive": true,
+    "**/node_modules.old.*": true,
+    "**/node_modules.backup.*": true,
+    "**/.turbo": true,
+    "**/.next": true,
+    "**/.cache": true
+  },
+
+  // Files to exclude from file watcher (reduces CPU/memory usage)
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/venv/**": true,
+    "**/.venv/**": true,
+    "**/__pycache__/**": true,
+    "**/.pytest_cache/**": true,
+    "**/.mypy_cache/**": true,
+    "**/dist/**": true,
+    "**/build/**": true,
+    "**/htmlcov/**": true,
+    "**/*.egg-info/**": true,
+    "**/.turbo/**": true,
+    "**/.next/**": true,
+    "**/.cache/**": true,
+    "**/Archive/**": true
+  },
+
+  // ====================================================================
+  // Language-Specific Settings
+  // ====================================================================
+
+  // Python Settings
+  "python.defaultInterpreterPath": "${workspaceFolder}/venv/bin/python",
+  "python.analysis.typeCheckingMode": "standard",
+  "python.analysis.diagnosticMode": "workspace",
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}",
+    "${workspaceFolder}/apps/backend",
+    "${workspaceFolder}/core",
+    "${workspaceFolder}/database"
+  ],
+  "python.analysis.exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/venv",
+    "**/.venv",
+    "**/dist",
+    "**/build"
+  ],
+  "python.testing.pytestEnabled": true,
+  "python.testing.pytestArgs": [
+    "tests"
+  ],
+  "python.testing.unittestEnabled": false,
+
+  // TypeScript/JavaScript Settings
+  "typescript.tsdk": "apps/dashboard/node_modules/typescript/lib",
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "javascript.preferences.importModuleSpecifier": "relative",
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "javascript.updateImportsOnFileMove.enabled": "always",
+
+  // Editor Settings
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.rulers": [80, 120],
+
+  // File Associations
+  "files.associations": {
+    "*.lua": "lua",
+    "*.luau": "lua",
+    "*.md": "markdown",
+    "Dockerfile*": "dockerfile",
+    "docker-compose*.yml": "dockercompose"
+  },
+
+  // ESLint Configuration
+  "eslint.workingDirectories": [
+    "apps/dashboard"
+  ],
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+
+  // Git Settings
+  "git.ignoreLimitWarning": true,
+  "git.autofetch": true,
+
+  // Terminal Settings
+  "terminal.integrated.cwd": "${workspaceFolder}",
+  "terminal.integrated.defaultProfile.osx": "zsh",
+
+  // ====================================================================
+  // Performance Tuning
+  // ====================================================================
+
+  // Reduce file watching overhead
+  "files.watcherExcludePolicy": "limited",
+
+  // Disable features that may slow down large workspaces
+  "search.followSymlinks": false,
+  "search.smartCase": true,
+
+  // Limit file size for syntax highlighting
+  "files.maxMemoryForLargeFilesMB": 4096,
+
+  // Disable automatic type acquisition (use explicit dependencies)
+  "typescript.disableAutomaticTypeAcquisition": false,
+
+  // ====================================================================
+  // Security Settings
+  // ====================================================================
+
+  // Prevent accidental commits of secrets
+  "files.readonlyInclude": {
+    "**/.env": true,
+    "**/.env.local": true,
+    "**/*.pem": true,
+    "**/*.key": true
+  }
+}

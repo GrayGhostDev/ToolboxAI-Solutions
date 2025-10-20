@@ -30,7 +30,8 @@ async function globalSetup(config: FullConfig) {
 
   try {
     // Navigate to login page
-    const baseURL = config.projects[0].use?.baseURL || 'http://localhost:5179';
+    const firstProject = config.projects?.[0];
+    const baseURL = firstProject?.use?.baseURL || 'http://localhost:5179';
     await page.goto(`${baseURL}/login`);
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(1000); // Give React time to render
@@ -107,8 +108,6 @@ async function globalSetup(config: FullConfig) {
     // Create teacher auth state
     // Using demo credentials from Login.tsx
     const teacherEmail = process.env.TEST_TEACHER_EMAIL || 'jane.smith@school.edu';
-    const teacherPassword = process.env.TEST_TEACHER_PASSWORD || 'Teacher123!';
-
     const teacherAuthState = {
       cookies: [],
       origins: [
@@ -142,8 +141,6 @@ async function globalSetup(config: FullConfig) {
     // Create student auth state
     // Using demo credentials from Login.tsx
     const studentEmail = process.env.TEST_STUDENT_EMAIL || 'alex.johnson@student.edu';
-    const studentPassword = process.env.TEST_STUDENT_PASSWORD || 'Student123!';
-
     const studentAuthState = {
       cookies: [],
       origins: [

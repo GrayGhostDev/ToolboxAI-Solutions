@@ -11,7 +11,7 @@ export interface TestCredentials {
   role: 'admin' | 'teacher' | 'student';
 }
 
-export const TEST_CREDENTIALS: Record<string, TestCredentials> = {
+export const TEST_CREDENTIALS: Record<'admin' | 'teacher' | 'student', TestCredentials> = {
   admin: {
     email: 'admin@toolboxai.com',
     password: 'Admin123!',

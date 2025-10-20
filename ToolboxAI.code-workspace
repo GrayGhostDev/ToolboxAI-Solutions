@@ -1,0 +1,345 @@
+{
+  // ====================================================================
+  // Multi-Root Workspace Configuration for ToolboxAI-Solutions
+  // ====================================================================
+  // This workspace configuration separates the monorepo into logical
+  // workspace folders for improved VS Code performance and IntelliSense.
+  //
+  // Benefits:
+  // - Faster IntelliSense (scoped to specific folders)
+  // - Better language server performance (isolated Python/TypeScript)
+  // - Reduced memory usage (smaller indexed file sets)
+  // - Cleaner project organization
+  // ====================================================================
+
+  "folders": [
+    {
+      "name": "📦 Root (Configs & Scripts)",
+      "path": "."
+    },
+    {
+      "name": "🐍 Backend (FastAPI)",
+      "path": "apps/backend"
+    },
+    {
+      "name": "⚛️ Dashboard (React)",
+      "path": "apps/dashboard"
+    },
+    {
+      "name": "🤖 AI Core (Agents & MCP)",
+      "path": "core"
+    },
+    {
+      "name": "🗄️ Database (Models & Migrations)",
+      "path": "database"
+    },
+    {
+      "name": "🎮 Roblox (Lua/Luau)",
+      "path": "roblox"
+    },
+    {
+      "name": "📚 Documentation",
+      "path": "docs"
+    },
+    {
+      "name": "🧪 Tests",
+      "path": "tests"
+    }
+  ],
+
+  // ====================================================================
+  // Workspace-Level Settings
+  // ====================================================================
+  // These settings apply to ALL folders in the workspace
+  // and override the default .vscode/settings.json when using this workspace
+  // ====================================================================
+
+  "settings": {
+    // ================================================================
+    // Performance Optimizations (Critical for 3.5GB monorepo)
+    // ================================================================
+
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/node_modules": true,
+      "**/.venv": true,
+      "**/venv": true,
+      "**/.pytest_cache": true,
+      "**/.mypy_cache": true,
+      "**/htmlcov": true,
+      "**/.coverage": true,
+      "**/*.pyc": true,
+      "**/dist": true,
+      "**/build": true,
+      "**/.turbo": true,
+      "**/.cache": true,
+      "**/*.tsbuildinfo": true
+    },
+
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/venv": true,
+      "**/__pycache__": true,
+      "**/dist": true,
+      "**/build": true,
+      "**/.git": true,
+      "**/htmlcov": true,
+      "**/Archive": true
+    },
+
+    "files.watcherExclude": {
+      "**/.git/objects/**": true,
+      "**/node_modules/**": true,
+      "**/venv/**": true,
+      "**/__pycache__/**": true,
+      "**/dist/**": true,
+      "**/build/**": true,
+      "**/Archive/**": true
+    },
+
+    // Reduce file watching overhead
+    "files.watcherExcludePolicy": "limited",
+    "search.followSymlinks": false,
+    "files.maxMemoryForLargeFilesMB": 4096,
+
+    // ================================================================
+    // Python Settings (Backend)
+    // ================================================================
+
+    "python.defaultInterpreterPath": "${workspaceFolder}/venv/bin/python",
+    "python.analysis.typeCheckingMode": "standard",
+    "python.analysis.diagnosticMode": "workspace",
+    "python.analysis.extraPaths": [
+      "${workspaceFolder}",
+      "${workspaceFolder}/apps/backend",
+      "${workspaceFolder}/core",
+      "${workspaceFolder}/database"
+    ],
+    "python.analysis.exclude": [
+      "**/node_modules",
+      "**/__pycache__",
+      "**/venv",
+      "**/dist",
+      "**/build"
+    ],
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": ["tests"],
+    "python.testing.unittestEnabled": false,
+
+    // ================================================================
+    // TypeScript/JavaScript Settings (Dashboard)
+    // ================================================================
+
+    "typescript.tsdk": "apps/dashboard/node_modules/typescript/lib",
+    "typescript.preferences.importModuleSpecifier": "relative",
+    "javascript.preferences.importModuleSpecifier": "relative",
+    "typescript.updateImportsOnFileMove.enabled": "always",
+
+    // ================================================================
+    // Editor Settings
+    // ================================================================
+
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit",
+      "source.organizeImports": "explicit"
+    },
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.rulers": [80, 120],
+
+    // ================================================================
+    // ESLint Configuration
+    // ================================================================
+
+    "eslint.workingDirectories": ["apps/dashboard"],
+    "eslint.validate": [
+      "javascript",
+      "javascriptreact",
+      "typescript",
+      "typescriptreact"
+    ],
+
+    // ================================================================
+    // Git Settings
+    // ================================================================
+
+    "git.ignoreLimitWarning": true,
+    "git.autofetch": true,
+
+    // ================================================================
+    // File Associations
+    // ================================================================
+
+    "files.associations": {
+      "*.lua": "lua",
+      "*.luau": "lua",
+      "*.md": "markdown",
+      "Dockerfile*": "dockerfile",
+      "docker-compose*.yml": "dockercompose"
+    },
+
+    // ================================================================
+    // Security Settings
+    // ================================================================
+
+    "files.readonlyInclude": {
+      "**/.env": true,
+      "**/.env.local": true,
+      "**/*.pem": true,
+      "**/*.key": true
+    }
+  },
+
+  // ====================================================================
+  // Launch Configurations (Debugging)
+  // ====================================================================
+
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "🐍 Python: FastAPI Backend",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "uvicorn",
+        "args": [
+          "apps.backend.main:app",
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "8009",
+          "--reload"
+        ],
+        "jinja": true,
+        "justMyCode": false,
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}"
+        }
+      },
+      {
+        "name": "🧪 Python: pytest (Current File)",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "pytest",
+        "args": [
+          "${file}",
+          "-v"
+        ],
+        "console": "integratedTerminal",
+        "justMyCode": false
+      },
+      {
+        "name": "⚛️ Chrome: Dashboard",
+        "type": "chrome",
+        "request": "launch",
+        "url": "http://localhost:5179",
+        "webRoot": "${workspaceFolder}/apps/dashboard"
+      }
+    ],
+    "compounds": [
+      {
+        "name": "🚀 Full Stack (Backend + Dashboard)",
+        "configurations": [
+          "🐍 Python: FastAPI Backend",
+          "⚛️ Chrome: Dashboard"
+        ],
+        "stopAll": true
+      }
+    ]
+  },
+
+  // ====================================================================
+  // Tasks Configuration (Build & Development)
+  // ====================================================================
+
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Backend: Start Server",
+        "type": "shell",
+        "command": "source venv/bin/activate && uvicorn apps.backend.main:app --host 127.0.0.1 --port 8009 --reload",
+        "problemMatcher": [],
+        "group": {
+          "kind": "build",
+          "isDefault": false
+        },
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated"
+        }
+      },
+      {
+        "label": "Dashboard: Start Dev Server",
+        "type": "shell",
+        "command": "npm run dev",
+        "options": {
+          "cwd": "${workspaceFolder}/apps/dashboard"
+        },
+        "problemMatcher": [],
+        "group": {
+          "kind": "build",
+          "isDefault": false
+        },
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated"
+        }
+      },
+      {
+        "label": "Tests: Run All Python Tests",
+        "type": "shell",
+        "command": "source venv/bin/activate && pytest -q",
+        "problemMatcher": [],
+        "group": {
+          "kind": "test",
+          "isDefault": true
+        },
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "Docker: Start All Services",
+        "type": "shell",
+        "command": "docker compose -f infrastructure/docker/compose/docker-compose.yml -f infrastructure/docker/compose/docker-compose.dev.yml up -d",
+        "problemMatcher": [],
+        "group": "build",
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "Docker: Stop All Services",
+        "type": "shell",
+        "command": "docker compose -f infrastructure/docker/compose/docker-compose.yml -f infrastructure/docker/compose/docker-compose.dev.yml down",
+        "problemMatcher": [],
+        "group": "build",
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared"
+        }
+      }
+    ]
+  },
+
+  // ====================================================================
+  // Extensions
+  // ====================================================================
+
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.vscode-pylance",
+      "dbaeumer.vscode-eslint",
+      "nightrains.robloxlsp",
+      "ms-azuretools.vscode-docker",
+      "mtxr.sqltools",
+      "mtxr.sqltools-driver-pg",
+      "eamodio.gitlens"
+    ]
+  }
+}

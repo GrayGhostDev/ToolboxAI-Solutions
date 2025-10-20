@@ -1,15 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
 /**
  * Playwright Configuration for ToolBoxAI Dashboard
  * Comprehensive E2E testing setup with multiple browser configurations
  */
-
-// ES module compatible __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Use Docker container ports
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5179';  // Dashboard in Docker
@@ -32,7 +26,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
 
   // Opt out of parallel tests on CI
-  workers: process.env.CI ? 1 : undefined,
+  ...(process.env.CI ? { workers: 1 as const } : {}),
 
   // Reporter to use
   reporter: [
@@ -138,7 +132,6 @@ export default defineConfig({
         contextOptions: {
           ignoreHTTPSErrors: true,
           // WebKit handles cookies differently
-          storageState: undefined,
         },
         // Longer timeouts for WebKit
         actionTimeout: 15 * 1000,

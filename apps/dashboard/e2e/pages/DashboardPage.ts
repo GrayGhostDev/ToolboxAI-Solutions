@@ -1,5 +1,4 @@
-import type { Page, Locator } from '@playwright/test';
-import { expect } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 /**
  * Dashboard Page Object Model
@@ -86,7 +85,8 @@ export class DashboardPage {
    */
   isOnDashboard(): boolean {
     const url = this.page.url();
-    return url.includes('dashboard') || url === this.page.context().pages()[0].url() + '/';
+    const rootPageUrl = this.page.context().pages()[0]?.url() ?? '';
+    return url.includes('dashboard') || url === `${rootPageUrl}/`;
   }
 
   /**
