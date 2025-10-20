@@ -60,14 +60,14 @@ import {
   setPluginStatus
 } from '../../store/slices/robloxSlice';
 
-// Lazy load Roblox components (Vite auto-resolves extensions)
-const RobloxAIAssistant = React.lazy(() => import('@/components/roblox/RobloxAIAssistant'));
-const RobloxControlPanel = React.lazy(() => import('@/components/roblox/RobloxControlPanel'));
-const ContentGenerationMonitor = React.lazy(() => import('@/components/roblox/ContentGenerationMonitor'));
-const StudentProgressDashboard = React.lazy(() => import('@/components/roblox/StudentProgressDashboard'));
-const RobloxSessionManager = React.lazy(() => import('@/components/roblox/RobloxSessionManager'));
-const QuizResultsAnalytics = React.lazy(() => import('@/components/roblox/QuizResultsAnalytics'));
-const RobloxEnvironmentPreview = React.lazy(() => import('@/components/roblox/RobloxEnvironmentPreview'));
+// Lazy load Roblox components with explicit extensions for Vercel compatibility
+const RobloxAIAssistant = React.lazy(() => import('@/components/roblox/RobloxAIAssistant.tsx'));
+const RobloxControlPanel = React.lazy(() => import('@/components/roblox/RobloxControlPanel.tsx'));
+const ContentGenerationMonitor = React.lazy(() => import('@/components/roblox/ContentGenerationMonitor.tsx'));
+const StudentProgressDashboard = React.lazy(() => import('@/components/roblox/StudentProgressDashboard.tsx'));
+const RobloxSessionManager = React.lazy(() => import('@/components/roblox/RobloxSessionManager.tsx'));
+const QuizResultsAnalytics = React.lazy(() => import('@/components/roblox/QuizResultsAnalytics.tsx'));
+const RobloxEnvironmentPreview = React.lazy(() => import('@/components/roblox/RobloxEnvironmentPreview.tsx'));
 // import { AIAssistantTest } from '../test/AIAssistantTest'; // File does not exist
 import { IconSparkles, IconCircle, IconDeviceGamepad, IconBrain, IconWorld, IconClipboardCheck } from '@tabler/icons-react';
 import { api } from '../../services/api';
