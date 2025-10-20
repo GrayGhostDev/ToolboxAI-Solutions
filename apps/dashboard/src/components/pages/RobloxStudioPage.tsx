@@ -6,9 +6,9 @@ import { Box, Alert, Loader } from '@mantine/core';
  * A dedicated page for the Roblox Studio Integration with proper error boundaries
  * Ensures the component is displayed properly without overlaying other content
  * Includes Celery task progress tracking for script optimization jobs
+ *
+ * Note: RobloxStudioIntegration component temporarily disabled for Vercel deployment
  */
-// RobloxStudioIntegration temporarily disabled for Vercel build
-// import RobloxStudioIntegration from '../roblox/RobloxStudioIntegration';
 import { useMultipleCeleryTasks } from '../../hooks/pusher/useCeleryTaskProgress';
 import { TaskProgressList } from '../common/TaskProgressList';
 
@@ -113,16 +113,13 @@ const RobloxStudioPage: React.FunctionComponent<Record<string, any>> = () => {
           </Box>
         )}
 
-        {/* RobloxStudioIntegration temporarily disabled for Vercel build */}
+        {/* Roblox Studio Integration temporarily disabled for Vercel deployment */}
         <Box style={{ padding: '2rem', textAlign: 'center' }}>
           <Alert color="blue" variant="light" title="Roblox Studio Integration">
             Roblox Studio integration is currently being optimized for deployment.
             This feature will be available soon.
           </Alert>
         </Box>
-        {/* <Suspense fallback={<Loader size="lg" style={{ margin: 'auto' }} />}>
-          <RobloxStudioIntegration />
-        </Suspense> */}
       </Box>
     </RobloxStudioErrorBoundary>
   );
