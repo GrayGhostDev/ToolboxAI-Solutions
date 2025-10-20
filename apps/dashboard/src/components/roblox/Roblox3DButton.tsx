@@ -1,5 +1,24 @@
 import React, { useState } from 'react';
 import { Button, Box, Text, Tooltip, useMantineTheme, rem } from '@mantine/core';
+import {
+  IconTrophy,
+  IconCertificate,
+  IconSchool,
+  IconBulb,
+  IconBooks,
+  IconBackpack,
+  IconBallBasketball,
+  IconChalkboard,
+  IconPencil,
+  IconPaint,
+  IconRuler,
+  IconEraser,
+  IconLamp,
+  IconBook,
+  IconPaperclip,
+  IconShape,
+  IconBallFootball,
+} from '@tabler/icons-react';
 
 interface Roblox3DButtonProps {
   iconName: string;
@@ -55,28 +74,28 @@ if (typeof document !== 'undefined') {
   }
 }
 
-// Map icon names to their image paths
-const iconImageMap: { [key: string]: string } = {
-  'ABC_CUBE': '/images/png/3d_icon_ABC_CUBE_1.png',
-  'BACKPACK': '/images/png/3d_icon_BACKPACK_1.png',
-  'BADGE': '/images/png/3d_icon_BADGE_1.png',
-  'BASKETBALL': '/images/png/3d_icon_BASKETBALL_1.png',
-  'BOARD': '/images/png/3d_icon_BOARD_1.png',
-  'BOOKS': '/images/png/3d_icon_BOOKS_1.png',
-  'BRUSH_PAINT': '/images/png/3d_icon_BRUSH_PAINT_1.png',
-  'CIRCLE_RULER': '/images/png/3d_icon_CIRCLE_RULER_1.png',
-  'CRAYON': '/images/png/3d_icon_CRAYON_1.png',
-  'ERASER': '/images/png/3d_icon_ERASER_1.png',
-  'GRADUATION_CAP': '/images/png/3d_icon_GRADUATION_CAP_1.png',
-  'LAMP': '/images/png/3d_icon_LAMP_1.png',
-  'LIGHT_BULB': '/images/png/3d_icon_LIGHT_BULB_1.png',
-  'OPEN_BOOK': '/images/png/3d_icon_OPEN_BOOK_1.png',
-  'PAPER': '/images/png/3d_icon_PAPER_1.png',
-  'PENCIL': '/images/png/3d_icon_PENCIL_1.png',
-  'RULER': '/images/png/3d_icon_RULER_1.png',
-  'SOCCER_BALL': '/images/png/3d_icon_SOCCER_BALL_1.png',
-  'TRIANGLE_RULER': '/images/png/3d_icon_TRIANGLE_RULER_1.png',
-  'TROPHY': '/images/png/3d_icon_TROPHY_1.png',
+// Map icon names to Tabler icon components
+const iconComponentMap: { [key: string]: React.ElementType } = {
+  'ABC_CUBE': IconShape,
+  'BACKPACK': IconBackpack,
+  'BADGE': IconCertificate,
+  'BASKETBALL': IconBallBasketball,
+  'BOARD': IconChalkboard,
+  'BOOKS': IconBooks,
+  'BRUSH_PAINT': IconPaint,
+  'CIRCLE_RULER': IconRuler,
+  'CRAYON': IconPencil,
+  'ERASER': IconEraser,
+  'GRADUATION_CAP': IconSchool,
+  'LAMP': IconLamp,
+  'LIGHT_BULB': IconBulb,
+  'OPEN_BOOK': IconBook,
+  'PAPER': IconPaperclip,
+  'PENCIL': IconPencil,
+  'RULER': IconRuler,
+  'SOCCER_BALL': IconBallFootball,
+  'TRIANGLE_RULER': IconRuler,
+  'TROPHY': IconTrophy,
 };
 
 export const Roblox3DButton: React.FunctionComponent<Roblox3DButtonProps> = ({
@@ -116,7 +135,7 @@ export const Roblox3DButton: React.FunctionComponent<Roblox3DButtonProps> = ({
   };
 
   const mainColor = variantColors[variant];
-  const iconPath = iconImageMap[iconName] || iconImageMap['TROPHY'];
+  const IconComponent = iconComponentMap[iconName] || IconTrophy;
 
   // Button base styles
   const buttonStyle: React.CSSProperties = {
@@ -172,16 +191,13 @@ export const Roblox3DButton: React.FunctionComponent<Roblox3DButtonProps> = ({
           <Box style={loadingSpinnerStyle} />
         ) : (
           <Box style={iconContainerStyle}>
-            <Box
-              component="img"
-              src={iconPath}
-              alt={iconName}
+            <IconComponent
+              size={iconSizes[size].width}
+              stroke={1.5}
               style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'contain',
-                filter: isHovered ? 'brightness(1.2) contrast(1.1)' : 'none',
-                transition: 'all 0.3s ease'
+                filter: isHovered ? 'drop-shadow(0 0 8px currentColor)' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
+                transition: 'all 0.3s ease',
+                color: 'white'
               }}
             />
           </Box>

@@ -34,7 +34,7 @@ import {
 import { useSelector } from 'react-redux';
 import { type RootState } from '../../store';
 import api from '../../services/api';
-import pusher from '../../services/pusher';
+import { pusherService } from '../../services/pusher';
 
 interface ConversationStage {
   id: string;

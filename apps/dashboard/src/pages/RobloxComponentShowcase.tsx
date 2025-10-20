@@ -29,16 +29,18 @@ import {
   IconSparkles,
 } from '@tabler/icons-react';
 
-// Import Roblox components
-import { Roblox3DButton } from '@/components/roblox/Roblox3DButton';
-import { Roblox3DNavigation } from '@/components/roblox/Roblox3DNavigation';
-import { Roblox3DTabs } from '@/components/roblox/Roblox3DTabs';
-import { Roblox3DMetricCard } from '@/components/roblox/Roblox3DMetricCard';
-import { RobloxProgressBar } from '@/components/roblox/RobloxProgressBar';
-import { RobloxAchievementBadge } from '@/components/roblox/RobloxAchievementBadge';
-import { RobloxCharacterAvatar } from '@/components/roblox/RobloxCharacterAvatar';
-import { ParticleEffects } from '@/components/roblox/ParticleEffects';
-import { Roblox3DLoader } from '@/components/roblox/Roblox3DLoader';
+// Import Roblox components using barrel exports (explicit index.ts for Vercel compatibility)
+import {
+  Roblox3DButton,
+  Roblox3DNavigation,
+  Roblox3DTabs,
+  Roblox3DMetricCard,
+  RobloxProgressBar,
+  RobloxAchievementBadge,
+  RobloxCharacterAvatar,
+  ParticleEffects,
+  Roblox3DLoader,
+} from '@/components/roblox/index.ts';
 
 // Import theme colors
 import { robloxColors } from '@/theme/robloxTheme';

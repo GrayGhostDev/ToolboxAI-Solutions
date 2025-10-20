@@ -60,14 +60,14 @@ import {
   setPluginStatus
 } from '../../store/slices/robloxSlice';
 
-// Lazy load Roblox components for optimal performance
-const RobloxAIAssistant = React.lazy(() => import('../roblox/RobloxAIAssistant').then(m => ({ default: m.RobloxAIAssistant })));
-const RobloxControlPanel = React.lazy(() => import('../roblox/RobloxControlPanel').then(m => ({ default: m.RobloxControlPanel })));
-const ContentGenerationMonitor = React.lazy(() => import('../roblox/ContentGenerationMonitor').then(m => ({ default: m.ContentGenerationMonitor })));
-const StudentProgressDashboard = React.lazy(() => import('../roblox/StudentProgressDashboard').then(m => ({ default: m.StudentProgressDashboard })));
-const RobloxSessionManager = React.lazy(() => import('../roblox/RobloxSessionManager').then(m => ({ default: m.RobloxSessionManager })));
-const QuizResultsAnalytics = React.lazy(() => import('../roblox/QuizResultsAnalytics').then(m => ({ default: m.QuizResultsAnalytics })));
-const RobloxEnvironmentPreview = React.lazy(() => import('../roblox/RobloxEnvironmentPreview'));
+// Lazy load Roblox components for optimal performance using barrel exports (explicit index.ts for Vercel compatibility)
+const RobloxAIAssistant = React.lazy(() => import('@/components/roblox/index.ts').then(m => ({ default: m.RobloxAIAssistant })));
+const RobloxControlPanel = React.lazy(() => import('@/components/roblox/index.ts').then(m => ({ default: m.RobloxControlPanel })));
+const ContentGenerationMonitor = React.lazy(() => import('@/components/roblox/index.ts').then(m => ({ default: m.ContentGenerationMonitor })));
+const StudentProgressDashboard = React.lazy(() => import('@/components/roblox/index.ts').then(m => ({ default: m.StudentProgressDashboard })));
+const RobloxSessionManager = React.lazy(() => import('@/components/roblox/index.ts').then(m => ({ default: m.RobloxSessionManager })));
+const QuizResultsAnalytics = React.lazy(() => import('@/components/roblox/index.ts').then(m => ({ default: m.QuizResultsAnalytics })));
+const RobloxEnvironmentPreview = React.lazy(() => import('@/components/roblox/index.ts').then(m => ({ default: m.RobloxEnvironmentPreview })));
 // import { AIAssistantTest } from '../test/AIAssistantTest'; // File does not exist
 import { IconSparkles, IconCircle, IconDeviceGamepad, IconBrain, IconWorld, IconClipboardCheck } from '@tabler/icons-react';
 import { api } from '../../services/api';
