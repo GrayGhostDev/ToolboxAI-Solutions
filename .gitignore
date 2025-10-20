@@ -371,4 +371,7 @@ venv_clean*/
 aiosqlite/
 # Temporary fix scripts (not needed in repo)
 fix_classes*.py
-.vercel
+
+# Vercel (ignore all except project.json for team deployment config)
+.vercel/*
+!.vercel/project.json
