@@ -229,7 +229,7 @@ export default defineConfig({
     sourcemap: process.env.NODE_ENV !== 'production', // Only in dev for debugging
     minify: 'terser',
     target: 'es2022', // Updated for 2025 - better browser support
-    chunkSizeWarningLimit: 200, // Even stricter limit for faster loading in tests
+    chunkSizeWarningLimit: 1500, // Increased to accommodate large libraries like Three.js (1.2MB)
 
     // Performance-focused build settings
     cssCodeSplit: true,
