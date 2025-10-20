@@ -4,7 +4,7 @@ import {
   Progress, Modal, Drawer, Tabs, Menu, Tooltip, Checkbox, Radio,
   Switch, Slider, Rating, Skeleton, Table, useMantineTheme
 } from '@mantine/core';
-import { IconRefresh, IconSchool, IconCircleCheck } from '@tabler/icons-react';
+import { IconRefresh, IconSchool, IconCircleCheck, IconRocket, IconTrophy, IconStar, IconBook } from '@tabler/icons-react';
 
 // Helper function for color transparency (replaces MUI alpha)
 const alpha = (color: string, opacity: number) => {
@@ -55,10 +55,10 @@ import CreateLessonDialog from '../dialogs/CreateLessonDialog';
 import RealTimeAnalytics from '../widgets/RealTimeAnalytics';
 import ConnectionStatus from '../widgets/ConnectionStatus';
 
-// Roblox-themed components
-import RobloxCharacterAvatar from '../roblox/RobloxCharacterAvatar';
-import { Roblox3DButton } from '../roblox/Roblox3DButton';
-import { Real3DIcon } from '../roblox/Safe3DIcon';
+// Roblox-themed components temporarily disabled for Vercel build
+// import RobloxCharacterAvatar from '../roblox/RobloxCharacterAvatar';
+// import { Roblox3DButton } from '../roblox/Roblox3DButton';
+// import { Real3DIcon } from '../roblox/Safe3DIcon';
 import { robloxColors } from '../../theme/robloxTheme';
 
 interface DashboardHomeRTKProps {
@@ -333,22 +333,10 @@ export function DashboardHomeRTK({
                 }}
               >
                 <Group gap="xs" align="center">
-                  <Real3DIcon
-                    iconName="ROCKET"
-                    size="small"
-                    animated={true}
-                    particleEffect="sparkle"
-                    glowColor={robloxColors.neon.electricBlue}
-                  />
+                  <IconRocket size={20} />
                   <span>Welcome to Mission Control!</span>
                   <Box style={{ display: 'inline-flex', animation: 'neon-pulse 2s ease-in-out infinite' }}>
-                    <Real3DIcon
-                      iconName="STAR"
-                      size="small"
-                      animated={true}
-                      particleEffect="none"
-                      glowColor={robloxColors.neon.plasmaYellow}
-                    />
+                    <IconStar size={20} />
                   </Box>
                 </Group>
               </Text>
@@ -362,21 +350,14 @@ export function DashboardHomeRTK({
 
               {/* Enhanced Character with Real-time Data */}
               <Group align="center" gap="md" mb="md">
-                <RobloxCharacterAvatar
-                  character={{
-                    name: 'Mission Commander',
-                    type: 'astronaut',
-                    level: userLevel,
-                    xp: userXP,
-                    achievements: badgesData?.map(b => b.name) || ['First Steps', 'Explorer'],
-                    isActive: true,
-                    imagePath: ''
+                <Avatar
+                  size="lg"
+                  style={{
+                    background: `linear-gradient(135deg, ${theme.colors.blue[6]}, ${theme.colors.violet[6]})`,
                   }}
-                  size="medium"
-                  showLevel={false}
-                  showXP={false}
-                  animated={true}
-                />
+                >
+                  🚀
+                </Avatar>
                 <Box>
                   <Text fw={600} size="lg">
                     Level {userLevel} Commander
@@ -403,40 +384,35 @@ export function DashboardHomeRTK({
                 <Group gap="md" wrap="wrap">
                   {effectiveRole === 'teacher' && (
                     <>
-                      <Roblox3DButton
-                        iconName="ROCKET"
-                        label="Roblox Studio"
+                      <Button
                         onClick={() => navigate('/roblox-studio')}
-                        variant="primary"
-                        size="medium"
-                        animated={true}
-                        tooltip="Open Roblox Studio Integration"
-                        glowEffect={true}
+                        variant="filled"
+                        size="md"
+                        leftSection={<IconRocket size={16} />}
                         disabled={isClassesLoading}
-                      />
-                      <Roblox3DButton
-                        iconName="OPEN_BOOK"
-                        label="Create Lesson"
+                      >
+                        Roblox Studio
+                      </Button>
+                      <Button
                         onClick={() => setCreateLessonOpen(true)}
-                        variant="secondary"
-                        size="medium"
-                        animated={true}
-                        tooltip="Create a new lesson for your students"
-                      />
+                        variant="filled"
+                        size="md"
+                        leftSection={<IconBook size={16} />}
+                      >
+                        Create Lesson
+                      </Button>
                     </>
                   )}
 
-                  <Roblox3DButton
-                    iconName="REFRESH"
-                    label={isFetching ? 'Syncing...' : 'Refresh'}
+                  <Button
                     onClick={handleRefresh}
-                    variant="info"
-                    size="medium"
-                    animated={!isFetching}
-                    glowEffect={true}
-                    tooltip="Refresh dashboard data"
+                    variant="outline"
+                    size="md"
+                    leftSection={isFetching ? <Loader size={16} /> : <IconRefresh size={16} />}
                     disabled={isFetching}
-                  />
+                  >
+                    {isFetching ? 'Syncing...' : 'Refresh'}
+                  </Button>
                 </Group>
               </Stack>
           </Card>
@@ -615,12 +591,7 @@ export function DashboardHomeRTK({
                       transition: 'all 0.3s ease',
                     }}
                   >
-                    <Real3DIcon
-                      iconName="TROPHY"
-                      size="small"
-                      animated={true}
-                      description={badge.name}
-                    />
+                    <IconTrophy size={32} color={theme.colors.violet[6]} />
                     <Text size="xs" fw={600} ta="center" mt="xs">
                       {badge.name}
                     </Text>

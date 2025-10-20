@@ -1,15 +1,14 @@
 import { Overlay, Stack, Loader, Text, Box } from '@mantine/core';
-import { Roblox3DLoader } from '../roblox/Roblox3DLoader';
-import { useMantineTheme } from '@mantine/core';
+// Roblox3DLoader temporarily disabled for Vercel build
+// import { Roblox3DLoader } from '../roblox/Roblox3DLoader';
 
 interface Props {
   message?: string;
-  use3DLoader?: boolean;
+  // use3DLoader temporarily disabled
+  // use3DLoader?: boolean;
 }
 
-export function LoadingOverlay({ message = 'Loading awesome stuff...', use3DLoader = true }: Props) {
-  const theme = useMantineTheme();
-
+export function LoadingOverlay({ message = 'Loading awesome stuff...' }: Props) {
   return (
     <Overlay
       opacity={0.95}
@@ -26,21 +25,13 @@ export function LoadingOverlay({ message = 'Loading awesome stuff...', use3DLoad
           color: 'white',
         }}
       >
-        {use3DLoader ? (
-          <Roblox3DLoader
-            message={message}
-            variant="both"
-            size="large"
-            showBackground={true}
-          />
-        ) : (
-          <Stack align="center" spacing="md">
-            <Loader color="cyan" size="xl" variant="dots" />
-            <Text size="lg" fw={600}>
-              {message}
-            </Text>
-          </Stack>
-        )}
+        {/* Roblox3DLoader temporarily disabled - using standard loader */}
+        <Stack align="center" gap="md">
+          <Loader color="cyan" size="xl" variant="dots" />
+          <Text size="lg" fw={600}>
+            {message}
+          </Text>
+        </Stack>
       </Box>
     </Overlay>
   );

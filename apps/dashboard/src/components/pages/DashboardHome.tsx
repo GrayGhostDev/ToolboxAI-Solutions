@@ -38,16 +38,16 @@ import { ROUTES } from '../../config/routes';
 import CreateLessonDialog from '../dialogs/CreateLessonDialog';
 import RealTimeAnalytics from '../widgets/RealTimeAnalytics';
 import ConnectionStatus from '../widgets/ConnectionStatus';
-// Roblox-themed components
-import RobloxCharacterAvatar from '../roblox/RobloxCharacterAvatar';
-import Roblox3DIcon from '../roblox/Roblox3DIcon';
-import { Roblox3DButton } from '../roblox/Roblox3DButton';
-import { Roblox3DTabs } from '../roblox/Roblox3DTabs';
-import { Roblox3DNavigation } from '../roblox/Roblox3DNavigation';
-import { RobloxProgressBar } from '../roblox/RobloxProgressBar';
-import { RobloxAchievementBadge } from '../roblox/RobloxAchievementBadge';
-import { Simple3DIcon } from '../roblox/Simple3DIcon';
-import { Real3DIcon } from '../roblox/Safe3DIcon';
+// Roblox-themed components temporarily disabled for Vercel build
+// import RobloxCharacterAvatar from '../roblox/RobloxCharacterAvatar';
+// import Roblox3DIcon from '../roblox/Roblox3DIcon';
+// import { Roblox3DButton } from '../roblox/Roblox3DButton';
+// import { Roblox3DTabs } from '../roblox/Roblox3DTabs';
+// import { Roblox3DNavigation } from '../roblox/Roblox3DNavigation';
+// import { RobloxProgressBar } from '../roblox/RobloxProgressBar';
+// import { RobloxAchievementBadge } from '../roblox/RobloxAchievementBadge';
+// import { Simple3DIcon } from '../roblox/Simple3DIcon';
+// import { Real3DIcon } from '../roblox/Safe3DIcon';
 import { robloxColors } from '../../theme/robloxTheme';
 import { getDashboardOverview } from '../../services/api';
 
@@ -160,22 +160,10 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                   }}
                 >
                   <Group align="center" gap="xs">
-                    <Real3DIcon
-                      iconName="ROCKET"
-                      size="small"
-                      animated={true}
-                      particleEffect="sparkle"
-                      glowColor={robloxColors.neon.electricBlue}
-                    />
+                    <IconRocket size={16} />
                     <span>Welcome to Space Station!</span>
                     <Box style={{ display: 'inline-flex', animation: 'neon-pulse 2s ease-in-out infinite' }}>
-                      <Real3DIcon
-                        iconName="STAR"
-                        size="small"
-                        animated={true}
-                        particleEffect="none"
-                        glowColor={robloxColors.neon.plasmaYellow}
-                      />
+                      <IconTrophy size={16} />
                     </Box>
                   </Group>
                 </Text>
@@ -188,21 +176,14 @@ export function DashboardHome({ role }: { role?: UserRole }) {
 
                 {/* Character Avatar */}
                 <Group align="center" gap="md" style={{ marginBottom: 16 }}>
-                  <RobloxCharacterAvatar
-                    character={{
-                      name: 'Space Explorer',
-                      type: 'astronaut',
-                      level: level,
-                      xp: userXP,
-                      achievements: ['First Mission', 'Quiz Master', 'Level Up'],
-                      isActive: true,
-                      imagePath: '' // Will be loaded dynamically
+                  <Avatar
+                    size="lg"
+                    style={{
+                      background: `linear-gradient(135deg, ${theme.colors.blue[6]}, ${theme.colors.violet[6]})`,
                     }}
-                    size="medium"
-                    showLevel={false}
-                    showXP={false}
-                    animated={true}
-                  />
+                  >
+                    🚀
+                  </Avatar>
                   <Box>
                     <Text size="lg" fw={600}>
                       Level {level} Explorer
@@ -216,112 +197,100 @@ export function DashboardHome({ role }: { role?: UserRole }) {
               <Group gap="md" wrap="wrap">
                 {role === 'teacher' && (
                   <>
-                    <Roblox3DButton
-                      iconName="ROCKET"
-                      label="Roblox Studio"
+                    <Button
                       onClick={() => navigate('/roblox-studio')}
-                      variant="primary"
-                      size="medium"
-                      animated={true}
-                      tooltip="Open Roblox Studio Integration"
-                      glowEffect={true}
-                    />
-                    <Roblox3DButton
-                      iconName="OPEN_BOOK"
-                      label="Create Lesson"
+                      variant="filled"
+                      size="md"
+                      leftSection={<IconRocket size={16} />}
+                    >
+                      Roblox Studio
+                    </Button>
+                    <Button
                       onClick={() => setCreateLessonOpen(true)}
-                      variant="secondary"
-                      size="medium"
-                      animated={true}
-                      tooltip="Create a new lesson for your students"
-                    />
-                    <Roblox3DButton
-                      iconName="ASSESSMENT"
-                      label="View Assessments"
+                      variant="filled"
+                      size="md"
+                      leftSection={<IconSchool size={16} />}
+                    >
+                      Create Lesson
+                    </Button>
+                    <Button
                       onClick={() => navigate(ROUTES.ASSESSMENTS)}
-                      variant="secondary"
-                      size="medium"
-                      animated={true}
-                      tooltip="Review student assessments and progress"
-                    />
+                      variant="filled"
+                      size="md"
+                      leftSection={<IconClipboardCheck size={16} />}
+                    >
+                      View Assessments
+                    </Button>
                   </>
                 )}
                 {role === 'admin' && (
                   <>
-                    <Roblox3DButton
-                      iconName="LIGHT_BULB"
-                      label="Analytics"
+                    <Button
                       onClick={() => navigate(ROUTES.ANALYTICS)}
-                      variant="primary"
-                      size="medium"
-                      animated={true}
-                      tooltip="View system analytics and reports"
-                    />
-                    <Roblox3DButton
-                      iconName="SETTINGS"
-                      label="Manage LMS"
+                      variant="filled"
+                      size="md"
+                      leftSection={<IconTrendingUp size={16} />}
+                    >
+                      Analytics
+                    </Button>
+                    <Button
                       onClick={() => navigate(ROUTES.INTEGRATIONS)}
-                      variant="secondary"
-                      size="medium"
-                      animated={true}
-                      tooltip="Manage learning management system"
-                    />
+                      variant="filled"
+                      size="md"
+                      leftSection={<IconDeviceGamepad size={16} />}
+                    >
+                      Manage LMS
+                    </Button>
                   </>
                 )}
                 {role === 'student' && (
                   <>
-                    <Roblox3DButton
-                      iconName="ROCKET"
-                      label="Enter Roblox World"
+                    <Button
                       onClick={handleCompleteTask}
-                      variant="primary"
-                      size="medium"
-                      animated={true}
-                      tooltip="Jump into your Roblox learning world"
-                    />
-                    <Roblox3DButton
-                      iconName="TROPHY"
-                      label="View Rewards"
+                      variant="filled"
+                      size="md"
+                      leftSection={<IconRocket size={16} />}
+                    >
+                      Enter Roblox World
+                    </Button>
+                    <Button
                       onClick={() => navigate(ROUTES.REWARDS)}
-                      variant="secondary"
-                      size="medium"
-                      animated={true}
-                      tooltip="Check your achievements and rewards"
-                    />
+                      variant="filled"
+                      size="md"
+                      leftSection={<IconTrophy size={16} />}
+                    >
+                      View Rewards
+                    </Button>
                   </>
                 )}
                 {role === 'parent' && (
                   <>
-                    <Roblox3DButton
-                      iconName="SPORTS_ESPORTS"
-                      label="Watch Gameplay"
+                    <Button
                       onClick={() => navigate('/gameplay-replay')}
-                      variant="primary"
-                      size="medium"
-                      animated={true}
-                      tooltip="Watch your child's learning gameplay"
-                    />
-                    <Roblox3DButton
-                      iconName="ASSESSMENT"
-                      label="View Reports"
+                      variant="filled"
+                      size="md"
+                      leftSection={<IconDeviceGamepad size={16} />}
+                    >
+                      Watch Gameplay
+                    </Button>
+                    <Button
                       onClick={() => navigate(ROUTES.REPORTS)}
-                      variant="secondary"
-                      size="medium"
-                      animated={true}
-                      tooltip="View detailed progress reports"
-                    />
+                      variant="filled"
+                      size="md"
+                      leftSection={<IconClipboardCheck size={16} />}
+                    >
+                      View Reports
+                    </Button>
                   </>
                 )}
-                <Roblox3DButton
-                  iconName="REFRESH"
-                  label="Refresh"
+                <Button
                   onClick={() => void loadDashboardData()}
-                  variant="info"
-                  size="medium"
-                  animated={true}
-                  glowEffect={true}
-                  tooltip="Refresh dashboard data"
-                />
+                  variant="outline"
+                  size="md"
+                  leftSection={<IconRefresh size={16} />}
+                >
+                  Refresh
+                </Button>
               </Group>
             </Stack>
           </Card.Section>
@@ -353,25 +322,19 @@ export function DashboardHome({ role }: { role?: UserRole }) {
               }}
             >
               <Group justify="center" align="center" gap="xs">
-                <Real3DIcon
-                  iconName="SPORTS_ESPORTS"
-                  size="small"
-                  animated={true}
-                  particleEffect="none"
-                  glowColor={robloxColors.neon.hotPink}
-                />
+                <IconDeviceGamepad size={16} />
                 <span>Your Learning Tools</span>
               </Group>
             </Text>
 
             <Grid gutter="md" justify="center">
               {[
-                { name: 'ABC_CUBE', description: 'ABC Learning Cube' },
-                { name: 'BOARD', description: 'Math Learning Board' },
-                { name: 'ROCKET', description: 'Space Quiz Mission' },
-                { name: 'SOCCER_BALL', description: 'Sports Challenge' },
-                { name: 'BRUSH_PAINT', description: 'Art Studio' },
-                { name: 'TROPHY', description: 'Achievements Hall' },
+                { icon: '🎲', description: 'ABC Learning Cube' },
+                { icon: '📋', description: 'Math Learning Board' },
+                { icon: '🚀', description: 'Space Quiz Mission' },
+                { icon: '⚽', description: 'Sports Challenge' },
+                { icon: '🎨', description: 'Art Studio' },
+                { icon: '🏆', description: 'Achievements Hall' },
               ].map((tool, index) => (
                 <Grid.Col span={{ base: 6, sm: 4, md: 2 }} key={index}>
                   <Box
@@ -386,14 +349,11 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                       cursor: 'pointer',
                       transition: 'all 0.3s ease',
                     }}
-                    onClick={() => console.log(`Clicked ${tool.name}`)}
+                    onClick={() => console.log(`Clicked ${tool.description}`)}
                   >
-                      <Real3DIcon
-                        iconName={tool.name}
-                        size="large"
-                        animated={true}
-                        description={tool.description}
-                      />
+                    <Text size="48px" style={{ lineHeight: 1 }}>
+                      {tool.icon}
+                    </Text>
                     <Text size="sm" ta="center" fw={600} mt="xs">
                       {tool.description}
                     </Text>
@@ -417,36 +377,22 @@ export function DashboardHome({ role }: { role?: UserRole }) {
         >
           <Box mb="md">
             <Group justify="center" align="center" gap="xs">
-              <Real3DIcon
-                iconName="BOARD"
-                size="small"
-                animated={true}
-                particleEffect="none"
-                glowColor={robloxColors.neon.electricBlue}
-              />
+              <IconSchool size={16} />
               <Text size="lg" ta="center" fw={700} component="span">Navigation Hub</Text>
             </Group>
           </Box>
           <Group justify="center" gap="md" wrap="wrap">
             {[
-              { name: 'Dashboard', icon: 'BOARD', iconColor: robloxColors.neon.electricBlue, path: '/dashboard' },
-              { name: 'Lessons', icon: 'BOOKS', iconColor: robloxColors.neon.toxicGreen, path: '/lessons', badge: 3 },
-              { name: 'Assessments', icon: 'ASSESSMENT', iconColor: robloxColors.neon.hotPink, path: '/assessments' },
-              { name: 'Rewards', icon: 'TROPHY', iconColor: robloxColors.neon.plasmaYellow, path: '/rewards', badge: 5 },
-              { name: 'Profile', icon: 'BADGE', iconColor: robloxColors.neon.deepPurple, path: '/profile' },
+              { name: 'Dashboard', icon: IconSchool, path: '/dashboard' },
+              { name: 'Lessons', icon: IconSchool, path: '/lessons', badge: 3 },
+              { name: 'Assessments', icon: IconClipboardCheck, path: '/assessments' },
+              { name: 'Rewards', icon: IconTrophy, path: '/rewards', badge: 5 },
+              { name: 'Profile', icon: IconRocket, path: '/profile' },
             ].map((item, index) => (
               <Button
                 key={index}
                 variant="filled"
-                leftSection={
-                  <Real3DIcon
-                    iconName={item.icon}
-                    size="small"
-                    animated={false}
-                    particleEffect="none"
-                    glowColor={item.iconColor}
-                  />
-                }
+                leftSection={<item.icon size={16} />}
                 onClick={() => navigate(item.path)}
                 style={{
                   background: `linear-gradient(135deg, ${theme.colors.blue[6]}, ${theme.colors.violet[6]})`,
@@ -591,10 +537,10 @@ export function DashboardHome({ role }: { role?: UserRole }) {
 
                 <Group gap="md" wrap="wrap">
                   {[
-                    { name: 'ROCKET', description: 'Space Walker' },
-                    { name: 'LIGHT_BULB', description: 'Quiz Master' },
-                    { name: 'TROPHY', description: 'Streak Keeper' },
-                    { name: 'STAR', description: 'Level Up' },
+                    { icon: '🚀', description: 'Space Walker' },
+                    { icon: '💡', description: 'Quiz Master' },
+                    { icon: '🏆', description: 'Streak Keeper' },
+                    { icon: '⭐', description: 'Level Up' },
                   ].map((achievement, index) => (
                     <Box
                       key={index}
@@ -612,12 +558,9 @@ export function DashboardHome({ role }: { role?: UserRole }) {
                       }}
                       onClick={() => console.log('Achievement clicked:', achievement.description)}
                     >
-                        <Real3DIcon
-                          iconName={achievement.name}
-                          size="small"
-                          animated={true}
-                          description={achievement.description}
-                        />
+                      <Text size="32px" style={{ lineHeight: 1 }}>
+                        {achievement.icon}
+                      </Text>
                       <Text size="xs" ta="center" fw={600} mt={4}>
                         {achievement.description}
                       </Text>

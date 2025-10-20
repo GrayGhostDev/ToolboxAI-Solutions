@@ -1,14 +1,14 @@
 /**
  * Example Dashboard Layouts
  *
- * Demonstrates various dashboard layouts using Roblox components.
+ * Demonstrates various dashboard layouts using Mantine components.
  * Showcases best practices for responsive design and component composition.
  *
  * @module ExampleDashboardLayouts
  * @since 2025-10-01
  */
 
-import React, { useState, memo } from 'react';
+import { useState, memo } from 'react';
 import {
   Container,
   Grid,
@@ -23,6 +23,8 @@ import {
   Box,
   Paper,
   Tabs,
+  Avatar,
+  Progress,
 } from '@mantine/core';
 import {
   IconTrophy,
@@ -30,16 +32,15 @@ import {
   IconBook,
   IconUser,
   IconSettings,
-  IconBell,
 } from '@tabler/icons-react';
 
-// Import Roblox components
-import { Roblox3DButton } from '../components/roblox/Roblox3DButton';
-import { Roblox3DNavigation } from '../components/roblox/Roblox3DNavigation';
-import { Roblox3DMetricCard } from '../components/roblox/Roblox3DMetricCard';
-import { RobloxProgressBar } from '../components/roblox/RobloxProgressBar';
-import { RobloxAchievementBadge } from '../components/roblox/RobloxAchievementBadge';
-import { RobloxDashboardHeader } from '../components/roblox/RobloxDashboardHeader';
+// Roblox-themed components temporarily disabled for Vercel build
+// import { Roblox3DButton } from '../components/roblox/Roblox3DButton';
+// import { Roblox3DNavigation } from '../components/roblox/Roblox3DNavigation';
+// import { Roblox3DMetricCard } from '../components/roblox/Roblox3DMetricCard';
+// import { RobloxProgressBar } from '../components/roblox/RobloxProgressBar';
+// import { RobloxAchievementBadge } from '../components/roblox/RobloxAchievementBadge';
+// import { RobloxDashboardHeader } from '../components/roblox/RobloxDashboardHeader';
 
 /**
  * Student Dashboard Layout
@@ -47,8 +48,6 @@ import { RobloxDashboardHeader } from '../components/roblox/RobloxDashboardHeade
  * A dashboard layout optimized for students showing progress, achievements, and tasks.
  */
 export const StudentDashboardLayout = memo(() => {
-  const [activeTab, setActiveTab] = useState('overview');
-
   const navItems = [
     { id: 'home', label: 'Home', iconName: 'BOARD' },
     { id: 'courses', label: 'Courses', iconName: 'BOOKS' },
@@ -60,65 +59,61 @@ export const StudentDashboardLayout = memo(() => {
     <Container fluid p="lg">
       {/* Navigation */}
       <Box mb="xl">
-        <Roblox3DNavigation
-          items={navItems}
-          onItemClick={(item) => console.log('Navigate to:', item.id)}
-          variant="buttons"
-          orientation="horizontal"
-          animated={true}
-        />
+        <Tabs defaultValue="home">
+          <Tabs.List>
+            {navItems.map(item => (
+              <Tabs.Tab
+                key={item.id}
+                value={item.id}
+                leftSection={<IconBook />}
+                onClick={() => console.log('Navigate to:', item.id)}
+              >
+                {item.label}
+                {item.badge && <Badge ml="xs" size="xs" circle>{item.badge}</Badge>}
+              </Tabs.Tab>
+            ))}
+          </Tabs.List>
+        </Tabs>
       </Box>
 
       {/* Header with user info */}
-      <RobloxDashboardHeader
-        userName="Alex Student"
-        level={12}
-        xp={2450}
-        maxXp={3000}
-        avatarUrl="/avatars/student.png"
-      />
+      <Group align="center" gap="md" mb="xl">
+        <Avatar size="lg">AS</Avatar>
+        <Box>
+          <Text size="lg" fw={600}>Welcome, Alex Student</Text>
+          <Text size="sm" c="dimmed">Level 12 • 2450 / 3000 XP</Text>
+        </Box>
+      </Group>
 
       {/* Metrics Grid */}
       <Grid mt="xl" gutter="lg">
         <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-          <Roblox3DMetricCard
-            title="Total XP"
-            value={15420}
-            change={+12.5}
-            iconName="LIGHT_BULB"
-            variant="success"
-            animated={true}
-          />
+          <Card withBorder padding="md">
+            <Text size="sm" c="dimmed" mb="xs">Total XP</Text>
+            <Text size="xl" fw={700}>15,420</Text>
+            <Badge color="green" size="sm" mt="xs">+12.5%</Badge>
+          </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-          <Roblox3DMetricCard
-            title="Courses Completed"
-            value={8}
-            change={+2}
-            iconName="BOOKS"
-            variant="primary"
-            animated={true}
-          />
+          <Card withBorder padding="md">
+            <Text size="sm" c="dimmed" mb="xs">Courses Completed</Text>
+            <Text size="xl" fw={700}>8</Text>
+            <Badge color="blue" size="sm" mt="xs">+2</Badge>
+          </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-          <Roblox3DMetricCard
-            title="Achievements"
-            value={24}
-            change={+5}
-            iconName="TROPHY"
-            variant="warning"
-            animated={true}
-          />
+          <Card withBorder padding="md">
+            <Text size="sm" c="dimmed" mb="xs">Achievements</Text>
+            <Text size="xl" fw={700}>24</Text>
+            <Badge color="yellow" size="sm" mt="xs">+5</Badge>
+          </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-          <Roblox3DMetricCard
-            title="Streak Days"
-            value={15}
-            change={+1}
-            iconName="GRADUATION_CAP"
-            variant="info"
-            animated={true}
-          />
+          <Card withBorder padding="md">
+            <Text size="sm" c="dimmed" mb="xs">Streak Days</Text>
+            <Text size="xl" fw={700}>15</Text>
+            <Badge color="cyan" size="sm" mt="xs">+1</Badge>
+          </Card>
         </Grid.Col>
       </Grid>
 
@@ -135,14 +130,7 @@ export const StudentDashboardLayout = memo(() => {
                   <Text fw={600}>Python Fundamentals</Text>
                   <Badge color="green">75% Complete</Badge>
                 </Group>
-                <RobloxProgressBar
-                  currentXP={750}
-                  requiredXP={1000}
-                  level={5}
-                  showLevel={false}
-                  animated={true}
-                  variant="gradient"
-                />
+                <Progress value={75} size="lg" radius="md" />
               </Box>
 
               <Box>
@@ -150,14 +138,7 @@ export const StudentDashboardLayout = memo(() => {
                   <Text fw={600}>Web Development</Text>
                   <Badge color="blue">60% Complete</Badge>
                 </Group>
-                <RobloxProgressBar
-                  currentXP={600}
-                  requiredXP={1000}
-                  level={4}
-                  showLevel={false}
-                  animated={true}
-                  variant="gradient"
-                />
+                <Progress value={60} size="lg" radius="md" />
               </Box>
 
               <Box>
@@ -165,32 +146,25 @@ export const StudentDashboardLayout = memo(() => {
                   <Text fw={600}>Data Structures</Text>
                   <Badge color="orange">40% Complete</Badge>
                 </Group>
-                <RobloxProgressBar
-                  currentXP={400}
-                  requiredXP={1000}
-                  level={3}
-                  showLevel={false}
-                  animated={true}
-                  variant="gradient"
-                />
+                <Progress value={40} size="lg" radius="md" />
               </Box>
             </Stack>
 
             <Group mt="xl">
-              <Roblox3DButton
-                iconName="BOOKS"
-                label="Continue Learning"
-                variant="primary"
-                size="medium"
+              <Button
+                variant="filled"
+                leftSection={<IconBook />}
                 onClick={() => console.log('Continue learning')}
-              />
-              <Roblox3DButton
-                iconName="BOARD"
-                label="View All Courses"
-                variant="secondary"
-                size="medium"
+              >
+                Continue Learning
+              </Button>
+              <Button
+                variant="outline"
+                leftSection={<IconBook />}
                 onClick={() => console.log('View courses')}
-              />
+              >
+                View All Courses
+              </Button>
             </Group>
           </Card>
         </Grid.Col>
@@ -201,28 +175,28 @@ export const StudentDashboardLayout = memo(() => {
             <Title order={3} mb="md">Recent Achievements</Title>
 
             <Stack gap="md">
-              <RobloxAchievementBadge
-                title="Fast Learner"
-                description="Complete 5 courses in one month"
-                iconName="LIGHT_BULB"
-                rarity="rare"
-                unlocked={true}
-              />
-              <RobloxAchievementBadge
-                title="Perfect Score"
-                description="Score 100% on 3 quizzes"
-                iconName="TROPHY"
-                rarity="epic"
-                unlocked={true}
-              />
-              <RobloxAchievementBadge
-                title="Code Master"
-                description="Complete 50 coding challenges"
-                iconName="GRADUATION_CAP"
-                rarity="legendary"
-                unlocked={false}
-                progress={75}
-              />
+              <Card withBorder padding="sm">
+                <Group gap="xs" mb="xs">
+                  <Badge color="violet" variant="filled">Rare</Badge>
+                  <Text size="sm" fw={600}>Fast Learner</Text>
+                </Group>
+                <Text size="xs" c="dimmed">Complete 5 courses in one month</Text>
+              </Card>
+              <Card withBorder padding="sm">
+                <Group gap="xs" mb="xs">
+                  <Badge color="purple" variant="filled">Epic</Badge>
+                  <Text size="sm" fw={600}>Perfect Score</Text>
+                </Group>
+                <Text size="xs" c="dimmed">Score 100% on 3 quizzes</Text>
+              </Card>
+              <Card withBorder padding="sm">
+                <Group gap="xs" mb="xs">
+                  <Badge color="orange" variant="filled">Legendary</Badge>
+                  <Text size="sm" fw={600}>Code Master</Text>
+                </Group>
+                <Text size="xs" c="dimmed" mb="xs">Complete 50 coding challenges</Text>
+                <Progress value={75} size="sm" radius="md" />
+              </Card>
             </Stack>
           </Card>
         </Grid.Col>
@@ -250,13 +224,21 @@ export const TeacherDashboardLayout = memo(() => {
     <Container fluid p="lg">
       {/* Navigation */}
       <Box mb="xl">
-        <Roblox3DNavigation
-          items={navItems}
-          onItemClick={(item) => console.log('Navigate to:', item.id)}
-          variant="tabs"
-          orientation="horizontal"
-          animated={true}
-        />
+        <Tabs defaultValue="overview">
+          <Tabs.List>
+            {navItems.map(item => (
+              <Tabs.Tab
+                key={item.id}
+                value={item.id}
+                leftSection={<IconBook />}
+                onClick={() => console.log('Navigate to:', item.id)}
+              >
+                {item.label}
+                {item.badge && <Badge ml="xs" size="xs" circle>{item.badge}</Badge>}
+              </Tabs.Tab>
+            ))}
+          </Tabs.List>
+        </Tabs>
       </Box>
 
       {/* Header */}
@@ -266,60 +248,50 @@ export const TeacherDashboardLayout = memo(() => {
           <Text c="dimmed">Welcome back, Professor Smith</Text>
         </Box>
         <Group>
-          <Roblox3DButton
-            iconName="BOARD"
-            label="Create Assignment"
-            variant="primary"
+          <Button
+            variant="filled"
+            leftSection={<IconBook />}
             onClick={() => console.log('Create assignment')}
-          />
-          <Roblox3DButton
-            iconName="LIGHT_BULB"
-            label="View Reports"
-            variant="secondary"
+          >
+            Create Assignment
+          </Button>
+          <Button
+            variant="outline"
+            leftSection={<IconChartBar />}
             onClick={() => console.log('View reports')}
-          />
+          >
+            View Reports
+          </Button>
         </Group>
       </Group>
 
       {/* Class Overview Cards */}
       <Grid gutter="lg">
         <Grid.Col span={{ base: 12, sm: 6, lg: 3 }}>
-          <Roblox3DMetricCard
-            title="Total Students"
-            value={156}
-            change={+8}
-            iconName="GRADUATION_CAP"
-            variant="primary"
-            animated={true}
-          />
+          <Card withBorder padding="md">
+            <Text size="sm" c="dimmed" mb="xs">Total Students</Text>
+            <Text size="xl" fw={700}>156</Text>
+            <Badge color="blue" size="sm" mt="xs">+8</Badge>
+          </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6, lg: 3 }}>
-          <Roblox3DMetricCard
-            title="Active Classes"
-            value={5}
-            iconName="BOOKS"
-            variant="success"
-            animated={true}
-          />
+          <Card withBorder padding="md">
+            <Text size="sm" c="dimmed" mb="xs">Active Classes</Text>
+            <Text size="xl" fw={700}>5</Text>
+          </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6, lg: 3 }}>
-          <Roblox3DMetricCard
-            title="Avg. Performance"
-            value={87}
-            change={+3.2}
-            iconName="TROPHY"
-            variant="warning"
-            animated={true}
-          />
+          <Card withBorder padding="md">
+            <Text size="sm" c="dimmed" mb="xs">Avg. Performance</Text>
+            <Text size="xl" fw={700}>87</Text>
+            <Badge color="yellow" size="sm" mt="xs">+3.2%</Badge>
+          </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6, lg: 3 }}>
-          <Roblox3DMetricCard
-            title="Pending Reviews"
-            value={12}
-            iconName="BOARD"
-            variant="info"
-            animated={true}
-          />
+          <Card withBorder padding="md">
+            <Text size="sm" c="dimmed" mb="xs">Pending Reviews</Text>
+            <Text size="xl" fw={700}>12</Text>
+          </Card>
         </Grid.Col>
       </Grid>
 
@@ -337,22 +309,16 @@ export const TeacherDashboardLayout = memo(() => {
                     <Text size="sm" c="dimmed">{25 + idx * 5} students</Text>
                   </Group>
                   <Title order={4}>{className}</Title>
-                  <RobloxProgressBar
-                    currentXP={(idx + 1) * 200}
-                    requiredXP={1000}
-                    level={idx + 1}
-                    showLevel={false}
-                    animated={true}
-                    variant="gradient"
-                  />
-                  <Roblox3DButton
-                    iconName="BOOKS"
-                    label="View Class"
-                    variant="primary"
-                    size="small"
+                  <Progress value={((idx + 1) * 200 / 1000) * 100} size="lg" radius="md" />
+                  <Button
+                    variant="filled"
+                    size="sm"
                     fullWidth
+                    leftSection={<IconBook />}
                     onClick={() => console.log(`View ${className}`)}
-                  />
+                  >
+                    View Class
+                  </Button>
                 </Stack>
               </Paper>
             </Grid.Col>
@@ -384,74 +350,63 @@ export const AdminDashboardLayout = memo(() => {
     <Container fluid p="lg">
       {/* Top Navigation */}
       <Box mb="xl">
-        <Roblox3DNavigation
-          items={navItems}
-          onItemClick={(item) => setSelectedView(item.id)}
-          variant="buttons"
-          orientation="horizontal"
-          glowEffect={true}
-        />
+        <Tabs value={selectedView} onChange={(value) => setSelectedView(value || 'dashboard')}>
+          <Tabs.List>
+            {navItems.map(item => (
+              <Tabs.Tab
+                key={item.id}
+                value={item.id}
+                leftSection={<IconBook />}
+              >
+                {item.label}
+                {item.badge && <Badge ml="xs" size="xs" circle>{item.badge}</Badge>}
+              </Tabs.Tab>
+            ))}
+          </Tabs.List>
+        </Tabs>
       </Box>
 
       {/* System Metrics */}
       <Grid gutter="lg" mb="xl">
         <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2 }}>
-          <Roblox3DMetricCard
-            title="Total Users"
-            value={1247}
-            change={+15.3}
-            iconName="GRADUATION_CAP"
-            variant="primary"
-            animated={true}
-          />
+          <Card withBorder padding="md">
+            <Text size="sm" c="dimmed" mb="xs">Total Users</Text>
+            <Text size="xl" fw={700}>1,247</Text>
+            <Badge color="blue" size="sm" mt="xs">+15.3%</Badge>
+          </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2 }}>
-          <Roblox3DMetricCard
-            title="Active Sessions"
-            value={342}
-            change={+8.1}
-            iconName="LIGHT_BULB"
-            variant="success"
-            animated={true}
-          />
+          <Card withBorder padding="md">
+            <Text size="sm" c="dimmed" mb="xs">Active Sessions</Text>
+            <Text size="xl" fw={700}>342</Text>
+            <Badge color="green" size="sm" mt="xs">+8.1%</Badge>
+          </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2 }}>
-          <Roblox3DMetricCard
-            title="Courses"
-            value={89}
-            change={+2}
-            iconName="BOOKS"
-            variant="info"
-            animated={true}
-          />
+          <Card withBorder padding="md">
+            <Text size="sm" c="dimmed" mb="xs">Courses</Text>
+            <Text size="xl" fw={700}>89</Text>
+            <Badge color="cyan" size="sm" mt="xs">+2</Badge>
+          </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2 }}>
-          <Roblox3DMetricCard
-            title="Achievements"
-            value={456}
-            iconName="TROPHY"
-            variant="warning"
-            animated={true}
-          />
+          <Card withBorder padding="md">
+            <Text size="sm" c="dimmed" mb="xs">Achievements</Text>
+            <Text size="xl" fw={700}>456</Text>
+          </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2 }}>
-          <Roblox3DMetricCard
-            title="System Load"
-            value={67}
-            change={-5.2}
-            iconName="BOARD"
-            variant="success"
-            animated={true}
-          />
+          <Card withBorder padding="md">
+            <Text size="sm" c="dimmed" mb="xs">System Load</Text>
+            <Text size="xl" fw={700}>67%</Text>
+            <Badge color="green" size="sm" mt="xs">-5.2%</Badge>
+          </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 2 }}>
-          <Roblox3DMetricCard
-            title="Uptime"
-            value={99.9}
-            iconName="LIGHT_BULB"
-            variant="success"
-            animated={true}
-          />
+          <Card withBorder padding="md">
+            <Text size="sm" c="dimmed" mb="xs">Uptime</Text>
+            <Text size="xl" fw={700}>99.9%</Text>
+          </Card>
         </Grid.Col>
       </Grid>
 
@@ -461,58 +416,64 @@ export const AdminDashboardLayout = memo(() => {
 
         <Grid gutter="md">
           <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-            <Roblox3DButton
-              iconName="GRADUATION_CAP"
-              label="User Management"
-              variant="primary"
+            <Button
+              variant="filled"
               fullWidth
+              leftSection={<IconUser />}
               onClick={() => console.log('User management')}
-            />
+            >
+              User Management
+            </Button>
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-            <Roblox3DButton
-              iconName="BOOKS"
-              label="Content Management"
-              variant="secondary"
+            <Button
+              variant="outline"
               fullWidth
+              leftSection={<IconBook />}
               onClick={() => console.log('Content management')}
-            />
+            >
+              Content Management
+            </Button>
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-            <Roblox3DButton
-              iconName="LIGHT_BULB"
-              label="Analytics"
-              variant="info"
+            <Button
+              variant="filled"
               fullWidth
+              leftSection={<IconChartBar />}
               onClick={() => console.log('Analytics')}
-            />
+            >
+              Analytics
+            </Button>
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-            <Roblox3DButton
-              iconName="TROPHY"
-              label="Gamification"
-              variant="warning"
+            <Button
+              variant="filled"
               fullWidth
+              leftSection={<IconTrophy />}
               onClick={() => console.log('Gamification')}
-            />
+            >
+              Gamification
+            </Button>
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-            <Roblox3DButton
-              iconName="BOARD"
-              label="System Settings"
-              variant="success"
+            <Button
+              variant="filled"
               fullWidth
+              leftSection={<IconSettings />}
               onClick={() => console.log('System settings')}
-            />
+            >
+              System Settings
+            </Button>
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-            <Roblox3DButton
-              iconName="LIGHT_BULB"
-              label="Reports"
-              variant="primary"
+            <Button
+              variant="filled"
               fullWidth
+              leftSection={<IconChartBar />}
               onClick={() => console.log('Reports')}
-            />
+            >
+              Reports
+            </Button>
           </Grid.Col>
         </Grid>
       </Card>
@@ -535,7 +496,7 @@ export const ExampleDashboardLayouts = memo(() => {
           <Box>
             <Title order={1}>Example Dashboard Layouts</Title>
             <Text c="dimmed" size="lg" mt="xs">
-              Explore different dashboard layouts built with Roblox components
+              Explore different dashboard layouts built with Mantine components
             </Text>
           </Box>
 

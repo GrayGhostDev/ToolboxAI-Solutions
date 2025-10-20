@@ -11,10 +11,10 @@ import {
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 
-// Import our new playful components
-import { Roblox3DMetricCard } from '../roblox/Roblox3DMetricCard';
-import { AnimatedLeaderboard } from '../roblox/AnimatedLeaderboard';
-import { FloatingIslandNav } from '../roblox/FloatingIslandNav';
+// Roblox-themed components temporarily disabled for Vercel build
+// import { Roblox3DMetricCard } from '../roblox/Roblox3DMetricCard';
+// import { AnimatedLeaderboard } from '../roblox/AnimatedLeaderboard';
+// import { FloatingIslandNav } from '../roblox/FloatingIslandNav';
 import { useMantineTheme } from '@mantine/core';
 
 const PlaygroundShowcase: React.FunctionComponent<Record<string, any>> = () => {
@@ -147,7 +147,7 @@ const PlaygroundShowcase: React.FunctionComponent<Record<string, any>> = () => {
             >
               🏝️ Choose Your Adventure Island! 🏝️
             </Text>
-            <FloatingIslandNav />
+            <Alert color="blue" variant="light">Island navigation being optimized for deployment.</Alert>
           </Card>
         </motion.div>
 
@@ -172,11 +172,25 @@ const PlaygroundShowcase: React.FunctionComponent<Record<string, any>> = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                 >
-                  <Roblox3DMetricCard
-                    {...metric}
+                  <Card
+                    withBorder
+                    radius="md"
                     onClick={() => setSelectedMetric(index)}
-                    tooltip={`Click for more details about ${metric.title}`}
-                  />
+                    style={{
+                      background: `linear-gradient(135deg, ${theme.colors.dark[7]}, ${theme.colors.dark[6]})`,
+                      border: `2px solid ${metric.color}`,
+                      padding: 16,
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    <Group align="center" gap="md" mb="xs">
+                      {metric.icon}
+                      <Text size="sm" fw={600} c={metric.color}>{metric.title}</Text>
+                    </Group>
+                    <Text size="2rem" fw={800} c="white">{metric.value}</Text>
+                    <Text size="xs" c="dimmed">{metric.subtitle}</Text>
+                  </Card>
                 </motion.div>
               </Grid.Col>
             ))}
@@ -192,11 +206,35 @@ const PlaygroundShowcase: React.FunctionComponent<Record<string, any>> = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
               >
-                <AnimatedLeaderboard
-                  players={leaderboardPlayers}
-                  title="🏆 ULTIMATE CHAMPIONS 🏆"
-                  onPlayerClick={(player) => console.log('Clicked player:', player)}
-                />
+                <Card
+                  withBorder
+                  radius="xl"
+                  style={{
+                    background: `linear-gradient(135deg, ${theme.colors.dark[7]}, ${theme.colors.violet[9]})`,
+                    border: `2px solid ${theme.colors.violet[6]}`,
+                    padding: 24
+                  }}
+                >
+                  <Text size="lg" fw={700} ta="center" mb="lg" c={theme.colors.green[4]}>
+                    🏆 ULTIMATE CHAMPIONS 🏆
+                  </Text>
+                  <Stack gap="sm">
+                    {leaderboardPlayers.slice(0, 5).map((player, idx) => (
+                      <Button
+                        key={player.id}
+                        fullWidth
+                        variant="filled"
+                        style={{
+                          background: `linear-gradient(135deg, ${theme.colors.blue[6]}, ${theme.colors.violet[6]})`,
+                          justifyContent: 'flex-start'
+                        }}
+                        onClick={() => console.log('Clicked player:', player)}
+                      >
+                        #{idx + 1} {player.name} - {player.xp} XP
+                      </Button>
+                    ))}
+                  </Stack>
+                </Card>
               </motion.div>
             </Grid.Col>
 

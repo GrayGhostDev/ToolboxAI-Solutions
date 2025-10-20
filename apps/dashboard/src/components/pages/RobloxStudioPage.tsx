@@ -1,22 +1,5 @@
 import React, { Component, Suspense, useState, useEffect, useCallback } from 'react';
-import {
-  Box, Button, Text, Paper, Stack, SimpleGrid, Container, ActionIcon, Avatar, Card,
-  Group, List, Divider, TextInput, Select, Badge, Alert, Loader,
-  Progress, Modal, Drawer, Tabs, Menu, Tooltip, Checkbox, Radio,
-  Switch, Slider, Rating, Skeleton, Table, useMantineTheme, Typography
-} from '@mantine/core';
-
-// Helper function for color transparency (replaces MUI alpha)
-const alpha = (color: string, opacity: number) => {
-  if (color.startsWith('#')) {
-    const hex = color.slice(1);
-    const r = parseInt(hex.slice(0, 2), 16);
-    const g = parseInt(hex.slice(2, 4), 16);
-    const b = parseInt(hex.slice(4, 6), 16);
-    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-  }
-  return color;
-};
+import { Box, Alert, Loader } from '@mantine/core';
 /**
  * RobloxStudioPage Component
  *
@@ -24,10 +7,10 @@ const alpha = (color: string, opacity: number) => {
  * Ensures the component is displayed properly without overlaying other content
  * Includes Celery task progress tracking for script optimization jobs
  */
-import RobloxStudioIntegration from '../roblox/RobloxStudioIntegration';
+// RobloxStudioIntegration temporarily disabled for Vercel build
+// import RobloxStudioIntegration from '../roblox/RobloxStudioIntegration';
 import { useMultipleCeleryTasks } from '../../hooks/pusher/useCeleryTaskProgress';
 import { TaskProgressList } from '../common/TaskProgressList';
-import { showTaskNotification } from '../common/TaskProgressToast';
 
 // Error Boundary for Roblox Studio Integration
 class RobloxStudioErrorBoundary extends Component<
@@ -82,11 +65,9 @@ const RobloxStudioPage: React.FunctionComponent<Record<string, any>> = () => {
   // Track all Celery tasks for script optimization
   const {
     tasks,
-    addTask,
     removeTask,
     activeTasks,
-    completedTasks,
-    failedTasks
+    completedTasks
   } = useMultipleCeleryTasks(organizationId);
 
   // Show task panel when there are active tasks
@@ -132,9 +113,16 @@ const RobloxStudioPage: React.FunctionComponent<Record<string, any>> = () => {
           </Box>
         )}
 
-        <Suspense fallback={<Loader size="lg" style={{ margin: 'auto' }} />}>
+        {/* RobloxStudioIntegration temporarily disabled for Vercel build */}
+        <Box style={{ padding: '2rem', textAlign: 'center' }}>
+          <Alert color="blue" variant="light" title="Roblox Studio Integration">
+            Roblox Studio integration is currently being optimized for deployment.
+            This feature will be available soon.
+          </Alert>
+        </Box>
+        {/* <Suspense fallback={<Loader size="lg" style={{ margin: 'auto' }} />}>
           <RobloxStudioIntegration />
-        </Suspense>
+        </Suspense> */}
       </Box>
     </RobloxStudioErrorBoundary>
   );
