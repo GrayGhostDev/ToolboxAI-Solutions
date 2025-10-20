@@ -16,11 +16,15 @@
     }
   },
 
-  "functions": {
-    "**/*.html": {
-      "maxDuration": 10
+  "routes": [
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
-  },
+  ],
 
   "headers": [
     {
