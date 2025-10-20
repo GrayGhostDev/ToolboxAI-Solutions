@@ -87,7 +87,7 @@
     }
   ],
 
-  "regions": ["iad1"],
+  "regions": ["sfo1"],
 
   "trailingSlash": false,
 
