@@ -72,7 +72,7 @@
     }
   ],
 
-  "regions": ["pdx1"],
+  "regions": ["iad1"],
 
   "trailingSlash": false,
 
