@@ -72,8 +72,6 @@
     }
   ],
 
-  "regions": ["iad1"],
-
   "trailingSlash": false,
 
   "cleanUrls": true,
