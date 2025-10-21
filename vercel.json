@@ -7,15 +7,6 @@
   "framework": "vite",
   "devCommand": "npm run dashboard:dev",
 
-  "build": {
-    "env": {
-      "NODE_VERSION": "22",
-      "NPM_VERSION": "10",
-      "NODE_ENV": "production",
-      "COVERAGE": "false"
-    }
-  },
-
   "headers": [
     {
       "source": "/(.*)",
