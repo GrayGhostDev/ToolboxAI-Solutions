@@ -1,0 +1,99 @@
+# Render.com Configuration for ToolboxAI Backend
+# Database: Supabase PostgreSQL
+# Authentication: Clerk
+
+services:
+  - type: web
+    name: toolboxai-backend
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn apps.backend.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+
+      - key: PYTHONPATH
+        value: /opt/render/project/src
+
+      - key: NODE_ENV
+        value: production
+
+      # Supabase Database Configuration
+      - key: SUPABASE_URL
+        sync: false
+
+      - key: SUPABASE_ANON_KEY
+        sync: false
+
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+
+      - key: DATABASE_URL
+        sync: false
+
+      # Clerk Authentication
+      - key: CLERK_SECRET_KEY
+        sync: false
+
+      - key: CLERK_PUBLISHABLE_KEY
+        sync: false
+
+      # JWT Configuration
+      - key: JWT_SECRET_KEY
+        sync: false
+
+      - key: JWT_ALGORITHM
+        value: HS256
+
+      - key: JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 60
+
+      # Pusher Configuration
+      - key: PUSHER_APP_ID
+        sync: false
+
+      - key: PUSHER_KEY
+        sync: false
+
+      - key: PUSHER_SECRET
+        sync: false
+
+      - key: PUSHER_CLUSTER
+        value: us2
+
+      # CORS Configuration
+      - key: CORS_ORIGINS
+        value: "https://toolbox-production-final.vercel.app,https://toolbox-production-final-*.vercel.app"
+
+      # Optional: AI Services
+      - key: OPENAI_API_KEY
+        sync: false
+
+      - key: ANTHROPIC_API_KEY
+        sync: false
+
+      # SendGrid Email
+      - key: SENDGRID_API_KEY
+        sync: false
+
+      - key: SENDGRID_FROM_EMAIL
+        value: noreply@toolboxai.com
+
+      # Sentry Monitoring
+      - key: SENTRY_DSN
+        sync: false
+
+      # Environment
+      - key: ENVIRONMENT
+        value: production
+
+      - key: DEBUG
+        value: false
+
+    healthCheckPath: /health
+
+    autoDeploy: true
+
+databases: []  # Using external Supabase database

@@ -4,8 +4,14 @@
   "buildCommand": "npm run dashboard:build",
   "outputDirectory": "apps/dashboard/dist",
   "installCommand": "npm ci --include=dev --workspaces",
-  "framework": null,
+  "framework": "vite",
   "devCommand": "npm run dashboard:dev",
+
+  "functions": {
+    "**/*": {
+      "runtime": null
+    }
+  },
 
   "build": {
     "env": {

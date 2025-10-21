@@ -15,6 +15,7 @@ venv/
 venv_old_python39/
 __pycache__/
 *.py[cod]
+*.py
 *$py.class
 *.so
 .Python
@@ -23,6 +24,9 @@ dist-python/
 .pytest_cache/
 .coverage
 htmlcov/
+pyproject.toml
+requirements.txt
+pytest.ini
 
 # Database
 database/

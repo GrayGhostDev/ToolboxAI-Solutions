@@ -13,6 +13,7 @@ from fastapi import (
     BackgroundTasks,
     status,
 )
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import StreamingResponse
 from typing import Dict, Any, List, Optional, AsyncGenerator
 from datetime import datetime
@@ -23,6 +24,9 @@ import asyncio
 import time
 from pydantic import BaseModel, Field, field_validator
 from enum import Enum
+
+# Security scheme for optional authentication
+security = HTTPBearer(auto_error=False)
 
 # Import dependencies
 try:
