@@ -74,7 +74,8 @@ class SupabaseConfig:
             "url": self.url,
             "key": self.service_role_key or self.anon_key,
             "options": {
-                "schema": self.agent_schema,
+                # Note: 'schema' parameter removed - not supported in current Supabase Python client
+                # Schema is handled through REST API calls, not client initialization
                 "auto_refresh_token": True,
                 "persist_session": False,  # Backend doesn't need session persistence
                 "detect_session_in_url": False,

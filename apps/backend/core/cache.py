@@ -59,6 +59,7 @@ class RedisConnectionManager:
         self.pool: Optional[redis.ConnectionPool] = None
         self.client: Optional[redis.Redis] = None
         self._lock = asyncio.Lock()
+        self._available = False  # Track Redis availability
 
     async def initialize(self):
         """Initialize Redis connection pool with performance optimizations"""
@@ -102,19 +103,28 @@ class RedisConnectionManager:
 
                 # Test connection
                 await self.client.ping()
+                self._available = True
                 logger.info(
                     f"Redis connection pool initialized with {CacheConfig.POOL_MAX_CONNECTIONS} max connections"
                 )
 
             except Exception as e:
-                logger.error(f"Failed to initialize Redis connection: {e}")
-                raise
+                logger.warning(f"Failed to initialize Redis connection: {e}")
+                logger.warning("Continuing without Redis caching - application will function with reduced performance")
+                self._available = False
+                # Don't raise - allow app to start without Redis
 
     async def get_client(self) -> redis.Redis:
         """Get Redis client, initializing if needed"""
         if self.client is None:
             await self.initialize()
+        if not self._available or self.client is None:
+            raise ConnectionError("Redis is not available")
         return self.client
+
+    def is_available(self) -> bool:
+        """Check if Redis is available"""
+        return self._available
 
     async def close(self):
         """Close Redis connections"""
