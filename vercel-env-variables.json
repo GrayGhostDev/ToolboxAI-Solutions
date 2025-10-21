@@ -1,0 +1,42 @@
+{
+  "backend_api": {
+    "VITE_API_BASE_URL": "https://toolboxai-solutions.onrender.com",
+    "VITE_WS_URL": "wss://toolboxai-solutions.onrender.com"
+  },
+  "clerk_authentication": {
+    "VITE_CLERK_PUBLISHABLE_KEY": "pk_test_Y2FzdWFsLWZpcmVmbHktMzkuY2xlcmsuYWNjb3VudHMuZGV2JA",
+    "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_Y2FzdWFsLWZpcmVmbHktMzkuY2xlcmsuYWNjb3VudHMuZGV2JA",
+    "VITE_ENABLE_CLERK_AUTH": "true",
+    "VITE_CLERK_SIGN_IN_URL": "/sign-in",
+    "VITE_CLERK_SIGN_UP_URL": "/sign-up",
+    "VITE_CLERK_AFTER_SIGN_IN_URL": "/dashboard",
+    "VITE_CLERK_AFTER_SIGN_UP_URL": "/dashboard"
+  },
+  "supabase_database": {
+    "VITE_SUPABASE_URL": "https://jlesbkscprldariqcbvt.supabase.co",
+    "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpsZXNia3NjcHJsZGFyaXFjYnZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg0MzYzNTYsImV4cCI6MjA3NDAxMjM1Nn0.NQnqmLIM7UOwRKwTnoHUJSl440d1NzPrj1xipC2du14",
+    "NEXT_PUBLIC_SUPABASE_URL": "https://jlesbkscprldariqcbvt.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpsZXNia3NjcHJsZGFyaXFjYnZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg0MzYzNTYsImV4cCI6MjA3NDAxMjM1Nn0.NQnqmLIM7UOwRKwTnoHUJSl440d1NzPrj1xipC2du14"
+  },
+  "pusher_realtime": {
+    "VITE_PUSHER_KEY": "73f059a21bb304c7d68c",
+    "VITE_PUSHER_CLUSTER": "us2",
+    "VITE_PUSHER_AUTH_ENDPOINT": "/pusher/auth",
+    "VITE_ENABLE_PUSHER": "true"
+  },
+  "feature_flags": {
+    "VITE_ENABLE_ANALYTICS": "true",
+    "VITE_ENABLE_DEBUG_MODE": "false",
+    "VITE_ENABLE_WEBSOCKET": "true"
+  },
+  "stripe_payments_optional": {
+    "VITE_STRIPE_PUBLISHABLE_KEY": "pk_test_your_stripe_publishable_key_here"
+  },
+  "metadata": {
+    "total_variables": 20,
+    "backend_deployed": "https://toolboxai-solutions.onrender.com",
+    "frontend_domain": "https://toolbox-production-final.vercel.app",
+    "configuration_date": "2025-10-21",
+    "environments": ["production", "preview", "development"]
+  }
+}

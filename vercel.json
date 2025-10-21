@@ -79,7 +79,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://toolboxai-backend.onrender.com/api/:path*"
+      "destination": "https://toolboxai-solutions.onrender.com/api/:path*"
     },
     {
       "source": "/:path((?!api|assets|_next|favicon.ico).*)*",
