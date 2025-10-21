@@ -16,7 +16,7 @@ import {
 } from '@clerk/clerk-react';
 import { type User } from '../types/api';
 import type { UserRole } from '../types/roles';
-import { getUserConfig } from '@/config/users';
+import { getUserConfig } from '@/config/users.ts';
 import { store } from '../store';
 import { addNotification } from '../store/slices/uiSlice';
 import { signInSuccess, signOut as signOutAction } from '../store/slices/userSlice';

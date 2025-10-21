@@ -7,7 +7,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { useNavigate } from 'react-router-dom';
 import { type User, type AuthResponse } from '../types/api';
 import { type UserRole } from '../types/roles';
-import { getUserConfig, AUTH_CONFIG } from '@/config/users';
+import { getUserConfig, AUTH_CONFIG } from '@/config/users.ts';
 import ApiClient, { getMyProfile, updateUser as apiUpdateUser } from '../services/api';
 import { store } from '../store';
 import { addNotification } from '../store/slices/uiSlice';
