@@ -73,7 +73,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://your-backend-url.onrender.com/api/:path*"
+      "destination": "https://toolboxai-backend.onrender.com/api/:path*"
     },
     {
       "source": "/:path((?!api|assets|_next|favicon.ico).*)*",
@@ -81,7 +81,7 @@
     }
   ],
 
-  "regions": ["sfo1"],
+  "regions": ["pdx1"],
 
   "trailingSlash": false,
 

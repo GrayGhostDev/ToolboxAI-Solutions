@@ -134,7 +134,6 @@ core/
 toolboxai_settings/
 toolboxai_utils/
 config/
-.vercel/
 .turbo/
 e2e/
 playwright.config.ts
