@@ -137,7 +137,7 @@ pytest.ini
 core/
 toolboxai_settings/
 toolboxai_utils/
-config/
+/config/
 .turbo/
 e2e/
 playwright.config.ts
