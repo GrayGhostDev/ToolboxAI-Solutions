@@ -1,1 +1,16 @@
-{"projectId":"prj_0TmmPwrRrSKPPfQtO48uIM9hLiZz","orgId":"team_q7Yws9w7Oyer7bneNyTMBjah","projectName":"toolbox-production-final"}
+{
+  "projectId": "prj_0TmmPwrRrSKPPfQtO48uIM9hLiZz",
+  "orgId": "team_q7Yws9w7Oyer7bneNyTMBjah",
+  "projectName": "toolbox-production-final",
+  "settings": {
+    "createdAt": 1758439914910,
+    "framework": null,
+    "devCommand": "npm run dashboard:dev",
+    "installCommand": "npm ci --include=dev --workspaces",
+    "buildCommand": "cd apps/dashboard && npm run build",
+    "outputDirectory": "apps/dashboard/dist",
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "22.x"
+  }
+}

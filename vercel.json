@@ -1,10 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "buildCommand": "npm run dashboard:build",
+  "buildCommand": "cd apps/dashboard && npm run build",
   "outputDirectory": "apps/dashboard/dist",
   "installCommand": "npm ci --include=dev --workspaces",
-  "framework": "vite",
+  "framework": null,
   "devCommand": "npm run dashboard:dev",
 
   "headers": [
