@@ -1,6 +1,6 @@
 # Render SPA Routing Configuration
-# Proxy API requests to backend
-/api/*  https://toolboxai-solutions.onrender.com/api/:splat  200
+# Proxy API requests to backend (with correct Render syntax)
+/api/*  https://toolboxai-solutions.onrender.com/api/:splat  200!
 
 # All other routes serve index.html (SPA routing)
 /*    /index.html   200

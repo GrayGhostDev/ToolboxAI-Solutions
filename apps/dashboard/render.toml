@@ -1,0 +1,128 @@
+# Render Static Site Configuration for Dashboard
+# https://render.com/docs/static-sites
+
+[static]
+# Build configuration
+buildCommand = "npm ci && npm run build"
+publishPath = "dist"
+
+# Headers for proper MIME types and security
+[[headers]]
+path = "/**/*.js"
+name = "Content-Type"
+value = "application/javascript; charset=utf-8"
+
+[[headers]]
+path = "/**/*.mjs"
+name = "Content-Type"
+value = "application/javascript; charset=utf-8"
+
+[[headers]]
+path = "/**/*.jsx"
+name = "Content-Type"
+value = "application/javascript; charset=utf-8"
+
+[[headers]]
+path = "/**/*.tsx"
+name = "Content-Type"
+value = "application/javascript; charset=utf-8"
+
+[[headers]]
+path = "/**/*.css"
+name = "Content-Type"
+value = "text/css; charset=utf-8"
+
+[[headers]]
+path = "/**/*.html"
+name = "Content-Type"
+value = "text/html; charset=utf-8"
+
+[[headers]]
+path = "/**/*.json"
+name = "Content-Type"
+value = "application/json; charset=utf-8"
+
+# Font types
+[[headers]]
+path = "/**/*.woff2"
+name = "Content-Type"
+value = "font/woff2"
+
+[[headers]]
+path = "/**/*.woff"
+name = "Content-Type"
+value = "font/woff"
+
+[[headers]]
+path = "/**/*.ttf"
+name = "Content-Type"
+value = "font/ttf"
+
+# Image types
+[[headers]]
+path = "/**/*.svg"
+name = "Content-Type"
+value = "image/svg+xml"
+
+[[headers]]
+path = "/**/*.png"
+name = "Content-Type"
+value = "image/png"
+
+[[headers]]
+path = "/**/*.jpg"
+name = "Content-Type"
+value = "image/jpeg"
+
+[[headers]]
+path = "/**/*.jpeg"
+name = "Content-Type"
+value = "image/jpeg"
+
+[[headers]]
+path = "/**/*.ico"
+name = "Content-Type"
+value = "image/x-icon"
+
+# Security headers
+[[headers]]
+path = "/*"
+name = "X-Frame-Options"
+value = "DENY"
+
+[[headers]]
+path = "/*"
+name = "X-Content-Type-Options"
+value = "nosniff"
+
+[[headers]]
+path = "/*"
+name = "X-XSS-Protection"
+value = "1; mode=block"
+
+[[headers]]
+path = "/*"
+name = "Referrer-Policy"
+value = "strict-origin-when-cross-origin"
+
+# Cache headers
+[[headers]]
+path = "/assets/**/*"
+name = "Cache-Control"
+value = "public, max-age=31536000, immutable"
+
+[[headers]]
+path = "/**/*.html"
+name = "Cache-Control"
+value = "public, max-age=0, must-revalidate"
+
+# Redirects for SPA routing
+[[redirects]]
+from = "/api/*"
+to = "https://toolboxai-solutions.onrender.com/api/:splat"
+status = 200
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200

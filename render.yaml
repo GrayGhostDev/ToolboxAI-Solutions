@@ -13,6 +13,51 @@ services:
     buildCommand: "cd apps/dashboard && npm ci && npm run build"
     staticPublishPath: ./apps/dashboard/dist
     headers:
+      - path: /**/*.js
+        name: Content-Type
+        value: application/javascript; charset=utf-8
+      - path: /**/*.mjs
+        name: Content-Type
+        value: application/javascript; charset=utf-8
+      - path: /**/*.jsx
+        name: Content-Type
+        value: application/javascript; charset=utf-8
+      - path: /**/*.tsx
+        name: Content-Type
+        value: application/javascript; charset=utf-8
+      - path: /**/*.css
+        name: Content-Type
+        value: text/css; charset=utf-8
+      - path: /**/*.html
+        name: Content-Type
+        value: text/html; charset=utf-8
+      - path: /**/*.json
+        name: Content-Type
+        value: application/json; charset=utf-8
+      - path: /**/*.woff2
+        name: Content-Type
+        value: font/woff2
+      - path: /**/*.woff
+        name: Content-Type
+        value: font/woff
+      - path: /**/*.ttf
+        name: Content-Type
+        value: font/ttf
+      - path: /**/*.svg
+        name: Content-Type
+        value: image/svg+xml
+      - path: /**/*.png
+        name: Content-Type
+        value: image/png
+      - path: /**/*.jpg
+        name: Content-Type
+        value: image/jpeg
+      - path: /**/*.jpeg
+        name: Content-Type
+        value: image/jpeg
+      - path: /**/*.ico
+        name: Content-Type
+        value: image/x-icon
       - path: /*
         name: X-Frame-Options
         value: DENY
@@ -22,13 +67,16 @@ services:
       - path: /*
         name: Referrer-Policy
         value: strict-origin-when-cross-origin
-      - path: /assets/*
+      - path: /assets/**/*
         name: Cache-Control
         value: public, max-age=31536000, immutable
+      - path: /**/*.html
+        name: Cache-Control
+        value: public, max-age=0, must-revalidate
     routes:
       - type: rewrite
         source: /api/*
-        destination: https://toolboxai-solutions.onrender.com/api/*
+        destination: https://toolboxai-solutions.onrender.com/api/:splat
       - type: rewrite
         source: /*
         destination: /index.html
