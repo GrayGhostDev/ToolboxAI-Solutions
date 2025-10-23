@@ -5,13 +5,13 @@
 # Authentication: Clerk
 
 services:
-  # Frontend Dashboard - Static Site
+  # Frontend Dashboard - Node.js Web Service with Express
   - type: web
     name: toolboxai-dashboard
-    env: static
+    env: node
     region: oregon
     buildCommand: "cd apps/dashboard && npm ci && npm run build"
-    staticPublishPath: ./apps/dashboard/dist
+    startCommand: "cd apps/dashboard && npm start"
     headers:
       - path: /**/*.js
         name: Content-Type
