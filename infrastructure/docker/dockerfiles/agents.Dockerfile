@@ -49,7 +49,7 @@ ENV PYTHONUNBUFFERED=1 \
 # ============================================
 FROM base AS builder
 
-# Install build dependencies
+# Install build dependencies including Rust for tiktoken
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && \
@@ -59,7 +59,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         make \
         libffi-dev \
         libssl-dev \
-        build-essential && \
+        build-essential \
+        cargo \
+        rustc && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy requirements files
@@ -70,24 +72,10 @@ RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
     python -m venv /opt/venv && \
     . /opt/venv/bin/activate && \
     pip install --upgrade pip setuptools wheel && \
-    pip install --no-deps -r requirements.txt && \
+    pip install -r requirements.txt && \
     if [ -f requirements-ai.txt ]; then \
-        pip install --no-deps -r requirements-ai.txt; \
+        pip install -r requirements-ai.txt; \
     fi && \
-    # Install agent-specific packages
-    pip install --no-deps \
-        openai==1.3.0 \
-        anthropic==0.7.0 \
-        langchain==0.0.350 \
-        langchain-openai==0.0.2 \
-        langchain-anthropic==0.0.1 \
-        celery==5.3.4 \
-        fastapi==0.104.1 \
-        uvicorn[standard]==0.24.0 \
-        pydantic==2.5.0 \
-        redis==5.0.1 \
-        psycopg[binary]==3.1.12 \
-        httpx==0.25.0 && \
     # Clean up pip cache
     find /opt/venv -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
     find /opt/venv -type f -name "*.pyc" -delete 2>/dev/null || true
@@ -151,9 +139,9 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy application code
 COPY --chown=coordinator:coordinator core ./core
+COPY --chown=coordinator:coordinator apps ./apps
 COPY --chown=coordinator:coordinator database ./database
 COPY --chown=coordinator:coordinator toolboxai_settings ./toolboxai_settings
-COPY --chown=coordinator:coordinator toolboxai_utils ./toolboxai_utils
 
 # Create necessary directories with proper permissions
 RUN mkdir -p /app/logs /data/agents /tmp/coordinator && \

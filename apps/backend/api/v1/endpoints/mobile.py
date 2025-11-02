@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
-from database.connection import get_async_session as get_db
+from apps.backend.core.deps import get_async_db as get_db
 from database.models import User, Content, Quiz, UserProgress, Notification
 from apps.backend.api.auth.auth import get_current_user, create_access_token
 from apps.backend.core.cache import cache_result

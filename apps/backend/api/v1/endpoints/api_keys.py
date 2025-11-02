@@ -17,7 +17,7 @@ from apps.backend.core.security.api_keys import (
     get_api_key_manager
 )
 from apps.backend.core.security.jwt_rotation import get_jwt_manager, TokenPayload
-from database.connection import get_async_session
+from apps.backend.core.deps import get_async_db
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ async def verify_api_key(
 async def create_api_key(
     request: APIKeyCreate,
     current_user: TokenPayload = Depends(get_current_user),
-    db: AsyncSession = Depends(get_async_session)
+    db: AsyncSession = Depends(get_async_db)
 ):
     """
     Create a new API key for Roblox plugin authentication.
@@ -98,7 +98,7 @@ async def create_api_key(
 async def list_api_keys(
     include_revoked: bool = Query(False, description="Include revoked keys"),
     current_user: TokenPayload = Depends(get_current_user),
-    db: AsyncSession = Depends(get_async_session)
+    db: AsyncSession = Depends(get_async_db)
 ):
     """
     List all API keys for the current user.
@@ -124,7 +124,7 @@ async def list_api_keys(
 async def revoke_api_key(
     key_id: str,
     current_user: TokenPayload = Depends(get_current_user),
-    db: AsyncSession = Depends(get_async_session)
+    db: AsyncSession = Depends(get_async_db)
 ):
     """
     Revoke an API key.
@@ -330,7 +330,7 @@ async def get_educational_content_with_api_key(
 async def get_api_key_usage_stats(
     key_id: str,
     current_user: TokenPayload = Depends(get_current_user),
-    db: AsyncSession = Depends(get_async_session)
+    db: AsyncSession = Depends(get_async_db)
 ):
     """
     Get usage statistics for a specific API key.

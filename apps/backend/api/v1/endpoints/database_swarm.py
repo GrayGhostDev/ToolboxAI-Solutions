@@ -21,7 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import json
 import asyncio
 
-from database.connection import get_async_session
+from apps.backend.core.deps import get_async_db
 from core.agents.database import (
     DatabaseWorkflow,
     DatabaseSupervisorAgent,
@@ -269,7 +269,7 @@ async def get_agents_status(current_user: User = Depends(get_current_user)):
 @router.post("/events/append", response_model=EventResponse)
 async def append_event(
     request: EventRequest,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user),
 ):
     """Append an event to the event store."""
