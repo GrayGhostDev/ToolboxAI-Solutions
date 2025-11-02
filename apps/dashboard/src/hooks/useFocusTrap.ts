@@ -184,16 +184,19 @@ export const useAdvancedFocusTrap = <T extends HTMLElement = HTMLDivElement>({
     let focusableElements = getFocusableElements();
 
     // Watch for DOM changes and update focusable elements
-    observerRef.current = new MutationObserver(() => {
-      focusableElements = getFocusableElements();
-    });
+    // Ensure container is a valid Node before observing
+    if (container instanceof Node) {
+      observerRef.current = new MutationObserver(() => {
+        focusableElements = getFocusableElements();
+      });
 
-    observerRef.current.observe(container, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['disabled', 'aria-hidden', 'tabindex'],
-    });
+      observerRef.current.observe(container, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['disabled', 'aria-hidden', 'tabindex'],
+      });
+    }
 
     // Focus initial element
     if (initialFocus) {

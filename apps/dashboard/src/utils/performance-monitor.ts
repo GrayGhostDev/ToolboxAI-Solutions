@@ -104,7 +104,7 @@ export class PerformanceMonitor {
   private systemResourcesTimer: ReturnType<typeof setInterval> | null = null;
   private wsLatencyTimer: ReturnType<typeof setInterval> | null = null;
   private observers: Map<string, PerformanceObserver> = new Map();
-  private terminalAdapter?: TerminalSyncAdapter;
+  private terminalAdapter: TerminalSyncAdapter | undefined;
 
   // Thresholds for performance alerts
   private readonly thresholds = {
@@ -131,7 +131,11 @@ export class PerformanceMonitor {
 
   // Adapter setter
   public setTerminalAdapter(adapter?: TerminalSyncAdapter): void {
-    this.terminalAdapter = adapter;
+    if (adapter === undefined) {
+      this.terminalAdapter = undefined;
+    } else {
+      this.terminalAdapter = adapter;
+    }
   }
 
   // ================================
@@ -410,6 +414,9 @@ export class PerformanceMonitor {
   private monitorDOMChanges(): void {
     if (typeof MutationObserver === 'undefined') return;
 
+    // Ensure document.body is available and is a valid Node
+    if (!document.body || !(document.body instanceof Node)) return;
+
     const observer = new MutationObserver((mutations) => {
       const startTime = performance.now();
       
@@ -507,20 +514,26 @@ export class PerformanceMonitor {
         
         // Get response size if available
         const contentLength = response.headers.get('content-length');
-        const size = contentLength ? parseInt(contentLength, 10) : undefined;
-        
+
         // Check if response was cached
         const cached = response.headers.get('cache-control') !== null;
         
+        // Build metric with optional properties only when defined
         const metric: ApiMetric = {
           url,
           method,
           duration,
           status: response.status,
-          size,
-          cached,
           timestamp: Date.now()
         };
+
+        if (contentLength) {
+          metric.size = parseInt(contentLength, 10);
+        }
+
+        if (cached) {
+          metric.cached = cached;
+        }
 
         this.recordApiMetric(metric);
         

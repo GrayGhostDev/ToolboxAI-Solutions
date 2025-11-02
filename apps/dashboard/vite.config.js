@@ -66,13 +66,7 @@ export default defineConfig({
       '@emotion/*',
       // Exclude highlight.js to prevent pre-bundling issues with missing language files
       'highlight.js',
-      'lowlight',
-      // Exclude refractor to avoid default export issues
-      'refractor',
-      'refractor/core',
-      // Exclude react-syntax-highlighter to prevent pre-bundling attempts that fail on refractor/core imports
-      'react-syntax-highlighter',
-      'react-syntax-highlighter/*'
+      'lowlight'
     ],
     force: process.env.NODE_ENV === 'development',
     esbuildOptions: {
@@ -102,6 +96,11 @@ export default defineConfig({
       'react-syntax-highlighter/dist/esm/prism-async-light': path.resolve(__dirname, 'node_modules/react-syntax-highlighter/dist/cjs/prism-async-light'),
       'react-syntax-highlighter/dist/esm/light': path.resolve(__dirname, 'node_modules/react-syntax-highlighter/dist/cjs/light'),
       'react-syntax-highlighter/dist/esm/light-async': path.resolve(__dirname, 'node_modules/react-syntax-highlighter/dist/cjs/light-async'),
+      // Force refractor to resolve properly to prevent module specifier errors
+      // Point to workspace root since that's where it's installed
+      'refractor': path.resolve(__dirname, '../../node_modules/refractor'),
+      'refractor/core': path.resolve(__dirname, '../../node_modules/refractor/core.js'),
+      'refractor/core.js': path.resolve(__dirname, '../../node_modules/refractor/core.js'),
       // Force single instance of three.js to prevent multiple initialization errors
       // Point to root node_modules in workspace setup
       three: path.resolve(__dirname, '../../node_modules/three')
@@ -223,6 +222,9 @@ export default defineConfig({
     }
   },
 
+  // Ensure proper MIME types for all module formats
+  assetsInclude: ['**/*.js', '**/*.mjs', '**/*.ts', '**/*.tsx', '**/*.jsx'],
+
   // Enhanced build configuration for 2025 with performance focus - optimized for test performance
   build: {
     outDir: 'dist',
@@ -308,7 +310,7 @@ export default defineConfig({
             }
             // Provide stub for refractor/core that mimics the old API
             if (id === '\0virtual:refractor-core') {
-              const refractorPath = path.resolve(__dirname, '../../node_modules/refractor/lib/core.js');
+              const refractorPath = path.resolve(__dirname, '../../node_modules/refractor/core.js');
               return `
                 import { refractor } from '${refractorPath}';
                 export default refractor;
@@ -317,7 +319,7 @@ export default defineConfig({
             }
             // Provide default export wrapper for main refractor package
             if (id === '\0virtual:refractor-main') {
-              const refractorPath = path.resolve(__dirname, '../../node_modules/refractor/lib/core.js');
+              const refractorPath = path.resolve(__dirname, '../../node_modules/refractor/core.js');
               return `
                 import { refractor } from '${refractorPath}';
                 export default refractor;

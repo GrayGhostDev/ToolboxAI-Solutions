@@ -110,6 +110,7 @@
     "react-window": "^2.1.0",
     "react-window-infinite-loader": "^2.0.0",
     "recharts": "^2.15.4",
+    "refractor": "^3.6.0",
     "remark-gfm": "^4.0.1",
     "three": "^0.160.1",
     "tinyexec": "^0.3.2",
