@@ -195,8 +195,8 @@ py-serializable==2.1.0
 pyarrow==21.0.0
 pyasn1==0.6.1
 pycparser==2.23
-pydantic<2.0.0
-# pydantic_core removed - v1.x doesn't use pydantic_core
+pydantic>=2.7.4,<2.10.0  # Pin to avoid ForwardRef._evaluate() bug in 2.10.x
+pydantic_core>=2.18.0,<2.28.0
 pydeck==0.9.1
 Pygments==2.19.2
 PyJWT==2.10.1
