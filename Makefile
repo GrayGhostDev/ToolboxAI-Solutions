@@ -1,6 +1,6 @@
 # ToolboxAI-Solutions Makefile
 
-.PHONY: dev backend dashboard test lint build
+.PHONY: dev backend dashboard test lint build docs-enforce dashboard-hygiene
 
 # Default ports
 API_HOST ?= 127.0.0.1
@@ -12,7 +12,7 @@ PY ?= python3
 UVICORN ?= uvicorn
 
 backend:
-	$(UVICORN) apps.backend.main:app --host $(API_HOST) --port $(API_PORT) --reload
+	$(PY) -m uvicorn apps.backend.main:app --host $(API_HOST) --port $(API_PORT) --reload
 
 dashboard:
 	npm -w apps/dashboard run dev
@@ -29,6 +29,12 @@ lint:
 	- mypy apps/backend || true
 	@echo "JS/TS lint: eslint"
 	npm -w apps/dashboard run lint || true
+
+docs-enforce:
+	python3 scripts/documentation/enforce-doc-locations.py
+
+dashboard-hygiene:
+	python3 scripts/development/enforce-dashboard-hygiene.py
 
 test:
 	@echo "Python tests"
@@ -195,6 +201,35 @@ docker-secrets-create:
 	@echo "Enter JWT secret:" && read -s JWT_SECRET && echo $$JWT_SECRET | docker secret create jwt_secret -
 	@echo "Secrets created!"
 
+# ============================================
+# DEPLOYMENT COMMANDS
+# ============================================
+
+# Deploy frontend to Vercel
+deploy-frontend:
+	@echo "Deploying frontend to Vercel..."
+	cd apps/dashboard && vercel --prod
+
+# Deploy backend to Render
+deploy-backend:
+	@echo "Deploying backend to Render..."
+	@curl -X POST -H "Authorization: Bearer $$RENDER_API_KEY" \
+		https://api.render.com/v1/services/$$RENDER_SERVICE_ID/deploys
+
+# Deploy everything
+deploy-all: deploy-backend deploy-frontend
+	@echo "✅ All services deployed!"
+
+# Upload sourcemaps to Sentry
+sentry-upload:
+	@echo "Uploading sourcemaps to Sentry..."
+	cd apps/dashboard && npm run sentry:frontend:upload
+
+# Health check
+health-check:
+	@echo "Running health checks..."
+	@bash scripts/health-check.sh
+
 # Help
 docker-help:
 	@echo "Docker Commands:"
@@ -211,4 +246,10 @@ docker-help:
 	@echo "  make health             - Check service health"
 	@echo "  make stack-up           - Start full stack"
 	@echo "  make stack-down         - Stop full stack"
-
+	@echo ""
+	@echo "Deployment Commands:"
+	@echo "  make deploy-frontend    - Deploy frontend to Vercel"
+	@echo "  make deploy-backend     - Deploy backend to Render"
+	@echo "  make deploy-all         - Deploy all services"
+	@echo "  make sentry-upload      - Upload sourcemaps to Sentry"
+	@echo "  make health-check       - Run deployment health checks"
