@@ -1281,7 +1281,7 @@ groups:
 kubectl create namespace toolboxai-staging --dry-run=client -o yaml | kubectl apply -f -
 
 # 2. Deploy all services
-kubectl apply -f infrastructure/k8s/staging/ -n toolboxai-staging
+kubectl apply -f infrastructure/kubernetes/staging/ -n toolboxai-staging
 
 # 3. Wait for all pods ready
 kubectl wait --for=condition=ready pod -l app=backend -n toolboxai-staging --timeout=300s

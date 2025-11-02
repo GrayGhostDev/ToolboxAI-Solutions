@@ -33,7 +33,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.api.auth.auth import get_current_user
-from apps.backend.core.deps import get_async_session
+from apps.backend.core.deps import get_async_db
 from apps.backend.middleware.tenant import get_tenant_context, TenantContext
 from apps.backend.models.schemas import User
 
@@ -151,7 +151,7 @@ class TagMergeResponse(BaseModel):
     description="Get list of all tags with pagination and filtering",
 )
 async def list_tags(
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=100),
@@ -206,7 +206,7 @@ async def list_tags(
 )
 async def create_tag(
     request: TagCreateRequest,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
 ) -> Tag:
@@ -272,7 +272,7 @@ async def create_tag(
 )
 async def get_tag(
     tag_id: UUID,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
 ) -> Tag:
     """
     Get detailed information about a tag.
@@ -315,7 +315,7 @@ async def get_tag(
 async def update_tag(
     tag_id: UUID,
     request: TagUpdateRequest,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> Tag:
     """
@@ -366,7 +366,7 @@ async def update_tag(
 )
 async def delete_tag(
     tag_id: UUID,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> None:
     """
@@ -405,7 +405,7 @@ async def delete_tag(
     description="Get most frequently used tags",
 )
 async def get_popular_tags(
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     limit: int = Query(20, ge=1, le=100),
     period: str = Query("all_time", pattern="^(all_time|30_days|7_days)$"),
@@ -453,7 +453,7 @@ async def get_popular_tags(
 )
 async def merge_tags(
     request: TagMergeRequest,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> TagMergeResponse:
     """

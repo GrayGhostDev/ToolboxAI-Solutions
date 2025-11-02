@@ -23,11 +23,11 @@ import logging
 import stripe
 
 from apps.backend.services.stripe_service import stripe_service
-from apps.backend.core.auth import get_current_user, require_auth
+from apps.backend.core.auth import get_current_user
 from apps.backend.core.config import settings
 from apps.backend.core.deps import get_current_organization_id  # Multi-tenant filtering
-from apps.backend.core.rate_limiter import rate_limit
-from database.connection import get_session
+# from apps.backend.core.rate_limiter import rate_limit
+from apps.backend.core.deps import get_async_db as get_session
 from database.models.payment import Customer, Subscription, Payment, Invoice
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, text
@@ -110,7 +110,7 @@ class CreateRefundRequest(BaseModel):
 
 # Customer Endpoints
 @router.post("/customers", response_model=Dict[str, Any])
-@rate_limit(max_calls=10, time_window=60)
+# @rate_limit(max_calls=10, time_window=60)
 async def create_customer(
     request: CreateCustomerRequest,
     org_id: UUID = Depends(get_current_organization_id),  # Multi-tenant isolation
@@ -166,7 +166,7 @@ async def create_customer(
                 stripe_customer_id=stripe_customer["id"],
                 email=request.email or current_user.email,
                 name=request.name or current_user.full_name,
-                metadata=request.metadata,
+                payment_metadata=request.metadata,
                 organization_id=org_id,  # Multi-tenant isolation
             )
             db.add(customer)
@@ -229,7 +229,7 @@ async def get_my_customer(
 
 # Subscription Endpoints
 @router.post("/subscriptions", response_model=Dict[str, Any])
-@rate_limit(max_calls=5, time_window=60)
+# @rate_limit(max_calls=5, time_window=60)
 async def create_subscription(
     request: CreateSubscriptionRequest,
     org_id: UUID = Depends(get_current_organization_id),  # Multi-tenant isolation
@@ -291,7 +291,7 @@ async def create_subscription(
                 if subscription.get("trial_end")
                 else None
             ),
-            metadata={"stripe_response": subscription},
+            payment_metadata={"stripe_response": subscription},
             organization_id=org_id,  # Multi-tenant isolation
         )
         db.add(db_subscription)
@@ -366,7 +366,7 @@ async def get_my_subscriptions(
 
 
 @router.patch("/subscriptions/{subscription_id}", response_model=Dict[str, Any])
-@rate_limit(max_calls=5, time_window=60)
+# @rate_limit(max_calls=5, time_window=60)
 async def update_subscription(
     subscription_id: str,
     request: UpdateSubscriptionRequest,
@@ -432,7 +432,7 @@ async def update_subscription(
 
 
 @router.delete("/subscriptions/{subscription_id}", response_model=Dict[str, Any])
-@rate_limit(max_calls=5, time_window=60)
+# @rate_limit(max_calls=5, time_window=60)
 async def cancel_subscription(
     subscription_id: str,
     immediately: bool = False,
@@ -491,7 +491,7 @@ async def cancel_subscription(
 
 # Payment Method Endpoints
 @router.post("/payment-methods", response_model=Dict[str, Any])
-@rate_limit(max_calls=10, time_window=60)
+# @rate_limit(max_calls=10, time_window=60)
 async def attach_payment_method(
     request: AttachPaymentMethodRequest,
     org_id: UUID = Depends(get_current_organization_id),  # Multi-tenant isolation
@@ -576,7 +576,7 @@ async def get_payment_methods(
 
 # One-time Payment Endpoints
 @router.post("/payment-intents", response_model=Dict[str, Any])
-@rate_limit(max_calls=10, time_window=60)
+# @rate_limit(max_calls=10, time_window=60)
 async def create_payment_intent(
     request: CreatePaymentIntentRequest,
     org_id: UUID = Depends(get_current_organization_id),  # Multi-tenant isolation
@@ -623,7 +623,7 @@ async def create_payment_intent(
 
 # Checkout Session Endpoints
 @router.post("/checkout/sessions", response_model=Dict[str, Any])
-@rate_limit(max_calls=5, time_window=60)
+# @rate_limit(max_calls=5, time_window=60)
 async def create_checkout_session(
     request: CreateCheckoutSessionRequest,
     org_id: UUID = Depends(get_current_organization_id),  # Multi-tenant isolation
@@ -755,7 +755,7 @@ async def get_invoices(
 
 # Refund Endpoints
 @router.post("/refunds", response_model=Dict[str, Any])
-@rate_limit(max_calls=5, time_window=60)
+# @rate_limit(max_calls=5, time_window=60)
 async def create_refund(
     request: CreateRefundRequest,
     org_id: UUID = Depends(get_current_organization_id),  # Multi-tenant isolation

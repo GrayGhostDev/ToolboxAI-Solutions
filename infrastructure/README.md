@@ -717,6 +717,24 @@ spec:
       weight: 10
 ```
 
+### Render Deployment
+
+| Asset | Location | Notes |
+| --- | --- | --- |
+| Production blueprint | `infrastructure/render/render.production.yaml` (symlinked to root `render.yaml`) | Canonical Render configuration consumed by the deployment script |
+| Staging blueprint | `infrastructure/render/render.staging.yaml` | Mirrors production with lower plans for preview environments |
+| Sync helper | `infrastructure/render/sync-render-config.sh` | Rebuilds the root `render.yaml` symlink or copies files for non-symlink hosts |
+| Deployment script | `scripts/deployment/deploy-render.sh` | Runs validation, tests, and pushes to trigger Render builds |
+
+**Workflow**
+
+1. Update the blueprint under `infrastructure/render/` and run `./infrastructure/render/sync-render-config.sh --env production --symlink`.
+2. Validate with `scripts/deployment/deploy-render.sh validate` to ensure dependencies and blueprints are sound.
+3. Deploy via `scripts/deployment/deploy-render.sh deploy` and monitor each Render service (backend, dashboard, MCP, agent coordinator, Celery worker/beat/flower, cron jobs, monitoring service).
+4. Use Render logs/metrics plus the updated Docker scripts (see `infrastructure/docker/start-services*.sh`) to reproduce full-stack behavior locally.
+
+> Legacy manifests under `infrastructure/k8s/` have been removed. Use `infrastructure/kubernetes/` for Kubernetes targets and the Render assets above for PaaS deployments.
+
 ### Scaling Guidelines
 
 #### Horizontal Pod Autoscaling

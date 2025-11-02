@@ -347,3 +347,40 @@ export const darkModeTokens = {
 export type DesignTokens = typeof designTokens;
 export type LightModeTokens = typeof lightModeTokens;
 export type DarkModeTokens = typeof darkModeTokens;
+
+/**
+ * Check color contrast ratio for WCAG compliance
+ * @param foreground - Foreground color in hex format
+ * @param background - Background color in hex format
+ * @returns Object with contrast ratio and WCAG AA compliance status
+ */
+export function checkContrast(foreground: string, background: string): {
+  ratio: number;
+  passes: boolean;
+  level: 'AAA' | 'AA' | 'Fail';
+} {
+  const getLuminance = (hex: string): number => {
+    // Remove # if present
+    const cleanHex = hex.replace('#', '');
+    const rgb = parseInt(cleanHex, 16);
+    const r = ((rgb >> 16) & 0xff) / 255;
+    const g = ((rgb >> 8) & 0xff) / 255;
+    const b = (rgb & 0xff) / 255;
+    
+    const [rs, gs, bs] = [r, g, b].map(val =>
+      val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4)
+    );
+    
+    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+  };
+  
+  const l1 = getLuminance(foreground);
+  const l2 = getLuminance(background);
+  const ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+  
+  return {
+    ratio: Math.round(ratio * 100) / 100,
+    passes: ratio >= 4.5, // WCAG AA standard for normal text
+    level: ratio >= 7 ? 'AAA' : ratio >= 4.5 ? 'AA' : 'Fail',
+  };
+}

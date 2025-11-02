@@ -15,7 +15,8 @@
 **/.npm/
 **/.yarn/
 **/.pnpm-store/
-**/package-lock.json
+# Keep package-lock.json for reproducible builds
+# **/package-lock.json
 **/yarn.lock
 **/pnpm-lock.yaml
 **/.next/
@@ -191,14 +192,14 @@ Jenkinsfile
 # Infrastructure (exclude non-essential)
 # ============================================
 infrastructure/docker/scripts/
-infrastructure/docker/config/
 infrastructure/docker/volumes/
 infrastructure/kubernetes/
 infrastructure/k8s/
 infrastructure/terraform/
 infrastructure/ansible/
 infrastructure/helm/
-infrastructure/monitoring/
+# Note: Keep infrastructure/docker/config/ for runtime configs
+# Note: Keep infrastructure/monitoring/ for prometheus configs
 
 # ============================================
 # Development & Configuration
@@ -214,18 +215,16 @@ secrets/
 **/secrets/
 
 # ============================================
-# Media & Assets (if not needed)
+# Media & Assets (large files only)
 # ============================================
-*.png
-*.jpg
-*.jpeg
-*.gif
-*.svg
-*.ico
-*.pdf
+# Note: Keeping small assets like icons, logos needed by app
+# Exclude only large media files
 *.mov
 *.mp4
 *.webm
+*.avi
+*.mkv
+# Keep: *.png *.jpg *.jpeg *.gif *.svg *.ico (needed by dashboard)
 
 # ============================================
 # Worktrees & Git Features

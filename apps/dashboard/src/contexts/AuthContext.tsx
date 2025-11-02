@@ -14,6 +14,7 @@ import { addNotification } from '../store/slices/uiSlice';
 import { signInSuccess, signOut } from '../store/slices/userSlice';
 import { AUTH_TOKEN_KEY, AUTH_REFRESH_TOKEN_KEY } from '../config';
 import { logger } from '../utils/logger';
+import { pusherService } from '../services/pusher';
 
 interface AuthContextType {
   user: User | null;
@@ -308,7 +309,6 @@ const updateProfile = useCallback(async (updates: Partial<User>) => {
       handleAuthSuccess(response);
 
       // Also refresh Pusher connection with new token
-      const { pusherService } = await import('../services/pusher');
       if (pusherService.isConnected()) {
         await pusherService.refreshToken(response.accessToken);
       }
@@ -375,7 +375,6 @@ const updateProfile = useCallback(async (updates: Partial<User>) => {
       if (user && isAuth) {
         const token = localStorage.getItem(AUTH_TOKEN_KEY);
         if (token) {
-          const { pusherService } = await import('../services/pusher');
           try {
             await pusherService.connect(token);
 

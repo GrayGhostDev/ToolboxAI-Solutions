@@ -58,8 +58,6 @@ export {
   Avatar,
   Card,
   List,
-  ListItem,
-  ListItemAvatar,
   Divider,
   TextField,
   Select,

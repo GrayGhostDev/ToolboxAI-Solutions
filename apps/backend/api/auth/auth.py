@@ -42,6 +42,34 @@ RATE_LIMIT_RETRY_AFTER = 60  # seconds
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+
+def hash_password(password: str) -> str:
+    """
+    Hash a password using bcrypt.
+
+    Args:
+        password: Plain text password to hash
+
+    Returns:
+        Hashed password string
+    """
+    return pwd_context.hash(password)
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """
+    Verify a password against a hashed password.
+
+    Args:
+        plain_password: Plain text password to verify
+        hashed_password: Hashed password to compare against
+
+    Returns:
+        True if password matches, False otherwise
+    """
+    return pwd_context.verify(plain_password, hashed_password)
+
+
 # JWT Security
 security = HTTPBearer(
     auto_error=False
@@ -743,10 +771,6 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
         email=user_data["email"],
         role=user_data["role"]
     )
-
-
-# Import from centralized location to avoid circular dependencies
-from core.utils.password import hash_password, verify_password
 
 
 def create_user_token(user: User) -> str:

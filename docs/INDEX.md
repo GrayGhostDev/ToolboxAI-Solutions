@@ -188,21 +188,31 @@ Perfect for new developers joining the project.
   - Maintenance improvements
 
 ### Planning & Roadmap
-- **[TODO](../TODO.md)**
+- **[TODO](TODO.md)**
   - Current tasks and priorities
   - Bug tracking
   - Feature requests
 
-- **[Changelog](../CHANGELOG.md)**
+- **[Changelog](10-meta/changelog/CHANGELOG_ROOT.md)**
   - Version history
   - Release notes
   - Breaking changes
+
+- **[Root Asset Inventory](10-meta/ROOT_ASSET_INVENTORY.md)**
+  - Top-level directories and owners
+  - Domain responsibilities
+  - Update when adding new root assets
+
+- **[Canonical Documentation Paths](10-meta/documentation/CANONICAL_PATHS.md)**
+  - Where each documentation type lives
+  - Rules for moving/adding docs
+  - Linked to enforcement scripts
 
 ---
 
 ## 🔒 Security & Compliance
 
-- **[Security](../SECURITY.md)**
+- **[Security](09-reference/security/templates/SECURITY_POLICY_TEMPLATE.md)**
   - Security policies
   - Vulnerability reporting
   - Authentication & authorization
@@ -257,7 +267,7 @@ Historical implementation documents are archived in [`Archive/2025-implementatio
 1. **New Developers**: Start with [Quick Start Guide](setup/QUICK_START_GUIDE.md)
 2. **Feature Development**: Review [2025 Implementation Standards](guides/2025-IMPLEMENTATION-STANDARDS.md)
 3. **Deployment**: Follow [Deployment Guide](guides/DEPLOYMENT_GUIDE.md)
-4. **Questions**: Check [TODO.md](../TODO.md) for known issues
+4. **Questions**: Check [TODO.md](TODO.md) for known issues
 
 ### Documentation Maintenance
 
@@ -296,7 +306,7 @@ Can't find what you're looking for? Try:
 
 If documentation is missing or unclear:
 
-1. Check [TODO.md](../TODO.md) to see if it's a known issue
+1. Check [TODO.md](TODO.md) to see if it's a known issue
 2. Review [CLAUDE.md](../CLAUDE.md) for development context
 3. Open a GitHub issue with label `documentation`
 4. Propose improvements via pull request
@@ -306,4 +316,3 @@ If documentation is missing or unclear:
 **Document Version**: 1.0  
 **Last Major Update**: October 8, 2025  
 **Maintained By**: ToolboxAI Development Team
-

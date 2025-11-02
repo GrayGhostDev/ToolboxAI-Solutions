@@ -1,0 +1,255 @@
+version: "3.9"
+
+# ============================================
+# TOOLBOXAI DOCKER SWARM OVERRIDE
+# ============================================
+# Use with: docker stack deploy -c docker-compose.yml -c docker-compose.swarm.yml toolboxai
+# This file removes Swarm-incompatible directives and ensures proper Swarm configuration
+# ============================================
+
+services:
+  # ----------------------------------------
+  # PostgreSQL Database
+  # ----------------------------------------
+  postgres:
+    # Remove container_name for Swarm (handled by service name)
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # ----------------------------------------
+  # Redis Cache
+  # ----------------------------------------
+  redis:
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # ----------------------------------------
+  # Backend (FastAPI)
+  # ----------------------------------------
+  backend:
+    # Ensure image is pre-built before stack deploy
+    image: toolboxai/backend:${DOCKER_TAG:-latest}
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+      rollback_config:
+        parallelism: 1
+        delay: 5s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # ----------------------------------------
+  # Dashboard (React)
+  # ----------------------------------------
+  dashboard:
+    # Ensure image is pre-built before stack deploy
+    image: toolboxai/dashboard:${DOCKER_TAG:-latest}
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # ----------------------------------------
+  # MCP Server
+  # ----------------------------------------
+  mcp-server:
+    image: toolboxai/mcp:${DOCKER_TAG:-latest}
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+  # ----------------------------------------
+  # Agent Coordinator
+  # ----------------------------------------
+  agent-coordinator:
+    image: toolboxai/agents:${DOCKER_TAG:-latest}
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+  # ----------------------------------------
+  # Celery Worker
+  # ----------------------------------------
+  celery-worker:
+    image: toolboxai/celery-worker:${DOCKER_TAG:-latest}
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # ----------------------------------------
+  # Celery Beat
+  # ----------------------------------------
+  celery-beat:
+    image: toolboxai/celery-beat:${DOCKER_TAG:-latest}
+    deploy:
+      replicas: 1  # Only one scheduler
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # ----------------------------------------
+  # Celery Flower
+  # ----------------------------------------
+  celery-flower:
+    image: toolboxai/celery-flower:${DOCKER_TAG:-latest}
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+
+  # ----------------------------------------
+  # Roblox Sync
+  # ----------------------------------------
+  roblox-sync:
+    image: toolboxai/roblox-sync:${DOCKER_TAG:-latest}
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # ----------------------------------------
+  # Redis Cloud Connector
+  # ----------------------------------------
+  redis-cloud-connector:
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+  # ----------------------------------------
+  # Backup Coordinator
+  # ----------------------------------------
+  backup-coordinator:
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+  # ----------------------------------------
+  # Migration Runner
+  # ----------------------------------------
+  migration-runner:
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+
+  # ----------------------------------------
+  # Prometheus
+  # ----------------------------------------
+  prometheus:
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3

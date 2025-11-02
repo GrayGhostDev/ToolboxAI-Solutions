@@ -179,6 +179,20 @@ ToolBoxAI-Solutions/
 3. Identify critical file relationships
 4. Create rollback plan
 
+## ♻️ Documentation & Directory Enforcement Lifecycle
+
+To keep the structure healthy after each release cycle:
+
+1. **Weekly (Fridays):** Run `make docs-enforce` to confirm all Markdown lives under `docs/`/`Archive/`.
+2. **Weekly (Fridays):** Run `make dashboard-hygiene` to verify `apps/dashboard` is code-only.
+3. **During any file move:** Execute `python3 scripts/documentation/update-link-references.py --old <old/path> --new <new/path>` to rewrite backlinks in docs/tests.
+4. **Monthly (first Monday):** Update `docs/10-meta/ROOT_ASSET_INVENTORY.md` and `docs/10-meta/documentation/CANONICAL_PATHS.md` if new top-level assets were added.
+5. **Quarterly:** Review this cleanup plan and adjust enforcement scripts/allowlists as the repository evolves.
+
+Document completion of each run in the maintenance log so CI parity can be audited.
+
+> **Automation:** The `documentation-health` GitHub workflow executes `make docs-enforce` and `make dashboard-hygiene` on every docs-related change plus the weekly schedule, guaranteeing continuous enforcement.
+
 ### **Step 2: Remove Duplicates**
 
 1. Delete duplicate CLAUDE.md files (keep main ones)

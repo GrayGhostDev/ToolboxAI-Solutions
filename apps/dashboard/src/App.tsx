@@ -19,6 +19,8 @@ import PasswordReset from './components/pages/PasswordReset';
 // Unified Auth Hook
 import { useUnifiedAuth } from './hooks/useUnifiedAuth';
 import ErrorBoundary from './components/ErrorBoundary';
+// Role-Based Router
+import { RoleBasedRouter } from './components/auth/RoleBasedRouter';
 // WebSocket removed - using Pusher for real-time features
 import { pusherService } from './services/pusher';
 import { PusherProvider } from './contexts/PusherContext';
@@ -41,6 +43,11 @@ const FloatingCharacters = React.lazy(() => import('./components/roblox/Floating
 
 // Cookie banner - only in production
 const CookieBannerLazy = React.lazy(() => import('./components/consent/CookieBanner').then(m => ({ default: m.default })));
+
+// Command Palette for quick navigation
+import { CommandPalette } from './components/navigation/CommandPalette';
+// Development Tools
+import { DevRoleSwitcher } from './components/dev/DevRoleSwitcher';
 
 export default function App() {
   const role = useAppSelector((s) => s.user.role);
@@ -217,10 +224,13 @@ export default function App() {
         )}
 
         <AppLayout role={role} isRobloxPage={isRobloxPage}>
-          <AppRoutes />
+          <RoleBasedRouter>
+            <AppRoutes />
+          </RoleBasedRouter>
         </AppLayout>
 
         {/* Global Components */}
+        <CommandPalette />
         <NotificationToast />
         <RealtimeToast />
         {/* Disable complex session monitoring in development */}
@@ -240,6 +250,11 @@ export default function App() {
           <React.Suspense fallback={null}>
             <PerformanceMonitor enabled={true} />
           </React.Suspense>
+        )}
+
+        {/* Role Switcher - Development Only */}
+        {process.env.NODE_ENV === 'development' && !bypassAuth && (
+          <DevRoleSwitcher />
         )}
 
         {/* COPPA Consent Modal */}

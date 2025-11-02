@@ -8,127 +8,56 @@
 # ============================================
 
 # ============================================
-# BASE STAGE - Common dependencies
+# BASE STAGE - Use backend image with all dependencies
 # ============================================
-FROM python:3.12-slim AS base
+# Backend image already has tiktoken==0.12.0 and all Python dependencies
+# Backend runs as user 'toolboxai' (UID 1001) - we'll reuse this user
+FROM toolboxai/backend:latest AS base
 
-# Install security updates and common dependencies
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends \
-        ca-certificates \
-        curl \
-        netcat-traditional \
-        tini \
-        git && \
-    rm -rf /var/lib/apt/lists/* && \
-    # Create non-root user with specific UID/GID for MCP
-    groupadd -r -g 1003 mcp && \
-    useradd -r -u 1003 -g mcp -d /app -s /sbin/nologin mcp && \
-    mkdir -p /app /data/contexts /data/agents && \
-    chown -R mcp:mcp /app /data
+# Switch to root temporarily to create MCP directories
+USER root
+
+# Create MCP-specific directories (reuse existing toolboxai user from backend)
+RUN mkdir -p /data/contexts /data/agents && \
+    chown -R toolboxai:toolboxai /data
 
 # Set working directory
 WORKDIR /app
 
-# Set Python environment variables
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONHASHSEED=random \
-    PYTHONPATH=/app \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    PIP_DEFAULT_TIMEOUT=100 \
-    PIP_ROOT_USER_ACTION=ignore
+# MCP-specific environment variables (inherit Python vars from backend)
+ENV MCP_HOST=0.0.0.0 \
+    MCP_PORT=9877 \
+    LOG_LEVEL=info
 
 # ============================================
-# BUILDER STAGE - Build dependencies
+# BUILDER STAGE - Skipped (using backend deps)
 # ============================================
-FROM base AS builder
-
-# Install build dependencies
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    apt-get update && \
-    apt-get install -y --no-install-recommends \
-        gcc \
-        g++ \
-        make \
-        libffi-dev \
-        libssl-dev \
-        build-essential && \
-    rm -rf /var/lib/apt/lists/*
-
-# Copy requirements files
-COPY requirements.txt requirements-ai.txt* ./
-
-# Install Python dependencies with cache mount
-RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
-    python -m venv /opt/venv && \
-    . /opt/venv/bin/activate && \
-    pip install --upgrade pip setuptools wheel && \
-    pip install --no-deps -r requirements.txt && \
-    if [ -f requirements-ai.txt ]; then \
-        pip install --no-deps -r requirements-ai.txt; \
-    fi && \
-    # Install MCP-specific packages
-    pip install --no-deps \
-        websockets==12.0 \
-        asyncio-mqtt==0.16.2 \
-        fastapi==0.104.1 \
-        uvicorn[standard]==0.24.0 \
-        pydantic==2.5.0 \
-        redis==5.0.1 \
-        psycopg[binary]==3.1.12 && \
-    # Clean up pip cache
-    find /opt/venv -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
-    find /opt/venv -type f -name "*.pyc" -delete 2>/dev/null || true
+# All dependencies already installed in backend image
 
 # ============================================
 # DEVELOPMENT STAGE - For local development
 # ============================================
 FROM base AS development
 
-# Install dev tools
+# Install dev tools (git, vim, etc. already in backend image)
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && \
     apt-get install -y --no-install-recommends \
-        gcc \
-        g++ \
-        make \
-        git \
-        vim \
-        procps \
-        htop \
         jq && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy virtual environment from builder
-COPY --from=builder /opt/venv /opt/venv
+# Virtual environment already present from backend image at /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Install development dependencies
-RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
-    pip install --no-deps \
-        ipython \
-        ipdb \
-        pytest \
-        pytest-asyncio \
-        pytest-cov \
-        black \
-        isort \
-        mypy \
-        ruff \
-        debugpy
+# Development dependencies already installed in backend image
+# (ipython, ipdb, pytest, black, etc.)
 
 # Copy application code (will be overridden by volume mount)
-COPY --chown=mcp:mcp . .
+COPY --chown=toolboxai:toolboxai . .
 
-# Switch to non-root user
-USER mcp
+# Switch to non-root user (reuse toolboxai from backend)
+USER toolboxai
 
 # Development command with hot reload
 CMD ["python", "-m", "core.mcp.server", "--reload", "--debug"]
@@ -138,19 +67,17 @@ CMD ["python", "-m", "core.mcp.server", "--reload", "--debug"]
 # ============================================
 FROM base AS production
 
-# Copy virtual environment from builder
-COPY --from=builder --chown=mcp:mcp /opt/venv /opt/venv
+# Virtual environment already present from backend image
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy application code
-COPY --chown=mcp:mcp core ./core
-COPY --chown=mcp:mcp database ./database
-COPY --chown=mcp:mcp toolboxai_settings ./toolboxai_settings
-COPY --chown=mcp:mcp toolboxai_utils ./toolboxai_utils
+COPY --chown=toolboxai:toolboxai core ./core
+COPY --chown=toolboxai:toolboxai database ./database
+COPY --chown=toolboxai:toolboxai toolboxai_settings ./toolboxai_settings
 
 # Create necessary directories with proper permissions
 RUN mkdir -p /app/logs /data/contexts /data/agents /tmp/mcp && \
-    chown -R mcp:mcp /app/logs /data/contexts /data/agents /tmp/mcp && \
+    chown -R toolboxai:toolboxai /app/logs /data/contexts /data/agents /tmp/mcp && \
     chmod 755 /app/logs /data/contexts /data/agents /tmp/mcp
 
 # MCP Server environment variables
@@ -197,8 +124,8 @@ LABEL org.opencontainers.image.title="ToolBoxAI MCP Server" \
 RUN chmod -R a-w /app && \
     chmod -R u+w /app/logs /data/contexts /data/agents /tmp/mcp
 
-# Switch to non-root user
-USER mcp
+# Switch to non-root user (reuse toolboxai from backend)
+USER toolboxai
 
 # Expose MCP server port
 EXPOSE 9877

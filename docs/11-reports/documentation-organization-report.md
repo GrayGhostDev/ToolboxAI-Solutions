@@ -103,7 +103,7 @@ Added navigation sections to major documents:
 #### Navigation Breadcrumbs
 Implemented breadcrumb navigation in key documents:
 ```markdown
-[Home](../../README.md) > [Implementation](../README.md) > [Development Setup](README.md)
+[Home](../02-overview/project-overview/ROOT_PROJECT_OVERVIEW.md) > [Implementation](../README.md) > [Development Setup](README.md)
 ```
 
 ### 4. ✅ Structure Alignment with DOCUMENTATION_STRUCTURE_2025.md

@@ -34,7 +34,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.api.auth.auth import get_current_user
-from apps.backend.core.deps import get_async_session
+from apps.backend.core.deps import get_async_db
 from apps.backend.middleware.tenant import get_tenant_context, TenantContext
 from apps.backend.models.schemas import User
 
@@ -220,7 +220,7 @@ class PreferenceExport(BaseModel):
     description="Get all preferences for the current user",
 )
 async def get_user_preferences(
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> UserPreferences:
     """
@@ -266,7 +266,7 @@ async def get_user_preferences(
 )
 async def get_category_preferences(
     category: PreferenceCategory,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> dict[str, Any]:
     """
@@ -311,7 +311,7 @@ async def get_category_preferences(
 )
 async def update_preference(
     request: UpdatePreferenceRequest,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> PreferenceValue:
     """
@@ -359,7 +359,7 @@ async def update_preference(
 )
 async def bulk_update_preferences(
     request: BulkPreferenceUpdate,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> UserPreferences:
     """
@@ -412,7 +412,7 @@ async def bulk_update_preferences(
 )
 async def reset_preferences(
     category: Optional[PreferenceCategory] = None,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> UserPreferences:
     """
@@ -467,7 +467,7 @@ async def reset_preferences(
     description="Export user preferences for backup or transfer",
 )
 async def export_preferences(
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> PreferenceExport:
     """
@@ -521,7 +521,7 @@ async def export_preferences(
 async def import_preferences(
     preferences_data: PreferenceExport,
     merge: bool = False,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> UserPreferences:
     """
@@ -578,7 +578,7 @@ async def import_preferences(
     description="Get UI-specific preferences",
 )
 async def get_ui_preferences(
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> UIPreferences:
     """Get UI preferences."""
@@ -601,7 +601,7 @@ async def get_ui_preferences(
 )
 async def update_ui_preferences(
     preferences: UIPreferences,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> UIPreferences:
     """Update UI preferences."""
@@ -624,7 +624,7 @@ async def update_ui_preferences(
     description="Get notification-specific preferences",
 )
 async def get_notification_preferences(
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> NotificationPreferences:
     """Get notification preferences."""
@@ -647,7 +647,7 @@ async def get_notification_preferences(
 )
 async def update_notification_preferences(
     preferences: NotificationPreferences,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> NotificationPreferences:
     """Update notification preferences."""
@@ -670,7 +670,7 @@ async def update_notification_preferences(
     description="Get privacy-specific preferences",
 )
 async def get_privacy_preferences(
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> PrivacyPreferences:
     """Get privacy preferences."""
@@ -693,7 +693,7 @@ async def get_privacy_preferences(
 )
 async def update_privacy_preferences(
     preferences: PrivacyPreferences,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> PrivacyPreferences:
     """Update privacy preferences."""
@@ -716,7 +716,7 @@ async def update_privacy_preferences(
     description="Get accessibility-specific preferences",
 )
 async def get_accessibility_preferences(
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> AccessibilityPreferences:
     """Get accessibility preferences."""
@@ -739,7 +739,7 @@ async def get_accessibility_preferences(
 )
 async def update_accessibility_preferences(
     preferences: AccessibilityPreferences,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> AccessibilityPreferences:
     """Update accessibility preferences."""

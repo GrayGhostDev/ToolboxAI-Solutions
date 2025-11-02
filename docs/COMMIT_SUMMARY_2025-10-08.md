@@ -318,8 +318,8 @@ pip show cryptography flask jinja2 requests urllib3
 - **Python Security**: https://github.com/pypa/advisory-database
 
 ### Internal Documentation
-- [SECURITY.md](../SECURITY.md) - Security policy
-- [CONTRIBUTING.md](../CONTRIBUTING.md) - Development guidelines
+- [SECURITY.md](../09-reference/security/templates/SECURITY_POLICY_TEMPLATE.md) - Security policy
+- [CONTRIBUTING.md](../10-meta/contributing/CONTRIBUTING_GUIDE.md) - Development guidelines
 - [SECURITY_UPDATE_2025-10-08.md](./SECURITY_UPDATE_2025-10-08.md) - Full security report
 
 ---
@@ -341,4 +341,3 @@ The ToolboxAI Solutions repository is now significantly more secure with all cri
 **Generated**: October 8, 2025  
 **Status**: ✅ COMPLETE  
 **Next Review**: October 15, 2025 (weekly security check)
-

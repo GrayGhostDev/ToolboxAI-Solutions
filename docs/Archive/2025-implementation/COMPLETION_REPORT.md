@@ -161,7 +161,7 @@ infrastructure/docker/dockerfiles/
 
 ### Kubernetes Manifests (9 files)
 ```
-infrastructure/k8s/base/
+infrastructure/kubernetes/base/
 ├── namespace.yaml ✨ NEW (1.2KB)
 ├── backend-deployment.yaml ✨ NEW (5.8KB)
 ├── backend-service.yaml ✨ NEW (1.5KB)
@@ -268,7 +268,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 **Best for**: Production, high-availability, scale
 
 ```bash
-kubectl apply -f infrastructure/k8s/base/ -n toolboxai-prod
+kubectl apply -f infrastructure/kubernetes/base/ -n toolboxai-prod
 ```
 
 ### Option 3: CI/CD
@@ -365,7 +365,7 @@ docker build -f dashboard-production-2025.Dockerfile -t dashboard:v2 ../../../
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 # Kubernetes
-kubectl apply -f infrastructure/k8s/base/ -n toolboxai-prod
+kubectl apply -f infrastructure/kubernetes/base/ -n toolboxai-prod
 ```
 
 ---

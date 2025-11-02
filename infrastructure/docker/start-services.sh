@@ -23,6 +23,70 @@ compose() {
   "${COMPOSE_CMD[@]}" "${COMPOSE_FILES[@]}" "$@"
 }
 
+DEFAULT_PROFILES="week2,production,migration"
+if [[ -z "${COMPOSE_PROFILES:-}" ]]; then
+  export COMPOSE_PROFILES="$DEFAULT_PROFILES"
+  echo "ℹ️  COMPOSE_PROFILES not set. Enabling profiles: $COMPOSE_PROFILES"
+fi
+
+AVAILABLE_SERVICES=""
+SERVICE_FILTER_DISABLED=false
+if ! AVAILABLE_SERVICES="$(compose config --services 2>/dev/null)"; then
+  SERVICE_FILTER_DISABLED=true
+  echo "⚠️  Could not resolve compose service list; attempting to start all phases regardless."
+fi
+
+service_exists() {
+  local service="$1"
+  if [[ "$SERVICE_FILTER_DISABLED" == true ]]; then
+    return 0
+  fi
+  printf '%s\n' "$AVAILABLE_SERVICES" | grep -qx "$service"
+}
+
+NEEDS_HEALTHCHECK=(postgres redis backend mcp-server agent-coordinator dashboard celery-flower)
+needs_healthcheck() {
+  local service="$1"
+  for target in "${NEEDS_HEALTHCHECK[@]}"; do
+    if [[ "$service" == "$target" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+start_single_service() {
+  local service="$1"
+  if ! service_exists "$service"; then
+    echo "⚪️  Skipping $service (not defined in current compose files)"
+    return 0
+  fi
+
+  echo "▶️  Starting $service..."
+  local extra_args=()
+  if [[ "$service" == "backend" || "$service" == "dashboard" ]]; then
+    extra_args+=(--build)
+  fi
+  if ! compose up -d "${extra_args[@]}" "$service"; then
+    echo "❌ Failed to start $service"
+    return 1
+  fi
+
+  if needs_healthcheck "$service"; then
+    check_health "$service" || true
+  fi
+}
+
+start_phase() {
+  local phase_title="$1"
+  shift
+  echo ""
+  echo "=== $phase_title ==="
+  for service in "$@"; do
+    start_single_service "$service"
+  done
+}
+
 echo "🚀 Starting ToolboxAI Docker services from $PROJECT_ROOT"
 
 check_health() {
@@ -47,26 +111,11 @@ check_health() {
 echo "🧹 Cleaning up previous containers (if any)..."
 compose down --remove-orphans >/dev/null 2>&1 || true
 
-echo "📦 Starting data services (postgres, redis)..."
-compose up -d postgres redis 2>&1 | grep -v "variable is not set" || true
-check_health "postgres" || true
-check_health "redis" || true
-
-echo "🔨 Building and starting backend..."
-compose up -d --build backend 2>&1 | grep -v "variable is not set" || true
-check_health "backend" || true
-
-echo "🤖 Starting orchestration services..."
-compose up -d mcp-server agent-coordinator 2>&1 | grep -v "variable is not set" || true
-check_health "mcp-server" || true
-check_health "agent-coordinator" || true
-
-echo "📮 Starting background workers..."
-compose up -d celery-worker celery-beat flower 2>&1 | grep -v "variable is not set" || true
-
-echo "🖥️ Starting dashboard and tooling..."
-compose up -d dashboard adminer redis-commander mailhog 2>&1 | grep -v "variable is not set" || true
-check_health "dashboard" || true
+start_phase "Phase 1: Core data services" postgres redis
+start_phase "Phase 2: Application backends" backend mcp-server agent-coordinator
+start_phase "Phase 3: Async workers & monitoring" celery-worker celery-beat celery-flower flower
+start_phase "Phase 4: Extended stack" roblox-sync redis-cloud-connector backup-coordinator migration-runner prometheus
+start_phase "Phase 5: Frontend & tooling" dashboard adminer redis-commander mailhog
 
 echo ""
 echo "📊 Current service status:"

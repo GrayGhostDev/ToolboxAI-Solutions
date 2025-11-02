@@ -74,17 +74,41 @@ def verify_password(plain_password, hashed_password):
     return bcrypt_handler.verify_password(plain_password, hashed_password)
 
 def authenticate_user(username: Optional[str], email: Optional[str], password: str):
-    """Authenticate a user by username or email"""
-    # Try to find user by email first, then by username
-    lookup_key = email if email else username
-    if not lookup_key:
+    """
+    Authenticate a user by username or email.
+
+    Args:
+        username: Optional username to authenticate with
+        email: Optional email to authenticate with
+        password: User's password
+
+    Returns:
+        User dict if authentication successful, False otherwise
+    """
+    if not username and not email:
         return False
 
+    # Try direct lookup by email or username (for keys in dict)
+    lookup_key = email if email else username
     user = fake_users_db.get(lookup_key)
+
+    # If not found, search through all users for matching username or email
+    if not user:
+        for user_data in fake_users_db.values():
+            # Check if username or email matches
+            if (username and user_data.get("username") == username) or \
+               (email and user_data.get("email") == email):
+                user = user_data
+                break
+
+    # User not found
     if not user:
         return False
+
+    # Verify password
     if not verify_password(password, user["hashed_password"]):
         return False
+
     return user
 
 # Use the imported create_access_token from jwt_handler

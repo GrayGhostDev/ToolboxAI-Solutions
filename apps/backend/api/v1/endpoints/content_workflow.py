@@ -35,8 +35,8 @@ from fastapi import (
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from apps.backend.api.auth.auth import get_current_user, require_teacher_or_admin
-from apps.backend.core.deps import get_async_session
+from apps.backend.api.auth.auth import get_current_user, require_any_role
+from apps.backend.core.deps import get_async_db
 from apps.backend.middleware.tenant import get_tenant_context, TenantContext
 from apps.backend.models.schemas import User
 
@@ -221,7 +221,7 @@ class PendingReviewsResponse(BaseModel):
 async def submit_for_review(
     content_id: UUID,
     request: SubmitForReviewRequest,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     background_tasks: BackgroundTasks,
 ) -> SubmitForReviewResponse:
@@ -288,12 +288,12 @@ async def submit_for_review(
     response_model=ReviewContentResponse,
     summary="Approve content",
     description="Approve submitted content (requires reviewer permissions)",
-    dependencies=[Depends(require_teacher_or_admin)],
+    dependencies=[Depends(require_any_role(["teacher", "admin"]))],
 )
 async def approve_content(
     content_id: UUID,
     request: ReviewContentRequest,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     background_tasks: BackgroundTasks,
 ) -> ReviewContentResponse:
@@ -364,12 +364,12 @@ async def approve_content(
     response_model=ReviewContentResponse,
     summary="Reject content",
     description="Reject submitted content (requires reviewer permissions)",
-    dependencies=[Depends(require_teacher_or_admin)],
+    dependencies=[Depends(require_any_role(["teacher", "admin"]))],
 )
 async def reject_content(
     content_id: UUID,
     request: ReviewContentRequest,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     background_tasks: BackgroundTasks,
 ) -> ReviewContentResponse:
@@ -416,12 +416,12 @@ async def reject_content(
     response_model=PublishContentResponse,
     summary="Publish content",
     description="Publish approved content (requires publisher permissions)",
-    dependencies=[Depends(require_teacher_or_admin)],
+    dependencies=[Depends(require_any_role(["teacher", "admin"]))],
 )
 async def publish_content(
     content_id: UUID,
     request: PublishContentRequest,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     background_tasks: BackgroundTasks,
 ) -> PublishContentResponse:
@@ -491,10 +491,10 @@ async def publish_content(
     response_model=PendingReviewsResponse,
     summary="Get pending reviews",
     description="Get list of content items pending review",
-    dependencies=[Depends(require_teacher_or_admin)],
+    dependencies=[Depends(require_any_role(["teacher", "admin"]))],
 )
 async def get_pending_reviews(
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     priority_filter: Optional[str] = Query(None, pattern="^(low|normal|high|urgent)$"),
@@ -548,7 +548,7 @@ async def get_pending_reviews(
 )
 async def get_workflow_status(
     content_id: UUID,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> ContentWorkflowInfo:
     """

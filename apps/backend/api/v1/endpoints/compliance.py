@@ -6,6 +6,7 @@ This module provides endpoints for compliance management and reporting.
 
 from datetime import datetime
 from typing import List, Optional, Dict, Any
+import uuid
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel, Field
 
@@ -130,8 +131,6 @@ async def generate_compliance_report(school_id: Optional[str] = None) -> Complia
     Returns:
         Generated compliance report
     """
-    import uuid
-
     report = ComplianceReport(
         report_id=f"RPT-{datetime.now().year}-{uuid.uuid4().hex[:8].upper()}",
         school_id=school_id,

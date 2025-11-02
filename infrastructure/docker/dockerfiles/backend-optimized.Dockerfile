@@ -98,7 +98,6 @@ COPY --chown=toolboxai:toolboxai apps/backend ./apps/backend
 COPY --chown=toolboxai:toolboxai core ./core
 COPY --chown=toolboxai:toolboxai database ./database
 COPY --chown=toolboxai:toolboxai toolboxai_settings ./toolboxai_settings
-COPY --chown=toolboxai:toolboxai toolboxai_utils ./toolboxai_utils
 
 # Create runtime directories with proper permissions
 RUN mkdir -p /app/logs /app/agent_data /app/memory_store && \

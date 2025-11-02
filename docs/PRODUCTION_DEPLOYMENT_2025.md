@@ -239,7 +239,7 @@ kubectl create secret generic toolboxai-secrets \
 
 ```bash
 # Apply base manifests
-kubectl apply -f infrastructure/k8s/base/ -n toolboxai-prod
+kubectl apply -f infrastructure/kubernetes/base/ -n toolboxai-prod
 
 # Verify deployment
 kubectl get pods -n toolboxai-prod
@@ -360,7 +360,7 @@ trivy image toolboxai/nginx:v2.0.0-alpine --severity HIGH,CRITICAL
 
 ```bash
 # Apply network policies (K8s)
-kubectl apply -f infrastructure/k8s/base/network-policy.yaml -n toolboxai-prod
+kubectl apply -f infrastructure/kubernetes/base/network-policy.yaml -n toolboxai-prod
 ```
 
 ---

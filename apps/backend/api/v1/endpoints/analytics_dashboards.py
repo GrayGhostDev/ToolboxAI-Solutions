@@ -34,7 +34,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.api.auth.auth import get_current_user
-from apps.backend.core.deps import get_async_session
+from apps.backend.core.deps import get_async_db
 from apps.backend.middleware.tenant import get_tenant_context, TenantContext
 from apps.backend.models.schemas import User
 
@@ -149,7 +149,7 @@ class DashboardDataResponse(BaseModel):
     description="Get list of available dashboards",
 )
 async def list_dashboards(
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     include_public: bool = Query(True),
@@ -197,7 +197,7 @@ async def list_dashboards(
 )
 async def get_dashboard(
     dashboard_id: UUID,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> Dashboard:
     """
@@ -242,7 +242,7 @@ async def get_dashboard(
 )
 async def create_dashboard(
     request: DashboardCreateRequest,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
 ) -> Dashboard:
@@ -303,7 +303,7 @@ async def create_dashboard(
 async def update_dashboard(
     dashboard_id: UUID,
     request: DashboardUpdateRequest,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> Dashboard:
     """
@@ -349,7 +349,7 @@ async def update_dashboard(
 )
 async def delete_dashboard(
     dashboard_id: UUID,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> None:
     """
@@ -387,7 +387,7 @@ async def delete_dashboard(
 )
 async def get_dashboard_data(
     dashboard_id: UUID,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     refresh: bool = Query(False, description="Force refresh from source"),
 ) -> DashboardDataResponse:
@@ -1013,7 +1013,7 @@ def _generate_recommendations(metric: str, direction: str, user_role: str) -> li
 )
 async def clone_dashboard(
     dashboard_id: UUID,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     new_name: str = Query(..., min_length=1, max_length=200),
 ) -> Dashboard:

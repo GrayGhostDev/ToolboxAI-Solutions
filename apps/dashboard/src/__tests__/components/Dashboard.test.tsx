@@ -7,13 +7,14 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, userEvent } from '../../test/utils/render';
-import { 
-  createMockUser, 
+import {
+  createMockUser,
   createMockDashboardData,
   createMockClass,
-  createMockApiResponse 
+  createMockApiResponse
 } from '../../test/utils/mockData';
 import { DashboardHome } from '../../components/pages/DashboardHome';
+import { subscribeToChannel, unsubscribeFromChannel } from '../../services/pusher';
 
 // Mock the API module
 vi.mock('../../services/api', () => ({
@@ -221,8 +222,6 @@ describe('Dashboard Component', () => {
 
   describe('Real-time Updates', () => {
     it('should subscribe to WebSocket channels on mount', async () => {
-      const { subscribeToChannel } = await import { PusherService } from '../../services/pusher');
-
       render(<DashboardHome role="teacher" />);
 
       await waitFor(() => {
@@ -231,10 +230,8 @@ describe('Dashboard Component', () => {
     });
 
     it('should unsubscribe from channels on unmount', async () => {
-      const { unsubscribeFromChannel } = await import { PusherService } from '../../services/pusher');
-      
       const { unmount } = render(<DashboardHome role="teacher" />);
-      
+
       unmount();
 
       expect(unsubscribeFromChannel).toHaveBeenCalled();

@@ -169,7 +169,7 @@ infrastructure/docker/compose/
 
 ### Kubernetes Manifests
 ```
-infrastructure/k8s/base/
+infrastructure/kubernetes/base/
 ├── namespace.yaml ✨ NEW
 ├── backend-deployment.yaml ✨ NEW
 ├── backend-service.yaml ✨ NEW
@@ -274,7 +274,7 @@ docker compose \
 
 ```bash
 # Deploy to Kubernetes
-kubectl apply -f infrastructure/k8s/base/ -n toolboxai-prod
+kubectl apply -f infrastructure/kubernetes/base/ -n toolboxai-prod
 
 # Enable auto-scaling
 kubectl autoscale deployment backend-api --min=3 --max=20 -n toolboxai-prod
@@ -350,7 +350,7 @@ docker build -f dashboard-production-2025.Dockerfile -t dashboard:test ../../../
 ### Deploying to Kubernetes
 
 ```bash
-kubectl apply -f infrastructure/k8s/base/ -n toolboxai-prod
+kubectl apply -f infrastructure/kubernetes/base/ -n toolboxai-prod
 kubectl get pods -n toolboxai-prod
 kubectl rollout status deployment/backend-api -n toolboxai-prod
 ```

@@ -36,7 +36,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.api.auth.auth import get_current_user
-from apps.backend.core.deps import get_async_session
+from apps.backend.core.deps import get_async_db
 from apps.backend.middleware.tenant import get_tenant_context, TenantContext
 from apps.backend.models.schemas import User
 
@@ -191,7 +191,7 @@ class ExportDownloadResponse(BaseModel):
 )
 async def export_to_csv(
     request: ExportCSVRequest,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     background_tasks: BackgroundTasks,
@@ -253,7 +253,7 @@ async def export_to_csv(
 )
 async def export_to_excel(
     request: ExportExcelRequest,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     background_tasks: BackgroundTasks,
@@ -314,7 +314,7 @@ async def export_to_excel(
 )
 async def export_to_pdf(
     request: ExportPDFRequest,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     background_tasks: BackgroundTasks,
@@ -374,7 +374,7 @@ async def export_to_pdf(
 )
 async def get_export_status(
     export_id: UUID,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> ExportStatus_Response:
     """
@@ -426,7 +426,7 @@ async def get_export_status(
 )
 async def download_export(
     export_id: UUID,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> StreamingResponse:
     """
@@ -473,7 +473,7 @@ async def download_export(
     description="Get history of exports for current user/tenant",
 )
 async def get_export_history(
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     format_filter: Optional[ExportFormat] = None,
@@ -521,7 +521,7 @@ async def get_export_history(
 )
 async def delete_export(
     export_id: UUID,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> None:
     """

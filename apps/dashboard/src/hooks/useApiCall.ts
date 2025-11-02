@@ -48,12 +48,12 @@ interface UseApiCallOptions {
 
 /**
  * Custom hook for making API calls with automatic state management
- * @param apiFunction - The API function to call
+ * @param apiFunction - The API function to call (optional, can be provided later to execute)
  * @param options - Configuration options
  * @returns Object with execute function, data, loading, and error states
  */
 export function useApiCall<T = any, P extends any[] = any[]>(
-  apiFunction: (...args: P) => Promise<AxiosResponse<T>>,
+  apiFunction?: (...args: P) => Promise<AxiosResponse<T>>,
   options: UseApiCallOptions = {}
 ) {
   const [state, setState] = useState<ApiCallState<T>>({
@@ -107,6 +107,24 @@ export function useApiCall<T = any, P extends any[] = any[]>(
 
   const execute = useCallback(
     async (...args: P) => {
+      // Validate apiFunction exists
+      if (!apiFunction) {
+        const errorMessage = 'No API function provided to useApiCall';
+        logger.error(errorMessage);
+        setState({ data: null, loading: false, error: errorMessage });
+
+        if (showNotification) {
+          dispatch(
+            addNotification({
+              message: errorMessage,
+              type: 'error',
+            })
+          );
+        }
+
+        throw new TypeError(errorMessage);
+      }
+
       setState((prev) => ({ ...prev, loading: true, error: null }));
 
       try {
@@ -145,7 +163,10 @@ export function useApiCall<T = any, P extends any[] = any[]>(
         return response;
       } catch (err) {
         const error = err as AxiosError;
-        const errorMessage = error.response?.data?.message || error.message || 'An error occurred';
+        const errorMessage =
+          (error.response?.data as { message?: string })?.message ||
+          error.message ||
+          'An error occurred';
 
         logger.error('API call failed:', errorMessage);
         setState({ data: null, loading: false, error: errorMessage });
@@ -189,13 +210,15 @@ export function useApiCall<T = any, P extends any[] = any[]>(
  * Hook for API calls that should execute immediately on mount
  */
 export function useApiCallOnMount<T = any>(
-  apiFunction: () => Promise<AxiosResponse<T>>,
+  apiFunction?: () => Promise<AxiosResponse<T>>,
   options: UseApiCallOptions = {}
 ) {
   const api = useApiCall(apiFunction, options);
 
   useEffect(() => {
-    api.execute();
+    if (apiFunction) {
+      api.execute();
+    }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return api;

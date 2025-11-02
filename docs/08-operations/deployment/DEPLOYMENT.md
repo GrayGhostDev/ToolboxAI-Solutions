@@ -366,7 +366,7 @@ regions:
 ## 📚 Additional Resources
 
 - [Docker Infrastructure README](infrastructure/docker/README.md)
-- [Security Documentation](SECURITY.md)
+- [Security Documentation](../../09-reference/security/templates/SECURITY_POLICY_TEMPLATE.md)
 - [API Documentation](http://localhost:8009/docs)
 - [Troubleshooting Guide](TROUBLESHOOTING.md)
 

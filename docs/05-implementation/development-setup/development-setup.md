@@ -766,7 +766,7 @@ echo "Database reset complete!"
 
 ### Documentation
 
-- [Project README](../../README.md)
+- [Project README](../../02-overview/project-overview/ROOT_PROJECT_OVERVIEW.md)
 - [API Documentation](../03-api/README.md)
 - [Architecture Overview](../02-architecture/system-design.md)
 

@@ -73,7 +73,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"[$(date '+%Y-%m-%d %H:%M:%S')] Enforcing 2025 standards\" >> \"${CLAUDE_PROJECT_DIR}/.claude/logs/standards.log\""
+            "command": "echo \"[$(date '+%Y-%m-%d %H:%M:%S')] Enforcing 2025 standards\" >> \"${CLAUDE_PROJECT_DIR:-.}/.claude/logs/standards.log\""
           }
         ]
       }
@@ -84,7 +84,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"[JS/TS] Enforcing React 19 + TypeScript 5.9 standards\" >> \"${CLAUDE_PROJECT_DIR}/.claude/logs/standards.log\"",
+            "command": "echo \"[JS/TS] Enforcing React 19 + TypeScript 5.9 standards\" >> \"${CLAUDE_PROJECT_DIR:-.}/.claude/logs/standards.log\"",
             "description": "Log frontend standard enforcement"
           }
         ]
@@ -94,7 +94,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"[Python] Enforcing Python 3.12 + Pydantic v2 standards\" >> \"${CLAUDE_PROJECT_DIR}/.claude/logs/standards.log\"",
+            "command": "echo \"[Python] Enforcing Python 3.12 + Pydantic v2 standards\" >> \"${CLAUDE_PROJECT_DIR:-.}/.claude/logs/standards.log\"",
             "description": "Log Python standard enforcement"
           }
         ]
@@ -106,7 +106,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"[$(date '+%Y-%m-%d %H:%M:%S')] File modified with 2025 standards\" >> \"${CLAUDE_PROJECT_DIR}/.claude/logs/file_changes.log\"",
+            "command": "echo \"[$(date '+%Y-%m-%d %H:%M:%S')] File modified with 2025 standards\" >> \"${CLAUDE_PROJECT_DIR:-.}/.claude/logs/file_changes.log\"",
             "description": "Track standards-compliant modifications"
           }
         ]
@@ -117,7 +117,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "mkdir -p ${CLAUDE_PROJECT_DIR}/.claude/logs && echo \"[$(date)] Worktree session started - 2025 standards enforced\" >> ${CLAUDE_PROJECT_DIR}/.claude/logs/sessions.log",
+            "command": "mkdir -p \"${CLAUDE_PROJECT_DIR:-.}/.claude/logs\" && echo \"[$(date)] Worktree session started - 2025 standards enforced\" >> \"${CLAUDE_PROJECT_DIR:-.}/.claude/logs/sessions.log\"",
             "description": "Initialize session with standards logging"
           }
         ]

@@ -242,8 +242,8 @@ pip show cryptography flask jinja2 requests urllib3
 - Python Security Advisories: https://github.com/pypa/advisory-database
 
 ### Internal Documentation
-- [SECURITY.md](../SECURITY.md) - Security policy and reporting
-- [CONTRIBUTING.md](../CONTRIBUTING.md) - Development guidelines
+- [SECURITY.md](../09-reference/security/templates/SECURITY_POLICY_TEMPLATE.md) - Security policy and reporting
+- [CONTRIBUTING.md](../10-meta/contributing/CONTRIBUTING_GUIDE.md) - Development guidelines
 - [NEXT_ACTIONS_COMPLETE_2025.md](./NEXT_ACTIONS_COMPLETE_2025.md) - Project status
 
 ---
@@ -258,4 +258,3 @@ pip show cryptography flask jinja2 requests urllib3
 ---
 
 **Note**: This update significantly improves the security posture of the ToolboxAI Solutions application. All critical and most moderate vulnerabilities have been resolved. The remaining 3 vulnerabilities are either without fixes (ecdsa), require alpha versions (langchain-text-splitters), or are low severity (pip).
-

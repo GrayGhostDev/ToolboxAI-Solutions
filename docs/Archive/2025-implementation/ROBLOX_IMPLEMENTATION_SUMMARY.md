@@ -178,7 +178,7 @@ const { play, toggleMute, isMuted } = useSoundEffects();
 1. ✅ `2025-IMPLEMENTATION-STANDARDS.md` - Development standards
 2. ✅ `ROBLOX_QUICK_START.md` - Quick start guide
 3. ✅ `ROBLOX_WORKTREE_README.md` - Worktree documentation
-4. ✅ `apps/dashboard/ROBLOX_COMPONENT_LIBRARY.md` - Component API reference
+4. ✅ `docs/06-features/user-interface/dashboard/components/ROBLOX_COMPONENT_LIBRARY.md` - Component API reference
 5. ✅ `ROBLOX_IMPLEMENTATION_SUMMARY.md` - This file
 
 ---
@@ -304,7 +304,7 @@ roblox-dashboard/
 ├── ROBLOX_IMPLEMENTATION_SUMMARY.md     # This file
 │
 └── apps/dashboard/
-    ├── ROBLOX_COMPONENT_LIBRARY.md      # Component API docs
+    ├── docs/06-features/user-interface/dashboard/components/ROBLOX_COMPONENT_LIBRARY.md      # Component API docs
     │
     ├── src/
     │   ├── components/roblox/            # 40+ Roblox components
@@ -420,7 +420,7 @@ MyComponent.displayName = 'MyComponent';
 - **Framer Motion**: https://www.framer.com/motion/
 
 ### Project Docs
-- Component Library: `ROBLOX_COMPONENT_LIBRARY.md`
+- Component Library: `docs/06-features/user-interface/dashboard/components/ROBLOX_COMPONENT_LIBRARY.md`
 - Quick Start: `ROBLOX_QUICK_START.md`
 - Standards: `2025-IMPLEMENTATION-STANDARDS.md`
 - Main CLAUDE.md: Development guidelines

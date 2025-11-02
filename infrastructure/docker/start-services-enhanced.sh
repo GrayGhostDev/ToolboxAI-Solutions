@@ -53,6 +53,27 @@ compose() {
     "${COMPOSE_CMD[@]}" "${COMPOSE_FILES[@]}" "$@"
 }
 
+DEFAULT_PROFILES="week2,production,migration"
+if [[ -z "${COMPOSE_PROFILES:-}" ]]; then
+    export COMPOSE_PROFILES="$DEFAULT_PROFILES"
+    log_info "Using default COMPOSE_PROFILES: $COMPOSE_PROFILES"
+fi
+
+AVAILABLE_SERVICES=""
+SERVICE_FILTER_DISABLED=false
+if ! AVAILABLE_SERVICES="$(compose config --services 2>/dev/null)"; then
+    SERVICE_FILTER_DISABLED=true
+    log_warn "Unable to enumerate compose services. All start commands will be attempted."
+fi
+
+service_available() {
+    local service="$1"
+    if [[ "$SERVICE_FILTER_DISABLED" == true ]]; then
+        return 0
+    fi
+    printf '%s\n' "$AVAILABLE_SERVICES" | grep -qx "$service"
+}
+
 # Function to check if docker and docker-compose are available
 check_prerequisites() {
     log_info "Checking prerequisites..."
@@ -161,9 +182,14 @@ start_service() {
     local build=${2:-false}
     local wait_for_health=${3:-true}
 
+    if ! service_available "$service"; then
+        log_warn "Skipping $service (not defined in current compose files)"
+        return 0
+    fi
+
     if [ "$build" = "true" ]; then
         log_info "🔨 Building $service..."
-        if ! compose build "$service" 2>&1 | grep -v "variable is not set" || true; then
+        if ! compose build "$service"; then
             log_error "Failed to build $service"
             show_service_logs "$service"
             return 1
@@ -171,7 +197,7 @@ start_service() {
     fi
 
     log_info "🚀 Starting $service..."
-    if ! compose up -d "$service" 2>&1 | grep -v "variable is not set" || true; then
+    if ! compose up -d "$service"; then
         log_error "Failed to start $service"
         show_service_logs "$service"
         return 1
@@ -230,6 +256,8 @@ show_service_urls() {
   🗂️  Adminer:           http://localhost:8080
   🧭  Redis Commander:   http://localhost:8081
   ✉️  Mailhog:           http://localhost:8025
+  📈  Prometheus:        http://localhost:9090
+  🎮  Roblox Sync:       http://localhost:34872
 
 📝 Useful commands:
   View logs: $COMPOSE_DISPLAY ${COMPOSE_FILES[*]} logs -f <service>
@@ -272,17 +300,23 @@ main() {
 
     log_info "📦 Phase 3: Starting orchestration services..."
 
-    # Phase 3: Orchestration and agents
+    # Phase 3: Orchestration and async workers
     start_service "agent-coordinator" true true || exit 1
-
-    log_info "📦 Phase 4: Starting integration services..."
-
-    # Phase 4: Background workers and tooling
     start_service "celery-worker" true true || exit 1
     start_service "celery-beat" true true || exit 1
+    start_service "celery-flower" true true || exit 1
     start_service "flower" false false || exit 1
 
-    log_info "📦 Phase 5: Starting frontend and CMS..."
+    log_info "📦 Phase 4: Starting extended platform services..."
+
+    # Phase 4: Extended services and observability
+    start_service "roblox-sync" true true || exit 1
+    start_service "redis-cloud-connector" false false || exit 1
+    start_service "backup-coordinator" false true || exit 1
+    start_service "migration-runner" false true || exit 1
+    start_service "prometheus" false false || exit 1
+
+    log_info "📦 Phase 5: Starting frontend and tooling..."
 
     # Phase 5: Frontend and developer tooling
     start_service "dashboard" true true || exit 1

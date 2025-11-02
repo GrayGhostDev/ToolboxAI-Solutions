@@ -34,7 +34,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from apps.backend.api.auth.auth import get_current_user, require_org_admin
-from apps.backend.core.deps import get_async_session
+from apps.backend.core.deps import get_async_db
 from apps.backend.middleware.tenant import get_tenant_context, TenantContext
 from apps.backend.models.schemas import User
 from database.models.tenant import Organization
@@ -206,7 +206,7 @@ class TenantIntegrationsResponse(BaseModel):
 
 async def get_current_tenant(
     tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
 ) -> Organization:
     """
     Get current tenant organization from context.
@@ -305,7 +305,7 @@ async def get_tenant_settings(
 async def update_tenant_settings(
     request: TenantSettingsUpdateRequest,
     tenant: Annotated[Organization, Depends(get_current_tenant)],
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
 ) -> TenantSettingsResponse:
     """
     Update tenant settings.
@@ -442,7 +442,7 @@ async def get_tenant_features(
 async def toggle_tenant_feature(
     request: TenantFeatureToggleRequest,
     tenant: Annotated[Organization, Depends(get_current_tenant)],
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
 ) -> TenantFeaturesResponse:
     """
     Toggle a feature for the tenant.
@@ -583,7 +583,7 @@ async def get_tenant_limits(
 async def update_custom_settings(
     request: TenantCustomSettingsRequest,
     tenant: Annotated[Organization, Depends(get_current_tenant)],
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
 ) -> TenantSettingsResponse:
     """
     Update custom tenant settings.

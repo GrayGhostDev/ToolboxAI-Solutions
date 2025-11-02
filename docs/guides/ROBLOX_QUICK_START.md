@@ -360,7 +360,7 @@ npm run dev
 
 ## 📖 Documentation
 
-- **Component Library**: See `ROBLOX_COMPONENT_LIBRARY.md`
+- **Component Library**: See `docs/06-features/user-interface/dashboard/components/ROBLOX_COMPONENT_LIBRARY.md`
 - **Main CLAUDE.md**: Development guidelines
 - **API Docs**: OpenAPI specs in `docs/03-api/`
 - **Storybook**: `npm run storybook`
@@ -391,7 +391,7 @@ docker compose -f infrastructure/docker/compose/docker-compose.yml \
 ## 🎯 Next Steps
 
 1. **Explore Showcase**: Visit `/roblox-showcase` to see all components
-2. **Read Docs**: Review `ROBLOX_COMPONENT_LIBRARY.md` for detailed API
+2. **Read Docs**: Review `docs/06-features/user-interface/dashboard/components/ROBLOX_COMPONENT_LIBRARY.md` for detailed API
 3. **Build Features**: Start creating with Roblox components
 4. **Customize Theme**: Adjust colors and styles to match your brand
 5. **Add Components**: Create new components following existing patterns

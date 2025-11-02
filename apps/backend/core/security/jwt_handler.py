@@ -6,6 +6,7 @@ for FastAPI applications with proper security practices.
 """
 
 import os
+import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
 from fastapi import Depends, HTTPException, status
@@ -44,14 +45,19 @@ class Token(BaseModel):
 
 def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
     """
-    Create a JWT access token
+    Create a JWT access token with guaranteed uniqueness.
+
+    Each token includes:
+    - jti (JWT ID): Unique random identifier
+    - iat (Issued At): Timestamp with microsecond precision
+    - exp (Expiration): Token expiration time
 
     Args:
         data: Payload data to encode in token
         expires_delta: Optional expiration time delta
 
     Returns:
-        Encoded JWT token string
+        Encoded JWT token string (guaranteed unique)
     """
     to_encode = data.copy()
 
@@ -61,7 +67,13 @@ def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta]
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
-    to_encode.update({"exp": expire})
+    # Add standard JWT claims for uniqueness and tracking
+    now = datetime.now(timezone.utc)
+    to_encode.update({
+        "exp": expire,
+        "iat": now.timestamp(),  # Issued at with microsecond precision
+        "jti": secrets.token_urlsafe(16),  # Unique JWT ID (nonce)
+    })
 
     # Encode the token
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)

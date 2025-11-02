@@ -21,6 +21,7 @@ import { store } from '../store';
 import { addNotification } from '../store/slices/uiSlice';
 import { signInSuccess, signOut as signOutAction } from '../store/slices/userSlice';
 import { logger } from '../utils/logger';
+import { getUserRoleFromClerk, normalizeRole } from '../utils/auth-utils';
 
 interface ClerkAuthContextType {
   user: User | null;
@@ -59,6 +60,7 @@ export const ClerkAuthProvider: React.FunctionComponent<{ children: React.ReactN
   const { session } = useSession();
   const navigate = useNavigate();
 
+
   const [user, setUser] = useState<User | null>(null);
   const [userConfig, setUserConfig] = useState<ReturnType<typeof getUserConfig> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -67,6 +69,9 @@ export const ClerkAuthProvider: React.FunctionComponent<{ children: React.ReactN
   useEffect(() => {
     if (isLoaded && userLoaded) {
       if (clerkUser) {
+        // Get role from Clerk metadata using utility function
+        const userRole = getUserRoleFromClerk(clerkUser);
+
         // Map Clerk user to our User type
         const mappedUser: User = {
           id: clerkUser.id,
@@ -76,7 +81,7 @@ export const ClerkAuthProvider: React.FunctionComponent<{ children: React.ReactN
           lastName: clerkUser.lastName || '',
           displayName: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || clerkUser.username || 'User',
           avatarUrl: clerkUser.imageUrl || undefined,
-          role: (clerkUser.publicMetadata?.role as UserRole) || 'student',
+          role: userRole,
           schoolId: clerkUser.publicMetadata?.schoolId as string | undefined,
           schoolName: clerkUser.publicMetadata?.schoolName as string | undefined,
           classIds: clerkUser.publicMetadata?.classIds as string[] | undefined,

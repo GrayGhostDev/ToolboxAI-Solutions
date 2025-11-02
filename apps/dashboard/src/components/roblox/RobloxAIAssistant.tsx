@@ -21,8 +21,7 @@ import {
   Alert,
   Tooltip,
   List,
-  Group,
-  Fade
+  Group
 } from '@mantine/core';
 import { Typography, Chip, IconButton, ListItem, ListItemAvatar } from '../../utils/mui-imports';
 import {
@@ -862,29 +861,27 @@ IMPORTANT: When you have enough information to create an environment, end your r
       >
         {/* Suggested Prompts */}
         {showSuggestions && messages.length <= 1 && (
-          <Fade in={showSuggestions}>
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Quick Actions:
-              </Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ gap: 1 }}>
-                {SUGGESTED_PROMPTS.map((prompt, index) => (
-                  <Chip
-                    key={index}
-                    icon={prompt.icon as React.ReactElement}
-                    label={prompt.text}
-                    onClick={(e: React.MouseEvent) => () => handleSuggestedPrompt(prompt.text)}
-                    sx={{
-                      cursor: 'pointer',
-                      '&:hover': {
-                        bgcolor: 'action.hover'
-                      }
-                    }}
-                  />
-                ))}
-              </Stack>
-            </Box>
-          </Fade>
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Quick Actions:
+            </Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ gap: 1 }}>
+              {SUGGESTED_PROMPTS.map((prompt, index) => (
+                <Chip
+                  key={index}
+                  icon={prompt.icon as React.ReactElement}
+                  label={prompt.text}
+                  onClick={(e: React.MouseEvent) => () => handleSuggestedPrompt(prompt.text)}
+                  sx={{
+                    cursor: 'pointer',
+                    '&:hover': {
+                      bgcolor: 'action.hover'
+                    }
+                  }}
+                />
+              ))}
+            </Stack>
+          </Box>
         )}
         {/* Messages List */}
         <List sx={{ width: '100%' }}>

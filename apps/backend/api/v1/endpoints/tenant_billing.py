@@ -33,7 +33,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.api.auth.auth import get_current_user
-from apps.backend.core.deps import get_async_session
+from apps.backend.core.deps import get_async_db
 from apps.backend.middleware.tenant import get_tenant_context, TenantContext
 from apps.backend.models.schemas import User
 from database.models.tenant import Organization, SubscriptionTier
@@ -209,7 +209,7 @@ class PaymentMethodsResponse(BaseModel):
 
 async def get_current_tenant_org(
     tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
 ) -> Organization:
     """Get current tenant organization"""
     from sqlalchemy import select
@@ -429,7 +429,7 @@ async def get_subscription(
 async def update_subscription(
     request: SubscriptionUpdateRequest,
     tenant: Annotated[Organization, Depends(get_current_tenant_org)],
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> SubscriptionUpdateResponse:
     """

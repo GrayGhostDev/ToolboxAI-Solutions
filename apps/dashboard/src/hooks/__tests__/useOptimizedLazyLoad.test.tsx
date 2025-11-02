@@ -14,7 +14,7 @@ import {
 const MockComponent = () => <div>Mock Component</div>;
 const MockFallback = () => <div>Fallback Component</div>;
 
-// FIXME: Tests timing out due to async/timer synchronization issues - see TESTING-KNOWN-ISSUES.md #5
+// FIXME: Tests timing out due to async/timer synchronization issues - see docs/05-implementation/testing/reports/TESTING_KNOWN_ISSUES.md #5
 describe.skip('useOptimizedLazyLoad', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -389,7 +389,7 @@ describe.skip('useOptimizedLazyLoad', () => {
   });
 });
 
-// FIXME: Tests timing out due to async/timer synchronization issues - see TESTING-KNOWN-ISSUES.md #5
+// FIXME: Tests timing out due to async/timer synchronization issues - see docs/05-implementation/testing/reports/TESTING_KNOWN_ISSUES.md #5
 describe.skip('createOptimizedLazyComponent', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -494,7 +494,7 @@ describe.skip('createOptimizedLazyComponent', () => {
   });
 });
 
-// FIXME: Tests timing out due to async/timer synchronization issues - see TESTING-KNOWN-ISSUES.md #5
+// FIXME: Tests timing out due to async/timer synchronization issues - see docs/05-implementation/testing/reports/TESTING_KNOWN_ISSUES.md #5
 describe.skip('preloadComponents', () => {
   beforeEach(() => {
     vi.clearAllMocks();

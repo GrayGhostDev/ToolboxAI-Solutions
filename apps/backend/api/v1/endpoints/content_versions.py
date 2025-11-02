@@ -34,7 +34,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.api.auth.auth import get_current_user
-from apps.backend.core.deps import get_async_session
+from apps.backend.core.deps import get_async_db
 from apps.backend.middleware.tenant import get_tenant_context, TenantContext
 from apps.backend.models.schemas import User
 
@@ -176,7 +176,7 @@ class VersionCompareRequest(BaseModel):
 )
 async def list_content_versions(
     content_id: UUID,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     limit: int = Query(50, ge=1, le=100),
@@ -248,7 +248,7 @@ async def list_content_versions(
 async def get_version_detail(
     content_id: UUID,
     version_number: int,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> VersionDetailResponse:
     """
@@ -311,7 +311,7 @@ async def compare_versions(
     content_id: UUID,
     from_version: int = Query(..., ge=1),
     to_version: int = Query(..., ge=1),
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> VersionDiffResponse:
     """
@@ -386,7 +386,7 @@ async def compare_versions(
 async def revert_to_version(
     content_id: UUID,
     request: VersionRevertRequest,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> VersionRevertResponse:
     """
@@ -442,7 +442,7 @@ async def tag_version(
     content_id: UUID,
     version_number: int,
     request: VersionTagRequest,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> dict[str, str]:
     """
@@ -493,7 +493,7 @@ async def tag_version(
 async def delete_version(
     content_id: UUID,
     version_number: int,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     permanent: bool = Query(False, description="Permanently delete version"),
 ) -> None:

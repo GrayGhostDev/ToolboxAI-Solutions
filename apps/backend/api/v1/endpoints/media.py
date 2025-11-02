@@ -36,7 +36,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.api.auth.auth import get_current_user
-from apps.backend.core.deps import get_async_session
+from apps.backend.core.deps import get_async_db
 from apps.backend.middleware.tenant import get_tenant_context, TenantContext
 from apps.backend.models.schemas import User
 from apps.backend.services.storage.storage_service import (
@@ -150,7 +150,7 @@ class ImageTransformParams(BaseModel):
 # === Dependency Injection ===
 
 async def get_storage_service(
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> StorageService:

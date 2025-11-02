@@ -7,6 +7,7 @@ if (typeof window !== 'undefined') {
 }
 
 // Singleton instance storage for WebGL renderer to prevent context limit
+// This ensures only ONE WebGL context is created across all components
 let globalRenderer: THREE.WebGLRenderer | null = null;
 let globalRendererRefCount = 0;
 
@@ -89,31 +90,38 @@ export const ThreeProvider: React.FunctionComponent<ThreeProviderProps> = ({ chi
     camera.position.z = 5;
     cameraRef.current = camera;
 
-    // Create or reuse renderer (singleton pattern to avoid WebGL context limit)
+    // Create or reuse renderer (STRICT singleton pattern to avoid WebGL context limit)
     let renderer: THREE.WebGLRenderer;
-    if (globalRenderer && globalRenderer.domElement.isConnected === false) {
-      // Reuse existing renderer if available
+
+    if (globalRenderer) {
+      // Always reuse existing renderer if it exists
       renderer = globalRenderer;
       globalRendererRefCount++;
-    } else if (!globalRenderer) {
-      // Create new renderer only if none exists
+
+      // Update renderer settings if needed
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, performanceLevel === 'high' ? 2 : 1));
+    } else {
+      // Only create new renderer if none exists (first mount)
+      console.log('🎨 Creating new WebGL renderer (should only happen once)');
       renderer = new THREE.WebGLRenderer({
         antialias: performanceLevel === 'high',
         powerPreference: performanceLevel === 'high' ? 'high-performance' : 'low-power',
-        alpha: true
+        alpha: true,
+        preserveDrawingBuffer: false, // Better performance
+        failIfMajorPerformanceCaveat: false // Don't fail on slow hardware
       });
+
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, performanceLevel === 'high' ? 2 : 1));
+      renderer.shadowMap.enabled = performanceLevel !== 'low';
+      renderer.shadowMap.type = performanceLevel === 'high' ? THREE.PCFSoftShadowMap : THREE.BasicShadowMap;
+
+      // Store as global singleton
       globalRenderer = renderer;
       globalRendererRefCount = 1;
-    } else {
-      // Use existing renderer
-      renderer = globalRenderer;
-      globalRendererRefCount++;
     }
 
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, performanceLevel === 'high' ? 2 : 1));
-    renderer.shadowMap.enabled = performanceLevel !== 'low';
-    renderer.shadowMap.type = performanceLevel === 'high' ? THREE.PCFSoftShadowMap : THREE.BasicShadowMap;
     rendererRef.current = renderer;
 
     // Add ambient light
@@ -163,26 +171,36 @@ export const ThreeProvider: React.FunctionComponent<ThreeProviderProps> = ({ chi
         cancelAnimationFrame(frameIdRef.current);
       }
 
-      // Cleanup
+      // Decrement reference count
       globalRendererRefCount--;
+      console.log(`🎨 ThreeProvider unmounting. Ref count: ${globalRendererRefCount}`);
 
-      // Only dispose renderer if no other components are using it
-      if (globalRendererRefCount <= 0 && globalRenderer) {
+      // Only dispose renderer if NO components are using it
+      // In development (StrictMode), this prevents disposing too early
+      if (globalRendererRefCount === 0 && globalRenderer) {
+        console.log('🎨 Disposing WebGL renderer (no more references)');
         globalRenderer.dispose();
         globalRenderer = null;
-        globalRendererRefCount = 0;
       }
 
-      scene.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          child.geometry.dispose();
-          if (Array.isArray(child.material)) {
-            child.material.forEach(material => material.dispose());
-          } else {
-            child.material.dispose();
+      // Clean up scene objects
+      if (scene) {
+        scene.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            child.geometry.dispose();
+            if (Array.isArray(child.material)) {
+              child.material.forEach(material => material.dispose());
+            } else {
+              child.material.dispose();
+            }
           }
+        });
+
+        // Clear scene
+        while(scene.children.length > 0) {
+          scene.remove(scene.children[0]);
         }
-      });
+      }
     };
   }, [isWebGLAvailable, performanceLevel]);
 

@@ -37,7 +37,7 @@ vi.mock('@/config/features', () => ({
   }),
 }));
 
-// FIXME: Tests timing out due to async/timer synchronization issues - see TESTING-KNOWN-ISSUES.md #5
+// FIXME: Tests timing out due to async/timer synchronization issues - see docs/05-implementation/testing/reports/TESTING_KNOWN_ISSUES.md #5
 describe.skip('usePerformanceMonitor', () => {
   beforeEach(() => {
     vi.clearAllMocks();

@@ -47,7 +47,7 @@ ENV PYTHONUNBUFFERED=1 \
 # ============================================
 FROM base AS builder
 
-# Install build dependencies
+# Install build dependencies including Rust for tiktoken
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && \
@@ -58,7 +58,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         libpq-dev \
         libffi-dev \
         libssl-dev \
-        git && \
+        git \
+        cargo \
+        rustc && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy requirements files
@@ -69,9 +71,9 @@ RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
     python -m venv /opt/venv && \
     . /opt/venv/bin/activate && \
     pip install --upgrade pip setuptools wheel && \
-    pip install --no-deps -r requirements.txt && \
+    pip install -r requirements.txt && \
     if [ -f requirements-ai.txt ]; then \
-        pip install --no-deps -r requirements-ai.txt; \
+        pip install -r requirements-ai.txt; \
     fi && \
     # Install additional security packages
     pip install --no-deps \
@@ -156,7 +158,6 @@ COPY --chown=toolboxai:toolboxai apps/backend ./apps/backend
 COPY --chown=toolboxai:toolboxai core ./core
 COPY --chown=toolboxai:toolboxai database ./database
 COPY --chown=toolboxai:toolboxai toolboxai_settings ./toolboxai_settings
-COPY --chown=toolboxai:toolboxai toolboxai_utils ./toolboxai_utils
 
 # Create necessary directories with proper permissions
 RUN mkdir -p /app/logs /app/agent_data /app/memory_store /tmp/app && \

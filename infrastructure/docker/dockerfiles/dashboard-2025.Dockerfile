@@ -36,15 +36,18 @@ RUN addgroup -g 1001 -S appuser && \
 # Set working directory
 WORKDIR /app
 
-# Copy package files first (Docker layer caching optimization)
-COPY --chown=appuser:appuser apps/dashboard/package*.json ./
+# Copy package files first for better Docker layer caching
+COPY --chown=appuser:appuser apps/dashboard/package.json apps/dashboard/package-lock.json ./
 
-# Install ALL dependencies (dev dependencies needed for build)
-RUN --mount=type=cache,target=/home/appuser/.npm,uid=1001,gid=1001 \
-    npm install --no-audit --no-fund && \
-    npm cache clean --force
+# Install ALL dependencies (including devDependencies like vite)
+# Set NODE_ENV to development temporarily to ensure devDependencies are installed
+RUN NODE_ENV=development npm install --no-audit --no-fund && \
+    echo "📦 Verifying vite installation:" && \
+    ls -la node_modules/.bin/vite 2>&1 && \
+    ls -la node_modules/vite/bin/vite.js 2>&1 && \
+    echo "✅ Vite installed successfully"
 
-# Copy source code
+# Now copy the full dashboard source code
 COPY --chown=appuser:appuser apps/dashboard/ ./
 
 # Build arguments for environment variables
@@ -63,8 +66,9 @@ ARG VITE_ENABLE_AGENTS=true
 ARG VITE_ENABLE_ROBLOX=true
 ARG VITE_ENABLE_GHOST=true
 
-# Set build environment variables
-ENV VITE_API_BASE_URL=${VITE_API_BASE_URL} \
+# Set build environment variables AND ensure node_modules/.bin is in PATH
+ENV PATH="/app/node_modules/.bin:${PATH}" \
+    VITE_API_BASE_URL=${VITE_API_BASE_URL} \
     VITE_PUSHER_KEY=${VITE_PUSHER_KEY} \
     VITE_PUSHER_CLUSTER=${VITE_PUSHER_CLUSTER} \
     VITE_PUSHER_AUTH_ENDPOINT=${VITE_PUSHER_AUTH_ENDPOINT} \
@@ -82,10 +86,16 @@ ENV VITE_API_BASE_URL=${VITE_API_BASE_URL} \
 # Switch to non-root user for build (security best practice)
 USER appuser
 
-# Build the application (using npm script for proper Vite build)
+# Build the application with vite
 RUN set -e && \
     echo "🔨 Building ToolBoxAI Dashboard..." && \
-    npm run build && \
+    echo "📍 Node version: $(node --version)" && \
+    echo "📍 NPM version: $(npm --version)" && \
+    echo "📍 Working directory: $(pwd)" && \
+    echo "📍 PATH: $PATH" && \
+    echo "📍 Checking vite: $(ls -la node_modules/.bin/vite 2>&1)" && \
+    echo "📍 Running vite build..." && \
+    vite build && \
     echo "✅ Build completed successfully" && \
     ls -la dist/ && \
     # Verify essential files exist
@@ -124,10 +134,8 @@ RUN mkdir -p /usr/share/nginx/html \
 # Copy built application from builder stage
 COPY --from=builder --chown=nginxuser:nginxuser /app/dist /usr/share/nginx/html
 
-# Copy nginx configuration files
-COPY --chown=nginxuser:nginxuser infrastructure/docker/config/nginx/ /etc/nginx/
-
 # Create nginx configuration (proper approach for 2025)
+# Note: Using inline COPY <<EOF instead of external files for better portability
 COPY <<EOF /etc/nginx/nginx.conf
 user nginxuser;
 worker_processes auto;

@@ -230,7 +230,7 @@ Accurate documentation for latest technologies:
 
 | Topic | Documentation |
 |-------|---------------|
-| **Getting Started** | [README.md](../../README.md) |
+| **Getting Started** | [README.md](../02-overview/project-overview/ROOT_PROJECT_OVERVIEW.md) |
 | **Architecture** | [docs/02-architecture/supabase-integration.md](../02-architecture/supabase-integration.md) |
 | **API Reference** | [docs/03-api/supabase-api.md](../03-api/supabase-api.md) |
 | **Deployment** | [docs/07-operations/supabase-deployment.md](../07-operations/supabase-deployment.md) |

@@ -110,7 +110,13 @@ export const RobloxStudioIntegration: React.FunctionComponent<Record<string, any
     const interval = setInterval(checkPluginStatus, 30000); // Check every 30 seconds
 
     return () => clearInterval(interval);
-  }, [checkPluginStatus, loadEnvironments]);
+  }, []);
+
+  // Periodic plugin status check
+  useEffect(() => {
+    const interval = setInterval(checkPluginStatus, 30000);
+    return () => clearInterval(interval);
+  }, [checkPluginStatus]);
 
   // Handle environment generation completion
   useEffect(() => {
@@ -166,14 +172,11 @@ export const RobloxStudioIntegration: React.FunctionComponent<Record<string, any
 
       // Show success message
       setError(null);
-
-      // Optionally refresh environments
-      loadEnvironments();
     } catch (err) {
       console.error('Failed to deploy to Studio:', err);
       setError('Failed to deploy environment to Roblox Studio. Please try again.');
     }
-  }, [pluginStatus.connected, loadEnvironments]);
+  }, [pluginStatus.connected]);
 
   // Download environment
   const downloadEnvironment = useCallback(async (environmentId: string) => {

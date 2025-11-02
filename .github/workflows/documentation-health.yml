@@ -29,6 +29,12 @@ jobs:
       with:
         python-version: '3.12'
 
+    - name: Enforce documentation placement
+      run: make docs-enforce
+
+    - name: Verify dashboard hygiene
+      run: make dashboard-hygiene
+
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip

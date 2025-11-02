@@ -808,3 +808,69 @@ class DatabaseService:
 
 # Create a singleton instance
 db_service = DatabaseService()
+
+
+# Standalone database utility functions
+from contextlib import asynccontextmanager
+from uuid import UUID
+
+
+@asynccontextmanager
+async def get_db_session():
+    """
+    Async context manager for database sessions.
+
+    Provides a database connection from the pool for executing queries.
+    Automatically handles connection acquisition and release.
+
+    Usage:
+        async with get_db_session() as db:
+            result = await db.execute(query, *args)
+
+    Yields:
+        asyncpg.Connection: Database connection from pool
+
+    Raises:
+        RuntimeError: If database pool is not initialized
+    """
+    if not db_service.pool:
+        await db_service.connect()
+
+    async with db_service.pool.acquire() as conn:
+        yield conn
+
+
+async def update_user_password(db, user_id: str | UUID, password_hash: str) -> bool:
+    """
+    Update user's password hash in database.
+
+    Args:
+        db: Database connection (from get_db_session)
+        user_id: User ID (UUID as string or UUID object)
+        password_hash: New bcrypt password hash
+
+    Returns:
+        True if successful, False otherwise
+
+    Example:
+        async with get_db_session() as db:
+            success = await update_user_password(db, user_id, new_hash)
+    """
+    try:
+        # Convert UUID to string if needed
+        user_id_str = str(user_id) if isinstance(user_id, UUID) else user_id
+
+        await db.execute(
+            """
+            UPDATE dashboard_users
+            SET password_hash = $1, updated_at = NOW()
+            WHERE id = $2
+            """,
+            password_hash,
+            user_id_str
+        )
+        logger.info(f"Password updated successfully for user {user_id_str}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to update password for user {user_id}: {e}")
+        return False

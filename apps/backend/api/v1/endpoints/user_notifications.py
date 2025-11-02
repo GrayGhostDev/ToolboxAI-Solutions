@@ -36,7 +36,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.api.auth.auth import get_current_user
-from apps.backend.core.deps import get_async_session
+from apps.backend.core.deps import get_async_db
 from apps.backend.middleware.tenant import get_tenant_context, TenantContext
 from apps.backend.models.schemas import User
 
@@ -191,7 +191,7 @@ class NotificationStats(BaseModel):
     description="Get notifications for current user",
 )
 async def list_notifications(
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     status_filter: Optional[NotificationStatus] = None,
     type_filter: Optional[NotificationType] = None,
@@ -244,7 +244,7 @@ async def list_notifications(
 )
 async def get_notification(
     notification_id: UUID,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> Notification:
     """
@@ -289,7 +289,7 @@ async def get_notification(
 )
 async def create_notification(
     request: CreateNotificationRequest,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> Notification:
     """
@@ -350,7 +350,7 @@ async def create_notification(
 )
 async def create_bulk_notifications(
     request: BulkNotificationRequest,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> dict[str, Any]:
     """
@@ -396,7 +396,7 @@ async def create_bulk_notifications(
 )
 async def mark_as_read(
     notification_id: UUID,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> Notification:
     """
@@ -441,7 +441,7 @@ async def mark_as_read(
 )
 async def mark_multiple_as_read(
     request: MarkAsReadRequest,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> dict[str, Any]:
     """
@@ -484,7 +484,7 @@ async def mark_multiple_as_read(
     description="Mark all user notifications as read",
 )
 async def mark_all_as_read(
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> dict[str, Any]:
     """
@@ -525,7 +525,7 @@ async def mark_all_as_read(
 )
 async def delete_notification(
     notification_id: UUID,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> None:
     """
@@ -562,7 +562,7 @@ async def delete_notification(
 )
 async def archive_notifications(
     request: MarkAsReadRequest,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> dict[str, Any]:
     """
@@ -604,7 +604,7 @@ async def archive_notifications(
     description="Get notification statistics for current user",
 )
 async def get_notification_stats(
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> NotificationStats:
     """
@@ -644,9 +644,9 @@ async def get_notification_stats(
     description="Delete notifications older than specified days",
 )
 async def clear_old_notifications(
-    older_than_days: int = Query(30, ge=1, le=365),
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
+    older_than_days: int = Query(30, ge=1, le=365),
 ) -> dict[str, Any]:
     """
     Clear old notifications.

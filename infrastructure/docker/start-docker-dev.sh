@@ -52,6 +52,45 @@ compose() {
     "${COMPOSE_CMD[@]}" "${COMPOSE_FILES[@]}" "$@"
 }
 
+DEFAULT_PROFILES="week2,production,migration"
+if [[ -z "${COMPOSE_PROFILES:-}" ]]; then
+    export COMPOSE_PROFILES="$DEFAULT_PROFILES"
+    log "Using default COMPOSE_PROFILES: $COMPOSE_PROFILES"
+fi
+
+AVAILABLE_SERVICES=""
+SERVICE_FILTER_DISABLED=false
+if ! AVAILABLE_SERVICES="$(compose config --services 2>/dev/null)"; then
+    SERVICE_FILTER_DISABLED=true
+    log_warn "Unable to enumerate compose services; attempting to start declared phases regardless."
+fi
+
+service_exists() {
+    local service="$1"
+    if [[ "$SERVICE_FILTER_DISABLED" == true ]]; then
+        return 0
+    fi
+    printf '%s\n' "$AVAILABLE_SERVICES" | grep -qx "$service"
+}
+
+start_if_defined() {
+    local service="$1"
+    local build=${2:-false}
+
+    if ! service_exists "$service"; then
+        log "Skipping $service (not defined in compose stack)"
+        return 0
+    fi
+
+    local args=(up -d)
+    if [[ "$build" == "true" ]]; then
+        args+=(--build)
+    fi
+
+    log "Starting $service..."
+    compose "${args[@]}" "$service"
+}
+
 # Function to check if Docker is running
 check_docker() {
     log "Checking Docker status..."
@@ -239,70 +278,85 @@ start_services() {
 
     # Phase 1: Database and cache services
     log "Phase 1: Starting database and cache services..."
-    compose up -d postgres redis
-
-    # Wait for databases to be ready
-    log "Waiting for PostgreSQL to be ready..."
-    local postgres_ready=false
-    for i in {1..30}; do
-        if compose exec -T postgres pg_isready -U "${POSTGRES_USER:-toolboxai}" -d "${POSTGRES_DB:-toolboxai}" 2>/dev/null; then
-            postgres_ready=true
-            break
-        fi
-        log "PostgreSQL not ready yet, waiting... ($i/30)"
-        sleep 5
-    done
-    
-    if [ "$postgres_ready" = false ]; then
-        log_error "PostgreSQL failed to become ready"
-        return 1
+    local infra_services=()
+    service_exists "postgres" && infra_services+=(postgres)
+    service_exists "redis" && infra_services+=(redis)
+    if ((${#infra_services[@]})); then
+        compose up -d "${infra_services[@]}"
+    else
+        log_warn "No infrastructure services defined in compose stack"
     fi
 
-    log "Waiting for Redis to be ready..."
-    local redis_ready=false
-    for i in {1..15}; do
-        if compose exec -T redis redis-cli ping 2>/dev/null | grep -q PONG; then
-            redis_ready=true
-            break
+    if service_exists "postgres"; then
+        log "Waiting for PostgreSQL to be ready..."
+        local postgres_ready=false
+        for i in {1..30}; do
+            if compose exec -T postgres pg_isready -U "${POSTGRES_USER:-toolboxai}" -d "${POSTGRES_DB:-toolboxai}" 2>/dev/null; then
+                postgres_ready=true
+                break
+            fi
+            log "PostgreSQL not ready yet, waiting... ($i/30)"
+            sleep 5
+        done
+        if [ "$postgres_ready" = false ]; then
+            log_error "PostgreSQL failed to become ready"
+            return 1
         fi
-        log "Redis not ready yet, waiting... ($i/15)"
-        sleep 2
-    done
-    
-    if [ "$redis_ready" = false ]; then
-        log_error "Redis failed to become ready"
-        return 1
     fi
-    
-    log_success "Database and cache services are ready"
+
+    if service_exists "redis"; then
+        log "Waiting for Redis to be ready..."
+        local redis_ready=false
+        for i in {1..15}; do
+            if compose exec -T redis redis-cli ping 2>/dev/null | grep -q PONG; then
+                redis_ready=true
+                break
+            fi
+            log "Redis not ready yet, waiting... ($i/15)"
+            sleep 2
+        done
+        if [ "$redis_ready" = false ]; then
+            log_error "Redis failed to become ready"
+            return 1
+        fi
+    fi
 
     # Phase 2: Backend services
-    log "Phase 2: Starting backend services..."
-    compose up -d backend
-
-    # Wait for backend to be ready
-    log "Waiting for FastAPI backend to be ready..."
-    sleep 30
+    if service_exists "backend"; then
+        start_if_defined "backend" true
+        log "Waiting for FastAPI backend to be ready..."
+        sleep 30
+    fi
 
     # Phase 3: MCP and agent services
-    log "Phase 3: Starting MCP and agent services..."
-    compose up -d mcp-server
-    sleep 15
-    compose up -d agent-coordinator
-    sleep 10
-    compose up -d celery-worker celery-beat
+    if service_exists "mcp-server"; then
+        start_if_defined "mcp-server" true
+        sleep 15
+    fi
+    if service_exists "agent-coordinator"; then
+        start_if_defined "agent-coordinator" true
+        sleep 10
+    fi
 
-    # Phase 4: Observability and tooling
-    log "Phase 4: Starting observability services..."
-    compose up -d flower
+    start_if_defined "celery-worker" true
+    start_if_defined "celery-beat" true
+    start_if_defined "celery-flower" true
+    start_if_defined "flower" false
 
-    sleep 10
+    # Phase 4: Extended services
+    start_if_defined "roblox-sync" true
+    start_if_defined "redis-cloud-connector" false
+    start_if_defined "backup-coordinator" false
+    start_if_defined "migration-runner" false
+    start_if_defined "prometheus" false
 
     # Phase 5: Frontend
-    log "Phase 5: Starting frontend..."
-    compose up -d dashboard adminer redis-commander mailhog
+    start_if_defined "dashboard" true
+    start_if_defined "adminer" false
+    start_if_defined "redis-commander" false
+    start_if_defined "mailhog" false
 
-    log_success "All services started"
+    log_success "All requested services started"
 }
 
 # Function to verify services are running

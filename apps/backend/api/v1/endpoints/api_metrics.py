@@ -37,7 +37,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.api.auth.auth import get_current_user
-from apps.backend.core.deps import get_async_session
+from apps.backend.core.deps import get_async_db
 from apps.backend.models.schemas import User
 
 logger = logging.getLogger(__name__)
@@ -212,7 +212,7 @@ class TimeSeriesMetrics(BaseModel):
     description="Get API health status and basic checks",
 )
 async def health_check(
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
 ) -> APIHealthCheck:
     """
     Perform API health check.

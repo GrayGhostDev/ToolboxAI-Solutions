@@ -406,7 +406,7 @@ class Invoice(TenantBaseModel):
     description = Column(Text)
     footer = Column(Text)
     memo = Column(Text)
-    metadata = Column(JSON)
+    invoice_metadata = Column(JSON)
 
     # Additional timestamps (created_at, updated_at inherited from TenantBaseModel)
     paid_at = Column(DateTime(timezone=True))
@@ -529,7 +529,7 @@ class UsageRecord(TenantBaseModel):
 
     # Metadata
     description = Column(String(500))
-    metadata = Column(JSON)
+    usage_metadata = Column(JSON)
 
     # Relationships
     subscription = relationship("Subscription", back_populates="usage_records")
@@ -586,7 +586,7 @@ class Coupon(TenantBaseModel):
 
     # Metadata
     name = Column(String(255))
-    metadata = Column(JSON)
+    coupon_metadata = Column(JSON)
 
     # Constraints and indexes
     __table_args__ = (

@@ -84,7 +84,7 @@ The Roblox-themed dashboard implementation is **complete** with 40+ custom compo
 2. **ACCESSIBILITY_GUIDE.md** - WCAG 2.1 AA compliance
 3. **DEPLOYMENT_GUIDE.md** - Production deployment procedures
 4. **RESPONSIVE_DESIGN_GUIDE.md** - Mobile/tablet/desktop patterns
-5. **ROBLOX_COMPONENT_LIBRARY.md** - Full component API reference
+5. **docs/06-features/user-interface/dashboard/components/ROBLOX_COMPONENT_LIBRARY.md** - Full component API reference
 6. **ROBLOX_QUICK_START.md** - Getting started guide
 
 **Component Documentation:**
@@ -293,7 +293,7 @@ Documentation/
 ├── ACCESSIBILITY_GUIDE.md
 ├── DEPLOYMENT_GUIDE.md
 ├── RESPONSIVE_DESIGN_GUIDE.md
-├── ROBLOX_COMPONENT_LIBRARY.md
+├── docs/06-features/user-interface/dashboard/components/ROBLOX_COMPONENT_LIBRARY.md
 ├── ROBLOX_QUICK_START.md
 └── ROBLOX_IMPLEMENTATION_COMPLETE.md (this file)
 ```
@@ -352,7 +352,7 @@ See **DEPLOYMENT_GUIDE.md** for detailed procedures.
 
 ### For Developers
 - **Getting Started**: ROBLOX_QUICK_START.md
-- **Component API**: ROBLOX_COMPONENT_LIBRARY.md
+- **Component API**: docs/06-features/user-interface/dashboard/components/ROBLOX_COMPONENT_LIBRARY.md
 - **2025 Standards**: 2025-IMPLEMENTATION-STANDARDS.md
 
 ### For Designers
@@ -504,7 +504,7 @@ components: {
 ### Documentation
 - **Location**: `/Documentation/` folder
 - **Storybook**: `npm run storybook`
-- **Component Library**: ROBLOX_COMPONENT_LIBRARY.md
+- **Component Library**: docs/06-features/user-interface/dashboard/components/ROBLOX_COMPONENT_LIBRARY.md
 
 ### Tools
 - **Mantine**: https://mantine.dev/

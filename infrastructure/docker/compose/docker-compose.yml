@@ -44,15 +44,7 @@ x-logging: &default-logging
 x-restart-policy: &restart-policy
   restart: unless-stopped
 
-x-resource-limits: &resource-limits
-  deploy:
-    resources:
-      limits:
-        cpus: '2.0'
-        memory: 2G
-      reservations:
-        cpus: '0.5'
-        memory: 512M
+# Removed unused x-resource-limits anchor - use inline deploy sections instead
 
 # ============================================
 # SERVICES
@@ -156,13 +148,9 @@ services:
     build:
       context: ../../..
       dockerfile: infrastructure/docker/dockerfiles/backend.Dockerfile
-      # Local cache only (no registry)
-      cache_from:
-        - type=local,src=/tmp/docker-cache
-      cache_to:
-        - type=local,dest=/tmp/docker-cache,mode=max
       args:
         BUILDKIT_INLINE_CACHE: 1
+        # BuildKit cache via DOCKER_BUILDKIT=1 environment variable
     image: toolboxai/backend:${DOCKER_TAG:-latest}
     container_name: toolboxai-backend
     <<: *restart-policy
@@ -178,8 +166,8 @@ services:
       OPENAI_API_KEY_FILE: /run/secrets/openai_api_key
       ANTHROPIC_API_KEY_FILE: /run/secrets/anthropic_api_key
       # Feature flags
-      RATE_LIMIT_ENABLED: true
-      RATE_LIMIT_PER_MINUTE: 60
+      RATE_LIMIT_ENABLED: "true"
+      RATE_LIMIT_PER_MINUTE: "60"
     secrets:
       - database_url
       - redis_url
@@ -187,17 +175,15 @@ services:
       - openai_api_key
       - anthropic_api_key
     volumes:
-      - backend_logs:/app/logs:Z
-      - agent_data:/app/agent_data:Z
+      - backend_logs:/app/logs:rw
+      - agent_data:/app/agent_data:rw
     networks:
       - backend
       - database
       - cache
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - postgres
+      - redis
     healthcheck:
       <<: *healthcheck-defaults
       test: ["CMD", "curl", "-f", "http://localhost:8009/health"]
@@ -227,6 +213,7 @@ services:
       context: ../../..
       dockerfile: infrastructure/docker/dockerfiles/dashboard-2025.Dockerfile
       args:
+        # HTTP is acceptable for internal Docker network communication
         VITE_API_BASE_URL: "${VITE_API_BASE_URL:-http://backend:8009}"
         VITE_PUSHER_KEY: "${VITE_PUSHER_KEY:-dummy-key-for-development}"
         VITE_PUSHER_CLUSTER: "${VITE_PUSHER_CLUSTER:-us2}"
@@ -254,6 +241,7 @@ services:
       # Runtime Pusher configuration
       VITE_PUSHER_KEY: "${VITE_PUSHER_KEY}"
       VITE_PUSHER_CLUSTER: "${VITE_PUSHER_CLUSTER:-us2}"
+      # HTTP is acceptable for internal Docker network communication
       VITE_API_BASE_URL: "${VITE_API_BASE_URL:-http://backend:8009}"
     volumes:
       - nginx_logs:/var/log/nginx:Z
@@ -261,8 +249,7 @@ services:
       - frontend
       - backend
     depends_on:
-      backend:
-        condition: service_healthy
+      - backend
     healthcheck:
       <<: *healthcheck-defaults
       test: ["CMD", "curl", "-f", "http://localhost/health"]
@@ -292,11 +279,8 @@ services:
     build:
       context: ../../..
       dockerfile: infrastructure/docker/dockerfiles/mcp.Dockerfile
-      # Local cache only (no registry)
-      cache_from:
-        - type=local,src=/tmp/docker-cache
-      cache_to:
-        - type=local,dest=/tmp/docker-cache,mode=max
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     image: toolboxai/mcp:${DOCKER_TAG:-latest}
     container_name: toolboxai-mcp
     <<: [*restart-policy, *security-opts]
@@ -308,7 +292,7 @@ services:
       REDIS_URL_FILE: /run/secrets/redis_url
       JWT_SECRET_KEY_FILE: /run/secrets/jwt_secret
       MAX_TOKENS: ${MAX_TOKENS:-8192}
-      AGENT_DISCOVERY_ENABLED: true
+      AGENT_DISCOVERY_ENABLED: "true"
     secrets:
       - database_url
       - redis_url
@@ -321,12 +305,13 @@ services:
       - database
       - cache
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - postgres
+      - redis
     healthcheck:
-      <<: *healthcheck-defaults
+      interval: 30s
+      timeout: 20s
+      retries: 5
+      start_period: 60s
       test: ["CMD", "curl", "-f", "http://localhost:9877/health"]
     logging: *default-logging
     user: "1002:1002"
@@ -338,11 +323,8 @@ services:
     build:
       context: ../../..
       dockerfile: infrastructure/docker/dockerfiles/agents.Dockerfile
-      # Local cache only (no registry)
-      cache_from:
-        - type=local,src=/tmp/docker-cache
-      cache_to:
-        - type=local,dest=/tmp/docker-cache,mode=max
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     image: toolboxai/agents:${DOCKER_TAG:-latest}
     container_name: toolboxai-agents
     <<: [*restart-policy, *security-opts]
@@ -362,19 +344,16 @@ services:
       - jwt_secret
       - openai_api_key
     volumes:
-      - agent_data:/data/agents:Z
-      - agent_logs:/app/logs:Z
+      - agent_data:/data/agents:rw
+      - agent_logs:/app/logs:rw
     networks:
       - mcp
       - database
       - cache
     depends_on:
-      mcp-server:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - mcp-server
+      - postgres
+      - redis
     healthcheck:
       <<: *healthcheck-defaults
       test: ["CMD", "curl", "-f", "http://localhost:8888/health"]
@@ -388,12 +367,9 @@ services:
     build:
       context: ../../..
       dockerfile: infrastructure/docker/dockerfiles/celery-worker.Dockerfile
-      # Local cache only (no registry)
-      cache_from:
-        - type=local,src=/tmp/docker-cache
-      cache_to:
-        - type=local,dest=/tmp/docker-cache,mode=max
       target: production
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     image: toolboxai/celery-worker:${DOCKER_TAG:-latest}
     # container_name removed to support replicas
     <<: *restart-policy
@@ -423,12 +399,9 @@ services:
       - database
       - cache
     depends_on:
-      redis:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
-      backend:
-        condition: service_healthy
+      - redis
+      - postgres
+      - backend
     healthcheck:
       <<: *healthcheck-defaults
       # Using Celery 5.4 inspect ping command for health check
@@ -457,12 +430,9 @@ services:
     build:
       context: ../../..
       dockerfile: infrastructure/docker/dockerfiles/celery-beat.Dockerfile
-      # Local cache only (no registry)
-      cache_from:
-        - type=local,src=/tmp/docker-cache
-      cache_to:
-        - type=local,dest=/tmp/docker-cache,mode=max
       target: production
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     image: toolboxai/celery-beat:${DOCKER_TAG:-latest}
     # container_name removed to support deploy section
     <<: *restart-policy
@@ -488,12 +458,9 @@ services:
       - database
       - cache
     depends_on:
-      redis:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
-      celery-worker:
-        condition: service_healthy
+      - redis
+      - postgres
+      - celery-worker
     healthcheck:
       <<: *healthcheck-defaults
       # Beat process check - Celery Beat doesn't have inspect command
@@ -522,19 +489,16 @@ services:
     build:
       context: ../../..
       dockerfile: infrastructure/docker/dockerfiles/celery-flower.Dockerfile
-      # Local cache only (no registry)
-      cache_from:
-        - type=local,src=/tmp/docker-cache
-      cache_to:
-        - type=local,dest=/tmp/docker-cache,mode=max
       target: production
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     image: toolboxai/celery-flower:${DOCKER_TAG:-latest}
     <<: *restart-policy
     environment:
       <<: *common-variables
       CELERY_BROKER_URL: ${REDIS_URL:-redis://redis:6379/0}
       FLOWER_PORT: 5555
-      FLOWER_BASIC_AUTH: ${FLOWER_BASIC_AUTH:-admin:admin}  # Change in production
+      FLOWER_BASIC_AUTH: ${FLOWER_BASIC_AUTH:-admin:changeme}
       FLOWER_URL_PREFIX: /flower
     volumes:
       - flower-data:/data:rw
@@ -543,10 +507,8 @@ services:
     networks:
       - backend
     depends_on:
-      redis:
-        condition: service_healthy
-      celery-worker:
-        condition: service_healthy
+      - redis
+      - celery-worker
     healthcheck:
       <<: *healthcheck-defaults
       test: ["CMD", "curl", "-f", "http://localhost:5555/api/workers"]
@@ -577,11 +539,6 @@ services:
     build:
       context: ../../..
       dockerfile: infrastructure/docker/dockerfiles/roblox-sync.Dockerfile
-      # Local cache only (no registry)
-      cache_from:
-        - type=local,src=/tmp/docker-cache
-      cache_to:
-        - type=local,dest=/tmp/docker-cache,mode=max
       target: production
       args:
         BUILDKIT_INLINE_CACHE: 1
@@ -613,7 +570,7 @@ services:
       - ../../../roblox/src:/app/src:ro
       - ../../../roblox/plugins:/app/plugins:ro
       - ../../../roblox/assets:/app/assets:ro
-      - ../../config/rojo/default.project.json:/app/default.project.json:ro
+      - ../config/rojo/default.project.json:/app/default.project.json:ro
       - roblox_builds:/app/builds:Z
       - roblox_logs:/app/logs:Z
     networks:
@@ -672,9 +629,6 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    profiles:
-      - week2
-      - production
 
   # ----------------------------------------
   # Backup Coordinator (Week 2)
@@ -683,7 +637,7 @@ services:
     image: toolboxai/backend:${DOCKER_TAG:-latest}
     container_name: toolboxai-backup
     <<: *restart-policy
-    command: ["python", "-m", "infrastructure.backups.scripts.backup_manager"]
+    command: ["python", "-m", "infrastructure.backups.scripts.backup_manager", "status"]
     environment:
       <<: *common-variables
       BACKUP_ENABLED: ${BACKUP_ENABLED:-true}
@@ -693,17 +647,13 @@ services:
       BACKUP_ENCRYPTION_KEY_FILE: /run/secrets/backup_encryption_key
       BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET:-}
       BACKUP_S3_REGION: ${BACKUP_S3_REGION:-us-east-1}
-      AWS_ACCESS_KEY_ID_FILE: /run/secrets/aws_access_key
-      AWS_SECRET_ACCESS_KEY_FILE: /run/secrets/aws_secret_key
     secrets:
       - backup_encryption_key
-      - aws_access_key
-      - aws_secret_key
     volumes:
-      - postgres_backup:/backup/postgres:Z
-      - redis_backup:/backup/redis:Z
-      - app_backup:/backup/application:Z
-      - backup_logs:/app/logs:Z
+      - postgres_backup:/backup/postgres:rw
+      - redis_backup:/backup/redis:rw
+      - app_backup:/backup/application:rw
+      - backup_logs:/app/logs:rw
     networks:
       - database
       - cache
@@ -721,9 +671,6 @@ services:
     cap_add:
       - DAC_OVERRIDE  # For backup file operations
     user: "1008:1008"
-    profiles:
-      - week2
-      - production
 
   # ----------------------------------------
   # Migration Runner (Week 2)
@@ -746,16 +693,14 @@ services:
       - database_url
       - redis_url
     volumes:
-      - migration_logs:/app/logs:Z
+      - migration_logs:/app/logs:rw
       - ../../../infrastructure/migrations:/app/migrations:ro
     networks:
       - database
       - cache
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - postgres
+      - redis
     healthcheck:
       <<: *healthcheck-defaults
       test: ["CMD", "python", "-c", "import sys; from apps.backend.services.supabase_migration_manager import MigrationManager; sys.exit(0 if MigrationManager.health_check() else 1)"]
@@ -765,9 +710,6 @@ services:
     cap_drop:
       - ALL
     user: "1009:1009"
-    profiles:
-      - week2
-      - migration
 
   # ----------------------------------------
   # Prometheus Monitoring (Basic)
@@ -801,70 +743,40 @@ services:
 # ============================================
 # NETWORKS
 # ============================================
+# All networks are internally managed by Docker Compose
+# They will be created automatically when services start
 networks:
   toolboxai-network:
     driver: bridge
-    driver_opts:
-      com.docker.network.bridge.name: br-toolboxai
+    name: toolboxai_toolboxai-network
 
   frontend:
     driver: bridge
-    driver_opts:
-      com.docker.network.bridge.name: br-frontend
-    ipam:
-      config:
-        - subnet: 172.20.0.0/24
+    name: toolboxai_frontend
 
   backend:
     driver: bridge
-    driver_opts:
-      com.docker.network.bridge.name: br-backend
-    ipam:
-      config:
-        - subnet: 172.21.0.0/24
+    name: toolboxai_backend
 
   database:
     driver: bridge
-    internal: true  # No external access
-    driver_opts:
-      com.docker.network.bridge.name: br-database
-    ipam:
-      config:
-        - subnet: 172.22.0.0/24
+    name: toolboxai_database
 
   cache:
     driver: bridge
-    internal: true  # No external access
-    driver_opts:
-      com.docker.network.bridge.name: br-cache
-    ipam:
-      config:
-        - subnet: 172.23.0.0/24
+    name: toolboxai_cache
 
   mcp:
     driver: bridge
-    internal: true  # No external access
-    driver_opts:
-      com.docker.network.bridge.name: br-mcp
-    ipam:
-      config:
-        - subnet: 172.24.0.0/24
+    name: toolboxai_mcp
 
   monitoring:
     driver: bridge
-    driver_opts:
-      com.docker.network.bridge.name: br-monitoring
-    ipam:
-      config:
-        - subnet: 172.25.0.0/24
+    name: toolboxai_monitoring
 
   roblox:
     driver: bridge
-    driver_opts:
-      com.docker.network.bridge.name: br-roblox
-    ipam:
-      config:
-        - subnet: 172.26.0.0/24
+    name: toolboxai_roblox
 
 # ============================================
 # VOLUMES
@@ -872,10 +784,8 @@ networks:
 volumes:
   postgres_data:
     driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${DATA_DIR:-./data}/postgres
+    # Note: For production, consider using named volumes or external storage
+    # The DATA_DIR environment variable is no longer used for volume path
 
   postgres_backup:
     driver: local
@@ -961,8 +871,4 @@ secrets:
   langcache_api_key:
     external: true
   backup_encryption_key:
-    external: true
-  aws_access_key:
-    external: true
-  aws_secret_key:
     external: true

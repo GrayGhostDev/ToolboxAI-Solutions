@@ -18,7 +18,7 @@ from apps.backend.api.auth.password_management import (
     PasswordChangeService,
 )
 from apps.backend.api.auth.auth import get_current_user, redis_client
-from .core.security.session_manager import get_session_manager, initialize_session_manager
+from apps.backend.core.security.session_manager import get_session_manager, initialize_session_manager
 from apps.backend.models.schemas import User
 from apps.backend.services.database import get_db_session, update_user_password
 

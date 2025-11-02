@@ -92,10 +92,11 @@ export default function Topbar() {
               backgroundClip: 'text',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
-              textShadow: '0 0 10px rgba(0, 188, 212, 0.5)'
+              fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+              letterSpacing: '-0.02em',
             }}
           >
-            🚀 Space Station Dashboard
+            🎓 Education Dashboard
           </Text>
         </Group>
 
@@ -234,7 +235,17 @@ export default function Topbar() {
               </Tooltip>
             </Menu.Target>
             <Menu.Dropdown>
-              <Menu.Label>{displayName || 'Guest User'}</Menu.Label>
+              <Menu.Label>
+                <Text size="sm" fw={600}>{displayName || 'Guest User'}</Text>
+                <Text size="xs" c="dimmed" tt="capitalize">{role}</Text>
+              </Menu.Label>
+              <Menu.Divider />
+              <Menu.Item
+                leftSection={<IconUser size={16} />}
+                onClick={() => navigate('/profile')}
+              >
+                Profile
+              </Menu.Item>
               <Menu.Item
                 leftSection={<IconSettings size={16} />}
                 onClick={handleSettings}

@@ -382,18 +382,51 @@ export default function AppRoutes() {
   return (
     <Suspense fallback={<LoadingFallback variant="dashboard" timeout={1000} />}>
       <Routes>
-        {/* Redirect from /dashboard to / for Clerk compatibility */}
-        <Route path="/dashboard" element={<Navigate to="/" replace />} />
+        {/* Root redirect - will be handled by RoleBasedRouter */}
+        <Route path="/" element={<Navigate to={`/${role}/overview`} replace />} />
 
-        <Route path="/" element={
-          <PerformanceRoute priority="high" skeletonVariant="dashboard" timeout={1200}>
-            <DashboardHome role={role} />
-          </PerformanceRoute>
+        {/* Legacy /dashboard redirect */}
+        <Route path="/dashboard" element={<Navigate to={`/${role}/overview`} replace />} />
+
+        {/* Admin Routes */}
+        <Route path="/admin/overview" element={
+          <RoleGuard allow={['admin']}>
+            <PerformanceRoute priority="high" skeletonVariant="dashboard" timeout={1200}>
+              <DashboardHome role="admin" />
+            </PerformanceRoute>
+          </RoleGuard>
+        } />
+
+        {/* Teacher Routes */}
+        <Route path="/teacher/overview" element={
+          <RoleGuard allow={['teacher', 'admin']}>
+            <PerformanceRoute priority="high" skeletonVariant="dashboard" timeout={1200}>
+              <DashboardHome role="teacher" />
+            </PerformanceRoute>
+          </RoleGuard>
+        } />
+
+        {/* Student Routes */}
+        <Route path="/student/overview" element={
+          <RoleGuard allow={['student']}>
+            <PerformanceRoute priority="high" skeletonVariant="dashboard" timeout={1200}>
+              <DashboardHome role="student" />
+            </PerformanceRoute>
+          </RoleGuard>
+        } />
+
+        {/* Parent Routes */}
+        <Route path="/parent/overview" element={
+          <RoleGuard allow={['parent']}>
+            <PerformanceRoute priority="high" skeletonVariant="dashboard" timeout={1200}>
+              <DashboardHome role="parent" />
+            </PerformanceRoute>
+          </RoleGuard>
         } />
 
       {/* Teacher Routes - wrapped with performance optimization */}
       <Route
-        path="/lessons"
+        path="/teacher/lessons"
         element={
           <RoleGuard allow={['teacher', 'admin']}>
             <PerformanceRoute priority="high" skeletonVariant="list" timeout={1000}>
@@ -403,7 +436,7 @@ export default function AppRoutes() {
         }
       />
       <Route
-        path="/assessments"
+        path="/teacher/assessments"
         element={
           <RoleGuard allow={['teacher', 'admin']}>
             <PerformanceRoute priority="high" skeletonVariant="form" timeout={1000}>
@@ -413,7 +446,7 @@ export default function AppRoutes() {
         }
       />
       <Route
-        path="/classes"
+        path="/teacher/classes"
         element={
           <RoleGuard allow={['teacher', 'admin']}>
             <PerformanceRoute priority="high" skeletonVariant="card" timeout={1000}>
@@ -423,11 +456,41 @@ export default function AppRoutes() {
         }
       />
       <Route
-        path="/classes/:classId"
+        path="/teacher/classes/:classId"
         element={
-          <RoleGuard allow={['teacher', 'admin', 'student', 'parent']}>
+          <RoleGuard allow={['teacher', 'admin']}>
             <PerformanceRoute priority="medium" skeletonVariant="dashboard" timeout={1200}>
               <ClassDetail />
+            </PerformanceRoute>
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/teacher/reports"
+        element={
+          <RoleGuard allow={['teacher', 'admin']}>
+            <PerformanceRoute priority="medium" skeletonVariant="dashboard" timeout={1200}>
+              <Reports />
+            </PerformanceRoute>
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/teacher/messages"
+        element={
+          <RoleGuard allow={['teacher', 'admin']}>
+            <PerformanceRoute priority="medium" skeletonVariant="list" timeout={1000}>
+              <Messages />
+            </PerformanceRoute>
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/teacher/settings"
+        element={
+          <RoleGuard allow={['teacher', 'admin']}>
+            <PerformanceRoute priority="low" skeletonVariant="form" timeout={1000}>
+              <Settings />
             </PerformanceRoute>
           </RoleGuard>
         }
@@ -435,43 +498,195 @@ export default function AppRoutes() {
 
       {/* Student Routes */}
       <Route
-        path="/missions"
+        path="/student/missions"
         element={
           <RoleGuard allow={['student']}>
-            <Missions />
+            <PerformanceRoute priority="high" skeletonVariant="card" timeout={1000}>
+              <Missions />
+            </PerformanceRoute>
           </RoleGuard>
         }
       />
       <Route
-        path="/rewards"
+        path="/student/progress"
         element={
           <RoleGuard allow={['student']}>
-            <Rewards />
+            <PerformanceRoute priority="high" skeletonVariant="dashboard" timeout={1000}>
+              <Progress />
+            </PerformanceRoute>
           </RoleGuard>
         }
       />
       <Route
-        path="/avatar"
+        path="/student/rewards"
         element={
           <RoleGuard allow={['student']}>
-            <Avatar />
+            <PerformanceRoute priority="medium" skeletonVariant="card" timeout={1000}>
+              <Rewards />
+            </PerformanceRoute>
           </RoleGuard>
         }
       />
       <Route
-        path="/play"
+        path="/student/leaderboard"
         element={
           <RoleGuard allow={['student']}>
-            <Play />
+            <PerformanceRoute priority="medium" skeletonVariant="list" timeout={1000}>
+              <Leaderboard />
+            </PerformanceRoute>
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/student/avatar"
+        element={
+          <RoleGuard allow={['student']}>
+            <PerformanceRoute priority="medium" skeletonVariant="form" timeout={1200}>
+              <Avatar />
+            </PerformanceRoute>
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/student/play"
+        element={
+          <RoleGuard allow={['student']}>
+            <PerformanceRoute priority="high" skeletonVariant="dashboard" timeout={1500}>
+              <Play />
+            </PerformanceRoute>
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/student/settings"
+        element={
+          <RoleGuard allow={['student']}>
+            <PerformanceRoute priority="low" skeletonVariant="form" timeout={1000}>
+              <Settings />
+            </PerformanceRoute>
+          </RoleGuard>
+        }
+      />
+
+      {/* Admin Routes */}
+      <Route
+        path="/admin/schools"
+        element={
+          <RoleGuard allow={['admin']}>
+            <PerformanceRoute priority="medium" skeletonVariant="list" timeout={1500}>
+              <Schools />
+            </PerformanceRoute>
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <RoleGuard allow={['admin']}>
+            <PerformanceRoute priority="medium" skeletonVariant="list" timeout={1500}>
+              <Users />
+            </PerformanceRoute>
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/admin/compliance"
+        element={
+          <RoleGuard allow={['admin']}>
+            <PerformanceRoute priority="medium" skeletonVariant="dashboard" timeout={1500}>
+              <Compliance />
+            </PerformanceRoute>
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/admin/analytics"
+        element={
+          <RoleGuard allow={['admin']}>
+            <PerformanceRoute priority="medium" skeletonVariant="chart" timeout={2000}>
+              <Analytics />
+            </PerformanceRoute>
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/admin/integrations"
+        element={
+          <RoleGuard allow={['admin']}>
+            <PerformanceRoute priority="low" skeletonVariant="form" timeout={1500}>
+              <Integrations />
+            </PerformanceRoute>
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/admin/settings"
+        element={
+          <RoleGuard allow={['admin']}>
+            <PerformanceRoute priority="low" skeletonVariant="form" timeout={1000}>
+              <Settings />
+            </PerformanceRoute>
+          </RoleGuard>
+        }
+      />
+
+      {/* Parent Routes */}
+      <Route
+        path="/parent/progress"
+        element={
+          <RoleGuard allow={['parent']}>
+            <PerformanceRoute priority="high" skeletonVariant="dashboard" timeout={1200}>
+              <Progress />
+            </PerformanceRoute>
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/parent/reports"
+        element={
+          <RoleGuard allow={['parent']}>
+            <PerformanceRoute priority="high" skeletonVariant="dashboard" timeout={1200}>
+              <Reports />
+            </PerformanceRoute>
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/parent/messages"
+        element={
+          <RoleGuard allow={['parent']}>
+            <PerformanceRoute priority="medium" skeletonVariant="list" timeout={1000}>
+              <Messages />
+            </PerformanceRoute>
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/parent/settings"
+        element={
+          <RoleGuard allow={['parent']}>
+            <PerformanceRoute priority="low" skeletonVariant="form" timeout={1000}>
+              <Settings />
+            </PerformanceRoute>
           </RoleGuard>
         }
       />
 
       {/* Roblox Routes - Heavy 3D components with extended timeout */}
       <Route
-        path="/roblox/*"
+        path="/teacher/roblox/*"
         element={
           <RoleGuard allow={['teacher', 'admin']}>
+            <PerformanceRoute priority="low" skeletonVariant="dashboard" timeout={5000}>
+              <TeacherRobloxDashboard />
+            </PerformanceRoute>
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/admin/roblox/*"
+        element={
+          <RoleGuard allow={['admin']}>
             <PerformanceRoute priority="low" skeletonVariant="dashboard" timeout={5000}>
               <TeacherRobloxDashboard />
             </PerformanceRoute>

@@ -51,7 +51,14 @@ cp .env.example .env
 # Edit .env with your actual values (keep secrets secure!)
 ```
 
-3. **Start development stack:**
+3. **Create Docker secrets from `.env`:**
+```bash
+./infrastructure/docker/scripts/sync-secrets-from-env.sh
+# or pass a custom env file: ./.../sync-secrets-from-env.sh ./path/to/.env.dev
+```
+This seeds the Docker secrets (`db_password`, `redis_password`, `jwt_secret`, etc.) so the enhanced compose stacks can run without manual prompts. The script reads values from your `.env` file without echoing the secrets back to the terminal.
+
+4. **Start development stack:**
 ```bash
 ./infrastructure/docker/start-docker-dev.sh
 ```
@@ -61,7 +68,7 @@ docker compose -f infrastructure/docker/compose/docker-compose.yml \
               -f infrastructure/docker/compose/docker-compose.dev.yml up -d
 ```
 
-4. **Access services:**
+5. **Access services:**
 - Dashboard: http://localhost:5179
 - Backend API: http://localhost:8009
 - API Docs: http://localhost:8009/docs

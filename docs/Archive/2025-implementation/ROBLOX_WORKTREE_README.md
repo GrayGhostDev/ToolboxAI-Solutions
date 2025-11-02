@@ -65,7 +65,7 @@ This worktree contains a fully-featured Roblox-themed educational dashboard with
 - ✅ CSS classes and keyframes utilities
 
 ### 7. Documentation ✅
-- ✅ Comprehensive component library docs (`ROBLOX_COMPONENT_LIBRARY.md`)
+- ✅ Comprehensive component library docs (`docs/06-features/user-interface/dashboard/components/ROBLOX_COMPONENT_LIBRARY.md`)
 - ✅ Quick start guide (`ROBLOX_QUICK_START.md`)
 - ✅ TypeScript definitions for all components
 - ✅ JSDoc comments in source files
@@ -187,7 +187,7 @@ roblox-dashboard/
 │   │   └── routes.tsx
 │   └── public/
 │       └── assets/
-├── ROBLOX_COMPONENT_LIBRARY.md         # Full documentation
+├── docs/06-features/user-interface/dashboard/components/ROBLOX_COMPONENT_LIBRARY.md         # Full documentation
 ├── ROBLOX_QUICK_START.md               # Quick start guide
 └── ROBLOX_WORKTREE_README.md          # This file
 ```
@@ -221,7 +221,7 @@ All components are:
 
 ### Available Guides
 
-1. **Component Library** (`ROBLOX_COMPONENT_LIBRARY.md`)
+1. **Component Library** (`docs/06-features/user-interface/dashboard/components/ROBLOX_COMPONENT_LIBRARY.md`)
    - Complete API reference
    - Usage examples
    - Best practices
@@ -292,7 +292,7 @@ npm run storybook        # Interactive component playground
 2. Follow existing patterns (TypeScript, props interface, styles)
 3. Add to `src/components/roblox/index.ts`
 4. Create test file in `__tests__/`
-5. Document in `ROBLOX_COMPONENT_LIBRARY.md`
+5. Document in `docs/06-features/user-interface/dashboard/components/ROBLOX_COMPONENT_LIBRARY.md`
 
 ---
 
@@ -389,7 +389,7 @@ MIT License - see LICENSE file
 
 ## 📞 Support
 
-- **Documentation**: See `ROBLOX_COMPONENT_LIBRARY.md`
+- **Documentation**: See `docs/06-features/user-interface/dashboard/components/ROBLOX_COMPONENT_LIBRARY.md`
 - **Examples**: Visit `/roblox-showcase`
 - **Issues**: GitHub Issues
 - **Storybook**: `npm run storybook`

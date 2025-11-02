@@ -35,8 +35,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete, func
 
-from apps.backend.api.auth.auth import get_current_user, require_super_admin
-from apps.backend.core.deps import get_async_session
+from apps.backend.api.auth.auth import get_current_user, require_role
+from apps.backend.core.deps import get_async_db
 from apps.backend.models.schemas import User
 from apps.backend.services.tenant_provisioner import TenantProvisioner
 from database.models.tenant import (
@@ -50,7 +50,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(
     prefix="/tenants",
     tags=["tenant-admin"],
-    dependencies=[Depends(require_super_admin)],
+    dependencies=[Depends(require_role("admin"))],
     responses={404: {"description": "Tenant not found"}},
 )
 
@@ -194,7 +194,7 @@ class TenantMigrationRequest(BaseModel):
 )
 async def create_tenant(
     request: TenantCreateRequest,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> TenantResponse:
     """
@@ -291,7 +291,7 @@ async def create_tenant(
     description="List all tenant organizations with pagination (super admin only)",
 )
 async def list_tenants(
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=100),
     status_filter: Optional[OrganizationStatus] = None,
@@ -380,7 +380,7 @@ async def list_tenants(
 )
 async def get_tenant(
     tenant_id: UUID,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
 ) -> TenantResponse:
     """
     Get detailed information about a specific tenant.
@@ -445,7 +445,7 @@ async def get_tenant(
 async def update_tenant(
     tenant_id: UUID,
     request: TenantUpdateRequest,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
 ) -> TenantResponse:
     """
     Update tenant information.
@@ -523,7 +523,7 @@ async def update_tenant(
 )
 async def delete_tenant(
     tenant_id: UUID,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     permanent: bool = Query(False, description="Permanently delete (cannot be undone)"),
 ) -> None:
     """
@@ -586,7 +586,7 @@ async def delete_tenant(
 async def provision_tenant(
     tenant_id: UUID,
     request: TenantProvisionRequest,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
     background_tasks: BackgroundTasks,
 ) -> TenantProvisionResponse:
     """
@@ -687,7 +687,7 @@ async def provision_tenant(
 async def update_tenant_limits(
     tenant_id: UUID,
     request: TenantLimitsUpdateRequest,
-    session: Annotated[AsyncSession, Depends(get_async_session)],
+    session: Annotated[AsyncSession, Depends(get_async_db)],
 ) -> TenantResponse:
     """
     Update tenant usage limits.

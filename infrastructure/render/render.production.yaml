@@ -1,0 +1,752 @@
+# Render.com Infrastructure Configuration
+# This file defines all services, databases, and environment groups for deployment
+
+databases:
+  - name: toolboxai-postgres
+    plan: pro # Upgraded for production with enhanced performance
+    region: oregon # Options: oregon, ohio, frankfurt, singapore
+    databaseName: educational_platform_prod
+    user: eduplatform
+    ipAllowList: [] # Leave empty for internal access only
+    postgresMajorVersion: 16 # Upgraded for better performance and features
+    # Production database configuration
+    maxConnections: 100
+    sharedBuffers: "256MB"
+    effectiveCacheSize: "1GB"
+    maintenanceWorkMem: "128MB"
+    checkpointCompletionTarget: 0.9
+    walBuffers: "16MB"
+    defaultStatisticsTarget: 100
+    randomPageCost: 1.1
+    # Backup configuration
+    backupRetentionPeriod: 30 # days
+    backupWindow: "02:00-04:00" # UTC
+    maintenanceWindow: "sun:04:00-sun:06:00" # UTC
+
+
+services:
+  # Backend API Service
+  - type: web
+    name: toolboxai-backend
+    runtime: python
+    region: oregon
+    plan: pro # Upgraded for production with more CPU/memory
+    buildCommand: |
+      pip install --upgrade pip setuptools wheel
+      pip install -r requirements.txt
+    startCommand: |
+      cd apps/backend && \
+      python -m uvicorn main:app \
+        --host 0.0.0.0 \
+        --port $PORT \
+        --workers 8 \
+        --worker-class uvicorn.workers.UvicornWorker \
+        --loop uvloop \
+        --access-log \
+        --timeout-keep-alive 5 \
+        --timeout-graceful-shutdown 30 \
+        --limit-concurrency 1000 \
+        --limit-max-requests 10000 \
+        --backlog 2048
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: toolboxai-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: toolboxai-redis
+          property: connectionString
+      - key: ENVIRONMENT
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: ALLOWED_ORIGINS
+        value: https://toolboxai-dashboard.onrender.com,https://www.yourdomain.com,https://toolboxai.vercel.app
+      - key: TRUSTED_HOSTS
+        value: toolboxai-backend.onrender.com,api.yourdomain.com,localhost,127.0.0.1
+      # Sentry Monitoring
+      - key: SENTRY_DSN_BACKEND
+        sync: false
+      - key: SENTRY_ENVIRONMENT
+        value: production
+      - key: SENTRY_RELEASE
+        value: ${RENDER_GIT_COMMIT}
+      # Supabase Integration
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_DATABASE_URL
+        sync: false
+      # Production performance settings
+      - key: DB_POOL_SIZE
+        value: 20
+      - key: DB_MAX_OVERFLOW
+        value: 10
+      - key: DB_POOL_TIMEOUT
+        value: 30
+      - key: DB_POOL_RECYCLE
+        value: 3600
+      - key: RATE_LIMIT_REQUESTS
+        value: 1000
+      - key: RATE_LIMIT_WINDOW
+        value: 60
+      # Security settings
+      - key: SECURITY_HEADERS_ENABLED
+        value: true
+      - key: HTTPS_ONLY
+        value: true
+      - key: SECURE_COOKIES
+        value: true
+      - fromGroup: toolboxai-secrets
+    healthCheckPath: /health
+    autoDeploy: true # Auto-deploy on git push
+    # Production scaling configuration
+    scaling:
+      minInstances: 2
+      maxInstances: 10
+      targetCPUPercent: 70
+      targetMemoryPercent: 80
+    # Resource limits
+    disk: 2GB
+    # Zero-downtime deployment
+    preDeployCommand: |
+      echo "Starting pre-deployment health checks..."
+      python -c "import sys; print(f'Python version: {sys.version}')"
+      pip check
+    headers:
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=31536000; includeSubDomains; preload
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-XSS-Protection
+        value: 1; mode=block
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Content-Security-Policy
+        value: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' wss: https:; font-src 'self' data:;
+
+  # Redis (managed) - Enhanced for production
+  - type: redis
+    name: toolboxai-redis
+    plan: pro # Upgraded for production with clustering support
+    region: oregon
+    ipAllowList: []
+    maxmemoryPolicy: allkeys-lru
+    # Redis 7.2 production configuration
+    version: "7.2"
+    # Performance settings
+    maxMemory: "1GB"
+    maxClients: 1000
+    timeout: 0
+    # Persistence configuration
+    persistenceEnabled: true
+    appendOnly: true
+    appendFsync: "everysec"
+    # Security settings
+    requirePass: true
+    # Monitoring
+    slowlogLogSlowerThan: 10000 # microseconds
+    slowlogMaxLen: 128
+    # Connection pooling
+    connectionPoolSize: 20
+    connectionPoolMaxIdleTime: 300
+
+  # Frontend Static Site - Enhanced for production
+  - type: web
+    name: toolboxai-dashboard
+    runtime: static
+    region: oregon
+    plan: pro # Upgraded for better CDN and performance
+    buildCommand: |
+      cd apps/dashboard && \
+      npm ci --production=false && \
+      npm run build && \
+      npm run build:analyze
+    staticPublishPath: ./apps/dashboard/dist
+    envVars:
+      - key: NODE_VERSION
+        value: 22.0.0 # Latest LTS
+      - key: VITE_API_BASE_URL
+        value: https://toolboxai-backend.onrender.com
+      - key: VITE_WS_URL
+        value: wss://toolboxai-backend.onrender.com
+      - key: VITE_ENABLE_WEBSOCKET
+        value: true
+      - key: VITE_ENVIRONMENT
+        value: production
+      - fromGroup: toolboxai-frontend-env
+    pullRequestPreviewsEnabled: true
+    # Enhanced security headers
+    headers:
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=31536000; includeSubDomains; preload
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-XSS-Protection
+        value: 1; mode=block
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Content-Security-Policy
+        value: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' wss: https:; font-src 'self' data:; frame-ancestors 'none';
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=(), interest-cohort=()
+      # Caching headers for static assets
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /*.js
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /*.css
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /index.html
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+
+  # Model Context Protocol API
+  - type: web
+    name: toolboxai-mcp
+    runtime: python
+    region: oregon
+    plan: pro
+    buildCommand: |
+      pip install --upgrade pip setuptools wheel
+      pip install -r requirements.txt
+    startCommand: |
+      python -m core.mcp.server \
+        --host 0.0.0.0 \
+        --port $PORT \
+        --log-level info \
+        --max-connections 200 \
+        --enable-compression \
+        --enable-extensions
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: toolboxai-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: toolboxai-redis
+          property: connectionString
+      - key: MCP_MAX_TOKENS
+        value: 8192
+      - key: AGENT_DISCOVERY_ENABLED
+        value: true
+      - fromGroup: toolboxai-secrets
+    healthCheckPath: /health
+    autoDeploy: true
+    scaling:
+      minInstances: 1
+      maxInstances: 5
+      targetCPUPercent: 65
+      targetMemoryPercent: 70
+    disk: 1GB
+
+  # Agent Coordinator Service
+  - type: web
+    name: toolboxai-agent-coordinator
+    runtime: python
+    region: oregon
+    plan: pro
+    buildCommand: |
+      pip install --upgrade pip setuptools wheel
+      pip install -r requirements.txt
+    startCommand: |
+      python -m core.agents.master_orchestrator \
+        --host 0.0.0.0 \
+        --port $PORT \
+        --log-level info
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: toolboxai-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: toolboxai-redis
+          property: connectionString
+      - key: COORDINATOR_MAX_AGENTS
+        value: 25
+      - key: TASK_TIMEOUT
+        value: 300
+      - key: MCP_SERVER_URL
+        value: wss://toolboxai-mcp.onrender.com
+      - fromGroup: toolboxai-secrets
+    healthCheckPath: /health
+    autoDeploy: true
+    scaling:
+      minInstances: 1
+      maxInstances: 4
+      targetCPUPercent: 60
+      targetMemoryPercent: 70
+    disk: 512MB
+
+  # Celery Worker Fleet
+  - type: worker
+    name: toolboxai-celery-worker
+    runtime: python
+    region: oregon
+    plan: pro
+    numInstances: 2
+    buildCommand: |
+      pip install --upgrade pip setuptools wheel
+      pip install -r requirements.txt
+    startCommand: |
+      cd apps/backend && \
+      celery -A apps.backend.celery_app worker \
+        --loglevel ${CELERY_LOG_LEVEL:-info} \
+        --pool ${CELERY_WORKER_POOL:-prefork} \
+        --concurrency ${CELERY_WORKER_CONCURRENCY:-4} \
+        --hostname render-worker-%n
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: toolboxai-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: toolboxai-redis
+          property: connectionString
+      - key: ENVIRONMENT
+        value: production
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: toolboxai-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          name: toolboxai-redis
+          property: connectionString
+      - key: ENVIRONMENT
+        value: production
+      - key: CELERY_WORKER_CONCURRENCY
+        value: 6
+      - key: CELERY_WORKER_POOL
+        value: prefork
+      - key: CELERY_TASK_TIME_LIMIT
+        value: 300
+      - key: CELERY_TASK_SOFT_TIME_LIMIT
+        value: 270
+      - key: CELERY_WORKER_MAX_TASKS_PER_CHILD
+        value: 1000
+      - fromGroup: toolboxai-secrets
+    autoDeploy: true
+
+  # Celery Beat Scheduler
+  - type: worker
+    name: toolboxai-celery-beat
+    runtime: python
+    region: oregon
+    plan: starter
+    numInstances: 1
+    buildCommand: |
+      pip install --upgrade pip setuptools wheel
+      pip install -r requirements.txt
+    startCommand: |
+      cd apps/backend && \
+      celery -A apps.backend.celery_app beat \
+        --loglevel ${CELERY_BEAT_LOG_LEVEL:-info} \
+        --scheduler celery.beat.PersistentScheduler
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: toolboxai-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: toolboxai-redis
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: toolboxai-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          name: toolboxai-redis
+          property: connectionString
+      - key: CELERY_BEAT_LOG_LEVEL
+        value: info
+      - key: CELERY_BEAT_MAX_LOOP_INTERVAL
+        value: 60
+      - fromGroup: toolboxai-secrets
+    autoDeploy: true
+
+  # Celery Flower Monitoring
+  - type: web
+    name: toolboxai-celery-flower
+    runtime: python
+    region: oregon
+    plan: starter
+    buildCommand: |
+      pip install --upgrade pip setuptools wheel
+      pip install -r requirements.txt
+    startCommand: |
+      cd apps/backend && \
+      celery -A apps.backend.celery_app flower \
+        --port $PORT \
+        --address 0.0.0.0 \
+        --basic_auth=${FLOWER_BASIC_AUTH:-admin:admin} \
+        --url_prefix=/
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: toolboxai-redis
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: toolboxai-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          name: toolboxai-redis
+          property: connectionString
+      - key: ENVIRONMENT
+        value: production
+      - fromGroup: toolboxai-secrets
+    healthCheckPath: /
+    autoDeploy: true
+    scaling:
+      minInstances: 1
+      maxInstances: 1
+    disk: 256MB
+
+
+  # Database Backup Service
+  - type: cron
+    name: toolboxai-backup
+    runtime: python
+    region: oregon
+    plan: starter
+    schedule: "0 1 * * *" # Daily at 01:00 UTC
+    buildCommand: |
+      pip install --upgrade pip setuptools wheel
+      pip install -r requirements.txt
+    command: |
+      cd apps/backend && \
+      python -c "
+      import asyncio
+      from database.connection import db_manager
+      from datetime import datetime
+      import os
+
+      async def backup():
+          timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+          backup_path = f'/tmp/backup_{timestamp}.sql'
+          success = await db_manager.backup_database(backup_path)
+          if success:
+              print(f'Backup completed: {backup_path}')
+              # Here you would upload to S3/GCS/etc
+          else:
+              print('Backup failed')
+              exit(1)
+
+      asyncio.run(backup())
+      "
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: toolboxai-postgres
+          property: connectionString
+      - fromGroup: toolboxai-secrets
+
+  # Database Maintenance and Optimization
+  - type: cron
+    name: toolboxai-maintenance
+    runtime: python
+    region: oregon
+    plan: starter
+    schedule: "0 3 * * 0" # Weekly on Sunday at 03:00 UTC
+    buildCommand: |
+      pip install --upgrade pip setuptools wheel
+      pip install -r requirements.txt
+    command: |
+      cd apps/backend && \
+      python -c "
+      import asyncio
+      from database.connection import db_manager
+
+      async def maintenance():
+          print('Starting database optimization...')
+          result = await db_manager.optimize_database()
+          print(f'Optimization completed: {result}')
+
+      asyncio.run(maintenance())
+      "
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: toolboxai-postgres
+          property: connectionString
+      - fromGroup: toolboxai-secrets
+
+  # Data Retention and Cleanup
+  - type: cron
+    name: toolboxai-cleanup
+    runtime: python
+    region: oregon
+    plan: starter
+    schedule: "0 2 * * *" # Daily at 02:00 UTC
+    buildCommand: |
+      pip install --upgrade pip setuptools wheel
+      pip install -r requirements.txt
+    command: |
+      cd apps/backend && \
+      python -c "
+      import asyncio
+      from database.connection import get_db
+      from datetime import datetime, timedelta
+
+      async def cleanup():
+          print('Starting data retention cleanup...')
+          # Clean old logs, temporary data, etc.
+          cutoff_date = datetime.now() - timedelta(days=90)
+          print(f'Cleaning data older than {cutoff_date}')
+          # Add actual cleanup logic here
+          print('Cleanup completed')
+
+      asyncio.run(cleanup())
+      "
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: toolboxai-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: toolboxai-redis
+          property: connectionString
+      - fromGroup: toolboxai-secrets
+
+  # Health Monitoring Service
+  - type: web
+    name: toolboxai-monitoring
+    runtime: python
+    region: oregon
+    plan: starter
+    buildCommand: |
+      pip install --upgrade pip
+      pip install prometheus-client fastapi uvicorn psutil
+    startCommand: |
+      python -c "
+      from fastapi import FastAPI
+      from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
+      from fastapi.responses import Response
+      import psutil
+      import time
+      import uvicorn
+      import os
+
+      app = FastAPI(title='ToolBoxAI Monitoring')
+
+      # Metrics
+      request_count = Counter('http_requests_total', 'Total HTTP requests', ['method', 'endpoint'])
+      request_duration = Histogram('http_request_duration_seconds', 'HTTP request duration')
+      system_cpu = Gauge('system_cpu_percent', 'System CPU usage')
+      system_memory = Gauge('system_memory_percent', 'System memory usage')
+
+      @app.get('/metrics')
+      async def metrics():
+          # Update system metrics
+          system_cpu.set(psutil.cpu_percent())
+          system_memory.set(psutil.virtual_memory().percent)
+          return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+      @app.get('/health')
+      async def health():
+          return {'status': 'healthy', 'timestamp': time.time()}
+
+      if __name__ == '__main__':
+          port = int(os.getenv('PORT', 8000))
+          uvicorn.run(app, host='0.0.0.0', port=port)
+      " &
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+    healthCheckPath: /health
+
+envVarGroups:
+  # Sensitive secrets (configure in Render dashboard)
+  - name: toolboxai-secrets
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true # Render will generate a secure random value
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: JWT_REFRESH_SECRET_KEY
+        generateValue: true
+      - key: ENCRYPTION_KEY
+        generateValue: true
+      # API Keys
+      - key: OPENAI_API_KEY
+        sync: false # Must be set manually in dashboard
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: GOOGLE_AI_API_KEY
+        sync: false
+      # Real-time services
+      - key: PUSHER_APP_ID
+        sync: false
+      - key: PUSHER_KEY
+        sync: false
+      - key: PUSHER_SECRET
+        sync: false
+      - key: PUSHER_CLUSTER
+        value: us2
+      # Monitoring and logging
+      - key: SENTRY_DSN
+        sync: false
+      - key: SENTRY_AUTH_TOKEN
+        sync: false
+      - key: DATADOG_API_KEY
+        sync: false
+      - key: NEW_RELIC_LICENSE_KEY
+        sync: false
+      # External integrations
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      # Cloud storage
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_S3_BUCKET_NAME
+        sync: false
+      - key: GCP_SERVICE_ACCOUNT_KEY
+        sync: false
+      - key: FLOWER_BASIC_AUTH
+        sync: false
+      # Security
+      - key: RATE_LIMIT_SECRET
+        generateValue: true
+      - key: CSRF_SECRET_KEY
+        generateValue: true
+      - key: SESSION_SECRET_KEY
+        generateValue: true
+
+  # Frontend environment variables
+  - name: toolboxai-frontend-env
+    envVars:
+      - key: VITE_PUSHER_KEY
+        sync: false
+      - key: VITE_PUSHER_CLUSTER
+        value: us2
+      - key: VITE_PUSHER_AUTH_ENDPOINT
+        value: /pusher/auth
+      - key: VITE_SENTRY_DSN
+        sync: false
+      - key: VITE_GOOGLE_ANALYTICS_ID
+        sync: false
+      - key: VITE_STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: VITE_HOTJAR_ID
+        sync: false
+      - key: VITE_MIXPANEL_TOKEN
+        sync: false
+      - key: VITE_INTERCOM_APP_ID
+        sync: false
+      - key: VITE_VERSION
+        value: "1.0.0"
+
+  # Monitoring and alerts configuration
+  - name: toolboxai-monitoring
+    envVars:
+      - key: ALERT_WEBHOOK_URL
+        sync: false
+      - key: SLACK_WEBHOOK_URL
+        sync: false
+      - key: DISCORD_WEBHOOK_URL
+        sync: false
+      - key: PAGERDUTY_INTEGRATION_KEY
+        sync: false
+      - key: PROMETHEUS_URL
+        value: "https://toolboxai-monitoring.onrender.com/metrics"
+      - key: GRAFANA_API_KEY
+        sync: false
+
+# Preview Environments Configuration - Enhanced
+previewsEnabled: true
+previewsExpireAfterDays: 7
+previewConfiguration:
+  # Preview environment settings
+  database:
+    plan: starter # Smaller plan for previews
+    databaseName: preview_${RENDER_GIT_BRANCH}
+  redis:
+    plan: starter
+  services:
+    backend:
+      plan: starter
+      scaling:
+        minInstances: 1
+        maxInstances: 2
+    frontend:
+      plan: starter

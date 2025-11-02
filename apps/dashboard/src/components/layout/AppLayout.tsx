@@ -5,6 +5,8 @@ import Sidebar from './Sidebar';
 import { type UserRole } from '../../types';
 import { useAppSelector } from '../../store';
 import { ParticleEffects } from '../roblox/ParticleEffects';
+import { Breadcrumbs } from '../navigation/Breadcrumbs';
+import { PageTransition } from '../common/PageTransition';
 
 interface Props {
   role: UserRole;
@@ -22,7 +24,6 @@ export default function AppLayout({ role, children, isRobloxPage = false }: Prop
         display: 'flex',
         minHeight: '100vh',
         backgroundColor: 'var(--mantine-color-dark-7)',
-        overflow: 'hidden',
       }}
     >
       <Topbar />
@@ -32,8 +33,9 @@ export default function AppLayout({ role, children, isRobloxPage = false }: Prop
         style={{
           flexGrow: 1,
           padding: 'var(--mantine-spacing-md)',
-          width: sidebarOpen ? `calc(100% - ${drawerWidth}px)` : '100%',
-          marginLeft: sidebarOpen ? `${drawerWidth}px` : 0,
+          width: `calc(100% - ${drawerWidth}px)`,
+          marginLeft: `${drawerWidth}px`,
+          transition: 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           minHeight: '100vh',
           background: 'linear-gradient(135deg, #0f0f2e 0%, #1a0b2e 50%, #2e0b2e 100%)',
           position: 'relative',
@@ -64,7 +66,10 @@ export default function AppLayout({ role, children, isRobloxPage = false }: Prop
         <Box style={{ height: '64px' }} />
 
         <Box style={{ position: 'relative', zIndex: 1, minHeight: 'calc(100vh - 64px)' }}>
-          {children}
+          <Breadcrumbs />
+          <PageTransition variant="slide">
+            {children}
+          </PageTransition>
         </Box>
       </Box>
     </Box>

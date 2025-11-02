@@ -676,7 +676,7 @@ pip install -r requirements.txt
 
 ### Internal Documentation
 - [DEPLOYMENT.md](DEPLOYMENT.md) - Production deployment
-- [SECURITY.md](SECURITY.md) - Security guidelines
+- [SECURITY.md](../../09-reference/security/templates/SECURITY_POLICY_TEMPLATE.md) - Security guidelines
 - [API Documentation](http://localhost:8009/docs) - Interactive API docs
 - [CLAUDE.md](../CLAUDE.md) - AI assistant context
 

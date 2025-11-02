@@ -40,7 +40,7 @@ This runbook provides step-by-step instructions for deploying the enhanced load 
 ./scripts/test-replica-connectivity.sh
 
 # Deploy replica router configuration
-kubectl apply -f infrastructure/k8s/replica-router-configmap.yaml
+kubectl apply -f infrastructure/kubernetes/replica-router-configmap.yaml
 
 # Update application to use replica router
 kubectl set env deployment/fastapi-main \
@@ -91,7 +91,7 @@ cd infrastructure/pgbouncer
 
 ```bash
 # Deploy circuit breaker configuration
-kubectl apply -f infrastructure/k8s/circuit-breaker-config.yaml
+kubectl apply -f infrastructure/kubernetes/circuit-breaker-config.yaml
 
 # Enable resilience middleware
 kubectl set env deployment/fastapi-main \
@@ -112,7 +112,7 @@ watch -n 5 'curl -s http://localhost:8009/health/circuit-breakers | jq .'
 
 ```bash
 # Deploy rate limit rules
-kubectl apply -f infrastructure/k8s/rate-limit-rules.yaml
+kubectl apply -f infrastructure/kubernetes/rate-limit-rules.yaml
 
 # Enable distributed rate limiting
 kubectl set env deployment/fastapi-main \
@@ -135,7 +135,7 @@ kubectl set env deployment/fastapi-main \
 
 ```bash
 # Initialize edge cache
-kubectl apply -f infrastructure/k8s/edge-cache-deployment.yaml
+kubectl apply -f infrastructure/kubernetes/edge-cache-deployment.yaml
 
 # Configure CDN integration
 ./scripts/configure-cdn.sh \
@@ -174,7 +174,7 @@ redis-cli --scan --pattern "cache:*" | wc -l
 
 ```bash
 # Deploy cluster coordinator
-kubectl apply -f infrastructure/k8s/websocket-cluster.yaml
+kubectl apply -f infrastructure/kubernetes/websocket-cluster.yaml
 
 # Scale WebSocket pods
 kubectl scale deployment/websocket-handler --replicas=3
