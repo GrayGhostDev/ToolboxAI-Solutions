@@ -103,7 +103,8 @@ export default defineConfig({
       'react-syntax-highlighter/dist/esm/light': 'react-syntax-highlighter/dist/cjs/light',
       'react-syntax-highlighter/dist/esm/light-async': 'react-syntax-highlighter/dist/cjs/light-async',
       // Force single instance of three.js to prevent multiple initialization errors
-      three: path.resolve(__dirname, './node_modules/three')
+      // Point to root node_modules in workspace setup
+      three: path.resolve(__dirname, '../../node_modules/three')
     },
     dedupe: [
       'react',
@@ -129,7 +130,7 @@ export default defineConfig({
     strictPort: true,
     open: false,
     cors: true,
-    // Configure HMR for all environments
+    // Configure HMR for all environments with improved error handling
     hmr: {
       // Use dynamic host detection for better compatibility
       host: 'localhost',
@@ -137,11 +138,19 @@ export default defineConfig({
       clientPort: 24678,
       protocol: 'ws',
       overlay: process.env.DOCKER_ENV !== 'true', // Disable overlay only in Docker
+      timeout: 30000, // Increased timeout for slower connections
+      // Add error handling
+      handleError: (error) => {
+        console.warn('HMR WebSocket error (non-critical):', error.message);
+        // Don't throw - allow app to continue working
+      }
     },
     watch: {
       // Use polling in Docker for file watching
       usePolling: process.env.DOCKER_ENV === 'true',
-      interval: 1000
+      interval: 1000,
+      // Ignore node_modules for better performance
+      ignored: ['**/node_modules/**', '**/.git/**']
     },
     proxy: {
       // Use environment variable for proxy target, fallback to localhost for non-Docker development
@@ -253,7 +262,9 @@ export default defineConfig({
         // 'react-dom'
         // Externalize refractor to avoid default export issues
         'refractor',
-        'refractor/core'
+        'refractor/core',
+        // Externalize all refractor language files
+        /^refractor\/lang\/.*/
       ],
 
       // Enhanced module resolution
