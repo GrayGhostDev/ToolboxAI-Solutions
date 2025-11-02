@@ -41,6 +41,15 @@ from fastapi.responses import Response
 # Import Prometheus metrics
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST, REGISTRY
 
+# Initialize Sentry monitoring
+try:
+    from apps.backend.config.sentry import init_sentry
+    init_sentry()
+except ImportError:
+    logging.warning("Sentry configuration not found, monitoring disabled")
+except Exception as e:
+    logging.error(f"Failed to initialize Sentry: {e}")
+
 # Create the FastAPI application using the factory
 app = create_app(config_settings=settings)
 

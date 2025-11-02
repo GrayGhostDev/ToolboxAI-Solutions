@@ -12,11 +12,29 @@ import App from './App';
 import './i18n/config';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { logger } from './utils/logger';
+import { unregisterServiceWorkers } from './utils/serviceWorkerCleanup';
+
+// Initialize Sentry monitoring
+import { initSentry } from './config/sentry';
+
+// Suppress non-critical HMR WebSocket errors in Docker/development
+import './utils/hmrErrorSuppressor';
 
 // Mantine Core Styles - Import all necessary CSS
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 import '@mantine/dates/styles.css';
+
+// Initialize Sentry for error tracking in production
+initSentry();
+
+// Clean up any old service workers on app start
+// This prevents errors from previously registered service workers
+if (process.env.NODE_ENV === 'development') {
+  unregisterServiceWorkers().catch(error => {
+    console.warn('Failed to unregister service workers:', error);
+  });
+}
 
 // Conditionally import Clerk components only when enabled
 const isClerkEnabled = import.meta.env.VITE_ENABLE_CLERK_AUTH === 'true';
@@ -35,33 +53,31 @@ if (!clerkPubKey && isClerkEnabled) {
 }
 
 // Create root app component with both auth providers
-// Both providers are always present to support the useUnifiedAuth hook
+// Redux Provider must be at the top since auth providers use Redux hooks
 const RootApp = () => {
-  const appContent = (
-    <Provider store={store}>
-      <App />
-    </Provider>
-  );
-
   // Always wrap with both providers - they handle their own enabled/disabled state
   // This allows the useUnifiedAuth hook to work correctly without violating React rules
   if (isClerkEnabled) {
     return (
-      <ClerkProviderWrapper>
-        <ClerkAuthProvider>
-          <LegacyAuthProvider>
-            {appContent}
-          </LegacyAuthProvider>
-        </ClerkAuthProvider>
-      </ClerkProviderWrapper>
+      <Provider store={store}>
+        <ClerkProviderWrapper>
+          <ClerkAuthProvider>
+            <LegacyAuthProvider>
+              <App />
+            </LegacyAuthProvider>
+          </ClerkAuthProvider>
+        </ClerkProviderWrapper>
+      </Provider>
     );
   }
 
   // When Clerk is disabled, still provide both providers for consistency
   return (
-    <LegacyAuthProvider>
-      {appContent}
-    </LegacyAuthProvider>
+    <Provider store={store}>
+      <LegacyAuthProvider>
+        <App />
+      </LegacyAuthProvider>
+    </Provider>
   );
 };
 

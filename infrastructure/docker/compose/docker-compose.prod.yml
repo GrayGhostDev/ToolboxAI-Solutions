@@ -110,10 +110,23 @@ services:
       SECURE_BROWSER_XSS_FILTER: true
       # Production logging
       LOG_LEVEL: WARNING
-      SENTRY_DSN: ${SENTRY_DSN}
+      # Sentry Integration
+      SENTRY_DSN: ${SENTRY_DSN_BACKEND}
+      SENTRY_ENVIRONMENT: production
+      SENTRY_RELEASE: ${COMMIT_SHA:-unknown}
+      # Supabase Integration (replaces local postgres if configured)
+      DATABASE_URL: ${SUPABASE_DATABASE_URL:-${DATABASE_URL}}
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
       # Performance settings
       CONNECTION_POOL_SIZE: 20
       CONNECTION_MAX_OVERFLOW: 40
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8009/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     deploy:
       replicas: 3  # Multiple replicas for high availability
       update_config:
