@@ -1,9 +1,19 @@
 # 🚨 IMMEDIATE FIX REQUIRED: Root Directory Error
 
-## Error Message
+## Error Messages Fixed
+
+### 1. Root Directory Error ✅ FIXED
 ```
 The specified Root Directory "apps/dashboard" does not exist
 ```
+**Solution**: Set Root Directory to `.` or leave empty
+
+### 2. Vite Command Not Found ✅ FIXED
+```
+sh: line 1: vite: command not found
+Error: Command "npm run build" exited with 127
+```
+**Solution**: Changed install command to `npm install --production=false --legacy-peer-deps`
 
 ## 🎯 Quick Fix (2 minutes)
 
@@ -53,9 +63,11 @@ Framework Preset: Vite
 Root Directory: . (or empty)
 Build Command: npm run build
 Output Directory: dist
-Install Command: npm install --legacy-peer-deps
+Install Command: npm install --production=false --legacy-peer-deps
 Node.js Version: 22.x
 ```
+
+**Note**: `--production=false` ensures devDependencies (like vite) are installed
 
 ### Expected Result
 After fixing and redeploying:
