@@ -97,11 +97,11 @@ export default defineConfig({
       '@styles': path.resolve(__dirname, './src/styles'),
       '@config': path.resolve(__dirname, './src/config'),
       // Force react-syntax-highlighter to use CJS versions (better compatibility)
-      'react-syntax-highlighter/dist/esm/prism': 'react-syntax-highlighter/dist/cjs/prism',
-      'react-syntax-highlighter/dist/esm/prism-light': 'react-syntax-highlighter/dist/cjs/prism-light',
-      'react-syntax-highlighter/dist/esm/prism-async-light': 'react-syntax-highlighter/dist/cjs/prism-async-light',
-      'react-syntax-highlighter/dist/esm/light': 'react-syntax-highlighter/dist/cjs/light',
-      'react-syntax-highlighter/dist/esm/light-async': 'react-syntax-highlighter/dist/cjs/light-async',
+      'react-syntax-highlighter/dist/esm/prism': path.resolve(__dirname, 'node_modules/react-syntax-highlighter/dist/cjs/prism'),
+      'react-syntax-highlighter/dist/esm/prism-light': path.resolve(__dirname, 'node_modules/react-syntax-highlighter/dist/cjs/prism-light'),
+      'react-syntax-highlighter/dist/esm/prism-async-light': path.resolve(__dirname, 'node_modules/react-syntax-highlighter/dist/cjs/prism-async-light'),
+      'react-syntax-highlighter/dist/esm/light': path.resolve(__dirname, 'node_modules/react-syntax-highlighter/dist/cjs/light'),
+      'react-syntax-highlighter/dist/esm/light-async': path.resolve(__dirname, 'node_modules/react-syntax-highlighter/dist/cjs/light-async'),
       // Force single instance of three.js to prevent multiple initialization errors
       // Point to root node_modules in workspace setup
       three: path.resolve(__dirname, '../../node_modules/three')
@@ -260,10 +260,7 @@ export default defineConfig({
         // Uncomment to load from CDN in production
         // 'react',
         // 'react-dom'
-        // Externalize refractor to avoid default export issues
-        'refractor',
-        'refractor/core',
-        // Externalize all refractor language files
+        // Externalize refractor language files (they're imported dynamically and not needed for SSR)
         /^refractor\/lang\/.*/
       ],
 
@@ -285,7 +282,7 @@ export default defineConfig({
               return { id, external: true };
             }
             // Handle refractor/core imports - refractor v4+ removed /core export
-            if (id === 'refractor/core' || id === 'refractor/core.js') {
+            if (id === 'refractor/core' || id === 'refractor/core.js' || id.includes('refractor/lib/core')) {
               return '\0virtual:refractor-core';
             }
             // Handle direct refractor imports - refractor doesn't have default export
@@ -311,19 +308,20 @@ export default defineConfig({
             }
             // Provide stub for refractor/core that mimics the old API
             if (id === '\0virtual:refractor-core') {
-              const refractorPath = path.resolve(__dirname, 'node_modules/refractor/index.js');
+              const refractorPath = path.resolve(__dirname, '../../node_modules/refractor/lib/core.js');
               return `
                 import { refractor } from '${refractorPath}';
                 export default refractor;
+                export { refractor };
               `;
             }
             // Provide default export wrapper for main refractor package
             if (id === '\0virtual:refractor-main') {
-              const refractorPath = path.resolve(__dirname, 'node_modules/refractor/index.js');
+              const refractorPath = path.resolve(__dirname, '../../node_modules/refractor/lib/core.js');
               return `
                 import { refractor } from '${refractorPath}';
                 export default refractor;
-                export * from '${refractorPath}';
+                export { refractor };
               `;
             }
             return null;
