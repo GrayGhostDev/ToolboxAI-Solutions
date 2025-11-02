@@ -14,7 +14,7 @@ import redis
 from sqlalchemy import select, delete
 from sqlalchemy.orm import Session
 
-from apps.backend.core.database import get_session
+from apps.backend.core.database import get_db
 from apps.backend.core.config import settings
 from database.models import User, Session as DBSession
 
@@ -119,7 +119,7 @@ def cleanup_expired_sessions(self, hours_old: int = 24) -> Dict[str, Any]:
         redis_keys_removed = 0
 
         # Clean database sessions
-        with get_session() as session:
+        with next(get_db()) as session:
             # Find and delete expired sessions
             stmt = delete(DBSession).where(DBSession.last_activity < cutoff_time)
             result = session.execute(stmt)

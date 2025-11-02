@@ -15,8 +15,8 @@ from celery.utils.log import get_task_logger
 import httpx
 
 from apps.backend.core.config import settings
-from apps.backend.services.pusher_service import pusher_client
-from apps.backend.services.roblox import RobloxService
+from apps.backend.services.pusher import pusher_service as pusher_client
+from apps.backend.services.roblox_service import RobloxService
 
 logger = get_task_logger(__name__)
 

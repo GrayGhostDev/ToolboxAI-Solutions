@@ -16,7 +16,7 @@ import pandas as pd
 
 from apps.backend.core.config import settings
 from apps.backend.core.database import get_session
-from apps.backend.services.pusher_service import pusher_client
+from apps.backend.services.pusher import pusher_service as pusher_client
 from database.models import (
     User,
     EducationalContent,

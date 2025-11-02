@@ -15,8 +15,7 @@ import openai
 from pydantic import BaseModel, Field
 
 from apps.backend.core.config import settings
-from apps.backend.core.database import get_async_session
-from apps.backend.services.pusher_service import pusher_client
+from apps.backend.services.pusher import pusher_service as pusher_client
 from database.models import EducationalContent, Quiz, User
 from core.agents.content_agent import ContentAgent
 from core.agents.orchestrator import Orchestrator

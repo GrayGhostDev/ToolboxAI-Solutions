@@ -37,9 +37,11 @@ services:
   redis:
     ports:
       - "6381:6379"
+    # Override entrypoint to run directly without user switching
+    entrypoint: ["redis-server"]
     command: >
-      redis-server
-      --appendonly yes
+      --save ""
+      --appendonly no
       --maxmemory 256mb
       --maxmemory-policy allkeys-lru
     # No password in development
@@ -48,6 +50,9 @@ services:
     security_opt: []
     cap_drop: []
     read_only: false
+    user: root  # Run as root in development to avoid permission issues
+    # Skip volume mount to avoid ownership conflicts
+    volumes: []
 
   # ----------------------------------------
   # FastAPI Backend (Development)
@@ -78,16 +83,19 @@ services:
       HTTP_PROXY: ${HTTP_PROXY}
       HTTPS_PROXY: ${HTTPS_PROXY}
     secrets: []
-    volumes:
+    # Completely override base volumes list (base has backend_logs:/app/logs which conflicts with tmpfs)
+    volumes: !override
       # Mount source code for hot reload
       - ../../../apps/backend:/app/apps/backend:cached
       - ../../../core:/app/core:cached
       - ../../../database:/app/database:cached
       - ../../../toolboxai_settings:/app/toolboxai_settings:cached
-      - ../../../toolboxai_utils:/app/toolboxai_utils:cached
-      - backend_logs:/app/logs
+      - agent_data:/app/agent_data:Z  # Keep this from base config
       # Allow pip install in development
       - pip_cache:/root/.cache/pip
+      # Note: /app/logs is mounted as tmpfs below, not a volume
+    tmpfs:
+      - /app/logs  # Writable logs directory
     # Remove security restrictions for development
     security_opt: []
     cap_drop: []
@@ -106,34 +114,25 @@ services:
   # React Dashboard (Development)
   # ----------------------------------------
   dashboard:
-    build:
-      context: ../../..
-      dockerfile: infrastructure/docker/dockerfiles/dashboard-fixed.Dockerfile
-      target: builder
-      args:
-        NODE_ENV: development
-        # Clerk Authentication Build Args
-        VITE_ENABLE_CLERK_AUTH: "${VITE_ENABLE_CLERK_AUTH:-true}"
-        VITE_CLERK_PUBLISHABLE_KEY: "${VITE_CLERK_PUBLISHABLE_KEY}"
-        VITE_CLERK_SIGN_IN_URL: "${VITE_CLERK_SIGN_IN_URL:-/sign-in}"
-        VITE_CLERK_SIGN_UP_URL: "${VITE_CLERK_SIGN_UP_URL:-/sign-up}"
-        VITE_CLERK_AFTER_SIGN_IN_URL: "${VITE_CLERK_AFTER_SIGN_IN_URL:-/dashboard}"
-        VITE_CLERK_AFTER_SIGN_UP_URL: "${VITE_CLERK_AFTER_SIGN_UP_URL:-/dashboard}"
-        VITE_CLERK_FRONTEND_API_URL: "${VITE_CLERK_FRONTEND_API_URL}"
-        # Updated build args for Pusher migration
-        VITE_ENABLE_WEBSOCKET: "false"
-        VITE_ENABLE_PUSHER: "true"
-        VITE_PUSHER_KEY: "${VITE_PUSHER_KEY}"
-        VITE_PUSHER_CLUSTER: "${VITE_PUSHER_CLUSTER:-us2}"
-        # API Configuration
-        VITE_API_BASE_URL: "${VITE_API_BASE_URL:-http://127.0.0.1:8009}"
+    # Use Node.js 22 base image directly for development (required by package.json)
+    image: node:22-alpine
+    container_name: toolboxai-dashboard
+    restart: unless-stopped
+    working_dir: /app
     ports:
       - "5179:5179"  # Vite dev server exposed on host
       - "9229:9229"  # Node debugger port
     environment:
       NODE_ENV: development
+      DOCKER_ENV: "true"  # Flag for Docker-specific configurations
+      # npm configuration to avoid permission issues
+      NPM_CONFIG_CACHE: /tmp/.npm
+      NPM_CONFIG_UPDATE_NOTIFIER: "false"
+      NPM_CONFIG_FUND: "false"
+      NPM_CONFIG_AUDIT: "false"
       # API configuration for development
       VITE_API_BASE_URL: http://localhost:8009
+      VITE_PROXY_TARGET: http://backend:8009  # Proxy to backend service inside Docker
       # Pusher configuration (2025 standards)
       VITE_PUSHER_KEY: "${VITE_PUSHER_KEY}"
       VITE_PUSHER_CLUSTER: "${VITE_PUSHER_CLUSTER:-us2}"
@@ -153,34 +152,41 @@ services:
       VITE_MOCK_API: "false"
       # Enable Clerk auth
       VITE_ENABLE_CLERK_AUTH: "true"
+      VITE_CLERK_PUBLISHABLE_KEY: "${VITE_CLERK_PUBLISHABLE_KEY}"
     volumes:
-      # Mount source code for hot reload
-      - ../../../apps/dashboard/src:/app/src:cached
-      - ../../../apps/dashboard/public:/app/public:cached
-      - ../../../apps/dashboard/index.html:/app/index.html:cached
-      - ../../../apps/dashboard/vite.config.ts:/app/vite.config.ts:cached
-      - ../../../apps/dashboard/tsconfig.json:/app/tsconfig.json:cached
-      - ../../../apps/dashboard/package.json:/app/package.json:cached
-      # Exclude node_modules to prevent conflicts
-      - /app/node_modules
-      - /app/dist
-    # Remove security restrictions for development
-    security_opt: []
-    cap_drop: []
+      # Mount entire dashboard directory
+      - ../../../apps/dashboard:/app:cached
+      # Override node_modules with anonymous volume to avoid permission issues
+      - dashboard_node_modules:/app/node_modules
+    tmpfs:
+      - /tmp  # Writable tmp for npm cache
+    networks:
+      - frontend
+      - backend
+    # Allow writing to filesystem in development
     read_only: false
-    user: root
-    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5179"]
+    user: root  # Run as root to avoid permission issues
+    command: >
+      sh -c "
+      apk add --no-cache wget &&
+      echo '📦 Installing dashboard dependencies...' &&
+      npm install --legacy-peer-deps &&
+      echo '✅ Dependencies installed, starting dev server...' &&
+      npm run dev -- --host 0.0.0.0 --port 5179
+      "
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5179"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5179"]
       interval: 15s
       timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 90s  # Give more time for npm install and Vite startup
 
   # ----------------------------------------
   # MCP Server (Development)
   # ----------------------------------------
   mcp-server:
+    build:
+      target: development  # Use development stage
     ports:
       - "9877:9877"
       - "9878:9878"  # Debug port
@@ -208,6 +214,9 @@ services:
   # Agent Coordinator (Development)
   # ----------------------------------------
   agent-coordinator:
+    profiles: ["agents"]  # Disabled by default due to Pydantic v2.10 compatibility issues
+    build:
+      target: development  # Use development stage
     ports:
       - "8888:8888"
       - "8889:8889"  # Debug port
@@ -223,6 +232,9 @@ services:
       MAX_CONCURRENT_AGENTS: 3  # Lower for dev
       TASK_TIMEOUT: 60  # Shorter timeout for dev
       HEALTH_CHECK_INTERVAL: 10  # More frequent checks in dev
+      # Disable LangSmith tracing to avoid Pydantic v1/v2 compatibility issues
+      LANGCHAIN_TRACING_V2: "false"
+      LANGCHAIN_API_KEY: ""
     secrets: []
     volumes:
       # Mount source code for development
@@ -240,8 +252,8 @@ services:
   celery-worker:
     build:
       target: development
-    ports:
-      - "5678:5678"  # Python debugger port
+    # Note: debugpy port removed to avoid conflict with backend service
+    # If needed, add: "5679:5678" for separate worker debugging
     environment:
       ENVIRONMENT: development
       DEBUG: "true"
@@ -261,15 +273,15 @@ services:
       HTTP_PROXY: ${HTTP_PROXY}
       HTTPS_PROXY: ${HTTPS_PROXY}
     secrets: []
-    volumes:
+    volumes: !override
       # Mount source code for hot reload
       - ../../../apps/backend:/app/apps/backend:cached
       - ../../../core:/app/core:cached
       - ../../../database:/app/database:cached
       - ../../../toolboxai_settings:/app/toolboxai_settings:cached
-      - ../../../toolboxai_utils:/app/toolboxai_utils:cached
-      - celery_logs:/app/logs
       - celery_data:/app/data
+    tmpfs:
+      - /app/logs  # Use tmpfs to avoid permission issues
     security_opt: []
     cap_drop: []
     read_only: false
@@ -308,41 +320,117 @@ services:
       HTTP_PROXY: ${HTTP_PROXY}
       HTTPS_PROXY: ${HTTPS_PROXY}
     secrets: []
-    volumes:
+    volumes: !override
       # Mount source code for development
       - ../../../apps/backend:/app/apps/backend:cached
       - ../../../core:/app/core:cached
       - ../../../database:/app/database:cached
       - ../../../toolboxai_settings:/app/toolboxai_settings:cached
-      - ../../../toolboxai_utils:/app/toolboxai_utils:cached
       - celerybeat_schedule:/app/celerybeat-schedule
-      - celery_logs:/app/logs
+    tmpfs:
+      - /app/logs  # Use tmpfs to avoid permission issues
     security_opt: []
     cap_drop: []
     read_only: false
     user: root
 
   # ----------------------------------------
-  # Flower (Celery Monitoring - Dev Only)
+  # Roblox Sync Service (Development - disabled due to command issues)
   # ----------------------------------------
-  flower:
-    image: mher/flower:2.0
-    container_name: toolboxai-flower
-    restart: always
-    ports:
-      - "5555:5555"
+  roblox-sync:
+    profiles: ["roblox"]  # Only start with: docker compose --profile roblox up
+    environment:
+      ENVIRONMENT: development
+      DEBUG: "true"
+      LOG_LEVEL: DEBUG
+      # Use direct env vars instead of secrets
+      ROBLOX_API_KEY: ${ROBLOX_API_KEY:-roblox-dev-key}
+      ROBLOX_CLIENT_SECRET: ${ROBLOX_CLIENT_SECRET:-roblox-dev-secret}
+      # Remove secret file references
+      ROBLOX_API_KEY_FILE: ""
+      ROBLOX_CLIENT_SECRET_FILE: ""
+      # Dev mode enabled
+      ROJO_LIVE_RELOAD: "true"
+      ROJO_DEV_MODE: "true"
+      ROJO_LOG_LEVEL: debug
+    secrets: []
+    security_opt: []
+    cap_drop: []
+    read_only: false
+
+  # ----------------------------------------
+  # Redis Cloud Connector (Development)
+  # ----------------------------------------
+  redis-cloud-connector:
+    profiles: ["cloud"]  # Disabled by default - only needed for cloud deployment
+    # Override entrypoint to avoid user-switching issues
+    entrypoint: ["redis-server"]
+    command: ["--save", "", "--appendonly", "no"]
+    environment:
+      ENVIRONMENT: development
+      DEBUG: "true"
+      # Disable LangCache in development
+      LANGCACHE_ENABLED: "false"
+      LANGCACHE_API_KEY: ${LANGCACHE_API_KEY:-langcache-dev-key}
+      LANGCACHE_API_KEY_FILE: ""
+    security_opt: []
+    cap_drop: []
+    read_only: false
+    user: root
+    volumes: []
+
+  # ----------------------------------------
+  # Backup Coordinator (Development)
+  # ----------------------------------------
+  backup-coordinator:
+    profiles: ["backups"]  # Disabled by default - backups not needed in dev
+    # Uses backend image (no separate build)
+    environment:
+      ENVIRONMENT: development
+      DEBUG: "true"
+      # Disable backups in development by default
+      BACKUP_ENABLED: "false"
+      BACKUP_ENCRYPTION_ENABLED: "false"
+      BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY:-backup-dev-key}
+      BACKUP_ENCRYPTION_KEY_FILE: ""
+    secrets: []
+    security_opt: []
+    cap_drop: []
+    read_only: false
+    user: root  # Run as root in development to avoid permission issues
+
+  # ----------------------------------------
+  # Migration Runner (Development)
+  # ----------------------------------------
+  migration-runner:
+    profiles: ["migrations"]  # Disabled by default - run manually when needed
+    environment:
+      ENVIRONMENT: development
+      DEBUG: "true"
+      # Use direct database connection
+      DATABASE_URL: postgresql://${POSTGRES_USER:-toolboxai}:${POSTGRES_PASSWORD:-devpass2024}@postgres:5432/${POSTGRES_DB:-toolboxai}
+      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL_FILE: ""
+      REDIS_URL_FILE: ""
+      # Disable auto-run in development
+      MIGRATION_AUTO_RUN: "false"
+    secrets: []
+    security_opt: []
+    cap_drop: []
+    read_only: false
+
+  # ----------------------------------------
+  # Celery Flower - Override to use env vars instead of secrets
+  # ----------------------------------------
+  celery-flower:
     environment:
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
       FLOWER_PORT: 5555
       FLOWER_BASIC_AUTH: ${FLOWER_USER:-admin}:${FLOWER_PASSWORD:-admin}
       FLOWER_DEBUG: "true"
-    networks:
-      - cache
-      - backend
-    depends_on:
-      - redis
-      - celery-worker
+      FLOWER_BASIC_AUTH_FILE: ""  # Disable secret file
+    secrets: []  # No secrets in dev mode
     command: >
       celery
       --broker=redis://redis:6379/0
@@ -395,6 +483,13 @@ services:
     networks:
       - backend
 
+  # Prometheus (Development - disabled due to config issues)
+  prometheus:
+    profiles: ["monitoring"]  # Only start with: docker compose --profile monitoring up
+    security_opt: []
+    cap_drop: []
+    user: root  # Run as root in development to avoid permission issues
+
 # ============================================
 # DEVELOPMENT VOLUMES
 # ============================================
@@ -402,6 +497,8 @@ volumes:
   pip_cache:
     driver: local
   node_modules:
+    driver: local
+  dashboard_node_modules:
     driver: local
   celery_logs:
     driver: local
@@ -427,6 +524,50 @@ networks:
   mcp:
     external: false
     internal: false  # Allow external access in dev
+  # Add missing networks from base
+  toolboxai-network:
+    external: false
+  monitoring:
+    external: false
+  roblox:
+    external: false
 
-# Override production secrets - use environment variables in dev
-secrets: {}
+# File-based secrets for Docker Compose development
+# These override the external: true secrets from base config
+# Values are loaded from .env by start-dev.sh
+# Must explicitly set external: false to override base config
+secrets:
+  db_password:
+    file: .secrets/db_password.txt
+    external: false
+  redis_password:
+    file: .secrets/redis_password.txt
+    external: false
+  database_url:
+    file: .secrets/database_url.txt
+    external: false
+  redis_url:
+    file: .secrets/redis_url.txt
+    external: false
+  jwt_secret:
+    file: .secrets/jwt_secret.txt
+    external: false
+  openai_api_key:
+    file: .secrets/openai_api_key.txt
+    external: false
+  anthropic_api_key:
+    file: .secrets/anthropic_api_key.txt
+    external: false
+  roblox_api_key:
+    file: .secrets/roblox_api_key.txt
+    external: false
+  roblox_client_secret:
+    file: .secrets/roblox_client_secret.txt
+    external: false
+  langcache_api_key:
+    file: .secrets/langcache_api_key.txt
+    external: false
+  backup_encryption_key:
+    file: .secrets/backup_encryption_key.txt
+    external: false
+  # flower_auth not needed in dev - using env vars instead

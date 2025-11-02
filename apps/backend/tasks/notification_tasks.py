@@ -12,8 +12,8 @@ from celery.utils.log import get_task_logger
 import httpx
 
 from apps.backend.core.config import settings
-from apps.backend.services.pusher_service import pusher_client
-from apps.backend.core.database import get_session
+from apps.backend.services.pusher import pusher_service as pusher_client
+from apps.backend.core.database import SessionLocal
 from database.models import User, Notification
 
 logger = get_task_logger(__name__)
@@ -58,7 +58,7 @@ def send_notification(
         # Save notification to database
         notification_id = None
         try:
-            with get_session() as session:
+            with SessionLocal() as session:
                 notification = Notification(
                     user_id=user_id,
                     type=notification_type,
@@ -135,8 +135,8 @@ def send_notification(
         # Send via Webhook
         if "webhook" in channels and data and data.get("webhook_url"):
             try:
-                async with httpx.AsyncClient() as client:
-                    webhook_response = await client.post(
+                with httpx.Client() as client:
+                    webhook_response = client.post(
                         data["webhook_url"],
                         json={
                             "notification_id": notification_id,
@@ -167,7 +167,7 @@ def send_notification(
         # Update notification status in database
         if notification_id:
             try:
-                with get_session() as session:
+                with SessionLocal() as session:
                     notification = session.query(Notification).filter_by(id=notification_id).first()
 
                     if notification:

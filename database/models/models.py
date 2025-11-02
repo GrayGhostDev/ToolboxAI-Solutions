@@ -1462,6 +1462,10 @@ __all__.extend(
         "Content",
         "Class",
         "Lesson",
+        "Quiz",
+        "QuizQuestion",
+        "QuizAttempt",
+        "QuizResponse",
         "EnhancedContentGeneration",
         "ContentGenerationBatch",
     ]

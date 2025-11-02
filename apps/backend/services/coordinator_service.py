@@ -26,7 +26,7 @@ from core.coordinators import (
 )
 
 # Import Pusher service for real-time updates
-from apps.backend.services.pusher_service import pusher_service
+from apps.backend.services.pusher import pusher_service
 
 logger = logging.getLogger(__name__)
 
