@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "name": "toolboxai-dashboard",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
@@ -84,12 +83,6 @@
   "build": {
     "env": {
       "NODE_OPTIONS": "--max_old_space_size=4096"
-    }
-  },
-  "functions": {
-    "api/**/*.ts": {
-      "memory": 1024,
-      "maxDuration": 10
     }
   },
   "regions": ["iad1"],
