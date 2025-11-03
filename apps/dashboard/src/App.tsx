@@ -26,6 +26,8 @@ import { pusherService } from './services/pusher';
 import { PusherProvider } from './contexts/PusherContext';
 import { NetworkError } from './components/ErrorComponents';
 import { SessionMonitor, NetworkStatus } from './components/auth/AuthRecovery';
+// Backend Health Monitoring
+import { HealthStatusBanner } from './components/HealthStatusBanner';
 // Lazy load heavy 3D components to improve initial load time
 const ThreeProvider = React.lazy(() => import('./components/three/ThreeProvider').then(m => ({ default: m.ThreeProvider })));
 const Scene3D = React.lazy(() => import('./components/three/Scene3D').then(m => ({ default: m.Scene3D })));
@@ -230,6 +232,7 @@ export default function App() {
         </AppLayout>
 
         {/* Global Components */}
+        <HealthStatusBanner position="top" dismissible showRetry />
         <CommandPalette />
         <NotificationToast />
         <RealtimeToast />
