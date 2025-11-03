@@ -1,7 +1,7 @@
 // In development with Vite, use empty baseURL to enable relative URLs through proxy
 // This avoids CORS issues by routing all requests through the same origin
 const isDevelopment = import.meta.env.DEV;
-const rawApi = (import.meta.env.VITE_API_BASE_URL as string) || 'http://127.0.0.1:8009';
+const rawApi = (import.meta.env.VITE_API_URL as string) || 'http://127.0.0.1:8009';
 
 // Use empty string in development so axios uses relative URLs that go through Vite proxy
 // In production, ensure we have a clean base URL without trailing slashes or api paths

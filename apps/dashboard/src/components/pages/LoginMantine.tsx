@@ -253,44 +253,49 @@ export default function LoginMantine() {
                 </Anchor>
               </Group>
 
-              <Divider label="Demo Credentials" labelPosition="center" />
+              {/* Demo Credentials - Development Only */}
+              {import.meta.env.DEV && (
+                <>
+                  <Divider label="Demo Credentials (Dev Only)" labelPosition="center" />
 
-              <Stack gap="xs">
-                {demoCredentials.map((cred) => (
-                  <Group
-                    key={cred.role}
-                    justify="space-between"
-                    p="xs"
-                    style={{
-                      border: '1px solid var(--mantine-color-gray-3)',
-                      borderRadius: 'var(--mantine-radius-sm)',
-                      cursor: 'pointer',
-                      transition: 'background-color 0.2s',
-                    }}
-                    onClick={() => fillDemoCredentials(cred.email, cred.password)}
-                  >
-                    <Box>
-                      <Text size="sm" fw={600}>
-                        {cred.role}
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        {cred.email}
-                      </Text>
-                    </Box>
-                    <AtomicButton
-                      size="xs"
-                      variant="secondary"
-                      robloxTheme={true}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        fillDemoCredentials(cred.email, cred.password);
-                      }}
-                    >
-                      Use
-                    </AtomicButton>
-                  </Group>
-                ))}
-              </Stack>
+                  <Stack gap="xs">
+                    {demoCredentials.map((cred) => (
+                      <Group
+                        key={cred.role}
+                        justify="space-between"
+                        p="xs"
+                        style={{
+                          border: '1px solid var(--mantine-color-gray-3)',
+                          borderRadius: 'var(--mantine-radius-sm)',
+                          cursor: 'pointer',
+                          transition: 'background-color 0.2s',
+                        }}
+                        onClick={() => fillDemoCredentials(cred.email, cred.password)}
+                      >
+                        <Box>
+                          <Text size="sm" fw={600}>
+                            {cred.role}
+                          </Text>
+                          <Text size="xs" c="dimmed">
+                            {cred.email}
+                          </Text>
+                        </Box>
+                        <AtomicButton
+                          size="xs"
+                          variant="secondary"
+                          robloxTheme={true}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            fillDemoCredentials(cred.email, cred.password);
+                          }}
+                        >
+                          Use
+                        </AtomicButton>
+                      </Group>
+                    ))}
+                  </Stack>
+                </>
+              )}
 
               <Group justify="center" mt="md">
                 <Text size="sm" c="dimmed">

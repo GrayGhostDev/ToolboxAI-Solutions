@@ -595,7 +595,7 @@ IMPORTANT: When you have enough information to create an environment, end your r
         // Add the temporary message immediately for visual feedback
         setMessages(prev => [...prev, tempAiMessage]);
         // Use fetch for streaming response
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8009'}/api/v1/ai-chat/generate`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8009'}/api/v1/ai-chat/generate`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

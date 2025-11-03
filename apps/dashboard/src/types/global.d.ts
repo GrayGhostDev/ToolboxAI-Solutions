@@ -175,7 +175,7 @@ declare global {
 declare namespace NodeJS {
   interface ProcessEnv {
     NODE_ENV: 'development' | 'production' | 'test';
-    VITE_API_BASE_URL?: string;
+    VITE_API_URL?: string;
     VITE_WS_URL?: string;
     VITE_ENABLE_WEBSOCKET?: string;
     VITE_PUSHER_KEY?: string;
@@ -188,7 +188,7 @@ declare namespace NodeJS {
 
 // Vite environment variables
 interface ImportMetaEnv {
-  readonly VITE_API_BASE_URL: string;
+  readonly VITE_API_URL: string;
   readonly VITE_WS_URL: string;
   readonly VITE_ENABLE_WEBSOCKET: string;
   readonly VITE_PUSHER_KEY: string;

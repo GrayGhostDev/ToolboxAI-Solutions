@@ -117,7 +117,7 @@ const mockResponses: Record<string, any> = {
 };
 
 // Configure axios defaults
-axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8009';
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8009';
 axios.defaults.headers.common['Content-Type'] = 'application/json';
 
 // Request interceptor - check for bypass mode

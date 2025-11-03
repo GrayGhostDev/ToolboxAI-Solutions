@@ -1138,7 +1138,7 @@ beforeAll(() => {
   process.setMaxListeners(50);
 
   // Mock environment variables with realistic test values
-  process.env.VITE_API_BASE_URL = 'http://localhost:8009';
+  process.env.VITE_API_URL = 'http://localhost:8009';
   process.env.VITE_WS_URL = 'ws://localhost:8009';
   process.env.VITE_PUSHER_KEY = 'test-pusher-key';
   process.env.VITE_PUSHER_CLUSTER = 'us2';

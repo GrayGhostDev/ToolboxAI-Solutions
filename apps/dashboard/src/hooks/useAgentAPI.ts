@@ -37,7 +37,7 @@ export const useAgentAPI = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8009';
+  const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8009';
 
   const makeAPICall = useCallback(async <T = any>(
     endpoint: string,
