@@ -6,8 +6,42 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Plugin to enforce correct module loading order
+function reorderModulePreloadsPlugin() {
+  return {
+    name: 'reorder-modulepreloads',
+    transformIndexHtml(html) {
+      // Extract all modulepreload links
+      const preloadRegex = /<link\s+rel="modulepreload"[^>]*>/g;
+      const preloads = html.match(preloadRegex) || [];
+
+      // Sort preloads by the numbered prefix in the href
+      const sorted = preloads.sort((a, b) => {
+        const getNumber = (link) => {
+          const match = link.match(/\/(\d+)-/);
+          return match ? parseInt(match[1]) : 999;
+        };
+        return getNumber(a) - getNumber(b);
+      });
+
+      // Remove all existing preloads
+      let newHtml = html.replace(preloadRegex, '');
+
+      // Insert sorted preloads before the main script tag
+      const scriptPos = newHtml.indexOf('<script type="module"');
+      if (scriptPos > 0) {
+        newHtml = newHtml.slice(0, scriptPos) +
+                  sorted.join('\n    ') + '\n    ' +
+                  newHtml.slice(scriptPos);
+      }
+
+      return newHtml;
+    }
+  };
+}
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), reorderModulePreloadsPlugin()],
 
   // Optimize dependencies for faster dev and prevent bundling issues
   optimizeDeps: {
@@ -98,6 +132,14 @@ export default defineConfig({
           }
           if (chunkInfo.name === 'vendor-icons') {
             return 'assets/02-vendor-icons-[hash].js';
+          }
+          // Three.js must load AFTER React (it uses React hooks)
+          if (chunkInfo.name === 'vendor-three') {
+            return 'assets/03-vendor-three-[hash].js';
+          }
+          // All other vendors load last
+          if (chunkInfo.name === 'vendor-other') {
+            return 'assets/04-vendor-other-[hash].js';
           }
           return 'assets/[name]-[hash].js';
         }
