@@ -88,7 +88,8 @@ export default defineConfig({
       'three',
       '@react-three/fiber',
       '@react-three/drei',
-      'use-sync-external-store'
+      'use-sync-external-store',
+      'framer-motion'
     ]
   },
   build: {
@@ -117,6 +118,10 @@ export default defineConfig({
             }
             // Mantine UI - depends on React
             if (id.includes('@mantine')) {
+              return 'vendor-mantine';
+            }
+            // Animation libraries - depend on React hooks (useLayoutEffect)
+            if (id.includes('framer-motion')) {
               return 'vendor-mantine';
             }
             // Tabler icons - depends on React
