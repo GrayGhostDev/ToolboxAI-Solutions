@@ -53,7 +53,26 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: process.env.NODE_ENV !== 'production',
     minify: 'terser',
-    chunkSizeWarningLimit: 1000
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        // Ensure proper module format
+        format: 'es',
+        // Manually separate vendor code
+        manualChunks(id) {
+          // Bundle React and core deps into vendor chunk
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-redux')) {
+              return 'vendor-react';
+            }
+            if (id.includes('@mantine')) {
+              return 'vendor-mantine';
+            }
+            return 'vendor';
+          }
+        }
+      }
+    }
   },
   server: {
     port: 5179,
