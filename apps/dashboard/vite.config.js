@@ -79,12 +79,16 @@ export default defineConfig({
       'react',
       'react-dom',
       'react-redux',
+      'react-router-dom',
+      '@reduxjs/toolkit',
+      '@remix-run/router',
       '@mantine/core',
       '@mantine/hooks',
       '@tabler/icons-react',
       'three',
       '@react-three/fiber',
-      '@react-three/drei'
+      '@react-three/drei',
+      'use-sync-external-store'
     ]
   },
   build: {
@@ -103,8 +107,12 @@ export default defineConfig({
           // Bundle React and core deps into vendor chunk
           if (id.includes('node_modules')) {
             // React core - HIGHEST PRIORITY (loads first)
-            if (id.includes('/react/') || id.includes('/react-dom/') || id.includes('/react-redux/') ||
-                id.includes('\\react\\') || id.includes('\\react-dom\\') || id.includes('\\react-redux\\')) {
+            // Must catch react, react-dom, react-redux, react-router, @reduxjs/toolkit
+            if (id.includes('/react/') || id.includes('/react-dom/') ||
+                id.includes('\\react\\') || id.includes('\\react-dom\\') ||
+                id.includes('react-redux') || id.includes('react-router') ||
+                id.includes('@reduxjs/toolkit') || id.includes('@remix-run/router') ||
+                id.includes('use-sync-external-store')) {
               return 'vendor-react';
             }
             // Mantine UI - depends on React
