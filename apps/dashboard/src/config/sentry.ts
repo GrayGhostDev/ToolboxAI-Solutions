@@ -8,7 +8,6 @@
  */
 
 import * as Sentry from '@sentry/react';
-import { BrowserTracing } from '@sentry/tracing';
 
 /**
  * Initialize Sentry for error tracking and performance monitoring
@@ -22,18 +21,8 @@ export const initSentry = () => {
       release: import.meta.env.VITE_COMMIT_SHA || 'unknown',
 
       integrations: [
-        new BrowserTracing({
-          // Track page loads and navigation
-          routingInstrumentation: Sentry.reactRouterV6Instrumentation(
-            // @ts-ignore - React Router hooks
-            window.React.useEffect,
-            window.React.useLocation,
-            window.React.useNavigationType,
-            window.React.createRoutesFromChildren,
-            window.React.matchRoutes
-          ),
-        }),
-        new Sentry.Replay({
+        Sentry.browserTracingIntegration(),
+        Sentry.replayIntegration({
           // Privacy settings
           maskAllText: false,
           blockAllMedia: false,

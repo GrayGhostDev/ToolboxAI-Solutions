@@ -16,6 +16,7 @@ import { unregisterServiceWorkers } from './utils/serviceWorkerCleanup';
 
 // Initialize Sentry monitoring
 import { initSentry } from './config/sentry';
+import * as Sentry from '@sentry/react';
 
 // Suppress non-critical HMR WebSocket errors in Docker/development
 import './utils/hmrErrorSuppressor';
@@ -81,7 +82,15 @@ const RootApp = () => {
   );
 };
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(document.getElementById('root')!, {
+  // React 19 error hooks for better Sentry integration
+  onUncaughtError: Sentry.reactErrorHandler((error, errorInfo) => {
+    logger.error('Uncaught error', { error, componentStack: errorInfo.componentStack });
+  }),
+  onCaughtError: Sentry.reactErrorHandler((error, errorInfo) => {
+    logger.warn('Caught error', { error, componentStack: errorInfo.componentStack });
+  }),
+}).render(
   <React.StrictMode>
     <MantineProvider theme={theme} defaultColorScheme="light">
       <Notifications position="top-right" limit={5} />
