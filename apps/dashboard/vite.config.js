@@ -82,7 +82,9 @@ export default defineConfig({
       '@mantine/core',
       '@mantine/hooks',
       '@tabler/icons-react',
-      'three'
+      'three',
+      '@react-three/fiber',
+      '@react-three/drei'
     ]
   },
   build: {
@@ -113,8 +115,13 @@ export default defineConfig({
             if (id.includes('@tabler/icons')) {
               return 'vendor-icons';
             }
-            // Three.js and other large libraries
-            if (id.includes('three')) {
+            // React-Three-Fiber - MUST load AFTER React (uses React hooks)
+            // Check this BEFORE checking for 'three' to avoid bundling with Three.js core
+            if (id.includes('@react-three/fiber') || id.includes('@react-three/drei')) {
+              return 'vendor-react-three';
+            }
+            // Three.js core library (no React dependencies)
+            if (id.includes('/three/') || id.includes('\\three\\')) {
               return 'vendor-three';
             }
             // Everything else
@@ -133,13 +140,17 @@ export default defineConfig({
           if (chunkInfo.name === 'vendor-icons') {
             return 'assets/02-vendor-icons-[hash].js';
           }
-          // Three.js must load AFTER React (it uses React hooks)
+          // React-Three-Fiber must load AFTER React but BEFORE Three.js core
+          if (chunkInfo.name === 'vendor-react-three') {
+            return 'assets/03-vendor-react-three-[hash].js';
+          }
+          // Three.js core library
           if (chunkInfo.name === 'vendor-three') {
-            return 'assets/03-vendor-three-[hash].js';
+            return 'assets/04-vendor-three-[hash].js';
           }
           // All other vendors load last
           if (chunkInfo.name === 'vendor-other') {
-            return 'assets/04-vendor-other-[hash].js';
+            return 'assets/05-vendor-other-[hash].js';
           }
           return 'assets/[name]-[hash].js';
         }
