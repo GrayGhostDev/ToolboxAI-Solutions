@@ -80,7 +80,14 @@
   "env": {
     "VITE_API_URL": "https://toolboxai-backend.onrender.com",
     "VITE_ENVIRONMENT": "production",
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+
+    "VITE_BYPASS_AUTH": "false",
+    "VITE_PUSHER_KEY": "73f059a21bb304c7d68c",
+    "VITE_PUSHER_CLUSTER": "us2",
+    "VITE_PUSHER_ENABLED": "true",
+    "VITE_ENABLE_CLERK_AUTH": "false",
+    "VITE_DEBUG_MODE": "false"
   },
   "build": {
     "env": {

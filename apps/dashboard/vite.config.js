@@ -19,7 +19,8 @@ export default defineConfig({
       '@mantine/core',
       '@mantine/hooks',
       'react-redux',
-      '@reduxjs/toolkit'
+      '@reduxjs/toolkit',
+      '@tabler/icons-react'
     ],
     exclude: ['@vite/client', '@vite/env']
   },
@@ -46,6 +47,7 @@ export default defineConfig({
       'react-redux',
       '@mantine/core',
       '@mantine/hooks',
+      '@tabler/icons-react',
       'three'
     ]
   },
@@ -58,18 +60,46 @@ export default defineConfig({
       output: {
         // Ensure proper module format
         format: 'es',
-        // Manually separate vendor code
+        // Control chunk loading order with priority hints
+        experimentalMinChunkSize: 100000,
+        // Manually separate vendor code with proper loading order
         manualChunks(id) {
           // Bundle React and core deps into vendor chunk
           if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-redux')) {
+            // React core - HIGHEST PRIORITY (loads first)
+            if (id.includes('/react/') || id.includes('/react-dom/') || id.includes('/react-redux/') ||
+                id.includes('\\react\\') || id.includes('\\react-dom\\') || id.includes('\\react-redux\\')) {
               return 'vendor-react';
             }
+            // Mantine UI - depends on React
             if (id.includes('@mantine')) {
               return 'vendor-mantine';
             }
-            return 'vendor';
+            // Tabler icons - depends on React
+            if (id.includes('@tabler/icons')) {
+              return 'vendor-icons';
+            }
+            // Three.js and other large libraries
+            if (id.includes('three')) {
+              return 'vendor-three';
+            }
+            // Everything else
+            return 'vendor-other';
           }
+        },
+        // Ensure React chunk has priority in loading
+        chunkFileNames: (chunkInfo) => {
+          // Prefix React chunk to load first alphabetically
+          if (chunkInfo.name === 'vendor-react') {
+            return 'assets/00-vendor-react-[hash].js';
+          }
+          if (chunkInfo.name === 'vendor-mantine') {
+            return 'assets/01-vendor-mantine-[hash].js';
+          }
+          if (chunkInfo.name === 'vendor-icons') {
+            return 'assets/02-vendor-icons-[hash].js';
+          }
+          return 'assets/[name]-[hash].js';
         }
       }
     }
