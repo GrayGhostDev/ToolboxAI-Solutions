@@ -41,7 +41,15 @@ function reorderModulePreloadsPlugin() {
 }
 
 export default defineConfig({
-  plugins: [react(), reorderModulePreloadsPlugin()],
+  plugins: [
+    react({
+      // Explicit JSX runtime configuration for React 19
+      jsxRuntime: 'automatic',
+      // Disable Fast Refresh for production stability with React 19
+      fastRefresh: false
+    }),
+    reorderModulePreloadsPlugin()
+  ],
 
   // Optimize dependencies for faster dev and prevent bundling issues
   optimizeDeps: {
@@ -54,9 +62,17 @@ export default defineConfig({
       '@mantine/hooks',
       'react-redux',
       '@reduxjs/toolkit',
-      '@tabler/icons-react'
+      '@tabler/icons-react',
+      '@sentry/react'
     ],
-    exclude: ['@vite/client', '@vite/env']
+    exclude: ['@vite/client', '@vite/env'],
+    // Force ESNext target for modern builds
+    esbuildOptions: {
+      target: 'esnext',
+      supported: {
+        bigint: true
+      }
+    }
   },
 
   resolve: {
@@ -68,6 +84,12 @@ export default defineConfig({
       '@hooks': path.resolve(__dirname, './src/hooks'),
       '@types': path.resolve(__dirname, './src/types'),
       '@utils': path.resolve(__dirname, './src/utils'),
+      // Force single React instance from workspace root (CRITICAL for React 19)
+      'react': path.resolve(__dirname, '../../node_modules/react'),
+      'react-dom': path.resolve(__dirname, '../../node_modules/react-dom'),
+      'react/jsx-runtime': path.resolve(__dirname, '../../node_modules/react/jsx-runtime'),
+      'react/jsx-dev-runtime': path.resolve(__dirname, '../../node_modules/react/jsx-dev-runtime'),
+      'react-dom/client': path.resolve(__dirname, '../../node_modules/react-dom/client'),
       // Fix refractor module resolution for react-syntax-highlighter
       'refractor': path.resolve(__dirname, '../../node_modules/refractor'),
       'refractor/core': path.resolve(__dirname, '../../node_modules/refractor/core.js'),
@@ -97,6 +119,10 @@ export default defineConfig({
     sourcemap: process.env.NODE_ENV !== 'production',
     minify: 'terser',
     chunkSizeWarningLimit: 1000,
+    // Force ESNext target for modern builds
+    target: 'esnext',
+    // Disable module preload polyfill for pure ESM
+    modulePreload: { polyfill: false },
     rollupOptions: {
       output: {
         // Ensure proper module format
@@ -108,12 +134,14 @@ export default defineConfig({
           // Bundle React and core deps into vendor chunk
           if (id.includes('node_modules')) {
             // React core - HIGHEST PRIORITY (loads first)
-            // Must catch react, react-dom, react-redux, react-router, @reduxjs/toolkit
+            // Must catch react, react-dom, react-redux, react-router, @reduxjs/toolkit, @sentry/react
             if (id.includes('/react/') || id.includes('/react-dom/') ||
                 id.includes('\\react\\') || id.includes('\\react-dom\\') ||
                 id.includes('react-redux') || id.includes('react-router') ||
                 id.includes('@reduxjs/toolkit') || id.includes('@remix-run/router') ||
-                id.includes('use-sync-external-store')) {
+                id.includes('use-sync-external-store') || id.includes('@sentry/react') ||
+                id.includes('@sentry/browser') || id.includes('@sentry/core') ||
+                id.includes('@sentry/utils')) {
               return 'vendor-react';
             }
             // Mantine UI - depends on React
