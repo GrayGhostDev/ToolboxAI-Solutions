@@ -376,42 +376,58 @@ class ConfigurationHealthCheck {
   }
 
   /**
-   * Log health check results to console
+   * Log health check results to console (only errors and critical warnings)
    */
   public async logHealthCheck(): Promise<void> {
+    // Prevent duplicate logs in React StrictMode
+    if (hasWarnedAboutConfig) return;
+    hasWarnedAboutConfig = true;
+
     const report = await this.runHealthCheck();
 
-    console.group('🏥 Configuration Health Check');
-    console.log(`Overall Status: ${report.overall.toUpperCase()}`);
-    console.log(`Timestamp: ${report.timestamp}`);
+    // Only log if there are actual errors (not warnings about backend being down in dev)
+    const hasErrors = Object.values(report.checks).some(check => check.status === 'error');
+    const criticalErrors = Object.entries(report.checks).filter(([name, check]) =>
+      check.status === 'error' && name !== 'api' // API being down in dev is expected
+    );
 
-    console.group('Checks:');
-    Object.entries(report.checks).forEach(([name, check]) => {
-      const emoji = check.status === 'healthy' ? '✅' : check.status === 'warning' ? '⚠️' : '❌';
-      console.log(`${emoji} ${name}: ${check.message}`);
-      if (check.details) {
-        console.log('   Details:', check.details);
+    if (hasErrors && criticalErrors.length > 0) {
+      console.group('🏥 Configuration Health Check');
+      console.log(`Overall Status: ${report.overall.toUpperCase()}`);
+      console.log(`Timestamp: ${report.timestamp}`);
+
+      console.group('Checks:');
+      criticalErrors.forEach(([name, check]) => {
+        const emoji = '❌';
+        console.log(`${emoji} ${name}: ${check.message}`);
+        if (check.details) {
+          console.log('   Details:', check.details);
+        }
+      });
+      console.groupEnd();
+
+      if (report.recommendations.length > 0) {
+        console.group('💡 Recommendations:');
+        report.recommendations.forEach(rec => console.log(`• ${rec}`));
+        console.groupEnd();
       }
-    });
-    console.groupEnd();
 
-    if (report.recommendations.length > 0) {
-      console.group('💡 Recommendations:');
-      report.recommendations.forEach(rec => console.log(`• ${rec}`));
       console.groupEnd();
     }
-
-    console.groupEnd();
   }
 }
 
 // Export singleton instance
 export const configHealthCheck = new ConfigurationHealthCheck();
 
-// Auto-run in development mode
-if (import.meta.env.DEV) {
-  // Run health check after app loads
+// Disabled auto-run to reduce console noise
+// Health checks are still available programmatically via configHealthCheck.runHealthCheck()
+// or can be enabled by setting VITE_ENABLE_HEALTH_CHECK=true
+if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_HEALTH_CHECK === 'true') {
+  // Run health check after app loads - increased delay to avoid race conditions
   setTimeout(() => {
-    configHealthCheck.logHealthCheck().catch(console.error);
-  }, 2000);
+    configHealthCheck.logHealthCheck().catch(() => {
+      // Silently fail - health check errors shouldn't break the app
+    });
+  }, 5000);
 }

@@ -72,11 +72,12 @@ export default function App() {
   // Use the unified auth hook that handles conditional logic correctly
   const authHookResult = useUnifiedAuth();
 
-  // Validate configuration on startup (warn only once to suppress React StrictMode double-execute)
+  // Validate configuration on startup (disabled by default to reduce console noise)
+  // Enable with VITE_ENABLE_CONFIG_VALIDATION=true if needed
   React.useEffect(() => {
     const validateConfig = async () => {
-      // Dynamic import to avoid loading in production
-      if (process.env.NODE_ENV === 'development') {
+      // Only run if explicitly enabled
+      if (process.env.NODE_ENV === 'development' && import.meta.env.VITE_ENABLE_CONFIG_VALIDATION === 'true') {
         const { configHealthCheck } = await import('./utils/configHealthCheck');
         const report = await configHealthCheck.runHealthCheck();
 

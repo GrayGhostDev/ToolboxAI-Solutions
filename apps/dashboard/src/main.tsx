@@ -1,3 +1,6 @@
+// CRITICAL: Error suppressor MUST be first import to intercept console before React loads
+import './utils/hmrErrorSuppressor';
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 // HMR test comment - Hot module replacement working!
@@ -18,8 +21,6 @@ import { unregisterServiceWorkers } from './utils/serviceWorkerCleanup';
 import { initSentry } from './config/sentry';
 import * as Sentry from '@sentry/react';
 
-// Suppress non-critical HMR WebSocket errors in Docker/development
-import './utils/hmrErrorSuppressor';
 
 // Mantine Core Styles - Import all necessary CSS
 import '@mantine/core/styles.css';

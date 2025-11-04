@@ -15,11 +15,11 @@ export interface HealthCheckResult {
 
 /**
  * Check if the backend API is reachable and healthy
- * @param timeoutMs - Maximum time to wait for health check (default 10 seconds)
+ * @param timeoutMs - Maximum time to wait for health check (default 3 seconds)
  * @returns Promise<HealthCheckResult>
  */
 export const checkBackendHealth = async (
-  timeoutMs: number = 10000
+  timeoutMs: number = 3000
 ): Promise<HealthCheckResult> => {
   const startTime = Date.now();
   const controller = new AbortController();
@@ -87,10 +87,18 @@ export const checkBackendHealth = async (
       errorMessage = error.message || 'Backend health check failed';
     }
 
-    logger.error('Backend health check error', {
+    // Use debug level for timeouts and network errors (common in dev when backend is off)
+    // Only use error level for truly unexpected errors
+    const isExpectedError = error.name === 'AbortError' ||
+                           errorMessage.includes('Network error') ||
+                           errorMessage.includes('CORS') ||
+                           errorMessage.includes('Failed to fetch');
+
+    const logLevel = isExpectedError ? 'debug' : 'error';
+    logger[logLevel]('Backend health check failed', {
       error: errorMessage,
       responseTime: `${responseTime}ms`,
-      details: error
+      details: isExpectedError ? undefined : error
     });
 
     return {

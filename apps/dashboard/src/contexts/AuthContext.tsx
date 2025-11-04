@@ -54,11 +54,11 @@ export const AuthProvider: React.FunctionComponent<{ children: React.ReactNode }
     const initAuth = async () => {
       // CRITICAL: Check backend health BEFORE attempting authentication
       // This prevents infinite loading when backend is unreachable
-      const healthCheck = await checkBackendHealth(10000); // 10 second timeout
+      const healthCheck = await checkBackendHealth(3000); // 3 second timeout
 
       if (!healthCheck.isHealthy) {
         const message = getHealthCheckMessage(healthCheck);
-        logger.warn('Backend health check failed during initialization', {
+        logger.debug('Backend health check failed during initialization', {
           error: healthCheck.error,
           responseTime: healthCheck.responseTime
         });

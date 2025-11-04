@@ -38,7 +38,60 @@ if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
     /Too many active WebGL contexts/i,
     /WebGLRenderer.*Context Lost/i,
     /THREE\.WebGLRenderer.*Context/i,
-    /WARNING.*WebGL contexts/i
+    /WARNING.*WebGL contexts/i,
+
+    // Browser extension errors (Grammarly, password managers, etc.)
+    /runtime\.lastError/i,
+    /message port closed/i,
+    /Could not establish connection/i,
+    /Receiving end does not exist/i,
+    /background\.js/i,
+    /FrameDoesNotExistError/i,
+    /FrameIsBrowserFrameError/i,
+    /Frame \d+ does not exist/i,
+    /Frame \d+ in tab \d+ is a browser frame/i,
+
+    // Chrome extension content script errors
+    /chrome-extension:\/\//i,
+    /extensions::/i,
+
+    // React DevTools errors
+    /react_devtools_backend/i,
+    /Invalid argument not valid semver/i,
+    /validateAndParse.*semver/i,
+
+    // SVG attribute errors from third-party components
+    /svg.*attribute.*Expected length/i,
+    /svg.*width.*calc/i,
+    /svg.*height.*calc/i,
+    /attribute width.*Expected length/i,
+    /attribute height.*Expected length/i,
+
+    // File not found errors from extensions
+    /utils\.js.*ERR_FILE_NOT_FOUND/i,
+    /extensionState\.js.*ERR_FILE_NOT_FOUND/i,
+    /heuristicsRedefinitions\.js.*ERR_FILE_NOT_FOUND/i,
+    /chrome-extension.*ERR_FILE_NOT_FOUND/i,
+
+    // CORS errors (expected when backend is down or has CORS issues in dev)
+    /blocked by CORS policy/i,
+    /No 'Access-Control-Allow-Origin'/i,
+    /CORS.*preflight/i,
+    /Access to fetch.*blocked by CORS/i,
+
+    // Fetch failed errors (backend down in dev)
+    /Failed to fetch/i,
+    /fetch.*failed/i,
+    /Fetch failed loading/i,
+    /Network error.*backend unreachable/i,
+    /Backend health check failed/i,
+    /GET.*health.*ERR_FAILED/i,
+    /GET.*health.*net::ERR_FAILED/i,
+    /GET.*toolboxai-backend.*health/i,
+
+    // Configuration warnings (expected in dev)
+    /Configuration warnings detected/i,
+    /Backend unavailable/i
   ];
 
   // Check if message should be suppressed
@@ -115,6 +168,34 @@ if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
       // If error checking fails, let the original error through
     }
   }, true); // Use capture phase
+
+  // Intercept React's console.error before it's overridden
+  // This catches SVG attribute warnings from React DOM
+  const reactErrorHandler = console.error;
+  console.error = function(...args: any[]) {
+    // Check if this is a React DOM SVG warning
+    const firstArg = args[0];
+    if (typeof firstArg === 'string') {
+      if (
+        firstArg.includes('<svg> attribute') ||
+        firstArg.includes('Expected length') ||
+        firstArg.includes('calc(')
+      ) {
+        // Suppress SVG attribute warnings (they're harmless, from Mantine icons)
+        if (import.meta.env.VITE_DEBUG_MODE === 'true') {
+          console.debug('[SUPPRESSED-SVG]', firstArg);
+        }
+        return;
+      }
+    }
+
+    // Check other suppression patterns
+    if (!shouldSuppressMessage(args)) {
+      reactErrorHandler.apply(console, args);
+    } else if (import.meta.env.VITE_DEBUG_MODE === 'true') {
+      console.debug('[HMR-SUPPRESSED]', ...args);
+    }
+  };
 
   console.log('🔇 HMR error suppressor initialized (aggressive mode for Docker)');
 }
