@@ -176,12 +176,29 @@ class Settings:
     # Authentication
     @property
     def JWT_SECRET_KEY(self):
+        """
+        Get JWT secret key with bcrypt compatibility validation.
+
+        BCrypt has a 72-byte limit for passwords. To ensure compatibility,
+        we validate and truncate the JWT_SECRET_KEY to 64 characters (256 bits)
+        which provides strong entropy while staying safely under the limit.
+        """
         # JWT secrets should always come from Vault in production
-        return self._get_secret(
+        key = self._get_secret(
             "JWT_SECRET_KEY",
             vault_path="apps/backend/auth/jwt_secret",
             fallback=self._config.JWT_SECRET_KEY
         )
+
+        # Validate length for bcrypt compatibility (72-byte limit)
+        if key and len(key) > 64:
+            logger.warning(
+                f"JWT_SECRET_KEY exceeds recommended 64 characters ({len(key)} chars). "
+                f"Truncating to 64 chars to ensure bcrypt compatibility (72-byte limit)."
+            )
+            return key[:64]
+
+        return key
 
     @property
     def COOKIE_SECURE(self):

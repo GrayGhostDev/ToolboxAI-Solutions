@@ -147,7 +147,10 @@ axios.interceptors.request.use(
     }
 
     // Add auth token if available
-    const token = localStorage.getItem('auth_token');
+    // Try multiple token keys for compatibility
+    const token = localStorage.getItem('toolboxai_auth_token') ||
+                  localStorage.getItem('auth_token') ||
+                  localStorage.getItem('access_token');
     if (token && !config.headers.Authorization) {
       config.headers.Authorization = `Bearer ${token}`;
     }

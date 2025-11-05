@@ -73,18 +73,12 @@ class RedisConnectionManager:
                 # Parse Redis URL from settings
                 redis_url = settings.REDIS_URL
 
-                # Create optimized connection pool
+                # Create simplified connection pool (macOS-compatible)
                 self.pool = redis.ConnectionPool.from_url(
                     redis_url,
                     # Performance optimizations
                     max_connections=CacheConfig.POOL_MAX_CONNECTIONS,
                     retry_on_timeout=CacheConfig.POOL_RETRY_ON_TIMEOUT,
-                    socket_keepalive=True,
-                    socket_keepalive_options={
-                        1: 1,  # TCP_KEEPIDLE
-                        2: 3,  # TCP_KEEPINTVL
-                        3: 5,  # TCP_KEEPCNT
-                    },
                     # Connection timeout optimizations
                     socket_connect_timeout=5,
                     socket_timeout=5,

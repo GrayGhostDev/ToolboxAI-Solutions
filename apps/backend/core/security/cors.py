@@ -75,11 +75,20 @@ class SecureCORSConfig:
                     "http://127.0.0.1:5178",
                     "http://localhost:5179",
                     "http://127.0.0.1:5179",
+                    # Vercel deployments
+                    "https://toolboxai-dashboard.vercel.app",
+                    "https://toolboxai-solutions.vercel.app",
+                    # Render backend
+                    "https://toolboxai-backend.onrender.com",
                 ]
             else:
-                # Production: Must specify explicit allowed origins
-                self.allowed_origins = []
-                logger.warning("No allowed origins specified for production environment")
+                # Production: Explicit allowed origins for Vercel and Render
+                self.allowed_origins = [
+                    "https://toolboxai-dashboard.vercel.app",
+                    "https://toolboxai-solutions.vercel.app",
+                    "https://toolboxai-backend.onrender.com",
+                ]
+                logger.info(f"Production CORS configured with origins: {self.allowed_origins}")
         else:
             # Validate and sanitize origins
             self.allowed_origins = self._validate_origins(allowed_origins)

@@ -141,6 +141,29 @@ async def get_current_user(
     return verify_token(token)
 
 
+async def get_current_user_optional(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
+) -> Optional[TokenData]:
+    """
+    FastAPI dependency to get current user optionally
+    Returns None if no authentication is provided
+
+    Args:
+        credentials: HTTP bearer token credentials (optional)
+
+    Returns:
+        TokenData with current user information or None
+    """
+    if credentials is None:
+        return None
+
+    try:
+        token = credentials.credentials
+        return verify_token(token)
+    except HTTPException:
+        return None
+
+
 def require_role(required_role: str):
     """
     Create a dependency that requires a specific user role

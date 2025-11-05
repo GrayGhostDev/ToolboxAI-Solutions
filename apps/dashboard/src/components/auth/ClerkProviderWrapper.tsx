@@ -1,137 +1,43 @@
 /**
- * Clerk Provider Wrapper Component (2025)
- * Enhanced Clerk integration with loading states and error handling
- * Migrated to Mantine v8 components
+ * Clerk Provider Wrapper Component
+ *
+ * Conditionally wraps the application with Clerk's authentication provider
+ * based on environment configuration.
  */
 
-import React, { Suspense } from 'react';
+import React from 'react';
 import { ClerkProvider } from '@clerk/clerk-react';
-import { Box, Loader, Text, Alert, Stack, Center } from '@mantine/core';
-import ClerkErrorBoundary from './ClerkErrorBoundary';
+import { logger } from '../../utils/logger';
 
 interface ClerkProviderWrapperProps {
   children: React.ReactNode;
-  publishableKey?: string;
 }
 
-// Loading component for Clerk initialization
-const ClerkLoadingFallback = () => (
-  <Center style={{ minHeight: '100vh' }}>
-    <Stack align="center" gap="md">
-      <Loader size="lg" />
-      <Text size="sm" c="dimmed">
-        Initializing authentication...
-      </Text>
-    </Stack>
-  </Center>
-);
+const ClerkProviderWrapper: React.FC<ClerkProviderWrapperProps> = ({ children }) => {
+  const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+  const isClerkEnabled = import.meta.env.VITE_ENABLE_CLERK_AUTH === 'true';
 
-// Error fallback for Clerk provider
-const ClerkErrorFallback = ({ error, retry }: { error: Error; retry: () => void }) => (
-  <Center style={{ minHeight: '100vh', padding: '1rem' }}>
-    <Box style={{ maxWidth: 600, width: '100%' }}>
-      <Alert color="red" title="Authentication Service Unavailable">
-        <Stack gap="sm">
-          <Text size="sm">
-            {error.message.includes('publishable key')
-              ? 'The authentication service is not properly configured.'
-              : 'Unable to connect to the authentication service.'}
-          </Text>
-          <Text size="sm" c="dimmed">
-            Please check your connection and try again.
-          </Text>
-        </Stack>
-      </Alert>
-    </Box>
-  </Center>
-);
-
-// Check if Clerk is properly configured
-const validateClerkConfig = (publishableKey?: string): string => {
-  // Try to get from environment variables
-  const envKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-  const key = publishableKey || envKey;
-
-  if (!key) {
-    throw new Error(
-      'Clerk publishable key not found. Please set VITE_CLERK_PUBLISHABLE_KEY in your environment variables.'
-    );
+  // If Clerk is not enabled, just return children without wrapping
+  if (!isClerkEnabled) {
+    logger.debug('Clerk authentication is disabled');
+    return <>{children}</>;
   }
 
-  if (!key.startsWith('pk_')) {
-    throw new Error(
-      'Invalid Clerk publishable key format. Key should start with "pk_".'
-    );
+  // If Clerk is enabled but no key is provided, log error and return children
+  if (!clerkPubKey) {
+    logger.error('Clerk is enabled but VITE_CLERK_PUBLISHABLE_KEY is not set');
+    return <>{children}</>;
   }
 
-  return key;
-};
-
-export const ClerkProviderWrapper = ({
-  children,
-  publishableKey
-}: ClerkProviderWrapperProps) => {
-  // Validate configuration
-  let validatedKey: string;
-  try {
-    validatedKey = validateClerkConfig(publishableKey);
-  } catch (error) {
-    return (
-      <ClerkErrorFallback
-        error={error as Error}
-        retry={() => window.location.reload()}
-      />
-    );
-  }
-
-  // Clerk provider configuration
-  const clerkConfig = {
-    // Production URLs from environment
-    signInUrl: import.meta.env.VITE_CLERK_SIGN_IN_URL || '/sign-in',
-    signUpUrl: import.meta.env.VITE_CLERK_SIGN_UP_URL || '/sign-up',
-    fallbackRedirectUrl: import.meta.env.VITE_CLERK_AFTER_SIGN_IN_URL || '/',
-    // fallbackRedirectUrl is used for both sign-in and sign-up when no explicit target is set
-
-    // Enhanced localization support
-    localization: {
-      locale: 'en-US' // Can be made dynamic based on user preference
-    },
-
-    // Appearance customization for Mantine theme integration
-    appearance: {
-      elements: {
-        rootBox: {
-          fontFamily: '"Roboto","Helvetica","Arial",sans-serif'
-        },
-        card: {
-          borderRadius: '8px',
-          boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)'
-        }
-      },
-      variables: {
-        colorPrimary: '#00bfff', // Electric blue from Roblox theme
-        fontFamily: '"Roboto","Helvetica","Arial",sans-serif'
-      }
-    },
-
-    // Enhanced telemetry for better error tracking
-    telemetry: {
-      disabled: process.env.NODE_ENV === 'development'
-    }
-  };
+  // Valid Clerk configuration - wrap with provider
+  logger.info('Initializing Clerk authentication');
 
   return (
-    <ClerkErrorBoundary fallback={ClerkErrorFallback}>
-      <Suspense fallback={<ClerkLoadingFallback />}>
-        <ClerkProvider
-          publishableKey={validatedKey}
-          {...clerkConfig}
-        >
-          {children}
-        </ClerkProvider>
-      </Suspense>
-    </ClerkErrorBoundary>
+    <ClerkProvider publishableKey={clerkPubKey}>
+      {children}
+    </ClerkProvider>
   );
 };
 
 export default ClerkProviderWrapper;
+

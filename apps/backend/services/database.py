@@ -7,8 +7,9 @@ import asyncio
 import asyncpg
 import os
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Union
 from datetime import datetime, timedelta
+from uuid import UUID
 import json
 from decimal import Decimal
 
@@ -840,7 +841,7 @@ async def get_db_session():
         yield conn
 
 
-async def update_user_password(db, user_id: str | UUID, password_hash: str) -> bool:
+async def update_user_password(db, user_id: Union[str, UUID], password_hash: str) -> bool:
     """
     Update user's password hash in database.
 

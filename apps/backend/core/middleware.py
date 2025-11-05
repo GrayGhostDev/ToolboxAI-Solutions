@@ -149,16 +149,59 @@ class MetricsMiddleware(BaseHTTPMiddleware):
 
 
 def configure_cors_middleware(app: FastAPI) -> None:
-    """Configure CORS middleware"""
+    """Configure CORS middleware with support for Vercel and Render deployments"""
     try:
-        # Use secure CORS configuration
-        cors_config = SecureCORSConfig()
-        app.add_middleware(
-            CORSMiddlewareWithLogging,
-            allow_origins=settings.CORS_ORIGINS,
-            allow_credentials=True,
-            allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-            allow_headers=[
+        # Parse CORS origins from settings
+        cors_origins = []
+        if hasattr(settings, 'CORS_ORIGINS'):
+            if isinstance(settings.CORS_ORIGINS, str):
+                cors_origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(',') if origin.strip()]
+            elif isinstance(settings.CORS_ORIGINS, list):
+                cors_origins = settings.CORS_ORIGINS
+
+        # Always include development origins
+        development_origins = [
+            "http://localhost:5179",
+            "http://127.0.0.1:5179",
+            "http://localhost:5180",
+            "http://127.0.0.1:5180",
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://localhost:8009",
+            "http://127.0.0.1:8009",
+            "http://localhost:8000",
+            "http://127.0.0.1:8000",
+        ]
+        cors_origins.extend(development_origins)
+
+        # Add deployment URLs
+        deployment_origins = [
+            "https://toolboxai-backend.onrender.com",
+            "https://toolboxai-dashboard.vercel.app",
+            "https://toolboxai.com",
+            "https://app.toolboxai.com",
+        ]
+        cors_origins.extend(deployment_origins)
+
+        # Check for wildcard Vercel domains
+        has_vercel_wildcard = any('*.vercel.app' in origin for origin in cors_origins)
+
+        # Remove wildcards (CORS doesn't support them, we'll use allow_origin_regex instead)
+        cors_origins = [origin for origin in cors_origins if '*' not in origin]
+
+        # Remove duplicates while preserving order
+        cors_origins = list(dict.fromkeys(cors_origins))
+
+        logger.info(f"Configuring CORS with {len(cors_origins)} origins")
+        if has_vercel_wildcard:
+            logger.info("Vercel wildcard detected - will use allow_origin_regex for *.vercel.app")
+
+        # Use secure CORS configuration with wildcard support for Vercel
+        middleware_kwargs = {
+            "allow_origins": cors_origins,
+            "allow_credentials": True,
+            "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"],
+            "allow_headers": [
                 "Authorization",
                 "Content-Type",
                 "X-Requested-With",
@@ -168,26 +211,40 @@ def configure_cors_middleware(app: FastAPI) -> None:
                 "Access-Control-Request-Headers",
                 "X-Request-ID",
                 "X-Correlation-ID",
+                "X-CSRF-Token",
+                "X-API-Key",
+                "Cache-Control",
+                "Pragma",
             ],
-            expose_headers=[
+            "expose_headers": [
                 "X-Request-ID",
                 "X-Process-Time",
                 "X-Rate-Limit-Remaining",
                 "X-Rate-Limit-Reset",
+                "X-Total-Count",
+                "Content-Length",
+                "Content-Type",
             ],
-        )
-        logger.info("CORS middleware configured with secure settings")
+            "max_age": 3600,  # 1 hour for preflight caching (reduced for dev)
+        }
+
+        # Add regex pattern for Vercel deployments if needed
+        if has_vercel_wildcard:
+            middleware_kwargs["allow_origin_regex"] = r"https://.*\.vercel\.app"
+
+        app.add_middleware(CORSMiddleware, **middleware_kwargs)
+        logger.info("✅ CORS middleware configured successfully")
     except Exception as e:
-        logger.error(f"Failed to configure CORS middleware: {e}")
-        # Fallback to basic CORS
+        logger.error(f"❌ Failed to configure CORS middleware: {e}")
+        # Fallback to permissive CORS for development
         app.add_middleware(
             CORSMiddleware,
-            allow_origins=["*"],
+            allow_origins=["*"],  # Allow all origins in fallback
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
         )
-        logger.warning("Using fallback CORS configuration")
+        logger.warning("⚠️ Using permissive fallback CORS configuration")
 
 
 def configure_security_middleware(app: FastAPI) -> None:
@@ -263,10 +320,13 @@ def configure_all_middleware(app: FastAPI) -> None:
     """Configure all middleware in the correct order"""
     logger.info("Configuring application middleware...")
 
-    # 1. Error handling (should be first to catch all errors)
+    # 1. CORS (MUST be first to handle preflight OPTIONS requests)
+    configure_cors_middleware(app)
+
+    # 2. Error handling
     app.add_middleware(ErrorHandlingMiddleware, debug=settings.DEBUG)
 
-    # 2. API Gateway (routing, versioning, circuit breakers)
+    # 3. API Gateway (routing, versioning, circuit breakers)
     try:
         from apps.backend.middleware.api_gateway import APIGatewayMiddleware
         app.add_middleware(APIGatewayMiddleware)
@@ -274,7 +334,7 @@ def configure_all_middleware(app: FastAPI) -> None:
     except ImportError as e:
         logger.warning(f"API Gateway middleware not available: {e}")
 
-    # 3. Request Validation (security checks, input sanitization)
+    # 4. Request Validation (security checks, input sanitization)
     try:
         from apps.backend.middleware.request_validator import RequestValidatorMiddleware
         app.add_middleware(RequestValidatorMiddleware)
@@ -282,7 +342,7 @@ def configure_all_middleware(app: FastAPI) -> None:
     except ImportError as e:
         logger.warning(f"Request Validator middleware not available: {e}")
 
-    # 4. Tenant Middleware
+    # 5. Tenant Middleware
     try:
         from apps.backend.middleware.tenant_middleware import TenantMiddleware
         app.add_middleware(TenantMiddleware)
@@ -290,10 +350,7 @@ def configure_all_middleware(app: FastAPI) -> None:
     except ImportError as e:
         logger.warning(f"Tenant middleware not available: {e}")
 
-    # 5. CORS (early in chain for preflight requests)
-    configure_cors_middleware(app)
-
-    # 5. Security middleware
+    # 6. Security middleware
     configure_security_middleware(app)
 
     # 6. Logging and correlation ID

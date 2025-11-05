@@ -419,7 +419,7 @@ async def _check_pusher() -> Dict[str, Any]:
 
         status = get_pusher_status()
         return {
-            "status": "healthy" if status.get("enabled") else "not_configured",
+            "status": "healthy" if status.get("status") == "healthy" else "not_configured",
             "details": status,
             "last_check": datetime.now(timezone.utc).isoformat(),
         }

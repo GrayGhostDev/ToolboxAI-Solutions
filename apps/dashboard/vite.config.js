@@ -121,8 +121,8 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000,
     // Force ESNext target for modern builds
     target: 'esnext',
-    // Disable module preload polyfill for pure ESM
-    modulePreload: { polyfill: false },
+    // Enable module preload polyfill to ensure correct chunk loading order
+    modulePreload: { polyfill: true },
     rollupOptions: {
       output: {
         // Ensure proper module format
@@ -134,14 +134,12 @@ export default defineConfig({
           // Bundle React and core deps into vendor chunk
           if (id.includes('node_modules')) {
             // React core - HIGHEST PRIORITY (loads first)
-            // Must catch react, react-dom, react-redux, react-router, @reduxjs/toolkit, @sentry/react
+            // Must catch react, react-dom, react-redux, react-router, @reduxjs/toolkit, @sentry
             if (id.includes('/react/') || id.includes('/react-dom/') ||
                 id.includes('\\react\\') || id.includes('\\react-dom\\') ||
                 id.includes('react-redux') || id.includes('react-router') ||
                 id.includes('@reduxjs/toolkit') || id.includes('@remix-run/router') ||
-                id.includes('use-sync-external-store') || id.includes('@sentry/react') ||
-                id.includes('@sentry/browser') || id.includes('@sentry/core') ||
-                id.includes('@sentry/utils')) {
+                id.includes('use-sync-external-store') || id.includes('@sentry')) {
               return 'vendor-react';
             }
             // Mantine UI - depends on React

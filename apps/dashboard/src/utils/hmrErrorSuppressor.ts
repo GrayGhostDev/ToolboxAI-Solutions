@@ -112,22 +112,33 @@ if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
   };
 
   // Override console.error to filter HMR WebSocket errors
-  console.error = function(...args: any[]) {
-    if (!shouldSuppressMessage(args)) {
-      originalError.apply(console, args);
-    } else if (import.meta.env.VITE_DEBUG_MODE === 'true') {
-      console.debug('[HMR-SUPPRESSED]', ...args);
-    }
-  };
+  // Use try-catch in case console.error is locked by error-suppressor-preload.js
+  try {
+    console.error = function(...args: any[]) {
+      if (!shouldSuppressMessage(args)) {
+        originalError.apply(console, args);
+      } else if (import.meta.env.VITE_DEBUG_MODE === 'true') {
+        console.debug('[HMR-SUPPRESSED]', ...args);
+      }
+    };
+  } catch (e) {
+    // console.error is locked, it's already being suppressed by preload script
+    console.log('⚠️ console.error already locked by preload script (this is OK)');
+  }
 
   // Override console.warn for similar patterns
-  console.warn = function(...args: any[]) {
-    if (!shouldSuppressMessage(args)) {
-      originalWarn.apply(console, args);
-    } else if (import.meta.env.VITE_DEBUG_MODE === 'true') {
-      console.debug('[HMR-SUPPRESSED-WARN]', ...args);
-    }
-  };
+  try {
+    console.warn = function(...args: any[]) {
+      if (!shouldSuppressMessage(args)) {
+        originalWarn.apply(console, args);
+      } else if (import.meta.env.VITE_DEBUG_MODE === 'true') {
+        console.debug('[HMR-SUPPRESSED-WARN]', ...args);
+      }
+    };
+  } catch (e) {
+    // console.warn is locked, it's already being suppressed
+    console.log('⚠️ console.warn already locked by preload script (this is OK)');
+  }
 
   // Suppress unhandled promise rejections from HMR WebSocket
   window.addEventListener('unhandledrejection', (event) => {
@@ -172,30 +183,36 @@ if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
   // Intercept React's console.error before it's overridden
   // This catches SVG attribute warnings from React DOM
   const reactErrorHandler = console.error;
-  console.error = function(...args: any[]) {
-    // Check if this is a React DOM SVG warning
-    const firstArg = args[0];
-    if (typeof firstArg === 'string') {
-      if (
-        firstArg.includes('<svg> attribute') ||
-        firstArg.includes('Expected length') ||
-        firstArg.includes('calc(')
-      ) {
-        // Suppress SVG attribute warnings (they're harmless, from Mantine icons)
-        if (import.meta.env.VITE_DEBUG_MODE === 'true') {
-          console.debug('[SUPPRESSED-SVG]', firstArg);
-        }
-        return;
-      }
-    }
 
-    // Check other suppression patterns
-    if (!shouldSuppressMessage(args)) {
-      reactErrorHandler.apply(console, args);
-    } else if (import.meta.env.VITE_DEBUG_MODE === 'true') {
-      console.debug('[HMR-SUPPRESSED]', ...args);
-    }
-  };
+  try {
+    console.error = function(...args: any[]) {
+      // Check if this is a React DOM SVG warning
+      const firstArg = args[0];
+      if (typeof firstArg === 'string') {
+        if (
+          firstArg.includes('<svg> attribute') ||
+          firstArg.includes('Expected length') ||
+          firstArg.includes('calc(')
+        ) {
+          // Suppress SVG attribute warnings (they're harmless, from Mantine icons)
+          if (import.meta.env.VITE_DEBUG_MODE === 'true') {
+            console.debug('[SUPPRESSED-SVG]', firstArg);
+          }
+          return;
+        }
+      }
+
+      // Check other suppression patterns
+      if (!shouldSuppressMessage(args)) {
+        reactErrorHandler.apply(console, args);
+      } else if (import.meta.env.VITE_DEBUG_MODE === 'true') {
+        console.debug('[HMR-SUPPRESSED]', ...args);
+      }
+    };
+  } catch (e) {
+    // console.error is locked by preload script - this is OK
+    console.log('⚠️ console.error already locked by preload script (this is OK)');
+  }
 
   console.log('🔇 HMR error suppressor initialized (aggressive mode for Docker)');
 }

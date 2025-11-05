@@ -3,15 +3,14 @@ User Profile API endpoint
 Provides current user profile information
 """
 
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from apps.backend.core.security.jwt_handler import get_current_user
-from database.models import User
+from apps.backend.core.security.jwt_handler import get_current_user, TokenData
 
-router = APIRouter(prefix="/api/v1/users", tags=["User Profile"])
+router = APIRouter(tags=["User Profile"])
 
 
 class UserProfile(BaseModel):
@@ -24,45 +23,39 @@ class UserProfile(BaseModel):
     displayName: Optional[str] = None
     avatarUrl: Optional[str] = None
     schoolId: Optional[str] = None
-    classIds: list[str] = []
+    classIds: List[str] = []  # Python 3.9 compatible
     createdAt: datetime
     lastLogin: Optional[datetime] = None
     isActive: bool = True
 
 
 @router.get("/me/profile", response_model=UserProfile)
-async def get_user_profile(current_user: User = Depends(get_current_user)):
+async def get_user_profile(current_user: TokenData = Depends(get_current_user)):
     """
     Get the current user's profile information.
 
     This endpoint is called by the frontend during initialization
     to restore the user's session and profile data.
     """
-    if not current_user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-
-    # Convert the User model to profile response
+    # get_current_user already raises HTTPException if not authenticated
+    # Convert the TokenData to profile response
     return UserProfile(
-        id=str(current_user.id) if hasattr(current_user, "id") else "1",
-        username=(
-            current_user.username
-            if hasattr(current_user, "username")
-            else current_user.email.split("@")[0]
-        ),
-        email=current_user.email,
-        role=current_user.role if hasattr(current_user, "role") else "student",
-        displayName=getattr(current_user, "display_name", None) or current_user.email.split("@")[0],
-        avatarUrl=getattr(current_user, "avatar_url", None),
-        schoolId=getattr(current_user, "school_id", None),
-        classIds=getattr(current_user, "class_ids", []) or [],
-        createdAt=getattr(current_user, "created_at", datetime.now(timezone.utc)),
-        lastLogin=getattr(current_user, "last_login", None),
-        isActive=getattr(current_user, "is_active", True),
+        id=str(current_user.user_id) if current_user.user_id else "1",
+        username=current_user.username or "user",
+        email=current_user.username or "user@example.com",  # username is typically email
+        role=current_user.role or "student",
+        displayName=current_user.username or "User",
+        avatarUrl=None,
+        schoolId=None,
+        classIds=[],
+        createdAt=datetime.now(timezone.utc),
+        lastLogin=datetime.now(timezone.utc),
+        isActive=True,
     )
 
 
 @router.patch("/me/profile")
-async def update_user_profile(updates: dict, current_user: User = Depends(get_current_user)):
+async def update_user_profile(updates: dict, current_user: TokenData = Depends(get_current_user)):
     """
     Update the current user's profile information.
 
@@ -90,7 +83,7 @@ async def update_user_profile(updates: dict, current_user: User = Depends(get_cu
 
 
 @router.get("/me/preferences")
-async def get_user_preferences(current_user: User = Depends(get_current_user)):
+async def get_user_preferences(current_user: TokenData = Depends(get_current_user)):
     """Get user preferences and settings"""
     if not current_user:
         raise HTTPException(status_code=401, detail="Not authenticated")

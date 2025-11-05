@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 import logging
 import os
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Header, HTTPException, Request, status
 
@@ -32,7 +32,7 @@ except Exception:  # pragma: no cover
 @router.post("/webhook", status_code=status.HTTP_200_OK)
 async def stripe_webhook(
     request: Request,
-    stripe_signature: str | None = Header(None, alias="Stripe-Signature"),
+    stripe_signature: Optional[str] = Header(None, alias="Stripe-Signature"),
 ) -> Dict[str, Any]:
     if not STRIPE_AVAILABLE:
         raise HTTPException(status_code=503, detail="Stripe SDK not available")

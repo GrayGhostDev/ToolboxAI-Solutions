@@ -1,0 +1,35 @@
+# Essential missing dependencies for backend auth to work
+# Install with: python3 -m pip install --user -r requirements-essential.txt
+
+# Auth dependencies
+python-jose==3.3.0
+PyJWT==2.8.0
+
+# Pydantic with email validation
+pydantic[email]==2.5.0
+
+# Async database
+asyncpg==0.29.0
+
+# HTTP client
+httpx==0.25.0
+
+# System utilities
+psutil==5.9.6
+
+# Real-time communication
+pusher==3.3.2
+
+# LangChain (optional, for AI features)
+# langchain-core==0.1.0
+
+# OpenTelemetry (optional, for monitoring)
+# opentelemetry-api==1.21.0
+# opentelemetry-sdk==1.21.0
+
+# Prometheus (optional, for metrics)
+# prometheus-fastapi-instrumentator==6.1.0
+
+# Type backport for Python 3.9
+# eval-type-backport==0.1.3
+

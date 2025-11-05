@@ -64,8 +64,8 @@ def init_sentry() -> None:
             send_default_pii=False,  # Don't send personally identifiable information
             max_breadcrumbs=50,
 
-            # Request data
-            request_bodies='medium',  # 'never', 'small', 'medium', 'always'
+            # Request data (updated for Sentry SDK v2.0+)
+            max_request_body_size='medium',  # 'never', 'small', 'medium', 'always'
         )
 
         logger.info("✅ Sentry initialized for production monitoring")

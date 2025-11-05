@@ -7,8 +7,8 @@
 import React from 'react';
 import { Button, Group, Paper, Text, Stack } from '@mantine/core';
 import { IconUser, IconSchool, IconUsers, IconShield } from '@tabler/icons-react';
-import { useUpdateClerkRole } from '../../hooks/useClerkRoleSync';
-import { useAppSelector } from '../../store';
+import { useAppSelector, useAppDispatch } from '../../store';
+import { setRole } from '../../store/slices/userSlice';
 import type { UserRole } from '../../types/roles';
 
 const roleIcons: Record<UserRole, React.ReactNode> = {
@@ -26,25 +26,25 @@ const roleColors: Record<UserRole, string> = {
 };
 
 export function DevRoleSwitcher() {
-  const { updateRole } = useUpdateClerkRole();
-  const currentRole = useAppSelector((s) => s.user.role);
-  const [switching, setSwitching] = React.useState(false);
-
   // Only show in development
   if (process.env.NODE_ENV !== 'development') {
     return null;
   }
 
+  const dispatch = useAppDispatch();
+  const currentRole = useAppSelector((s) => s.user.role);
+  const [switching, setSwitching] = React.useState(false);
+
   const handleRoleSwitch = async (role: UserRole) => {
     setSwitching(true);
     try {
-      const success = await updateRole(role);
-      if (success) {
-        // Reload page to apply new role routing
-        setTimeout(() => {
-          window.location.href = '/';
-        }, 500);
-      }
+      // Update Redux store directly in dev mode
+      dispatch(setRole(role));
+
+      // Reload page to apply new role routing
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 500);
     } finally {
       setSwitching(false);
     }
@@ -88,7 +88,7 @@ export function DevRoleSwitcher() {
               size="xs"
               color={roleColors[role]}
               variant={currentRole === role ? 'filled' : 'outline'}
-              leftIcon={roleIcons[role]}
+              leftSection={roleIcons[role]}
               onClick={() => handleRoleSwitch(role)}
               disabled={switching || currentRole === role}
               style={{

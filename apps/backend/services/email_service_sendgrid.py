@@ -56,7 +56,7 @@ try:
         MailSettings,
         BypassListManagement,
         FooterSettings,
-        SandBoxMode,
+        # SandBoxMode removed - now use mail_settings.sandbox_mode = True/False directly
     )
     from python_http_client.exceptions import HTTPError
 
@@ -561,9 +561,9 @@ class SendGridEmailService:
         """Configure mail settings"""
         mail_settings = MailSettings()
 
-        # Sandbox mode for testing
+        # Sandbox mode for testing (SendGrid v6+ uses boolean directly)
         if self.sandbox_mode:
-            mail_settings.sandbox_mode = SandBoxMode(enable=True)
+            mail_settings.sandbox_mode = True
 
         mail.mail_settings = mail_settings
 

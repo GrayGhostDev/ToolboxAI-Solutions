@@ -150,7 +150,8 @@ def _register_v1_routers(app: FastAPI) -> None:
 
         # Background tasks and Celery management
         ("apps.backend.api.v1.endpoints.tasks", "router", "/api/v1"),
-        ("apps.backend.api.v1.endpoints.user_profile", "router", ""),  # User profile endpoints
+        # User profile endpoints
+        ("apps.backend.api.v1.endpoints.user_profile", "router", "/api/v1/users"),
         # Content and AI routers
         ("apps.backend.api.v1.endpoints.ai_chat", "router", "/api/v1"),
         ("apps.backend.api.v1.endpoints.enhanced_content", "router", ""),
