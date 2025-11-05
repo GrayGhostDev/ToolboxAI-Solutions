@@ -49,17 +49,6 @@
     "NODE_VERSION": "22",
     "NPM_VERSION": "10"
   },
-  "build": {
-    "env": {
-      "NODE_ENV": "production",
-      "VITE_API_BASE_URL": "@vite_api_base_url",
-      "VITE_ENABLE_CLERK_AUTH": "@vite_enable_clerk_auth",
-      "VITE_CLERK_PUBLISHABLE_KEY": "@vite_clerk_publishable_key",
-      "VITE_ENABLE_PUSHER": "@vite_enable_pusher",
-      "VITE_PUSHER_KEY": "@vite_pusher_key",
-      "VITE_PUSHER_CLUSTER": "@vite_pusher_cluster"
-    }
-  },
   "rewrites": [
     {
       "source": "/api/:path*",
