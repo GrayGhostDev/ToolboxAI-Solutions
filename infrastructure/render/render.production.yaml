@@ -1,15 +1,6 @@
 # Render.com Infrastructure Configuration
-# This file defines all services, databases, and environment groups for deployment
-
-databases:
-  - name: toolboxai-postgres
-    plan: starter
-    region: oregon
-    databaseName: educational_platform_prod
-    user: eduplatform
-    ipAllowList: []
-    postgresMajorVersion: 16
-
+# This file defines all services and environment groups for deployment
+# Database: Using Supabase (configured via environment variables)
 
 services:
   # Backend API Service
@@ -39,9 +30,7 @@ services:
       - key: PYTHON_VERSION
         value: 3.12.0
       - key: DATABASE_URL
-        fromDatabase:
-          name: toolboxai-postgres
-          property: connectionString
+        sync: false # Set to SUPABASE_DATABASE_URL in Render Dashboard
       - key: REDIS_URL
         fromService:
           type: redis
@@ -213,9 +202,7 @@ services:
       - key: PYTHON_VERSION
         value: 3.12.0
       - key: DATABASE_URL
-        fromDatabase:
-          name: toolboxai-postgres
-          property: connectionString
+        sync: false # Set to SUPABASE_DATABASE_URL in Render Dashboard
       - key: REDIS_URL
         fromService:
           type: redis
@@ -248,9 +235,7 @@ services:
       - key: PYTHON_VERSION
         value: 3.12.0
       - key: DATABASE_URL
-        fromDatabase:
-          name: toolboxai-postgres
-          property: connectionString
+        sync: false # Set to SUPABASE_DATABASE_URL in Render Dashboard
       - key: REDIS_URL
         fromService:
           type: redis
@@ -288,9 +273,7 @@ services:
       - key: PYTHON_VERSION
         value: 3.12.0
       - key: DATABASE_URL
-        fromDatabase:
-          name: toolboxai-postgres
-          property: connectionString
+        sync: false # Set to SUPABASE_DATABASE_URL in Render Dashboard
       - key: REDIS_URL
         fromService:
           type: redis
@@ -340,9 +323,7 @@ services:
       - key: PYTHON_VERSION
         value: 3.12.0
       - key: DATABASE_URL
-        fromDatabase:
-          name: toolboxai-postgres
-          property: connectionString
+        sync: false # Set to SUPABASE_DATABASE_URL in Render Dashboard
       - key: REDIS_URL
         fromService:
           type: redis
@@ -407,79 +388,7 @@ services:
     disk: 1
 
 
-  # Database Backup Service
-  - type: cron
-    name: toolboxai-backup
-    runtime: python
-    region: oregon
-    plan: starter
-    schedule: "0 1 * * *" # Daily at 01:00 UTC
-    buildCommand: |
-      pip install --upgrade pip setuptools wheel
-      pip install -r requirements.txt
-    command: |
-      cd apps/backend && \
-      python -c "
-      import asyncio
-      from database.connection import db_manager
-      from datetime import datetime
-      import os
-
-      async def backup():
-          timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-          backup_path = f'/tmp/backup_{timestamp}.sql'
-          success = await db_manager.backup_database(backup_path)
-          if success:
-              print(f'Backup completed: {backup_path}')
-              # Here you would upload to S3/GCS/etc
-          else:
-              print('Backup failed')
-              exit(1)
-
-      asyncio.run(backup())
-      "
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.12.0
-      - key: DATABASE_URL
-        fromDatabase:
-          name: toolboxai-postgres
-          property: connectionString
-      - fromGroup: toolboxai-secrets
-
-  # Database Maintenance and Optimization
-  - type: cron
-    name: toolboxai-maintenance
-    runtime: python
-    region: oregon
-    plan: starter
-    schedule: "0 3 * * 0" # Weekly on Sunday at 03:00 UTC
-    buildCommand: |
-      pip install --upgrade pip setuptools wheel
-      pip install -r requirements.txt
-    command: |
-      cd apps/backend && \
-      python -c "
-      import asyncio
-      from database.connection import db_manager
-
-      async def maintenance():
-          print('Starting database optimization...')
-          result = await db_manager.optimize_database()
-          print(f'Optimization completed: {result}')
-
-      asyncio.run(maintenance())
-      "
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.12.0
-      - key: DATABASE_URL
-        fromDatabase:
-          name: toolboxai-postgres
-          property: connectionString
-      - fromGroup: toolboxai-secrets
-
-  # Data Retention and Cleanup
+  # Data Retention and Cleanup (Application-level)
   - type: cron
     name: toolboxai-cleanup
     runtime: python
@@ -510,9 +419,7 @@ services:
       - key: PYTHON_VERSION
         value: 3.12.0
       - key: DATABASE_URL
-        fromDatabase:
-          name: toolboxai-postgres
-          property: connectionString
+        sync: false # Set to SUPABASE_DATABASE_URL in Render Dashboard
       - key: REDIS_URL
         fromService:
           type: redis
