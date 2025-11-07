@@ -1,6 +1,18 @@
 # Render.com Infrastructure Configuration
 # This file defines all services and environment groups for deployment
-# Database: Using Supabase (configured via environment variables)
+#
+# Architecture: Stateless, Cloud-Native Design
+# - Database: Supabase PostgreSQL (managed)
+# - File Storage: Supabase Storage (object storage)
+# - Cache: Redis (Render managed)
+# - Logs: Sentry/Datadog (external)
+# - Task State: PostgreSQL (Supabase)
+#
+# Benefits:
+# - Horizontal scaling enabled (no persistent disks)
+# - Zero-downtime deployments
+# - High availability (no single points of failure)
+# - Cost-effective (no disk management overhead)
 
 services:
   # Backend API Service
@@ -58,6 +70,11 @@ services:
         sync: false
       - key: SUPABASE_DATABASE_URL
         sync: false
+      # Supabase Storage Configuration
+      - key: STORAGE_BACKEND
+        value: supabase
+      - key: SUPABASE_STORAGE_BUCKET
+        value: toolboxai-uploads
       # Starter plan performance settings
       - key: DB_POOL_SIZE
         value: 5
@@ -81,7 +98,6 @@ services:
       - fromGroup: toolboxai-secrets
     healthCheckPath: /health
     autoDeploy: true
-    disk: 1GB
     # Zero-downtime deployment
     preDeployCommand: |
       echo "Starting pre-deployment health checks..."
@@ -215,7 +231,6 @@ services:
       - fromGroup: toolboxai-secrets
     healthCheckPath: /health
     autoDeploy: true
-    disk: 1GB
 
   # Agent Coordinator Service
   - type: web
@@ -250,7 +265,6 @@ services:
       - fromGroup: toolboxai-secrets
     healthCheckPath: /health
     autoDeploy: true
-    disk: 1GB
 
   # Celery Worker Fleet
   - type: worker
@@ -385,7 +399,6 @@ services:
       - fromGroup: toolboxai-secrets
     healthCheckPath: /
     autoDeploy: true
-    disk: 1GB
 
 
   # Data Retention and Cleanup (Application-level)
@@ -474,7 +487,6 @@ services:
         value: 3.12.0
     healthCheckPath: /health
     autoDeploy: true
-    disk: 1GB
 
 envVarGroups:
   # Sensitive secrets (configure in Render dashboard)
