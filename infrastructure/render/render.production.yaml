@@ -3,23 +3,17 @@
 
 databases:
   - name: toolboxai-postgres
-    plan: pro # Upgraded for production with enhanced performance
+    plan: starter # Start with Starter plan, upgrade to Pro if needed
     region: oregon # Options: oregon, ohio, frankfurt, singapore
     databaseName: educational_platform_prod
     user: eduplatform
     ipAllowList: [] # Leave empty for internal access only
     postgresMajorVersion: 16 # Upgraded for better performance and features
-    # Production database configuration
-    maxConnections: 100
-    sharedBuffers: "256MB"
-    effectiveCacheSize: "1GB"
-    maintenanceWorkMem: "128MB"
-    checkpointCompletionTarget: 0.9
-    walBuffers: "16MB"
-    defaultStatisticsTarget: 100
-    randomPageCost: 1.1
+    # Starter plan database configuration
+    maxConnections: 22 # Starter plan limit
+    # Note: Advanced tuning parameters may not be available on Starter plan
     # Backup configuration
-    backupRetentionPeriod: 30 # days
+    backupRetentionPeriod: 7 # days (Starter plan retention)
     backupWindow: "02:00-04:00" # UTC
     maintenanceWindow: "sun:04:00-sun:06:00" # UTC
 
@@ -30,7 +24,7 @@ services:
     name: toolboxai-backend
     runtime: python
     region: oregon
-    plan: pro # Upgraded for production with more CPU/memory
+    plan: starter # Start with Starter plan, upgrade to Pro if needed
     buildCommand: |
       pip install --upgrade pip setuptools wheel
       pip install -r requirements.txt
@@ -39,15 +33,15 @@ services:
       python -m uvicorn main:app \
         --host 0.0.0.0 \
         --port $PORT \
-        --workers 8 \
+        --workers 2 \
         --worker-class uvicorn.workers.UvicornWorker \
         --loop uvloop \
         --access-log \
         --timeout-keep-alive 5 \
         --timeout-graceful-shutdown 30 \
-        --limit-concurrency 1000 \
-        --limit-max-requests 10000 \
-        --backlog 2048
+        --limit-concurrency 500 \
+        --limit-max-requests 5000 \
+        --backlog 1024
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.0
@@ -82,11 +76,11 @@ services:
         sync: false
       - key: SUPABASE_DATABASE_URL
         sync: false
-      # Production performance settings
+      # Starter plan performance settings
       - key: DB_POOL_SIZE
-        value: 20
+        value: 5
       - key: DB_MAX_OVERFLOW
-        value: 10
+        value: 5
       - key: DB_POOL_TIMEOUT
         value: 30
       - key: DB_POOL_RECYCLE
@@ -105,14 +99,10 @@ services:
       - fromGroup: toolboxai-secrets
     healthCheckPath: /health
     autoDeploy: true # Auto-deploy on git push
-    # Production scaling configuration
-    scaling:
-      minInstances: 2
-      maxInstances: 10
-      targetCPUPercent: 70
-      targetMemoryPercent: 80
+    # Starter plan configuration (single instance)
+    # Note: Auto-scaling requires Pro plan or higher
     # Resource limits
-    disk: 2GB
+    disk: 1GB
     # Zero-downtime deployment
     preDeployCommand: |
       echo "Starting pre-deployment health checks..."
@@ -138,38 +128,25 @@ services:
         name: Content-Security-Policy
         value: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' wss: https:; font-src 'self' data:;
 
-  # Redis (managed) - Enhanced for production
+  # Redis (managed) - Starter configuration
   - type: redis
     name: toolboxai-redis
-    plan: pro # Upgraded for production with clustering support
+    plan: starter # Start with Starter plan, upgrade to Pro if needed
     region: oregon
     ipAllowList: []
     maxmemoryPolicy: allkeys-lru
-    # Redis 7.2 production configuration
+    # Redis 7.2 Starter plan configuration
     version: "7.2"
-    # Performance settings
-    maxMemory: "1GB"
-    maxClients: 1000
-    timeout: 0
-    # Persistence configuration
-    persistenceEnabled: true
-    appendOnly: true
-    appendFsync: "everysec"
+    # Note: Advanced performance settings may not be available on Starter plan
     # Security settings
     requirePass: true
-    # Monitoring
-    slowlogLogSlowerThan: 10000 # microseconds
-    slowlogMaxLen: 128
-    # Connection pooling
-    connectionPoolSize: 20
-    connectionPoolMaxIdleTime: 300
 
-  # Frontend Static Site - Enhanced for production
+  # Frontend Static Site - Starter configuration
   - type: web
     name: toolboxai-dashboard
     runtime: static
     region: oregon
-    plan: pro # Upgraded for better CDN and performance
+    plan: starter # Start with Starter plan, upgrade to Pro if needed
     buildCommand: |
       cd apps/dashboard && \
       npm ci --production=false && \
@@ -236,7 +213,7 @@ services:
     name: toolboxai-mcp
     runtime: python
     region: oregon
-    plan: pro
+    plan: starter
     buildCommand: |
       pip install --upgrade pip setuptools wheel
       pip install -r requirements.txt
@@ -267,19 +244,14 @@ services:
       - fromGroup: toolboxai-secrets
     healthCheckPath: /health
     autoDeploy: true
-    scaling:
-      minInstances: 1
-      maxInstances: 5
-      targetCPUPercent: 65
-      targetMemoryPercent: 70
-    disk: 1GB
+    disk: 512MB
 
   # Agent Coordinator Service
   - type: web
     name: toolboxai-agent-coordinator
     runtime: python
     region: oregon
-    plan: pro
+    plan: starter
     buildCommand: |
       pip install --upgrade pip setuptools wheel
       pip install -r requirements.txt
@@ -309,20 +281,15 @@ services:
       - fromGroup: toolboxai-secrets
     healthCheckPath: /health
     autoDeploy: true
-    scaling:
-      minInstances: 1
-      maxInstances: 4
-      targetCPUPercent: 60
-      targetMemoryPercent: 70
-    disk: 512MB
+    disk: 256MB
 
   # Celery Worker Fleet
   - type: worker
     name: toolboxai-celery-worker
     runtime: python
     region: oregon
-    plan: pro
-    numInstances: 2
+    plan: starter
+    numInstances: 1
     buildCommand: |
       pip install --upgrade pip setuptools wheel
       pip install -r requirements.txt
@@ -360,7 +327,7 @@ services:
       - key: ENVIRONMENT
         value: production
       - key: CELERY_WORKER_CONCURRENCY
-        value: 6
+        value: 2
       - key: CELERY_WORKER_POOL
         value: prefork
       - key: CELERY_TASK_TIME_LIMIT
@@ -455,9 +422,6 @@ services:
       - fromGroup: toolboxai-secrets
     healthCheckPath: /
     autoDeploy: true
-    scaling:
-      minInstances: 1
-      maxInstances: 1
     disk: 256MB
 
 
