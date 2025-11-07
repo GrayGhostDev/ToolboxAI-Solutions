@@ -117,11 +117,10 @@ services:
     ipAllowList: []
     maxmemoryPolicy: allkeys-lru
 
-  # Frontend Static Site - Starter configuration
+  # Frontend Static Site - Free tier (static sites are free on Render)
   - type: web
     name: toolboxai-dashboard
     runtime: static
-    plan: starter # Start with Starter plan, upgrade to Pro if needed
     buildCommand: |
       cd apps/dashboard && \
       npm ci --production=false && \
