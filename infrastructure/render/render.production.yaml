@@ -295,7 +295,7 @@ services:
       pip install -r requirements.txt
     startCommand: |
       cd apps/backend && \
-      celery -A apps.backend.celery_app worker \
+      celery -A celery_app worker \
         --loglevel ${CELERY_LOG_LEVEL:-info} \
         --pool ${CELERY_WORKER_POOL:-prefork} \
         --concurrency ${CELERY_WORKER_CONCURRENCY:-4} \
@@ -351,7 +351,7 @@ services:
       pip install -r requirements.txt
     startCommand: |
       cd apps/backend && \
-      celery -A apps.backend.celery_app beat \
+      celery -A celery_app beat \
         --loglevel ${CELERY_BEAT_LOG_LEVEL:-info} \
         --scheduler celery.beat.PersistentScheduler
     envVars:
@@ -394,7 +394,7 @@ services:
       pip install -r requirements.txt
     startCommand: |
       cd apps/backend && \
-      celery -A apps.backend.celery_app flower \
+      celery -A celery_app flower \
         --port $PORT \
         --address 0.0.0.0 \
         --basic_auth=${FLOWER_BASIC_AUTH:-admin:admin} \
