@@ -108,25 +108,6 @@ services:
       echo "Starting pre-deployment health checks..."
       python -c "import sys; print(f'Python version: {sys.version}')"
       pip check
-    headers:
-      - path: /*
-        name: Strict-Transport-Security
-        value: max-age=31536000; includeSubDomains; preload
-      - path: /*
-        name: X-Content-Type-Options
-        value: nosniff
-      - path: /*
-        name: X-Frame-Options
-        value: DENY
-      - path: /*
-        name: X-XSS-Protection
-        value: 1; mode=block
-      - path: /*
-        name: Referrer-Policy
-        value: strict-origin-when-cross-origin
-      - path: /*
-        name: Content-Security-Policy
-        value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' wss: https:; font-src 'self' data:;"
 
   # Redis (managed) - Starter configuration
   - type: redis
@@ -140,7 +121,6 @@ services:
   - type: web
     name: toolboxai-dashboard
     runtime: static
-    region: oregon
     plan: starter # Start with Starter plan, upgrade to Pro if needed
     buildCommand: |
       cd apps/dashboard && \
