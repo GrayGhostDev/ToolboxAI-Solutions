@@ -3,19 +3,12 @@
 
 databases:
   - name: toolboxai-postgres
-    plan: starter # Start with Starter plan, upgrade to Pro if needed
-    region: oregon # Options: oregon, ohio, frankfurt, singapore
+    plan: starter
+    region: oregon
     databaseName: educational_platform_prod
     user: eduplatform
-    ipAllowList: [] # Leave empty for internal access only
-    postgresMajorVersion: 16 # Upgraded for better performance and features
-    # Starter plan database configuration
-    maxConnections: 22 # Starter plan limit
-    # Note: Advanced tuning parameters may not be available on Starter plan
-    # Backup configuration
-    backupRetentionPeriod: 7 # days (Starter plan retention)
-    backupWindow: "02:00-04:00" # UTC
-    maintenanceWindow: "sun:04:00-sun:06:00" # UTC
+    ipAllowList: []
+    postgresMajorVersion: 16
 
 
 services:
@@ -98,11 +91,8 @@ services:
         value: true
       - fromGroup: toolboxai-secrets
     healthCheckPath: /health
-    autoDeploy: true # Auto-deploy on git push
-    # Starter plan configuration (single instance)
-    # Note: Auto-scaling requires Pro plan or higher
-    # Resource limits
-    disk: 1GB
+    autoDeploy: true
+    disk: 1
     # Zero-downtime deployment
     preDeployCommand: |
       echo "Starting pre-deployment health checks..."
@@ -131,15 +121,10 @@ services:
   # Redis (managed) - Starter configuration
   - type: redis
     name: toolboxai-redis
-    plan: starter # Start with Starter plan, upgrade to Pro if needed
+    plan: starter
     region: oregon
     ipAllowList: []
     maxmemoryPolicy: allkeys-lru
-    # Redis 7.2 Starter plan configuration
-    version: "7.2"
-    # Note: Advanced performance settings may not be available on Starter plan
-    # Security settings
-    requirePass: true
 
   # Frontend Static Site - Starter configuration
   - type: web
@@ -243,7 +228,7 @@ services:
       - fromGroup: toolboxai-secrets
     healthCheckPath: /health
     autoDeploy: true
-    disk: 512MB
+    disk: 1
 
   # Agent Coordinator Service
   - type: web
@@ -280,7 +265,7 @@ services:
       - fromGroup: toolboxai-secrets
     healthCheckPath: /health
     autoDeploy: true
-    disk: 256MB
+    disk: 1
 
   # Celery Worker Fleet
   - type: worker
@@ -419,7 +404,7 @@ services:
       - fromGroup: toolboxai-secrets
     healthCheckPath: /
     autoDeploy: true
-    disk: 256MB
+    disk: 1
 
 
   # Database Backup Service
@@ -581,6 +566,8 @@ services:
       - key: PYTHON_VERSION
         value: 3.12.0
     healthCheckPath: /health
+    autoDeploy: true
+    disk: 1
 
 envVarGroups:
   # Sensitive secrets (configure in Render dashboard)
