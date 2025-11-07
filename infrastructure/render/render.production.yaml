@@ -150,8 +150,7 @@ services:
     buildCommand: |
       cd apps/dashboard && \
       npm ci --production=false && \
-      npm run build && \
-      npm run build:analyze
+      npm run build
     staticPublishPath: ./apps/dashboard/dist
     envVars:
       - key: NODE_VERSION
@@ -324,8 +323,6 @@ services:
           type: redis
           name: toolboxai-redis
           property: connectionString
-      - key: ENVIRONMENT
-        value: production
       - key: CELERY_WORKER_CONCURRENCY
         value: 2
       - key: CELERY_WORKER_POOL
