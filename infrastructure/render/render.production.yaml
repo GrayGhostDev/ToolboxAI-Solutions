@@ -81,7 +81,7 @@ services:
       - fromGroup: toolboxai-secrets
     healthCheckPath: /health
     autoDeploy: true
-    disk: 1
+    disk: 1GB
     # Zero-downtime deployment
     preDeployCommand: |
       echo "Starting pre-deployment health checks..."
@@ -215,7 +215,7 @@ services:
       - fromGroup: toolboxai-secrets
     healthCheckPath: /health
     autoDeploy: true
-    disk: 1
+    disk: 1GB
 
   # Agent Coordinator Service
   - type: web
@@ -250,7 +250,7 @@ services:
       - fromGroup: toolboxai-secrets
     healthCheckPath: /health
     autoDeploy: true
-    disk: 1
+    disk: 1GB
 
   # Celery Worker Fleet
   - type: worker
@@ -385,7 +385,7 @@ services:
       - fromGroup: toolboxai-secrets
     healthCheckPath: /
     autoDeploy: true
-    disk: 1
+    disk: 1GB
 
 
   # Data Retention and Cleanup (Application-level)
@@ -474,7 +474,7 @@ services:
         value: 3.12.0
     healthCheckPath: /health
     autoDeploy: true
-    disk: 1
+    disk: 1GB
 
 envVarGroups:
   # Sensitive secrets (configure in Render dashboard)
@@ -586,22 +586,3 @@ envVarGroups:
         value: "https://toolboxai-monitoring.onrender.com/metrics"
       - key: GRAFANA_API_KEY
         sync: false
-
-# Preview Environments Configuration - Enhanced
-previewsEnabled: true
-previewsExpireAfterDays: 7
-previewConfiguration:
-  # Preview environment settings
-  database:
-    plan: starter # Smaller plan for previews
-    databaseName: preview_${RENDER_GIT_BRANCH}
-  redis:
-    plan: starter
-  services:
-    backend:
-      plan: starter
-      scaling:
-        minInstances: 1
-        maxInstances: 2
-    frontend:
-      plan: starter
