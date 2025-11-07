@@ -411,7 +411,7 @@ services:
     buildCommand: |
       pip install --upgrade pip setuptools wheel
       pip install -r requirements.txt
-    command: |
+    startCommand: |
       cd apps/backend && \
       python -c "
       import asyncio
