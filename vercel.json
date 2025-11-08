@@ -8,11 +8,6 @@
   "devCommand": "cd apps/dashboard && npm run dev",
   "framework": "vite",
   "regions": ["iad1"],
-  "functions": {
-    "apps/dashboard/dist/**/*": {
-      "runtime": "nodejs22.x"
-    }
-  },
   "headers": [
     {
       "source": "/assets/(.*)",
