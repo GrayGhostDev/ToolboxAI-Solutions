@@ -19,6 +19,7 @@ permissions:
   security-events: write
   actions: read
   id-token: write
+  issues: write
 
 jobs:
   # Secret Scanning
@@ -250,6 +251,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
       - name: COPPA Compliance Check
         run: |
           python scripts/compliance/coppa_validator.py
@@ -300,10 +306,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
+        continue-on-error: true
 
       - name: Generate consolidated report
+        continue-on-error: true
         run: |
           python scripts/security/generate_security_report.py \
             --output security-report.html
@@ -315,7 +328,8 @@ jobs:
           path: security-report.html
 
       - name: Post to Slack
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && secrets.SLACK_WEBHOOK != ''
+        continue-on-error: true
         uses: 8398a7/action-slack@v3
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
@@ -325,6 +339,7 @@ jobs:
 
       - name: Create GitHub Issue for vulnerabilities
         if: failure() && github.ref == 'refs/heads/main'
+        continue-on-error: true
         uses: actions/github-script@v7
         with:
           script: |
