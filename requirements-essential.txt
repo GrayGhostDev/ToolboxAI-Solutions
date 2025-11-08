@@ -6,7 +6,7 @@ python-jose==3.4.0
 PyJWT==2.8.0
 
 # Pydantic with email validation
-pydantic[email]==2.5.0
+pydantic[email]==2.12.4
 
 # Async database
 asyncpg==0.29.0
