@@ -1,12 +1,25 @@
 version: 2
+
+# ============================================
+# TOOLBOXAI DEPENDABOT CONFIGURATION
+# ============================================
+# Automated dependency updates with:
+# - Grouped updates for related packages
+# - Staggered schedules across the week
+# - Auto-labeling for easier triage
+# ============================================
+
 updates:
-  # Python dependencies
+  # ──────────────────────────────────────────
+  # PYTHON DEPENDENCIES (Backend)
+  # ──────────────────────────────────────────
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
       time: "09:00"
+      timezone: "America/New_York"
     open-pull-requests-limit: 10
     reviewers:
       - "GrayGhostDev"
@@ -14,10 +27,36 @@ updates:
       - "GrayGhostDev"
     commit-message:
       prefix: "chore"
+      prefix-development: "chore"
       include: "scope"
     labels:
       - "dependencies"
       - "python"
+      - "backend"
+    pull-request-branch-name:
+      separator: "/"
+    # Group related dependencies together
+    groups:
+      fastapi-ecosystem:
+        patterns:
+          - "fastapi*"
+          - "uvicorn*"
+          - "starlette*"
+          - "pydantic*"
+      testing:
+        patterns:
+          - "pytest*"
+          - "coverage*"
+      security:
+        patterns:
+          - "cryptography*"
+          - "bcrypt*"
+          - "passlib*"
+      ai-ml:
+        patterns:
+          - "langchain*"
+          - "openai*"
+          - "tiktoken*"
 
   # Node.js dependencies (root)
   - package-ecosystem: "npm"
@@ -38,13 +77,16 @@ updates:
       - "dependencies"
       - "javascript"
 
-  # Node.js dependencies (dashboard)
+  # ──────────────────────────────────────────
+  # NPM DEPENDENCIES (Dashboard)
+  # ──────────────────────────────────────────
   - package-ecosystem: "npm"
     directory: "/apps/dashboard"
     schedule:
       interval: "weekly"
-      day: "monday"
-      time: "09:00"
+      day: "tuesday"
+      time: "10:00"
+      timezone: "America/New_York"
     open-pull-requests-limit: 10
     reviewers:
       - "GrayGhostDev"
@@ -52,19 +94,50 @@ updates:
       - "GrayGhostDev"
     commit-message:
       prefix: "chore"
+      prefix-development: "chore"
       include: "scope"
     labels:
       - "dependencies"
       - "javascript"
+      - "frontend"
       - "dashboard"
+    pull-request-branch-name:
+      separator: "/"
+    # Group updates by framework
+    groups:
+      react-ecosystem:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "react-router*"
+      mantine-ui:
+        patterns:
+          - "@mantine/*"
+      vite-ecosystem:
+        patterns:
+          - "vite*"
+          - "@vitejs/*"
+      testing:
+        patterns:
+          - "vitest*"
+          - "@vitest/*"
+          - "playwright*"
+          - "@playwright/*"
+      typescript:
+        patterns:
+          - "typescript"
+          - "@types/*"
 
-  # GitHub Actions
+  # ──────────────────────────────────────────
+  # GITHUB ACTIONS
+  # ──────────────────────────────────────────
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "monday"
+      day: "wednesday"
       time: "09:00"
+      timezone: "America/New_York"
     open-pull-requests-limit: 5
     reviewers:
       - "GrayGhostDev"
@@ -76,14 +149,36 @@ updates:
     labels:
       - "dependencies"
       - "github-actions"
+      - "ci-cd"
+    pull-request-branch-name:
+      separator: "/"
+    # Group action updates by vendor
+    groups:
+      actions-core:
+        patterns:
+          - "actions/*"
+      aws-actions:
+        patterns:
+          - "aws-actions/*"
+      docker-actions:
+        patterns:
+          - "docker/*"
+      security-actions:
+        patterns:
+          - "aquasecurity/*"
+          - "github/codeql-action"
+          - "zricethezav/*"
 
-  # Docker dependencies
+  # ──────────────────────────────────────────
+  # DOCKER DEPENDENCIES
+  # ──────────────────────────────────────────
   - package-ecosystem: "docker"
     directory: "/infrastructure/docker"
     schedule:
       interval: "weekly"
-      day: "monday"
+      day: "thursday"
       time: "09:00"
+      timezone: "America/New_York"
     open-pull-requests-limit: 5
     reviewers:
       - "GrayGhostDev"
@@ -95,3 +190,27 @@ updates:
     labels:
       - "dependencies"
       - "docker"
+      - "infrastructure"
+
+# ============================================
+# NOTES
+# ============================================
+#
+# Staggered Schedule:
+#   Monday    - Python dependencies
+#   Tuesday   - Dashboard (npm)
+#   Wednesday - GitHub Actions
+#   Thursday  - Docker
+#
+# Dependency Grouping:
+#   Related packages are grouped together in single PRs
+#   to reduce noise and make reviews more efficient.
+#
+# Security Updates:
+#   Dependabot automatically creates PRs for security updates
+#   regardless of schedule. Review and merge these ASAP.
+#
+# Auto-merge (Optional):
+#   Enable in repository settings for patch updates only.
+#
+# ============================================

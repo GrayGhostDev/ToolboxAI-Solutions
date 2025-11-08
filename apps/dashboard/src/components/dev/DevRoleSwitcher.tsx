@@ -26,8 +26,18 @@ const roleColors: Record<UserRole, string> = {
 };
 
 export function DevRoleSwitcher() {
-  // Only show in development
-  if (process.env.NODE_ENV !== 'development') {
+  // Only show in development mode or if explicitly enabled
+  const isDevelopment = import.meta.env.DEV;
+  const isDevToolsEnabled = import.meta.env.VITE_ENABLE_DEV_TOOLS === 'true';
+  const isProduction = import.meta.env.PROD;
+
+  // Hide completely in production unless dev tools are explicitly enabled
+  if (isProduction && !isDevToolsEnabled) {
+    return null;
+  }
+
+  // Also hide in development if explicitly disabled
+  if (!isDevelopment && !isDevToolsEnabled) {
     return null;
   }
 

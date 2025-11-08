@@ -186,4 +186,117 @@ class RoleBasedAnalytics {
         `/api/analytics/dashboard-engagement/${role}?period=${period}`
       );
       const data = await response.json();
+      return data.score;
+    } catch (error) {
+      console.error('Error fetching dashboard engagement:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Track role-based performance metrics
+   */
+  trackPerformance(
+    metric: string,
+    value: number,
+    role: UserRole,
+    userId: string
+  ): void {
+    const event: AnalyticsEvent = {
+      event: 'performance_metric',
+      role,
+      userId,
+      timestamp: new Date().toISOString(),
+      properties: {
+        metric,
+        value,
+      },
+    };
+
+    this.events.push(event);
+    this.sendToAnalytics(event);
+  }
+
+  /**
+   * Send analytics event to backend
+   */
+  private async sendToAnalytics(event: AnalyticsEvent): Promise<void> {
+    try {
+      // Send to backend analytics service
+      await fetch('/api/analytics/events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('clerkToken')}`,
+        },
+        body: JSON.stringify(event),
+      });
+
+      // Also send to external analytics if configured
+      if (window.gtag) {
+        window.gtag('event', event.event, {
+          event_category: event.role,
+          ...event.properties,
+        });
+      }
+
+      // Sentry breadcrumb
+      if (window.Sentry) {
+        window.Sentry.addBreadcrumb({
+          category: 'analytics',
+          message: event.event,
+          level: 'info',
+          data: event.properties,
+        });
+      }
+    } catch (error) {
+      // Silently fail - don't interrupt user experience
+      if (import.meta.env.DEV) {
+        console.error('Analytics error:', error);
+      }
+    }
+  }
+
+  /**
+   * Get all tracked events (for debugging)
+   */
+  getEvents(): AnalyticsEvent[] {
+    return [...this.events];
+  }
+
+  /**
+   * Clear tracked events
+   */
+  clearEvents(): void {
+    this.events = [];
+  }
+}
+
+// Singleton instance
+export const roleAnalytics = new RoleBasedAnalytics();
+
+// React hook for easy usage
+export function useRoleAnalytics() {
+  return {
+    trackFeature: roleAnalytics.trackFeatureUsage.bind(roleAnalytics),
+    trackPage: roleAnalytics.trackPageView.bind(roleAnalytics),
+    trackSession: roleAnalytics.trackSession.bind(roleAnalytics),
+    trackAction: roleAnalytics.trackRoleAction.bind(roleAnalytics),
+    trackPerformance: roleAnalytics.trackPerformance.bind(roleAnalytics),
+    getRoleDistribution: roleAnalytics.getRoleDistribution.bind(roleAnalytics),
+    getRoleEngagement: roleAnalytics.getRoleEngagement.bind(roleAnalytics),
+    getFeatureUsage: roleAnalytics.getFeatureUsageByRole.bind(roleAnalytics),
+    getDashboardEngagement: roleAnalytics.getDashboardEngagement.bind(roleAnalytics),
+  };
+}
+
+// Type definitions for window globals
+declare global {
+  interface Window {
+    gtag?: (...args: any[]) => void;
+    Sentry?: {
+      addBreadcrumb: (breadcrumb: any) => void;
+    };
+  }
+}
 

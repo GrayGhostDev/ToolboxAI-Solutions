@@ -1,0 +1,174 @@
+# ============================================
+# REUSABLE PYTHON TESTING WORKFLOW
+# ============================================
+# Reusable workflow for Python testing
+# Can be called from other workflows with custom parameters
+# ============================================
+
+name: 🐍 Python Tests (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: 'Python version to use'
+        required: false
+        type: string
+        default: '3.12'
+      test-type:
+        description: 'Type of tests to run (unit, integration, all)'
+        required: false
+        type: string
+        default: 'all'
+      coverage-threshold:
+        description: 'Minimum coverage percentage required'
+        required: false
+        type: number
+        default: 80
+      working-directory:
+        description: 'Working directory for tests'
+        required: false
+        type: string
+        default: '.'
+    outputs:
+      coverage:
+        description: 'Test coverage percentage'
+        value: ${{ jobs.python-tests.outputs.coverage }}
+      status:
+        description: 'Test status (success/failure)'
+        value: ${{ jobs.python-tests.outputs.status }}
+
+jobs:
+  python-tests:
+    name: Python ${{ inputs.python-version }} - ${{ inputs.test-type }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      coverage: ${{ steps.coverage.outputs.percentage }}
+      status: ${{ steps.test-status.outputs.status }}
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: 'pip'
+          cache-dependency-path: requirements.txt
+
+      - name: 📦 Install dependencies
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-xdist pytest-timeout pytest-asyncio
+
+      - name: 🧪 Run Unit Tests
+        if: inputs.test-type == 'unit' || inputs.test-type == 'all'
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb
+          REDIS_URL: redis://localhost:6379/0
+          JWT_SECRET_KEY: test-secret-key-for-ci
+          TESTING: true
+          USE_MOCK_LLM: true
+        run: |
+          pytest tests/unit/ \
+            -v \
+            --cov=apps \
+            --cov=core \
+            --cov-report=xml \
+            --cov-report=html \
+            --cov-report=term-missing \
+            --junit-xml=test-results/unit-tests.xml \
+            -n auto \
+            --timeout=300
+
+      - name: 🧪 Run Integration Tests
+        if: inputs.test-type == 'integration' || inputs.test-type == 'all'
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb
+          REDIS_URL: redis://localhost:6379/0
+          JWT_SECRET_KEY: test-secret-key-for-ci
+          TESTING: true
+        run: |
+          pytest tests/integration/ \
+            -v \
+            --junit-xml=test-results/integration-tests.xml \
+            -m "not slow" \
+            --timeout=600
+
+      - name: 📊 Extract Coverage
+        id: coverage
+        if: inputs.test-type == 'unit' || inputs.test-type == 'all'
+        run: |
+          # Extract coverage percentage from coverage report
+          COVERAGE=$(python -c "import xml.etree.ElementTree as ET; tree = ET.parse('coverage.xml'); root = tree.getroot(); print(root.attrib['line-rate'])")
+          COVERAGE_PCT=$(echo "$COVERAGE * 100" | bc | cut -d'.' -f1)
+          echo "percentage=$COVERAGE_PCT" >> $GITHUB_OUTPUT
+          echo "📊 Coverage: $COVERAGE_PCT%"
+
+      - name: ✅ Check Coverage Threshold
+        if: inputs.test-type == 'unit' || inputs.test-type == 'all'
+        run: |
+          if [ ${{ steps.coverage.outputs.percentage }} -lt ${{ inputs.coverage-threshold }} ]; then
+            echo "❌ Coverage ${{ steps.coverage.outputs.percentage }}% is below threshold ${{ inputs.coverage-threshold }}%"
+            exit 1
+          fi
+          echo "✅ Coverage meets threshold"
+
+      - name: 📤 Upload Coverage
+        if: inputs.test-type == 'unit' || inputs.test-type == 'all'
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: python
+          name: python-${{ inputs.python-version }}-coverage
+
+      - name: 📤 Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-test-results-${{ inputs.python-version }}-${{ inputs.test-type }}
+          path: |
+            test-results/
+            htmlcov/
+          retention-days: 7
+
+      - name: 📝 Set Test Status
+        id: test-status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+          fi

@@ -42,7 +42,7 @@ import {
 } from '@tabler/icons-react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { useAppSelector, useAppDispatch } from '../../store';
 import { addNotification } from '../../store/slices/uiSlice';
 import { apiClient } from '../../services/api';

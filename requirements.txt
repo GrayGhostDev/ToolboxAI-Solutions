@@ -157,7 +157,7 @@ opentelemetry-instrumentation-psycopg2==0.42b0
 opentelemetry-instrumentation-redis==0.42b0
 opentelemetry-instrumentation-sqlalchemy==0.42b0
 opentelemetry-proto==1.21.0
-opentelemetry-semantic-conventions==0.42b0
+opentelemetry-semantic-conventions==0.48b0
 opentelemetry-util-http==0.42b0
 orjson==3.11.3
 packageurl-python==0.17.5

@@ -14,14 +14,10 @@ import {
   Button,
   Paper,
   Alert,
-  Stack,
   Collapse,
-  ActionIcon,
-  Divider,
   Group,
   useMantineTheme,
   ScrollArea,
-  Badge,
   Center,
 } from '@mantine/core';
 import {
@@ -30,7 +26,6 @@ import {
   IconChevronDown,
   IconChevronUp,
   IconHome,
-  IconBug,
   IconCopy,
   IconCheck,
 } from '@tabler/icons-react';
@@ -83,7 +78,7 @@ export class ErrorBoundary extends Component<Props, State> {
     };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error to console in development
     if (process.env.NODE_ENV === 'development') {
       console.error('Error Boundary caught an error:', error, errorInfo);
@@ -111,7 +106,7 @@ export class ErrorBoundary extends Component<Props, State> {
     }
   }
 
-  componentWillUnmount() {
+  override componentWillUnmount() {
     if (this.resetTimeoutId) {
       clearTimeout(this.resetTimeoutId);
     }
@@ -197,7 +192,7 @@ URL: ${window.location.href}
     }));
   };
 
-  render() {
+  override render() {
     const { hasError, error, errorInfo, showDetails, copied, isRecovering, errorCount } = this.state;
     const { children, fallback, level = 'component', showDetails: showDetailsProp = true } = this.props;
 
@@ -250,7 +245,7 @@ interface ErrorFallbackProps {
 
 function ErrorFallback({
   error,
-  errorInfo,
+  errorInfo: _errorInfo,
   level,
   showDetails,
   showDetailsProp,
@@ -262,21 +257,18 @@ function ErrorFallback({
   isRecovering,
   errorCount,
 }: ErrorFallbackProps) {
-  // Use a safe theme access that doesn't depend on Mantine context
-  let theme: any;
-  try {
-    theme = useMantineTheme();
-  } catch {
-    // Fallback theme when Mantine context is not available
-    theme = {
-      colors: {
-        red: ['#fff5f5', '#fed7d7', '#feb2b2', '#fc8181', '#f56565', '#e53e3e', '#c53030', '#9b2c2c', '#742a2a', '#2d1b1b'],
-        gray: ['#f7fafc', '#edf2f7', '#e2e8f0', '#cbd5e0', '#a0aec0', '#718096', '#4a5568', '#2d3748', '#1a202c', '#171923'],
-        green: ['#f0fff4', '#c6f6d5', '#9ae6b4', '#68d391', '#48bb78', '#38a169', '#2f855a', '#276749', '#22543d', '#1c4532']
-      },
-      radius: { sm: 4 }
-    };
-  }
+  // Always call the hook - React Hooks must be called unconditionally
+  const mantineTheme = useMantineTheme();
+
+  // Fallback theme values in case Mantine theme is incomplete
+  const theme = mantineTheme || {
+    colors: {
+      red: ['#fff5f5', '#fed7d7', '#feb2b2', '#fc8181', '#f56565', '#e53e3e', '#c53030', '#9b2c2c', '#742a2a', '#2d1b1b'],
+      gray: ['#f7fafc', '#edf2f7', '#e2e8f0', '#cbd5e0', '#a0aec0', '#718096', '#4a5568', '#2d3748', '#1a202c', '#171923'],
+      green: ['#f0fff4', '#c6f6d5', '#9ae6b4', '#68d391', '#48bb78', '#38a169', '#2f855a', '#276749', '#22543d', '#1c4532']
+    },
+    radius: { sm: 4 }
+  };
 
   // Different layouts based on error level
   if (level === 'page') {

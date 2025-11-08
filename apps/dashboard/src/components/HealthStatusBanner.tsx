@@ -8,24 +8,24 @@
  * ============================================
  */
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Alert,
   Group,
   Text,
   Button,
-  CloseButton,
-  rem,
   Box,
   Transition,
 } from '@mantine/core';
+import type { CSSProperties } from 'react';
 import {
   IconAlertCircle,
   IconRefresh,
   IconWifi,
   IconWifiOff,
 } from '@tabler/icons-react';
-import { useBackendHealth, BackendHealthStatus } from '../hooks/useBackendHealth';
+import type { BackendHealthStatus } from '../hooks/useBackendHealth';
+import { useBackendHealth } from '../hooks/useBackendHealth';
 
 export interface HealthStatusBannerProps {
   /**
@@ -167,7 +167,7 @@ export function HealthStatusBanner({
       duration={300}
       timingFunction="ease"
     >
-      {(styles) => (
+      {(styles: CSSProperties) => (
         <Box
           style={{
             ...styles,

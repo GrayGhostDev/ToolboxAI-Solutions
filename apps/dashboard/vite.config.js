@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+
 // Plugin to enforce correct module loading order
 function reorderModulePreloadsPlugin() {
   return {
@@ -94,7 +95,7 @@ export default defineConfig({
       'react-dom/client': path.resolve(__dirname, '../../node_modules/react-dom/client'),
       // Fix refractor module resolution for react-syntax-highlighter
       'refractor': path.resolve(__dirname, '../../node_modules/refractor'),
-      'refractor/core': path.resolve(__dirname, '../../node_modules/refractor/core.js'),
+      'refractor/core': path.resolve(__dirname, '../../node_modules/refractor/lib/core.js'),
       // Force single instance of three.js
       'three': path.resolve(__dirname, '../../node_modules/three')
     },
@@ -110,9 +111,6 @@ export default defineConfig({
       '@mantine/hooks',
       '@tabler/icons-react',
       'three',
-      '@react-three/fiber',
-      '@react-three/drei',
-      'use-sync-external-store',
       'framer-motion'
     ]
   },

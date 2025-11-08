@@ -174,7 +174,6 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: apps/dashboard/package-lock.json
 
       - name: Cache Python dependencies
         uses: actions/cache@v4
@@ -252,7 +251,6 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: apps/dashboard/package-lock.json
 
       - name: Cache Python dependencies
         uses: actions/cache@v4

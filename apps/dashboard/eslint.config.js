@@ -27,7 +27,8 @@ export default tseslint.config(
         ecmaFeatures: {
           jsx: true,
         },
-        project: './tsconfig.json', // Enable type-aware linting
+        projectService: true, // Use projectService instead of project for better performance
+        tsconfigRootDir: import.meta.dirname,
       },
     },
     settings: {

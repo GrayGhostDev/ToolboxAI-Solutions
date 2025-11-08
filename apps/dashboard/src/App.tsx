@@ -24,7 +24,6 @@ import { RoleBasedRouter } from './components/auth/RoleBasedRouter';
 // WebSocket removed - using Pusher for real-time features
 import { pusherService } from './services/pusher';
 import { PusherProvider } from './contexts/PusherContext';
-import { NetworkError } from './components/ErrorComponents';
 import { SessionMonitor, NetworkStatus } from './components/auth/AuthRecovery';
 // Backend Health Monitoring
 import { HealthStatusBanner } from './components/HealthStatusBanner';
@@ -40,8 +39,8 @@ const MigrationControlPanel = React.lazy(() => import('./components/migration/Mi
 const RoutePerformanceMonitor = React.lazy(() => import('./components/performance/RoutePerformanceMonitor').then(m => ({ default: m.RoutePerformanceMonitor })));
 const RoutePreloader = React.lazy(() => import('./components/performance/RoutePreloader').then(m => ({ default: m.RoutePreloader })));
 
-// Keep old FloatingCharacters as fallback
-const FloatingCharacters = React.lazy(() => import('./components/roblox/FloatingCharacters').then(module => ({ default: module.FloatingCharacters })));
+// Keep old FloatingCharacters as fallback (currently unused, may be used for feature flag)
+const _FloatingCharacters = React.lazy(() => import('./components/roblox/FloatingCharacters').then(module => ({ default: module.FloatingCharacters })));
 
 // Cookie banner - only in production
 const CookieBannerLazy = React.lazy(() => import('./components/consent/CookieBanner').then(m => ({ default: m.default })));
@@ -70,7 +69,7 @@ export default function App() {
   const bypassAuth = import.meta.env.VITE_BYPASS_AUTH === 'true';
 
   // Use the unified auth hook that handles conditional logic correctly
-  const authHookResult = useUnifiedAuth();
+  const _authHookResult = useUnifiedAuth();
 
   // Validate configuration on startup (disabled by default to reduce console noise)
   // Enable with VITE_ENABLE_CONFIG_VALIDATION=true if needed

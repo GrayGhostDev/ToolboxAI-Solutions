@@ -3,8 +3,14 @@
  * TEAMCITY KOTLIN DSL CONFIGURATION
  * ============================================
  * ToolBoxAI Solutions - Complete CI/CD Pipeline
- * Version: 2025.03
- * Updated: 2025-09-28
+ * Version: 2025.07
+ * Updated: 2025-11-08
+ *
+ * New Features (2025.07):
+ * - Build Cache enabled (10GB max size)
+ * - Parallel Tests support
+ * - Smart .teamcity directory handling
+ * - Kotlin incremental compilation
  * ============================================
  */
 
@@ -20,7 +26,7 @@ import jetbrains.buildServer.configs.kotlin.triggers.vcs
 import jetbrains.buildServer.configs.kotlin.triggers.schedule
 import jetbrains.buildServer.configs.kotlin.vcs.GitVcsRoot
 
-version = "2025.03"
+version = "2025.07"
 
 project {
     description = "ToolBoxAI Solutions - Educational Platform with AI Integration"
@@ -57,6 +63,22 @@ project {
     // Project Features
     // ============================================
     features {
+        // Build Cache (2025.07 feature)
+        feature {
+            type = "BuildCache"
+            id = "build-cache"
+            param("name", "Build Cache")
+            param("enabled", "true")
+            param("publish.max.size", "10GB")
+            param("rules", """
+                +:**/node_modules/** => directory
+                +:**/.venv/** => directory
+                +:**/target/** => directory
+                +:**/.gradle/** => directory
+                +:**/__pycache__/** => directory
+            """.trimIndent())
+        }
+
         // TeamCity Cloud Docker Registry
         dockerRegistry {
             id = "TeamCityCloudRegistry"

@@ -10,22 +10,40 @@
 # - Build Cache feature (2025.07+)
 #
 # Created: 2025-09-28
-# Updated: 2025-11-08 - Upgraded to TeamCity 2025.07, Integrated with Supabase PostgreSQL
+# Updated: 2025-11-08 - Upgraded to TeamCity 2025.07
 # ============================================
 
 services:
   # ----------------------------------------
-  # TeamCity Database - INTEGRATED WITH SUPABASE POSTGRESQL
+  # TeamCity Database (PostgreSQL 16)
   # ----------------------------------------
-  # TeamCity now uses Supabase's PostgreSQL 17 instance
-  # Database: teamcity (created in Supabase PostgreSQL)
-  # Connection: supabase_db_supabase container via supabase_network_supabase
-  # Port: 5432 (internal), 54322 (host)
-  # User: supabase_admin
-  # ----------------------------------------
-  # REMOVED: Standalone teamcity-db container
-  # Previous postgres:16-alpine container replaced with Supabase integration
-  # ----------------------------------------
+  teamcity-db:
+    image: postgres:16-alpine
+    container_name: teamcity-postgres
+    environment:
+      POSTGRES_DB: teamcity
+      POSTGRES_USER: ${TEAMCITY_DB_USER:-teamcity}
+      POSTGRES_PASSWORD: ${TEAMCITY_DB_PASSWORD:-teamcity_secure_2025}
+    volumes:
+      - teamcity_db_data:/var/lib/postgresql/data
+      # Optimization for TeamCity-specific PostgreSQL settings
+      - type: bind
+        source: ../config/teamcity-postgres.conf
+        target: /etc/postgresql/postgresql.conf
+        read_only: true
+    networks:
+      - teamcity
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TEAMCITY_DB_USER:-teamcity}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
 
   # ----------------------------------------
   # TeamCity Server (2025.07)
@@ -36,10 +54,10 @@ services:
     container_name: teamcity-server
     user: "1000:1000" # Non-root user as per 2025 security standards
     environment:
-      # Database configuration - Supabase PostgreSQL Integration
-      TEAMCITY_DATABASE_URL: jdbc:postgresql://db.supabase.internal:5432/teamcity
-      TEAMCITY_DATABASE_USER: supabase_admin
-      TEAMCITY_DATABASE_PASSWORD: postgres
+      # Database configuration
+      TEAMCITY_DATABASE_URL: jdbc:postgresql://teamcity-db:5432/teamcity
+      TEAMCITY_DATABASE_USER: ${TEAMCITY_DB_USER:-teamcity}
+      TEAMCITY_DATABASE_PASSWORD: ${TEAMCITY_DB_PASSWORD:-teamcity_secure_2025}
 
       # Server configuration
       TEAMCITY_SERVER_MEM_OPTS: "-Xmx4g -XX:MaxPermSize=512m"
@@ -51,8 +69,8 @@ services:
       # External URL for webhooks and agents
       TEAMCITY_SERVER_URL: ${TEAMCITY_SERVER_URL:-https://ci.toolboxaisolutions.com}
 
-      # Pipeline token for API access (from .env)
-      TEAMCITY_PIPELINE_ACCESS_TOKEN: ${TEAMCITY_PIPELINE_ACCESS_TOKEN:-eyJ0eXAiOiAiVENWMiJ9.Z00zSzRFazBrNktpandnemRUZ2dJRGhBbVlF.MTZhZjcxM2EtZWJiZC00ODA2LTgxMmQtMzA2MWZjMjk2OWYz}
+      # Pipeline token for API access
+      TEAMCITY_PIPELINE_ACCESS_TOKEN: ${TEAMCITY_PIPELINE_ACCESS_TOKEN}
 
       # Integration with existing services
       PUSHER_KEY: ${VITE_PUSHER_KEY}
@@ -74,9 +92,10 @@ services:
       - ../../../.teamcity:/data/teamcity_server/datadir/config/projects/ToolBoxAI/.teamcity:ro
     networks:
       - teamcity
-      - supabase_network_supabase  # Connect to Supabase network for PostgreSQL access
       # - toolboxai # Connect to main network for service integration
-    # depends_on removed - Supabase PostgreSQL managed externally
+    depends_on:
+      teamcity-db:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8111/health"]
       interval: 30s
@@ -257,7 +276,8 @@ services:
 # ============================================
 volumes:
   # TeamCity Server volumes
-  # teamcity_db_data - REMOVED (using Supabase PostgreSQL)
+  teamcity_db_data:
+    driver: local
   teamcity_data:
     driver: local
   teamcity_logs:
@@ -314,9 +334,6 @@ networks:
   teamcity:
     driver: bridge
     name: teamcity-network
-  supabase_network_supabase:
-    external: true
-    name: supabase_network_supabase
   toolboxai:
     external: true
     name: toolboxai
