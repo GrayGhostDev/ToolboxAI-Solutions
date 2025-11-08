@@ -60,7 +60,10 @@
   "license": "MIT",
   "overrides": {
     "three": "^0.160.1",
-    "refractor": "^3.6.0"
+    "prismjs": "^1.30.0",
+    "esbuild": "^0.25.10",
+    "undici": "^6.0.0",
+    "path-to-regexp": "^6.2.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.37.0",
@@ -80,7 +83,6 @@
     "vercel": "^48.8.0"
   },
   "dependencies": {
-    "@esbuild/darwin-arm64": "^0.25.10",
     "@mantine/core": "^8.3.3",
     "@rollup/rollup-darwin-arm64": "^4.53.0",
     "@sentry-internal/browser-utils": "^10.23.0",
