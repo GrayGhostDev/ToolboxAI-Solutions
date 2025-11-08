@@ -323,4 +323,4 @@ psutil==6.1.0  # System monitoring
 prometheus-fastapi-instrumentator==7.0.0  # Prometheus metrics
 opentelemetry-api==1.21.0  # OpenTelemetry base
 opentelemetry-sdk==1.21.0  # OpenTelemetry SDK
-opentelemetry-instrumentation-fastapi==0.48b0  # FastAPI instrumentation
+opentelemetry-instrumentation-fastapi==0.42b0  # FastAPI instrumentation
