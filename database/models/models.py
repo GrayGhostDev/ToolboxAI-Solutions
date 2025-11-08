@@ -1459,6 +1459,7 @@ __all__.extend(
     [
         "Base",
         "User",
+        "Course",
         "Content",
         "Class",
         "Lesson",
@@ -1466,6 +1467,17 @@ __all__.extend(
         "QuizQuestion",
         "QuizAttempt",
         "QuizResponse",
+        "UserProgress",  # Mobile endpoint dependency
+        "StudentProgress",
+        "Analytics",
+        "Achievement",
+        "UserAchievement",
+        "Enrollment",
+        "ClassEnrollment",
+        "Session",
+        "RobloxSession",
+        "RobloxContent",
+        "RobloxPlayerProgress",
         "EnhancedContentGeneration",
         "ContentGenerationBatch",
     ]

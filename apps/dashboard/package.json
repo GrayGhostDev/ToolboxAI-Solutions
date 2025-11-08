@@ -4,7 +4,7 @@
   "version": "1.1.0",
   "type": "module",
   "engines": {
-    "node": "22.x",
+    "node": ">=22.x",
     "npm": ">=10"
   },
   "overrides": {
@@ -27,7 +27,8 @@
     "inflight": "^2.0.0",
     "@babel/plugin-proposal-class-properties": "npm:@babel/plugin-transform-class-properties@^7.25.9",
     "@babel/plugin-proposal-object-rest-spread": "npm:@babel/plugin-transform-object-rest-spread@^7.25.9",
-    "node-domexception": "^1.0.0"
+    "node-domexception": "^1.0.0",
+    "esbuild": "^0.25.0"
   },
   "scripts": {
     "install:external": "npm install --no-bin-links",
@@ -73,10 +74,10 @@
     "@babel/runtime": "^7.28.4",
     "@clerk/clerk-react": "^5.47.0",
     "@mantine/charts": "^8.3.3",
-    "@mantine/core": "^8.3.3",
+    "@mantine/core": "^8.3.6",
     "@mantine/dates": "^8.3.3",
     "@mantine/form": "^8.3.2",
-    "@mantine/hooks": "^8.3.3",
+    "@mantine/hooks": "^8.3.6",
     "@mantine/notifications": "^8.3.3",
     "@mantine/spotlight": "^8.3.3",
     "@mantine/tiptap": "^8.3.3",
@@ -163,7 +164,7 @@
     "storybook": "^8.6.14",
     "terser": "^5.44.0",
     "typescript": "^5.5.4",
-    "vite": "^6.0.1",
+    "vite": "^7.0.0",
     "vitest": "^3.2.4"
   }
 }

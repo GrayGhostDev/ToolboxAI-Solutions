@@ -1,7 +1,7 @@
 global:
   resolve_timeout: 5m
   # Slack webhook URL (replace with your actual webhook)
-  slack_api_url: 'YOUR_SLACK_WEBHOOK_URL'
+  slack_api_url: 'https://hooks.slack.com/services/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'
 
 # The directory from which notification templates are read
 templates:
@@ -101,7 +101,7 @@ receivers:
         headers:
           Subject: '🚨 CRITICAL SECURITY: {{ .GroupLabels.alertname }}'
     slack_configs:
-      - api_url: 'YOUR_SLACK_WEBHOOK_URL'
+      - api_url: 'https://hooks.slack.com/services/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'
         channel: '#security-critical'
         title: '🚨 Critical Security Alert'
         text: '{{ range .Alerts }}{{ .Annotations.summary }}\n{{ .Annotations.description }}{{ end }}'
@@ -109,7 +109,7 @@ receivers:
   # Security team notifications
   - name: 'security-team'
     slack_configs:
-      - api_url: 'YOUR_SLACK_WEBHOOK_URL'
+      - api_url: 'https://hooks.slack.com/services/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'
         channel: '#security-alerts'
         title: '⚠️ Security Alert: {{ .GroupLabels.alertname }}'
         text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
@@ -117,14 +117,14 @@ receivers:
   # API team notifications
   - name: 'api-team'
     slack_configs:
-      - api_url: 'YOUR_SLACK_WEBHOOK_URL'
+      - api_url: 'https://hooks.slack.com/services/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'
         channel: '#api-alerts'
         title: '🔑 API Alert: {{ .GroupLabels.alertname }}'
 
   # Roblox team notifications
   - name: 'roblox-team'
     slack_configs:
-      - api_url: 'YOUR_SLACK_WEBHOOK_URL'
+      - api_url: 'https://hooks.slack.com/services/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'
         channel: '#roblox-alerts'
         title: '🎮 Roblox Alert: {{ .GroupLabels.alertname }}'
 
@@ -147,9 +147,7 @@ receivers:
         auth_password: '${EMAIL_PASSWORD:-change-me}'
         send_resolved: true
     slack_configs:
-      - api_url: 'YOUR_SLACK_WEBHOOK_URL'
+      - api_url: 'https://hooks.slack.com/services/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'
         channel: '#ops-critical'
         title: '🔥 SYSTEM DOWN: {{ .GroupLabels.alertname }}'
         text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
-    webhook_configs:
-      - url: 'http://pagerduty-webhook-endpoint'  # Optional PagerDuty integration

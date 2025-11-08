@@ -13,6 +13,9 @@ from .content_tasks import (
 from .roblox_tasks import sync_roblox_environment, deploy_to_roblox, validate_roblox_assets
 from .notification_tasks import send_notification, send_bulk_notifications, process_webhook_event
 from .analytics_tasks import aggregate_usage_metrics, generate_reports, export_analytics_data
+from .health_tasks import check_integrations, check_database_health, check_redis_health
+from .email_tasks import send_pending_emails, send_email, send_bulk_emails
+from .ai_tasks import process_generation_queue, generate_content, batch_content_generation
 
 __all__ = [
     # Cleanup tasks
@@ -35,4 +38,16 @@ __all__ = [
     "aggregate_usage_metrics",
     "generate_reports",
     "export_analytics_data",
+    # Health tasks
+    "check_integrations",
+    "check_database_health",
+    "check_redis_health",
+    # Email tasks
+    "send_pending_emails",
+    "send_email",
+    "send_bulk_emails",
+    # AI tasks
+    "process_generation_queue",
+    "generate_content",
+    "batch_content_generation",
 ]

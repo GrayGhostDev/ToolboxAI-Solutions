@@ -1,0 +1,209 @@
+# Render Environment Variables Configuration Template
+# ToolboxAI Solutions Production Deployment
+#
+# INSTRUCTIONS:
+# 1. Copy this file to a secure location (DO NOT commit filled version to Git)
+# 2. Fill in all values marked with [REQUIRED] or [GENERATE]
+# 3. Use these values when setting up environment variable groups in Render Dashboard
+# 4. Keep this file in a secure password manager after deployment
+
+# ==============================================================================
+# SUPABASE CONFIGURATION
+# Get credentials from Supabase Dashboard
+# Get these from: https://supabase.com/dashboard → Your Project → Project Settings
+# ==============================================================================
+
+# From: Project Settings → API
+SUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_KEY=your_supabase_anon_public_key_here
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key_here
+
+# From: Project Settings → Database → Connection Pooling (Port 6543, Transaction mode)
+DATABASE_URL=postgresql://postgres:your_database_password@db.your-project-id.supabase.co:6543/postgres?sslmode=require
+
+# Storage configuration
+STORAGE_BACKEND=supabase
+SUPABASE_STORAGE_BUCKET=your-bucket-name
+
+# From: Project Settings → S3 Access Keys (Optional - for S3 SDK compatibility)
+SUPABASE_S3_ENDPOINT=https://your-project-id.storage.supabase.co/storage/v1/s3
+SUPABASE_S3_REGION=us-east-1
+SUPABASE_S3_ACCESS_KEY_ID=your_s3_access_key_id
+SUPABASE_S3_SECRET_ACCESS_KEY=your_s3_secret_access_key
+
+# ==============================================================================
+# AI API KEYS
+# ==============================================================================
+
+# OpenAI: https://platform.openai.com/api-keys
+OPENAI_API_KEY=[REQUIRED - sk-proj-...]
+
+# Anthropic Claude: https://console.anthropic.com/settings/keys
+ANTHROPIC_API_KEY=[REQUIRED - sk-ant-api03-...]
+
+# Google AI: https://makersuite.google.com/app/apikey
+GOOGLE_API_KEY=[REQUIRED - AIzaSy...]
+
+# ==============================================================================
+# PUSHER REAL-TIME CONFIGURATION
+# Get from: https://dashboard.pusher.com → Your App → App Keys
+# ==============================================================================
+
+PUSHER_APP_ID=2050003
+PUSHER_KEY=[REQUIRED - your pusher key]
+PUSHER_SECRET=[REQUIRED - your pusher secret]
+PUSHER_CLUSTER=us2
+
+# ==============================================================================
+# MONITORING & ERROR TRACKING
+# ==============================================================================
+
+# Sentry Backend (already configured)
+SENTRY_DSN_BACKEND=https://6175c9912112e5a9fa094247539d13f5@o4509912543199232.ingest.us.sentry.io/4510294208937984
+
+# Sentry Frontend: Create a separate project at https://sentry.io
+SENTRY_DSN_FRONTEND=[REQUIRED - https://...@o...ingest.us.sentry.io/...]
+
+# Celery Flower Monitoring Dashboard Basic Auth
+# Generate with: openssl rand -base64 24
+FLOWER_BASIC_AUTH_USERNAME=admin
+FLOWER_BASIC_AUTH_PASSWORD=[GENERATE - secure password]
+
+# ==============================================================================
+# SECURITY TOKENS
+# Generate each with: openssl rand -hex 32
+# ==============================================================================
+
+JWT_SECRET_KEY=[GENERATE - 64 character hex string]
+SECRET_KEY=[GENERATE - 64 character hex string]
+ENCRYPTION_KEY=[GENERATE - 64 character hex string]
+
+# ==============================================================================
+# APPLICATION CONFIGURATION
+# ==============================================================================
+
+ENVIRONMENT=production
+LOG_LEVEL=INFO
+DEBUG=false
+
+# Update after deployment with actual URLs
+CORS_ORIGINS=["https://toolboxai-dashboard.onrender.com"]
+BACKEND_URL=https://toolboxai-backend.onrender.com
+
+# ==============================================================================
+# REDIS CONFIGURATION (Managed by Render)
+# ==============================================================================
+
+# This will be automatically set by Render when Redis service is created
+# REDIS_URL=redis://red-xxxxx:6379
+# You don't need to set this manually
+
+# ==============================================================================
+# CELERY CONFIGURATION
+# ==============================================================================
+
+CELERY_BROKER_URL=${REDIS_URL}
+CELERY_RESULT_BACKEND=${REDIS_URL}
+CELERY_TASK_ALWAYS_EAGER=false
+CELERY_TASK_SERIALIZER=json
+CELERY_RESULT_SERIALIZER=json
+CELERY_ACCEPT_CONTENT=["json"]
+CELERY_TIMEZONE=UTC
+
+# ==============================================================================
+# FRONTEND ENVIRONMENT VARIABLES (toolboxai-frontend-env group)
+# ==============================================================================
+
+# Update after backend is deployed
+VITE_API_BASE_URL=https://toolboxai-backend.onrender.com
+
+# Pusher (same as backend)
+VITE_PUSHER_KEY=[SAME AS PUSHER_KEY ABOVE]
+VITE_PUSHER_CLUSTER=us2
+
+# Sentry Frontend
+VITE_SENTRY_DSN=[SAME AS SENTRY_DSN_FRONTEND ABOVE]
+
+# Application info
+VITE_APP_NAME=ToolboxAI Solutions
+VITE_APP_VERSION=1.0.0
+
+# ==============================================================================
+# MONITORING STACK (toolboxai-monitoring group)
+# ==============================================================================
+
+# Grafana Dashboard
+# Generate with: openssl rand -base64 24
+GRAFANA_ADMIN_USERNAME=admin
+GRAFANA_ADMIN_PASSWORD=[GENERATE - secure password]
+
+# Data retention
+PROMETHEUS_RETENTION_TIME=15d
+LOKI_RETENTION_PERIOD=30d
+
+# Slack alerts (optional)
+ALERTMANAGER_SLACK_WEBHOOK_URL=[OPTIONAL - https://hooks.slack.com/services/...]
+
+# ==============================================================================
+# LOCAL DEVELOPMENT ONLY (supabase-local group)
+# These values are for local development and can be copied from .env.supabase.local.example
+# They will NOT be used in production
+# ==============================================================================
+
+SUPABASE_LOCAL_API_URL=http://127.0.0.1:54321
+SUPABASE_LOCAL_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres
+SUPABASE_LOCAL_GRAPHQL_URL=http://127.0.0.1:54321/graphql/v1
+SUPABASE_LOCAL_INBUCKET_URL=http://127.0.0.1:54324
+SUPABASE_LOCAL_KONG_HTTP_URL=http://127.0.0.1:8000
+SUPABASE_LOCAL_KONG_HTTPS_URL=https://127.0.0.1:8443
+SUPABASE_LOCAL_PUBLISHABLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+SUPABASE_LOCAL_SECRET_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
+SUPABASE_LOCAL_JWT_SECRET=super-secret-jwt-token-with-at-least-32-characters-long
+SUPABASE_LOCAL_S3_PROTOCOL=http
+SUPABASE_LOCAL_S3_ENDPOINT=127.0.0.1:54321/storage/v1/s3
+SUPABASE_LOCAL_S3_ACCESS_KEY=625729a08b95bf1b7ff351a663f3a23c
+SUPABASE_LOCAL_S3_SECRET_KEY=850181e4652dd023b7a98c58ae0d2d34bd487ee0cc3254aed6eda37307425907
+
+# ==============================================================================
+# COMMAND REFERENCE
+# ==============================================================================
+
+# Generate secure passwords:
+# openssl rand -base64 24
+
+# Generate hex tokens:
+# openssl rand -hex 32
+
+# Validate configuration:
+# python scripts/validate_env.py --template infrastructure/render/ENVIRONMENT_VARIABLES.template
+
+# ==============================================================================
+# DEPLOYMENT CHECKLIST
+# ==============================================================================
+
+# Before deploying to Render:
+# [ ] All [REQUIRED] values filled in
+# [ ] All [GENERATE] values generated with openssl
+# [ ] Supabase project created and configured
+# [ ] Supabase storage bucket "your-bucket-name" created
+# [ ] All API keys obtained and tested
+# [ ] Pusher app configured with correct credentials
+# [ ] Sentry projects created (backend + frontend)
+# [ ] This file saved in secure password manager
+# [ ] Ready to configure environment variable groups in Render Dashboard
+
+# ==============================================================================
+# RENDER ENVIRONMENT VARIABLE GROUPS MAPPING
+# ==============================================================================
+
+# Group: toolboxai-secrets
+# Contains: All Supabase, API keys, Pusher, Sentry, security tokens, app config
+
+# Group: toolboxai-frontend-env
+# Contains: VITE_* variables for React dashboard
+
+# Group: toolboxai-monitoring
+# Contains: Grafana, Prometheus, Loki, Alertmanager configuration
+
+# Group: supabase-local
+# Contains: All SUPABASE_LOCAL_* variables (for local development only)

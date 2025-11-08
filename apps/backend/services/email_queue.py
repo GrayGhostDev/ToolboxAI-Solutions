@@ -17,7 +17,7 @@ from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from apps.backend.config import settings
+from apps.backend.core.config import settings
 from apps.backend.core.cache import CacheService
 from apps.backend.services.email_service import email_service
 from database.db import get_async_db

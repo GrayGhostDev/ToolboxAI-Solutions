@@ -14,7 +14,7 @@ from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query
 from pydantic import BaseModel, Field
 
 from apps.backend.core.security.jwt_handler import get_current_user
-from apps.backend.celery_app import celery_app
+from apps.backend.celery_app import app as celery_app
 from apps.backend.tasks import (
     cleanup_old_files,
     cleanup_expired_sessions,

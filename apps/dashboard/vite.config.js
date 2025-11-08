@@ -63,7 +63,9 @@ export default defineConfig({
       'react-redux',
       '@reduxjs/toolkit',
       '@tabler/icons-react',
-      '@sentry/react'
+      '@sentry/react',
+      '@sentry-internal/replay',
+      '@sentry-internal/browser-utils'
     ],
     exclude: ['@vite/client', '@vite/env'],
     // Force ESNext target for modern builds

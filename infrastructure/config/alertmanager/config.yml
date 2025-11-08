@@ -1,0 +1,25 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ['alertname']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 3h
+  receiver: 'slack-primary'
+
+receivers:
+  - name: 'slack-primary'
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/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'
+        channel: '#alerts'
+        text: "Alert received — check Alertmanager UI for details"
+
+  - name: 'slack-secondary'
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/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'
+        channel: '#alerts'
+        text: "Alert received — check Alertmanager UI for details"
+
+inhibit_rules: []
+templates: []

@@ -19,14 +19,14 @@
  */
 
 import { useState, useEffect, useCallback, useRef, useMemo, startTransition } from 'react';
-import { 
-  type AgentInstance, 
-  type AgentExecution, 
-  type AgentMetrics, 
+import {
+  type AgentInstance,
+  type AgentExecution,
+  type AgentMetrics,
   type SystemHealth,
   AgentSupabaseService,
-  isSupabaseConfigured 
-} from '../lib/supabase';
+  isSupabaseConfigured
+} from '../services/supabase/AgentSupabaseService';
 
 export interface UseSupabaseAgentState {
   agents: AgentInstance[];

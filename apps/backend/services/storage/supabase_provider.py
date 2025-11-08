@@ -94,7 +94,8 @@ class SupabaseStorageProvider(StorageService):
         self.security_manager = SecurityManager()
 
         # Configuration
-        self.default_bucket = "files"
+        import os
+        self.default_bucket = os.getenv("SUPABASE_STORAGE_BUCKET", "toolboxai-uploads")
         self.max_file_size = kwargs.get("max_file_size", 100 * 1024 * 1024)  # 100MB
         self.chunk_size = kwargs.get("chunk_size", 1024 * 1024)  # 1MB chunks
         self.enable_cdn = kwargs.get("enable_cdn", True)

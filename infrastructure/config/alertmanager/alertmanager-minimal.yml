@@ -1,0 +1,61 @@
+# AlertManager Configuration
+# Minimal working configuration for ToolboxAI monitoring
+
+global:
+  resolve_timeout: 5m
+
+# Route tree - how alerts are routed to receivers
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  receiver: 'default'
+
+  routes:
+    # Route critical alerts differently
+    - match:
+        severity: critical
+      receiver: 'critical'
+      continue: false
+
+    # Route warning alerts
+    - match:
+        severity: warning
+      receiver: 'warning'
+      continue: false
+
+# Inhibition rules - suppress alerts when others are firing
+inhibit_rules:
+  # Inhibit warnings if critical alert is firing for same resource
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'instance']
+
+# Receivers - where to send alerts
+# Configure these with your actual notification endpoints when ready
+receivers:
+  # Default receiver - catches all unmatched alerts
+  - name: 'default'
+    # No configuration = alerts logged but not sent anywhere
+    # This prevents errors when external services aren't configured
+
+  # Critical alerts receiver
+  - name: 'critical'
+    # Configure when ready:
+    # webhook_configs:
+    #   - url: 'http://your-webhook-endpoint/critical'
+    # slack_configs:
+    #   - api_url: 'YOUR_SLACK_WEBHOOK_URL'
+    #     channel: '#alerts-critical'
+    #     title: 'Critical Alert'
+    #     text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+
+  # Warning alerts receiver
+  - name: 'warning'
+    # Configure when ready:
+    # webhook_configs:
+    #   - url: 'http://your-webhook-endpoint/warning'
+

@@ -1,0 +1,21 @@
+# ============================================
+# Redis ACL (Access Control Lists)
+# ============================================
+# User-based access control for Redis
+# ============================================
+
+# Disable default user
+user default off
+
+# Backend service user (full access)
+user toolboxai_backend on >PLACEHOLDER_BACKEND_PASSWORD ~* &* +@all
+
+# Celery worker user (queue access only)
+user toolboxai_celery on >PLACEHOLDER_CELERY_PASSWORD ~celery:* ~toolboxai:* &* +@all
+
+# Read-only user (monitoring)
+user toolboxai_readonly on >PLACEHOLDER_READONLY_PASSWORD ~* +@read +ping +info +client|list
+
+# Admin user (full access with no restrictions)
+user admin on >PLACEHOLDER_ADMIN_PASSWORD ~* &* +@all
+

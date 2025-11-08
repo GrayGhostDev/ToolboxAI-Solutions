@@ -1,0 +1,166 @@
+# AlertManager Configuration with Slack Integration
+# Production-ready configuration for ToolboxAI
+
+global:
+  resolve_timeout: 5m
+  # Set your Slack webhook URL here or via environment variable
+  slack_api_url: '${SLACK_WEBHOOK_URL}'
+
+# Route tree - how alerts are routed to receivers
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 5m
+  repeat_interval: 4h
+  receiver: 'slack-default'
+
+  routes:
+    # Critical alerts - immediate notification
+    - match:
+        severity: critical
+      receiver: 'slack-critical'
+      group_wait: 10s
+      group_interval: 5m
+      repeat_interval: 1h
+      continue: false
+
+    # Warning alerts - less frequent
+    - match:
+        severity: warning
+      receiver: 'slack-warnings'
+      group_wait: 30s
+      group_interval: 10m
+      repeat_interval: 4h
+      continue: false
+
+    # Database alerts
+    - match_re:
+        alertname: "Database.*"
+      receiver: 'slack-database'
+      continue: false
+
+    # Infrastructure alerts
+    - match_re:
+        alertname: "(High.*Usage|DiskSpaceLow|.*Memory.*)"
+      receiver: 'slack-infrastructure'
+      continue: false
+
+# Inhibition rules - suppress alerts when others are firing
+inhibit_rules:
+  # Inhibit warnings if critical alert is firing for same resource
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'instance']
+
+  # Inhibit any alert if the whole service is down
+  - source_match:
+      alertname: 'ServiceDown'
+    target_match_re:
+      severity: '.*'
+    equal: ['service']
+
+# Receivers - where to send alerts
+receivers:
+  # Default receiver for uncategorized alerts
+  - name: 'slack-default'
+    slack_configs:
+      - channel: '#monitoring'
+        username: 'ToolboxAI Alerts'
+        icon_emoji: ':bell:'
+        title: 'ToolboxAI Alert: {{ .GroupLabels.alertname }}'
+        text: |-
+          {{ range .Alerts }}
+          *Alert:* `{{ .Labels.alertname }}`
+          *Severity:* `{{ .Labels.severity }}`
+          *Summary:* {{ .Annotations.summary }}
+          {{ if .Labels.instance }}*Instance:* `{{ .Labels.instance }}`{{ end }}
+          {{ end }}
+        color: '#439FE0'
+        send_resolved: true
+
+  # Critical alerts - highest priority
+  - name: 'slack-critical'
+    slack_configs:
+      - channel: '#alerts-critical'
+        username: 'ToolboxAI Critical Alerts'
+        icon_emoji: ':fire:'
+        title: ':rotating_light: CRITICAL: {{ .GroupLabels.alertname }}'
+        title_link: 'http://localhost:9093'
+        text: |-
+          *CRITICAL ALERT - Immediate Action Required*
+          
+          {{ range .Alerts }}
+          :fire: *Alert:* `{{ .Labels.alertname }}`
+          :computer: *Instance:* `{{ .Labels.instance }}`
+          :warning: *Severity:* `{{ .Labels.severity }}`
+          :memo: *Summary:* {{ .Annotations.summary }}
+          {{ if .Annotations.description }}
+          :clipboard: *Description:* {{ .Annotations.description }}
+          {{ end }}
+          :clock1: *Started:* {{ .StartsAt.Format "2006-01-02 15:04:05 MST" }}
+          {{ if .EndsAt }}:white_check_mark: *Resolved:* {{ .EndsAt.Format "2006-01-02 15:04:05 MST" }}{{ end }}
+          {{ end }}
+          
+          <http://localhost:9093|:mag: View in AlertManager> | <http://localhost:3001|:bar_chart: View Metrics>
+        color: 'danger'
+        send_resolved: true
+        actions:
+          - type: button
+            text: 'View AlertManager :mag:'
+            url: 'http://localhost:9093'
+          - type: button
+            text: 'View Grafana :bar_chart:'
+            url: 'http://localhost:3001'
+
+  # Warning alerts
+  - name: 'slack-warnings'
+    slack_configs:
+      - channel: '#alerts-warning'
+        username: 'ToolboxAI Alerts'
+        icon_emoji: ':warning:'
+        title: ':warning: WARNING: {{ .GroupLabels.alertname }}'
+        text: |-
+          {{ range .Alerts }}
+          :warning: *Alert:* `{{ .Labels.alertname }}`
+          :computer: *Instance:* `{{ .Labels.instance }}`
+          :memo: *Summary:* {{ .Annotations.summary }}
+          :clock1: *Started:* {{ .StartsAt.Format "15:04:05" }}
+          {{ end }}
+        color: 'warning'
+        send_resolved: true
+
+  # Database-specific alerts
+  - name: 'slack-database'
+    slack_configs:
+      - channel: '#alerts-database'
+        username: 'ToolboxAI Database Alerts'
+        icon_emoji: ':database:'
+        title: ':database: Database Alert: {{ .GroupLabels.alertname }}'
+        text: |-
+          {{ range .Alerts }}
+          *Alert:* `{{ .Labels.alertname }}`
+          *Instance:* `{{ .Labels.instance }}`
+          *Summary:* {{ .Annotations.summary }}
+          {{ if .Annotations.description }}*Details:* {{ .Annotations.description }}{{ end }}
+          {{ end }}
+        color: '#FF6B6B'
+        send_resolved: true
+
+  # Infrastructure alerts
+  - name: 'slack-infrastructure'
+    slack_configs:
+      - channel: '#alerts-infrastructure'
+        username: 'ToolboxAI Infrastructure'
+        icon_emoji: ':construction:'
+        title: ':construction: Infrastructure: {{ .GroupLabels.alertname }}'
+        text: |-
+          {{ range .Alerts }}
+          *Alert:* `{{ .Labels.alertname }}`
+          *Instance:* `{{ .Labels.instance }}`
+          *Summary:* {{ .Annotations.summary }}
+          {{ end }}
+        color: '#FFA500'
+        send_resolved: true
+

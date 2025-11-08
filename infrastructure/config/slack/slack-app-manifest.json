@@ -1,0 +1,402 @@
+{
+  "display_information": {
+    "name": "ToolboxAI AlertManager",
+    "description": "Receives and displays alerts from ToolboxAI monitoring system",
+    "background_color": "#e01e5a",
+    "long_description": "ToolboxAI AlertManager integration receives critical alerts, warnings, and notifications from your monitoring infrastructure including Prometheus, Grafana, and custom alert rules. Get instant notifications about system health, performance issues, and infrastructure problems directly in your Slack workspace."
+  },
+  "features": {
+    "bot_user": {
+      "display_name": "ToolboxAI Alerts",
+      "always_online": true
+    }
+  },
+  "oauth_config": {
+    "scopes": {
+      "bot": [
+        "incoming-webhook",
+        "chat:write",
+        "chat:write.public"
+      ]
+    }
+  },
+  "settings": {
+    "org_deploy_enabled": false,
+    "socket_mode_enabled": false,
+    "token_rotation_enabled": false
+  }
+}
+# Slack App Manifest for ToolboxAI AlertManager
+
+This manifest will create a Slack app that can receive alerts from AlertManager.
+
+## Slack App Manifest (JSON)
+
+Use this manifest to create a Slack app at https://api.slack.com/apps
+
+```json
+{
+  "display_information": {
+    "name": "ToolboxAI AlertManager",
+    "description": "Receives and displays alerts from ToolboxAI monitoring system",
+    "background_color": "#e01e5a",
+    "long_description": "ToolboxAI AlertManager integration receives critical alerts, warnings, and notifications from your monitoring infrastructure including Prometheus, Grafana, and custom alert rules. Get instant notifications about system health, performance issues, and infrastructure problems directly in your Slack workspace."
+  },
+  "features": {
+    "bot_user": {
+      "display_name": "ToolboxAI Alerts",
+      "always_online": true
+    }
+  },
+  "oauth_config": {
+    "scopes": {
+      "bot": [
+        "incoming-webhook",
+        "chat:write",
+        "chat:write.public"
+      ]
+    }
+  },
+  "settings": {
+    "org_deploy_enabled": false,
+    "socket_mode_enabled": false,
+    "token_rotation_enabled": false
+  }
+}
+```
+
+## Slack App Manifest (YAML)
+
+Alternatively, use this YAML format:
+
+```yaml
+display_information:
+  name: ToolboxAI AlertManager
+  description: Receives and displays alerts from ToolboxAI monitoring system
+  background_color: "#e01e5a"
+  long_description: >
+    ToolboxAI AlertManager integration receives critical alerts, warnings,
+    and notifications from your monitoring infrastructure including Prometheus,
+    Grafana, and custom alert rules. Get instant notifications about system
+    health, performance issues, and infrastructure problems directly in your
+    Slack workspace.
+
+features:
+  bot_user:
+    display_name: ToolboxAI Alerts
+    always_online: true
+
+oauth_config:
+  scopes:
+    bot:
+      - incoming-webhook
+      - chat:write
+      - chat:write.public
+
+settings:
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false
+```
+
+---
+
+## Setup Instructions
+
+### Step 1: Create Slack App
+
+1. Go to https://api.slack.com/apps
+2. Click **"Create New App"**
+3. Select **"From an app manifest"**
+4. Choose your workspace
+5. Paste the manifest (JSON or YAML) above
+6. Review permissions and create the app
+
+### Step 2: Install to Workspace
+
+1. In your new app's settings, go to **"Install App"**
+2. Click **"Install to Workspace"**
+3. Review permissions and click **"Allow"**
+
+### Step 3: Create Webhook URL
+
+#### Option A: Using Incoming Webhooks (Recommended for AlertManager)
+
+1. In your app settings, go to **"Incoming Webhooks"**
+2. Toggle **"Activate Incoming Webhooks"** to **ON**
+3. Click **"Add New Webhook to Workspace"**
+4. Select the channel for alerts (e.g., `#alerts-critical` or `#monitoring`)
+5. Click **"Allow"**
+6. Copy the **Webhook URL** (it will look like: `https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXX`)
+
+#### Option B: Using Chat API with Bot Token
+
+1. In your app settings, go to **"OAuth & Permissions"**
+2. Copy the **"Bot User OAuth Token"** (starts with `xoxb-`)
+3. Use this token with Slack's chat.postMessage API
+
+---
+
+## Recommended Channel Structure
+
+Create these channels in your Slack workspace:
+
+- `#alerts-critical` - For critical production alerts
+- `#alerts-warning` - For warning-level alerts
+- `#alerts-info` - For informational notifications
+- `#monitoring` - General monitoring updates
+- `#incidents` - Active incident response
+
+---
+
+## Configure AlertManager with Slack Webhook
+
+Once you have your webhook URL, update AlertManager configuration:
+
+### Edit AlertManager Config
+
+```bash
+# Edit the AlertManager configuration
+nano /Volumes/G-DRIVE\ ArmorATD/Development/Clients/ToolBoxAI-Solutions/infrastructure/config/alertmanager/alertmanager.yml
+```
+
+### Add Slack Configuration
+
+Replace the placeholder receivers with your actual webhook URLs:
+
+```yaml
+global:
+  resolve_timeout: 5m
+  slack_api_url: 'https://hooks.slack.com/services/YOUR/WEBHOOK/URL'
+
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  receiver: 'slack-default'
+
+  routes:
+    - match:
+        severity: critical
+      receiver: 'slack-critical'
+      continue: false
+
+    - match:
+        severity: warning
+      receiver: 'slack-warnings'
+      continue: false
+
+receivers:
+  - name: 'slack-default'
+    slack_configs:
+      - channel: '#monitoring'
+        title: 'ToolboxAI Alert'
+        text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+        send_resolved: true
+
+  - name: 'slack-critical'
+    slack_configs:
+      - channel: '#alerts-critical'
+        icon_emoji: ':fire:'
+        title: 'CRITICAL: {{ .GroupLabels.alertname }}'
+        text: |-
+          {{ range .Alerts }}
+          *Alert:* {{ .Labels.alertname }}
+          *Severity:* {{ .Labels.severity }}
+          *Summary:* {{ .Annotations.summary }}
+          *Description:* {{ .Annotations.description }}
+          {{ end }}
+        color: 'danger'
+        send_resolved: true
+
+  - name: 'slack-warnings'
+    slack_configs:
+      - channel: '#alerts-warning'
+        icon_emoji: ':warning:'
+        title: 'WARNING: {{ .GroupLabels.alertname }}'
+        text: |-
+          {{ range .Alerts }}
+          *Alert:* {{ .Labels.alertname }}
+          *Severity:* {{ .Labels.severity }}
+          *Summary:* {{ .Annotations.summary }}
+          {{ end }}
+        color: 'warning'
+        send_resolved: true
+```
+
+---
+
+## Alternative: Using Environment Variables
+
+For better security, use environment variables for the webhook URL:
+
+### 1. Store Webhook URL Securely
+
+```bash
+# Add to your .env file or export
+export SLACK_WEBHOOK_URL='https://hooks.slack.com/services/YOUR/WEBHOOK/URL'
+```
+
+### 2. Update Docker Compose
+
+Add the environment variable to AlertManager service:
+
+```yaml
+alertmanager:
+  image: prom/alertmanager:v0.26.0
+  environment:
+    - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+  # ... rest of config
+```
+
+### 3. Use Variable in Config
+
+Reference the environment variable in alertmanager.yml:
+
+```yaml
+global:
+  slack_api_url: '${SLACK_WEBHOOK_URL}'
+```
+
+---
+
+## Test the Integration
+
+### 1. Restart AlertManager
+
+```bash
+cd /Volumes/G-DRIVE\ ArmorATD/Development/Clients/ToolBoxAI-Solutions/infrastructure/docker/compose
+docker-compose -f docker-compose.monitoring.yml restart alertmanager
+```
+
+### 2. Send Test Alert
+
+```bash
+# Send a test alert to AlertManager
+curl -X POST http://localhost:9093/api/v1/alerts -H "Content-Type: application/json" -d '[
+  {
+    "labels": {
+      "alertname": "TestAlert",
+      "severity": "warning",
+      "instance": "localhost:9090"
+    },
+    "annotations": {
+      "summary": "This is a test alert from ToolboxAI",
+      "description": "Testing Slack integration with AlertManager"
+    }
+  }
+]'
+```
+
+### 3. Verify in Slack
+
+Check your configured Slack channel - you should see the test alert appear.
+
+---
+
+## Advanced Slack Message Formatting
+
+For better-looking alerts, use Slack's message formatting:
+
+```yaml
+receivers:
+  - name: 'slack-critical'
+    slack_configs:
+      - channel: '#alerts-critical'
+        username: 'ToolboxAI AlertManager'
+        icon_emoji: ':fire:'
+        title: ':rotating_light: CRITICAL ALERT'
+        title_link: 'http://localhost:9093'
+        text: |
+          *Alert Details:*
+          {{ range .Alerts }}
+          • *Name:* `{{ .Labels.alertname }}`
+          • *Instance:* `{{ .Labels.instance }}`
+          • *Severity:* `{{ .Labels.severity }}`
+          • *Summary:* {{ .Annotations.summary }}
+          • *Started:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+          {{ if .Annotations.description }}
+          • *Details:* {{ .Annotations.description }}
+          {{ end }}
+          {{ end }}
+        color: 'danger'
+        send_resolved: true
+        actions:
+          - type: button
+            text: 'View in AlertManager :mag:'
+            url: 'http://localhost:9093'
+          - type: button
+            text: 'Silence Alert :mute:'
+            url: 'http://localhost:9093/#/silences/new'
+```
+
+---
+
+## Webhook URL Security Best Practices
+
+1. **Never commit webhook URLs to Git**
+   ```bash
+   # Add to .gitignore
+   echo "*.webhook" >> .gitignore
+   echo ".env.local" >> .gitignore
+   ```
+
+2. **Use environment variables**
+   - Store in `.env.local` (gitignored)
+   - Or use secrets management (Vault)
+
+3. **Rotate webhook URLs regularly**
+   - Every 90 days recommended
+   - Immediately if exposed
+
+4. **Use different webhooks per environment**
+   - Development: `#alerts-dev`
+   - Staging: `#alerts-staging`
+   - Production: `#alerts-critical`
+
+---
+
+## Troubleshooting
+
+### Alerts Not Appearing in Slack
+
+1. **Check webhook URL is correct**
+   ```bash
+   # Test webhook directly
+   curl -X POST -H 'Content-Type: application/json' \
+     --data '{"text":"Test message from AlertManager"}' \
+     YOUR_WEBHOOK_URL
+   ```
+
+2. **Check AlertManager logs**
+   ```bash
+   docker logs toolboxai-alertmanager | grep -i slack
+   ```
+
+3. **Verify AlertManager config**
+   ```bash
+   docker exec toolboxai-alertmanager amtool check-config /etc/alertmanager/config.yml
+   ```
+
+### Rate Limiting
+
+Slack has rate limits on incoming webhooks:
+- 1 message per second per webhook
+- Configure `group_interval` and `repeat_interval` accordingly
+
+---
+
+## Additional Resources
+
+- **Slack API Documentation**: https://api.slack.com/messaging/webhooks
+- **AlertManager Configuration**: https://prometheus.io/docs/alerting/latest/configuration/
+- **Message Formatting**: https://api.slack.com/reference/surfaces/formatting
+- **App Manifest Schema**: https://api.slack.com/reference/manifests
+
+---
+
+**Created**: November 7, 2025
+**For**: ToolboxAI Monitoring Stack
+**Status**: Ready to deploy
+

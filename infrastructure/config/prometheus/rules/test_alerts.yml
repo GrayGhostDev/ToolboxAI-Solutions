@@ -1,0 +1,12 @@
+groups:
+  - name: toolboxai_test_rules
+    rules:
+      - alert: ToolboxAIAlwaysFiring
+        expr: vector(1)
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "ToolboxAI test alert - always firing"
+          description: "This is a synthetic alert used to test the Alertmanager -> Slack pipeline."
+

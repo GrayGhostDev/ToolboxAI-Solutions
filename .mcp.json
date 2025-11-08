@@ -1,21 +1,15 @@
 {
   "mcpServers": {
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=jlesbkscprldariqcbvt&features=storage%2Cbranching%2Cfunctions%2Cdevelopment%2Cdebugging%2Cdatabase%2Caccount%2Cdocs"
+    },
     "filesystem": {
       "command": "npx",
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
         "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
-      ],
-      "disabled": [
-        "**/node_modules/**",
-        "**/.git/**",
-        "**/venv/**",
-        "**/__pycache__/**",
-        "**/dist/**",
-        "**/build/**",
-        "**/coverage/**",
-        "**/data/**"
       ]
     },
     "github": {
@@ -34,8 +28,11 @@
       "args": [
         "-y",
         "@modelcontextprotocol/server-postgres",
-        "postgresql://eduplatform:eduplatform2024@localhost:5432/educational_platform_dev"
-      ]
+        "${DATABASE_URL}"
+      ],
+      "env": {
+        "DATABASE_URL": "${DATABASE_URL}"
+      }
     },
     "memory": {
       "command": "npx",
@@ -61,8 +58,8 @@
         "MCP_HOST": "localhost",
         "MCP_PORT": "9877",
         "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions",
-        "DATABASE_URL": "postgresql://eduplatform:eduplatform2024@localhost:5432/educational_platform_dev",
-        "REDIS_URL": "redis://localhost:55007",
+        "DATABASE_URL": "${DATABASE_URL}",
+        "REDIS_URL": "${REDIS_URL}",
         "JWT_SECRET_KEY": "${JWT_SECRET_KEY}"
       },
       "cwd": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
@@ -103,7 +100,7 @@
       ],
       "env": {
         "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions",
-        "REDIS_URL": "redis://localhost:55007"
+        "REDIS_URL": "${REDIS_URL}"
       },
       "cwd": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
     },
@@ -115,7 +112,7 @@
       ],
       "env": {
         "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions",
-        "REDIS_URL": "redis://localhost:55007"
+        "REDIS_URL": "${REDIS_URL}"
       },
       "cwd": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
     },
@@ -160,8 +157,8 @@
       ],
       "env": {
         "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions",
-        "DATABASE_URL": "postgresql://eduplatform:eduplatform2024@localhost:5432/educational_platform_dev",
-        "REDIS_URL": "redis://localhost:55007",
+        "DATABASE_URL": "${DATABASE_URL}",
+        "REDIS_URL": "${REDIS_URL}",
         "OPENAI_API_KEY": "${OPENAI_API_KEY}"
       },
       "cwd": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
@@ -174,8 +171,8 @@
       ],
       "env": {
         "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions",
-        "DATABASE_URL": "postgresql://eduplatform:eduplatform2024@localhost:5432/educational_platform_dev",
-        "REDIS_URL": "redis://localhost:55007"
+        "DATABASE_URL": "${DATABASE_URL}",
+        "REDIS_URL": "${REDIS_URL}"
       },
       "cwd": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
     },
@@ -187,8 +184,8 @@
       ],
       "env": {
         "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions",
-        "DATABASE_URL": "postgresql://eduplatform:eduplatform2024@localhost:5432/educational_platform_dev",
-        "REDIS_URL": "redis://localhost:55007",
+        "DATABASE_URL": "${DATABASE_URL}",
+        "REDIS_URL": "${REDIS_URL}",
         "ROBLOX_API_KEY": "${ROBLOX_API_KEY}"
       },
       "cwd": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
@@ -201,8 +198,8 @@
       ],
       "env": {
         "PYTHONPATH": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions",
-        "DATABASE_URL": "postgresql://eduplatform:eduplatform2024@localhost:5432/educational_platform_dev",
-        "REDIS_URL": "redis://localhost:55007",
+        "DATABASE_URL": "${DATABASE_URL}",
+        "REDIS_URL": "${REDIS_URL}",
         "COORDINATOR_PORT": "8888"
       },
       "cwd": "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"

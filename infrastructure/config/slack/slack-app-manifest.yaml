@@ -1,0 +1,28 @@
+display_information:
+  name: ToolboxAI AlertManager
+  description: Receives and displays alerts from ToolboxAI monitoring system
+  background_color: "#e01e5a"
+  long_description: >
+    ToolboxAI AlertManager integration receives critical alerts, warnings, 
+    and notifications from your monitoring infrastructure including Prometheus, 
+    Grafana, and custom alert rules. Get instant notifications about system 
+    health, performance issues, and infrastructure problems directly in your 
+    Slack workspace.
+
+features:
+  bot_user:
+    display_name: ToolboxAI Alerts
+    always_online: true
+
+oauth_config:
+  scopes:
+    bot:
+      - incoming-webhook
+      - chat:write
+      - chat:write.public
+
+settings:
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false
+

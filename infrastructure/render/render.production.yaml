@@ -68,6 +68,15 @@ services:
         value: production
       - key: SENTRY_RELEASE
         value: ${RENDER_GIT_COMMIT}
+      # LangChain/LangSmith Configuration
+      - key: LANGCHAIN_API_KEY
+        sync: false
+      - key: LANGCHAIN_PROJECT
+        value: ToolboxAI-Solutions
+      - key: LANGCHAIN_TRACING_V2
+        value: "true"
+      - key: LANGCHAIN_ENDPOINT
+        value: https://api.smith.langchain.com
       # Supabase Integration
       - key: SUPABASE_URL
         sync: false
@@ -80,6 +89,14 @@ services:
         value: supabase
       - key: SUPABASE_STORAGE_BUCKET
         value: toolboxai-uploads
+      - key: SUPABASE_S3_ENDPOINT
+        sync: false
+      - key: SUPABASE_S3_REGION
+        sync: false
+      - key: SUPABASE_S3_ACCESS_KEY_ID
+        sync: false
+      - key: SUPABASE_S3_SECRET_ACCESS_KEY
+        sync: false
       # Starter plan performance settings
       - key: DB_POOL_SIZE
         value: 5
@@ -100,6 +117,15 @@ services:
         value: true
       - key: SECURE_COOKIES
         value: true
+      # Clerk Authentication
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: CLERK_WEBHOOK_SIGNING_SECRET
+        sync: false
+      - key: CLERK_JWKS_URL
+        sync: false
       - fromGroup: toolboxai-secrets
     healthCheckPath: /health
     autoDeploy: true
@@ -108,6 +134,14 @@ services:
       echo "Starting pre-deployment health checks..."
       python -c "import sys; print(f'Python version: {sys.version}')"
       pip check
+      # Setup Supabase SSL certificate if provided
+      if [ ! -z "$SUPABASE_SSL_CERT_B64" ]; then
+        echo "Setting up Supabase SSL certificate..."
+        mkdir -p /opt/render/project/.postgresql
+        echo "$SUPABASE_SSL_CERT_B64" | base64 -d > /opt/render/project/.postgresql/root.crt
+        chmod 600 /opt/render/project/.postgresql/root.crt
+        echo "SSL certificate configured at /opt/render/project/.postgresql/root.crt"
+      fi
 
   # Redis (managed) - Starter configuration
   - type: redis
@@ -212,6 +246,32 @@ services:
         value: 8192
       - key: AGENT_DISCOVERY_ENABLED
         value: true
+      # Supabase Integration
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_DATABASE_URL
+        sync: false
+      - key: SUPABASE_STORAGE_BUCKET
+        value: toolboxai-uploads
+      - key: SUPABASE_S3_ENDPOINT
+        sync: false
+      - key: SUPABASE_S3_REGION
+        sync: false
+      - key: SUPABASE_S3_ACCESS_KEY_ID
+        sync: false
+      - key: SUPABASE_S3_SECRET_ACCESS_KEY
+        sync: false
+      # LangChain Configuration
+      - key: LANGCHAIN_API_KEY
+        sync: false
+      - key: LANGCHAIN_PROJECT
+        value: ToolboxAI-Solutions
+      - key: LANGCHAIN_TRACING_V2
+        value: "true"
+      - key: LANGCHAIN_ENDPOINT
+        value: https://api.smith.langchain.com
       - fromGroup: toolboxai-secrets
     healthCheckPath: /health
     autoDeploy: true
@@ -246,6 +306,32 @@ services:
         value: 300
       - key: MCP_SERVER_URL
         value: wss://toolboxai-mcp.onrender.com
+      # Supabase Integration
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_DATABASE_URL
+        sync: false
+      - key: SUPABASE_STORAGE_BUCKET
+        value: toolboxai-uploads
+      - key: SUPABASE_S3_ENDPOINT
+        sync: false
+      - key: SUPABASE_S3_REGION
+        sync: false
+      - key: SUPABASE_S3_ACCESS_KEY_ID
+        sync: false
+      - key: SUPABASE_S3_SECRET_ACCESS_KEY
+        sync: false
+      # LangChain Configuration
+      - key: LANGCHAIN_API_KEY
+        sync: false
+      - key: LANGCHAIN_PROJECT
+        value: ToolboxAI-Solutions
+      - key: LANGCHAIN_TRACING_V2
+        value: "true"
+      - key: LANGCHAIN_ENDPOINT
+        value: https://api.smith.langchain.com
       - fromGroup: toolboxai-secrets
     healthCheckPath: /health
     autoDeploy: true
@@ -491,6 +577,45 @@ envVarGroups:
         sync: false
       - key: GOOGLE_AI_API_KEY
         sync: false
+      - key: REPLICATE_API_TOKEN
+        sync: false
+      # LangChain/LangSmith
+      - key: LANGCHAIN_API_KEY
+        sync: false
+      - key: LANGCACHE_API_KEY
+        sync: false
+      - key: LANGCACHE_CACHE_ID
+        sync: false
+      # Clerk Authentication
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: CLERK_WEBHOOK_SIGNING_SECRET
+        sync: false
+      - key: CLERK_JWKS_URL
+        sync: false
+      # Supabase Configuration
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_DATABASE_URL
+        sync: false
+      - key: SUPABASE_S3_ENDPOINT
+        sync: false
+      - key: SUPABASE_S3_REGION
+        sync: false
+      - key: SUPABASE_S3_ACCESS_KEY_ID
+        sync: false
+      - key: SUPABASE_S3_SECRET_ACCESS_KEY
+        sync: false
+      # Supabase SSL Certificate (Base64 encoded)
+      # For enhanced security with sslmode=verify-ca or verify-full
+      - key: SUPABASE_SSL_CERT_B64
+        sync: false
       # Real-time services
       - key: PUSHER_APP_ID
         sync: false
@@ -546,12 +671,40 @@ envVarGroups:
   # Frontend environment variables
   - name: toolboxai-frontend-env
     envVars:
+      # Supabase Frontend Configuration
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: VITE_SUPABASE_S3_ENDPOINT
+        sync: false
+      - key: VITE_SUPABASE_S3_REGION
+        value: us-east-2
+      # Clerk Authentication
+      - key: VITE_CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: VITE_CLERK_FRONTEND_API_URL
+        sync: false
+      - key: VITE_ENABLE_CLERK_AUTH
+        value: "true"
+      - key: VITE_CLERK_SIGN_IN_URL
+        value: /sign-in
+      - key: VITE_CLERK_SIGN_UP_URL
+        value: /sign-up
+      - key: VITE_CLERK_AFTER_SIGN_IN_URL
+        value: /dashboard
+      - key: VITE_CLERK_AFTER_SIGN_UP_URL
+        value: /dashboard
+      # Pusher Real-time
       - key: VITE_PUSHER_KEY
         sync: false
       - key: VITE_PUSHER_CLUSTER
         value: us2
       - key: VITE_PUSHER_AUTH_ENDPOINT
         value: /pusher/auth
+      - key: VITE_ENABLE_PUSHER
+        value: "true"
+      # Monitoring
       - key: VITE_SENTRY_DSN
         sync: false
       - key: VITE_GOOGLE_ANALYTICS_ID
