@@ -135,7 +135,7 @@ mkdocs-minify-plugin==0.8.0
 mkdocs-redirects==1.2.2
 msgpack==1.1.1
 multidict==6.6.4
-mypy==1.13.0
+mypy==1.18.2
 mypy_extensions==1.1.0
 natsort==8.4.0
 ndg-httpsclient==0.5.1
