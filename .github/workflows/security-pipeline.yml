@@ -231,7 +231,7 @@ jobs:
             --output sarif > terrascan-results.sarif
 
       - name: KICS Security Scan
-        uses: checkmarx/kics-github-action@v1.7.0
+        uses: checkmarx/kics-github-action@v2.1.15
         with:
           path: 'infrastructure'
           output_path: 'kics-results'
