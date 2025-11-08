@@ -55,10 +55,28 @@ WARP.md
 warp.md
 Thumbs.db
 
-# Environment variables
+# ============================================
+# ENVIRONMENT VARIABLES & SECRETS
+# ============================================
+# CRITICAL: Ignore ALL environment files by default
+# This prevents accidental credential exposure
+
+# Deny all .env patterns
+.env*
+*.env
 .env
 .env.local
 .env.*.local
+.env.development
+.env.production
+.env.staging
+.env.test
+.env.secret
+
+# Allow ONLY example/template files (these are safe - no real credentials)
+!.env.example
+!.env*.example
+!*.env.example
 
 # Logs
 logs/
@@ -108,9 +126,7 @@ scripts/pids/
 .dockerignore
 **/.dockerignore
 
-# Additional secrets
-*.env
-.env.*
+# Additional secrets (environment files protected above)
 .envrc
 .secret*
 config/secrets/
@@ -299,6 +315,9 @@ credentials.json
 
 # Database and Cache Dumps
 *.sql
+!supabase/**/migrations/*.sql
+!database/migrations/*.sql
+!database/schemas/*.sql
 *.dump
 *.rdb
 *.aof
@@ -368,3 +387,4 @@ venv_clean*/
 aiosqlite/
 # Temporary fix scripts (not needed in repo)
 fix_classes*.py
+.vercel
