@@ -58,12 +58,7 @@ jobs:
       - name: Set build matrix
         id: set-matrix
         run: |
-          MATRIX='{"include":[
-            {"name":"backend","dockerfile":"backend-production-2025.Dockerfile","context":".","target":"<200MB"},
-            {"name":"dashboard","dockerfile":"dashboard-production-2025.Dockerfile","context":".","target":"<100MB"},
-            {"name":"celery-worker","dockerfile":"celery-production-2025.Dockerfile","context":".","target":"<200MB"},
-            {"name":"nginx","dockerfile":"nginx-production-2025.Dockerfile","context":"infrastructure/docker","target":"<50MB"}
-          ]}'
+          MATRIX='{"include":[{"name":"backend","dockerfile":"backend-production-2025.Dockerfile","context":".","target":"<200MB"},{"name":"dashboard","dockerfile":"dashboard-production-2025.Dockerfile","context":".","target":"<100MB"},{"name":"celery-worker","dockerfile":"celery-production-2025.Dockerfile","context":".","target":"<200MB"},{"name":"nginx","dockerfile":"nginx-production-2025.Dockerfile","context":"infrastructure/docker","target":"<50MB"}]}'
           echo "matrix=${MATRIX}" >> $GITHUB_OUTPUT
 
   # ============================================
