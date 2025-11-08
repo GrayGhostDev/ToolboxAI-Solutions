@@ -122,7 +122,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.10.2",
     "@graphql-codegen/cli": "^5.0.0",
-    "@graphql-codegen/typescript": "^4.0.0",
+    "@graphql-codegen/typescript": "^5.0.2",
     "@graphql-codegen/typescript-operations": "^4.0.0",
     "@graphql-codegen/typescript-react-apollo": "^4.0.0",
     "@playwright/test": "^1.55.0",
