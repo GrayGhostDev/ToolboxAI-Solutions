@@ -294,7 +294,7 @@ toolz==0.12.1
 tornado==6.5.2
 tqdm==4.67.1
 traitlets==5.14.3
-twilio==9.4.0
+twilio==9.8.5
 typer==0.19.2
 typing-inspection==0.4.1
 typing_extensions==4.14.1
