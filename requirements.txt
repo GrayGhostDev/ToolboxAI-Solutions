@@ -102,10 +102,10 @@ jsonschema==4.25.1
 jsonschema-specifications==2023.12.1
 kiwisolver==1.4.9
 kombu==5.5.4
-langchain==0.3.27
-langchain-core==0.3.77
-langchain-openai==0.2.14
-langchain-text-splitters==0.3.11
+langchain==1.0.5
+langchain-core==1.0.4
+langchain-openai==1.0.2
+langchain-text-splitters==1.0.0
 langgraph==0.2.62
 langsmith==0.4.39
 license-expression==30.4.4
