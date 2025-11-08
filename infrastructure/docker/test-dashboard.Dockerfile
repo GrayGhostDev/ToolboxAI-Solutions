@@ -1,5 +1,5 @@
 # Test Dockerfile to debug npm install issue
-FROM node:22-alpine
+FROM node:25-alpine
 
 WORKDIR /app
 
