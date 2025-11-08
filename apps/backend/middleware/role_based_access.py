@@ -9,7 +9,7 @@ Integrates with Clerk authentication and supports the following roles:
 - parent: Access to child's data only
 """
 
-from typing import List, Optional
+from typing import Optional
 from fastapi import HTTPException, status, Request
 from functools import wraps
 import logging

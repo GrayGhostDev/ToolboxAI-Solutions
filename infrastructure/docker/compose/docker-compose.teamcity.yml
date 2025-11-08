@@ -41,8 +41,11 @@ services:
       TEAMCITY_DATABASE_USER: supabase_admin
       TEAMCITY_DATABASE_PASSWORD: postgres
 
-      # Server configuration
-      TEAMCITY_SERVER_MEM_OPTS: "-Xmx4g -XX:MaxPermSize=512m"
+      # Server configuration (Updated 2025-11-08: Production-grade 2025 sizing)
+      # JetBrains official recommendation: 16GB supports up to 100 agents
+      # 12GB heap + 4GB OS/cache overhead = 16GB total container
+      # Removed deprecated MaxPermSize (ignored by Java 21)
+      TEAMCITY_SERVER_MEM_OPTS: "-Xmx12g -XX:ReservedCodeCacheSize=896m"
       TEAMCITY_HTTPS_PORT: 8111
 
       # Build Cache feature (2025.07+)
@@ -86,9 +89,11 @@ services:
     deploy:
       resources:
         limits:
-          memory: 6G
+          memory: 16G  # JetBrains official: 16GB supports up to 100 agents (2025-11-08)
+          cpus: '4'    # 2025 best practice: explicit CPU limits for resource fairness
         reservations:
-          memory: 4G
+          memory: 12G  # 75% of limit (industry standard, 2025-11-08)
+          cpus: '2'    # Guaranteed CPU allocation
 
   # ----------------------------------------
   # TeamCity Agent 1 - Frontend Specialist
@@ -102,6 +107,10 @@ services:
     environment:
       SERVER_URL: http://teamcity-server:8111
       AGENT_NAME: "Frontend-Builder-01"
+
+      # Agent JVM configuration (2025 best practice)
+      # Modern TypeScript/React builds need 4GB heap
+      TEAMCITY_AGENT_MEM_OPTS: "-Xmx4g -XX:ReservedCodeCacheSize=512m"
 
       # Docker configuration
       DOCKER_IN_DOCKER: "start"
@@ -130,9 +139,11 @@ services:
     deploy:
       resources:
         limits:
-          memory: 4G
+          memory: 6G   # Modern frontend builds: TypeScript 5.9 + React 19 + Docker (2025-11-08)
+          cpus: '2'    # 2025 best practice: explicit CPU limits
         reservations:
-          memory: 2G
+          memory: 4.5G # 75% of limit (2025-11-08)
+          cpus: '1'    # Guaranteed CPU allocation
 
   # ----------------------------------------
   # TeamCity Agent 2 - Backend Specialist
@@ -146,6 +157,10 @@ services:
     environment:
       SERVER_URL: http://teamcity-server:8111
       AGENT_NAME: "Backend-Builder-01"
+
+      # Agent JVM configuration (2025 best practice)
+      # Python/FastAPI + LangChain builds need 4GB heap
+      TEAMCITY_AGENT_MEM_OPTS: "-Xmx4g -XX:ReservedCodeCacheSize=512m"
 
       # Docker configuration
       DOCKER_IN_DOCKER: "start"
@@ -175,9 +190,11 @@ services:
     deploy:
       resources:
         limits:
-          memory: 4G
+          memory: 6G   # Modern backend builds: Python 3.12 + LangChain + Docker (2025-11-08)
+          cpus: '2'    # 2025 best practice: explicit CPU limits
         reservations:
-          memory: 2G
+          memory: 4.5G # 75% of limit (2025-11-08)
+          cpus: '1'    # Guaranteed CPU allocation
 
   # ----------------------------------------
   # TeamCity Agent 3 - Integration/Docker Specialist
@@ -191,6 +208,10 @@ services:
     environment:
       SERVER_URL: http://teamcity-server:8111
       AGENT_NAME: "Integration-Builder-01"
+
+      # Agent JVM configuration (2025 best practice)
+      # Multi-language E2E tests (Node + Python + Docker) need 4GB heap
+      TEAMCITY_AGENT_MEM_OPTS: "-Xmx4g -XX:ReservedCodeCacheSize=512m"
 
       # Docker configuration
       DOCKER_IN_DOCKER: "start"
@@ -224,9 +245,11 @@ services:
     deploy:
       resources:
         limits:
-          memory: 4G
+          memory: 6G   # Integration tests: Node 22 + Python 3.12 + E2E + Docker (2025-11-08)
+          cpus: '2'    # 2025 best practice: explicit CPU limits
         reservations:
-          memory: 2G
+          memory: 4.5G # 75% of limit (2025-11-08)
+          cpus: '1'    # Guaranteed CPU allocation
 
   # ----------------------------------------
   # Docker Registry Cache (Optional - Disabled for ARM64 compatibility)

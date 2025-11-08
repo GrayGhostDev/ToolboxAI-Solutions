@@ -6,7 +6,7 @@
 import * as React from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../../store';
-import { getDefaultRouteForRole, getUserRoleFromClerk } from '../../utils/auth-utils';
+import { getDefaultRouteForRole } from '../../utils/auth-utils';
 import { logger } from '../../utils/logger';
 
 interface RoleBasedRouterProps {

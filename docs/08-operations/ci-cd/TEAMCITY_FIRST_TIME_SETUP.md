@@ -191,25 +191,45 @@ Branch specification:
 
 ### Step 9: Configure Docker Registry
 
-Navigate to **Administration → <Root Project> → Docker Registry**
+**Note**: In TeamCity 2025.07, Docker registries are configured via **Connections** or within build configurations.
 
-#### **TeamCity Cloud Registry**
-```
-Name: TeamCity Cloud Registry
-URL: https://build-cloud.docker.com:443
-Username: thegrayghost23
-Password: [Create parameter: credentialsJSON:teamcity-cloud-docker]
-```
+#### Option 1: Project-Level Connection (Recommended)
 
-#### **Docker Hub Registry** (Optional)
-```
-Name: Docker Hub Registry
-URL: https://registry-1.docker.io
-Username: thegrayghost23
-Password: [Create parameter: credentialsJSON:docker-hub-password]
-```
+Navigate to **Administration → <Root Project> → Connections**
 
-**Test Connection**: Click **"Test Connection"** for each registry
+1. Click **"Add Connection"**
+2. Select **"Docker Registry"**
+3. Configure **TeamCity Cloud Registry**:
+   ```
+   Display name: TeamCity Cloud Registry
+   Registry URL: https://build-cloud.docker.com:443
+   Username: thegrayghost23
+   Password: %credentialsJSON:teamcity-cloud-docker%
+   ```
+4. Click **"Test Connection"** to verify
+5. Click **"Save"**
+
+6. **(Optional)** Add **Docker Hub Registry**:
+   - Click **"Add Connection"** again
+   - Select **"Docker Registry"**
+   - Configure:
+     ```
+     Display name: Docker Hub
+     Registry URL: https://registry-1.docker.io
+     Username: thegrayghost23
+     Password: %credentialsJSON:docker-hub-password%
+     ```
+   - Test and Save
+
+#### Option 2: Build Configuration Level
+
+If "Connections" is not available, Docker registries can be configured in each build configuration:
+
+1. Navigate to **Build Configuration → Build Features**
+2. Add **"Docker Support"** feature
+3. Configure registry credentials there
+
+**Note**: Project-level connections (Option 1) are preferred as they can be reused across all build configurations.
 
 ### Step 10: Configure Project Parameters
 

@@ -14,6 +14,7 @@ Features:
 
 import json
 import hashlib
+import inspect
 from typing import Any, Optional, Callable, Union
 from functools import wraps
 from datetime import timedelta
@@ -311,9 +312,6 @@ def cached(
                 key_parts.extend(str(arg) for arg in args)
                 key_parts.extend(f"{k}={v}" for k, v in sorted(kwargs.items()))
                 cache_key = ":".join(key_parts)
-
-# At the top of services/cache_service.py, add:
-import inspect
 
             # Extract organization_id from bound arguments safely
             bound = inspect.signature(func).bind_partial(*args, **kwargs)
