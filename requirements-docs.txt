@@ -1,0 +1,75 @@
+# Documentation Building Dependencies
+# Install with: pip install -r requirements-docs.txt
+# These packages are NOT needed for production runtime or development
+
+# ============================================================================
+# SPHINX DOCUMENTATION SYSTEM
+# ============================================================================
+Sphinx==7.4.7                        # Documentation generator
+sphinx-rtd-theme==3.0.2              # Read the Docs theme
+sphinxcontrib-applehelp==2.0.0       # Apple Help output
+sphinxcontrib-devhelp==2.0.0         # DevHelp output
+sphinxcontrib-htmlhelp==2.1.0        # HTML Help output
+sphinxcontrib-jquery==4.1            # jQuery integration
+sphinxcontrib-jsmath==1.0.1          # Math rendering
+sphinxcontrib-qthelp==2.0.0          # Qt Help output
+sphinxcontrib-serializinghtml==2.0.0 # Serialized HTML output
+alabaster==0.7.16                    # Alabaster theme
+docutils==0.21.2                     # Documentation utilities
+snowballstemmer==3.0.1               # Stemmer for search
+imagesize==1.4.1                     # Image size detection
+
+# ============================================================================
+# MKDOCS DOCUMENTATION SYSTEM
+# ============================================================================
+mkdocs==1.6.1                        # Modern documentation system
+mkdocs-material==9.6.21              # Material theme
+mkdocs-material-extensions==1.3.1    # Material extensions
+mkdocs-awesome-pages-plugin==2.10.1  # Page organization
+mkdocs-get-deps==0.2.0               # Dependency resolution
+mkdocs-git-authors-plugin==0.10.0    # Git authors integration
+mkdocs-git-revision-date-localized-plugin==1.4.7  # Git revision dates
+mkdocs-macros-plugin==1.4.0          # Macros and variables
+mkdocs-mermaid2-plugin==1.2.2        # Mermaid diagram support
+mkdocs-minify-plugin==0.8.0          # HTML/CSS/JS minification
+mkdocs-redirects==1.2.2              # Page redirects
+mike==2.1.3                          # Version management for MkDocs
+ghp-import==2.1.0                    # GitHub Pages import
+natsort==8.4.0                       # Natural sorting
+pyyaml_env_tag==1.1                  # YAML environment tags
+
+# ============================================================================
+# SHARED DOCUMENTATION DEPENDENCIES
+# ============================================================================
+Markdown==3.9                        # Markdown parser
+markdown-it-py==3.0.0                # Markdown-it parser
+markdown2==2.4.10                    # Alternative Markdown parser
+markdownlit==0.0.7                   # Markdown utilities
+mdurl==0.1.2                         # Markdown URL utilities
+pymdown-extensions==10.16.1          # Python Markdown extensions
+Jinja2==3.1.6                        # Template engine (also in prod)
+MarkupSafe==3.0.2                    # Jinja2 dependency (also in prod)
+Pygments==2.19.2                     # Syntax highlighting
+babel==2.17.0                        # Internationalization
+mergedeep==1.3.4                     # Deep merge utilities
+PyYAML==6.0.2                        # YAML parser (also in prod)
+
+# ============================================================================
+# ASSET PROCESSING FOR DOCS
+# ============================================================================
+htmlmin2==0.1.13                     # HTML minification
+csscompressor==0.9.5                 # CSS compression
+jsmin==3.0.1                         # JavaScript minification
+jsbeautifier==1.15.4                 # JavaScript beautification
+wcmatch==10.1                        # Wildcard matching
+backrefs==5.9                        # Regex backreference support
+bracex==2.6                          # Brace expansion
+
+# ============================================================================
+# Note: Install production dependencies separately with:
+#   pip install -r requirements.txt
+# Build docs with:
+#   sphinx-build -b html docs/source docs/build
+#   or
+#   mkdocs build
+# ============================================================================

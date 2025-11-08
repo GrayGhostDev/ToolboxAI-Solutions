@@ -1,0 +1,76 @@
+# Development Tools and Testing Dependencies
+# Install with: pip install -r requirements-dev.txt
+# These packages are NOT needed for production runtime
+
+# ============================================================================
+# CODE QUALITY & FORMATTING
+# ============================================================================
+black==24.10.0                       # Code formatter
+isort==5.13.2                        # Import sorting
+mypy==1.13.0                         # Static type checking
+mypy_extensions==1.1.0               # Mypy extensions
+ruff==0.8.4                          # Fast Python linter
+EditorConfig==0.17.1                 # Editor configuration
+
+# ============================================================================
+# TESTING FRAMEWORK
+# ============================================================================
+pytest==7.4.4                        # Testing framework
+pytest-asyncio==0.21.2               # Async test support
+pytest-cov==6.0.0                    # Coverage reporting
+pytest-flask==1.3.0                  # Flask testing utilities
+pytest-mock==3.14.0                  # Mocking support
+pytest-xdist==3.6.1                  # Parallel test execution
+pytest-timeout==2.3.1                # Test timeouts
+pytest-html==4.1.1                   # HTML test reports
+coverage==7.10.7                     # Code coverage
+execnet>=2.1                         # pytest-xdist dependency
+pytest-metadata>=2.0.0               # pytest-html dependency
+
+# ============================================================================
+# TEST DATA GENERATION & MOCKING
+# ============================================================================
+factory_boy==3.3.1                   # Test fixture factories
+Faker==33.1.0                        # Fake data generation
+responses==0.25.3                    # HTTP mock responses
+
+# ============================================================================
+# DEBUGGING & DEVELOPMENT
+# ============================================================================
+ipdb==0.13.13                        # IPython-based debugger
+ipython==8.30.0                      # Enhanced Python REPL
+matplotlib-inline==0.1.7             # IPython matplotlib integration
+
+# ============================================================================
+# SECURITY SCANNING & AUDITING
+# ============================================================================
+safety==3.6.2                        # Dependency vulnerability scanning
+safety-schemas==0.0.16               # Safety schemas
+pip_audit==2.9.0                     # PyPI package auditing
+cyclonedx-python-lib==9.1.0          # SBOM generation (CycloneDX)
+packageurl-python==0.17.5            # Package URL specification
+py-serializable==2.1.0               # Serialization for SBOM
+license-expression==30.4.4           # License expression parsing
+boolean.py==5.0                      # Boolean algebra for licenses
+pip-api==0.0.34                      # pip API wrapper
+pip-requirements-parser==32.0.1      # Requirements file parsing
+dparse==0.6.4                        # Dependency parsing
+verspec==0.1.0                       # Version specification
+
+# ============================================================================
+# DEVELOPMENT UTILITIES
+# ============================================================================
+GitPython==3.1.45                    # Git repository access
+gitdb==4.0.12                        # GitPython dependency
+smmap==5.0.2                         # GitPython dependency
+watchdog==6.0.0                      # File system event monitoring
+python-dotenv==1.0.1                 # .env file loading (also in prod)
+
+#
+
+ ============================================================================
+# Note: Install production dependencies separately with:
+#   pip install -r requirements.txt
+# Install all dependencies (prod + dev) with:
+#   pip install -r requirements.txt -r requirements-dev.txt
+# ============================================================================
