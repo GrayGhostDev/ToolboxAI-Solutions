@@ -145,7 +145,7 @@
     "@typescript-eslint/eslint-plugin": "^8.42.0",
     "@typescript-eslint/parser": "^8.42.0",
     "@vitejs/plugin-react": "^5.0.0",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "^4.0.8",
     "chalk": "^5.6.2",
     "eslint": "^9.35.0",
     "eslint-plugin-react": "^7.37.2",
@@ -162,6 +162,6 @@
     "terser": "^5.44.0",
     "typescript": "^5.5.4",
     "vite": "^7.0.0",
-    "vitest": "^3.2.4"
+    "vitest": "^4.0.8"
   }
 }
