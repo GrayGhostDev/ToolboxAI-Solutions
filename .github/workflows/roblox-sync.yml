@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Set up Lua
         uses: leafo/gh-actions-lua@v10
@@ -64,10 +64,10 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       
@@ -174,13 +174,13 @@ jobs:
           "
       
       - name: Upload generated scripts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: generated-scripts
           path: roblox/Scripts/Generated/
       
       - name: Upload build report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: build-report
           path: build_report.json
@@ -192,16 +192,16 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Download generated scripts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: generated-scripts
           path: roblox/Scripts/Generated/
       
       - name: Download build report
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: build-report
           path: .
@@ -250,7 +250,7 @@ jobs:
           rojo build -o ToolboxAI.rbxl
       
       - name: Upload place file
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: roblox-place
           path: ToolboxAI.rbxl
@@ -281,7 +281,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && success()
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Deploy Backend Services
         env:
