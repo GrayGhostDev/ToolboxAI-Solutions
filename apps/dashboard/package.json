@@ -87,7 +87,7 @@
     "@tabler/icons-react": "^3.35.0",
     "@tiptap/extension-link": "^3.5.1",
     "@tiptap/react": "^3.5.1",
-    "@tiptap/starter-kit": "^3.5.1",
+    "@tiptap/starter-kit": "^3.10.4",
     "@types/react-window": "^1.8.8",
     "axios": "^1.7.9",
     "chart.js": "^4.5.0",
