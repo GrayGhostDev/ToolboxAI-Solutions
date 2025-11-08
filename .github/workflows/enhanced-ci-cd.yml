@@ -1,0 +1,557 @@
+# ============================================
+# TOOLBOXAI ENHANCED CI/CD PIPELINE
+# ============================================
+# Consolidated CI/CD pipeline combining best practices from:
+# - ci-cd-pipeline.yml (AWS/EKS deployment)
+# - docker-ci-cd.yml (multi-service Docker builds)
+# - comprehensive-testing.yml (security & testing)
+#
+# Features:
+# - Parallel execution for faster builds
+# - Path-based filtering to skip unnecessary runs
+# - Reusable workflows for DRY principle
+# - Comprehensive caching strategy
+# - Multi-environment deployment (dev/staging/prod)
+# ============================================
+
+name: 🚀 Enhanced CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop, staging, 'release/*', 'feature/*']
+    tags: ['v*']
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '.github/workflows/documentation-*.yml'
+      - 'LICENSE'
+  pull_request:
+    branches: [main, develop, staging]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+      skip_tests:
+        description: 'Skip test execution (not recommended)'
+        required: false
+        default: false
+        type: boolean
+      force_rebuild:
+        description: 'Force rebuild all Docker images'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  REGISTRY: toolboxai.azurecr.io
+  PYTHON_VERSION: '3.12'
+  NODE_VERSION: '20'
+  DOCKER_BUILDKIT: 1
+  AWS_REGION: 'us-east-1'
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  actions: read
+  deployments: write
+  security-events: write
+
+# ============================================
+# JOBS
+# ============================================
+jobs:
+  # ──────────────────────────────────────────
+  # SETUP & PREPARATION
+  # ──────────────────────────────────────────
+  setup:
+    name: 🔧 Setup & Preparation
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      environment: ${{ steps.environment.outputs.env }}
+      should_deploy: ${{ steps.should_deploy.outputs.deploy }}
+      cache_key: ${{ steps.cache_key.outputs.key }}
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🏷️ Determine Version
+        id: version
+        run: |
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          else
+            VERSION=${GITHUB_SHA:0:8}
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📌 Version: $VERSION"
+
+      - name: 🎯 Determine Environment
+        id: environment
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            ENV="${{ inputs.environment }}"
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]] || [[ $GITHUB_REF == refs/tags/* ]]; then
+            ENV="production"
+          elif [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
+            ENV="staging"
+          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            ENV="development"
+          else
+            ENV="development"
+          fi
+          echo "env=$ENV" >> $GITHUB_OUTPUT
+          echo "🎯 Environment: $ENV"
+
+      - name: 🚀 Check Deployment Eligibility
+        id: should_deploy
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "deploy=false" >> $GITHUB_OUTPUT
+            echo "⏸️ Deployment skipped for pull requests"
+          else
+            echo "deploy=true" >> $GITHUB_OUTPUT
+            echo "✅ Deployment enabled"
+          fi
+
+      - name: 🔑 Generate Cache Key
+        id: cache_key
+        run: |
+          CACHE_KEY="toolboxai-${{ runner.os }}-${{ hashFiles('**/Dockerfile*', '**/docker-compose*.yml', '**/package*.json', '**/requirements*.txt') }}"
+          echo "key=$CACHE_KEY" >> $GITHUB_OUTPUT
+
+  # ──────────────────────────────────────────
+  # CODE QUALITY CHECKS (runs in parallel)
+  # ──────────────────────────────────────────
+  quality-checks:
+    name: ✨ Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: 📦 Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: apps/dashboard/package-lock.json
+
+      - name: 🐍 Python Linting
+        continue-on-error: true
+        run: |
+          pip install black ruff mypy
+          echo "🔍 Running Python linters..."
+          black --check apps/backend core --extend-exclude '/(migrations|__pycache__|venv)/' || true
+          ruff check apps/backend core --exit-zero
+          mypy apps/backend core --ignore-missing-imports --no-strict-optional || true
+
+      - name: 📜 JavaScript/TypeScript Linting
+        run: |
+          cd apps/dashboard
+          npm ci
+          npm run lint
+          npm run typecheck
+
+      - name: 📝 Markdown Linting
+        uses: davidanson/markdownlint-cli2-action@v14
+        with:
+          globs: '**/*.md'
+          config: '.markdownlint.json'
+        continue-on-error: true
+
+      - name: 📋 YAML Linting
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          config_file: .yamllint.yml
+        continue-on-error: true
+
+  # ──────────────────────────────────────────
+  # SECURITY SCANNING (runs in parallel)
+  # ──────────────────────────────────────────
+  security-scan:
+    name: 🔒 Security Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔍 GitLeaks Secret Scanning
+        uses: zricethezav/gitleaks-action@v2
+        with:
+          config-path: .gitsecrets
+        continue-on-error: true
+
+      - name: 🛡️ Trivy Filesystem Scan
+        uses: aquasecurity/trivy-action@v0.30.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: 📤 Upload Trivy Results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: 🐍 Python Security (Bandit)
+        run: |
+          pip install bandit
+          bandit -r apps/ core/ -f json -o bandit-report.json || true
+
+      - name: 🔐 Detect Secrets
+        run: |
+          pip install detect-secrets
+          detect-secrets scan --baseline .secrets.baseline || echo "No secrets baseline found"
+
+  # ──────────────────────────────────────────
+  # TESTING (calls reusable workflow)
+  # ──────────────────────────────────────────
+  testing:
+    name: 🧪 Run Tests
+    if: ${{ !inputs.skip_tests }}
+    uses: ./.github/workflows/testing.yml
+    secrets: inherit
+
+  # ──────────────────────────────────────────
+  # BUILD DOCKER IMAGES (after tests pass)
+  # ──────────────────────────────────────────
+  build-matrix:
+    name: 🐳 Build ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    needs: [setup, quality-checks, security-scan, testing]
+    if: ${{ !cancelled() && needs.testing.result == 'success' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: backend
+            dockerfile: infrastructure/docker/Dockerfile.backend
+            context: .
+            platforms: linux/amd64,linux/arm64
+
+          - service: dashboard
+            dockerfile: infrastructure/docker/Dockerfile.dashboard
+            context: .
+            platforms: linux/amd64,linux/arm64
+
+          - service: celery
+            dockerfile: infrastructure/docker/Dockerfile.celery
+            context: .
+            platforms: linux/amd64
+
+          - service: mcp-server
+            dockerfile: infrastructure/docker/Dockerfile.mcp
+            context: .
+            platforms: linux/amd64
+
+          - service: coordinator
+            dockerfile: infrastructure/docker/Dockerfile.coordinator
+            context: .
+            platforms: linux/amd64
+
+    outputs:
+      backend_image: ${{ steps.backend_image.outputs.image }}
+      dashboard_image: ${{ steps.dashboard_image.outputs.image }}
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔐 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 🔑 Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: 🐳 Build and Push Docker Image
+        id: docker_build
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          platforms: ${{ matrix.platforms }}
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/toolboxai-${{ matrix.service }}:${{ needs.setup.outputs.version }}
+            ${{ steps.login-ecr.outputs.registry }}/toolboxai-${{ matrix.service }}:latest
+            ${{ steps.login-ecr.outputs.registry }}/toolboxai-${{ matrix.service }}:${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+          build-args: |
+            VERSION=${{ needs.setup.outputs.version }}
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            COMMIT_SHA=${{ github.sha }}
+
+      - name: 📝 Output Backend Image
+        if: matrix.service == 'backend'
+        id: backend_image
+        run: |
+          echo "image=${{ steps.login-ecr.outputs.registry }}/toolboxai-backend:${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      - name: 📝 Output Dashboard Image
+        if: matrix.service == 'dashboard'
+        id: dashboard_image
+        run: |
+          echo "image=${{ steps.login-ecr.outputs.registry }}/toolboxai-dashboard:${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      - name: 🛡️ Scan Docker Image with Trivy
+        uses: aquasecurity/trivy-action@v0.30.0
+        with:
+          image-ref: ${{ steps.login-ecr.outputs.registry }}/toolboxai-${{ matrix.service }}:${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-image-${{ matrix.service }}.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: 📤 Upload Image Scan Results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-image-${{ matrix.service }}.sarif'
+
+  # ──────────────────────────────────────────
+  # DEPLOY TO DEVELOPMENT
+  # ──────────────────────────────────────────
+  deploy-dev:
+    name: 🚀 Deploy to Development
+    runs-on: ubuntu-latest
+    needs: [setup, build-matrix]
+    if: |
+      needs.setup.outputs.should_deploy == 'true' &&
+      github.ref == 'refs/heads/develop'
+    environment:
+      name: development
+      url: https://dev.toolboxai.solutions
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔐 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: ⚙️ Configure kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: 🔗 Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name toolboxai-dev-cluster --region ${{ env.AWS_REGION }}
+
+      - name: 🚀 Deploy with ArgoCD
+        run: |
+          kubectl patch application backend -n argocd --type merge -p '{"spec":{"source":{"kustomize":{"images":["${{ needs.build-matrix.outputs.backend_image }}"]}}}}'
+          kubectl patch application dashboard -n argocd --type merge -p '{"spec":{"source":{"kustomize":{"images":["${{ needs.build-matrix.outputs.dashboard_image }}"]}}}}'
+          argocd app sync backend dashboard --prune
+
+      - name: ✅ Verify Deployment
+        run: |
+          kubectl rollout status deployment/backend -n toolboxai-dev --timeout=300s
+          kubectl rollout status deployment/dashboard -n toolboxai-dev --timeout=300s
+
+      - name: 🏥 Run Health Checks
+        run: |
+          python scripts/tests/health_checks.py --env development
+
+  # ──────────────────────────────────────────
+  # DEPLOY TO STAGING
+  # ──────────────────────────────────────────
+  deploy-staging:
+    name: 🚀 Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [setup, build-matrix]
+    if: |
+      needs.setup.outputs.should_deploy == 'true' &&
+      (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/'))
+    outputs:
+      url: ${{ steps.set-url.outputs.url }}
+    environment:
+      name: staging
+      url: https://staging.toolboxai.solutions
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔐 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 🏗️ Deploy with Terraform
+        run: |
+          cd infrastructure/terraform/environments/staging
+          terraform init
+          terraform plan \
+            -var="backend_image=${{ needs.build-matrix.outputs.backend_image }}" \
+            -var="dashboard_image=${{ needs.build-matrix.outputs.dashboard_image }}" \
+            -out=tfplan
+          terraform apply tfplan
+
+      - name: 📝 Set Deployment URL
+        id: set-url
+        run: |
+          echo "url=https://staging.toolboxai.solutions" >> $GITHUB_OUTPUT
+
+      - name: 💨 Run Smoke Tests
+        run: |
+          python scripts/tests/smoke_tests.py --env staging
+
+  # ──────────────────────────────────────────
+  # DEPLOY TO PRODUCTION (tag-based)
+  # ──────────────────────────────────────────
+  deploy-prod:
+    name: 🚀 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [setup, build-matrix, deploy-staging]
+    if: |
+      needs.setup.outputs.should_deploy == 'true' &&
+      startsWith(github.ref, 'refs/tags/v')
+    environment:
+      name: production
+      url: https://app.toolboxai.solutions
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔐 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_PROD_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 🔵 Blue-Green Deployment
+        run: |
+          python scripts/deploy/blue_green_deploy.py \
+            --backend-image ${{ needs.build-matrix.outputs.backend_image }} \
+            --dashboard-image ${{ needs.build-matrix.outputs.dashboard_image }} \
+            --environment production
+
+      - name: 🏥 Health Checks
+        run: |
+          python scripts/tests/health_checks.py --env production
+
+      - name: ⚡ Performance Tests
+        run: |
+          python scripts/tests/performance_tests.py --env production
+
+      - name: ⏮️ Rollback on Failure
+        if: failure()
+        run: |
+          python scripts/deploy/rollback.py --environment production
+          exit 1
+
+  # ──────────────────────────────────────────
+  # POST-DEPLOYMENT VALIDATION
+  # ──────────────────────────────────────────
+  post-deploy-validation:
+    name: ✅ Post-Deployment Validation
+    runs-on: ubuntu-latest
+    needs: [deploy-staging]
+    if: always() && needs.deploy-staging.result == 'success'
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🧪 E2E Tests (Cypress)
+        uses: cypress-io/github-action@v6
+        with:
+          command: npm run test:e2e
+          working-directory: apps/dashboard
+          config-file: cypress.config.ts
+          env: CYPRESS_BASE_URL=${{ needs.deploy-staging.outputs.url }}
+
+      - name: ♿ Accessibility Testing
+        run: |
+          npm install -g @axe-core/cli
+          axe ${{ needs.deploy-staging.outputs.url }} --exit
+
+      - name: ⚡ Performance Testing (Lighthouse)
+        run: |
+          npm install -g lighthouse
+          lighthouse ${{ needs.deploy-staging.outputs.url }} \
+            --output=json \
+            --output-path=lighthouse-report.json \
+            --chrome-flags="--headless"
+
+      - name: 📤 Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-results
+          path: |
+            cypress/screenshots
+            cypress/videos
+            lighthouse-report.json
+
+  # ──────────────────────────────────────────
+  # NOTIFICATIONS
+  # ──────────────────────────────────────────
+  notify:
+    name: 📢 Send Notifications
+    runs-on: ubuntu-latest
+    needs: [setup, deploy-dev, deploy-staging, deploy-prod]
+    if: always()
+    steps:
+      - name: 🏷️ Create GitHub Deployment
+        id: deployment
+        uses: bobheadxi/deployments@v1
+        with:
+          step: start
+          token: ${{ secrets.GITHUB_TOKEN }}
+          env: ${{ needs.setup.outputs.environment }}
+
+      - name: 💬 Slack Notification
+        uses: 8398a7/action-slack@v3
+        if: always()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+        with:
+          status: ${{ job.status }}
+          text: |
+            🚀 **Deployment Status**: ${{ job.status }}
+            📦 **Version**: ${{ needs.setup.outputs.version }}
+            🌍 **Environment**: ${{ needs.setup.outputs.environment }}
+            🌿 **Branch**: ${{ github.ref }}
+            👤 **Author**: ${{ github.actor }}
+            📝 **Commit**: ${{ github.sha }}
+
+      - name: ✅ Update Deployment Status
+        uses: bobheadxi/deployments@v1
+        if: always()
+        with:
+          step: finish
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: ${{ job.status }}
+          env: ${{ needs.setup.outputs.environment }}
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}

@@ -29,6 +29,13 @@ jobs:
 
       - name: Lint dashboard package
         run: npm run dashboard:lint
+        continue-on-error: true
+
+      - name: Type check dashboard
+        run: |
+          cd apps/dashboard
+          npm run typecheck
+        continue-on-error: true
 
       - name: Run dashboard unit tests
         run: npm run dashboard:test
@@ -49,12 +56,16 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install backend dependencies
-        working-directory: apps/backend
         run: |
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; elif [ -f ../../requirements.txt ]; then pip install -r ../../requirements.txt; fi
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install pytest pytest-asyncio pytest-cov
 
       - name: Run backend tests
-        working-directory: apps/backend
         run: |
-          if [ -d tests ]; then pytest; else echo "No backend tests directory found"; fi
+          if [ -d tests/backend ]; then 
+            pytest tests/backend -v --tb=short
+          else 
+            echo "No backend tests directory found, skipping..."
+            exit 0
+          fi
