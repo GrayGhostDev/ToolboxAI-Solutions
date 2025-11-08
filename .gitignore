@@ -78,6 +78,26 @@ Thumbs.db
 !.env*.example
 !*.env.example
 
+# ============================================
+# SSL/TLS CERTIFICATES & KEYS
+# ============================================
+# CRITICAL: Never commit SSL certificates, private keys, or CA certificates
+*.crt
+*.key
+*.pem
+*.p12
+*.pfx
+*.cer
+*.der
+supabase/*.crt
+supabase/*.key
+supabase/*.pem
+.postgresql/
+config/certificates/*.crt
+config/certificates/*.key
+infrastructure/certificates/*.crt
+infrastructure/certificates/*.key
+
 # Logs
 logs/
 !logs/.gitkeep
