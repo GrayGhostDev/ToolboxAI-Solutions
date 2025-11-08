@@ -328,7 +328,7 @@ jobs:
           path: security-report.html
 
       - name: Post to Slack
-        if: github.ref == 'refs/heads/main' && secrets.SLACK_WEBHOOK != ''
+        if: github.ref == 'refs/heads/main'
         continue-on-error: true
         uses: 8398a7/action-slack@v3
         env:
