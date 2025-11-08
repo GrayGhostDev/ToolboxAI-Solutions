@@ -134,7 +134,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
       
       - name: Build and push API image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./infrastructure/docker/dockerfiles/backend-simple.Dockerfile
@@ -146,7 +146,7 @@ jobs:
           cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/toolboxai-api:buildcache,mode=max
       
       - name: Build and push Dashboard image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./src/dashboard
           file: ./src/dashboard/Dockerfile
