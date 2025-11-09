@@ -129,15 +129,15 @@ opentelemetry-api==1.21.0            # OpenTelemetry API
 opentelemetry-sdk==1.21.0            # OpenTelemetry SDK
 opentelemetry-semantic-conventions==0.42b0  # Semantic conventions
 opentelemetry-proto==1.21.0          # Protocol definitions
-opentelemetry-instrumentation==0.48b0  # Base instrumentation (matches ASGI/FastAPI)
-opentelemetry-instrumentation-asgi==0.48b0  # ASGI instrumentation (matches FastAPI)
+opentelemetry-instrumentation==0.42b0  # Base instrumentation
+opentelemetry-instrumentation-asgi==0.42b0  # ASGI instrumentation
 opentelemetry-instrumentation-dbapi==0.42b0  # Database API instrumentation
 opentelemetry-instrumentation-httpx==0.42b0  # HTTPX instrumentation
 opentelemetry-instrumentation-logging==0.42b0  # Logging instrumentation
 opentelemetry-instrumentation-psycopg2==0.42b0  # PostgreSQL instrumentation
 opentelemetry-instrumentation-redis==0.42b0  # Redis instrumentation
 opentelemetry-instrumentation-sqlalchemy==0.42b0  # SQLAlchemy instrumentation
-opentelemetry-instrumentation-fastapi==0.48b0  # FastAPI instrumentation
+opentelemetry-instrumentation-fastapi==0.42b0  # FastAPI instrumentation
 opentelemetry-exporter-otlp==1.21.0  # OTLP exporter
 opentelemetry-exporter-otlp-proto-common==1.21.0  # OTLP common
 opentelemetry-exporter-otlp-proto-grpc==1.21.0  # OTLP gRPC exporter
