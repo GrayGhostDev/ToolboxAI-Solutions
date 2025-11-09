@@ -93,9 +93,6 @@ export default defineConfig({
       'react/jsx-runtime': path.resolve(__dirname, '../../node_modules/react/jsx-runtime'),
       'react/jsx-dev-runtime': path.resolve(__dirname, '../../node_modules/react/jsx-dev-runtime'),
       'react-dom/client': path.resolve(__dirname, '../../node_modules/react-dom/client'),
-      // Fix refractor module resolution for react-syntax-highlighter
-      'refractor': path.resolve(__dirname, '../../node_modules/refractor'),
-      'refractor/core': path.resolve(__dirname, '../../node_modules/refractor/lib/core.js'),
       // Force single instance of three.js
       'three': path.resolve(__dirname, '../../node_modules/three')
     },
