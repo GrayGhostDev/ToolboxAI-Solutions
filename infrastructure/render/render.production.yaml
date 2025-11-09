@@ -58,7 +58,7 @@ services:
       - key: ALLOWED_ORIGINS
         value: https://toolboxai-dashboard.vercel.app,https://www.yourdomain.com
       - key: TRUSTED_HOSTS
-        value: toolboxai-backend.onrender.com,api.yourdomain.com,localhost,127.0.0.1
+        value: toolboxai-backend-8j12.onrender.com,api.yourdomain.com,localhost,127.0.0.1
       # Sentry Monitoring
       - key: SENTRY_DSN_BACKEND
         sync: false
