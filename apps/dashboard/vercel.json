@@ -64,7 +64,7 @@
         },
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "https://toolboxai-backend.onrender.com"
+          "value": "https://toolboxai-backend-8j12.onrender.com"
         },
         {
           "key": "Access-Control-Allow-Methods",
@@ -72,7 +72,15 @@
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization, X-Requested-With"
+          "value": "Content-Type, Authorization, X-Requested-With, X-CSRF-Token, Accept, Accept-Version, Content-Length, Content-MD5, Date, X-Api-Version"
+        },
+        {
+          "key": "Access-Control-Expose-Headers",
+          "value": "X-Request-ID, X-Response-Time, X-Total-Count, X-Page-Count, X-Per-Page, Link, Location"
+        },
+        {
+          "key": "Access-Control-Max-Age",
+          "value": "86400"
         }
       ]
     },
@@ -100,7 +108,11 @@
     "VITE_PUSHER_CLUSTER": "us2",
     "VITE_PUSHER_ENABLED": "true",
     "VITE_ENABLE_CLERK_AUTH": "false",
-    "VITE_DEBUG_MODE": "false"
+    "VITE_DEBUG_MODE": "false",
+
+    "VITE_VERCEL_ENV": "@vercel-env",
+    "VITE_VERCEL_URL": "@vercel-url",
+    "VITE_VERCEL_PROJECT_PRODUCTION_URL": "@vercel-project-production-url"
   },
   "build": {
     "env": {

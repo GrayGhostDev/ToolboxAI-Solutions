@@ -176,7 +176,7 @@ def configure_cors_middleware(app: FastAPI) -> None:
 
         # Add deployment URLs
         deployment_origins = [
-            "https://toolboxai-backend.onrender.com",
+            "https://toolboxai-backend-8j12.onrender.com",
             "https://toolboxai-dashboard.vercel.app",
             "https://toolboxai.com",
             "https://app.toolboxai.com",
