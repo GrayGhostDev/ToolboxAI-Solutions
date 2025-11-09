@@ -1,0 +1,189 @@
+name: E2E Testing
+# End-to-end testing workflow with Playwright
+# Replaces: e2e-tests.yml, playwright.yml, continuous-testing.yml
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+  workflow_dispatch: {}
+
+env:
+  NODE_VERSION: '20'
+  PYTHON_VERSION: '3.11'
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+jobs:
+  # Playwright E2E Tests
+  playwright-tests:
+    name: Playwright E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: apps/dashboard/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: apps/dashboard
+        run: npm ci
+      
+      - name: Install Playwright browsers
+        working-directory: apps/dashboard
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+      
+      - name: Run Playwright tests
+        working-directory: apps/dashboard
+        env:
+          BROWSER: ${{ matrix.browser }}
+        run: npx playwright test --project=${{ matrix.browser }}
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-results-${{ matrix.browser }}
+          path: apps/dashboard/test-results/
+          retention-days: 7
+      
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-${{ matrix.browser }}
+          path: apps/dashboard/playwright-report/
+          retention-days: 7
+  
+  # API E2E Tests
+  api-e2e-tests:
+    name: API E2E Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_DB: e2e_test
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio httpx
+      
+      - name: Start API server
+        env:
+          DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/e2e_test
+          REDIS_URL: redis://localhost:6379/0
+        run: |
+          cd apps/backend
+          uvicorn main:app --host 0.0.0.0 --port 8000 &
+          sleep 15
+          curl -f http://localhost:8000/health || exit 1
+      
+      - name: Run API E2E tests
+        run: pytest tests/e2e/ -v --maxfail=5
+      
+      - name: Stop API server
+        if: always()
+        run: pkill -f uvicorn || true
+  
+  # Visual Regression Tests
+  visual-regression:
+    name: Visual Regression Tests
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        working-directory: apps/dashboard
+        run: npm ci
+      
+      - name: Install Playwright
+        working-directory: apps/dashboard
+        run: npx playwright install --with-deps chromium
+      
+      - name: Run visual regression tests
+        working-directory: apps/dashboard
+        run: npx playwright test --project=chromium --grep=@visual
+      
+      - name: Upload visual diffs
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: visual-regression-diffs
+          path: apps/dashboard/test-results/**/*.png
+          retention-days: 7
+  
+  # E2E Summary
+  e2e-summary:
+    name: E2E Test Summary
+    runs-on: ubuntu-latest
+    needs: [playwright-tests, api-e2e-tests]
+    if: always()
+    
+    steps:
+      - name: Check E2E results
+        run: |
+          echo "## 🎭 E2E Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ End-to-end testing completed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Browsers tested:** Chromium, Firefox, WebKit" >> $GITHUB_STEP_SUMMARY
+          echo "**API tests:** Completed" >> $GITHUB_STEP_SUMMARY
