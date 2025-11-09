@@ -1,0 +1,24 @@
+# GitHub Pages Dependencies - 2025
+# Compatible with GitHub Pages and Jekyll 4.x
+
+source "https://rubygems.org"
+
+# Core GitHub Pages gem (includes Jekyll and plugins)
+gem "github-pages", "~> 231", group: :jekyll_plugins
+
+# Additional Jekyll plugins
+group :jekyll_plugins do
+  gem "jekyll-redirect-from", "~> 0.16"
+  gem "jekyll-sitemap", "~> 1.4"
+  gem "jekyll-feed", "~> 0.17"
+  gem "jekyll-seo-tag", "~> 2.8"
+  gem "jekyll-scholar", "~> 7.1"
+  gem "jekyll-toc", "~> 0.18"
+  gem "jekyll-include-cache", "~> 0.2"
+end
+
+# Required for local development
+gem "webrick", "~> 1.8"
+
+# Ruby version (matches GitHub Pages)
+ruby ">= 3.1.0"
