@@ -76,7 +76,7 @@
     "@mantine/dates": "^8.3.3",
     "@mantine/form": "^8.3.2",
     "@mantine/hooks": "^8.3.6",
-    "@mantine/notifications": "^8.3.3",
+    "@mantine/notifications": "^8.3.6",
     "@mantine/spotlight": "^8.3.3",
     "@mantine/tiptap": "^8.3.3",
     "@react-three/drei": "^10.7.6",
