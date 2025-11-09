@@ -607,7 +607,8 @@ async def update_ui_preferences(
     """Update UI preferences."""
     try:
         # TODO: Implement UI preference update
-        return preferences
+        updated_preferences = preferences
+        return updated_preferences
     except Exception as e:
         logger.error(f"Failed to update UI preferences: {str(e)}", exc_info=True)
         await session.rollback()
@@ -653,7 +654,8 @@ async def update_notification_preferences(
     """Update notification preferences."""
     try:
         # TODO: Implement notification preference update
-        return preferences
+        updated_preferences = preferences
+        return updated_preferences
     except Exception as e:
         logger.error(f"Failed to update notification preferences: {str(e)}", exc_info=True)
         await session.rollback()
@@ -699,7 +701,8 @@ async def update_privacy_preferences(
     """Update privacy preferences."""
     try:
         # TODO: Implement privacy preference update
-        return preferences
+        updated_preferences = preferences
+        return updated_preferences
     except Exception as e:
         logger.error(f"Failed to update privacy preferences: {str(e)}", exc_info=True)
         await session.rollback()
@@ -745,7 +748,8 @@ async def update_accessibility_preferences(
     """Update accessibility preferences."""
     try:
         # TODO: Implement accessibility preference update
-        return preferences
+        updated_preferences = preferences
+        return updated_preferences
     except Exception as e:
         logger.error(f"Failed to update accessibility preferences: {str(e)}", exc_info=True)
         await session.rollback()

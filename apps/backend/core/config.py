@@ -22,7 +22,6 @@ try:
     env_file = project_root / ".env"
     if env_file.exists():
         load_dotenv(env_file)
-        print(f"Loaded .env file from {env_file}")
 except ImportError:
     pass
 

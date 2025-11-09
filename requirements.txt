@@ -54,7 +54,7 @@ langchain-core==0.3.77               # LangChain core
 langchain-openai==0.2.14             # OpenAI integration
 langchain-text-splitters==0.3.11     # Text splitting utilities
 langgraph==0.2.62                    # LangGraph workflow orchestration
-langgraph-checkpoint<3.0.0,>=2.0.4   # Checkpoint management
+langgraph-checkpoint==3.0.0   # Checkpoint management
 langgraph-sdk<0.2.0,>=0.1.42         # LangGraph SDK
 langsmith==0.4.39                    # LangSmith tracing
 openai>=1.61.0                       # OpenAI API client (explicit dependency)

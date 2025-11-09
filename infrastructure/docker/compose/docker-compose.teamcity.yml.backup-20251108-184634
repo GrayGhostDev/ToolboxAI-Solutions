@@ -35,13 +35,11 @@ services:
     platform: linux/amd64
     container_name: teamcity-server
     user: "1000:1000" # Non-root user as per 2025 security standards
-    restart: unless-stopped  # 2025 best practice: automatic recovery
     environment:
       # Database configuration - Supabase PostgreSQL Integration
       TEAMCITY_DATABASE_URL: jdbc:postgresql://db.supabase.internal:5432/teamcity
       TEAMCITY_DATABASE_USER: supabase_admin
-      # SECURITY NOTE: Password loaded from Docker Secret (not hardcoded)
-      # Access via: cat /run/secrets/db_password inside container
+      TEAMCITY_DATABASE_PASSWORD: postgres
 
       # Server configuration (Updated 2025-11-08: Production-grade 2025 sizing)
       # JetBrains official recommendation: 16GB supports up to 100 agents
@@ -56,8 +54,8 @@ services:
       # External URL for webhooks and agents
       TEAMCITY_SERVER_URL: ${TEAMCITY_SERVER_URL:-https://ci.toolboxaisolutions.com}
 
-      # SECURITY NOTE: Pipeline token loaded from Docker Secret (not hardcoded)
-      # Access via: cat /run/secrets/pipeline_token inside container
+      # Pipeline token for API access (from .env)
+      TEAMCITY_PIPELINE_ACCESS_TOKEN: ${TEAMCITY_PIPELINE_ACCESS_TOKEN:-eyJ0eXAiOiAiVENWMiJ9.Z00zSzRFazBrNktpandnemRUZ2dJRGhBbVlF.MTZhZjcxM2EtZWJiZC00ODA2LTgxMmQtMzA2MWZjMjk2OWYz}
 
       # Integration with existing services
       PUSHER_KEY: ${VITE_PUSHER_KEY}
@@ -77,9 +75,6 @@ services:
       - teamcity_cache:/data/teamcity_server/system/caches
       # Mount project for build configurations
       - ../../../.teamcity:/data/teamcity_server/datadir/config/projects/ToolBoxAI/.teamcity:ro
-    secrets:
-      - db_password
-      - pipeline_token
     networks:
       - teamcity
       - supabase_network_supabase  # Connect to Supabase network for PostgreSQL access
@@ -91,12 +86,6 @@ services:
       timeout: 10s
       retries: 5
       start_period: 120s
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-        compress: "true"
     deploy:
       resources:
         limits:
@@ -115,7 +104,6 @@ services:
     container_name: teamcity-agent-frontend
     user: "1000:1000"
     privileged: true # Required for Docker-in-Docker
-    restart: unless-stopped  # 2025 best practice: automatic recovery
     environment:
       SERVER_URL: http://teamcity-server:8111
       AGENT_NAME: "Frontend-Builder-01"
@@ -148,12 +136,6 @@ services:
       # - toolboxai
     depends_on:
       - teamcity-server
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-        compress: "true"
     deploy:
       resources:
         limits:
@@ -172,7 +154,6 @@ services:
     container_name: teamcity-agent-backend
     user: "1000:1000"
     privileged: true
-    restart: unless-stopped  # 2025 best practice: automatic recovery
     environment:
       SERVER_URL: http://teamcity-server:8111
       AGENT_NAME: "Backend-Builder-01"
@@ -206,12 +187,6 @@ services:
       # - toolboxai
     depends_on:
       - teamcity-server
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-        compress: "true"
     deploy:
       resources:
         limits:
@@ -230,7 +205,6 @@ services:
     container_name: teamcity-agent-integration
     user: "1000:1000"
     privileged: true
-    restart: unless-stopped  # 2025 best practice: automatic recovery
     environment:
       SERVER_URL: http://teamcity-server:8111
       AGENT_NAME: "Integration-Builder-01"
@@ -268,12 +242,6 @@ services:
       # - toolboxai
     depends_on:
       - teamcity-server
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-        compress: "true"
     deploy:
       resources:
         limits:
@@ -361,17 +329,6 @@ volumes:
     driver: local
   registry_data:
     driver: local
-
-# ============================================
-# SECRETS (2025 Best Practice)
-# ============================================
-# Secrets are mounted as read-only files in /run/secrets/ inside containers
-# Never exposed in docker inspect or logs
-secrets:
-  db_password:
-    file: ./secrets/db_password.txt
-  pipeline_token:
-    file: ./secrets/pipeline_token.txt
 
 # ============================================
 # NETWORKS

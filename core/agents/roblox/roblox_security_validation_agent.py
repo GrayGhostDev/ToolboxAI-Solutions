@@ -22,8 +22,7 @@ try:
     from langchain.tools import Tool, StructuredTool
     from langchain_openai import ChatOpenAI
     LANGCHAIN_CORE_AVAILABLE = True
-except ImportError as e:
-    print(f"LangChain core imports failed: {e}")
+except ImportError:
     LANGCHAIN_CORE_AVAILABLE = False
     # Create mock classes
     class SystemMessage:

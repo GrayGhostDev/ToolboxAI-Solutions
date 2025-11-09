@@ -5,10 +5,7 @@ Generates a consolidated security report from various security scan results.
 """
 
 import argparse
-import json
-import os
 from datetime import datetime
-from pathlib import Path
 
 
 def generate_html_report(output_file: str):

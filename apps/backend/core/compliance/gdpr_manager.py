@@ -519,7 +519,7 @@ class GDPRComplianceManager:
         }
 
         # Check consents
-        for consent_type in ConsentType:
+        for consent_type in ConsentType.__members__.values():
             has_consent = await self.check_consent(user_id, consent_type)
             report["consents"][consent_type.value] = has_consent
 

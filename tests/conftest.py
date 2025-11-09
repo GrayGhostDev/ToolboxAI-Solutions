@@ -16,8 +16,8 @@ if str(project_root) not in sys.path:
 try:
     from core.agents.langchain_compat import apply_compatibility_patches
     apply_compatibility_patches()
-except Exception as e:
-    print(f"Warning: Could not apply LangChain compatibility patches: {e}")
+except Exception:
+    pass  # LangChain compatibility patches not available
 
 
 

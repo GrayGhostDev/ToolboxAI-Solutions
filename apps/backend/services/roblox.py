@@ -48,10 +48,8 @@ try:
     from core.mcp.context_manager import ContextManager
 
     AGENT_INTEGRATION = True
-    print("Agent systems successfully imported for Flask bridge")
-except ImportError as e:
+except ImportError:
     AGENT_INTEGRATION = False
-    print(f"Warning: Agent systems not available for Flask bridge: {e}")
 
 
 # from core.shared.utils.cache import LRUCache

@@ -683,7 +683,7 @@ class SecureUserManager:
         try:
             # Create a simple audit log dict instead of model
             # TODO: Implement proper audit logging with AuditLog model
-            pass
+            logger.info(f"Audit log: {action} for user {user_id}: {details}")
         except Exception as e:
             logger.error(f"Failed to create audit log: {e}")
 

@@ -312,7 +312,8 @@ async def get_dashboard_students(current_user: User = Depends(get_current_user))
 async def get_dashboard_analytics(current_user: User = Depends(get_current_user)):
     """Get analytics data for dashboard"""
     try:
-        return {
+        # Mock data - replace with actual database queries
+        analytics_data = {
             "usage_metrics": {
                 "daily_active_users": [
                     {"date": "2024-09-01", "count": 45},
@@ -343,6 +344,7 @@ async def get_dashboard_analytics(current_user: User = Depends(get_current_user)
                 "satisfaction_score": 4.7,
             },
         }
+        return analytics_data
     except Exception as e:
         logger.error(f"Dashboard analytics error: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch analytics data")

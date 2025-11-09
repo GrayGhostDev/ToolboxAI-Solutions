@@ -268,7 +268,7 @@ class EmailQueueService:
                 await self._process_scheduled()
 
                 # Process priority queues in order
-                for priority in EmailPriority:
+                for priority in EmailPriority.__members__.values():
                     await self._process_priority_queue(priority)
 
                 # Process retry queue
@@ -605,10 +605,10 @@ class EmailQueueService:
             metrics[key] = int(value) if value else 0
 
         # Get queue lengths
-        for priority in EmailPriority:
+        for priority in EmailPriority.__members__.values():
             queue_name = self.queues[priority]
             length = await self.redis_client.llen(queue_name)
-            metrics[f"queue_{priority}"] = length
+            metrics[f"queue_{priority.value}"] = length
 
         # Get retry queue length
         retry_length = await self.redis_client.zcard(self.retry_queue)
