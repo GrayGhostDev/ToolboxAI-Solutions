@@ -143,8 +143,15 @@ export default defineConfig({
             if (id.includes('@mantine')) {
               return 'vendor-mantine';
             }
+            // Emotion libraries - required by framer-motion peer dependency
+            if (id.includes('@emotion')) {
+              return 'vendor-mantine';
+            }
             // Animation libraries - depend on React hooks (useLayoutEffect)
-            if (id.includes('framer-motion')) {
+            // Strengthen pattern matching to catch all import variations
+            if (id.includes('framer-motion') ||
+                id.includes('/framer-motion/') ||
+                id.includes('\\framer-motion\\')) {
               return 'vendor-mantine';
             }
             // Tabler icons - depends on React

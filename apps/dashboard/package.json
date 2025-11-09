@@ -71,6 +71,7 @@
     "@assistant-ui/react": "^0.5.0",
     "@babel/runtime": "^7.28.4",
     "@clerk/clerk-react": "^5.47.0",
+    "@emotion/is-prop-valid": "^1.4.0",
     "@mantine/charts": "^8.3.3",
     "@mantine/core": "^8.3.6",
     "@mantine/dates": "^8.3.3",
