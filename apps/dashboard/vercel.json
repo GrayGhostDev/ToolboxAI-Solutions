@@ -4,7 +4,7 @@
   "outputDirectory": "dist",
   "devCommand": "npm run dev",
   "framework": "vite",
-  "installCommand": "npm ci --legacy-peer-deps",
+  "installCommand": "npm ci --workspace=apps/dashboard --legacy-peer-deps",
   "ignoreCommand": "git diff --quiet HEAD^ HEAD ./",
   "rewrites": [
     {
