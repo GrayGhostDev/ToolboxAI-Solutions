@@ -378,7 +378,7 @@ jobs:
           cmd_options: '-a'
 
       - name: Nuclei Security Scan
-        uses: projectdiscovery/nuclei-action@v2.0.1
+        uses: projectdiscovery/nuclei-action@v2.0.2
         with:
           target: 'https://staging.toolboxai.solutions'
           flags: '-severity critical,high,medium'
