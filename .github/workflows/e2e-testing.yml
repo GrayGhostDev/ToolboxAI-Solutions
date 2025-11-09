@@ -36,26 +36,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
       
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: apps/dashboard/package-lock.json
+          cache: 'pnpm'
+          cache-dependency-path: apps/dashboard/ppnpm-lock.yaml
       
       - name: Install dependencies
         working-directory: apps/dashboard
-        run: npm ci
+        run: ppnpm install --frozen-lockfile
       
       - name: Install Playwright browsers
         working-directory: apps/dashboard
-        run: npx playwright install --with-deps ${{ matrix.browser }}
+        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
       
       - name: Run Playwright tests
         working-directory: apps/dashboard
         env:
           BROWSER: ${{ matrix.browser }}
-        run: npx playwright test --project=${{ matrix.browser }}
+        run: pnpm exec playwright test --project=${{ matrix.browser }}
       
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -145,23 +150,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
       
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: 'pnpm'
       
       - name: Install dependencies
         working-directory: apps/dashboard
-        run: npm ci
+        run: ppnpm install --frozen-lockfile
       
       - name: Install Playwright
         working-directory: apps/dashboard
-        run: npx playwright install --with-deps chromium
+        run: pnpm exec playwright install --with-deps chromium
       
       - name: Run visual regression tests
         working-directory: apps/dashboard
-        run: npx playwright test --project=chromium --grep=@visual
+        run: pnpm exec playwright test --project=chromium --grep=@visual
       
       - name: Upload visual diffs
         uses: actions/upload-artifact@v4

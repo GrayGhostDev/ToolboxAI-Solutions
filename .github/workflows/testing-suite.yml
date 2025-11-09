@@ -109,28 +109,33 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
       
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: apps/dashboard/package-lock.json
+          cache: 'pnpm'
+          cache-dependency-path: apps/dashboard/ppnpm-lock.yaml
       
       - name: Install dependencies
         working-directory: apps/dashboard
-        run: npm ci
+        run: ppnpm install --frozen-lockfile
       
       - name: Run linting
         working-directory: apps/dashboard
-        run: npm run lint
+        run: pnpm lint
       
       - name: Run type checking
         working-directory: apps/dashboard
-        run: npm run type-check || true
+        run: pnpm type-check || true
       
       - name: Run unit tests
         working-directory: apps/dashboard
-        run: npm test -- --coverage --watchAll=false
+        run: pnpm test -- --coverage --watchAll=false
       
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -180,11 +185,16 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
       
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: 'pnpm'
       
       - name: Install backend dependencies
         run: |
@@ -193,7 +203,7 @@ jobs:
       
       - name: Install frontend dependencies
         working-directory: apps/dashboard
-        run: npm ci
+        run: ppnpm install --frozen-lockfile
       
       - name: Start backend server
         env:
@@ -238,6 +248,11 @@ jobs:
       - name: Run Pylint
         run: pylint apps/backend --fail-under=7.0 || true
       
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -245,15 +260,15 @@ jobs:
       
       - name: Install frontend dependencies
         working-directory: apps/dashboard
-        run: npm ci
+        run: ppnpm install --frozen-lockfile
       
       - name: Run ESLint
         working-directory: apps/dashboard
-        run: npm run lint
+        run: pnpm lint
       
       - name: Run Prettier check
         working-directory: apps/dashboard
-        run: npm run format:check || true
+        run: pnpm format:check || true
 
   # Test Summary
   test-summary:
