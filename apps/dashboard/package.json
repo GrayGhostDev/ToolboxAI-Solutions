@@ -89,7 +89,7 @@
     "@tiptap/react": "^3.5.1",
     "@tiptap/starter-kit": "^3.5.1",
     "@types/react-window": "^1.8.8",
-    "axios": "^1.7.9",
+    "axios": "^1.13.2",
     "chart.js": "^4.5.0",
     "date-fns": "^2.30.0",
     "dayjs": "^1.11.18",
