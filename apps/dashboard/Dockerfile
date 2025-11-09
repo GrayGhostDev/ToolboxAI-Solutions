@@ -5,7 +5,7 @@
 # ========================================
 # Stage 1: Dependencies
 # ========================================
-FROM node:22-alpine AS deps
+FROM node:25-alpine AS deps
 
 # Install system dependencies
 RUN apk add --no-cache libc6-compat python3 make g++
@@ -23,7 +23,7 @@ RUN npm ci --only=production --ignore-scripts && \
 # ========================================
 # Stage 2: Builder
 # ========================================
-FROM node:22-alpine AS builder
+FROM node:25-alpine AS builder
 
 # Install build dependencies
 RUN apk add --no-cache libc6-compat python3 make g++
@@ -66,7 +66,7 @@ RUN npm run build && \
 # ========================================
 # Stage 3: Production Runtime
 # ========================================
-FROM node:22-alpine AS runner
+FROM node:25-alpine AS runner
 
 # Install only runtime dependencies
 RUN apk add --no-cache \
