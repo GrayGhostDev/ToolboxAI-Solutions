@@ -108,11 +108,7 @@
     "VITE_PUSHER_CLUSTER": "us2",
     "VITE_PUSHER_ENABLED": "true",
     "VITE_ENABLE_CLERK_AUTH": "false",
-    "VITE_DEBUG_MODE": "false",
-
-    "VITE_VERCEL_ENV": "@vercel-env",
-    "VITE_VERCEL_URL": "@vercel-url",
-    "VITE_VERCEL_PROJECT_PRODUCTION_URL": "@vercel-project-production-url"
+    "VITE_DEBUG_MODE": "false"
   },
   "build": {
     "env": {
