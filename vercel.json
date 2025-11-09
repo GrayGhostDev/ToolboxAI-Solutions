@@ -4,7 +4,7 @@
   "name": "toolboxai-solutions",
   "buildCommand": "cd apps/dashboard && npm run build",
   "outputDirectory": "apps/dashboard/dist",
-  "installCommand": "npm install --workspace=apps/dashboard --include=optional --no-package-lock",
+  "installCommand": "npm ci --workspace=apps/dashboard",
   "devCommand": "cd apps/dashboard && npm run dev",
   "framework": "vite",
   "regions": ["iad1"],
