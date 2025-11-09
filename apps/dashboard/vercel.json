@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "cd ../.. && npm install --include=optional && cd apps/dashboard && npm run build",
+  "buildCommand": "npm install @rollup/rollup-linux-x64-gnu --no-save && npm run build",
   "outputDirectory": "dist",
   "devCommand": "npm run dev",
   "framework": "vite",
