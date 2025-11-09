@@ -201,7 +201,7 @@ jobs:
         continue-on-error: true
 
       - name: 🛡️ Trivy Filesystem Scan
-        uses: aquasecurity/trivy-action@v0.30.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -324,7 +324,7 @@ jobs:
           echo "image=${{ steps.login-ecr.outputs.registry }}/toolboxai-dashboard:${{ github.sha }}" >> $GITHUB_OUTPUT
 
       - name: 🛡️ Scan Docker Image with Trivy
-        uses: aquasecurity/trivy-action@v0.30.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           image-ref: ${{ steps.login-ecr.outputs.registry }}/toolboxai-${{ matrix.service }}:${{ github.sha }}
           format: 'sarif'
