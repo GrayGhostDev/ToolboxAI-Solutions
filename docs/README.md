@@ -4,12 +4,12 @@ Welcome to the comprehensive documentation for ToolBoxAI-Solutions, an AI-powere
 
 ## 🚀 Quick Start Guides
 
-### 🔥 Latest Documentation (September 2025)
-1. **[Docker MCP Gateway Integration 2025](05-implementation/docker-mcp-gateway-integration-2025.md)** - ⭐ **CURRENT** - Accurate implementation status
-2. **[Docker Hub MCP Integration](05-implementation/docker-hub-mcp-integration.md)** - Repository management via MCP
-3. **[Documentation Update Summary](11-reports/DOCUMENTATION_UPDATE_SUMMARY_2025-09-28.md)** - All corrections applied
-4. **[Phase 2 Status Report](phase2/PHASE2_STATUS.md)** - Implementation status (68% complete)
-5. **[Testing Environment](phase2/testing/PYTEST_ENVIRONMENT_COMPLETE.md)** - Test suite results (74.9% pass rate)
+### 🔥 Latest Documentation (November 2025)
+1. **[File Relocation Map](FILE_RELOCATION_MAP.md)** - ⭐ **NEW** - Complete map of files moved during Nov 9 cleanup
+2. **[Environment Files Documentation](10-security/ENV_FILES_DOCUMENTATION.md)** - ⭐ **NEW** - Security guide for .env files
+3. **[Docker MCP Gateway Integration 2025](05-implementation/docker-mcp-gateway-integration-2025.md)** - Accurate implementation status
+4. **[Documentation Update Summary](11-reports/DOCUMENTATION_UPDATE_SUMMARY_2025-09-28.md)** - All corrections applied
+5. **[Phase 2 Status Report](phase2/PHASE2_STATUS.md)** - Implementation status (68% complete)
 
 ### For Developers
 1. **[Docker MCP Deployment Guide 2025](guides/DOCKER_MCP_DEPLOYMENT_GUIDE_2025.md)** - ⭐ **CURRENT** - Complete deployment guide
@@ -205,6 +205,17 @@ Review compliance documentation and security reports:
 - **Format Standardization**: 95% (Consistent formatting applied)
 
 ### Recent Improvements
+
+#### November 2025 - Major Cleanup and Reorganization
+- ✅ **Documentation Centralization**: Moved 50+ files to proper /docs locations
+- ✅ **Security Documentation**: Created comprehensive .env file documentation
+- ✅ **File Relocation Map**: Complete tracking of all moved files for team reference
+- ✅ **Root Directory Cleanup**: Removed 19 obsolete migration scripts, 7 placeholder files, 5 old backups
+- ✅ **Script Organization**: Organized deployment scripts into /scripts/deployment/
+- ✅ **Test Structure**: Merged `__tests__` into `tests/` for consistency
+- ✅ **Log Management**: Archived old logs to /logs/archive/
+
+#### September 2025 - Documentation Structure Overhaul
 - ✅ **Critical Path Issues Resolved**: Dashboard and virtual environment paths corrected
 - ✅ **Cross-References Updated**: All internal links validated and repaired
 - ✅ **Structure Standardization**: Aligned with DOCUMENTATION_STRUCTURE_2025.md
@@ -274,9 +285,9 @@ Review compliance documentation and security reports:
 
 ---
 
-**Documentation Last Organized**: 2025-09-16
-**Structure Version**: 2.0.0
-**Next Review Scheduled**: 2025-10-16
+**Documentation Last Organized**: 2025-11-09
+**Structure Version**: 2.1.0
+**Next Review Scheduled**: 2025-12-09
 **Compliance**: COPPA, FERPA, GDPR, SOC 2 Type 2
 
 *This documentation follows accessibility guidelines and supports multiple navigation patterns for optimal user experience.*
