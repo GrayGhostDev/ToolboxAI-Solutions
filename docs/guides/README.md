@@ -25,7 +25,7 @@ This directory contains comprehensive deployment guides for the ToolBoxAI platfo
 | Service | Port | Guide Reference | Status |
 |---------|------|----------------|--------|
 | **Backend** | `8009` | Docker MCP Guide 2025 | ✅ Current |
-| **Dashboard** | `5180` | Docker MCP Guide 2025 | ✅ Current |
+| **Dashboard** | `5179` | Docker MCP Guide 2025 | ✅ Current |
 | **MCP Server** | `9877` | Docker MCP Guide 2025 | ✅ Current |
 | **Agent Coordinator** | `8888` | Docker MCP Guide 2025 | ✅ Current |
 | **PostgreSQL** | `5432` | Docker MCP Guide 2025 | ✅ Current |
@@ -45,7 +45,7 @@ docker compose -f compose/docker-compose.yml -f compose/docker-compose.dev.yml u
 
 # Verify all services
 curl http://localhost:8009/health    # Backend
-curl http://localhost:5180/health    # Dashboard
+curl http://localhost:5179/health    # Dashboard
 curl http://localhost:9877/health    # MCP Server
 curl http://localhost:8888/health    # Agent Coordinator
 ```
@@ -79,7 +79,7 @@ docker compose up -d --scale backend=3 --scale mcp-server=2
 ┌─────────────▼──────────┐         ┌─────────▼─────────┐
 │     Dashboard          │         │     Backend       │
 │  React + Mantine v8    │         │   FastAPI + AI    │
-│     Port: 5180         │         │   Port: 8009      │
+│     Port: 5179         │         │   Port: 8009      │
 └────────────────────────┘         └───────────────────┘
                               │
               ┌───────────────┴───────────────┐
@@ -173,7 +173,7 @@ networks:
 ```bash
 # Service health endpoints
 curl http://localhost:8009/health      # Backend
-curl http://localhost:5180/health      # Dashboard
+curl http://localhost:5179/health      # Dashboard
 curl http://localhost:9877/health      # MCP Server
 curl http://localhost:8888/health      # Agent Coordinator
 ```

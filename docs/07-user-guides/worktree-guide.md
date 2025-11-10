@@ -108,7 +108,7 @@ wcreate feature-name --launch-claude
 # The system will:
 # 1. Create branch 'feature-name'
 # 2. Set up worktree at ../ToolBoxAI-Solutions-worktrees/feature-name
-# 3. Allocate ports (e.g., backend: 8009, frontend: 5180)
+# 3. Allocate ports (e.g., backend: 8009, frontend: 5179)
 # 4. Copy environment files
 # 5. Create helper scripts (start.sh, stop.sh, status.sh)
 ```
@@ -231,7 +231,7 @@ For complete isolation:
 ```bash
 # Create containerized worktree
 docker run -v $(pwd):/workspace \
-  -p 8009:8009 -p 5180:5180 \
+  -p 8009:8009 -p 5179:5179 \
   toolboxai/worktree:latest \
   create feature-name
 ```

@@ -27,7 +27,7 @@ The ToolBoxAI platform has been successfully updated to incorporate Docker's lat
 | Service | Documented Port | Actual Port | Status |
 |---------|----------------|-------------|--------|
 | **Backend** | `8009` | `8009` | ✅ Correct |
-| **Dashboard** | `5180` | `5180` | ✅ **Corrected** |
+| **Dashboard** | `5179` | `5179` | ✅ **Corrected** |
 | **MCP Server** | `9877` | `9877` | ✅ **Corrected** |
 | **Agent Coordinator** | `8888` | `8888` | ✅ Correct |
 | **PostgreSQL** | `5432` | `5432` | ✅ **Corrected** |
@@ -123,7 +123,7 @@ docker.io/thegrayghost23/
   - Pusher real-time integration
   - PostgreSQL + Redis connectivity
 
-- **Dashboard** (`toolboxai/dashboard:latest`) - Port `5180`
+- **Dashboard** (`toolboxai/dashboard:latest`) - Port `5179`
   - React + Mantine v8 components
   - Pusher WebSocket integration
   - Nginx-served production build
@@ -166,7 +166,7 @@ docker compose -f compose/docker-compose.yml -f compose/docker-compose.dev.yml u
 
 # Verify all services respond
 curl http://localhost:8009/health    # ✅ Backend
-curl http://localhost:5180/health    # ✅ Dashboard
+curl http://localhost:5179/health    # ✅ Dashboard
 curl http://localhost:9877/health    # ✅ MCP Server
 curl http://localhost:8888/health    # ✅ Agent Coordinator
 

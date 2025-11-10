@@ -120,7 +120,7 @@ docker.io/thegrayghost23/
 #### **Docker Compose Updates:**
 - ✅ **Updated**: `infrastructure/docker/compose/docker-compose.yml`
 - ✅ **Updated**: `infrastructure/docker/compose/docker-compose.dev.yml`
-- ✅ **Port Change**: 5179 → 5180 (resolved conflicts)
+- ✅ **Port Change**: 5179 → 5179 (resolved conflicts)
 - ✅ **Environment**: Comprehensive service configuration
 
 #### **Service Integration:**
@@ -283,13 +283,13 @@ cd infrastructure/docker/compose
 docker-compose --env-file ../config/environment.env up -d
 
 # 4. Access dashboard
-open http://localhost:5180
+open http://localhost:5179
 ```
 
 #### **Service Health Checks:**
 ```bash
 # Dashboard health
-curl http://localhost:5180/health
+curl http://localhost:5179/health
 
 # Backend health
 curl http://localhost:8009/health

@@ -163,13 +163,13 @@ docker tag toolboxai-dashboard:latest toolboxai/dashboard:2025.09.27
 docker tag toolboxai-backend:latest toolboxai/backend:2025.09.27
 
 # Test locally before pushing
-docker run -d -p 5180:80 \
+docker run -d -p 5179:80 \
     -e VITE_PUSHER_KEY=test_key \
     -e VITE_API_BASE_URL=http://localhost:8009 \
     toolboxai/dashboard:2025.09.27
 
 # Verify
-curl http://localhost:5180/health
+curl http://localhost:5179/health
 ```
 
 ### Push to Docker Hub
@@ -294,7 +294,7 @@ docker-compose up -d
 
 # Emergency rollback
 docker-compose down
-docker run -d -p 5180:80 toolboxai/dashboard:stable
+docker run -d -p 5179:80 toolboxai/dashboard:stable
 ```
 
 ## Next Steps
@@ -313,11 +313,11 @@ docker run -d -p 5180:80 toolboxai/dashboard:stable
 3. **Verify Integration**
    ```bash
    # Check all services
-   curl http://localhost:5180/health
+   curl http://localhost:5179/health
    curl http://localhost:8009/health
 
    # Open dashboard
-   open http://localhost:5180
+   open http://localhost:5179
    ```
 
 4. **Configure Pusher Credentials**

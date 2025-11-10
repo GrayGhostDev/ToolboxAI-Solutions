@@ -9,7 +9,7 @@ The ToolBoxAI dashboard has been successfully modernized with cutting-edge React
 ## ✅ Issues Fixed
 
 ### CORS & Connectivity
-- ✅ Fixed CORS configuration for ports 5179, 5180, and 8009
+- ✅ Fixed CORS configuration for ports 5179, 5179, and 8009
 - ✅ Updated Vite proxy configuration to correct backend port (8009)
 - ✅ Added `/api/v1` prefix to all API endpoints
 - ✅ Verified all backend routes exist and are accessible

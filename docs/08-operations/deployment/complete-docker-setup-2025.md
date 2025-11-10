@@ -49,13 +49,13 @@ docker-compose --env-file ../config/environment.env up -d
 docker-compose ps
 
 # Test dashboard (new port)
-curl http://localhost:5180/health
+curl http://localhost:5179/health
 
 # Test backend
 curl http://localhost:8009/health
 
 # Open dashboard
-open http://localhost:5180
+open http://localhost:5179
 ```
 
 ## 🏗️ **Architecture Overview**
@@ -65,7 +65,7 @@ open http://localhost:5180
 ┌─────────────────────────────────────────────────────────────┐
 │                    ToolboxAI Platform 2025                  │
 ├─────────────────────────────────────────────────────────────┤
-│ Frontend (Port 5180)                                        │
+│ Frontend (Port 5179)                                        │
 │ ├── React 18 + TypeScript                                   │
 │ ├── Mantine v8.3.1 UI Components                           │
 │ ├── Pusher Real-time Communication                          │
@@ -302,22 +302,22 @@ networks:
 ### **Service Health Endpoints**
 ```bash
 # Dashboard health
-curl http://localhost:5180/health
+curl http://localhost:5179/health
 
 # Backend health
 curl http://localhost:8009/health
 
 # MCP server health
-curl http://localhost:5180/mcp/health
+curl http://localhost:5179/mcp/health
 
 # Agent coordinator health
-curl http://localhost:5180/agents/health
+curl http://localhost:5179/agents/health
 
 # Roblox bridge health
-curl http://localhost:5180/roblox/health
+curl http://localhost:5179/roblox/health
 
 # Ghost CMS health
-curl http://localhost:5180/ghost/health
+curl http://localhost:5179/ghost/health
 ```
 
 ### **Real-time Monitoring**
@@ -342,7 +342,7 @@ docker stats
 #### **1. Port Conflicts**
 ```bash
 # Check what's using ports
-lsof -i :5179,:5180,:8009
+lsof -i :5179,:5179,:8009
 
 # Kill conflicting processes
 pkill -f "vite"
@@ -370,7 +370,7 @@ docker exec toolboxai-dashboard-v2 env | grep PUSHER
 curl https://js.pusher.com/8.4/pusher.min.js
 
 # Check CSP headers
-curl -I http://localhost:5180/
+curl -I http://localhost:5179/
 ```
 
 #### **4. Service Integration Issues**
@@ -405,7 +405,7 @@ docker network inspect compose_backend
 
 ### **Testing**
 - [ ] All services start successfully
-- [ ] Dashboard loads on port 5180
+- [ ] Dashboard loads on port 5179
 - [ ] Pusher real-time features work
 - [ ] All service proxies functional
 - [ ] Health checks pass
@@ -433,8 +433,8 @@ nano infrastructure/docker/config/environment.env
 ./infrastructure/docker/scripts/deploy.sh 2025.09.27 development
 
 # 5. Verify deployment
-curl http://localhost:5180/health
-open http://localhost:5180
+curl http://localhost:5179/health
+open http://localhost:5179
 ```
 
 ### **Quick Update Deployment**
@@ -452,4 +452,4 @@ docker-compose --env-file infrastructure/docker/config/environment.env up -d
 **Status**: ✅ Ready for Implementation
 **Estimated Time**: 15-30 minutes
 **Dependencies**: Docker, Docker Compose, Pusher account
-**Result**: Complete integrated platform on port 5180
+**Result**: Complete integrated platform on port 5179

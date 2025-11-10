@@ -93,7 +93,7 @@ docker compose -f compose/docker-compose.yml -f compose/docker-compose.dev.yml l
 
 # Access services
 echo "Backend: http://localhost:8009"
-echo "Dashboard: http://localhost:5180"
+echo "Dashboard: http://localhost:5179"
 echo "MCP Server: ws://localhost:9877"
 echo "Agent Coordinator: http://localhost:8888"
 echo "Database UI: http://localhost:8080"
@@ -128,7 +128,7 @@ docker compose -f compose/docker-compose.yml up -d
 
 # Health check all services
 curl http://localhost:8009/health
-curl http://localhost:5180/health
+curl http://localhost:5179/health
 curl http://localhost:9877/health
 curl http://localhost:8888/health
 ```
@@ -140,7 +140,7 @@ curl http://localhost:8888/health
 | Service | Image | Port | Purpose |
 |---------|-------|------|---------|
 | **backend** | `toolboxai/backend:latest` | `8009` | FastAPI + AI Agents |
-| **dashboard** | `toolboxai/dashboard:latest` | `5180` | React + Mantine v8 |
+| **dashboard** | `toolboxai/dashboard:latest` | `5179` | React + Mantine v8 |
 | **mcp-server** | `toolboxai/mcp:latest` | `9877` | MCP Gateway |
 | **agent-coordinator** | `toolboxai/agent-coordinator:latest` | `8888` | Agent Orchestration |
 | **postgres** | `postgres:16-alpine` | `5432` | Primary Database |
@@ -235,7 +235,7 @@ docker run --rm -i -e HUB_PAT_TOKEN=$DOCKER_HUB_PAT_TOKEN \
 ```bash
 # Primary services
 curl http://localhost:8009/health      # Backend (FastAPI)
-curl http://localhost:5180/health      # Dashboard (React)
+curl http://localhost:5179/health      # Dashboard (React)
 curl http://localhost:9877/health      # MCP Server
 curl http://localhost:8888/health      # Agent Coordinator
 
@@ -345,7 +345,7 @@ mcp-server:
    ```bash
    # Check port usage
    lsof -i :8009  # Backend
-   lsof -i :5180  # Dashboard
+   lsof -i :5179  # Dashboard
    lsof -i :9877  # MCP Server
    lsof -i :8888  # Agent Coordinator
    ```
@@ -496,13 +496,13 @@ docker compose -f compose/docker-compose.yml up -d dashboard
 echo "✅ Verifying deployment..."
 sleep 15
 curl -f http://localhost:8009/health || exit 1
-curl -f http://localhost:5180/health || exit 1
+curl -f http://localhost:5179/health || exit 1
 curl -f http://localhost:9877/health || exit 1
 curl -f http://localhost:8888/health || exit 1
 
 echo "🎉 Deployment complete!"
 echo "Backend: http://localhost:8009"
-echo "Dashboard: http://localhost:5180"
+echo "Dashboard: http://localhost:5179"
 echo "MCP Gateway: ws://localhost:9877"
 echo "Agent Coordinator: http://localhost:8888"
 ```
@@ -517,7 +517,7 @@ docker compose ps
 
 # Verify service health
 curl http://localhost:8009/health      # Backend
-curl http://localhost:5180/health      # Dashboard
+curl http://localhost:5179/health      # Dashboard
 curl http://localhost:9877/health      # MCP Server
 curl http://localhost:8888/health      # Agent Coordinator
 
@@ -553,7 +553,7 @@ curl -X POST http://localhost:8009/api/v1/content/generate \
   -d '{"type": "lesson", "topic": "Python basics"}'
 
 # Test real-time updates
-curl http://localhost:5180/api/pusher/test
+curl http://localhost:5179/api/pusher/test
 
 # Test Roblox integration
 curl http://localhost:34872/api/rojo/status
@@ -650,7 +650,7 @@ docker stats --no-stream
 
 # Monitor service response times
 time curl http://localhost:8009/health
-time curl http://localhost:5180/health
+time curl http://localhost:5179/health
 time curl http://localhost:9877/health
 ```
 

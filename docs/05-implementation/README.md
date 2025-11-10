@@ -33,7 +33,7 @@ This directory contains comprehensive implementation guides and technical docume
 | Service | Port | Status | Documentation |
 |---------|------|--------|---------------|
 | **Backend** | `8009` | ✅ Production | FastAPI + Embedded AI Agents |
-| **Dashboard** | `5180` | ✅ Production | React + Mantine v8 + Pusher |
+| **Dashboard** | `5179` | ✅ Production | React + Mantine v8 + Pusher |
 | **MCP Server** | `9877` | ✅ Production | Model Context Protocol Gateway |
 | **Agent Coordinator** | `8888` | ✅ Production | AI Agent Orchestration |
 | **PostgreSQL** | `5432` | ✅ Production | Primary Database |
@@ -61,7 +61,7 @@ docker compose -f compose/docker-compose.yml -f compose/docker-compose.dev.yml u
 
 # Verify services
 curl http://localhost:8009/health    # Backend
-curl http://localhost:5180/health    # Dashboard
+curl http://localhost:5179/health    # Dashboard
 curl http://localhost:9877/health    # MCP Server
 curl http://localhost:8888/health    # Agent Coordinator
 ```
@@ -69,7 +69,7 @@ curl http://localhost:8888/health    # Agent Coordinator
 ### **Service Access**
 
 - **Backend API**: http://localhost:8009
-- **Dashboard**: http://localhost:5180
+- **Dashboard**: http://localhost:5179
 - **MCP Gateway**: ws://localhost:9877
 - **Agent Coordinator**: http://localhost:8888
 - **Database UI**: http://localhost:8080
@@ -84,7 +84,7 @@ The following port numbers have been corrected across all documentation:
 | Service | Old Port | New Port | Status |
 |---------|----------|----------|--------|
 | **MCP Server** | `9876` | `9877` | ✅ Updated |
-| **Dashboard** | `5179` | `5180` | ✅ Updated |
+| **Dashboard** | `5179` | `5179` | ✅ Updated |
 
 ### **Docker Hub Integration**
 

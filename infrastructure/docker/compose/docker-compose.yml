@@ -232,7 +232,7 @@ services:
     container_name: toolboxai-dashboard
     <<: *restart-policy
     ports:
-      - "5180:80"
+      - "5179:80"
     environment:
       <<: *common-variables
       NODE_ENV: production

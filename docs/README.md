@@ -228,7 +228,7 @@ Review compliance documentation and security reports:
 - **Virtual Environment**: Use `venv/` (not `.venv` or `venv_clean/`)
 - **Dashboard Location**: `apps/dashboard/` (not nested structure)
 - **Backend Port**: 8009 (FastAPI server)
-- **Frontend Port**: 5180 (React + Mantine v8 development server)
+- **Frontend Port**: 5179 (React + Mantine v8 development server)
 
 ### Development Workflow
 1. **Setup**: Follow [Development Setup](04-implementation/development-setup/comprehensive-development-setup.md)

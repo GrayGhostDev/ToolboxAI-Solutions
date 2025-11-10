@@ -11,7 +11,7 @@ The ToolBoxAI platform has been successfully integrated with Docker's MCP (Model
 | Service | Port | Status | Purpose |
 |---------|------|--------|---------|
 | **Backend** | `8009` | ✅ Running | FastAPI + Embedded AI Agents |
-| **Dashboard** | `5180` | ✅ Running | React + Mantine v8 + Pusher |
+| **Dashboard** | `5179` | ✅ Running | React + Mantine v8 + Pusher |
 | **MCP Server** | `9877` | ✅ Running | Model Context Protocol Gateway |
 | **Agent Coordinator** | `8888` | ✅ Running | AI Agent Orchestration |
 | **PostgreSQL** | `5432` | ✅ Running | Primary Database |
@@ -38,7 +38,7 @@ The ToolBoxAI platform has been successfully integrated with Docker's MCP (Model
 ┌─────────────▼──────────┐         ┌─────────▼─────────┐
 │     Dashboard          │         │     Backend       │
 │  React + Mantine v8    │         │   FastAPI + AI    │
-│     Port: 5180         │         │   Port: 8009      │
+│     Port: 5179         │         │   Port: 8009      │
 └────────────────────────┘         └───────────────────┘
                               │
               ┌───────────────┴───────────────┐
@@ -91,7 +91,7 @@ backend:
     WORKERS: 1
 
 dashboard:
-  ports: ["5180:80"]  # Corrected port
+  ports: ["5179:80"]  # Corrected port
   command: npm run dev
 
 mcp-server:
@@ -187,7 +187,7 @@ docker compose -f compose/docker-compose.yml -f compose/docker-compose.dev.yml u
 
 # Verify services are running on correct ports
 curl http://localhost:8009/health    # Backend
-curl http://localhost:5180/health    # Dashboard
+curl http://localhost:5179/health    # Dashboard
 curl http://localhost:9877/health    # MCP Server
 curl http://localhost:8888/health    # Agent Coordinator
 ```
@@ -196,7 +196,7 @@ curl http://localhost:8888/health    # Agent Coordinator
 
 #### **Primary Services**
 - **Backend API**: http://localhost:8009
-- **Dashboard**: http://localhost:5180
+- **Dashboard**: http://localhost:5179
 - **MCP Server**: ws://localhost:9877
 - **Agent Coordinator**: http://localhost:8888
 
@@ -291,7 +291,7 @@ docker compose -f compose/docker-compose.yml ps
 
 # Individual service health checks
 curl http://localhost:8009/health    # Backend (FastAPI)
-curl http://localhost:5180/health    # Dashboard (Nginx)
+curl http://localhost:5179/health    # Dashboard (Nginx)
 curl http://localhost:9877/health    # MCP Server
 curl http://localhost:8888/health    # Agent Coordinator
 
@@ -383,7 +383,7 @@ docker push thegrayghost23/toolboxai-backend:2025.09.27
    ```bash
    # Check for port usage
    lsof -i :8009  # Backend
-   lsof -i :5180  # Dashboard
+   lsof -i :5179  # Dashboard
    lsof -i :9877  # MCP Server
    lsof -i :8888  # Agent Coordinator
    ```

@@ -179,7 +179,7 @@ cd /Volumes/G-DRIVE\ ArmorATD/Development/Clients/ToolBoxAI-Solutions
 nano infrastructure/docker/config/environment.env
 
 # 3. Access services
-Dashboard: http://localhost:5180
+Dashboard: http://localhost:5179
 Backend:   http://localhost:8009
 ```
 

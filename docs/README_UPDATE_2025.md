@@ -16,7 +16,7 @@
 ┌─────────────────────────────────────────────────────────────┐
 │                    ToolboxAI Platform 2025                  │
 ├─────────────────────────────────────────────────────────────┤
-│ 🌐 Frontend (Port 5180)                                     │
+│ 🌐 Frontend (Port 5179)                                     │
 │ ├── React 18 + TypeScript                                   │
 │ ├── Mantine v8.3.1 UI (Converting from MUI)                │
 │ ├── Pusher Real-time Communication                          │
@@ -52,7 +52,7 @@ cd toolboxai
 ```
 
 ### **Access Points**
-- **Dashboard**: http://localhost:5180
+- **Dashboard**: http://localhost:5179
 - **API Documentation**: http://localhost:8009/docs
 - **Database Admin**: http://localhost:8080
 - **Redis Commander**: http://localhost:8081

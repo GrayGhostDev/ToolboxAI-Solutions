@@ -10,7 +10,7 @@ Comprehensive documentation update completed to align all documentation with the
 
 **Critical Updates Applied:**
 - **MCP Server**: `9876` → `9877` (corrected across all documentation)
-- **Dashboard**: `5179` → `5180` (corrected across all documentation)
+- **Dashboard**: `5179` → `5179` (corrected across all documentation)
 
 **Files Updated:**
 - `docs/05-implementation/mcp-docker-integration-complete.md`
@@ -57,7 +57,7 @@ Comprehensive documentation update completed to align all documentation with the
 ┌─────────────▼──────────┐         ┌─────────▼─────────┐
 │     Dashboard          │         │     Backend       │
 │  React + Mantine v8    │         │   FastAPI + AI    │
-│     Port: 5180         │         │   Port: 8009      │
+│     Port: 5179         │         │   Port: 8009      │
 └────────────────────────┘         └───────────────────┘
                               │
               ┌───────────────┴───────────────┐
@@ -92,7 +92,7 @@ Comprehensive documentation update completed to align all documentation with the
 | Service | Actual Port | Previous Docs | Status |
 |---------|-------------|---------------|--------|
 | Backend | `8009` | ✅ Correct | No change needed |
-| Dashboard | `5180` | ❌ `5179` | ✅ **Corrected** |
+| Dashboard | `5179` | ❌ `5179` | ✅ **Corrected** |
 | MCP Server | `9877` | ❌ `9876` | ✅ **Corrected** |
 | Agent Coordinator | `8888` | ✅ Correct | No change needed |
 | PostgreSQL | `5432` | ❌ `5434` | ✅ **Corrected** |
@@ -148,14 +148,14 @@ docker compose -f compose/docker-compose.yml -f compose/docker-compose.dev.yml u
 
 # Verify services on correct ports
 curl http://localhost:8009/health    # Backend
-curl http://localhost:5180/health    # Dashboard
+curl http://localhost:5179/health    # Dashboard
 curl http://localhost:9877/health    # MCP Server
 curl http://localhost:8888/health    # Agent Coordinator
 ```
 
 #### **Service Access URLs:**
 - **Backend API**: http://localhost:8009
-- **Dashboard**: http://localhost:5180 (corrected from 5179)
+- **Dashboard**: http://localhost:5179 (corrected from 5179)
 - **MCP Gateway**: ws://localhost:9877 (corrected from 9876)
 - **Agent Coordinator**: http://localhost:8888
 - **Database UI**: http://localhost:8080

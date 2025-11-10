@@ -11,7 +11,7 @@ Complete documentation for Docker service integration with Pusher real-time comm
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                          ToolboxAI Platform 2025                                │
 ├─────────────────────────────────────────────────────────────────────────────────┤
-│ Frontend Layer (Port 5180)                                                     │
+│ Frontend Layer (Port 5179)                                                     │
 │ ├── React 18 + TypeScript                                                      │
 │ ├── Mantine v8.3.1 UI Components (✅ Partially Complete)                       │
 │ ├── Pusher Real-time Communication (✅ Complete)                               │
@@ -349,12 +349,12 @@ docker-compose --env-file ../config/environment.env up -d
 ```bash
 # All services configured with health checks:
 
-Dashboard:           curl http://localhost:5180/health
+Dashboard:           curl http://localhost:5179/health
 Backend API:         curl http://localhost:8009/health
-MCP Server:          curl http://localhost:5180/mcp/health
-Agent Coordinator:   curl http://localhost:5180/agents/health
-Roblox Bridge:       curl http://localhost:5180/roblox/health
-Ghost CMS:           curl http://localhost:5180/ghost/health
+MCP Server:          curl http://localhost:5179/mcp/health
+Agent Coordinator:   curl http://localhost:5179/agents/health
+Roblox Bridge:       curl http://localhost:5179/roblox/health
+Ghost CMS:           curl http://localhost:5179/ghost/health
 PostgreSQL:          docker exec toolboxai-postgres pg_isready
 Redis:               docker exec toolboxai-redis redis-cli ping
 ```

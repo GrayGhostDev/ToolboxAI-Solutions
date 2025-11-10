@@ -5,7 +5,7 @@
 ### ✅ **Completed Tasks**
 
 #### **1. Core Infrastructure Fixes**
-- ✅ **Port Conflict Resolution**: Moved from 5179 → 5180
+- ✅ **Port Conflict Resolution**: Moved from 5179 → 5179
 - ✅ **Pusher Integration**: Complete WebSocket → Pusher migration
 - ✅ **Mantine v8 Migration**: All MUI components → Mantine v8
 - ✅ **PostCSS Configuration**: Fixed ES module syntax
@@ -57,7 +57,7 @@
 ┌─────────────────────────────────────────────────────────────┐
 │                    ToolboxAI Platform 2025                  │
 ├─────────────────────────────────────────────────────────────┤
-│ Frontend (Port 5180) - ✅ READY                             │
+│ Frontend (Port 5179) - ✅ READY                             │
 │ ├── React 18 + TypeScript                                   │
 │ ├── Mantine v8.3.1 UI Components                           │
 │ ├── Pusher Real-time Communication                          │
@@ -107,12 +107,12 @@ cd infrastructure/docker/compose
 docker-compose --env-file ../config/environment.env up -d
 
 # 4. Verify deployment
-curl http://localhost:5180/health
-open http://localhost:5180
+curl http://localhost:5179/health
+open http://localhost:5179
 ```
 
 ### **Post-deployment Verification**
-- [ ] Dashboard accessible on http://localhost:5180
+- [ ] Dashboard accessible on http://localhost:5179
 - [ ] Backend API responding on http://localhost:8009
 - [ ] Database connection healthy
 - [ ] Redis cache operational
@@ -145,7 +145,7 @@ open http://localhost:5180
 ## 🎉 **Expected Results**
 
 After successful deployment:
-- 🌐 **Dashboard**: Accessible on http://localhost:5180
+- 🌐 **Dashboard**: Accessible on http://localhost:5179
 - 🔧 **Backend API**: Available on http://localhost:8009
 - 🤖 **MCP Server**: Integrated AI model management
 - 🧠 **Agent Coordinator**: AI task orchestration
@@ -174,7 +174,7 @@ docker-compose build --progress=plain dashboard
 docker-compose logs -f dashboard
 
 # Check port conflicts
-lsof -i :5180,:8009
+lsof -i :5179,:8009
 
 # Restart services
 docker-compose restart
