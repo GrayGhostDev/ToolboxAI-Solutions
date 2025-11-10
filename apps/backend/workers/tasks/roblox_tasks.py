@@ -116,7 +116,7 @@ async def optimize_roblox_script(
 
         # Trigger Pusher notification - optimization started
         try:
-            from apps.backend.services.roblox_pusher import pusher_service
+            from apps.backend.services.roblox.pusher import pusher_service
             await pusher_service.trigger_event(
                 channel=f"org-{organization_id}",
                 event="script-optimization-started",
@@ -239,7 +239,7 @@ async def optimize_roblox_script(
 
         # Trigger Pusher notification - optimization failed
         try:
-            from apps.backend.services.roblox_pusher import pusher_service
+            from apps.backend.services.roblox.pusher import pusher_service
             await pusher_service.trigger_event(
                 channel=f"org-{organization_id}",
                 event="script-optimization-failed",

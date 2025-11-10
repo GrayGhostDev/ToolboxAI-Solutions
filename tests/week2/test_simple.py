@@ -248,7 +248,7 @@ def test_week2_services():
 
             mock_open.return_value.__enter__.return_value.read.return_value = 'print("test")'
 
-            from apps.backend.services.roblox_deployment import RobloxDeploymentService
+            from apps.backend.services.roblox.deployment import RobloxDeploymentService
 
             service = RobloxDeploymentService()
 

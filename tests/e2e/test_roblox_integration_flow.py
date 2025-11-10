@@ -16,9 +16,9 @@ from httpx import AsyncClient
 from fastapi import status
 
 # Import services
-from apps.backend.services.roblox_auth import RobloxOAuth2Service, TokenResponse
-from apps.backend.services.open_cloud_client import OpenCloudAPIClient, AssetDescription
-from apps.backend.services.rojo_manager import EnhancedRojoManager, RojoProjectConfig
+from apps.backend.services.roblox.auth import RobloxOAuth2Service, TokenResponse
+from apps.backend.services.roblox.open_cloud import OpenCloudAPIClient, AssetDescription
+from apps.backend.services.roblox.rojo_manager import EnhancedRojoManager, RojoProjectConfig
 from apps.backend.core.prompts.enhanced_conversation_flow import (
     EnhancedConversationFlowManager,
     ConversationStage

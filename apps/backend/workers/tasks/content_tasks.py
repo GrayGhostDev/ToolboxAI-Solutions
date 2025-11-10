@@ -109,7 +109,7 @@ async def generate_lesson_content(
 
         # Trigger Pusher notification - content generation started
         try:
-            from apps.backend.services.roblox_pusher import pusher_service
+            from apps.backend.services.roblox.pusher import pusher_service
             await pusher_service.trigger_event(
                 channel=f"org-{organization_id}",
                 event="content-generation-started",
@@ -190,7 +190,7 @@ async def generate_lesson_content(
 
         # Trigger Pusher notification - content generation failed
         try:
-            from apps.backend.services.roblox_pusher import pusher_service
+            from apps.backend.services.roblox.pusher import pusher_service
             await pusher_service.trigger_event(
                 channel=f"org-{organization_id}",
                 event="content-generation-failed",
@@ -299,7 +299,7 @@ async def generate_quiz_questions(
 
         # Trigger Pusher notification - quiz generation started
         try:
-            from apps.backend.services.roblox_pusher import pusher_service
+            from apps.backend.services.roblox.pusher import pusher_service
             await pusher_service.trigger_event(
                 channel=f"org-{organization_id}",
                 event="quiz-generation-started",
@@ -368,7 +368,7 @@ async def generate_quiz_questions(
 
         # Trigger Pusher notification - quiz generation failed
         try:
-            from apps.backend.services.roblox_pusher import pusher_service
+            from apps.backend.services.roblox.pusher import pusher_service
             await pusher_service.trigger_event(
                 channel=f"org-{organization_id}",
                 event="quiz-generation-failed",

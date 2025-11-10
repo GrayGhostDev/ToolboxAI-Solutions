@@ -28,7 +28,7 @@ from apps.backend.services.api_key_manager import APIKeyManager, APIKeyScope
 from apps.backend.services.supabase_migration_manager import (
     SupabaseMigrationManager, MigrationStrategy, Migration, MigrationStatus
 )
-from apps.backend.services.roblox_deployment import RobloxAssetManager, AssetType
+from apps.backend.services.roblox.deployment import RobloxAssetManager, AssetType
 from infrastructure.backups.scripts.backup_manager import (
     BackupManager, BackupType, BackupJob, BackupStatus
 )

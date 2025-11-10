@@ -18,7 +18,7 @@ from datetime import datetime
 
 from apps.backend.api.auth.auth import get_current_user
 from apps.backend.models.schemas import User
-from apps.backend.services.rojo_api import rojo_api_service, RojoAPIError
+from apps.backend.services.roblox.rojo_api import rojo_api_service, RojoAPIError
 from apps.backend.core.config import settings
 from apps.backend.core.deps import get_current_organization_id  # Multi-tenant filtering
 

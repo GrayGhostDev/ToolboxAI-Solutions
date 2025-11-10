@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 from apps.backend.core.config import settings
 from apps.backend.api.auth.auth import get_current_user
 from apps.backend.models.schemas import User
-from apps.backend.services.roblox_ai_agent import roblox_ai_agent
+from apps.backend.services.roblox.ai_agent import roblox_ai_agent
 from apps.backend.services.pusher_realtime import get_pusher_service
 
 pusher_service = get_pusher_service()

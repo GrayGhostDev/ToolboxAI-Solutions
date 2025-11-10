@@ -14,9 +14,9 @@ from unittest.mock import Mock, patch, AsyncMock
 from datetime import datetime
 
 # Import all the services we'll test
-from apps.backend.services.roblox_auth import RobloxOAuth2Service
-from apps.backend.services.open_cloud_client import OpenCloudAPIClient, AssetDescription, CreationContext, AssetType
-from apps.backend.services.rojo_manager import EnhancedRojoManager, RojoProjectConfig
+from apps.backend.services.roblox.auth import RobloxOAuth2Service
+from apps.backend.services.roblox.open_cloud import OpenCloudAPIClient, AssetDescription, CreationContext, AssetType
+from apps.backend.services.roblox.rojo_manager import EnhancedRojoManager, RojoProjectConfig
 from apps.backend.core.prompts.enhanced_conversation_flow import (
     EnhancedConversationFlowManager,
     ConversationStage,

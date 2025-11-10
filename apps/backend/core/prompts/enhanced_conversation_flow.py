@@ -20,8 +20,8 @@ from core.langchain_compat import (
     JsonOutputParser,
 )
 from apps.backend.services.pusher_realtime import pusher_service
-from apps.backend.services.rojo_manager import rojo_manager, RojoProjectConfig
-from apps.backend.services.open_cloud_client import open_cloud_client
+from apps.backend.services.roblox.rojo_manager import rojo_manager, RojoProjectConfig
+from apps.backend.services.roblox.open_cloud import open_cloud_client
 from apps.backend.core.prompts.conversation_flow import ConversationStage
 
 logger = logging.getLogger(__name__)

@@ -369,7 +369,7 @@ def test_roblox_deployment():
             mock_client = AsyncMock()
             mock_redis.return_value = mock_client
 
-            from apps.backend.services.roblox_deployment import RobloxDeploymentService
+            from apps.backend.services.roblox.deployment import RobloxDeploymentService
 
             # Test initialization
             service = RobloxDeploymentService()

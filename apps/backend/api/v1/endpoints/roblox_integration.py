@@ -13,8 +13,8 @@ import secrets
 
 from apps.backend.api.auth.auth import get_current_user
 from apps.backend.models.schemas import User
-from apps.backend.services.roblox_auth import roblox_auth_service
-from apps.backend.services.open_cloud_client import (
+from apps.backend.services.roblox.auth import roblox_auth_service
+from apps.backend.services.roblox.open_cloud import (
     open_cloud_client,
     AssetDescription,
     CreationContext,
@@ -22,7 +22,7 @@ from apps.backend.services.open_cloud_client import (
     DataStoreEntry,
     MessagingServiceMessage,
 )
-from apps.backend.services.rojo_manager import rojo_manager
+from apps.backend.services.roblox.rojo_manager import rojo_manager
 from apps.backend.core.prompts.enhanced_conversation_flow import enhanced_conversation_flow
 from apps.backend.services.pusher_realtime import pusher_service
 

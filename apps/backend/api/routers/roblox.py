@@ -38,9 +38,9 @@ from apps.backend.schemas.roblox import (
 
 # Import services
 from apps.backend.services.credential_manager import get_credential_manager
-from apps.backend.services.rojo_manager import EnhancedRojoManager
-from apps.backend.services.roblox_content_bridge import RobloxContentPipeline
-from apps.backend.services.roblox_pusher import get_roblox_pusher_service, RobloxChannelType
+from apps.backend.services.roblox.rojo_manager import EnhancedRojoManager
+from apps.backend.services.roblox.content_bridge import RobloxContentPipeline
+from apps.backend.services.roblox.pusher import get_roblox_pusher_service, RobloxChannelType
 from database.connection import get_async_session
 
 logger = logging.getLogger(__name__)

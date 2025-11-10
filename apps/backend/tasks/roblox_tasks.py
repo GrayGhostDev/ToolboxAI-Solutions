@@ -16,7 +16,7 @@ import httpx
 
 from apps.backend.core.config import settings
 from apps.backend.services.pusher import pusher_service as pusher_client
-from apps.backend.services.roblox_service import RobloxService
+from apps.backend.services.roblox.service import RobloxService
 
 logger = get_task_logger(__name__)
 

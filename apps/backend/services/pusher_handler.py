@@ -17,7 +17,7 @@ from apps.backend.services.pusher import (
     authenticate_channel as pusher_authenticate,
     PusherUnavailable,
 )
-from apps.backend.services.roblox_ai_agent import roblox_ai_agent
+from apps.backend.services.roblox.ai_agent import roblox_ai_agent
 from apps.backend.services.design_file_converter import design_file_converter
 from apps.backend.services.design_folder_scanner import design_folder_scanner
 

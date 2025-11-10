@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apps.backend.core.auth import get_current_user
 from database import get_db
 from apps.backend.models.schemas import User
-from apps.backend.services.roblox_ai_agent import roblox_ai_agent
+from apps.backend.services.roblox.ai_agent import roblox_ai_agent
 from apps.backend.services.pusher import trigger_event as pusher_trigger
 from apps.backend.models.database import RobloxEnvironment
 from sqlalchemy import select, and_
