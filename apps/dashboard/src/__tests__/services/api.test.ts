@@ -50,7 +50,7 @@ import {
 const mockAxios = new MockAdapter(apiClient.client);
 
 describe('API Service', () => {
-  const API_BASE_URL = 'http://localhost:8008';
+  const API_BASE_URL = 'http://localhost:8009';
   
   beforeEach(() => {
     // Reset axios mock before each test

@@ -448,8 +448,8 @@ vi.mock('@/config/routes', () => ({
 
 // Mock config/index with proper ES module exports
 vi.mock('@/config/index', () => ({
-  API_BASE_URL: 'http://localhost:8008',
-  WS_URL: 'http://localhost:8008',
+  API_BASE_URL: 'http://localhost:8009',
+  WS_URL: 'http://localhost:8009',
   PUSHER_KEY: 'test-pusher-key',
   PUSHER_CLUSTER: 'us2',
   PUSHER_AUTH_ENDPOINT: '/api/v1/pusher/auth',
@@ -494,8 +494,8 @@ vi.mock('@/config/index', () => ({
 
 // Mock relative config import path too
 vi.mock('../../config', () => ({
-  API_BASE_URL: 'http://localhost:8008',
-  WS_URL: 'http://localhost:8008',
+  API_BASE_URL: 'http://localhost:8009',
+  WS_URL: 'http://localhost:8009',
   PUSHER_KEY: 'test-pusher-key',
   PUSHER_CLUSTER: 'us2',
   PUSHER_AUTH_ENDPOINT: '/api/v1/pusher/auth',
@@ -1224,4 +1224,3 @@ global.__DEV__ = false;
 global.__TEST__ = true;
 
 export {};
-

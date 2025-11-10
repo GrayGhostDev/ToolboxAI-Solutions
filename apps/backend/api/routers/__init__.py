@@ -81,6 +81,18 @@ def _register_core_routers(app: FastAPI) -> None:
         except ImportError as e:
             logger.warning(f"Could not load Pusher endpoints: {e}")
 
+        # Development bridge router (plugin polling + pusher status)
+        try:
+            import os
+            if os.getenv("BRIDGE_DEV_ENABLED", "false").lower() == "true" or os.getenv("ENVIRONMENT", "development").lower() == "development":
+                from apps.backend.api.routers.bridge_dev import router as bridge_dev_router
+                app.include_router(bridge_dev_router)
+                logger.info("Development bridge endpoints loaded at root (dev only)")
+            else:
+                logger.info("Development bridge disabled (BRIDGE_DEV_ENABLED not set)")
+        except ImportError as e:
+            logger.warning(f"Could not load development bridge endpoints: {e}")
+
         # Content generation routers
         try:
             from apps.backend.api.routers.content import router as content_router

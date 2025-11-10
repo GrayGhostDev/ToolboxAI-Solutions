@@ -11,7 +11,7 @@ This document provides comprehensive examples of API requests and responses for 
 
 #### cURL
 ```bash
-curl -X POST "http://127.0.0.1:8008/auth/login" \
+curl -X POST "http://127.0.0.1:8009/auth/login" \
   -H "Content-Type: application/json" \
   -d '{
     "username": "teacher@school.edu",
@@ -24,7 +24,7 @@ curl -X POST "http://127.0.0.1:8008/auth/login" \
 import requests
 
 response = requests.post(
-    'http://127.0.0.1:8008/auth/login',
+    'http://127.0.0.1:8009/auth/login',
     json={
         'username': 'teacher@school.edu',
         'password': 'SecurePassword123!'
@@ -44,7 +44,7 @@ else:
 ```typescript
 const loginUser = async (username: string, password: string) => {
   try {
-    const response = await fetch('http://127.0.0.1:8008/auth/login', {
+    const response = await fetch('http://127.0.0.1:8009/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -100,7 +100,7 @@ loginUser('teacher@school.edu', 'SecurePassword123!')
 
 ##### cURL
 ```bash
-curl -X POST "http://127.0.0.1:8008/api/v1/content/generate" \
+curl -X POST "http://127.0.0.1:8009/api/v1/content/generate" \
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
   -H "Content-Type: application/json" \
   -d '{
@@ -143,7 +143,7 @@ def generate_content(token, content_request):
     }
 
     response = requests.post(
-        'http://127.0.0.1:8008/api/v1/content/generate',
+        'http://127.0.0.1:8009/api/v1/content/generate',
         headers=headers,
         json=content_request
     )
@@ -202,7 +202,7 @@ interface ContentRequest {
 }
 
 const generateContent = async (token: string, request: ContentRequest) => {
-  const response = await fetch('http://127.0.0.1:8008/api/v1/content/generate', {
+  const response = await fetch('http://127.0.0.1:8009/api/v1/content/generate', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -344,7 +344,7 @@ generateContent("your_token_here", contentRequest)
 
 #### cURL
 ```bash
-curl -X POST "http://127.0.0.1:8008/generate_quiz?subject=Mathematics&topic=Linear%20Equations&difficulty=medium&num_questions=5&grade_level=7" \
+curl -X POST "http://127.0.0.1:8009/generate_quiz?subject=Mathematics&topic=Linear%20Equations&difficulty=medium&num_questions=5&grade_level=7" \
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
 ```
 
@@ -361,7 +361,7 @@ def generate_quiz(token, subject, topic, difficulty="medium", num_questions=5, g
     }
 
     response = requests.post(
-        'http://127.0.0.1:8008/generate_quiz',
+        'http://127.0.0.1:8009/generate_quiz',
         headers=headers,
         params=params
     )
@@ -383,7 +383,7 @@ quiz = generate_quiz(
 ```javascript
 const generateQuiz = async (token, params) => {
   const queryString = new URLSearchParams(params).toString();
-  const response = await fetch(`http://127.0.0.1:8008/generate_quiz?${queryString}`, {
+  const response = await fetch(`http://127.0.0.1:8009/generate_quiz?${queryString}`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -410,7 +410,7 @@ generateQuiz("your_token", {
 
 #### cURL
 ```bash
-curl -X GET "http://127.0.0.1:8008/dashboard/student" \
+curl -X GET "http://127.0.0.1:8009/dashboard/student" \
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
 ```
 
@@ -419,7 +419,7 @@ curl -X GET "http://127.0.0.1:8008/dashboard/student" \
 def get_student_dashboard(token):
     headers = {'Authorization': f'Bearer {token}'}
     response = requests.get(
-        'http://127.0.0.1:8008/dashboard/student',
+        'http://127.0.0.1:8009/dashboard/student',
         headers=headers
     )
     return response.json()
@@ -432,7 +432,7 @@ print(f"Assignments due: {len(dashboard_data['assignments']['due_soon'])}")
 #### JavaScript
 ```javascript
 const getStudentDashboard = async (token) => {
-  const response = await fetch('http://127.0.0.1:8008/dashboard/student', {
+  const response = await fetch('http://127.0.0.1:8009/dashboard/student', {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
@@ -459,7 +459,7 @@ import Pusher from 'pusher-js';
 const initializePusher = (token) => {
   const pusher = new Pusher(process.env.VITE_PUSHER_KEY, {
     cluster: process.env.VITE_PUSHER_CLUSTER,
-    authEndpoint: 'http://127.0.0.1:8008/pusher/auth',
+    authEndpoint: 'http://127.0.0.1:8009/pusher/auth',
     auth: {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -545,7 +545,7 @@ def deploy_to_roblox(token, content_id, place_id):
     }
 
     response = requests.post(
-        f'http://127.0.0.1:8008/api/v1/roblox/deploy/{content_id}',
+        f'http://127.0.0.1:8009/api/v1/roblox/deploy/{content_id}',
         headers=headers,
         json=payload
     )
@@ -573,7 +573,7 @@ except Exception as e:
 #### JavaScript
 ```javascript
 const deployToRoblox = async (token, contentId, placeId) => {
-  const response = await fetch(`http://127.0.0.1:8008/api/v1/roblox/deploy/${contentId}`, {
+  const response = await fetch(`http://127.0.0.1:8009/api/v1/roblox/deploy/${contentId}`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -692,7 +692,7 @@ def generate_multiple_content(token, content_requests):
             print(f"Generating content {i+1}/{len(content_requests)}: {request['subject']}")
 
             response = requests.post(
-                'http://127.0.0.1:8008/api/v1/content/generate',
+                'http://127.0.0.1:8009/api/v1/content/generate',
                 headers=headers,
                 json=request
             )
@@ -761,7 +761,7 @@ class ContentGenerationMonitor {
   }
 
   connect() {
-    this.ws = new WebSocket('ws://127.0.0.1:8008/ws/content');
+    this.ws = new WebSocket('ws://127.0.0.1:8009/ws/content');
 
     this.ws.onopen = () => {
       console.log('WebSocket connected');

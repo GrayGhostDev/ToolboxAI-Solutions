@@ -26,7 +26,7 @@ local Selection = game:GetService("Selection")
 -- Configuration
 local CONFIG = {
     FLASK_URL = "http://127.0.0.1:5001",
-    FASTAPI_URL = "http://127.0.0.1:8008",
+    FASTAPI_URL = "http://127.0.0.1:8009",
     PLUGIN_ID = "toolboxai_plugin_" .. tostring(tick()),
     STUDIO_ID = "studio_" .. tostring(game.PlaceId or "test"),
     PORT = 64989,
@@ -274,7 +274,7 @@ function tests.testPolling()
         studio_id = CONFIG.STUDIO_ID
     }
     
-    local response = httpRequest(CONFIG.FLASK_URL .. "/plugin/poll-messages", "POST", nil, payload)
+    local response = httpRequest(CONFIG.FLASK_URL .. "/plugin/messages", "POST", nil, payload)
     
     if response then
         log("✅ Polling endpoint working")
@@ -335,7 +335,7 @@ local function startPolling()
             studio_id = CONFIG.STUDIO_ID
         }
         
-        local response = httpRequest(CONFIG.FLASK_URL .. "/plugin/poll-messages", "POST", nil, payload)
+        local response = httpRequest(CONFIG.FLASK_URL .. "/plugin/messages", "POST", nil, payload)
         
         if response and response.messages and #response.messages > 0 then
             for _, message in ipairs(response.messages) do

@@ -8,12 +8,12 @@ The ToolboxAI platform now includes a comprehensive GraphQL API powered by Ariad
 
 The GraphQL endpoint is available at:
 ```
-http://localhost:8008/graphql
+http://localhost:8009/graphql
 ```
 
 GraphQL Playground (for development):
 ```
-http://localhost:8008/graphql
+http://localhost:8009/graphql
 ```
 
 ## Authentication
@@ -363,7 +363,7 @@ Common error codes:
 import { ApolloClient, InMemoryCache } from '@apollo/client';
 
 const client = new ApolloClient({
-  uri: 'http://localhost:8008/graphql',
+  uri: 'http://localhost:8009/graphql',
   cache: new InMemoryCache(),
   headers: {
     authorization: localStorage.getItem('token') || '',

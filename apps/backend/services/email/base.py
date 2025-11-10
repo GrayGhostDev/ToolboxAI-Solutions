@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 # Import the actual implementations with error handling
 # Avoid importing 'email_service' from factory to prevent naming conflicts
 try:
-    from apps.backend.services.email_service_factory import (
+    from apps.backend.services.email.factory import (
         get_email_service,
         get_email_service_singleton
     )
@@ -25,7 +25,7 @@ except ImportError as e:
     get_email_service_singleton = None
 
 try:
-    from apps.backend.services.email_service_sendgrid import (
+    from apps.backend.services.email.sendgrid import (
         SendGridEmailService,
         email_service as sendgrid_instance,  # Rename to avoid conflict
         EmailService as SendGridEmailServiceClass,
@@ -70,7 +70,7 @@ except ImportError as e:
             self.content_type = content_type
 
 try:
-    from apps.backend.services.email_service_mock import (
+    from apps.backend.services.email.mock import (
         MockEmailService,
         mock_email_service as mock_instance,  # Rename to avoid conflict
         MockEmailServiceInstance

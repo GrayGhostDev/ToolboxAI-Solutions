@@ -20,7 +20,6 @@ local Chat = game:GetService("Chat")
 -- Configuration
 local CONFIG = {
     BACKEND_URL = "http://127.0.0.1:8009",
-    WEBSOCKET_URL = "ws://127.0.0.1:9877",
     DATA_STORE_NAME = "ToolboxAI_PlayerData",
     SESSION_TIMEOUT = 3600, -- 1 hour in seconds
     AUTOSAVE_INTERVAL = 60, -- seconds

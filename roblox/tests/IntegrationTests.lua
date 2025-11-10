@@ -208,12 +208,12 @@ function TestRunner:testWebSocketConnection()
     -- Test WebSocket via Flask bridge endpoint
     local success, response = pcall(function()
         return HttpService:RequestAsync({
-            Url = "http://127.0.0.1:5001/websocket/status",
+            Url = "http://127.0.0.1:5001/pusher/status",
             Method = "GET"
         })
     end)
     
-    -- If no WebSocket status endpoint, assume it's working if Flask is up
+    -- If no Pusher status endpoint, assume realtime is OK if Flask bridge is up
     if not success or response.StatusCode == 404 then
         return self:testTerminal1Connection()
     end
@@ -507,7 +507,7 @@ function TestRunner:testFallbackMechanisms()
     
     -- Primary endpoint (might not exist)
     local success1 = pcall(function()
-        HttpService:GetAsync("http://127.0.0.1:8008/health")
+        HttpService:GetAsync("http://127.0.0.1:8009/health")
     end)
     
     -- Fallback endpoint (should exist)

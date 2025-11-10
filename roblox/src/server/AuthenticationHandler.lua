@@ -20,16 +20,16 @@ local DataStoreService = game:GetService("DataStoreService")
 -- Configuration
 local CONFIG = {
     -- API Endpoints
-    AUTH_API_URL = "http://127.0.0.1:8008/auth",
-    VALIDATE_TOKEN_URL = "http://127.0.0.1:8008/auth/validate",
-    REFRESH_TOKEN_URL = "http://127.0.0.1:8008/auth/refresh",
-    PERMISSIONS_URL = "http://127.0.0.1:8008/auth/permissions",
+    AUTH_API_URL = "http://127.0.0.1:8009/auth",
+    VALIDATE_TOKEN_URL = "http://127.0.0.1:8009/auth/validate",
+    REFRESH_TOKEN_URL = "http://127.0.0.1:8009/auth/refresh",
+    PERMISSIONS_URL = "http://127.0.0.1:8009/auth/permissions",
 
     -- OAuth2 Endpoints
-    OAUTH2_AUTHORIZE_URL = "http://127.0.0.1:8008/oauth2/authorize",
-    OAUTH2_TOKEN_URL = "http://127.0.0.1:8008/oauth2/token",
-    OAUTH2_USERINFO_URL = "http://127.0.0.1:8008/oauth2/userinfo",
-    OAUTH2_REVOKE_URL = "http://127.0.0.1:8008/oauth2/revoke",
+    OAUTH2_AUTHORIZE_URL = "http://127.0.0.1:8009/oauth2/authorize",
+    OAUTH2_TOKEN_URL = "http://127.0.0.1:8009/oauth2/token",
+    OAUTH2_USERINFO_URL = "http://127.0.0.1:8009/oauth2/userinfo",
+    OAUTH2_REVOKE_URL = "http://127.0.0.1:8009/oauth2/revoke",
     
     -- Session Configuration
     SESSION_TIMEOUT = 3600, -- 1 hour in seconds
@@ -732,7 +732,7 @@ function AuthenticationHandler:InitiateOAuth2Flow(player, data)
     end
 
     local clientId = data.clientId or "ToolboxAI_Client"
-    local redirectUri = data.redirectUri or "http://127.0.0.1:8008/oauth2/callback"
+    local redirectUri = data.redirectUri or "http://127.0.0.1:8009/oauth2/callback"
     local scope = data.scope or "read write"
     local state = HttpService:GenerateGUID(false)
 
@@ -804,7 +804,7 @@ function AuthenticationHandler:ExchangeOAuth2Code(player, authCode)
         code = authCode,
         client_id = "ToolboxAI_Client",
         client_secret = CONFIG.SECRET_KEY, -- In production, use proper OAuth2 client secret
-        redirect_uri = "http://127.0.0.1:8008/oauth2/callback"
+        redirect_uri = "http://127.0.0.1:8009/oauth2/callback"
     }
 
     local success, result = pcall(function()

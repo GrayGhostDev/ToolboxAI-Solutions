@@ -9,6 +9,8 @@ Summary
 - Performed secret scan and Docker file tracking checks.
 - Started FastAPI locally under venv_clean for a targeted integration smoke.
 
+Note: Backend default port is now 8009 (legacy notes below may reference 8008). Realtime has migrated to Pusher Channels; use the Pusher integration instead of direct WebSocket wherever possible.
+
 What I completed
 1) Path normalization (legacy → canonical)
 - Replaced active references of "src/roblox-environment" with "ToolboxAI-Roblox-Environment" in:
@@ -566,4 +568,3 @@ Notes
 - Environment examples were updated but will not override any local .env files.
 
 End of log — warp007
-

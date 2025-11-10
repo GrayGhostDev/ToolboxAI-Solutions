@@ -11,7 +11,7 @@ Provides complete Roblox integration including:
 - Rate limiting and security
 
 Compatible with Universe ID: 8505376973
-Backend URL: http://127.0.0.1:8008
+Backend URL: http://127.0.0.1:8009
 Client ID: 2214511122270781418
 """
 
@@ -91,7 +91,7 @@ ROBLOX_CLIENT_SECRET = os.getenv("ROBLOX_CLIENT_SECRET")
 ROBLOX_API_KEY = os.getenv("ROBLOX_API_KEY")
 ROBLOX_PLUGIN_PORT = os.getenv("ROBLOX_PLUGIN_PORT", "64989")
 ROBLOX_UNIVERSE_ID = os.getenv("ROBLOX_UNIVERSE_ID", "8505376973")
-BACKEND_URL = "http://127.0.0.1:8008"
+BACKEND_URL = "http://127.0.0.1:8009"
 
 # OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")

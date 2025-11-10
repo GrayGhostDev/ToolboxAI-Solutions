@@ -58,7 +58,7 @@ REDIS_URL=redis://localhost:6379/0
 
 # API Configuration
 API_HOST=127.0.0.1
-API_PORT=8008
+API_PORT=8009
 
 # Pusher Configuration (for real-time updates)
 PUSHER_ENABLED=true
@@ -74,12 +74,12 @@ Create environment variables in your frontend:
 
 ```bash
 # API Configuration
-VITE_API_BASE_URL=http://localhost:8008
+VITE_API_BASE_URL=http://localhost:8009
 
 # Pusher Configuration
 VITE_PUSHER_KEY=your_key
 VITE_PUSHER_CLUSTER=us2
-VITE_PUSHER_AUTH_ENDPOINT=http://localhost:8008/pusher/auth
+VITE_PUSHER_AUTH_ENDPOINT=http://localhost:8009/pusher/auth
 
 # WebSocket Configuration
 VITE_ENABLE_WEBSOCKET=true
@@ -96,7 +96,7 @@ VITE_ENABLE_WEBSOCKET=true
 ### 2. Start Backend Server
 ```bash
 cd apps/backend
-python -m uvicorn main:app --host 127.0.0.1 --port 8008 --reload
+python -m uvicorn main:app --host 127.0.0.1 --port 8009 --reload
 ```
 
 ### 3. Start Frontend Dashboard

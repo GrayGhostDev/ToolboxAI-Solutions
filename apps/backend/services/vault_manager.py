@@ -64,7 +64,10 @@ class VaultManager:
         self.vault_token = os.getenv('VAULT_TOKEN')
         self.role_id = os.getenv('VAULT_ROLE_ID')
         self.secret_id = os.getenv('VAULT_SECRET_ID')
-        self.namespace = os.getenv('VAULT_NAMESPACE', 'toolboxai')
+        # Namespace is Enterprise-only feature, default to empty for OSS
+        self.namespace = os.getenv('VAULT_NAMESPACE', '')
+        # TLS verification (disable only for development with self-signed certs)
+        self.skip_verify = os.getenv('VAULT_SKIP_VERIFY', 'false').lower() in ('true', '1', 'yes')
 
         # Initialize client
         self.client = self._initialize_client()
@@ -78,10 +81,15 @@ class VaultManager:
 
     def _initialize_client(self) -> hvac.Client:
         """Initialize and authenticate Vault client"""
+        # Set verify based on VAULT_SKIP_VERIFY (for dev environments only)
+        verify = not self.skip_verify
+        if self.skip_verify:
+            logger.warning("TLS verification disabled - DO NOT use in production!")
+
         client = hvac.Client(
             url=self.vault_addr,
-            namespace=self.namespace,
-            verify=True  # Enable TLS verification
+            namespace=self.namespace if self.namespace else None,
+            verify=verify
         )
 
         # Authenticate using AppRole or token

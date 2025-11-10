@@ -1671,7 +1671,7 @@ local studentProgress = {{}}
 
 -- Educational content configuration
 local EDUCATION_CONFIG = {{
-    apiEndpoint = "http://localhost:8008",
+    apiEndpoint = "http://localhost:8009",
     lessonDuration = {10 if complexity_level == "beginner" else 15}, -- minutes
     assessmentFrequency = 5, -- every 5 interactions
     adaptiveDifficulty = true

@@ -17,17 +17,19 @@ local DEFAULT_CONFIG = {
     -- API Endpoints
     API = {
         FASTAPI_HOST = "127.0.0.1",
-        FASTAPI_PORT = 8008,
+        FASTAPI_PORT = 8009,
         FLASK_HOST = "127.0.0.1",
         FLASK_PORT = 5001,
         MCP_HOST = "127.0.0.1",
-        MCP_PORT = 9876,
+        MCP_PORT = 9877,
         PLUGIN_PORT = 64989,
         
         -- Constructed URLs
-        FASTAPI_URL = "http://127.0.0.1:8008",
+        FASTAPI_URL = "http://127.0.0.1:8009",
         FLASK_URL = "http://127.0.0.1:5001",
-        MCP_WS_URL = "ws://127.0.0.1:9876",
+        MCP_WS_URL = "ws://127.0.0.1:9877",
+        PUSHER_KEY = "your-pusher-key",
+        PUSHER_CLUSTER = "mt1",
     },
     
     -- User Preferences
@@ -46,7 +48,8 @@ local DEFAULT_CONFIG = {
     
     -- Feature Flags
     FEATURES = {
-        enableWebSocket = true,
+        enableWebSocket = false,
+        enablePusher = true,
         enableAutoSync = true,
         enableTerrainGeneration = true,
         enableQuizSystem = true,

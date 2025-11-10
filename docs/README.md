@@ -5,11 +5,12 @@ Welcome to the comprehensive documentation for ToolBoxAI-Solutions, an AI-powere
 ## 🚀 Quick Start Guides
 
 ### 🔥 Latest Documentation (November 2025)
-1. **[File Relocation Map](FILE_RELOCATION_MAP.md)** - ⭐ **NEW** - Complete map of files moved during Nov 9 cleanup
-2. **[Environment Files Documentation](10-security/ENV_FILES_DOCUMENTATION.md)** - ⭐ **NEW** - Security guide for .env files
-3. **[Docker MCP Gateway Integration 2025](05-implementation/docker-mcp-gateway-integration-2025.md)** - Accurate implementation status
-4. **[Documentation Update Summary](11-reports/DOCUMENTATION_UPDATE_SUMMARY_2025-09-28.md)** - All corrections applied
-5. **[Phase 2 Status Report](phase2/PHASE2_STATUS.md)** - Implementation status (68% complete)
+1. **[GitHub Projects Integration](08-operations/github-projects/GETTING_STARTED.md)** - ⭐ **NEW** - Complete project management setup
+2. **[File Relocation Map](FILE_RELOCATION_MAP.md)** - ⭐ **NEW** - Complete map of files moved during Nov 9 cleanup
+3. **[Environment Files Documentation](10-security/ENV_FILES_DOCUMENTATION.md)** - ⭐ **NEW** - Security guide for .env files
+4. **[Docker MCP Gateway Integration 2025](05-implementation/docker-mcp-gateway-integration-2025.md)** - Accurate implementation status
+5. **[Documentation Update Summary](11-reports/DOCUMENTATION_UPDATE_SUMMARY_2025-09-28.md)** - All corrections applied
+6. **[Phase 2 Status Report](phase2/PHASE2_STATUS.md)** - Implementation status (68% complete)
 
 ### For Developers
 1. **[Docker MCP Deployment Guide 2025](guides/DOCKER_MCP_DEPLOYMENT_GUIDE_2025.md)** - ⭐ **CURRENT** - Complete deployment guide
@@ -25,10 +26,11 @@ Welcome to the comprehensive documentation for ToolBoxAI-Solutions, an AI-powere
 4. **[Troubleshooting](07-operations/troubleshooting/README.md)** - Common issues and solutions
 
 ### For Operations Teams
-1. **[Security Overview](07-operations/security/owasp-compliance.md)** - Security policies and compliance
-2. **[Deployment Guide](04-implementation/deployment/deployment.md)** - Production deployment
-3. **[Monitoring Setup](07-operations/monitoring/infrastructure-monitoring.md)** - Observability configuration
-4. **[Maintenance Procedures](07-operations/maintenance/cleanup-plan.md)** - System maintenance
+1. **[GitHub Projects Setup](08-operations/github-projects/GETTING_STARTED.md)** - ⭐ **NEW** - Project management and tracking
+2. **[Security Overview](07-operations/security/owasp-compliance.md)** - Security policies and compliance
+3. **[Deployment Guide](04-implementation/deployment/deployment.md)** - Production deployment
+4. **[Monitoring Setup](07-operations/monitoring/infrastructure-monitoring.md)** - Observability configuration
+5. **[Maintenance Procedures](07-operations/maintenance/cleanup-plan.md)** - System maintenance
 
 ## 📁 Documentation Structure
 
@@ -85,12 +87,13 @@ Role-specific guides for different user types.
 - **Student**: Student dashboard and learning tools
 - **Parent**: Parent portal and monitoring
 
-### [07-operations/](07-operations/) - 🔧 Operations & Security
-Operations, security, compliance, and maintenance documentation.
-- **Security**: Security policies and procedures
-- **Compliance**: COPPA, FERPA, GDPR, SOC 2 compliance
+### [08-operations/](08-operations/) - 🔧 Operations & DevOps
+Operations, deployment, monitoring, and project management.
+- **GitHub Projects**: Project management and tracking setup
+- **Deployment**: Deployment guides and procedures
+- **CI/CD**: Continuous integration and deployment
 - **Monitoring**: System monitoring and observability
-- **Troubleshooting**: Problem diagnosis and resolution
+- **Security**: Security operations and compliance
 - **Maintenance**: System maintenance procedures
 
 ### [08-reference/](08-reference/) - 📖 Technical Reference

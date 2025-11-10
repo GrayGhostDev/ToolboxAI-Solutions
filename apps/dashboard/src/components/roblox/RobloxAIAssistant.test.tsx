@@ -391,7 +391,7 @@ describe('RobloxAIAssistant - Streaming', () => {
   let server: WS;
 
   beforeEach(() => {
-    server = new WS('ws://127.0.0.1:8008/api/v1/ai-chat/ws/conv_test123');
+    server = new WS('ws://127.0.0.1:8009/api/v1/ai-chat/ws/conv_test123');
     jest.clearAllMocks();
     (api.post as jest.Mock).mockResolvedValue({ data: mockConversation });
   });
@@ -632,7 +632,7 @@ describe('RobloxAIAssistant - Integration', () => {
   });
 
   test('39. Real-time updates via WebSocket', async () => {
-    const server = new WS('ws://127.0.0.1:8008/api/v1/ai-chat/ws/conv_test123');
+    const server = new WS('ws://127.0.0.1:8009/api/v1/ai-chat/ws/conv_test123');
     renderComponent();
 
     await server.connected;

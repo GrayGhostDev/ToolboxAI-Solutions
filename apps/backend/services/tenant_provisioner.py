@@ -363,7 +363,7 @@ class TenantProvisioner:
         # TODO: Implement actual email sending
         # This would integrate with SendGrid or similar service
         #
-        # from apps.backend.services.email_service import EmailService
+        # from apps.backend.services.email import EmailService
         # email_service = EmailService()
         # await email_service.send_welcome_email(
         #     to=org.email,

@@ -15,7 +15,7 @@ from apps.backend.core.logging import logging_manager, log_audit
 from apps.backend.core.config import settings
 from apps.backend.models.schemas import User
 from apps.backend.api.auth.auth import get_current_user
-from apps.backend.services.email_service import (
+from apps.backend.services.email import (
     email_service,
     EmailType,
     EmailPriority,

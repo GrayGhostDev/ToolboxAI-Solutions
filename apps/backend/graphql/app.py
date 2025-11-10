@@ -134,4 +134,4 @@ def setup_graphql(app: FastAPI):
 
     # Log GraphQL Playground availability
     if settings.DEBUG:
-        logger.info("GraphQL Playground available at http://localhost:8008/graphql")
+        logger.info("GraphQL Playground available at http://localhost:8009/graphql")

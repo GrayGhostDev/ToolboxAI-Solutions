@@ -24,7 +24,7 @@ import asyncio
 async def register_user():
     async with httpx.AsyncClient() as client:
         response = await client.post(
-            "http://localhost:8008/api/auth/register",
+            "http://localhost:8009/api/auth/register",
             json={
                 "email": "student@example.com",
                 "password": "SecurePassword123!",
@@ -50,7 +50,7 @@ user = asyncio.run(register_user())
 ```typescript
 async function registerUser() {
   try {
-    const response = await fetch('http://localhost:8008/api/auth/register', {
+    const response = await fetch('http://localhost:8009/api/auth/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -85,7 +85,7 @@ const user = await registerUser()
 #### cURL
 
 ```bash
-curl -X POST http://localhost:8008/api/auth/register \
+curl -X POST http://localhost:8009/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "email": "student@example.com",
@@ -105,7 +105,7 @@ import asyncio
 from typing import Optional, Dict
 
 class AuthManager:
-    def __init__(self, base_url: str = "http://localhost:8008"):
+    def __init__(self, base_url: str = "http://localhost:8009"):
         self.base_url = base_url
         self.access_token: Optional[str] = None
         self.refresh_token: Optional[str] = None
@@ -165,7 +165,7 @@ class AuthManager {
   private refreshToken: string | null = null
   private baseUrl: string
 
-  constructor(baseUrl: string = 'http://localhost:8008') {
+  constructor(baseUrl: string = 'http://localhost:8009') {
     this.baseUrl = baseUrl
   }
 

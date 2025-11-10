@@ -1,0 +1,146 @@
+name: GitHub Projects Automation
+
+on:
+  issues:
+    types: [opened, edited, closed, reopened, labeled, unlabeled]
+  pull_request:
+    types: [opened, edited, closed, reopened, ready_for_review, review_requested]
+  pull_request_review:
+    types: [submitted]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  repository-projects: write
+
+jobs:
+  auto-add-to-project:
+    name: Add to Project
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
+    steps:
+      - name: Add issue to project
+        uses: actions/add-to-project@v0.5.0
+        with:
+          project-url: https://github.com/users/GrayGhostDev/projects/1
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  update-project-status:
+    name: Update Project Status
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Update status based on PR state
+        if: github.event.pull_request
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prState = context.payload.pull_request.state;
+            const isDraft = context.payload.pull_request.draft;
+            const reviews = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number
+            });
+            
+            let status = 'In Progress';
+            
+            if (prState === 'closed') {
+              if (context.payload.pull_request.merged) {
+                status = 'Done';
+              } else {
+                status = 'Cancelled';
+              }
+            } else if (reviews.data.length > 0) {
+              status = 'In Review';
+            } else if (isDraft) {
+              status = 'Todo';
+            }
+            
+            core.info(`Suggested status: ${status}`);
+
+      - name: Label issues by priority
+        if: github.event.issue
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issue = context.payload.issue;
+            const labels = issue.labels.map(l => l.name);
+            
+            // Auto-label based on keywords
+            const body = issue.body ? issue.body.toLowerCase() : '';
+            const title = issue.title.toLowerCase();
+            
+            const newLabels = [];
+            
+            if (body.includes('critical') || body.includes('urgent') || title.includes('critical')) {
+              newLabels.push('priority: critical');
+            } else if (body.includes('security') || labels.includes('security')) {
+              newLabels.push('priority: high');
+            }
+            
+            if (newLabels.length > 0 && !labels.some(l => l.startsWith('priority:'))) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: newLabels
+              });
+            }
+
+  sync-project-fields:
+    name: Sync Project Fields
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update project fields based on labels
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // Get labels
+            const labels = context.payload.issue?.labels || context.payload.pull_request?.labels || [];
+            const labelNames = labels.map(l => l.name);
+            
+            core.info(`Labels: ${labelNames.join(', ')}`);
+            
+            // Map labels to project fields (this is a reference - actual field updates require GraphQL)
+            const fieldMappings = {
+              'priority: critical': { field: 'Priority', value: 'Critical' },
+              'priority: high': { field: 'Priority', value: 'High' },
+              'priority: medium': { field: 'Priority', value: 'Medium' },
+              'priority: low': { field: 'Priority', value: 'Low' },
+              'size: xs': { field: 'Size', value: 'XS' },
+              'size: s': { field: 'Size', value: 'S' },
+              'size: m': { field: 'Size', value: 'M' },
+              'size: l': { field: 'Size', value: 'L' },
+              'size: xl': { field: 'Size', value: 'XL' }
+            };
+            
+            for (const label of labelNames) {
+              if (fieldMappings[label]) {
+                core.info(`Would update ${fieldMappings[label].field} to ${fieldMappings[label].value}`);
+              }
+            }
+
+  comment-on-stale:
+    name: Comment on Stale Items
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    steps:
+      - name: Check for stale issues
+        uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          stale-issue-message: 'This issue has been inactive for 30 days. Please update if still relevant.'
+          stale-pr-message: 'This PR has been inactive for 30 days. Please update or close if no longer needed.'
+          days-before-stale: 30
+          days-before-close: 7
+          exempt-issue-labels: 'pinned,security,critical'
+          exempt-pr-labels: 'pinned,security,critical'

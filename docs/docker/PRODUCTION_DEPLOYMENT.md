@@ -352,7 +352,7 @@ trivy image --scanners config \
 ### Metrics Collection
 
 **Prometheus Metrics:**
-- Backend API metrics: `http://backend:8008/metrics`
+- Backend API metrics: `http://backend:8009/metrics`
 - Celery worker metrics: `http://celery-exporter:9540/metrics`
 - Redis metrics: `http://redis-exporter:9121/metrics`
 - Postgres metrics: `http://postgres-exporter:9187/metrics`

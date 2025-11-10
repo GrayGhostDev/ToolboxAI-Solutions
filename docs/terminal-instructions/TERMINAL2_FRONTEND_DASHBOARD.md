@@ -14,7 +14,7 @@ You are the Frontend/Dashboard Specialist responsible for fixing the dashboard t
 ```
 
 ## DEPENDENCY
-**WAIT FOR TERMINAL 1**: FastAPI must be running on port 8008 before proceeding with API integration.
+**WAIT FOR TERMINAL 1**: FastAPI must be running on port 8009 before proceeding with API integration. Note: Older references to 8008 should be replaced with 8009.
 
 ## PHASE 1: DIAGNOSE AND FIX DASHBOARD (First 1 hour)
 

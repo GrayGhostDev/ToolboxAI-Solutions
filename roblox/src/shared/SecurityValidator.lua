@@ -46,7 +46,7 @@ local CONFIG = {
     AUTO_BAN_THRESHOLD = 10,
 
     -- Backend integration
-    API_BASE_URL = "http://127.0.0.1:8008",
+    API_BASE_URL = "http://127.0.0.1:8009",
     SECURITY_ENDPOINT = "/api/v1/security/validate"
     
     -- Content validation

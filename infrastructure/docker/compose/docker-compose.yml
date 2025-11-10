@@ -142,6 +142,54 @@ services:
           memory: 256M
 
   # ----------------------------------------
+  # HashiCorp Vault - Secret Management
+  # ----------------------------------------
+  vault:
+    image: hashicorp/vault:1.15
+    container_name: toolboxai-vault
+    <<: *restart-policy
+    ports:
+      - "8200:8200"
+    environment:
+      <<: *common-variables
+      VAULT_ADDR: http://0.0.0.0:8200
+      VAULT_API_ADDR: http://vault:8200
+      SKIP_SETCAP: "true"
+    cap_add:
+      - IPC_LOCK
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - vault_data:/vault/data
+      - vault_logs:/vault/logs
+      - ../config/vault:/vault/config:ro
+    networks:
+      - backend
+      - database
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "vault", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    command: server
+    labels:
+      - "com.toolboxai.service=vault"
+      - "com.toolboxai.environment=production"
+      - "com.toolboxai.managed=true"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  # ----------------------------------------
   # FastAPI Backend
   # ----------------------------------------
   backend:
@@ -712,10 +760,10 @@ services:
     user: "1009:1009"
 
   # ----------------------------------------
-  # Prometheus Monitoring (Basic)
+  # Prometheus Monitoring
   # ----------------------------------------
   prometheus:
-    image: prom/prometheus:v2.47.0
+    image: prom/prometheus:v2.48.0
     container_name: toolboxai-prometheus
     <<: *restart-policy
     command:
@@ -725,20 +773,146 @@ services:
       - '--web.console.templates=/usr/share/prometheus/consoles'
       - '--web.enable-lifecycle'
       - '--storage.tsdb.retention.time=15d'
+      - '--query.max-concurrency=20'
+      - '--enable-feature=promql-at-modifier'
+      - '--enable-feature=promql-negative-offset'
+    ports:
+      - "9090:9090"
     volumes:
-      - ../../monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ../../monitoring/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
-      - prometheus_data:/prometheus:Z
+      - ../config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../config/prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+      # prometheus_data:/prometheus  # Disabled - using tmpfs in dev mode
     networks:
       - monitoring
       - backend
+      - database
+      - cache
     security_opt:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    # read_only: false  # Prometheus needs write access to /prometheus for TSDB
+    tmpfs:
+      - /tmp
+      - /prometheus  # Use tmpfs for data in development mode (data not persisted)
+    user: "root"  # Development mode - run as root for volume permissions
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     labels:
       - "com.toolboxai.service=prometheus"
       - "com.toolboxai.component=monitoring"
+      - "com.toolboxai.managed=true"
+
+  # ----------------------------------------
+  # PostgreSQL Exporter
+  # ----------------------------------------
+  postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: toolboxai-postgres-exporter
+    <<: *restart-policy
+    environment:
+      <<: *common-variables
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER:-toolboxai}:${POSTGRES_PASSWORD:-devpass2024}@postgres:5432/${POSTGRES_DB:-toolboxai}?sslmode=disable"
+    networks:
+      - monitoring
+      - database
+    depends_on:
+      - postgres
+    ports:
+      - "9187:9187"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9187/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp
+    user: "nobody"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    labels:
+      - "com.toolboxai.service=postgres-exporter"
+      - "com.toolboxai.component=monitoring"
+      - "com.toolboxai.managed=true"
+
+  # ----------------------------------------
+  # Redis Exporter
+  # ----------------------------------------
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.55.0
+    container_name: toolboxai-redis-exporter
+    <<: *restart-policy
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        export REDIS_PASSWORD=$$(cat /run/secrets/redis_password)
+        /redis_exporter
+    environment:
+      <<: *common-variables
+      REDIS_ADDR: redis:6379
+    secrets:
+      - redis_password
+    networks:
+      - monitoring
+      - cache
+    depends_on:
+      - redis
+    ports:
+      - "9121:9121"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9121/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp
+    user: "nobody"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    labels:
+      - "com.toolboxai.service=redis-exporter"
+      - "com.toolboxai.component=monitoring"
+      - "com.toolboxai.managed=true"
 
 # ============================================
 # NETWORKS
@@ -791,6 +965,12 @@ volumes:
     driver: local
 
   redis_data:
+    driver: local
+
+  vault_data:
+    driver: local
+
+  vault_logs:
     driver: local
 
   flower-data:

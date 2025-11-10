@@ -24,7 +24,7 @@ async def test_email_service():
     print("=" * 70)
 
     # Get the appropriate email service
-    from apps.backend.services.email_service_factory import get_email_service
+    from apps.backend.services.email.factory import get_email_service
 
     service = get_email_service()
 
@@ -75,7 +75,7 @@ async def test_email_service():
     print("TEST 3: Multiple Recipients")
     print("-" * 60)
 
-    from apps.backend.services.email_service_sendgrid import EmailRecipient
+    from apps.backend.services.email.sendgrid import EmailRecipient
 
     recipients = [
         EmailRecipient(email="user1@example.com", name="User One"),
@@ -113,7 +113,7 @@ async def test_with_mock():
     print("🎭 TESTING WITH MOCK SERVICE")
     print("=" * 70)
 
-    from apps.backend.services.email_service_factory import get_email_service
+    from apps.backend.services.email.factory import get_email_service
 
     # Force mock service
     service = get_email_service(force_mock=True)

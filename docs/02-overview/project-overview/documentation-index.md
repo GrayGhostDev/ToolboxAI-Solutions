@@ -2,7 +2,7 @@
 
 Canonical services (localhost-only):
 
-- FastAPI: 127.0.0.1:8008
+- FastAPI: 127.0.0.1:8009
 - Flask bridge: 127.0.0.1:5001
 - MCP WebSocket: 127.0.0.1:9876
 - Ghost Backend: 127.0.0.1:8000

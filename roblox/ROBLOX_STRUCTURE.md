@@ -95,6 +95,7 @@ rojo build Config/default.project.json
 
 ### Plugin Development
 - Main plugin: `plugins/AIContentGenerator.lua`
+- Realtime: Pusher via backend bridge with HTTP polling fallback (no direct WebSocket)
 - Test plugin functionality with `plugins/AIContentGeneratorTest.lua`
 - Use `plugins/components/` for UI elements
 

@@ -287,7 +287,7 @@ class MCPClient {
 
   async connect(token: string): Promise<void> {
     this.token = token;
-    this.ws = new WebSocket(`ws://localhost:9876?token=${token}`);
+    this.ws = new WebSocket(`ws://localhost:9877?token=${token}`);
 
     this.ws.onmessage = (event) => {
       const message = JSON.parse(event.data);
@@ -380,7 +380,7 @@ async def broadcast_context(self):
 
 ```python
 class MCPServer:
-    DEFAULT_PORT = 9876
+    DEFAULT_PORT = 9877
     DEFAULT_MAX_TOKENS = 128000
     JWT_SECRET_KEY = os.getenv("MCP_JWT_SECRET_KEY", "default_secret")
     JWT_ALGORITHM = "HS256"
@@ -395,7 +395,7 @@ class MCPServer:
 
 ```bash
 # MCP Server Configuration
-MCP_PORT=9876
+MCP_PORT=9877
 MCP_MAX_TOKENS=128000
 MCP_JWT_SECRET_KEY=your_secret_key
 
@@ -522,7 +522,7 @@ services:
   mcp-server:
     build: .
     ports:
-      - "9876:9876"
+      - "9877:9877"
     environment:
       - MCP_JWT_SECRET_KEY=${MCP_JWT_SECRET_KEY}
       - MCP_MAX_TOKENS=256000
@@ -583,7 +583,7 @@ async def test_full_workflow():
     server_task = asyncio.create_task(server.start())
 
     # Connect client
-    async with websockets.connect("ws://localhost:9876") as websocket:
+    async with websockets.connect("ws://localhost:9877") as websocket:
         # Test authentication and context operations
         pass
 

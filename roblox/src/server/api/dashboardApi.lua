@@ -11,9 +11,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Configuration
 local CONFIG = {
-    DASHBOARD_URL = "http://127.0.0.1:3000",
-    BACKEND_URL = "http://127.0.0.1:8008",
-    WEBSOCKET_URL = "ws://127.0.0.1:9876",
+    DASHBOARD_URL = "http://127.0.0.1:5179",
+    BACKEND_URL = "http://127.0.0.1:8009",
+    -- Pusher configuration (real-time via backend bridge)
+    PUSHER_KEY = "${PUSHER_KEY}",
+    PUSHER_CLUSTER = "${PUSHER_CLUSTER}",
     API_VERSION = "v1",
     REQUEST_TIMEOUT = 30,
     RETRY_ATTEMPTS = 3,
@@ -72,7 +74,7 @@ function DashboardAPI:initialize()
     local success = self:authenticate()
     if success then
         self.isInitialized = true
-        self:setupWebSocket()
+        self:setupRealtime()
         self:startSyncLoop()
         self:registerEventHandlers()
         print("[DashboardAPI] Initialized successfully")
@@ -159,54 +161,15 @@ function DashboardAPI:ensureAuth()
     return authState.token ~= nil
 end
 
--- Setup WebSocket connection for real-time updates
-function DashboardAPI:setupWebSocket()
-    if not HttpService.CreateWebStreamClient then
-        warn("[DashboardAPI] WebSocket not supported in this Studio version")
-        return
-    end
-    
-    local success, client = pcall(function()
-        return HttpService:CreateWebStreamClient()
-    end)
-    
-    if not success then
-        warn("[DashboardAPI] Failed to create WebSocket client:", client)
-        return
-    end
-    
-    webSocketConnection = client
-    
-    -- Connect to MCP WebSocket server
-    local wsUrl = self.config.WEBSOCKET_URL .. "/dashboard?token=" .. authState.token
-    
-    client:Connect(wsUrl)
-    
-    client.OnMessage:Connect(function(message)
-        self:handleWebSocketMessage(message)
-    end)
-    
-    client.OnClose:Connect(function(code, reason)
-        warn("[DashboardAPI] WebSocket closed:", code, reason)
-        -- Attempt reconnection after delay
-        wait(5)
-        self:setupWebSocket()
-    end)
-    
-    print("[DashboardAPI] WebSocket connected")
+-- Setup Pusher-based realtime via backend bridge
+function DashboardAPI:setupRealtime()
+    -- No native Pusher client in Roblox; rely on backend bridge and polling if needed
+    print("[DashboardAPI] Realtime initialized (Pusher via backend bridge)")
 end
 
--- Handle incoming WebSocket messages
-function DashboardAPI:handleWebSocketMessage(message)
-    local success, data = pcall(function()
-        return HttpService:JSONDecode(message)
-    end)
-    
-    if not success then
-        warn("[DashboardAPI] Invalid WebSocket message:", message)
-        return
-    end
-    
+-- Handle incoming realtime messages (from backend bridge if used)
+function DashboardAPI:handleRealtimeMessage(data)
+    if not data then return end
     local eventType = data.type
     local payload = data.payload
     
@@ -221,7 +184,7 @@ function DashboardAPI:handleWebSocketMessage(message)
     elseif eventType == "sync_request" then
         self:performSync()
     else
-        print("[DashboardAPI] Unknown WebSocket event:", eventType)
+        print("[DashboardAPI] Unknown realtime event:", eventType)
     end
 end
 
@@ -682,19 +645,16 @@ end
 
 -- Utility Functions
 
--- Send WebSocket message
+-- Send realtime event via backend (Pusher trigger handled server-side)
 function DashboardAPI:sendWebSocketMessage(message)
-    if not webSocketConnection then
-        return
-    end
-    
-    local success, err = pcall(function()
-        webSocketConnection:Send(HttpService:JSONEncode(message))
-    end)
-    
-    if not success then
-        warn("[DashboardAPI] Failed to send WebSocket message:", err)
-    end
+    -- Queue as generic event; backend can flush to Pusher
+    table.insert(self.eventQueue, {
+        type = "realtime_event",
+        payload = message,
+        timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+    })
+    -- Opportunistically flush
+    self:flushEventQueue()
 end
 
 -- Update analytics
@@ -846,10 +806,7 @@ end
 
 -- Broadcast session start
 function DashboardAPI:broadcastSessionStart(sessionData)
-    self:sendWebSocketMessage({
-        type = "session_started",
-        payload = sessionData
-    })
+    self:sendWebSocketMessage({ type = "session_started", payload = sessionData })
 end
 
 -- Update lesson
@@ -881,11 +838,7 @@ end
 function DashboardAPI:cleanup()
     self.syncEnabled = false
     
-    -- Close WebSocket
-    if webSocketConnection then
-        webSocketConnection:Close()
-        webSocketConnection = nil
-    end
+    -- No WebSocket to close when using Pusher bridge
     
     -- Flush remaining events
     self:flushEventQueue()

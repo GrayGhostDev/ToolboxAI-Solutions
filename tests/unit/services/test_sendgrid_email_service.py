@@ -15,7 +15,7 @@ import json
 import base64
 
 # Import the service
-from apps.backend.services.email_service_sendgrid import (
+from apps.backend.services.email.sendgrid import (
     SendGridEmailService,
     EmailPriority,
     EmailType,

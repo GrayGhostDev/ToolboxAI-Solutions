@@ -132,7 +132,7 @@ function SecureConfigurationManager:initializeSecureStorage()
         -- Set default attributes (these should be set by server scripts or manually)
         if self.environment == "development" then
             -- Development defaults - these should NEVER be production values
-            ServerStorage:SetAttribute("BACKEND_URL", "http://127.0.0.1:8008")
+            ServerStorage:SetAttribute("BACKEND_URL", "http://127.0.0.1:8009")
             ServerStorage:SetAttribute("BRIDGE_URL", "http://127.0.0.1:5001")
             ServerStorage:SetAttribute("DASHBOARD_URL", "http://127.0.0.1:5179")
         else
@@ -368,4 +368,3 @@ function SecureConfigurationManager.getInstance()
 end
 
 return SecureConfigurationManager
-

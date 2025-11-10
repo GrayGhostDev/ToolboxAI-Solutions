@@ -460,7 +460,7 @@ class RobloxAssistantGraph:
                 # Call Roblox content generation endpoint
                 async with AsyncClient() as client:
                     response = await client.post(
-                        "http://127.0.0.1:8008/api/v1/roblox/content/generate",
+                        "http://127.0.0.1:8009/api/v1/roblox/content/generate",
                         json={
                             "content_type": content_type_map.get(state.intent, "lesson"),
                             "subject": state.context.get("subject", "General"),

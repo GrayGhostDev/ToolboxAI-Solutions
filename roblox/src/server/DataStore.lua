@@ -31,8 +31,8 @@ local CONFIG = {
     DATA_VERSION = 2,
     
     -- API endpoints for backup
-    BACKUP_API_ENDPOINT = "http://127.0.0.1:8008/backup",
-    SYNC_API_ENDPOINT = "http://127.0.0.1:8008/sync"
+    BACKUP_API_ENDPOINT = "http://127.0.0.1:8009/backup",
+    SYNC_API_ENDPOINT = "http://127.0.0.1:8009/sync"
 }
 
 -- DataStore Module

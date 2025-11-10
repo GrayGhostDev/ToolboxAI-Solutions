@@ -72,7 +72,7 @@ The integration system exposes REST API endpoints under `/api/v1/integration`:
 ### 1. Check System Status
 
 ```bash
-curl -X GET http://localhost:8008/api/v1/integration/status \
+curl -X GET http://localhost:8009/api/v1/integration/status \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -96,7 +96,7 @@ Response:
 ### 2. Execute a Workflow
 
 ```bash
-curl -X POST http://localhost:8008/api/v1/integration/workflow/create \
+curl -X POST http://localhost:8009/api/v1/integration/workflow/create \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -112,7 +112,7 @@ curl -X POST http://localhost:8008/api/v1/integration/workflow/create \
 ### 3. Register a Schema
 
 ```bash
-curl -X POST http://localhost:8008/api/v1/integration/schema/register \
+curl -X POST http://localhost:8009/api/v1/integration/schema/register \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -135,7 +135,7 @@ curl -X POST http://localhost:8008/api/v1/integration/schema/register \
 ### 4. Trigger Data Sync
 
 ```bash
-curl -X POST http://localhost:8008/api/v1/integration/sync/trigger \
+curl -X POST http://localhost:8009/api/v1/integration/sync/trigger \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

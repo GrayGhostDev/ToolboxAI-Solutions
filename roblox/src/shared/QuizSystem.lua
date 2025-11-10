@@ -35,7 +35,7 @@ local QUIZ_CONFIG = {
     MAX_HINTS_PER_QUESTION = 2,
 
     -- Backend Integration (2025)
-    BACKEND_URL = "http://127.0.0.1:8008",
+    BACKEND_URL = "http://127.0.0.1:8009",
     QUIZ_ENDPOINT = "/api/v1/quiz",
     ANALYTICS_ENDPOINT = "/api/v1/analytics/quiz",
     RESULTS_ENDPOINT = "/api/v1/quiz/results"

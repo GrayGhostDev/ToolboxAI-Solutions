@@ -7,7 +7,7 @@ import logging
 import json
 from typing import List, Dict, Any, Optional, Union
 from datetime import datetime, timezone
-from apps.backend.services.email_service_sendgrid import (
+from apps.backend.services.email.sendgrid import (
     EmailRecipient,
     EmailAttachment,
     EmailPriority,

@@ -29,7 +29,7 @@ def get_email_service(force_mock: bool = False):
 
     if use_mock:
         logger.info("📧 Using MockEmailService (emails will be logged, not sent)")
-        from apps.backend.services.email_service_mock import MockEmailService
+        from apps.backend.services.email.mock import MockEmailService
         return MockEmailService()
 
     # Try to use SendGrid
@@ -37,18 +37,18 @@ def get_email_service(force_mock: bool = False):
 
     if not api_key:
         logger.warning("⚠️  No SENDGRID_API_KEY found, using MockEmailService")
-        from apps.backend.services.email_service_mock import MockEmailService
+        from apps.backend.services.email.mock import MockEmailService
         return MockEmailService()
 
     # Validate API key format
     if not api_key.startswith('SG.'):
         logger.warning("⚠️  Invalid SENDGRID_API_KEY format, using MockEmailService")
-        from apps.backend.services.email_service_mock import MockEmailService
+        from apps.backend.services.email.mock import MockEmailService
         return MockEmailService()
 
     # Try to initialize SendGrid
     try:
-        from apps.backend.services.email_service_sendgrid import SendGridEmailService
+        from apps.backend.services.email.sendgrid import SendGridEmailService
         from sendgrid import SendGridAPIClient
 
         # Test if the API key is valid by trying a simple API call

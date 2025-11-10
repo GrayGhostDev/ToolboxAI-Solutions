@@ -79,7 +79,7 @@ def test_sendgrid_with_service():
 
     try:
         # Import our service
-        from apps.backend.services.email_service_sendgrid import SendGridEmailService
+        from apps.backend.services.email.sendgrid import SendGridEmailService
         import asyncio
 
         # Create service instance

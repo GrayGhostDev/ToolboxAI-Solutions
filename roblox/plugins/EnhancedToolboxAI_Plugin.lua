@@ -30,7 +30,7 @@ local MarketplaceService = game:GetService("MarketplaceService")
 -- Plugin Configuration
 local CONFIG = {
     FLASK_BRIDGE_URL = "http://127.0.0.1:5001",
-    FASTAPI_URL = "http://127.0.0.1:8008",
+    FASTAPI_URL = "http://127.0.0.1:8009",
     PUSHER_KEY = "your-pusher-key",
     PUSHER_CLUSTER = "mt1",
     VERSION = "2.0.0",

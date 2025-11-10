@@ -139,7 +139,7 @@ VITE_DEBUG_MODE=true
 2. **Success Notifications**: Green toast notifications for successful operations
 3. **Loading States**: Buttons show "Saving..." during operations
 4. **Error Handling**: Clear error messages if operations fail
-5. **Real-time Status**: "Real-time connection established" notification when WebSocket connects
+5. **Real-time Status**: Realtime (Pusher) status visible on Observability page in development
 
 ## Files Modified
 
@@ -174,8 +174,8 @@ VITE_DEBUG_MODE=true
 
 If issues occur:
 
-1. **Check Backend Connection**: Ensure API server is running on port 8008
-2. **Check WebSocket**: Ensure MCP server is running on port 9876
+1. **Check Backend Connection**: Ensure API server is running on port 8009
+2. **Check MCP**: Ensure MCP server is running on port 9877
 3. **Clear Cache**: Hard refresh browser or clear localStorage
 4. **Check Console**: Look for detailed error messages
 5. **Fallback**: Manual page refresh still works for data updates

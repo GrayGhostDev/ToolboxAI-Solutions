@@ -4,6 +4,7 @@ import {
   Progress, Modal, Drawer, Tabs, Menu, Tooltip, Checkbox, Radio,
   Switch, Slider, Rating, Skeleton, Table, useMantineTheme
 } from '@mantine/core';
+import RealtimeStatusCard from '../system/RealtimeStatusCard';
 
 // Helper function for color transparency (replaces MUI alpha)
 const alpha = (color: string, opacity: number) => {
@@ -532,6 +533,13 @@ const ObservabilityDashboard: React.FC = () => {
           </ActionIcon>
         </Group>
       </Group>
+
+      {/* Realtime Status (dev or when enabled via flag) */}
+      {(import.meta.env.DEV || import.meta.env.VITE_SHOW_REALTIME_STATUS === 'true') && (
+        <Box mb={16} style={{ maxWidth: 420 }}>
+          <RealtimeStatusCard pollMs={15000} />
+        </Box>
+      )}
 
       {/* Loading indicator */}
       {loading && <Progress value={undefined} mb={16} />}

@@ -13,8 +13,8 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, EmailStr, Field
 
 from apps.backend.config import settings
-from apps.backend.services.email_service import email_service
-from apps.backend.services.email_queue import EmailPriority, email_queue
+from apps.backend.services.email import email_service
+from apps.backend.services.email.queue import EmailPriority, email_queue
 
 logger = logging.getLogger(__name__)
 

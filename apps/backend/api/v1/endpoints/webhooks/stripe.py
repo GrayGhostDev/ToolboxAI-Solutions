@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.config import settings
 from apps.backend.services.dunning_service import DunningService
-from apps.backend.services.email_queue import EmailPriority, email_queue
+from apps.backend.services.email.queue import EmailPriority, email_queue
 from apps.backend.services.invoice_generator import InvoiceGenerator
 from apps.backend.services.stripe_service import StripeService
 from database.db import get_async_db

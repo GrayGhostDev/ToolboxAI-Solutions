@@ -14,8 +14,8 @@ from sqlalchemy.orm import Session
 
 from apps.backend.core.database import get_db
 from apps.backend.core.config import settings
-from apps.backend.services.email_service import email_service
-from apps.backend.services.email_queue import email_queue, EmailPriority
+from apps.backend.services.email import email_service
+from apps.backend.services.email.queue import email_queue, EmailPriority
 
 logger = get_task_logger(__name__)
 
@@ -71,7 +71,7 @@ def send_pending_emails(self, batch_size: int = 50) -> Dict[str, Any]:
                             break
 
                         # Parse and process job
-                        from apps.backend.services.email_queue import EmailJob
+                        from apps.backend.services.email.queue import EmailJob
                         job = EmailJob.parse_raw(job_data)
 
                         await email_queue._process_email_job(job)

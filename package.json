@@ -62,8 +62,8 @@
     "three": "^0.160.1",
     "prismjs": "^1.30.0",
     "esbuild": "^0.25.10",
-    "undici": "^6.0.0",
-    "path-to-regexp": "^6.2.2"
+    "undici": "^6.20.0",
+    "path-to-regexp": "^8.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.37.0",

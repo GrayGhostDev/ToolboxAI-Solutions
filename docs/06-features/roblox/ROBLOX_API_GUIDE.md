@@ -18,7 +18,7 @@ This guide covers the comprehensive Roblox API endpoints for the ToolBoxAI Educa
 
 ## Overview
 
-**Base URL**: `http://127.0.0.1:8008/api/v1/roblox`
+**Base URL**: `http://127.0.0.1:8009/api/v1/roblox`
 **Universe ID**: `8505376973`
 **Client ID**: `2214511122270781418`
 
@@ -349,12 +349,14 @@ GET /roblox/progress/leaderboard?game_id=game_abc123def456&leaderboard_type=scor
 
 ## Real-time Communication
 
+Note: The platform uses Pusher Channels for realtime. The WebSocket examples below are provided for reference/legacy compatibility and should be replaced with the Pusher flow described in `docs/PUSHER_REALTIME.md`.
+
 ### 1. WebSocket - Game Updates
 
 Connect to real-time game updates.
 
 ```javascript
-const gameWs = new WebSocket('ws://127.0.0.1:8008/api/v1/roblox/ws/game/game_abc123def456');
+const gameWs = new WebSocket('ws://127.0.0.1:8009/api/v1/roblox/ws/game/game_abc123def456');
 
 gameWs.onmessage = function(event) {
     const data = JSON.parse(event.data);
@@ -386,7 +388,7 @@ gameWs.send(JSON.stringify({
 Monitor AI content generation progress.
 
 ```javascript
-const contentWs = new WebSocket('ws://127.0.0.1:8008/api/v1/roblox/ws/content');
+const contentWs = new WebSocket('ws://127.0.0.1:8009/api/v1/roblox/ws/content');
 
 contentWs.onmessage = function(event) {
     const data = JSON.parse(event.data);

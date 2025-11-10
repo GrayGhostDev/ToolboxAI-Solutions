@@ -11,6 +11,8 @@ The ToolboxAI Solutions platform uses a microservices architecture deployed on K
 > - [Infrastructure Monitoring 2025](../07-operations/infrastructure-monitoring.md) - Monitoring and observability
 > - [Infrastructure Security 2025](../07-operations/infrastructure-security.md) - Security and compliance
 
+> Note: The current default FastAPI backend port is 8009. Legacy examples in this document may reference 8008. Realtime communication has moved from WebSocket/Socket.IO to Pusher Channels.
+
 ## Infrastructure Components
 
 ### Container Orchestration

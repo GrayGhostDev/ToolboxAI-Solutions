@@ -426,7 +426,7 @@ Respond to the user's message in a helpful, conversational way."""
             # Trigger the realtime endpoint directly
             async with httpx.AsyncClient() as client:
                 await client.post(
-                    "http://127.0.0.1:8008/realtime/trigger",
+                    "http://127.0.0.1:8009/realtime/trigger",
                     json={
                         "channel": f"ai-chat-{conversation_id}",
                         "event": "message",

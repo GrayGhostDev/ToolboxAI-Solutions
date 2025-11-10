@@ -448,6 +448,8 @@ SELECT * FROM users LIMIT 10;  # Query data
 ```text
 ### API Debugging
 
+Note: Default backend port is 8009. Replace 8008 with 8009 where necessary in the commands below.
+
 #### Using curl
 
 ```bash
@@ -471,14 +473,24 @@ curl http://localhost:8008/api/user/profile \
 pip install httpie
 
 # Health check
-http :8008/health
+http :8009/health
 
 # Login
-http POST :8008/api/auth/login email=test@example.com password=password123
+http POST :8009/api/auth/login email=test@example.com password=password123
 
 # Authenticated request
-http :8008/api/user/profile "Authorization: Bearer $TOKEN"
+http :8009/api/user/profile "Authorization: Bearer $TOKEN"
 ```text
+### Realtime Status Card (Dashboard)
+
+In development, the Observability Dashboard displays a realtime status card (Pusher). To enable it outside development, add to your dashboard env:
+
+```env
+VITE_SHOW_REALTIME_STATUS=true
+VITE_API_BASE_URL=http://localhost:8009
+```
+
+Then start the dashboard and open the Observability Dashboard page.
 ## Testing
 
 ### Running Tests
@@ -551,7 +563,7 @@ class TestAPIEndpoints:
 
 ```bash
 # Find process using port
-lsof -i :8008
+lsof -i :8009
 
 # Kill process
 kill -9 <PID>

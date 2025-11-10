@@ -25,7 +25,7 @@ This document provides comprehensive documentation for the Roblox Bridge integra
 │  │ Generator Plugin│        │  (Port 34872)    │           │
 │  └────────┬────────┘        └────────┬─────────┘           │
 └───────────┼──────────────────────────┼─────────────────────┘
-            │ OAuth2/HTTPS              │ WebSocket
+            │ OAuth2/HTTPS              │ Pusher Channels (via Bridge)
             ▼                           ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    Backend Services                          │
@@ -63,7 +63,7 @@ This document provides comprehensive documentation for the Roblox Bridge integra
 | Roblox Router | `apps/backend/routers/roblox.py` | API endpoints for Roblox integration |
 | Schemas | `apps/backend/schemas/roblox.py` | Pydantic models for validation |
 | Rojo Config | `roblox/Config/default.project.json` | Rojo project configuration |
-| Studio Plugin | `roblox/plugins/AIContentGenerator.lua` | Roblox Studio plugin |
+| Studio Plugin | `roblox/plugins/AIContentGenerator.lua` | Roblox Studio plugin (Pusher via bridge) |
 | Environment Config | `.env.local` | Encrypted credentials and settings |
 
 ## Security Implementation
@@ -113,7 +113,72 @@ All credential access is logged with the following information:
 
 ## API Documentation
 
+### Bridge Endpoints (Plugin ↔ Bridge)
+
+- `POST /register_plugin` — register Studio plugin session
+- `POST /unregister_plugin` — unregister plugin session
+- `POST /plugin/messages` — long‑poll for realtime messages (Pusher relayed)
+- `POST /plugin/send-message` — send plugin event (bridge relays to Pusher)
+- `POST /plugin/pusher/send` — alternative send endpoint
+- `GET /pusher/status` — realtime health status
+
+Dev note: The backend exposes a minimal dev bridge (disabled by default) if `BRIDGE_DEV_ENABLED=true` or when `ENVIRONMENT=development`. Use this for local parity at `http://127.0.0.1:8009`.
+
 ### Authentication Endpoints
+
+### Minimal Bridge Handler (FastAPI Example)
+
+```python
+from fastapi import FastAPI, Body
+from pydantic import BaseModel
+from typing import List, Dict, Any
+from datetime import datetime
+
+app = FastAPI()
+
+class Message(BaseModel):
+    id: str
+    timestamp: float
+    plugin_id: str
+    studio_id: str
+    data: Dict[str, Any]
+
+_SESSIONS: Dict[str, Dict[str, Any]] = {}
+_QUEUES: Dict[str, List[Message]] = {}
+
+@app.post('/register_plugin')
+def register(payload: Dict[str, Any]):
+    sid = payload.get('studio_id') or 'studio'
+    pid = f"session_{int(datetime.utcnow().timestamp())}"
+    _SESSIONS[pid] = {"studio_id": sid, "created_at": datetime.utcnow().isoformat()}
+    _QUEUES.setdefault(pid, [])
+    return {"success": True, "session_id": pid}
+
+@app.post('/unregister_plugin')
+def unregister(payload: Dict[str, Any]):
+    pid = payload.get('session_id')
+    _SESSIONS.pop(pid, None)
+    _QUEUES.pop(pid, None)
+    return {"success": True}
+
+@app.post('/plugin/send-message')
+def send_message(msg: Message):
+    # Enqueue for demonstration (in production, trigger Pusher here)
+    _QUEUES.setdefault(msg.plugin_id, []).append(msg)
+    return {"success": True}
+
+@app.post('/plugin/messages')
+def poll_messages(payload: Dict[str, Any] = Body(...)):
+    pid = payload.get('plugin_id')
+    messages = _QUEUES.get(pid, [])
+    _QUEUES[pid] = []  # drain
+    return {"messages": [m.model_dump() for m in messages]}
+
+@app.get('/pusher/status')
+def pusher_status():
+    # Report static OK (in production, reflect actual Pusher state)
+    return {"connected": True, "cluster": "mt1", "channel": "toolboxai-dev"}
+```
 
 #### POST /api/v1/roblox/auth/initiate
 Initiates OAuth2 flow with Roblox.

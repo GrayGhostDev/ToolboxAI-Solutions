@@ -20,7 +20,7 @@ The Roblox AI Agent Suite provides powerful AI-driven capabilities for education
 
 ## API Endpoints
 
-Base URL: `http://localhost:8008/api/v1`
+Base URL: `http://localhost:8009/api/v1`
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
@@ -44,7 +44,7 @@ Authorization: Bearer YOUR_JWT_TOKEN
 To obtain a token:
 
 ```bash
-curl -X POST http://localhost:8008/api/v1/auth/login \
+curl -X POST http://localhost:8009/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username": "your_username", "password": "your_password"}'
 ```
@@ -56,7 +56,7 @@ curl -X POST http://localhost:8008/api/v1/auth/login \
 ### Generate Math Quiz
 
 ```bash
-curl -X POST http://localhost:8008/api/v1/roblox-agents/generate-content \
+curl -X POST http://localhost:8009/api/v1/roblox-agents/generate-content \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -98,7 +98,7 @@ curl -X POST http://localhost:8008/api/v1/roblox-agents/generate-content \
 ### Generate Science Experiment
 
 ```bash
-curl -X POST http://localhost:8008/api/v1/roblox-agents/generate-content \
+curl -X POST http://localhost:8009/api/v1/roblox-agents/generate-content \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -117,7 +117,7 @@ curl -X POST http://localhost:8008/api/v1/roblox-agents/generate-content \
 ### Optimize Performance
 
 ```bash
-curl -X POST http://localhost:8008/api/v1/roblox-agents/optimize-script \
+curl -X POST http://localhost:8009/api/v1/roblox-agents/optimize-script \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -159,7 +159,7 @@ curl -X POST http://localhost:8008/api/v1/roblox-agents/optimize-script \
 ### Validate Script Security
 
 ```bash
-curl -X POST http://localhost:8008/api/v1/roblox-agents/validate-security \
+curl -X POST http://localhost:8009/api/v1/roblox-agents/validate-security \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -224,7 +224,7 @@ curl -X POST http://localhost:8008/api/v1/roblox-agents/validate-security \
 ### Validate Multiple Scripts
 
 ```bash
-curl -X POST http://localhost:8008/api/v1/roblox-agents/batch-validate \
+curl -X POST http://localhost:8009/api/v1/roblox-agents/batch-validate \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -257,7 +257,7 @@ from typing import Dict, Any, Optional
 class RobloxAgentsClient:
     """Client for Roblox AI Agents API"""
 
-    def __init__(self, base_url: str = "http://localhost:8008", token: Optional[str] = None):
+    def __init__(self, base_url: str = "http://localhost:8009", token: Optional[str] = None):
         self.base_url = base_url
         self.token = token
         self.session = requests.Session()

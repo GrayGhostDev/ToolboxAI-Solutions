@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 import json
 
 from apps.backend.services import email_service
-from apps.backend.services.email_service import (
+from apps.backend.services.email import (
     EmailService, EmailProvider,
     EmailType, EmailPriority
 )

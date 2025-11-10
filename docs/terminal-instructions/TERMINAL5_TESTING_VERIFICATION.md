@@ -22,7 +22,7 @@ import asyncio
 from datetime import datetime
 import json
 
-BASE_URL = "http://localhost:8008"
+BASE_URL = "http://localhost:8009"
 TEST_USER = {"email": "test@toolboxai.com", "password": "test123"}
 
 @pytest.fixture
@@ -162,7 +162,7 @@ async def test_websocket_connection():
     """Test WebSocket connectivity"""
     import websockets
     
-    uri = "ws://localhost:8008/ws"
+    uri = "ws://localhost:8009/ws"
     try:
         async with websockets.connect(uri) as websocket:
             # Send ping
@@ -358,7 +358,7 @@ class TestFullWorkflow:
         async with httpx.AsyncClient() as client:
             # Login as teacher
             response = await client.post(
-                "http://localhost:8008/api/v1/auth/login",
+                "http://localhost:8009/api/v1/auth/login",
                 json={"username": "teacher@toolboxai.com", "password": "teacher123"}
             )
             assert response.status_code == 200
@@ -367,7 +367,7 @@ class TestFullWorkflow:
             
             # Generate content
             response = await client.post(
-                "http://localhost:8008/api/v1/content/generate",
+                "http://localhost:8009/api/v1/content/generate",
                 json={
                     "subject": "Science",
                     "grade_level": 5,
@@ -383,7 +383,7 @@ class TestFullWorkflow:
             
             # Generate quiz
             response = await client.post(
-                "http://localhost:8008/api/v1/quiz/generate",
+                "http://localhost:8009/api/v1/quiz/generate",
                 json={
                     "topic": "Photosynthesis",
                     "difficulty": "easy",
@@ -407,7 +407,7 @@ class TestFullWorkflow:
         async with httpx.AsyncClient() as client:
             # Login as student
             response = await client.post(
-                "http://localhost:8008/api/v1/auth/login",
+                "http://localhost:8009/api/v1/auth/login",
                 json={"username": "student@toolboxai.com", "password": "student123"}
             )
             
@@ -419,7 +419,7 @@ class TestFullWorkflow:
             
             # Get enrolled courses
             response = await client.get(
-                "http://localhost:8008/api/v1/courses",
+                "http://localhost:8009/api/v1/courses",
                 headers=headers
             )
             assert response.status_code == 200
@@ -430,7 +430,7 @@ class TestFullWorkflow:
                 
                 # Get course content
                 response = await client.get(
-                    f"http://localhost:8008/api/v1/courses/{course_id}/content",
+                    f"http://localhost:8009/api/v1/courses/{course_id}/content",
                     headers=headers
                 )
                 assert response.status_code in [200, 404]
@@ -485,7 +485,7 @@ from concurrent.futures import ThreadPoolExecutor
 import json
 
 class PerformanceTester:
-    def __init__(self, base_url="http://localhost:8008"):
+    def __init__(self, base_url="http://localhost:8009"):
         self.base_url = base_url
         self.results = []
     
@@ -799,7 +799,7 @@ while true; do
     
     # Check services
     echo "📡 Service Status:"
-    curl -s http://localhost:8008/health | jq -r '.status' | xargs -I {} echo "  FastAPI: {}"
+    curl -s http://localhost:8009/health | jq -r '.status' | xargs -I {} echo "  FastAPI: {}"
     curl -s http://localhost:5001/health 2>/dev/null && echo "  Flask: ✅" || echo "  Flask: ❌"
     curl -s http://localhost:5177 > /dev/null 2>&1 && echo "  Dashboard: ✅" || echo "  Dashboard: ❌"
     
@@ -811,7 +811,7 @@ while true; do
     echo ""
     echo "📊 Performance:"
     echo -n "  API Response: "
-    time=$(curl -o /dev/null -s -w '%{time_total}' http://localhost:8008/health)
+    time=$(curl -o /dev/null -s -w '%{time_total}' http://localhost:8009/health)
     echo "${time}s"
     
     echo ""

@@ -55,6 +55,30 @@ services:
     volumes: []
 
   # ----------------------------------------
+  # HashiCorp Vault (Development)
+  # ----------------------------------------
+  vault:
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_DEV_ROOT_TOKEN:-devtoken}
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+      VAULT_LOG_LEVEL: debug
+      SKIP_SETCAP: "true"
+    # Override entrypoint to run vault directly (bypass su-exec wrapper)
+    entrypoint: ["/bin/vault"]
+    command: ["server", "-dev", "-dev-root-token-id=${VAULT_DEV_ROOT_TOKEN:-devtoken}", "-dev-listen-address=0.0.0.0:8200"]
+    # Development mode doesn't require security restrictions
+    security_opt: []
+    cap_drop: []
+    cap_add: []
+    read_only: false
+    user: root  # Run as root in development to avoid permission issues
+    # Dev mode runs entirely in-memory, no config file needed (override base volumes)
+    volumes: !override []
+    labels:
+      - "com.toolboxai.environment=development"
+      - "com.toolboxai.vault.mode=dev"
+
+  # ----------------------------------------
   # FastAPI Backend (Development)
   # ----------------------------------------
   backend:

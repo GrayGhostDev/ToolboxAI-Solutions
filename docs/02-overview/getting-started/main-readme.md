@@ -170,7 +170,7 @@ make dev
 
 # Access the application
 open http://localhost:3000  # Dashboard
-open http://localhost:8008  # API
+open http://localhost:8009  # API
 ```
 
 ## 🤝 Contributing

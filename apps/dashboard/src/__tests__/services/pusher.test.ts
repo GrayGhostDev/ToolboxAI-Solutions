@@ -41,10 +41,10 @@ vi.mock('../../config', () => ({
     maxReconnectAttempts: 3,
     heartbeatInterval: 1000,
   },
-  WS_URL: 'http://localhost:8008',
+  WS_URL: 'http://localhost:8009',
   PUSHER_KEY: 'test-pusher-key',
   PUSHER_CLUSTER: 'test-cluster',
-  PUSHER_AUTH_ENDPOINT: 'http://localhost:8008/pusher/auth',
+  PUSHER_AUTH_ENDPOINT: 'http://localhost:8009/pusher/auth',
 }));
 
 // Mock API client

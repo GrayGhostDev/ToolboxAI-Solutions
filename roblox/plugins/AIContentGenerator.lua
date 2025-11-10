@@ -5,7 +5,7 @@
                  to the ToolboxAI backend for real-time content creation
     
     Features:
-    - Real-time WebSocket connection to backend
+    - Real-time Pusher integration via backend bridge
     - AI-powered content generation
     - Educational environment creation
     - Quiz and assessment integration
@@ -26,9 +26,10 @@ local CoreGui = game:GetService("CoreGui")
 local CONFIG = {
     PLUGIN_NAME = "ToolboxAI Content Generator",
     PLUGIN_VERSION = "1.1.0",
-    BACKEND_URL = "http://127.0.0.1:5001",  -- Flask bridge server
-    API_URL = "http://127.0.0.1:8008",      -- FastAPI main server
-    WEBSOCKET_URL = "ws://127.0.0.1:9876",  -- MCP WebSocket server
+    BACKEND_URL = "http://127.0.0.1:5001",  -- Bridge server (provides Pusher integration + polling)
+    API_URL = "http://127.0.0.1:8009",      -- FastAPI main server
+    PUSHER_KEY = "your-pusher-key",         -- Pusher Channels key (info purposes)
+    PUSHER_CLUSTER = "mt1",                  -- Pusher cluster
     PLUGIN_PORT = 64989,
     HEARTBEAT_INTERVAL = 30,  -- seconds
     RECONNECT_INTERVAL = 5,   -- seconds
@@ -39,6 +40,42 @@ local CONFIG = {
     STUDIO_ID = game:GetService("RbxAnalyticsService"):GetClientId() or "unknown"
 }
 
+-- Bridge endpoints (configurable if bridge differs)
+CONFIG.ENDPOINTS = {
+    register = "/register_plugin",
+    unregister = "/unregister_plugin",
+    poll = "/plugin/messages",
+    send = "/plugin/send-message",
+    alt_send = "/plugin/pusher/send",
+    status = "/pusher/status",
+    alt_polls = { "/plugin/poll", "/poll-messages", "/messages/poll" }
+}
+
+-- Optional: Use backend (API_URL) as bridge during development
+-- If true, bridge requests will be sent to API_URL instead of a dedicated bridge URL
+CONFIG.USE_BACKEND_BRIDGE = false
+
+-- Read plugin setting to override bridge target (Studio → Plugin Settings)
+local useBackendBridgeSetting = nil
+pcall(function()
+    useBackendBridgeSetting = plugin:GetSetting("UseBackendBridge")
+end)
+if useBackendBridgeSetting == true then
+    CONFIG.USE_BACKEND_BRIDGE = true
+elseif useBackendBridgeSetting == false then
+    CONFIG.USE_BACKEND_BRIDGE = false
+else
+    -- Default to backend bridge in Studio for development convenience
+    if RunService:IsStudio() then
+        CONFIG.USE_BACKEND_BRIDGE = true
+    end
+end
+
+-- Apply bridge override if enabled
+if CONFIG.USE_BACKEND_BRIDGE then
+    CONFIG.BACKEND_URL = CONFIG.API_URL
+end
+
 -- Plugin State
 local PluginState = {
     connected = false,
@@ -48,6 +85,9 @@ local PluginState = {
     reconnectAttempts = 0,
     activeRequests = {},
     generatedContent = {},
+    lastEventAt = nil,
+    pusherChannel = nil,
+    pusherConnected = false,
     settings = {
         autoApplyContent = false,
         showNotifications = true,
@@ -55,7 +95,7 @@ local PluginState = {
     }
 }
 
--- Enhanced WebSocket Manager with robust fallback and queuing
+-- Realtime Manager (Pusher via backend bridge) with robust fallback and queuing
 local WebSocketManager = {
     connection = nil,
     isAvailable = false,
@@ -66,7 +106,7 @@ local WebSocketManager = {
     offlineQueue = {},
     reconnectAttempts = 0,
     maxReconnectAttempts = 5,
-    connectionState = "disconnected", -- disconnected, connecting, connected, polling
+    connectionState = "disconnected", -- disconnected, connecting, pusher, polling
     lastSuccessfulConnection = 0,
     healthCheckInterval = 10 -- seconds
 }
@@ -130,6 +170,18 @@ statusLabel.TextColor3 = Color3.new(1, 1, 1)
 statusLabel.Font = Enum.Font.SourceSans
 statusLabel.TextScaled = true
 statusLabel.Parent = headerFrame
+
+-- Realtime info (Pusher details and last event time)
+local realtimeLabel = Instance.new("TextLabel")
+realtimeLabel.Size = UDim2.new(1, -20, 0, 16)
+realtimeLabel.Position = UDim2.new(0, 10, 1, -18)
+realtimeLabel.BackgroundTransparency = 1
+realtimeLabel.Text = "Realtime: Pusher (cluster=" .. tostring(CONFIG.PUSHER_CLUSTER) .. ") | Last event: none"
+realtimeLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+realtimeLabel.Font = Enum.Font.SourceSans
+realtimeLabel.TextXAlignment = Enum.TextXAlignment.Left
+realtimeLabel.TextScaled = false
+realtimeLabel.Parent = headerFrame
 
 -- Content Frame (Scrollable)
 local scrollFrame = Instance.new("ScrollingFrame")
@@ -322,6 +374,10 @@ local function updateConnectionStatus(connected, connectionType)
             displayText = "WebSocket Connected"
             color = Color3.fromRGB(100, 255, 100)
             WebSocketManager.connectionState = "connected"
+        elseif connectionType == "pusher" then
+            displayText = "Pusher Connected"
+            color = Color3.fromRGB(100, 255, 100)
+            WebSocketManager.connectionState = "pusher"
         elseif connectionType == "polling" then
             displayText = "HTTP Polling"
             color = Color3.fromRGB(255, 200, 100)
@@ -337,6 +393,12 @@ local function updateConnectionStatus(connected, connectionType)
     statusLabel.Text = displayText
     statusLabel.BackgroundColor3 = color
     debugLog(string.format("Connection status updated: %s (%s)", displayText, connectionType or "unknown"))
+    -- Update realtime info text
+    local last = PluginState.lastEventAt and os.date("!%H:%M:%S", PluginState.lastEventAt) or "none"
+    local channel = PluginState.pusherChannel and tostring(PluginState.pusherChannel) or "n/a"
+    local q = tostring(#WebSocketManager.offlineQueue)
+    realtimeLabel.Text = string.format("Realtime: Pusher (cluster=%s, channel=%s, q=%s) | Last: %s", tostring(CONFIG.PUSHER_CLUSTER), channel, q, last)
+    if debugPanel.Visible then updateDebugPanel() end
 end
 
 local function showNotification(message, notificationType)
@@ -374,6 +436,65 @@ local function showNotification(message, notificationType)
         end
     end)
 end
+
+-- Debug Panel
+local debugPanel = Instance.new("Frame")
+debugPanel.Name = "DebugPanel"
+debugPanel.Size = UDim2.new(1, -20, 0, 80)
+debugPanel.Position = UDim2.new(0, 10, 0, 60)
+debugPanel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+debugPanel.BorderSizePixel = 0
+debugPanel.Visible = false
+debugPanel.Parent = mainFrame
+
+local debugText = Instance.new("TextLabel")
+debugText.Name = "DebugText"
+debugText.Size = UDim2.new(1, -10, 1, -10)
+debugText.Position = UDim2.new(0, 5, 0, 5)
+debugText.BackgroundTransparency = 1
+debugText.Text = ""
+debugText.TextColor3 = Color3.fromRGB(200, 200, 200)
+debugText.Font = Enum.Font.Code
+debugText.TextXAlignment = Enum.TextXAlignment.Left
+debugText.TextYAlignment = Enum.TextYAlignment.Top
+debugText.TextWrapped = true
+debugText.TextScaled = false
+debugText.Parent = debugPanel
+
+local debugButton = Instance.new("TextButton")
+debugButton.Name = "DebugToggle"
+debugButton.Size = UDim2.new(0, 80, 0, 20)
+debugButton.Position = UDim2.new(0.7, -90, 0.1, 0)
+debugButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+debugButton.BorderSizePixel = 0
+debugButton.Text = "Debug"
+debugButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+debugButton.Font = Enum.Font.SourceSans
+debugButton.Parent = headerFrame
+
+local function updateDebugPanel()
+    local last = PluginState.lastEventAt and os.date("!%Y-%m-%d %H:%M:%S", PluginState.lastEventAt) or "none"
+    local connected = PluginState.pusherConnected and "true" or "false"
+    local state = WebSocketManager.connectionState
+    local q = tostring(#WebSocketManager.offlineQueue)
+    local channel = PluginState.pusherChannel and tostring(PluginState.pusherChannel) or "n/a"
+    debugText.Text = string.format(
+        "Pusher Connected: %s\nCluster: %s\nChannel: %s\nConn State: %s\nQueue: %s\nLast Event: %s",
+        connected,
+        tostring(CONFIG.PUSHER_CLUSTER),
+        channel,
+        state,
+        q,
+        last
+    )
+end
+
+debugButton.MouseButton1Click:Connect(function()
+    debugPanel.Visible = not debugPanel.Visible
+    if debugPanel.Visible then
+        updateDebugPanel()
+    end
+end)
 
 local function parseObjectives(text)
     local objectives = {}
@@ -425,36 +546,9 @@ end
 
 -- Enhanced WebSocket Detection and Management
 local function checkWebSocketAvailability()
-    debugLog("Checking WebSocket availability...")
-    
-    -- Check if WebSocket API is available
-    if not HttpService.CreateWebStreamClient then
-        debugLog("WebSocket API not available in this Studio version")
-        WebSocketManager.isAvailable = false
-        return false
-    end
-    
-    -- Test WebSocket creation
-    local success, webSocket = pcall(function()
-        return HttpService:CreateWebStreamClient()
-    end)
-    
-    if not success then
-        debugLog("Failed to create WebSocket client: " .. tostring(webSocket))
-        WebSocketManager.isAvailable = false
-        return false
-    end
-    
-    -- Clean up test WebSocket
-    if webSocket then
-        pcall(function()
-            webSocket:Close()
-        end)
-    end
-    
-    debugLog("WebSocket is available")
-    WebSocketManager.isAvailable = true
-    return true
+    -- We prefer Pusher via backend bridge; treat native WebSocket as unavailable
+    WebSocketManager.isAvailable = false
+    return false
 end
 
 -- Message Queue Management
@@ -499,108 +593,17 @@ end
 
 -- Enhanced WebSocket Connection
 local function connectWebSocket()
-    if not checkWebSocketAvailability() then
-        debugLog("WebSocket not available, starting HTTP polling")
-        startHTTPPolling()
-        return false
-    end
-    
-    WebSocketManager.connectionState = "connecting"
-    updateConnectionStatus(false, "connecting")
-    
-    local success, webSocket = pcall(function()
-        return HttpService:CreateWebStreamClient()
-    end)
-    
-    if not success then
-        warn("Failed to create WebSocket client:", webSocket)
-        startHTTPPolling()
-        return false
-    end
-    
-    WebSocketManager.connection = webSocket
-    
-    local connectSuccess, connectError = pcall(function()
-        webSocket:Connect(CONFIG.WEBSOCKET_URL, {
-            Headers = {
-                ["Authorization"] = CONFIG.JWT_TOKEN and ("Bearer " .. CONFIG.JWT_TOKEN) or "",
-                ["X-Plugin-Version"] = CONFIG.PLUGIN_VERSION,
-                ["X-Studio-ID"] = CONFIG.STUDIO_ID,
-                ["X-Session-ID"] = PluginState.sessionId or ""
-            }
-        })
-    end)
-    
-    if not connectSuccess then
-        warn("WebSocket connection failed:", connectError)
-        WebSocketManager.connection = nil
-        WebSocketManager.connectionState = "disconnected"
-        startHTTPPolling()
-        return false
-    end
-    
-    -- WebSocket event handlers
-    webSocket.OnMessage:Connect(function(message)
-        local success, data = pcall(function()
-            return HttpService:JSONDecode(message)
-        end)
-        
-        if success and data then
-            handleWebSocketMessage(data)
-            WebSocketManager.lastMessageId = math.max(WebSocketManager.lastMessageId, data.id or 0)
-        else
-            warn("Failed to parse WebSocket message:", message)
-        end
-    end)
-    
-    webSocket.OnError:Connect(function(error)
-        warn("WebSocket error:", error)
-        WebSocketManager.connection = nil
-        updateConnectionStatus(false)
-        
-        -- Attempt reconnection with exponential backoff
-        if WebSocketManager.reconnectAttempts < WebSocketManager.maxReconnectAttempts then
-            WebSocketManager.reconnectAttempts = WebSocketManager.reconnectAttempts + 1
-            local delay = math.min(30, 5 * WebSocketManager.reconnectAttempts)
-            debugLog(string.format("Attempting WebSocket reconnect in %d seconds (attempt %d)", delay, WebSocketManager.reconnectAttempts))
-            
-            spawn(function()
-                task.wait(delay)
-                connectWebSocket()
-            end)
-        else
-            debugLog("Max WebSocket reconnection attempts reached, falling back to HTTP polling")
-            startHTTPPolling()
-        end
-    end)
-    
-    webSocket.OnClose:Connect(function(code, reason)
-        warn("WebSocket closed:", code, reason)
-        WebSocketManager.connection = nil
-        updateConnectionStatus(false)
-        
-        -- Attempt reconnection
-        if WebSocketManager.reconnectAttempts < WebSocketManager.maxReconnectAttempts then
-            WebSocketManager.reconnectAttempts = WebSocketManager.reconnectAttempts + 1
-            local delay = math.min(30, 5 * WebSocketManager.reconnectAttempts)
-            
-            spawn(function()
-                task.wait(delay)
-                connectWebSocket()
-            end)
-        else
-            startHTTPPolling()
-        end
-    end)
-    
+    -- Use Pusher via backend bridge; no native WebSocket
+    WebSocketManager.connection = nil
     WebSocketManager.reconnectAttempts = 0
     WebSocketManager.lastSuccessfulConnection = os.time()
-    updateConnectionStatus(true, "websocket")
-    showNotification("WebSocket connected successfully", "success")
-    
+    WebSocketManager.connectionState = "pusher"
+    updateConnectionStatus(true, "pusher")
+    showNotification("Realtime connected (Pusher)", "success")
+    -- Start HTTP polling for events proxied from Pusher by the bridge
+    startHTTPPolling()
     -- Process any queued messages
     processOfflineQueue()
-    
     return true
 end
 
@@ -623,7 +626,7 @@ local function startHTTPPolling()
         while WebSocketManager.pollingActive do
             local success, result = pcall(function()
                 return HttpService:RequestAsync({
-                    Url = CONFIG.BACKEND_URL .. "/plugin/messages",
+                    Url = CONFIG.BACKEND_URL .. CONFIG.ENDPOINTS.poll,
                     Method = "POST",
                     Headers = {
                         ["Content-Type"] = "application/json",
@@ -656,11 +659,7 @@ local function startHTTPPolling()
                     end
                 elseif result.StatusCode == 404 then
                     -- Endpoint not available, try alternative endpoints
-                    local alternativeEndpoints = {
-                        "/plugin/poll",
-                        "/poll-messages",
-                        "/messages/poll"
-                    }
+                    local alternativeEndpoints = CONFIG.ENDPOINTS.alt_polls
                     
                     local foundWorkingEndpoint = false
                     for _, endpoint in ipairs(alternativeEndpoints) do
@@ -722,6 +721,10 @@ local function handleWebSocketMessage(data)
     if not data then return end
     
     debugLog(string.format("Received message type: %s", data.type or "unknown"))
+    -- track last event time
+    PluginState.lastEventAt = os.time()
+    realtimeLabel.Text = string.format("Realtime: Pusher (cluster=%s) | Last event: %s", tostring(CONFIG.PUSHER_CLUSTER), os.date("!%H:%M:%S", PluginState.lastEventAt))
+    if debugPanel.Visible then updateDebugPanel() end
     
     if data.type == "progress" then
         -- Update progress bar
@@ -773,23 +776,7 @@ function sendWebSocketMessage(message, skipQueue)
         data = message
     }
     
-    -- Try WebSocket first
-    if WebSocketManager.connection then
-        local success, error = pcall(function()
-            WebSocketManager.connection:Send(HttpService:JSONEncode(messageWithId))
-        end)
-        
-        if success then
-            debugLog("Message sent via WebSocket")
-            return true
-        else
-            warn("Failed to send WebSocket message:", error)
-            WebSocketManager.connection = nil
-            updateConnectionStatus(false)
-        end
-    end
-    
-    -- Try HTTP fallback
+    -- Send via HTTP to bridge (which relays to Pusher)
     local httpSuccess = sendHTTPMessage(messageWithId)
     if httpSuccess then
         return true
@@ -806,9 +793,8 @@ end
 -- Send message via HTTP when WebSocket unavailable
 local function sendHTTPMessage(message)
     local endpoints = {
-        "/plugin/message",
-        "/plugin/send-message",
-        "/send-message"
+        CONFIG.ENDPOINTS.send,
+        CONFIG.ENDPOINTS.alt_send
     }
     
     for _, endpoint in ipairs(endpoints) do
@@ -842,18 +828,18 @@ local function registerPlugin()
             "script_creation",
             "ui_building",
             "quiz_system",
-            "websocket",
+            "pusher",
             "http_polling"
         },
         connection_preferences = {
-            preferred_method = "websocket",
+            preferred_method = "pusher",
             fallback_method = "http_polling",
             polling_interval = CONFIG.POLLING_INTERVAL
         }
     }
     
     local success, result = makeRequest(
-        CONFIG.BACKEND_URL .. "/register_plugin",
+        CONFIG.BACKEND_URL .. CONFIG.ENDPOINTS.register,
         "POST",
         data
     )
@@ -1430,7 +1416,7 @@ local function performHealthCheck()
     debugLog("Performing health check...")
     
     -- Check WebSocket availability
-    local wsAvailable = checkWebSocketAvailability()
+    local wsAvailable = false -- using Pusher via bridge
     
     -- Check backend connectivity
     local backendSuccess, _ = makeRequest(CONFIG.BACKEND_URL .. "/health", "GET", nil, 5)
@@ -1438,8 +1424,20 @@ local function performHealthCheck()
     -- Check API connectivity  
     local apiSuccess, _ = makeRequest(CONFIG.API_URL .. "/health", "GET", nil, 5)
     
+    -- Query Pusher status from bridge
+    local pusherStatus = { connected = false }
+    local psOk, psRes = makeRequest(CONFIG.BACKEND_URL .. CONFIG.ENDPOINTS.status, "GET", nil, 5)
+    if psOk and type(psRes) == "table" then
+        pusherStatus = psRes
+    end
+
+    PluginState.pusherConnected = pusherStatus.connected or false
+    PluginState.pusherChannel = pusherStatus.channel
+
     local healthStatus = {
-        websocket_available = wsAvailable,
+        pusher_connected = pusherStatus.connected or false,
+        pusher_cluster = pusherStatus.cluster,
+        pusher_channel = pusherStatus.channel,
         backend_reachable = backendSuccess,
         api_reachable = apiSuccess,
         connection_state = WebSocketManager.connectionState,
@@ -1447,8 +1445,8 @@ local function performHealthCheck()
         timestamp = os.time()
     }
     
-    debugLog(string.format("Health check: WS=%s, Backend=%s, API=%s", 
-        tostring(wsAvailable), tostring(backendSuccess), tostring(apiSuccess)))
+    debugLog(string.format("Health check: Pusher=%s, Backend=%s, API=%s",
+        tostring(healthStatus.pusher_connected), tostring(backendSuccess), tostring(apiSuccess)))
     
     -- Send health status if connected
     if PluginState.connected then
@@ -1532,7 +1530,13 @@ spawn(function()
         task.wait(WebSocketManager.healthCheckInterval)
         
         -- Monitor connection health
-        if WebSocketManager.connectionState == "connected" and WebSocketManager.connection then
+        if WebSocketManager.connectionState == "pusher" then
+            -- Realtime is managed by bridge + polling; ensure polling is active
+            if not WebSocketManager.pollingActive then
+                debugLog("Realtime active but polling stopped; restarting polling...")
+                startHTTPPolling()
+            end
+        elseif WebSocketManager.connectionState == "connected" and WebSocketManager.connection then
             -- Check if WebSocket is still alive
             local testMessage = {
                 type = "ping",
@@ -1582,7 +1586,7 @@ plugin.Unloading:Connect(function()
     -- Unregister plugin
     if PluginState.connected then
         makeRequest(
-            CONFIG.BACKEND_URL .. "/unregister_plugin",
+            CONFIG.BACKEND_URL .. CONFIG.ENDPOINTS.unregister,
             "POST",
             { session_id = PluginState.sessionId }
         )
@@ -1592,6 +1596,6 @@ plugin.Unloading:Connect(function()
 end)
 
 print(string.format("[%s] Plugin loaded successfully (v%s)", CONFIG.PLUGIN_NAME, CONFIG.PLUGIN_VERSION))
-print(string.format("[%s] WebSocket URL: %s", CONFIG.PLUGIN_NAME, CONFIG.WEBSOCKET_URL))
+print(string.format("[%s] Realtime (Pusher): key=%s cluster=%s", CONFIG.PLUGIN_NAME, tostring(CONFIG.PUSHER_KEY), tostring(CONFIG.PUSHER_CLUSTER)))
 print(string.format("[%s] Backend URL: %s", CONFIG.PLUGIN_NAME, CONFIG.BACKEND_URL))
 print(string.format("[%s] Session ID: %s", CONFIG.PLUGIN_NAME, PluginState.sessionId or "Not assigned"))

@@ -5,7 +5,7 @@ This package provides the complete server implementation for the ToolboxAI Roblo
 including FastAPI main server, Flask bridge server, and all supporting components.
 
 Key Components:
-- FastAPI main application (port 8008)
+- FastAPI main application (port 8009)
 - Flask bridge server for Roblox Studio (port 5001)
 - LangChain tools for educational content generation
 - WebSocket support for real-time updates

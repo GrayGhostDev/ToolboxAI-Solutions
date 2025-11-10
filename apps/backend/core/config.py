@@ -130,11 +130,14 @@ class Settings:
     @property
     def OPENAI_API_KEY(self):
         # Prioritize Vault for API keys
-        return self._get_secret(
-            "OPENAI_API_KEY",
-            vault_path="apps/backend/api_keys/openai",
-            fallback=self._config.get_api_key("openai")
-        )
+        # Vault path: secret/integrations/openai (key: api_key)
+        if self._vault:
+            try:
+                secret = self._vault.get_secret("integrations/openai")
+                return secret.get("api_key") if isinstance(secret, dict) else secret
+            except Exception as e:
+                logger.debug(f"Vault lookup failed for OpenAI API key: {e}")
+        return self._config.get_api_key("openai")
 
     @property
     def OPENAI_MODEL(self):
@@ -166,11 +169,14 @@ class Settings:
     @property
     def REDIS_URL(self):
         # Redis credentials from Vault
-        return self._get_secret(
-            "REDIS_URL",
-            vault_path="apps/backend/cache/redis",
-            fallback=self._config.get_redis_url()
-        )
+        # Vault path: secret/backend/redis (key: url)
+        if self._vault:
+            try:
+                secret = self._vault.get_secret("backend/redis")
+                return secret.get("url") if isinstance(secret, dict) else secret
+            except Exception as e:
+                logger.debug(f"Vault lookup failed for Redis URL: {e}")
+        return self._config.get_redis_url()
 
     # Authentication
     @property
@@ -183,11 +189,18 @@ class Settings:
         which provides strong entropy while staying safely under the limit.
         """
         # JWT secrets should always come from Vault in production
-        key = self._get_secret(
-            "JWT_SECRET_KEY",
-            vault_path="apps/backend/auth/jwt_secret",
-            fallback=self._config.JWT_SECRET_KEY
-        )
+        # Vault path: secret/backend/api (key: jwt_secret)
+        key = None
+        if self._vault:
+            try:
+                secret = self._vault.get_secret("backend/api")
+                key = secret.get("jwt_secret") if isinstance(secret, dict) else None
+            except Exception as e:
+                logger.debug(f"Vault lookup failed for JWT secret: {e}")
+
+        # Fallback to environment config
+        if not key:
+            key = self._config.JWT_SECRET_KEY
 
         # Validate length for bcrypt compatibility (72-byte limit)
         if key and len(key) > 64:
@@ -300,25 +313,61 @@ class Settings:
 
     @property
     def PUSHER_APP_ID(self):
+        # Vault path: secret/integrations/pusher (key: app_id)
+        if self._vault:
+            try:
+                secret = self._vault.get_secret("integrations/pusher")
+                return secret.get("app_id") if isinstance(secret, dict) else None
+            except Exception:
+                pass
         return os.getenv("PUSHER_APP_ID")
 
     @property
     def PUSHER_KEY(self):
+        # Vault path: secret/integrations/pusher (key: key)
+        if self._vault:
+            try:
+                secret = self._vault.get_secret("integrations/pusher")
+                return secret.get("key") if isinstance(secret, dict) else None
+            except Exception:
+                pass
         return os.getenv("PUSHER_KEY")
 
     @property
     def PUSHER_SECRET(self):
-        return self._get_secret(
-            "PUSHER_SECRET",
-            vault_path="apps/backend/integrations/pusher/secret"
-        )
+        # Vault path: secret/integrations/pusher (key: secret)
+        if self._vault:
+            try:
+                secret = self._vault.get_secret("integrations/pusher")
+                return secret.get("secret") if isinstance(secret, dict) else None
+            except Exception:
+                pass
+        return os.getenv("PUSHER_SECRET")
 
     @property
     def PUSHER_CLUSTER(self):
+        # Vault path: secret/integrations/pusher (key: cluster)
+        if self._vault:
+            try:
+                secret = self._vault.get_secret("integrations/pusher")
+                cluster = secret.get("cluster") if isinstance(secret, dict) else None
+                if cluster:
+                    return cluster
+            except Exception:
+                pass
         return os.getenv("PUSHER_CLUSTER", "us2")
 
     @property
     def PUSHER_SSL(self):
+        # Vault path: secret/integrations/pusher (key: ssl)
+        if self._vault:
+            try:
+                secret = self._vault.get_secret("integrations/pusher")
+                ssl = secret.get("ssl") if isinstance(secret, dict) else None
+                if ssl is not None:
+                    return str(ssl).lower() in ("true", "1", "yes")
+            except Exception:
+                pass
         return os.getenv("PUSHER_SSL", "true").lower() in ("true", "1", "yes")
 
     # Rojo API Configuration

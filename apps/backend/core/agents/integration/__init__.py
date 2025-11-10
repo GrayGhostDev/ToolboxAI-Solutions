@@ -129,7 +129,7 @@ class IntegrationPlatform:
                 logger.info("Stripe service initialized")
 
             elif self.platform_name.lower() in ['sendgrid', 'email']:
-                from apps.backend.services.email_service import email_service
+                from apps.backend.services.email import email_service
                 self._service = email_service
                 logger.info("SendGrid email service initialized")
 

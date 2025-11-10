@@ -22,7 +22,7 @@ from sqlalchemy.orm import selectinload
 
 from apps.backend.core.config import settings
 from apps.backend.services.stripe_service import stripe_service
-from apps.backend.services.email_service import email_service
+from apps.backend.services.email import email_service
 from database.models.payment import (
     Customer,
     Subscription,
