@@ -8,6 +8,17 @@ Reference: https://docs.celeryq.dev/en/stable/
 Updated: 2025-09-27 - Following latest Celery 5.4 standards
 """
 
+# Ensure repository root is on sys.path even if executed from apps/backend
+import sys
+from pathlib import Path
+
+try:
+    import apps  # type: ignore
+except Exception:
+    project_root = Path(__file__).resolve().parents[2]
+    if str(project_root) not in sys.path:
+        sys.path.insert(0, str(project_root))
+
 import os
 from celery import Celery, Task
 from celery.signals import (
