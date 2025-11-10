@@ -170,7 +170,7 @@ jobs:
       - name: 🔧 Install Dependencies
         run: |
           pip install -r requirements.txt
-          npm install
+          pnpm install
 
       - name: 📊 Python Linting
         run: |
@@ -181,7 +181,7 @@ jobs:
 
       - name: 📊 JavaScript/TypeScript Linting
         run: |
-          npm run dashboard:lint
+          pnpm dashboard:lint
 
       - name: 📄 Dockerfile Linting
         uses: hadolint/hadolint-action@v3.1.0

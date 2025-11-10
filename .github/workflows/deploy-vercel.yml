@@ -56,10 +56,10 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
-          cache-dependency-path: apps/dashboard/ppnpm-lock.yaml
+          cache-dependency-path: apps/dashboard/pnpm-lock.yaml
       
       - name: Install Vercel CLI
-        run: ppnpm add -g vercel@latest
+        run: pnpm add -g vercel@latest
       
       - name: Pull Vercel environment
         working-directory: apps/dashboard
@@ -67,7 +67,7 @@ jobs:
       
       - name: Install dependencies
         working-directory: apps/dashboard
-        run: ppnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
       
       - name: Build project
         working-directory: apps/dashboard
@@ -107,7 +107,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       
       - name: Install Vercel CLI
-        run: ppnpm add -g vercel@latest
+        run: pnpm add -g vercel@latest
       
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -173,7 +173,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       
       - name: Install Vercel CLI
-        run: ppnpm add -g vercel@latest
+        run: pnpm add -g vercel@latest
       
       - name: Download build artifacts
         uses: actions/download-artifact@v4

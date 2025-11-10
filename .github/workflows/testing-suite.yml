@@ -119,11 +119,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
-          cache-dependency-path: apps/dashboard/ppnpm-lock.yaml
+          cache-dependency-path: apps/dashboard/pnpm-lock.yaml
       
       - name: Install dependencies
         working-directory: apps/dashboard
-        run: ppnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
       
       - name: Run linting
         working-directory: apps/dashboard
@@ -203,7 +203,7 @@ jobs:
       
       - name: Install frontend dependencies
         working-directory: apps/dashboard
-        run: ppnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
       
       - name: Start backend server
         env:
@@ -260,7 +260,7 @@ jobs:
       
       - name: Install frontend dependencies
         working-directory: apps/dashboard
-        run: ppnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
       
       - name: Run ESLint
         working-directory: apps/dashboard

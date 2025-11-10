@@ -141,7 +141,7 @@ jobs:
       - name: npm Audit
         run: |
           cd apps/dashboard
-          npm audit --json > npm-audit.json || true
+          npm audit --json > pnpm-audit.json || true
           npm audit --audit-level=moderate
 
       - name: OWASP Dependency Check

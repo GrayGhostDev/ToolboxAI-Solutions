@@ -145,7 +145,7 @@ jobs:
       - name: Install Node dependencies (for API validation)
         working-directory: apps/dashboard
         run: |
-          npm ci
+          pnpm install --frozen-lockfile
 
       - name: Create output directories
         run: |

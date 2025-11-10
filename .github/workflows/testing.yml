@@ -177,12 +177,12 @@ jobs:
       - name: 📦 Install Dashboard dependencies
         run: |
           cd apps/dashboard
-          npm ci
+          pnpm install --frozen-lockfile
 
       - name: 🧪 Run Frontend Unit Tests
         run: |
           cd apps/dashboard
-          npm run test:coverage
+          pnpm test:coverage
 
       - name: 📤 Upload Frontend Coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -253,7 +253,7 @@ jobs:
 
       - name: 📦 Install dependencies
         run: |
-          npm ci
+          pnpm install --frozen-lockfile
           pip install -r requirements.txt
           npx playwright install --with-deps chromium
 
@@ -272,15 +272,15 @@ jobs:
       - name: 🚀 Start Frontend Server
         run: |
           cd apps/dashboard
-          npm run build
-          npm run preview -- --port 5173 &
+          pnpm build
+          pnpm preview -- --port 5173 &
           # Wait for frontend to be ready
           timeout 30 bash -c 'until curl -f http://localhost:5173; do sleep 2; done'
 
       - name: 🎭 Run Playwright E2E Tests
         run: |
           cd apps/dashboard
-          npm run test:e2e
+          pnpm test:e2e
 
       - name: 📤 Upload Playwright Report
         if: always()
@@ -327,7 +327,7 @@ jobs:
       - name: 📦 Install Node dependencies
         run: |
           cd apps/dashboard
-          npm ci
+          pnpm install --frozen-lockfile
 
       - name: 🐍 Python Code Quality
         run: |
@@ -343,8 +343,8 @@ jobs:
       - name: ⚛️ TypeScript Code Quality
         run: |
           cd apps/dashboard
-          npm run lint
-          npm run typecheck
+          pnpm lint
+          pnpm typecheck
 
   # ──────────────────────────────────────────
   # TEST SUMMARY & COVERAGE REPORT

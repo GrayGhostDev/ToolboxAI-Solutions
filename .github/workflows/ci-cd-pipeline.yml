@@ -58,7 +58,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: Python Linting
         continue-on-error: true
@@ -74,9 +74,9 @@ jobs:
         continue-on-error: true
         run: |
           cd apps/dashboard
-          npm ci
-          npm run lint
-          npm run typecheck
+          pnpm install --frozen-lockfile
+          pnpm lint
+          pnpm typecheck
 
       - name: Markdown Linting
         uses: davidanson/markdownlint-cli2-action@v14
@@ -123,8 +123,8 @@ jobs:
         if: matrix.service == 'dashboard'
         run: |
           cd apps/dashboard
-          npm ci
-          npm run test
+          pnpm install --frozen-lockfile
+          pnpm test
 
       - name: Upload Coverage
         uses: codecov/codecov-action@v4
@@ -335,7 +335,7 @@ jobs:
           cache: 'npm'
 
       - name: Install Vercel CLI
-        run: npm install -g vercel@latest
+        run: pnpm install -g vercel@latest
 
       - name: Pull Vercel Environment Information
         run: vercel pull --yes --environment=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }} --token=${{ secrets.VERCEL_TOKEN }}

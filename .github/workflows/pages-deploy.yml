@@ -206,7 +206,7 @@ jobs:
         continue-on-error: true
         run: |
           # Install HTML validator
-          npm install -g html-validate
+          pnpm install -g html-validate
           
           # Validate generated HTML (continue on error to not block deployment)
           html-validate "docs/_site/**/*.html" || echo "HTML validation found warnings"

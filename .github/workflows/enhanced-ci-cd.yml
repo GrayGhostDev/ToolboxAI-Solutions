@@ -167,9 +167,9 @@ jobs:
       - name: 📜 JavaScript/TypeScript Linting
         run: |
           cd apps/dashboard
-          npm ci
-          npm run lint
-          npm run typecheck
+          pnpm install --frozen-lockfile
+          pnpm lint
+          pnpm typecheck
 
       - name: 📝 Markdown Linting
         uses: davidanson/markdownlint-cli2-action@v14
@@ -485,19 +485,19 @@ jobs:
       - name: 🧪 E2E Tests (Cypress)
         uses: cypress-io/github-action@v6
         with:
-          command: npm run test:e2e
+          command: pnpm test:e2e
           working-directory: apps/dashboard
           config-file: cypress.config.ts
           env: CYPRESS_BASE_URL=${{ needs.deploy-staging.outputs.url }}
 
       - name: ♿ Accessibility Testing
         run: |
-          npm install -g @axe-core/cli
+          pnpm install -g @axe-core/cli
           axe ${{ needs.deploy-staging.outputs.url }} --exit
 
       - name: ⚡ Performance Testing (Lighthouse)
         run: |
-          npm install -g lighthouse
+          pnpm install -g lighthouse
           lighthouse ${{ needs.deploy-staging.outputs.url }} \
             --output=json \
             --output-path=lighthouse-report.json \

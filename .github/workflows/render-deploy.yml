@@ -190,7 +190,7 @@ jobs:
 
       - name: Install Node dependencies
         working-directory: apps/dashboard
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Run validation script
         run: |
@@ -267,7 +267,7 @@ jobs:
 
       - name: Install Node dependencies
         working-directory: apps/dashboard
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Run Python tests
         env:
@@ -285,7 +285,7 @@ jobs:
 
       - name: Check frontend build
         working-directory: apps/dashboard
-        run: npm run build
+        run: pnpm build
 
   security-scan:
     name: Security Scan

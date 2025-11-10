@@ -1,6 +1,6 @@
 # Multi-stage production Dockerfile for ToolBoxAI Dashboard
-# Node 22 Alpine for optimized performance
-# Created: September 21, 2025
+# Node 22 Alpine with pnpm via Corepack for optimized performance
+# Updated: 2025-11-09 - Migrated from npm to pnpm
 
 # ========================================
 # Stage 1: Dependencies
@@ -10,15 +10,18 @@ FROM node:25-alpine AS deps
 # Install system dependencies
 RUN apk add --no-cache libc6-compat python3 make g++
 
+# Enable Corepack and install pnpm
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+
 WORKDIR /app
 
-# Copy package files for dependency installation
-COPY package.json package-lock.json ./
+# Copy workspace configuration and package files
+COPY pnpm-workspace.yaml .npmrc ./
+COPY package.json pnpm-lock.yaml ./
 
-# Install production dependencies with clean install
-# Use npm ci for reproducible builds
-RUN npm ci --only=production --ignore-scripts && \
-    npm cache clean --force
+# Install production dependencies with frozen lockfile
+RUN pnpm install --frozen-lockfile --prod && \
+    pnpm store prune
 
 # ========================================
 # Stage 2: Builder
@@ -28,13 +31,17 @@ FROM node:25-alpine AS builder
 # Install build dependencies
 RUN apk add --no-cache libc6-compat python3 make g++
 
+# Enable Corepack and install pnpm
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+
 WORKDIR /app
 
-# Copy package files
-COPY package.json package-lock.json ./
+# Copy workspace configuration and package files
+COPY pnpm-workspace.yaml .npmrc ./
+COPY package.json pnpm-lock.yaml ./
 
 # Install all dependencies (including dev dependencies for build)
-RUN npm ci --ignore-scripts
+RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY . .
@@ -57,11 +64,11 @@ ENV VITE_ENABLE_GAMIFICATION=${VITE_ENABLE_GAMIFICATION}
 ENV VITE_ENABLE_ANALYTICS=${VITE_ENABLE_ANALYTICS}
 
 # Build the application
-RUN npm run build && \
+RUN pnpm build && \
     # Remove dev dependencies after build
-    npm prune --production && \
-    # Clean npm cache
-    npm cache clean --force
+    pnpm prune --prod && \
+    # Clean pnpm store
+    pnpm store prune
 
 # ========================================
 # Stage 3: Production Runtime
@@ -72,6 +79,9 @@ FROM node:25-alpine AS runner
 RUN apk add --no-cache \
     curl \
     tini
+
+# Enable Corepack and install pnpm
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
@@ -119,4 +129,4 @@ ENTRYPOINT ["/sbin/tini", "--"]
 
 # Start the application
 # Use preview mode for production serving of Vite build
-CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "5179"]
+CMD ["pnpm", "preview", "--host", "0.0.0.0", "--port", "5179"]

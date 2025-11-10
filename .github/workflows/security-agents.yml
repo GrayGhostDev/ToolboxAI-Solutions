@@ -60,7 +60,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.npm
-          key: ${{ runner.os }}-node-security-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-node-security-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-node-security-
             ${{ runner.os }}-node-
@@ -74,8 +74,8 @@ jobs:
       - name: Install Node security tools
         working-directory: apps/dashboard
         run: |
-          npm ci
-          npm install -g npm-audit-html license-checker
+          pnpm install --frozen-lockfile
+          pnpm install -g pnpm-audit-html license-checker
 
       - name: Run Dependency Security Agent
         id: dependency-scan

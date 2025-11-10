@@ -9,14 +9,14 @@
     "packages/*"
   ],
   "scripts": {
-    "dashboard:dev": "npm -w apps/dashboard run dev",
-    "dashboard:build": "npm -w apps/dashboard run build",
-    "dashboard:test": "npm -w apps/dashboard run test",
-    "dashboard:lint": "npm -w apps/dashboard run lint",
-    "verify:dashboard": "npm -w apps/dashboard run test --silent && npm -w apps/dashboard run build",
-    "setup:roles": "npx tsx scripts/setup-clerk-user-roles.ts",
-    "setup:roles:default": "npx tsx scripts/setup-clerk-user-roles.ts default",
-    "setup:roles:list": "npx tsx scripts/setup-clerk-user-roles.ts list",
+    "dashboard:dev": "pnpm --filter apps/dashboard dev",
+    "dashboard:build": "pnpm --filter apps/dashboard build",
+    "dashboard:test": "pnpm --filter apps/dashboard test",
+    "dashboard:lint": "pnpm --filter apps/dashboard lint",
+    "verify:dashboard": "pnpm --filter apps/dashboard test --silent && pnpm --filter apps/dashboard build",
+    "setup:roles": "pnpm exec tsx scripts/setup-clerk-user-roles.ts",
+    "setup:roles:default": "pnpm exec tsx scripts/setup-clerk-user-roles.ts default",
+    "setup:roles:list": "pnpm exec tsx scripts/setup-clerk-user-roles.ts list",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
@@ -34,16 +34,16 @@
     "docker:ps": "docker-compose -f infrastructure/docker/compose/docker-compose.yml ps",
     "deploy:frontend": "cd apps/dashboard && vercel --prod",
     "deploy:backend": "curl -X POST -H \"Authorization: Bearer $RENDER_API_KEY\" https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys",
-    "deploy:all": "npm run deploy:backend && npm run deploy:frontend",
+    "deploy:all": "pnpm run deploy:backend && pnpm run deploy:frontend",
     "sentry:frontend:upload": "cd apps/dashboard && sentry-cli releases new $npm_package_version && sentry-cli releases files $npm_package_version upload-sourcemaps ./dist && sentry-cli releases finalize $npm_package_version",
     "sentry:backend:release": "sentry-cli releases new $npm_package_version && sentry-cli releases deploys $npm_package_version new -e production",
     "health:check": "curl -f http://localhost:8009/health && curl -f http://localhost:5179/",
-    "dev": "concurrently \"npm run dashboard:dev\" \"cd apps/backend && uvicorn main:app --reload\""
+    "dev": "concurrently \"pnpm run dashboard:dev\" \"cd apps/backend && uvicorn main:app --reload\""
   },
-  "packageManager": "npm@11.6.1",
+  "packageManager": "pnpm@9.15.0",
   "engines": {
     "node": ">=22",
-    "npm": ">=10"
+    "pnpm": ">=9.0.0"
   },
   "repository": {
     "type": "git",

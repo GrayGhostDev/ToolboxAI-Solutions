@@ -2,10 +2,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "name": "toolboxai-solutions",
-  "buildCommand": "cd apps/dashboard && npm run build",
+  "buildCommand": "pnpm --filter apps/dashboard build",
   "outputDirectory": "apps/dashboard/dist",
-  "installCommand": "npm ci --workspace=apps/dashboard",
-  "devCommand": "cd apps/dashboard && npm run dev",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "devCommand": "pnpm --filter apps/dashboard dev",
   "framework": "vite",
   "regions": ["iad1"],
   "headers": [
@@ -41,8 +41,8 @@
     }
   ],
   "env": {
-    "NODE_VERSION": "22",
-    "NPM_VERSION": "10"
+    "ENABLE_EXPERIMENTAL_COREPACK": "1",
+    "NODE_VERSION": "22"
   },
   "rewrites": [
     {

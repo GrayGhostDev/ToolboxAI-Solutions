@@ -207,11 +207,11 @@ deploy_frontend() {
     
     # Install dependencies
     log "Installing frontend dependencies..."
-    npm ci
+    pppnpm install --frozen-lockfile
     
     # Build frontend
     log "Building frontend..."
-    npm run build
+    pnpm build
     
     if [ $? -ne 0 ]; then
         log "${RED}❌ Frontend build failed${NC}"

@@ -46,7 +46,7 @@ jobs:
         node-version: '22'
 
     - name: Install markdownlint
-      run: npm install -g markdownlint-cli
+      run: pnpm install -g markdownlint-cli
 
     - name: Validate documentation structure
       id: structure

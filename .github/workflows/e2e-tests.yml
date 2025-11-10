@@ -46,7 +46,7 @@ jobs:
       - name: Generate cache keys
         id: cache-keys
         run: |
-          echo "key=e2e-${{ runner.os }}-${{ hashFiles('**/package-lock.json', '**/requirements.txt') }}" >> $GITHUB_OUTPUT
+          echo "key=e2e-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml', '**/requirements.txt') }}" >> $GITHUB_OUTPUT
 
   backend-tests:
     name: Backend API Tests
@@ -167,7 +167,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Install Node dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
         run: |
@@ -205,7 +205,7 @@ jobs:
           VITE_E2E_TESTING: true
         run: |
           cd apps/dashboard
-          npm run build
+          pnpm build
 
       - name: Run E2E tests
         env:
@@ -249,7 +249,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm ci
+          pnpm install --frozen-lockfile
           cd apps/dashboard
           npx playwright install chromium
 
@@ -258,7 +258,7 @@ jobs:
           VITE_E2E_TESTING: true
         run: |
           cd apps/dashboard
-          npm run build
+          pnpm build
 
       - name: Run accessibility tests
         run: |
@@ -289,7 +289,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm ci
+          pnpm install --frozen-lockfile
           cd apps/dashboard
           npx playwright install chromium
 
@@ -297,9 +297,9 @@ jobs:
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
         run: |
-          npm install -g @lhci/cli
+          pnpm install -g @lhci/cli
           cd apps/dashboard
-          npm run build
+          pnpm build
           lhci autorun || echo "Lighthouse CI not configured, skipping..."
 
   test-summary:

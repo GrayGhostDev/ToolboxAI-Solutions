@@ -20,13 +20,13 @@ jobs:
         cache: 'npm'
     
     - name: Install dependencies
-      run: npm ci
+      run: pnpm install --frozen-lockfile
     
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
     
     - name: Build Dashboard
-      run: npm run dashboard:build
+      run: pnpm dashboard:build
     
     - name: Start Backend Server
       run: |
@@ -41,7 +41,7 @@ jobs:
     - name: Start Dashboard Server
       run: |
         # Start the dashboard server in the background
-        npm run dashboard:dev &
+        pnpm dashboard:dev &
         # Wait for server to start
         sleep 15
     

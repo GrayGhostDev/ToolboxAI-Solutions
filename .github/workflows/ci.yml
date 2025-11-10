@@ -25,23 +25,23 @@ jobs:
           cache: 'npm'
 
       - name: Install workspace dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Lint dashboard package
-        run: npm run dashboard:lint
+        run: pnpm dashboard:lint
         continue-on-error: true
 
       - name: Type check dashboard
         run: |
           cd apps/dashboard
-          npm run typecheck
+          pnpm typecheck
         continue-on-error: true
 
       - name: Run dashboard unit tests
-        run: npm run dashboard:test
+        run: pnpm dashboard:test
 
       - name: Build dashboard package
-        run: npm run dashboard:build
+        run: pnpm dashboard:build
 
   python-backend:
     name: Backend Tests

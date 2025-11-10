@@ -15,7 +15,7 @@ backend:
 	$(PY) -m uvicorn apps.backend.main:app --host $(API_HOST) --port $(API_PORT) --reload
 
 dashboard:
-	npm -w apps/dashboard run dev
+	pnpm --filter apps/dashboard dev
 
 dev:
 	@echo "Starting backend (FastAPI) and dashboard (Vite)"
@@ -28,7 +28,7 @@ lint:
 	- black apps/backend || true
 	- mypy apps/backend || true
 	@echo "JS/TS lint: eslint"
-	npm -w apps/dashboard run lint || true
+	pnpm --filter apps/dashboard lint || true
 
 docs-enforce:
 	python3 scripts/documentation/enforce-doc-locations.py
@@ -40,10 +40,10 @@ test:
 	@echo "Python tests"
 	pytest -q || true
 	@echo "Dashboard tests"
-	npm -w apps/dashboard test || true
+	pnpm --filter apps/dashboard test || true
 
 build:
-	npm -w apps/dashboard run build
+	pnpm --filter apps/dashboard build
 
 # ============================================
 # DOCKER COMMANDS
@@ -223,7 +223,7 @@ deploy-all: deploy-backend deploy-frontend
 # Upload sourcemaps to Sentry
 sentry-upload:
 	@echo "Uploading sourcemaps to Sentry..."
-	cd apps/dashboard && npm run sentry:frontend:upload
+	cd apps/dashboard && pnpm sentry:frontend:upload
 
 # Health check
 health-check:

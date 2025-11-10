@@ -46,11 +46,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
-          cache-dependency-path: apps/dashboard/ppnpm-lock.yaml
+          cache-dependency-path: apps/dashboard/pnpm-lock.yaml
       
       - name: Install dependencies
         working-directory: apps/dashboard
-        run: ppnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
       
       - name: Install Playwright browsers
         working-directory: apps/dashboard
@@ -163,7 +163,7 @@ jobs:
       
       - name: Install dependencies
         working-directory: apps/dashboard
-        run: ppnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
       
       - name: Install Playwright
         working-directory: apps/dashboard

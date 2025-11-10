@@ -106,7 +106,7 @@ jobs:
 
       - name: Install Dashboard dependencies
         working-directory: apps/dashboard
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Set test environment variables
         run: |
@@ -246,7 +246,7 @@ jobs:
         working-directory: apps/dashboard
         run: |
           echo "🎨 Running Frontend Tests..."
-          npm run test -- \
+          pnpm test -- \
             --reporter=json \
             --outputFile=../../test-results/frontend-tests.json \
             --coverage \

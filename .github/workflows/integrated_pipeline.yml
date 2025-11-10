@@ -69,7 +69,7 @@ jobs:
                 echo "Dashboard not found, skipping..."
                 exit 0
               fi
-              npm ci
+              pnpm install --frozen-lockfile
               npm test -- --coverage --watchAll=false || echo "Tests completed with issues"
               ;;
             roblox)
@@ -197,8 +197,8 @@ jobs:
       - name: Build Frontend
         run: |
           cd src/dashboard
-          npm ci
-          npm run build
+          pnpm install --frozen-lockfile
+          pnpm build
       
       - name: Deploy Backend
         run: |

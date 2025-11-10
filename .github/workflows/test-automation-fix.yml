@@ -117,15 +117,15 @@ jobs:
       - name: Install dependencies
         working-directory: apps/dashboard
         run: |
-          npm ci --legacy-peer-deps
+          pnpm install --frozen-lockfile --legacy-peer-deps
 
       - name: Run type checking
         working-directory: apps/dashboard
-        run: npm run typecheck
+        run: pnpm typecheck
 
       - name: Run linting
         working-directory: apps/dashboard
-        run: npm run lint
+        run: pnpm lint
 
       - name: Run unit tests
         working-directory: apps/dashboard
@@ -133,7 +133,7 @@ jobs:
 
       - name: Build dashboard
         working-directory: apps/dashboard
-        run: npm run build
+        run: pnpm build
         env:
           CI: true
           NODE_ENV: production

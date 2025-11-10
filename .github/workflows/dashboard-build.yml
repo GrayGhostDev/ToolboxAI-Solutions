@@ -7,14 +7,14 @@ on:
       - 'apps/dashboard/**'
       - '.github/workflows/dashboard-build.yml'
       - 'package.json'
-      - 'package-lock.json'
+      - 'pnpm-lock.yaml'
   pull_request:
     branches: [main, develop]
     paths:
       - 'apps/dashboard/**'
       - '.github/workflows/dashboard-build.yml'
       - 'package.json'
-      - 'package-lock.json'
+      - 'pnpm-lock.yaml'
   workflow_dispatch:
     inputs:
       environment:
@@ -57,13 +57,13 @@ jobs:
             node_modules
             apps/dashboard/node_modules
             ~/.npm
-          key: ${{ env.CACHE_KEY_PREFIX }}${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ env.CACHE_KEY_PREFIX }}${{ runner.os }}-node-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ env.CACHE_KEY_PREFIX }}${{ runner.os }}-node-
 
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
-        run: npm ci --prefer-offline --no-audit
+        run: pnpm install --frozen-lockfile --prefer-offline --no-audit
 
   lint:
     name: Lint and Type Check
@@ -86,17 +86,17 @@ jobs:
             node_modules
             apps/dashboard/node_modules
             ~/.npm
-          key: ${{ env.CACHE_KEY_PREFIX }}${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ env.CACHE_KEY_PREFIX }}${{ runner.os }}-node-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: Run TypeScript type checking
         run: |
           cd apps/dashboard
-          npm run typecheck
+          pnpm typecheck
 
       - name: Run ESLint
         run: |
           cd apps/dashboard
-          npm run lint
+          pnpm lint
 
       - name: Check formatting
         run: |
@@ -127,7 +127,7 @@ jobs:
             node_modules
             apps/dashboard/node_modules
             ~/.npm
-          key: ${{ env.CACHE_KEY_PREFIX }}${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ env.CACHE_KEY_PREFIX }}${{ runner.os }}-node-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: Run unit tests (shard ${{ matrix.shard }})
         run: |
@@ -165,12 +165,12 @@ jobs:
             node_modules
             apps/dashboard/node_modules
             ~/.npm
-          key: ${{ env.CACHE_KEY_PREFIX }}${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ env.CACHE_KEY_PREFIX }}${{ runner.os }}-node-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: Run tests with coverage
         run: |
           cd apps/dashboard
-          npm run test:coverage
+          pnpm test:coverage
         env:
           CI: true
           NODE_ENV: test
@@ -215,7 +215,7 @@ jobs:
             node_modules
             apps/dashboard/node_modules
             ~/.npm
-          key: ${{ env.CACHE_KEY_PREFIX }}${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ env.CACHE_KEY_PREFIX }}${{ runner.os }}-node-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: Setup environment variables
         run: |
@@ -238,7 +238,7 @@ jobs:
       - name: Build dashboard
         run: |
           cd apps/dashboard
-          npm run build
+          pnpm build
         env:
           NODE_ENV: ${{ matrix.environment }}
           BUILD_TIMESTAMP: ${{ github.event.head_commit.timestamp }}
@@ -286,7 +286,7 @@ jobs:
             node_modules
             apps/dashboard/node_modules
             ~/.npm
-          key: ${{ env.CACHE_KEY_PREFIX }}${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ env.CACHE_KEY_PREFIX }}${{ runner.os }}-node-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: Run npm audit
         run: |
@@ -318,7 +318,7 @@ jobs:
 
       - name: Serve built application
         run: |
-          npm install -g serve
+          pnpm install -g serve
           serve -s apps/dashboard/dist -p 3000 &
           sleep 5
 
