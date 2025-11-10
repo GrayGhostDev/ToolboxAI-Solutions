@@ -88,7 +88,7 @@ except Exception as e:
 # Test 4: Check router endpoints
 print("\n4. Testing Roblox Router...")
 try:
-    from apps.backend.routers.roblox import router
+    from apps.backend.api.routers.roblox import router
 
     endpoints = []
     for route in router.routes:

@@ -82,9 +82,9 @@ class TestOAuth2Flow:
         mock_credential_manager, mock_pusher_service
     ):
         """Test successful OAuth2 initiation"""
-        with patch('apps.backend.routers.roblox.credential_manager', mock_credential_manager):
-            with patch('apps.backend.routers.roblox.verify_security', return_value=True):
-                with patch('apps.backend.routers.roblox.oauth2_states', {}):
+        with patch('apps.backend.api.routers.roblox.credential_manager', mock_credential_manager):
+            with patch('apps.backend.api.routers.roblox.verify_security', return_value=True):
+                with patch('apps.backend.api.routers.roblox.oauth2_states', {}):
                     response = test_client.post(
                         "/api/v1/roblox/auth/initiate",
                         json=sample_oauth_initiate_request
@@ -107,8 +107,8 @@ class TestOAuth2Flow:
             # Missing scopes field
         }
 
-        with patch('apps.backend.routers.roblox.credential_manager', mock_credential_manager):
-            with patch('apps.backend.routers.roblox.verify_security', return_value=True):
+        with patch('apps.backend.api.routers.roblox.credential_manager', mock_credential_manager):
+            with patch('apps.backend.api.routers.roblox.verify_security', return_value=True):
                 response = test_client.post(
                     "/api/v1/roblox/auth/initiate",
                     json=invalid_request
@@ -150,10 +150,10 @@ class TestOAuth2Flow:
         mock_httpx_client = AsyncMock()
         mock_httpx_client.post.return_value = mock_response
 
-        with patch('apps.backend.routers.roblox.credential_manager', mock_credential_manager):
-            with patch('apps.backend.routers.roblox.pusher_service', mock_pusher_service):
-                with patch('apps.backend.routers.roblox.oauth2_states', mock_states):
-                    with patch('apps.backend.routers.roblox.verify_security', return_value=True):
+        with patch('apps.backend.api.routers.roblox.credential_manager', mock_credential_manager):
+            with patch('apps.backend.api.routers.roblox.pusher_service', mock_pusher_service):
+                with patch('apps.backend.api.routers.roblox.oauth2_states', mock_states):
+                    with patch('apps.backend.api.routers.roblox.verify_security', return_value=True):
                         with patch('httpx.AsyncClient') as mock_client:
                             mock_client.return_value.__aenter__.return_value = mock_httpx_client
                             response = test_client.get(
@@ -170,9 +170,9 @@ class TestOAuth2Flow:
         self, test_client, mock_credential_manager
     ):
         """Test OAuth2 callback with invalid state"""
-        with patch('apps.backend.routers.roblox.credential_manager', mock_credential_manager):
-            with patch('apps.backend.routers.roblox.oauth2_states', {}):
-                with patch('apps.backend.routers.roblox.verify_security', return_value=True):
+        with patch('apps.backend.api.routers.roblox.credential_manager', mock_credential_manager):
+            with patch('apps.backend.api.routers.roblox.oauth2_states', {}):
+                with patch('apps.backend.api.routers.roblox.verify_security', return_value=True):
                     response = test_client.get(
                         "/api/v1/roblox/auth/callback?code=test&state=invalid_state"
                     )
@@ -195,9 +195,9 @@ class TestOAuth2Flow:
             }
         }
 
-        with patch('apps.backend.routers.roblox.credential_manager', mock_credential_manager):
-            with patch('apps.backend.routers.roblox.oauth2_states', mock_states):
-                with patch('apps.backend.routers.roblox.verify_security', return_value=True):
+        with patch('apps.backend.api.routers.roblox.credential_manager', mock_credential_manager):
+            with patch('apps.backend.api.routers.roblox.oauth2_states', mock_states):
+                with patch('apps.backend.api.routers.roblox.verify_security', return_value=True):
                     response = test_client.get(
                         f"/api/v1/roblox/auth/callback?code=test&state={state}"
                     )
@@ -224,8 +224,8 @@ class TestOAuth2Flow:
         mock_httpx_client = AsyncMock()
         mock_httpx_client.post.return_value = mock_response
 
-        with patch('apps.backend.routers.roblox.credential_manager', mock_credential_manager):
-            with patch('apps.backend.routers.roblox.verify_security', return_value=True):
+        with patch('apps.backend.api.routers.roblox.credential_manager', mock_credential_manager):
+            with patch('apps.backend.api.routers.roblox.verify_security', return_value=True):
                 with patch('httpx.AsyncClient') as mock_client:
                     mock_client.return_value.__aenter__.return_value = mock_httpx_client
                     response = test_client.post(
@@ -251,8 +251,8 @@ class TestOAuth2Flow:
         mock_httpx_client = AsyncMock()
         mock_httpx_client.post.return_value = mock_response
 
-        with patch('apps.backend.routers.roblox.credential_manager', mock_credential_manager):
-            with patch('apps.backend.routers.roblox.verify_security', return_value=True):
+        with patch('apps.backend.api.routers.roblox.credential_manager', mock_credential_manager):
+            with patch('apps.backend.api.routers.roblox.verify_security', return_value=True):
                 with patch('httpx.AsyncClient') as mock_client:
                     mock_client.return_value.__aenter__.return_value = mock_httpx_client
                     response = test_client.post(
@@ -277,8 +277,8 @@ class TestOAuth2Flow:
         mock_httpx_client = AsyncMock()
         mock_httpx_client.post.return_value = mock_response
 
-        with patch('apps.backend.routers.roblox.credential_manager', mock_credential_manager):
-            with patch('apps.backend.routers.roblox.verify_security', return_value=True):
+        with patch('apps.backend.api.routers.roblox.credential_manager', mock_credential_manager):
+            with patch('apps.backend.api.routers.roblox.verify_security', return_value=True):
                 with patch('httpx.AsyncClient') as mock_client:
                     mock_client.return_value.__aenter__.return_value = mock_httpx_client
                     response = test_client.post(
@@ -291,7 +291,7 @@ class TestOAuth2Flow:
 
     def test_auth_status_authenticated(self, test_client):
         """Test auth status check with valid credentials"""
-        with patch('apps.backend.routers.roblox.verify_security', return_value=True):
+        with patch('apps.backend.api.routers.roblox.verify_security', return_value=True):
             response = test_client.get(
                 "/api/v1/roblox/auth/status",
                 headers={"Authorization": "Bearer test_token"}
@@ -303,7 +303,7 @@ class TestOAuth2Flow:
 
     def test_auth_status_unauthenticated(self, test_client):
         """Test auth status check without credentials"""
-        with patch('apps.backend.routers.roblox.verify_security', return_value=True):
+        with patch('apps.backend.api.routers.roblox.verify_security', return_value=True):
             response = test_client.get("/api/v1/roblox/auth/status")
 
         assert response.status_code == status.HTTP_200_OK
@@ -318,7 +318,7 @@ class TestSecurityDependencies:
     @pytest.mark.asyncio
     async def test_verify_ip_whitelist_allowed(self):
         """Test IP whitelist verification with allowed IP"""
-        from apps.backend.routers.roblox import verify_ip_whitelist
+        from apps.backend.api.routers.roblox import verify_ip_whitelist
 
         mock_request = Mock()
         mock_request.client.host = "127.0.0.1"
@@ -330,7 +330,7 @@ class TestSecurityDependencies:
     @pytest.mark.asyncio
     async def test_verify_ip_whitelist_blocked(self):
         """Test IP whitelist verification with blocked IP"""
-        from apps.backend.routers.roblox import verify_ip_whitelist
+        from apps.backend.api.routers.roblox import verify_ip_whitelist
         from fastapi import HTTPException
 
         mock_request = Mock()
@@ -345,12 +345,12 @@ class TestSecurityDependencies:
     @pytest.mark.asyncio
     async def test_check_rate_limit_under_limit(self):
         """Test rate limiting under threshold"""
-        from apps.backend.routers.roblox import check_rate_limit
+        from apps.backend.api.routers.roblox import check_rate_limit
 
         mock_request = Mock()
         mock_request.client.host = "127.0.0.1"
 
-        with patch('apps.backend.routers.roblox.rate_limit_storage', {}):
+        with patch('apps.backend.api.routers.roblox.rate_limit_storage', {}):
             with patch.dict('os.environ', {'ROBLOX_API_RATE_LIMIT': '100'}):
                 result = await check_rate_limit(mock_request)
                 assert result is True
@@ -358,7 +358,7 @@ class TestSecurityDependencies:
     @pytest.mark.asyncio
     async def test_check_rate_limit_exceeded(self):
         """Test rate limiting when threshold exceeded"""
-        from apps.backend.routers.roblox import check_rate_limit
+        from apps.backend.api.routers.roblox import check_rate_limit
         from fastapi import HTTPException
 
         mock_request = Mock()
@@ -370,7 +370,7 @@ class TestSecurityDependencies:
             "127.0.0.1": [now - timedelta(seconds=i) for i in range(100)]
         }
 
-        with patch('apps.backend.routers.roblox.rate_limit_storage', mock_storage):
+        with patch('apps.backend.api.routers.roblox.rate_limit_storage', mock_storage):
             with patch.dict('os.environ', {'ROBLOX_API_RATE_LIMIT': '100'}):
                 with pytest.raises(HTTPException) as exc:
                     await check_rate_limit(mock_request)
@@ -382,7 +382,7 @@ class TestSecurityDependencies:
         self, mock_credential_manager
     ):
         """Test request signature verification with valid signature"""
-        from apps.backend.routers.roblox import verify_request_signature
+        from apps.backend.api.routers.roblox import verify_request_signature
         import hmac
         import hashlib
 
@@ -398,7 +398,7 @@ class TestSecurityDependencies:
 
         mock_credential_manager.get_roblox_client_secret.return_value = secret
 
-        with patch('apps.backend.routers.roblox.credential_manager', mock_credential_manager):
+        with patch('apps.backend.api.routers.roblox.credential_manager', mock_credential_manager):
             with patch.dict('os.environ', {'ENVIRONMENT': 'production'}):
                 result = await verify_request_signature(mock_request)
                 assert result is True
@@ -408,7 +408,7 @@ class TestSecurityDependencies:
         self, mock_credential_manager
     ):
         """Test request signature verification with invalid signature"""
-        from apps.backend.routers.roblox import verify_request_signature
+        from apps.backend.api.routers.roblox import verify_request_signature
         from fastapi import HTTPException
 
         mock_request = Mock()
@@ -418,7 +418,7 @@ class TestSecurityDependencies:
 
         mock_credential_manager.get_roblox_client_secret.return_value = "test_secret"
 
-        with patch('apps.backend.routers.roblox.credential_manager', mock_credential_manager):
+        with patch('apps.backend.api.routers.roblox.credential_manager', mock_credential_manager):
             with patch.dict('os.environ', {'ENVIRONMENT': 'production'}):
                 with pytest.raises(HTTPException) as exc:
                     await verify_request_signature(mock_request)
@@ -435,9 +435,9 @@ class TestConversationFlow:
         mock_pusher_service
     ):
         """Test starting a conversation session"""
-        with patch('apps.backend.routers.roblox.pusher_service', mock_pusher_service):
-            with patch('apps.backend.routers.roblox.conversation_sessions', {}):
-                with patch('apps.backend.routers.roblox.verify_security', return_value=True):
+        with patch('apps.backend.api.routers.roblox.pusher_service', mock_pusher_service):
+            with patch('apps.backend.api.routers.roblox.conversation_sessions', {}):
+                with patch('apps.backend.api.routers.roblox.verify_security', return_value=True):
                     response = test_client.post(
                         "/api/v1/roblox/conversation/start",
                         json=sample_conversation_start_request
@@ -471,8 +471,8 @@ class TestConversationFlow:
             "user_input": "I want to create a math lesson"
         }
 
-        with patch('apps.backend.routers.roblox.conversation_sessions', mock_sessions):
-            with patch('apps.backend.routers.roblox.verify_security', return_value=True):
+        with patch('apps.backend.api.routers.roblox.conversation_sessions', mock_sessions):
+            with patch('apps.backend.api.routers.roblox.verify_security', return_value=True):
                 response = test_client.post(
                     "/api/v1/roblox/conversation/input",
                     json=input_request
@@ -490,8 +490,8 @@ class TestConversationFlow:
             "user_input": "Test input"
         }
 
-        with patch('apps.backend.routers.roblox.conversation_sessions', {}):
-            with patch('apps.backend.routers.roblox.verify_security', return_value=True):
+        with patch('apps.backend.api.routers.roblox.conversation_sessions', {}):
+            with patch('apps.backend.api.routers.roblox.verify_security', return_value=True):
                 response = test_client.post(
                     "/api/v1/roblox/conversation/input",
                     json=input_request
@@ -520,9 +520,9 @@ class TestConversationFlow:
             "session_id": session_id
         }
 
-        with patch('apps.backend.routers.roblox.conversation_sessions', mock_sessions):
-            with patch('apps.backend.routers.roblox.pusher_service', mock_pusher_service):
-                with patch('apps.backend.routers.roblox.verify_security', return_value=True):
+        with patch('apps.backend.api.routers.roblox.conversation_sessions', mock_sessions):
+            with patch('apps.backend.api.routers.roblox.pusher_service', mock_pusher_service):
+                with patch('apps.backend.api.routers.roblox.verify_security', return_value=True):
                     response = test_client.post(
                         "/api/v1/roblox/conversation/generate",
                         json=generate_request
@@ -540,8 +540,8 @@ class TestConversationFlow:
             "session_id": "nonexistent_session"
         }
 
-        with patch('apps.backend.routers.roblox.conversation_sessions', {}):
-            with patch('apps.backend.routers.roblox.verify_security', return_value=True):
+        with patch('apps.backend.api.routers.roblox.conversation_sessions', {}):
+            with patch('apps.backend.api.routers.roblox.verify_security', return_value=True):
                 response = test_client.post(
                     "/api/v1/roblox/conversation/generate",
                     json=generate_request
@@ -561,7 +561,7 @@ class TestRojoManagement:
         mock_result.stdout = "Rojo 7.3.0"
 
         with patch('subprocess.run', return_value=mock_result):
-            with patch('apps.backend.routers.roblox.verify_security', return_value=True):
+            with patch('apps.backend.api.routers.roblox.verify_security', return_value=True):
                 response = test_client.get("/api/v1/roblox/rojo/check")
 
         assert response.status_code == status.HTTP_200_OK
@@ -572,7 +572,7 @@ class TestRojoManagement:
     def test_check_rojo_not_installed(self, test_client):
         """Test Rojo installation check when not installed"""
         with patch('subprocess.run', side_effect=FileNotFoundError()):
-            with patch('apps.backend.routers.roblox.verify_security', return_value=True):
+            with patch('apps.backend.api.routers.roblox.verify_security', return_value=True):
                 response = test_client.get("/api/v1/roblox/rojo/check")
 
         assert response.status_code == status.HTTP_200_OK
@@ -581,7 +581,7 @@ class TestRojoManagement:
 
     def test_list_projects(self, test_client):
         """Test listing Rojo projects"""
-        with patch('apps.backend.routers.roblox.verify_security', return_value=True):
+        with patch('apps.backend.api.routers.roblox.verify_security', return_value=True):
             response = test_client.get("/api/v1/roblox/rojo/projects")
 
         assert response.status_code == status.HTTP_200_OK
@@ -604,8 +604,8 @@ class TestPusherAuthentication:
             "user_id": "test_user"
         }
 
-        with patch('apps.backend.routers.roblox.pusher_service', mock_pusher_service):
-            with patch('apps.backend.routers.roblox.verify_security', return_value=True):
+        with patch('apps.backend.api.routers.roblox.pusher_service', mock_pusher_service):
+            with patch('apps.backend.api.routers.roblox.verify_security', return_value=True):
                 response = test_client.post(
                     "/api/v1/roblox/pusher/auth",
                     json=auth_request
@@ -626,8 +626,8 @@ class TestPusherAuthentication:
             "user_id": "test_user"
         }
 
-        with patch('apps.backend.routers.roblox.pusher_service', mock_pusher_service):
-            with patch('apps.backend.routers.roblox.verify_security', return_value=True):
+        with patch('apps.backend.api.routers.roblox.pusher_service', mock_pusher_service):
+            with patch('apps.backend.api.routers.roblox.verify_security', return_value=True):
                 response = test_client.post(
                     "/api/v1/roblox/pusher/auth",
                     json=auth_request
@@ -648,8 +648,8 @@ class TestPusherAuthentication:
             "user_id": "test_user"
         }
 
-        with patch('apps.backend.routers.roblox.pusher_service', mock_pusher_service):
-            with patch('apps.backend.routers.roblox.verify_security', return_value=True):
+        with patch('apps.backend.api.routers.roblox.pusher_service', mock_pusher_service):
+            with patch('apps.backend.api.routers.roblox.verify_security', return_value=True):
                 response = test_client.post(
                     "/api/v1/roblox/pusher/auth",
                     json=auth_request
@@ -665,7 +665,7 @@ class TestHealthCheck:
 
     def test_health_check_success(self, test_client, mock_pusher_service):
         """Test health check endpoint"""
-        with patch('apps.backend.routers.roblox.pusher_service', mock_pusher_service):
+        with patch('apps.backend.api.routers.roblox.pusher_service', mock_pusher_service):
             response = test_client.get("/api/v1/roblox/health")
 
         assert response.status_code == status.HTTP_200_OK
@@ -680,7 +680,7 @@ class TestHealthCheck:
         mock_service = Mock()
         mock_service.client = None
 
-        with patch('apps.backend.routers.roblox.pusher_service', mock_service):
+        with patch('apps.backend.api.routers.roblox.pusher_service', mock_service):
             response = test_client.get("/api/v1/roblox/health")
 
         assert response.status_code == status.HTTP_200_OK

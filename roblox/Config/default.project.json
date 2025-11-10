@@ -16,6 +16,12 @@
       },
       "Server": {
         "$path": "src/server"
+      },
+      "Main": {
+        "$path": "src/Main.server.lua"
+      },
+      "SecureConfigurationManager": {
+        "$path": "src/server/SecureConfigurationManager.lua"
       }
     },
 

@@ -1,6 +1,6 @@
 {
   "name": "AIContentGenerator",
   "tree": {
-    "$path": "Plugins/AIContentGenerator.lua"
+    "$path": "plugins/AIContentGenerator.lua"
   }
 }

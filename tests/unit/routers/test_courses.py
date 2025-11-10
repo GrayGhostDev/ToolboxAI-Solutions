@@ -70,7 +70,7 @@ class TestCoursesRouter:
         mock_query.offset.return_value.limit.return_value.all.return_value = mock_courses
         mock_db_session.query.return_value = mock_query
 
-        with patch('apps.backend.routers.courses.get_db', return_value=mock_db_session):
+        with patch('apps.backend.api.routers.courses.get_db', return_value=mock_db_session):
             response = test_client.get("/api/v1/courses/")
 
         assert response.status_code == status.HTTP_200_OK
@@ -88,7 +88,7 @@ class TestCoursesRouter:
         mock_query.filter.return_value = filter_mock
         mock_db_session.query.return_value = mock_query
 
-        with patch('apps.backend.routers.courses.get_db', return_value=mock_db_session):
+        with patch('apps.backend.api.routers.courses.get_db', return_value=mock_db_session):
             response = test_client.get(
                 "/api/v1/courses/",
                 params={"is_published": True, "difficulty_level": "beginner"}
@@ -110,7 +110,7 @@ class TestCoursesRouter:
         mock_query.offset.return_value = offset_mock
         mock_db_session.query.return_value = mock_query
 
-        with patch('apps.backend.routers.courses.get_db', return_value=mock_db_session):
+        with patch('apps.backend.api.routers.courses.get_db', return_value=mock_db_session):
             response = test_client.get("/api/v1/courses/?skip=10&limit=5")
 
         assert response.status_code == status.HTTP_200_OK
@@ -138,8 +138,8 @@ class TestCoursesRouter:
 
         mock_db_session.query.side_effect = [course_query, count_query]
 
-        with patch('apps.backend.routers.courses.get_db', return_value=mock_db_session):
-            with patch('apps.backend.routers.courses.CourseResponse') as mock_response:
+        with patch('apps.backend.api.routers.courses.get_db', return_value=mock_db_session):
+            with patch('apps.backend.api.routers.courses.CourseResponse') as mock_response:
                 mock_response.model_validate.return_value.model_dump.return_value = {
                     'id': str(course_id),
                     'title': 'Test Course'
@@ -156,7 +156,7 @@ class TestCoursesRouter:
         mock_query.filter.return_value.first.return_value = None
         mock_db_session.query.return_value = mock_query
 
-        with patch('apps.backend.routers.courses.get_db', return_value=mock_db_session):
+        with patch('apps.backend.api.routers.courses.get_db', return_value=mock_db_session):
             response = test_client.get(f"/api/v1/courses/{course_id}")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -175,8 +175,8 @@ class TestCoursesRouter:
         mock_db_session.query.return_value = instructor_query
         mock_db_session.refresh.side_effect = lambda x: setattr(x, 'id', uuid4())
 
-        with patch('apps.backend.routers.courses.get_db', return_value=mock_db_session):
-            with patch('apps.backend.routers.courses.Course', return_value=new_course):
+        with patch('apps.backend.api.routers.courses.get_db', return_value=mock_db_session):
+            with patch('apps.backend.api.routers.courses.Course', return_value=new_course):
                 response = test_client.post("/api/v1/courses/", json=sample_course_data)
 
         assert response.status_code == status.HTTP_201_CREATED
@@ -190,7 +190,7 @@ class TestCoursesRouter:
         instructor_query.filter.return_value.first.return_value = None
         mock_db_session.query.return_value = instructor_query
 
-        with patch('apps.backend.routers.courses.get_db', return_value=mock_db_session):
+        with patch('apps.backend.api.routers.courses.get_db', return_value=mock_db_session):
             response = test_client.post("/api/v1/courses/", json=sample_course_data)
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -208,8 +208,8 @@ class TestCoursesRouter:
 
         new_course = Mock(id=uuid4(), **course_data)
 
-        with patch('apps.backend.routers.courses.get_db', return_value=mock_db_session):
-            with patch('apps.backend.routers.courses.Course', return_value=new_course):
+        with patch('apps.backend.api.routers.courses.get_db', return_value=mock_db_session):
+            with patch('apps.backend.api.routers.courses.Course', return_value=new_course):
                 response = test_client.post("/api/v1/courses/", json=course_data)
 
         assert response.status_code == status.HTTP_201_CREATED
@@ -228,7 +228,7 @@ class TestCoursesRouter:
         mock_query.filter.return_value.first.return_value = mock_course
         mock_db_session.query.return_value = mock_query
 
-        with patch('apps.backend.routers.courses.get_db', return_value=mock_db_session):
+        with patch('apps.backend.api.routers.courses.get_db', return_value=mock_db_session):
             response = test_client.put(f"/api/v1/courses/{course_id}", json=update_data)
 
         assert response.status_code == status.HTTP_200_OK
@@ -243,7 +243,7 @@ class TestCoursesRouter:
         mock_query.filter.return_value.first.return_value = None
         mock_db_session.query.return_value = mock_query
 
-        with patch('apps.backend.routers.courses.get_db', return_value=mock_db_session):
+        with patch('apps.backend.api.routers.courses.get_db', return_value=mock_db_session):
             response = test_client.put(
                 f"/api/v1/courses/{course_id}",
                 json={"title": "New Title"}
@@ -262,7 +262,7 @@ class TestCoursesRouter:
         mock_query.filter.return_value.first.return_value = mock_course
         mock_db_session.query.return_value = mock_query
 
-        with patch('apps.backend.routers.courses.get_db', return_value=mock_db_session):
+        with patch('apps.backend.api.routers.courses.get_db', return_value=mock_db_session):
             response = test_client.delete(f"/api/v1/courses/{course_id}")
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -277,7 +277,7 @@ class TestCoursesRouter:
         mock_query.filter.return_value.first.return_value = None
         mock_db_session.query.return_value = mock_query
 
-        with patch('apps.backend.routers.courses.get_db', return_value=mock_db_session):
+        with patch('apps.backend.api.routers.courses.get_db', return_value=mock_db_session):
             response = test_client.delete(f"/api/v1/courses/{course_id}")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -317,7 +317,7 @@ class TestLessonsEndpoints:
 
         mock_db_session.query.side_effect = [course_query, lessons_query]
 
-        with patch('apps.backend.routers.courses.get_db', return_value=mock_db_session):
+        with patch('apps.backend.api.routers.courses.get_db', return_value=mock_db_session):
             response = test_client.get(f"/api/v1/courses/{course_id}/lessons")
 
         assert response.status_code == status.HTTP_200_OK
@@ -330,7 +330,7 @@ class TestLessonsEndpoints:
         mock_query.filter.return_value.first.return_value = None
         mock_db_session.query.return_value = mock_query
 
-        with patch('apps.backend.routers.courses.get_db', return_value=mock_db_session):
+        with patch('apps.backend.api.routers.courses.get_db', return_value=mock_db_session):
             response = test_client.get(f"/api/v1/courses/{course_id}/lessons")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -356,8 +356,8 @@ class TestLessonsEndpoints:
 
         new_lesson = Mock(id=uuid4(), **lesson_data)
 
-        with patch('apps.backend.routers.courses.get_db', return_value=mock_db_session):
-            with patch('apps.backend.routers.courses.Lesson', return_value=new_lesson):
+        with patch('apps.backend.api.routers.courses.get_db', return_value=mock_db_session):
+            with patch('apps.backend.api.routers.courses.Lesson', return_value=new_lesson):
                 response = test_client.post(
                     f"/api/v1/courses/{course_id}/lessons",
                     json=lesson_data
@@ -379,7 +379,7 @@ class TestLessonsEndpoints:
 
         update_data = {"title": "Updated Lesson Title"}
 
-        with patch('apps.backend.routers.courses.get_db', return_value=mock_db_session):
+        with patch('apps.backend.api.routers.courses.get_db', return_value=mock_db_session):
             response = test_client.put(
                 f"/api/v1/courses/{course_id}/lessons/{lesson_id}",
                 json=update_data
@@ -398,7 +398,7 @@ class TestLessonsEndpoints:
         mock_query.filter.return_value.first.return_value = mock_lesson
         mock_db_session.query.return_value = mock_query
 
-        with patch('apps.backend.routers.courses.get_db', return_value=mock_db_session):
+        with patch('apps.backend.api.routers.courses.get_db', return_value=mock_db_session):
             response = test_client.delete(
                 f"/api/v1/courses/{course_id}/lessons/{lesson_id}"
             )
@@ -440,8 +440,8 @@ class TestEnrollmentEndpoints:
 
         new_enrollment = Mock(id=uuid4(), user_id=user_id, course_id=course_id)
 
-        with patch('apps.backend.routers.courses.get_db', return_value=mock_db_session):
-            with patch('apps.backend.routers.courses.Enrollment', return_value=new_enrollment):
+        with patch('apps.backend.api.routers.courses.get_db', return_value=mock_db_session):
+            with patch('apps.backend.api.routers.courses.Enrollment', return_value=new_enrollment):
                 response = test_client.post(
                     f"/api/v1/courses/{course_id}/enroll?user_id={user_id}"
                 )
@@ -468,7 +468,7 @@ class TestEnrollmentEndpoints:
 
         mock_db_session.query.side_effect = [course_query, enrollment_query]
 
-        with patch('apps.backend.routers.courses.get_db', return_value=mock_db_session):
+        with patch('apps.backend.api.routers.courses.get_db', return_value=mock_db_session):
             response = test_client.post(
                 f"/api/v1/courses/{course_id}/enroll?user_id={user_id}"
             )
@@ -488,7 +488,7 @@ class TestEnrollmentEndpoints:
         mock_query.filter.return_value.all.return_value = mock_enrollments
         mock_db_session.query.return_value = mock_query
 
-        with patch('apps.backend.routers.courses.get_db', return_value=mock_db_session):
+        with patch('apps.backend.api.routers.courses.get_db', return_value=mock_db_session):
             response = test_client.get(f"/api/v1/courses/enrollments/user/{user_id}")
 
         assert response.status_code == status.HTTP_200_OK
@@ -524,8 +524,8 @@ class TestEnrollmentEndpoints:
 
         mock_db_session.query.side_effect = [enrollment_query, lessons_query, progress_query]
 
-        with patch('apps.backend.routers.courses.get_db', return_value=mock_db_session):
-            with patch('apps.backend.routers.courses.EnrollmentResponse'):
+        with patch('apps.backend.api.routers.courses.get_db', return_value=mock_db_session):
+            with patch('apps.backend.api.routers.courses.EnrollmentResponse'):
                 response = test_client.get(
                     f"/api/v1/courses/{course_id}/progress/{user_id}"
                 )

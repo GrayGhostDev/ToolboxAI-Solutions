@@ -55,7 +55,7 @@ def _register_core_routers(app: FastAPI) -> None:
 
         # Educational Platform - Courses Router (NEW)
         try:
-            from apps.backend.routers.courses import router as courses_router
+            from apps.backend.api.routers.courses import router as courses_router
             app.include_router(courses_router)
             logger.info("✅ Courses API endpoints loaded successfully at /api/v1/courses")
         except ImportError as e:
@@ -65,7 +65,7 @@ def _register_core_routers(app: FastAPI) -> None:
 
         # Secure Roblox Integration Router (Priority - loads first)
         try:
-            from apps.backend.routers.roblox import router as secure_roblox_router
+            from apps.backend.api.routers.roblox import router as secure_roblox_router
 
             app.include_router(secure_roblox_router)
             logger.info("✅ Secure Roblox integration endpoints loaded successfully")

@@ -65,8 +65,8 @@ class TestErrorReporting:
 
     def test_report_error_success(self, test_client, sample_error_report, mock_swarm_coordinator):
         """Test successful single error reporting"""
-        with patch('apps.backend.routers.error_handling_api.swarm_coordinator', mock_swarm_coordinator):
-            with patch('apps.backend.routers.error_handling_api.process_single_error', AsyncMock()):
+        with patch('apps.backend.api.routers.error_handling.swarm_coordinator', mock_swarm_coordinator):
+            with patch('apps.backend.api.routers.error_handling.process_single_error', AsyncMock()):
                 response = test_client.post(
                     "/api/v1/error-handling/report-error",
                     json=sample_error_report
@@ -109,7 +109,7 @@ class TestErrorReporting:
             "error_type": "RUNTIME"
         }
 
-        with patch('apps.backend.routers.error_handling_api.process_single_error', AsyncMock()):
+        with patch('apps.backend.api.routers.error_handling.process_single_error', AsyncMock()):
             response = test_client.post(
                 "/api/v1/error-handling/report-error",
                 json=minimal_report
@@ -167,8 +167,8 @@ class TestSwarmProcessing:
 
     def test_process_errors_async(self, test_client, sample_swarm_request, mock_swarm_coordinator):
         """Test asynchronous error processing"""
-        with patch('apps.backend.routers.error_handling_api.swarm_coordinator', mock_swarm_coordinator):
-            with patch('apps.backend.routers.error_handling_api.run_swarm_workflow', AsyncMock()):
+        with patch('apps.backend.api.routers.error_handling.swarm_coordinator', mock_swarm_coordinator):
+            with patch('apps.backend.api.routers.error_handling.run_swarm_workflow', AsyncMock()):
                 response = test_client.post(
                     "/api/v1/error-handling/process-errors",
                     json=sample_swarm_request
@@ -186,7 +186,7 @@ class TestSwarmProcessing:
         """Test synchronous error processing"""
         sample_swarm_request["async_processing"] = False
 
-        with patch('apps.backend.routers.error_handling_api.swarm_coordinator', mock_swarm_coordinator):
+        with patch('apps.backend.api.routers.error_handling.swarm_coordinator', mock_swarm_coordinator):
             response = test_client.post(
                 "/api/v1/error-handling/process-errors",
                 json=sample_swarm_request
@@ -206,7 +206,7 @@ class TestSwarmProcessing:
             "async_processing": True
         }
 
-        with patch('apps.backend.routers.error_handling_api.run_swarm_workflow', AsyncMock()):
+        with patch('apps.backend.api.routers.error_handling.run_swarm_workflow', AsyncMock()):
             response = test_client.post(
                 "/api/v1/error-handling/process-errors",
                 json=empty_request
@@ -234,7 +234,7 @@ class TestWorkflowManagement:
             "estimated_completion": "2025-10-10T12:05:00"
         }
 
-        with patch.dict('apps.backend.routers.error_handling_api.active_workflows', {workflow_id: mock_workflow}):
+        with patch.dict('apps.backend.api.routers.error_handling.active_workflows', {workflow_id: mock_workflow}):
             response = test_client.get(f"/api/v1/error-handling/workflow/{workflow_id}/status")
 
         assert response.status_code == status.HTTP_200_OK
@@ -249,7 +249,7 @@ class TestWorkflowManagement:
         """Test workflow status for non-existent workflow"""
         workflow_id = "workflow_nonexistent"
 
-        with patch.dict('apps.backend.routers.error_handling_api.active_workflows', {}):
+        with patch.dict('apps.backend.api.routers.error_handling.active_workflows', {}):
             response = test_client.get(f"/api/v1/error-handling/workflow/{workflow_id}/status")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -267,7 +267,7 @@ class TestWorkflowManagement:
             "estimated_completion": None
         }
 
-        with patch.dict('apps.backend.routers.error_handling_api.active_workflows', {workflow_id: mock_workflow}):
+        with patch.dict('apps.backend.api.routers.error_handling.active_workflows', {workflow_id: mock_workflow}):
             response = test_client.get(f"/api/v1/error-handling/workflow/{workflow_id}/status")
 
         assert response.status_code == status.HTTP_200_OK
@@ -301,7 +301,7 @@ class TestPatternAnalysis:
 
     def test_analyze_error_patterns_default_timeframe(self, test_client, mock_swarm_coordinator):
         """Test error pattern analysis with default timeframe"""
-        with patch('apps.backend.routers.error_handling_api.swarm_coordinator', mock_swarm_coordinator):
+        with patch('apps.backend.api.routers.error_handling.swarm_coordinator', mock_swarm_coordinator):
             response = test_client.get("/api/v1/error-handling/patterns/analyze")
 
         assert response.status_code == status.HTTP_200_OK
@@ -312,7 +312,7 @@ class TestPatternAnalysis:
 
     def test_analyze_error_patterns_custom_timeframe(self, test_client, mock_swarm_coordinator):
         """Test error pattern analysis with custom timeframe"""
-        with patch('apps.backend.routers.error_handling_api.swarm_coordinator', mock_swarm_coordinator):
+        with patch('apps.backend.api.routers.error_handling.swarm_coordinator', mock_swarm_coordinator):
             response = test_client.get(
                 "/api/v1/error-handling/patterns/analyze",
                 params={"timeframe_days": 30}
@@ -324,7 +324,7 @@ class TestPatternAnalysis:
 
     def test_predict_errors_default_timeframe(self, test_client, mock_swarm_coordinator):
         """Test error prediction with default timeframe"""
-        with patch('apps.backend.routers.error_handling_api.swarm_coordinator', mock_swarm_coordinator):
+        with patch('apps.backend.api.routers.error_handling.swarm_coordinator', mock_swarm_coordinator):
             response = test_client.post("/api/v1/error-handling/predict-errors")
 
         assert response.status_code == status.HTTP_200_OK
@@ -336,7 +336,7 @@ class TestPatternAnalysis:
 
     def test_predict_errors_custom_timeframe(self, test_client, mock_swarm_coordinator):
         """Test error prediction with custom timeframe"""
-        with patch('apps.backend.routers.error_handling_api.swarm_coordinator', mock_swarm_coordinator):
+        with patch('apps.backend.api.routers.error_handling.swarm_coordinator', mock_swarm_coordinator):
             response = test_client.post(
                 "/api/v1/error-handling/predict-errors",
                 params={"timeframe_hours": 48}
@@ -370,8 +370,8 @@ class TestSwarmStatus:
 
     def test_get_swarm_status_success(self, test_client, mock_swarm_coordinator):
         """Test successful swarm status retrieval"""
-        with patch('apps.backend.routers.error_handling_api.swarm_coordinator', mock_swarm_coordinator):
-            with patch.dict('apps.backend.routers.error_handling_api.active_workflows', {"wf1": {}, "wf2": {}}):
+        with patch('apps.backend.api.routers.error_handling.swarm_coordinator', mock_swarm_coordinator):
+            with patch.dict('apps.backend.api.routers.error_handling.active_workflows', {"wf1": {}, "wf2": {}}):
                 response = test_client.get("/api/v1/error-handling/swarm/status")
 
         assert response.status_code == status.HTTP_200_OK
@@ -406,7 +406,7 @@ class TestRecovery:
 
     def test_trigger_recovery_async(self, test_client, mock_swarm_coordinator):
         """Test asynchronous recovery trigger"""
-        with patch('apps.backend.routers.error_handling_api.swarm_coordinator', mock_swarm_coordinator):
+        with patch('apps.backend.api.routers.error_handling.swarm_coordinator', mock_swarm_coordinator):
             response = test_client.post(
                 "/api/v1/error-handling/recovery/trigger",
                 params={"component": "database_pool", "strategy": "restart"}
@@ -420,7 +420,7 @@ class TestRecovery:
 
     def test_trigger_recovery_sync(self, test_client, mock_swarm_coordinator):
         """Test synchronous recovery trigger"""
-        with patch('apps.backend.routers.error_handling_api.swarm_coordinator', mock_swarm_coordinator):
+        with patch('apps.backend.api.routers.error_handling.swarm_coordinator', mock_swarm_coordinator):
             # Mock background_tasks to force sync path
             response = test_client.post(
                 "/api/v1/error-handling/recovery/trigger",
@@ -433,7 +433,7 @@ class TestRecovery:
 
     def test_trigger_recovery_no_strategy(self, test_client, mock_swarm_coordinator):
         """Test recovery trigger without explicit strategy"""
-        with patch('apps.backend.routers.error_handling_api.swarm_coordinator', mock_swarm_coordinator):
+        with patch('apps.backend.api.routers.error_handling.swarm_coordinator', mock_swarm_coordinator):
             response = test_client.post(
                 "/api/v1/error-handling/recovery/trigger",
                 params={"component": "cache_service"}
@@ -488,8 +488,8 @@ class TestMetrics:
             "wf3": {"errors_processed": 5}
         }
 
-        with patch('apps.backend.routers.error_handling_api.swarm_coordinator', mock_swarm_coordinator):
-            with patch.dict('apps.backend.routers.error_handling_api.active_workflows', mock_workflows):
+        with patch('apps.backend.api.routers.error_handling.swarm_coordinator', mock_swarm_coordinator):
+            with patch.dict('apps.backend.api.routers.error_handling.active_workflows', mock_workflows):
                 response = test_client.get("/api/v1/error-handling/metrics")
 
         assert response.status_code == status.HTTP_200_OK
@@ -511,8 +511,8 @@ class TestMetrics:
 
     def test_get_error_metrics_empty_workflows(self, test_client, mock_swarm_coordinator):
         """Test metrics with no active workflows"""
-        with patch('apps.backend.routers.error_handling_api.swarm_coordinator', mock_swarm_coordinator):
-            with patch.dict('apps.backend.routers.error_handling_api.active_workflows', {}):
+        with patch('apps.backend.api.routers.error_handling.swarm_coordinator', mock_swarm_coordinator):
+            with patch.dict('apps.backend.api.routers.error_handling.active_workflows', {}):
                 response = test_client.get("/api/v1/error-handling/metrics")
 
         assert response.status_code == status.HTTP_200_OK
@@ -528,7 +528,7 @@ class TestBackgroundTasks:
     @pytest.mark.asyncio
     async def test_process_single_error(self):
         """Test single error background processing"""
-        from apps.backend.routers.error_handling_api import process_single_error
+        from apps.backend.api.routers.error_handling import process_single_error
 
         error_state = {
             "error_id": "err_test_123",
@@ -544,7 +544,7 @@ class TestBackgroundTasks:
         mock_coordinator = Mock()
         mock_coordinator.agents = {"aggregation": mock_aggregator}
 
-        with patch('apps.backend.routers.error_handling_api.swarm_coordinator', mock_coordinator):
+        with patch('apps.backend.api.routers.error_handling.swarm_coordinator', mock_coordinator):
             await process_single_error(error_state)
 
         mock_aggregator.aggregate_errors.assert_called_once_with([error_state], source="api")
@@ -552,7 +552,7 @@ class TestBackgroundTasks:
     @pytest.mark.asyncio
     async def test_run_swarm_workflow(self):
         """Test swarm workflow background execution"""
-        from apps.backend.routers.error_handling_api import run_swarm_workflow, active_workflows
+        from apps.backend.api.routers.error_handling import run_swarm_workflow, active_workflows
 
         workflow_id = "test_workflow_123"
         error_states = [
@@ -569,8 +569,8 @@ class TestBackgroundTasks:
         mock_coordinator = Mock()
         mock_coordinator.orchestrate_error_handling = AsyncMock(return_value=mock_result)
 
-        with patch('apps.backend.routers.error_handling_api.swarm_coordinator', mock_coordinator):
-            with patch.dict('apps.backend.routers.error_handling_api.active_workflows', {}, clear=True):
+        with patch('apps.backend.api.routers.error_handling.swarm_coordinator', mock_coordinator):
+            with patch.dict('apps.backend.api.routers.error_handling.active_workflows', {}, clear=True):
                 await run_swarm_workflow(workflow_id, error_states, context)
 
                 # Verify workflow was tracked
@@ -581,7 +581,7 @@ class TestBackgroundTasks:
     @pytest.mark.asyncio
     async def test_run_swarm_workflow_failure(self):
         """Test swarm workflow failure handling"""
-        from apps.backend.routers.error_handling_api import run_swarm_workflow, active_workflows
+        from apps.backend.api.routers.error_handling import run_swarm_workflow, active_workflows
 
         workflow_id = "test_workflow_fail"
         error_states = [{"error_id": "err1"}]
@@ -590,8 +590,8 @@ class TestBackgroundTasks:
         mock_coordinator = Mock()
         mock_coordinator.orchestrate_error_handling = AsyncMock(side_effect=Exception("Processing failed"))
 
-        with patch('apps.backend.routers.error_handling_api.swarm_coordinator', mock_coordinator):
-            with patch.dict('apps.backend.routers.error_handling_api.active_workflows', {}, clear=True):
+        with patch('apps.backend.api.routers.error_handling.swarm_coordinator', mock_coordinator):
+            with patch.dict('apps.backend.api.routers.error_handling.active_workflows', {}, clear=True):
                 await run_swarm_workflow(workflow_id, error_states, context)
 
                 # Verify workflow failure was tracked

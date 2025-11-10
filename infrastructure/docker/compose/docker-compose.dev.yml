@@ -214,7 +214,7 @@ services:
   # Agent Coordinator (Development)
   # ----------------------------------------
   agent-coordinator:
-    profiles: ["agents"]  # Disabled by default due to Pydantic v2.10 compatibility issues
+    # profiles: ["agents"]  # ENABLED: Pydantic compatibility resolved (pinned <2.10.0, LangSmith tracing disabled)
     build:
       target: development  # Use development stage
     ports:

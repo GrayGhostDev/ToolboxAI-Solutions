@@ -97,8 +97,8 @@ class TestContentGeneration:
         }
         mock_coordinator_service.generate_educational_content.return_value = mock_result
 
-        with patch('apps.backend.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
-            with patch('apps.backend.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
+        with patch('apps.backend.api.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
+            with patch('apps.backend.api.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
                 response = test_client.post(
                     "/api/v1/coordinators/generate",
                     json=sample_content_request
@@ -130,8 +130,8 @@ class TestContentGeneration:
             "environment_type": "interactive_classroom"
         }
 
-        with patch('apps.backend.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
-            with patch('apps.backend.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
+        with patch('apps.backend.api.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
+            with patch('apps.backend.api.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
                 response = test_client.post(
                     "/api/v1/coordinators/generate",
                     json=invalid_request
@@ -151,8 +151,8 @@ class TestContentGeneration:
             "environment_type": "interactive_classroom"
         }
 
-        with patch('apps.backend.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
-            with patch('apps.backend.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
+        with patch('apps.backend.api.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
+            with patch('apps.backend.api.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
                 response = test_client.post(
                     "/api/v1/coordinators/generate",
                     json=invalid_request
@@ -177,8 +177,8 @@ class TestContentGeneration:
         }
         mock_coordinator_service.generate_educational_content.return_value = mock_result
 
-        with patch('apps.backend.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
-            with patch('apps.backend.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
+        with patch('apps.backend.api.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
+            with patch('apps.backend.api.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
                 response = test_client.post(
                     "/api/v1/coordinators/generate",
                     json=sample_custom_request
@@ -202,8 +202,8 @@ class TestContentGeneration:
         """Test content generation when coordinator fails"""
         mock_coordinator_service.generate_educational_content.side_effect = Exception("LLM service unavailable")
 
-        with patch('apps.backend.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
-            with patch('apps.backend.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
+        with patch('apps.backend.api.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
+            with patch('apps.backend.api.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
                 response = test_client.post(
                     "/api/v1/coordinators/generate",
                     json=sample_content_request
@@ -233,8 +233,8 @@ class TestContentGeneration:
         mock_tracer.get_run_url.return_value = "https://smith.langchain.com/trace/abc123"
         mock_coordinator_service.tracer = mock_tracer
 
-        with patch('apps.backend.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
-            with patch('apps.backend.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
+        with patch('apps.backend.api.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
+            with patch('apps.backend.api.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
                 response = test_client.post(
                     "/api/v1/coordinators/generate",
                     json=sample_content_request
@@ -270,7 +270,7 @@ class TestHealthEndpoint:
         }
         mock_coordinator_service.get_health_status.return_value = mock_health
 
-        with patch('apps.backend.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
+        with patch('apps.backend.api.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
             response = test_client.get("/api/v1/coordinators/health")
 
         assert response.status_code == status.HTTP_200_OK
@@ -302,7 +302,7 @@ class TestHealthEndpoint:
         }
         mock_coordinator_service.get_health_status.return_value = mock_health
 
-        with patch('apps.backend.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
+        with patch('apps.backend.api.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
             response = test_client.get("/api/v1/coordinators/health")
 
         assert response.status_code == status.HTTP_200_OK
@@ -316,7 +316,7 @@ class TestHealthEndpoint:
         """Test health check when coordinator raises exception"""
         mock_coordinator_service.get_health_status.side_effect = Exception("Service unavailable")
 
-        with patch('apps.backend.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
+        with patch('apps.backend.api.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
             response = test_client.get("/api/v1/coordinators/health")
 
         assert response.status_code == status.HTTP_200_OK  # Endpoint handles errors gracefully
@@ -335,8 +335,8 @@ class TestAgentManagement:
         self, test_client, mock_coordinator_service, mock_current_user
     ):
         """Test retrieving agent statuses"""
-        with patch('apps.backend.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
-            with patch('apps.backend.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
+        with patch('apps.backend.api.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
+            with patch('apps.backend.api.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
                 response = test_client.get("/api/v1/coordinators/agents")
 
         assert response.status_code == status.HTTP_200_OK
@@ -353,10 +353,10 @@ class TestAgentManagement:
         self, test_client, mock_coordinator_service, mock_current_user
     ):
         """Test agent status retrieval failure"""
-        with patch('apps.backend.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
-            with patch('apps.backend.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
+        with patch('apps.backend.api.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
+            with patch('apps.backend.api.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
                 # Simulate error by raising exception during response creation
-                with patch('apps.backend.routers.v1.coordinators.AgentStatusResponse', side_effect=Exception("Parse error")):
+                with patch('apps.backend.api.routers.v1.coordinators.AgentStatusResponse', side_effect=Exception("Parse error")):
                     response = test_client.get("/api/v1/coordinators/agents")
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -374,8 +374,8 @@ class TestAgentManagement:
             }
         }
 
-        with patch('apps.backend.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
-            with patch('apps.backend.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
+        with patch('apps.backend.api.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
+            with patch('apps.backend.api.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
                 response = test_client.post(
                     "/api/v1/coordinators/agents/content/execute",
                     json=task_payload
@@ -394,8 +394,8 @@ class TestAgentManagement:
         """Test task execution on non-existent agent"""
         task_payload = {"action": "test"}
 
-        with patch('apps.backend.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
-            with patch('apps.backend.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
+        with patch('apps.backend.api.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
+            with patch('apps.backend.api.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
                 response = test_client.post(
                     "/api/v1/coordinators/agents/invalid_agent/execute",
                     json=task_payload
@@ -410,10 +410,10 @@ class TestAgentManagement:
         """Test agent task execution failure"""
         task_payload = {"action": "generate"}
 
-        with patch('apps.backend.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
-            with patch('apps.backend.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
+        with patch('apps.backend.api.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
+            with patch('apps.backend.api.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
                 # Simulate error by raising exception during execution
-                with patch('apps.backend.routers.v1.coordinators.datetime') as mock_datetime:
+                with patch('apps.backend.api.routers.v1.coordinators.datetime') as mock_datetime:
                     mock_datetime.now.side_effect = Exception("System error")
                     response = test_client.post(
                         "/api/v1/coordinators/agents/content/execute",
@@ -432,8 +432,8 @@ class TestWorkflowManagement:
         self, test_client, mock_coordinator_service, mock_current_user
     ):
         """Test retrieving active workflows"""
-        with patch('apps.backend.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
-            with patch('apps.backend.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
+        with patch('apps.backend.api.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
+            with patch('apps.backend.api.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
                 response = test_client.get("/api/v1/coordinators/workflows")
 
         assert response.status_code == status.HTTP_200_OK
@@ -446,10 +446,10 @@ class TestWorkflowManagement:
         self, test_client, mock_coordinator_service, mock_current_user
     ):
         """Test workflow retrieval failure"""
-        with patch('apps.backend.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
-            with patch('apps.backend.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
+        with patch('apps.backend.api.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
+            with patch('apps.backend.api.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
                 # Simulate error
-                with patch('apps.backend.routers.v1.coordinators.datetime') as mock_datetime:
+                with patch('apps.backend.api.routers.v1.coordinators.datetime') as mock_datetime:
                     mock_datetime.now.side_effect = Exception("Database error")
                     response = test_client.get("/api/v1/coordinators/workflows")
 
@@ -462,8 +462,8 @@ class TestWorkflowManagement:
         """Test successful workflow cancellation"""
         workflow_id = "workflow_abc123"
 
-        with patch('apps.backend.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
-            with patch('apps.backend.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
+        with patch('apps.backend.api.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
+            with patch('apps.backend.api.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
                 response = test_client.delete(
                     f"/api/v1/coordinators/workflows/{workflow_id}"
                 )
@@ -480,10 +480,10 @@ class TestWorkflowManagement:
         """Test workflow cancellation failure"""
         workflow_id = "workflow_xyz789"
 
-        with patch('apps.backend.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
-            with patch('apps.backend.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
+        with patch('apps.backend.api.routers.v1.coordinators.get_coordinator', return_value=mock_coordinator_service):
+            with patch('apps.backend.api.routers.v1.coordinators.get_current_user', return_value=mock_current_user):
                 # Simulate error during cancellation
-                with patch('apps.backend.routers.v1.coordinators.logger') as mock_logger:
+                with patch('apps.backend.api.routers.v1.coordinators.logger') as mock_logger:
                     mock_logger.error.side_effect = Exception("Cancellation failed")
                     # The endpoint catches exceptions, so this will cause an error path
                     response = test_client.delete(

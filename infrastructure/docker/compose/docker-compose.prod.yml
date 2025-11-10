@@ -186,9 +186,9 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./config/nginx/sites-enabled:/etc/nginx/sites-enabled:ro
-      - ./config/nginx/ssl:/etc/nginx/ssl:ro
+      - ../config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../config/nginx/sites-enabled:/etc/nginx/sites-enabled:ro
+      - ../config/nginx/ssl:/etc/nginx/ssl:ro
       - nginx_cache:/var/cache/nginx:Z
       - nginx_logs:/var/log/nginx:Z
     networks:

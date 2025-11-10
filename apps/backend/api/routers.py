@@ -128,7 +128,7 @@ def register_routers(app: FastAPI) -> None:
     logger.info("-" * 60)
 
     try:
-        from apps.backend.routers.courses import router as courses_router
+        from apps.backend.api.routers.courses import router as courses_router
         app.include_router(courses_router, tags=["courses"])
         logger.info("✓ Registered courses router at /api/v1/courses")
         registration_stats["successful"] += 1
