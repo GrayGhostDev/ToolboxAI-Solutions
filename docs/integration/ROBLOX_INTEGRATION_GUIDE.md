@@ -22,21 +22,21 @@ The Rojo server is configured to run on localhost port 34872 for all ToolboxAI-S
   - IP whitelisting and access control
   - Automatic credential rotation support
 
-- **Roblox Pusher Service** (`apps/backend/services/roblox_pusher.py`)
+- **Roblox Pusher Service** (`apps/backend/services/roblox/pusher.py`)
   - Real-time communication via Pusher channels
   - Event notifications for all stages
   - Private and presence channel authentication
 
-- **OAuth2 Authentication Service** (`apps/backend/services/roblox_auth.py`)
+- **OAuth2 Authentication Service** (`apps/backend/services/roblox/auth.py`)
   - Implements Roblox OAuth2 with PKCE flow (2025 standards)
   - Secure token management with encryption
   - Automatic token refresh
 
-- **Open Cloud API Client** (`apps/backend/services/open_cloud_client.py`)
+- **Open Cloud API Client** (`apps/backend/services/roblox/open_cloud.py`)
   - Complete Open Cloud API v2 implementation
   - Asset management, DataStore operations, messaging service
 
-- **Rojo Manager** (`apps/backend/services/rojo_manager.py`)
+- **Rojo Manager** (`apps/backend/services/roblox/rojo_manager.py`)
   - Enhanced Rojo 7.5.1 integration
   - Multi-project support with port 34872
 
