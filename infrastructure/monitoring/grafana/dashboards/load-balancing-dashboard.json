@@ -1,335 +1,485 @@
 {
-  "dashboard": {
-    "title": "Load Balancing & Resilience Dashboard",
-    "uid": "load-balancing-001",
-    "version": 1,
-    "timezone": "browser",
-    "refresh": "10s",
-    "time": {
-      "from": "now-1h",
-      "to": "now"
-    },
-    "panels": [
-      {
-        "title": "Circuit Breaker Status Overview",
-        "type": "stat",
-        "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
-        "targets": [
-          {
-            "expr": "sum(circuit_breaker_state{state='open'})",
-            "legendFormat": "Open Circuits"
-          },
-          {
-            "expr": "sum(circuit_breaker_state{state='half_open'})",
-            "legendFormat": "Half-Open Circuits"
-          },
-          {
-            "expr": "sum(circuit_breaker_state{state='closed'})",
-            "legendFormat": "Closed Circuits"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                { "value": 0, "color": "green" },
-                { "value": 1, "color": "yellow" },
-                { "value": 3, "color": "red" }
-              ]
-            }
-          }
+  "title": "Load Balancing & Resilience Dashboard",
+  "uid": "load-balancing-001",
+  "version": 1,
+  "timezone": "browser",
+  "refresh": "10s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "title": "Circuit Breaker Status Overview",
+      "type": "stat",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "sum(circuit_breaker_state{state='open'})",
+          "legendFormat": "Open Circuits"
+        },
+        {
+          "expr": "sum(circuit_breaker_state{state='half_open'})",
+          "legendFormat": "Half-Open Circuits"
+        },
+        {
+          "expr": "sum(circuit_breaker_state{state='closed'})",
+          "legendFormat": "Closed Circuits"
         }
-      },
-      {
-        "title": "Rate Limiting - Requests vs Rejections",
-        "type": "graph",
-        "gridPos": { "h": 8, "w": 12, "x": 6, "y": 0 },
-        "targets": [
-          {
-            "expr": "rate(rate_limit_requests_total[5m])",
-            "legendFormat": "Total Requests - {{ endpoint }}"
-          },
-          {
-            "expr": "rate(rate_limit_rejections_total[5m])",
-            "legendFormat": "Rejected - {{ endpoint }}"
-          }
-        ],
-        "yaxes": [
-          { "format": "reqps", "show": true },
-          { "format": "short", "show": false }
-        ]
-      },
-      {
-        "title": "Database Connection Pool Utilization",
-        "type": "graph",
-        "gridPos": { "h": 8, "w": 12, "x": 18, "y": 0 },
-        "targets": [
-          {
-            "expr": "(database_pool_active_connections / database_pool_size) * 100",
-            "legendFormat": "{{ pool_name }} Utilization %"
-          },
-          {
-            "expr": "database_pool_waiting_requests",
-            "legendFormat": "{{ pool_name }} Waiting"
-          }
-        ],
-        "yaxes": [
-          { "format": "percent", "max": 100, "min": 0, "show": true },
-          { "format": "short", "show": true }
-        ],
-        "alert": {
-          "conditions": [
-            {
-              "evaluator": { "params": [90], "type": "gt" },
-              "operator": { "type": "and" },
-              "query": { "params": ["A", "5m", "now"] },
-              "type": "query"
-            }
-          ]
-        }
-      },
-      {
-        "title": "PgBouncer Connection Statistics",
-        "type": "table",
-        "gridPos": { "h": 6, "w": 12, "x": 0, "y": 8 },
-        "targets": [
-          {
-            "expr": "pgbouncer_pools_client_active",
-            "format": "table",
-            "instant": true
-          }
-        ],
-        "transformations": [
-          {
-            "id": "organize",
-            "options": {
-              "excludeByName": {},
-              "indexByName": {
-                "database": 0,
-                "pool_mode": 1,
-                "Value": 2
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": 0,
+                "color": "green"
               },
-              "renameByName": {
-                "database": "Database",
-                "pool_mode": "Pool Mode",
-                "Value": "Active Connections"
+              {
+                "value": 1,
+                "color": "yellow"
+              },
+              {
+                "value": 3,
+                "color": "red"
               }
-            }
+            ]
           }
-        ]
-      },
-      {
-        "title": "Nginx Upstream Health",
-        "type": "heatmap",
-        "gridPos": { "h": 6, "w": 12, "x": 12, "y": 8 },
-        "targets": [
-          {
-            "expr": "nginx_upstream_up",
-            "format": "time_series"
-          }
-        ],
-        "dataFormat": "timeseries",
-        "yAxis": { "format": "short" },
-        "cards": { "cardPadding": 2, "cardRound": 2 },
-        "color": {
-          "mode": "spectrum",
-          "scheme": "interpolateRdYlGn",
-          "exponent": 0.5
-        }
-      },
-      {
-        "title": "Request Latency Distribution (p50, p95, p99)",
-        "type": "graph",
-        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
-        "targets": [
-          {
-            "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket[5m]))",
-            "legendFormat": "p50"
-          },
-          {
-            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
-            "legendFormat": "p95"
-          },
-          {
-            "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))",
-            "legendFormat": "p99"
-          }
-        ],
-        "yaxes": [
-          { "format": "s", "show": true },
-          { "format": "short", "show": false }
-        ]
-      },
-      {
-        "title": "WebSocket Connection Distribution",
-        "type": "piechart",
-        "gridPos": { "h": 8, "w": 6, "x": 12, "y": 14 },
-        "targets": [
-          {
-            "expr": "websocket_connections_per_pod",
-            "legendFormat": "{{ pod }}"
-          }
-        ],
-        "pieType": "donut",
-        "legendDisplayMode": "table",
-        "legendPlacement": "right"
-      },
-      {
-        "title": "HPA Scaling Status",
-        "type": "graph",
-        "gridPos": { "h": 8, "w": 6, "x": 18, "y": 14 },
-        "targets": [
-          {
-            "expr": "kube_horizontalpodautoscaler_status_current_replicas",
-            "legendFormat": "Current - {{ horizontalpodautoscaler }}"
-          },
-          {
-            "expr": "kube_horizontalpodautoscaler_status_desired_replicas",
-            "legendFormat": "Desired - {{ horizontalpodautoscaler }}"
-          },
-          {
-            "expr": "kube_horizontalpodautoscaler_spec_max_replicas",
-            "legendFormat": "Max - {{ horizontalpodautoscaler }}"
-          }
-        ],
-        "yaxes": [
-          { "format": "short", "decimals": 0, "show": true },
-          { "format": "short", "show": false }
-        ]
-      },
-      {
-        "title": "Circuit Breaker State Transitions",
-        "type": "graph",
-        "gridPos": { "h": 6, "w": 12, "x": 0, "y": 22 },
-        "targets": [
-          {
-            "expr": "increase(circuit_breaker_state_transitions_total[5m])",
-            "legendFormat": "{{ name }} - {{ from_state }} → {{ to_state }}"
-          }
-        ],
-        "bars": true,
-        "lines": false,
-        "stack": false
-      },
-      {
-        "title": "Load Balancer Strategy Distribution",
-        "type": "stat",
-        "gridPos": { "h": 6, "w": 6, "x": 12, "y": 22 },
-        "targets": [
-          {
-            "expr": "load_balancer_strategy_usage",
-            "legendFormat": "{{ strategy }}"
-          }
-        ],
-        "options": {
-          "orientation": "horizontal",
-          "textMode": "value_and_name",
-          "graphMode": "area"
-        }
-      },
-      {
-        "title": "System Bottleneck Indicators",
-        "type": "table",
-        "gridPos": { "h": 6, "w": 6, "x": 18, "y": 22 },
-        "targets": [
-          {
-            "expr": "load_balancer_bottleneck_indicators",
-            "format": "table",
-            "instant": true
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "custom": {
-              "align": "left"
-            },
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                { "value": 0, "color": "green" },
-                { "value": 1, "color": "yellow" },
-                { "value": 3, "color": "red" }
-              ]
-            }
-          }
-        }
-      },
-      {
-        "title": "Redis Rate Limiter Performance",
-        "type": "graph",
-        "gridPos": { "h": 6, "w": 12, "x": 0, "y": 28 },
-        "targets": [
-          {
-            "expr": "redis_commands_processed_total",
-            "legendFormat": "Commands/sec"
-          },
-          {
-            "expr": "redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total)",
-            "legendFormat": "Hit Rate"
-          }
-        ],
-        "yaxes": [
-          { "format": "ops", "show": true },
-          { "format": "percentunit", "show": true }
-        ]
-      },
-      {
-        "title": "Alert Status Summary",
-        "type": "alertlist",
-        "gridPos": { "h": 6, "w": 12, "x": 12, "y": 28 },
-        "options": {
-          "showOptions": "current",
-          "maxItems": 10,
-          "sortOrder": 1,
-          "dashboardAlerts": false,
-          "alertName": "",
-          "dashboardTitle": "",
-          "tags": ["load_balancing", "resilience"]
         }
       }
-    ],
-    "annotations": {
-      "list": [
+    },
+    {
+      "title": "Rate Limiting - Requests vs Rejections",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 6,
+        "y": 0
+      },
+      "targets": [
         {
-          "datasource": "Prometheus",
-          "enable": true,
-          "expr": "ALERTS{alertname=~\"Circuit.*|Rate.*|Database.*|Nginx.*|HPA.*\"}",
-          "iconColor": "red",
-          "name": "Load Balancing Alerts",
-          "step": "10s",
-          "tagKeys": "severity,component",
-          "textFormat": "{{ alertname }}: {{ summary }}"
+          "expr": "rate(rate_limit_requests_total[5m])",
+          "legendFormat": "Total Requests - {{ endpoint }}"
+        },
+        {
+          "expr": "rate(rate_limit_rejections_total[5m])",
+          "legendFormat": "Rejected - {{ endpoint }}"
+        }
+      ],
+      "yaxes": [
+        {
+          "format": "reqps",
+          "show": true
+        },
+        {
+          "format": "short",
+          "show": false
         }
       ]
     },
-    "templating": {
-      "list": [
+    {
+      "title": "Database Connection Pool Utilization",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 18,
+        "y": 0
+      },
+      "targets": [
         {
-          "name": "datasource",
-          "type": "datasource",
-          "query": "prometheus",
-          "current": { "text": "Prometheus", "value": "Prometheus" }
+          "expr": "(database_pool_active_connections / database_pool_size) * 100",
+          "legendFormat": "{{ pool_name }} Utilization %"
         },
         {
-          "name": "environment",
-          "type": "custom",
-          "current": { "text": "production", "value": "production" },
-          "options": [
-            { "text": "production", "value": "production" },
-            { "text": "staging", "value": "staging" },
-            { "text": "development", "value": "development" }
-          ]
+          "expr": "database_pool_waiting_requests",
+          "legendFormat": "{{ pool_name }} Waiting"
+        }
+      ],
+      "yaxes": [
+        {
+          "format": "percent",
+          "max": 100,
+          "min": 0,
+          "show": true
         },
         {
-          "name": "service",
-          "type": "query",
-          "datasource": "Prometheus",
-          "query": "label_values(up, job)",
-          "multi": true,
-          "includeAll": true
+          "format": "short",
+          "show": true
+        }
+      ],
+      "alert": {
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                90
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "A",
+                "5m",
+                "now"
+              ]
+            },
+            "type": "query"
+          }
+        ]
+      }
+    },
+    {
+      "title": "PgBouncer Connection Statistics",
+      "type": "table",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "pgbouncer_pools_client_active",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {
+              "database": 0,
+              "pool_mode": 1,
+              "Value": 2
+            },
+            "renameByName": {
+              "database": "Database",
+              "pool_mode": "Pool Mode",
+              "Value": "Active Connections"
+            }
+          }
         }
       ]
+    },
+    {
+      "title": "Nginx Upstream Health",
+      "type": "heatmap",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "nginx_upstream_up",
+          "format": "time_series"
+        }
+      ],
+      "dataFormat": "timeseries",
+      "yAxis": {
+        "format": "short"
+      },
+      "cards": {
+        "cardPadding": 2,
+        "cardRound": 2
+      },
+      "color": {
+        "mode": "spectrum",
+        "scheme": "interpolateRdYlGn",
+        "exponent": 0.5
+      }
+    },
+    {
+      "title": "Request Latency Distribution (p50, p95, p99)",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket[5m]))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))",
+          "legendFormat": "p99"
+        }
+      ],
+      "yaxes": [
+        {
+          "format": "s",
+          "show": true
+        },
+        {
+          "format": "short",
+          "show": false
+        }
+      ]
+    },
+    {
+      "title": "WebSocket Connection Distribution",
+      "type": "piechart",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 14
+      },
+      "targets": [
+        {
+          "expr": "websocket_connections_per_pod",
+          "legendFormat": "{{ pod }}"
+        }
+      ],
+      "pieType": "donut",
+      "legendDisplayMode": "table",
+      "legendPlacement": "right"
+    },
+    {
+      "title": "HPA Scaling Status",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 14
+      },
+      "targets": [
+        {
+          "expr": "kube_horizontalpodautoscaler_status_current_replicas",
+          "legendFormat": "Current - {{ horizontalpodautoscaler }}"
+        },
+        {
+          "expr": "kube_horizontalpodautoscaler_status_desired_replicas",
+          "legendFormat": "Desired - {{ horizontalpodautoscaler }}"
+        },
+        {
+          "expr": "kube_horizontalpodautoscaler_spec_max_replicas",
+          "legendFormat": "Max - {{ horizontalpodautoscaler }}"
+        }
+      ],
+      "yaxes": [
+        {
+          "format": "short",
+          "decimals": 0,
+          "show": true
+        },
+        {
+          "format": "short",
+          "show": false
+        }
+      ]
+    },
+    {
+      "title": "Circuit Breaker State Transitions",
+      "type": "graph",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 22
+      },
+      "targets": [
+        {
+          "expr": "increase(circuit_breaker_state_transitions_total[5m])",
+          "legendFormat": "{{ name }} - {{ from_state }} \u2192 {{ to_state }}"
+        }
+      ],
+      "bars": true,
+      "lines": false,
+      "stack": false
+    },
+    {
+      "title": "Load Balancer Strategy Distribution",
+      "type": "stat",
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 22
+      },
+      "targets": [
+        {
+          "expr": "load_balancer_strategy_usage",
+          "legendFormat": "{{ strategy }}"
+        }
+      ],
+      "options": {
+        "orientation": "horizontal",
+        "textMode": "value_and_name",
+        "graphMode": "area"
+      }
+    },
+    {
+      "title": "System Bottleneck Indicators",
+      "type": "table",
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 22
+      },
+      "targets": [
+        {
+          "expr": "load_balancer_bottleneck_indicators",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": 0,
+                "color": "green"
+              },
+              {
+                "value": 1,
+                "color": "yellow"
+              },
+              {
+                "value": 3,
+                "color": "red"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Redis Rate Limiter Performance",
+      "type": "graph",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 28
+      },
+      "targets": [
+        {
+          "expr": "redis_commands_processed_total",
+          "legendFormat": "Commands/sec"
+        },
+        {
+          "expr": "redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total)",
+          "legendFormat": "Hit Rate"
+        }
+      ],
+      "yaxes": [
+        {
+          "format": "ops",
+          "show": true
+        },
+        {
+          "format": "percentunit",
+          "show": true
+        }
+      ]
+    },
+    {
+      "title": "Alert Status Summary",
+      "type": "alertlist",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 28
+      },
+      "options": {
+        "showOptions": "current",
+        "maxItems": 10,
+        "sortOrder": 1,
+        "dashboardAlerts": false,
+        "alertName": "",
+        "dashboardTitle": "",
+        "tags": [
+          "load_balancing",
+          "resilience"
+        ]
+      }
     }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "datasource": "Prometheus",
+        "enable": true,
+        "expr": "ALERTS{alertname=~\"Circuit.*|Rate.*|Database.*|Nginx.*|HPA.*\"}",
+        "iconColor": "red",
+        "name": "Load Balancing Alerts",
+        "step": "10s",
+        "tagKeys": "severity,component",
+        "textFormat": "{{ alertname }}: {{ summary }}"
+      }
+    ]
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {
+          "text": "Prometheus",
+          "value": "Prometheus"
+        }
+      },
+      {
+        "name": "environment",
+        "type": "custom",
+        "current": {
+          "text": "production",
+          "value": "production"
+        },
+        "options": [
+          {
+            "text": "production",
+            "value": "production"
+          },
+          {
+            "text": "staging",
+            "value": "staging"
+          },
+          {
+            "text": "development",
+            "value": "development"
+          }
+        ]
+      },
+      {
+        "name": "service",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(up, job)",
+        "multi": true,
+        "includeAll": true
+      }
+    ]
   }
 }

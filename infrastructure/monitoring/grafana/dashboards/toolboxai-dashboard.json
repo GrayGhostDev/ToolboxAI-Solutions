@@ -37,7 +37,7 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
+        "type": "Prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
       "description": "P50, P95, and P99 latency percentiles for API endpoints",
@@ -114,7 +114,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "Prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket{job=\"toolboxai-backend\"}[5m])) by (le, endpoint))",
@@ -125,7 +125,7 @@
         },
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "Prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"toolboxai-backend\"}[5m])) by (le, endpoint))",
@@ -136,7 +136,7 @@
         },
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "Prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job=\"toolboxai-backend\"}[5m])) by (le, endpoint))",
@@ -151,7 +151,7 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
+        "type": "Prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
       "description": "Request rate and error rate for API endpoints",
@@ -245,7 +245,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "Prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "sum(rate(http_requests_total{job=\"toolboxai-backend\"}[5m])) by (endpoint)",
@@ -256,7 +256,7 @@
         },
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "Prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "(sum(rate(http_requests_total{job=\"toolboxai-backend\",status_code=~\"5..\"}[5m])) by (endpoint) / sum(rate(http_requests_total{job=\"toolboxai-backend\"}[5m])) by (endpoint)) * 100",
@@ -284,7 +284,7 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
+        "type": "Prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
       "description": "CPU and Memory usage across all instances",
@@ -367,7 +367,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "Prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "100 - (avg by (instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
@@ -378,7 +378,7 @@
         },
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "Prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
@@ -393,7 +393,7 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
+        "type": "Prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
       "description": "Database connection pool status and performance",
@@ -470,7 +470,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "Prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "toolboxai_database_connection_pool_size",
@@ -481,7 +481,7 @@
         },
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "Prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "toolboxai_database_connection_pool_active",
@@ -492,7 +492,7 @@
         },
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "Prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "toolboxai_cache_hit_rate",
@@ -520,7 +520,7 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
+        "type": "Prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
       "description": "Active users and content generation metrics",
@@ -597,7 +597,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "Prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "toolboxai_active_users_total",
@@ -608,7 +608,7 @@
         },
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "Prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "rate(toolboxai_user_registrations_total[5m]) * 300",
@@ -623,7 +623,7 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
+        "type": "Prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
       "description": "Content generation rate and success metrics",
@@ -700,7 +700,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "Prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "rate(toolboxai_content_generation_requests_total[5m]) * 300",
@@ -711,7 +711,7 @@
         },
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "Prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "rate(toolboxai_lessons_created_total[5m]) * 300",
@@ -739,7 +739,7 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
+        "type": "Prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
       "description": "AI agent task metrics and performance",
@@ -816,7 +816,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "Prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "toolboxai_active_agent_tasks",
@@ -827,7 +827,7 @@
         },
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "Prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "rate(toolboxai_agent_tasks_total[5m]) * 300",
@@ -842,7 +842,7 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
+        "type": "Prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
       "description": "LLM API usage and performance metrics",
@@ -936,7 +936,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "Prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "histogram_quantile(0.95, sum(rate(toolboxai_llm_api_duration_seconds_bucket[5m])) by (le, provider))",
@@ -947,7 +947,7 @@
         },
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "Prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "rate(toolboxai_llm_token_usage_total[5m]) * 300",
@@ -975,7 +975,7 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
+        "type": "Prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
       "description": "Container resource usage and health",
@@ -1058,7 +1058,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "Prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "(container_memory_usage_bytes{name!=\"\"} / container_spec_memory_limit_bytes{name!=\"\"}) * 100",
@@ -1069,7 +1069,7 @@
         },
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "Prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "(rate(container_cpu_usage_seconds_total{name!=\"\"}[5m])) * 100",

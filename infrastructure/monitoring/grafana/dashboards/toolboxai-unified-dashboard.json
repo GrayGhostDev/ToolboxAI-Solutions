@@ -51,7 +51,7 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
+        "type": "Prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
       "description": "Overall system health status for all services",
@@ -131,7 +131,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "Prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "up{environment=\"$environment\"} == 1",
@@ -146,7 +146,7 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
+        "type": "Prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
       "description": "Key performance indicators and metrics",
@@ -190,7 +190,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "Prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "rate(http_requests_total{environment=\"$environment\",service=\"backend-api\"}[5m])",
@@ -201,7 +201,7 @@
         },
         {
           "datasource": {
-            "type": "prometheus",
+            "type": "Prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{environment=\"$environment\",service=\"backend-api\"}[5m]))",
@@ -285,7 +285,7 @@
           "value": "$__all"
         },
         "datasource": {
-          "type": "prometheus",
+          "type": "Prometheus",
           "uid": "${DS_PROMETHEUS}"
         },
         "definition": "label_values(up{environment=\"$environment\"}, service)",
@@ -313,7 +313,7 @@
           "value": "$__all"
         },
         "datasource": {
-          "type": "prometheus",
+          "type": "Prometheus",
           "uid": "${DS_PROMETHEUS}"
         },
         "definition": "label_values(up{environment=\"$environment\",service=~\"$service\"}, instance)",

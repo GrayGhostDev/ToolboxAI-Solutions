@@ -3,44 +3,54 @@
 # ============================================================================
 # Purpose: Configure CodeQL analysis with custom query filters and paths
 # Last Updated: 2025-11-10
+# Documentation: https://docs.github.com/en/code-security/code-scanning/
 # ============================================================================
 
 name: "ToolBoxAI CodeQL Configuration"
 
-# Disable default queries and use only production-ready queries
-disable-default-queries: false
+# ============================================================================
+# Paths Configuration
+# ============================================================================
 
 # Paths to exclude from analysis
 paths-ignore:
-  - '**/node_modules/**'
-  - '**/venv/**'
-  - '**/.venv/**'
-  - '**/dist/**'
-  - '**/build/**'
-  - '**/coverage/**'
-  - '**/Archive/**'
-  - '**/__pycache__/**'
-  - '**/test-results/**'
-  - '**/test-reports/**'
+  - '**/node_modules'
+  - '**/venv'
+  - '**/.venv'
+  - '**/dist'
+  - '**/build'
+  - '**/coverage'
+  - '**/Archive'
+  - '**/__pycache__'
+  - '**/test-results'
+  - '**/test-reports'
   - '**/*.min.js'
   - '**/*.bundle.js'
-  - '**/vendor/**'
-  - '**/third_party/**'
+  - '**/vendor'
+  - '**/third_party'
+  - '**/.git'
 
 # Paths to specifically include
 paths:
-  - 'apps/**'
-  - 'core/**'
-  - 'middleware/**'
-  - 'services/**'
-  - 'api/**'
-  - 'roblox/**'
+  - 'apps'
+  - 'core'
+  - 'middleware'
+  - 'services'
+  - 'api'
+  - 'roblox'
 
 # ============================================================================
 # Query Configuration
 # ============================================================================
 
-# Use security-extended suite for comprehensive security scanning
+# Use default queries (security and quality)
+disable-default-queries: false
+
+# Additional query packs - use security-extended for comprehensive coverage
+queries:
+  - uses: security-extended
+
+# Query filters to exclude specific problematic queries
 query-filters:
   - exclude:
       id: py/unreachable-statement
@@ -50,8 +60,10 @@ query-filters:
 # ============================================================================
 # Notes
 # ============================================================================
-# - This configuration excludes the py/unreachable-statement query to prevent
-#   false positives from exception handling patterns (try/except blocks)
-# - Archive directories are excluded from scanning
-# - Test files and build artifacts are excluded
+# - security-extended: Comprehensive security query suite
+# - py/unreachable-statement excluded: False positives from try/except blocks
+# - py/redundant-global-declaration excluded: Required for dynamic imports
+# - Archive directories excluded from scanning
+# - Test files and build artifacts excluded
 # ============================================================================
+

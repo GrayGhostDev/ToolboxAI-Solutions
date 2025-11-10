@@ -27,8 +27,8 @@
   "panels": [
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "Prometheus",
+        "uid": "Prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -83,8 +83,8 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "Prometheus",
+            "uid": "Prometheus"
           },
           "expr": "sum(rate(auth_attempts_total{status=\"failed\"}[5m])) * 60",
           "refId": "A"
@@ -95,8 +95,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "Prometheus",
+        "uid": "Prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -147,8 +147,8 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "Prometheus",
+            "uid": "Prometheus"
           },
           "expr": "sum(increase(api_key_validations_total{status=\"invalid\"}[1h]))",
           "refId": "A"
@@ -159,8 +159,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "Prometheus",
+        "uid": "Prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -207,8 +207,8 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "Prometheus",
+            "uid": "Prometheus"
           },
           "expr": "sum(active_sessions_count)",
           "refId": "A"
@@ -219,8 +219,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "Prometheus",
+        "uid": "Prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -267,8 +267,8 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "Prometheus",
+            "uid": "Prometheus"
           },
           "expr": "sum(websocket_connections_active)",
           "refId": "A"
@@ -279,8 +279,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "Prometheus",
+        "uid": "Prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -386,8 +386,8 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "Prometheus",
+            "uid": "Prometheus"
           },
           "expr": "sum(rate(auth_attempts_total{status=\"success\"}[5m])) by (method)",
           "legendFormat": "Success - {{method}}",
@@ -395,8 +395,8 @@
         },
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "Prometheus",
+            "uid": "Prometheus"
           },
           "expr": "sum(rate(auth_attempts_total{status=\"failed\"}[5m])) by (method)",
           "legendFormat": "Failed - {{method}}",
@@ -408,8 +408,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "Prometheus",
+        "uid": "Prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -484,8 +484,8 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "Prometheus",
+            "uid": "Prometheus"
           },
           "expr": "sum(rate(api_key_validations_total[5m])) by (status)",
           "legendFormat": "{{status}}",
@@ -497,8 +497,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "Prometheus",
+        "uid": "Prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -573,8 +573,8 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "Prometheus",
+            "uid": "Prometheus"
           },
           "expr": "sum(increase(roblox_validations_total[1h])) by (risk_level, status)",
           "legendFormat": "{{risk_level}} - {{status}}",
@@ -586,8 +586,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "Prometheus",
+        "uid": "Prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -654,8 +654,8 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "Prometheus",
+            "uid": "Prometheus"
           },
           "expr": "topk(10, sum by (endpoint, status) (rate(http_requests_total{status=~\"4..|5..\"}[5m]) > 0))",
           "format": "table",
@@ -682,8 +682,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "Prometheus",
+        "uid": "Prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -741,8 +741,8 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "Prometheus",
+            "uid": "Prometheus"
           },
           "expr": "100 - (sum(rate(redis_cache_hits_total[5m])) / (sum(rate(redis_cache_hits_total[5m])) + sum(rate(redis_cache_misses_total[5m]))) * 100)",
           "refId": "A"
@@ -753,8 +753,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "Prometheus",
+        "uid": "Prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -812,8 +812,8 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "Prometheus",
+            "uid": "Prometheus"
           },
           "expr": "cpu_usage_percent",
           "refId": "A"
@@ -824,8 +824,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "Prometheus",
+        "uid": "Prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -883,8 +883,8 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "Prometheus",
+            "uid": "Prometheus"
           },
           "expr": "(memory_usage_bytes{type=\"rss\"} / memory_usage_bytes{type=\"available\"}) * 100",
           "refId": "A"
