@@ -60,5 +60,17 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 # Expose port
 EXPOSE ${PORT}
 
-# Run application
-CMD ["uvicorn", "apps.backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run application with gunicorn for production
+CMD ["gunicorn", "apps.backend.main:app", \
+     "--bind", "0.0.0.0:8000", \
+     "--workers", "2", \
+     "--worker-class", "uvicorn.workers.UvicornWorker", \
+     "--worker-connections", "500", \
+     "--max-requests", "5000", \
+     "--max-requests-jitter", "500", \
+     "--timeout", "30", \
+     "--keep-alive", "5", \
+     "--graceful-timeout", "30", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-", \
+     "--log-level", "info"]

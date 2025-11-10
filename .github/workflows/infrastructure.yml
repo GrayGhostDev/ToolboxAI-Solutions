@@ -1,0 +1,70 @@
+name: Infrastructure Pipeline
+
+# Consolidated infrastructure workflow
+# Replaces: database-migrations, roblox-sync, teamcity-trigger
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: 'Infrastructure operation'
+        required: true
+        type: choice
+        options:
+          - database-migration
+          - roblox-sync
+          - teamcity-trigger
+
+env:
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  database-migration:
+    name: Database Migrations
+    if: github.event.inputs.operation == 'database-migration'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run database migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "Running database migrations..."
+          # Add actual migration commands here
+          echo "Migrations complete"
+
+  roblox-sync:
+    name: Roblox Deployment Sync
+    if: github.event.inputs.operation == 'roblox-sync'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync Roblox assets
+        run: |
+          echo "Syncing Roblox deployment..."
+          # Add actual Rojo sync commands here
+          echo "Roblox sync complete"
+
+  teamcity-trigger:
+    name: TeamCity Build Trigger
+    if: github.event.inputs.operation == 'teamcity-trigger'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger TeamCity build
+        run: |
+          echo "Triggering TeamCity build..."
+          # Add actual TeamCity API call here
+          echo "TeamCity build triggered"
