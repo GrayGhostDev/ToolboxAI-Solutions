@@ -2,10 +2,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "name": "toolboxai-solutions",
-  "buildCommand": "pnpm --filter apps/dashboard build",
+  "buildCommand": "pnpm --filter ./apps/dashboard build",
   "outputDirectory": "apps/dashboard/dist",
   "installCommand": "pnpm install --frozen-lockfile",
-  "devCommand": "pnpm --filter apps/dashboard dev",
+  "devCommand": "pnpm --filter ./apps/dashboard dev",
   "framework": "vite",
   "regions": ["iad1"],
   "headers": [
