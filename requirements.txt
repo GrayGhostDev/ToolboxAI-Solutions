@@ -407,3 +407,5 @@ iniconfig==2.1.0                     # INI file parser
 # Removed: Streamlit (20 pkgs), Docs (30 pkgs), Dev tools (30 pkgs)
 # For full environment: pip install -r requirements.txt -r requirements-dev.txt
 # ============================================================================
+# Hashicorp Vault client (used by backend security)
+hvac==2.1.0                          # Hashicorp Vault secrets management
