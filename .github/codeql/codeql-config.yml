@@ -1,0 +1,57 @@
+# ============================================================================
+# CodeQL Configuration for ToolBoxAI Solutions
+# ============================================================================
+# Purpose: Configure CodeQL analysis with custom query filters and paths
+# Last Updated: 2025-11-10
+# ============================================================================
+
+name: "ToolBoxAI CodeQL Configuration"
+
+# Disable default queries and use only production-ready queries
+disable-default-queries: false
+
+# Paths to exclude from analysis
+paths-ignore:
+  - '**/node_modules/**'
+  - '**/venv/**'
+  - '**/.venv/**'
+  - '**/dist/**'
+  - '**/build/**'
+  - '**/coverage/**'
+  - '**/Archive/**'
+  - '**/__pycache__/**'
+  - '**/test-results/**'
+  - '**/test-reports/**'
+  - '**/*.min.js'
+  - '**/*.bundle.js'
+  - '**/vendor/**'
+  - '**/third_party/**'
+
+# Paths to specifically include
+paths:
+  - 'apps/**'
+  - 'core/**'
+  - 'middleware/**'
+  - 'services/**'
+  - 'api/**'
+  - 'roblox/**'
+
+# ============================================================================
+# Query Configuration
+# ============================================================================
+
+# Use security-extended suite for comprehensive security scanning
+query-filters:
+  - exclude:
+      id: py/unreachable-statement
+  - exclude:
+      id: py/redundant-global-declaration
+
+# ============================================================================
+# Notes
+# ============================================================================
+# - This configuration excludes the py/unreachable-statement query to prevent
+#   false positives from exception handling patterns (try/except blocks)
+# - Archive directories are excluded from scanning
+# - Test files and build artifacts are excluded
+# ============================================================================

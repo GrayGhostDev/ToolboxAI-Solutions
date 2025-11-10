@@ -1,0 +1,124 @@
+# ============================================================================
+# Trivy Security Scanner Configuration
+# ============================================================================
+# Purpose: Configure Trivy vulnerability scanning
+# Last Updated: 2025-11-10
+# Documentation: https://aquasecurity.github.io/trivy/
+# ============================================================================
+
+# Scan settings
+scan:
+  # Security checks to perform
+  security-checks:
+    - vuln      # Vulnerabilities
+    - config    # Misconfigurations
+    - secret    # Secrets
+  
+  # Vulnerability databases
+  vuln-type:
+    - os        # OS packages
+    - library   # Application libraries
+
+# Severity levels to report
+severity:
+  - CRITICAL
+  - HIGH
+  - MEDIUM
+  # Exclude LOW and UNKNOWN to reduce noise
+
+# ============================================================================
+# File and Directory Exclusions
+# ============================================================================
+
+# Skip scanning these directories
+skip-dirs:
+  - node_modules
+  - venv
+  - .venv
+  - dist
+  - build
+  - coverage
+  - Archive
+  - __pycache__
+  - test-results
+  - test-reports
+  - .git
+  - vendor
+  - third_party
+
+# Skip these files
+skip-files:
+  - "*.min.js"
+  - "*.bundle.js"
+  - "*.map"
+  - "*.pyc"
+
+# ============================================================================
+# Vulnerability Filtering
+# ============================================================================
+
+# Ignore specific vulnerabilities (with justification)
+ignorefile: .trivyignore
+
+# Exit code
+exit-code: 0  # Don't fail build on vulnerabilities (report only)
+
+# ============================================================================
+# Output Configuration
+# ============================================================================
+
+# Output format
+format: sarif
+
+# Include suppressed vulnerabilities in output
+list-all-pkgs: false
+
+# ============================================================================
+# Cache Configuration
+# ============================================================================
+
+# Clear cache before scanning
+clear-cache: false
+
+# Skip database update
+skip-db-update: false
+
+# ============================================================================
+# Scanning Targets
+# ============================================================================
+
+# Target patterns
+target:
+  - .  # Scan entire repository
+
+# ============================================================================
+# Secret Scanning
+# ============================================================================
+
+# Secret scanning configuration
+secret:
+  # File patterns to scan for secrets
+  config: .trivysecret.yaml
+
+# ============================================================================
+# Timeout Settings
+# ============================================================================
+
+# Timeout for vulnerability database download
+timeout: 5m
+
+# ============================================================================
+# Offline Mode
+# ============================================================================
+
+# Skip database download (use cached DB)
+offline-scan: false
+
+# ============================================================================
+# Notes
+# ============================================================================
+# - Configuration focuses on CRITICAL, HIGH, and MEDIUM severity issues
+# - Archive and test directories excluded to reduce false positives
+# - Secrets scanning enabled for credential detection
+# - SARIF format for GitHub integration
+# ============================================================================

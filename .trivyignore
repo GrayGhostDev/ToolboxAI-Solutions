@@ -1,0 +1,40 @@
+# ============================================================================
+# Trivy Ignore File
+# ============================================================================
+# Purpose: Ignore specific vulnerabilities with justification
+# Format: CVE-ID or Package@Version with comment explaining why ignored
+# Last Updated: 2025-11-10
+# ============================================================================
+
+# ============================================================================
+# Python Dependencies - Accepted Risks
+# ============================================================================
+
+# CVE-2024-23342 - ecdsa package
+# Status: FIXED - Package removed from requirements.txt on 2025-11-10
+# No longer needed - using cryptography library for ECDSA
+
+# ============================================================================
+# Development Dependencies - Low Risk
+# ============================================================================
+
+# Development-only packages with low-severity issues in test environments
+# These are not deployed to production
+
+# ============================================================================
+# Transitive Dependencies - Under Review
+# ============================================================================
+
+# Add specific CVEs here if needed after review
+# Format: CVE-YYYY-NNNNN
+
+# ============================================================================
+# False Positives
+# ============================================================================
+
+# Add false positives identified during scanning
+# Include detailed reasoning for each ignore
+
+# ============================================================================
+# End of Ignore List
+# ============================================================================
