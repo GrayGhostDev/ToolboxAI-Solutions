@@ -22,6 +22,18 @@ implementations for better scalability and reliability.
 See /api/v1/pusher/* endpoints for the new implementations.
 """
 
+# Ensure repository root is on sys.path even if CWD is apps/backend
+import sys
+from pathlib import Path
+
+try:
+    # If 'apps' cannot be imported, add project root to sys.path
+    import apps  # type: ignore
+except Exception:  # ModuleNotFoundError or others during bootstrap
+    project_root = Path(__file__).resolve().parents[2]  # repo root
+    if str(project_root) not in sys.path:
+        sys.path.insert(0, str(project_root))
+
 import os
 import logging
 from typing import Dict, Any
