@@ -12,13 +12,20 @@ services:
       pip install --upgrade pip
       pip install -r requirements.txt
     startCommand: |
-      cd apps/backend && \
-      python -m uvicorn main:app \
-        --host 0.0.0.0 \
-        --port $PORT \
+      gunicorn apps.backend.main:app \
+        --bind 0.0.0.0:$PORT \
         --workers 2 \
-        --loop uvloop \
-        --access-log
+        --worker-class uvicorn.workers.UvicornWorker \
+        --worker-connections 500 \
+        --max-requests 5000 \
+        --max-requests-jitter 500 \
+        --timeout 30 \
+        --keep-alive 5 \
+        --graceful-timeout 30 \
+        --backlog 1024 \
+        --access-logfile - \
+        --error-logfile - \
+        --log-level info
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.0
@@ -36,7 +43,7 @@ services:
       - key: LOG_LEVEL
         value: info
       - key: ALLOWED_ORIGINS
-        value: https://toolboxai-dashboard-staging.onrender.com
+        value: https://toolboxai-dashboard-staging.onrender.com,https://*.vercel.app
       - key: TRUSTED_HOSTS
         value: toolboxai-backend-staging.onrender.com,localhost,127.0.0.1
       - fromGroup: toolboxai-secrets-staging
@@ -102,8 +109,7 @@ services:
       pip install --upgrade pip
       pip install -r requirements.txt
     command: |
-      cd apps/backend && \
-      python -m scripts.retention
+      python -m apps.backend.scripts.retention
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.0

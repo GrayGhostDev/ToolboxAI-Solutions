@@ -10,6 +10,19 @@
   "regions": ["iad1"],
   "headers": [
     {
+      "source": "/manifest.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
+    },
+    {
       "source": "/assets/(.*)",
       "headers": [
         {
@@ -42,7 +55,10 @@
   ],
   "env": {
     "ENABLE_EXPERIMENTAL_COREPACK": "1",
-    "NODE_VERSION": "22"
+    "NODE_VERSION": "22",
+    "VITE_API_URL": "https://toolboxai-backend-8j12.onrender.com",
+    "VITE_ENVIRONMENT": "production",
+    "VITE_BYPASS_AUTH": "false"
   },
   "rewrites": [
     {

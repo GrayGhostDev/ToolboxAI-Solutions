@@ -63,8 +63,80 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Trigger TeamCity build
+      - uses: actions/checkout@v4
+
+      - name: Validate TeamCity Configuration
         run: |
-          echo "Triggering TeamCity build..."
-          # Add actual TeamCity API call here
-          echo "TeamCity build triggered"
+          if [ -z "${{ secrets.TEAMCITY_PIPELINE_ACCESS_TOKEN }}" ]; then
+            echo "❌ ERROR: TEAMCITY_PIPELINE_ACCESS_TOKEN secret is not configured"
+            echo ""
+            echo "Please configure the secret in GitHub:"
+            echo "  Settings → Secrets and variables → Actions → New repository secret"
+            echo "  Name: TEAMCITY_PIPELINE_ACCESS_TOKEN"
+            echo ""
+            exit 1
+          fi
+
+      - name: Trigger TeamCity Build
+        env:
+          TEAMCITY_URL: "https://grayghost-toolboxai.teamcity.com"
+          TEAMCITY_TOKEN: ${{ secrets.TEAMCITY_PIPELINE_ACCESS_TOKEN }}
+          PROJECT_ID: "ToolBoxAISolutions"
+          BUILD_TYPE_ID: "ToolBoxAISolutions_DashboardBuild"
+        run: |
+          echo "🚀 Triggering TeamCity build..."
+          echo "TeamCity URL: $TEAMCITY_URL"
+          echo "Project ID: $PROJECT_ID"
+          echo "Build Type: $BUILD_TYPE_ID"
+          echo ""
+
+          # Test TeamCity connection
+          echo "Testing TeamCity API connection..."
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer $TEAMCITY_TOKEN" \
+            "${TEAMCITY_URL}/app/rest/server")
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ ERROR: Cannot connect to TeamCity (HTTP $HTTP_CODE)"
+            echo "Please verify:"
+            echo "  1. TeamCity URL is correct"
+            echo "  2. Access token is valid"
+            echo "  3. Token has appropriate permissions"
+            exit 1
+          fi
+          echo "✅ Connected to TeamCity"
+          echo ""
+
+          # Trigger build
+          echo "Triggering build on branch: ${{ github.ref_name }}"
+          RESPONSE=$(curl -s -X POST \
+            -H "Authorization: Bearer $TEAMCITY_TOKEN" \
+            -H "Content-Type: application/xml" \
+            -H "Accept: application/json" \
+            "${TEAMCITY_URL}/app/rest/buildQueue" \
+            -d "<build>
+              <buildType id='${BUILD_TYPE_ID}'/>
+              <branchName>${{ github.ref_name }}</branchName>
+              <comment>
+                <text>Triggered from GitHub Actions - Commit: ${{ github.sha }}</text>
+              </comment>
+              <properties>
+                <property name='env.GITHUB_RUN_ID' value='${{ github.run_id }}'/>
+                <property name='env.GITHUB_ACTOR' value='${{ github.actor }}'/>
+              </properties>
+            </build>")
+
+          # Check response
+          BUILD_ID=$(echo "$RESPONSE" | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
+
+          if [ -n "$BUILD_ID" ]; then
+            echo "✅ Build triggered successfully!"
+            echo "Build ID: $BUILD_ID"
+            echo "View at: ${TEAMCITY_URL}/viewQueued.html?buildId=${BUILD_ID}"
+            echo ""
+            echo "::notice::TeamCity build triggered successfully (Build ID: $BUILD_ID)"
+          else
+            echo "❌ ERROR: Failed to trigger build"
+            echo "Response: $RESPONSE"
+            exit 1
+          fi

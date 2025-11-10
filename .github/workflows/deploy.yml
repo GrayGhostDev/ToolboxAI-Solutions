@@ -1,98 +1,80 @@
-name: Deployment Pipeline
-
-# Consolidated deployment workflow
-# Replaces: deploy, deploy-vercel, deploy-render, render-deploy, deploy-backend,
-#           deploy-frontend, vercel-deploy, deployment
+name: Deploy Backend then Dashboard
 
 on:
   push:
-    branches: [main]
+    branches: [ "main" ]
+    paths:
+      - 'apps/backend/**'
+      - 'apps/dashboard/**'
+      - 'infrastructure/render/**'
+      - '.github/workflows/deploy.yml'
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Deployment environment'
-        required: true
-        default: 'production'
-        type: choice
-        options:
-          - production
-          - staging
 
-env:
-  NODE_VERSION: '22'
-  PYTHON_VERSION: '3.12'
-  PNPM_VERSION: '9'
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
 
 jobs:
-  deploy-frontend:
-    name: Deploy Dashboard to Vercel
+  deploy:
     runs-on: ubuntu-latest
-    environment: production
-
+    env:
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+      BACKEND_HEALTH_URL: ${{ secrets.BACKEND_HEALTH_URL }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_BUILD_HOOK_URL: ${{ secrets.VERCEL_BUILD_HOOK_URL }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Setup Node.js
+      - name: Set up Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          node-version: '22'
 
-      - name: Install and build
+      - name: Trigger Render backend deploy (if credentials provided)
+        if: env.RENDER_API_KEY != '' && env.RENDER_SERVICE_ID != ''
         run: |
-          pnpm install --frozen-lockfile
-          pnpm -w apps/dashboard build
+          set -euo pipefail
+          echo "Triggering Render deploy for service $RENDER_SERVICE_ID"
+          curl -fsSL -X POST \
+            -H "Authorization: Bearer $RENDER_API_KEY" \
+            https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys
 
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
-          working-directory: apps/dashboard
-
-  deploy-backend:
-    name: Deploy Backend to Render
-    runs-on: ubuntu-latest
-    needs: deploy-frontend
-    environment: production
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Deploy to Render
-        uses: johnbeynon/render-deploy-action@v0.0.8
-        with:
-          service-id: ${{ secrets.RENDER_SERVICE_ID }}
-          api-key: ${{ secrets.RENDER_API_KEY }}
-          wait-for-success: true
-
-  smoke-tests:
-    name: Post-Deployment Tests
-    runs-on: ubuntu-latest
-    needs: [deploy-frontend, deploy-backend]
-
-    steps:
-      - name: Test backend health
+      - name: Wait for backend health to be ready
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.BACKEND_URL }}/health")
-          if [ "$response" -ne 200 ]; then
-            echo "Health check failed: $response"
-            exit 1
-          fi
-          echo "✅ Backend healthy"
+          set -euo pipefail
+          url="${BACKEND_HEALTH_URL:-https://toolboxai-backend-8j12.onrender.com/health}"
+          echo "Waiting for backend to be healthy: $url"
+          for i in {1..60}; do
+            code=$(curl -sk -o /dev/null -w "%{http_code}" "$url" || true)
+            if [ "$code" = "200" ]; then
+              echo "Backend healthy (HTTP 200)."
+              exit 0
+            fi
+            echo "Attempt $i/60: got $code; sleeping 10s..."
+            sleep 10
+          done
+          echo "Backend not healthy after 10 minutes."
+          exit 1
 
-      - name: Test frontend
+      - name: Deploy Dashboard via Vercel CLI
+        if: env.VERCEL_TOKEN != ''
+        working-directory: apps/dashboard
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.FRONTEND_URL }}")
-          if [ "$response" -ne 200 ]; then
-            echo "Frontend check failed: $response"
-            exit 1
-          fi
-          echo "✅ Frontend accessible"
+          set -euo pipefail
+          npm i -g vercel@latest
+          # Pull non-interactive project config (uses .vercel/project.json if present)
+          vercel --token "$VERCEL_TOKEN" pull --yes --environment=production
+          # Build and deploy only after backend is healthy
+          vercel --token "$VERCEL_TOKEN" build --prod
+          vercel --token "$VERCEL_TOKEN" deploy --prebuilt --prod
+
+      - name: Fallback - Trigger Vercel Build Hook
+        if: env.VERCEL_TOKEN == '' && env.VERCEL_BUILD_HOOK_URL != ''
+        run: |
+          set -euo pipefail
+          curl -fsSL -X POST "$VERCEL_BUILD_HOOK_URL"
+

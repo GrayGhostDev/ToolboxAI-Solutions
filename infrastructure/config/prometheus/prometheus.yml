@@ -5,8 +5,8 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
   external_labels:
-    cluster: 'toolboxai-production'
-    environment: 'production'
+    cluster: 'toolboxai-development'
+    environment: 'development'
 
 # Alertmanager configuration
 alerting:
@@ -44,11 +44,10 @@ scrape_configs:
   - job_name: 'backend'
     static_configs:
       - targets:
-          - 'backend1:8000'
-          - 'backend2:8000'
-          - 'backend3:8000'
+          - 'backend:8009'
         labels:
           service: 'backend'
+          environment: 'development'
     metrics_path: '/metrics'
 
   # Redis Exporter
@@ -87,8 +86,11 @@ scrape_configs:
       module: [http_2xx]
     static_configs:
       - targets:
-          - https://api.toolboxai.com/health
-          - https://dashboard.toolboxai.com
+          - http://backend:8009/health
+          - http://backend:8009/metrics
+          - http://grafana:3000/api/health
+          - http://prometheus:9090/-/healthy
+          - http://alertmanager:9093/-/healthy
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target

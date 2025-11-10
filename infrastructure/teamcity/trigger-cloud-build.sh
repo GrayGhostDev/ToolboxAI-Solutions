@@ -18,7 +18,23 @@ NC='\033[0m' # No Color
 
 # Configuration
 TEAMCITY_URL="https://grayghost-toolboxai.teamcity.com"
-TEAMCITY_TOKEN="${TEAMCITY_PIPELINE_ACCESS_TOKEN:-eyJ0eXAiOiAiVENWMiJ9.Z00zSzRFazBrNktpandnemRUZ2dJRGhBbVlF.MTZhZjcxM2EtZWJiZC00ODA2LTgxMmQtMzA2MWZjMjk2OWYz}"
+
+# Validate required environment variable
+if [ -z "$TEAMCITY_PIPELINE_ACCESS_TOKEN" ]; then
+    echo -e "${RED}❌ ERROR: TEAMCITY_PIPELINE_ACCESS_TOKEN environment variable is not set${NC}"
+    echo ""
+    echo "Please set the TeamCity token as an environment variable:"
+    echo "  export TEAMCITY_PIPELINE_ACCESS_TOKEN='your-token-here'"
+    echo ""
+    echo "To get a token:"
+    echo "  1. Log in to TeamCity: ${TEAMCITY_URL}"
+    echo "  2. Go to Profile → Access Tokens"
+    echo "  3. Create a new token with appropriate permissions"
+    echo ""
+    exit 1
+fi
+
+TEAMCITY_TOKEN="$TEAMCITY_PIPELINE_ACCESS_TOKEN"
 
 echo -e "${BLUE}╔══════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║            TeamCity Cloud Build Trigger                     ║${NC}"

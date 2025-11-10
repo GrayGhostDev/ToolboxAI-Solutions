@@ -30,8 +30,7 @@ services:
       pip install --upgrade pip setuptools wheel
       pip install -r requirements.txt
     startCommand: |
-      cd apps/backend && \
-      gunicorn main:app \
+      gunicorn apps.backend.main:app \
         --bind 0.0.0.0:$PORT \
         --workers 2 \
         --worker-class uvicorn.workers.UvicornWorker \
@@ -60,7 +59,7 @@ services:
       - key: LOG_LEVEL
         value: info
       - key: ALLOWED_ORIGINS
-        value: https://toolboxai-dashboard.vercel.app,https://www.yourdomain.com
+        value: https://toolboxai-dashboard.vercel.app,https://toolboxai-solutions-4sebumacd-grayghostdevs-projects.vercel.app,https://*.vercel.app,https://www.yourdomain.com
       - key: TRUSTED_HOSTS
         value: toolboxai-backend-8j12.onrender.com,api.yourdomain.com,localhost,127.0.0.1
       # Sentry Monitoring
@@ -286,8 +285,7 @@ services:
       pip install --upgrade pip setuptools wheel
       pip install -r requirements.txt
     startCommand: |
-      cd apps/backend && \
-      celery -A celery_app worker \
+      celery -A apps.backend.celery_app worker \
         --loglevel ${CELERY_LOG_LEVEL:-info} \
         --pool ${CELERY_WORKER_POOL:-prefork} \
         --concurrency ${CELERY_WORKER_CONCURRENCY:-4} \
@@ -338,8 +336,7 @@ services:
       pip install --upgrade pip setuptools wheel
       pip install -r requirements.txt
     startCommand: |
-      cd apps/backend && \
-      celery -A celery_app beat \
+      celery -A apps.backend.celery_app beat \
         --loglevel ${CELERY_BEAT_LOG_LEVEL:-info} \
         --scheduler celery.beat.PersistentScheduler
     envVars:
@@ -379,8 +376,7 @@ services:
       pip install --upgrade pip setuptools wheel
       pip install -r requirements.txt
     startCommand: |
-      cd apps/backend && \
-      celery -A celery_app flower \
+      celery -A apps.backend.celery_app flower \
         --port $PORT \
         --address 0.0.0.0 \
         --basic_auth=${FLOWER_BASIC_AUTH:-admin:admin} \
@@ -421,7 +417,6 @@ services:
       pip install --upgrade pip setuptools wheel
       pip install -r requirements.txt
     startCommand: |
-      cd apps/backend && \
       python -c "
       import asyncio
       from database.connection import get_db
