@@ -44,6 +44,60 @@ All documentation is centralized in `/docs/` with the following structure:
 
 ---
 
+## 🧹 Recent Infrastructure Cleanup (November 9, 2025)
+
+**MAJOR CONSOLIDATION COMPLETED**
+
+### Summary
+- **57 files deleted** + all Python cache cleaned
+- **16,073 lines removed** from codebase
+- **Significantly improved IDE performance** (reduced file scanning overhead)
+
+### What Changed
+
+#### GitHub Workflows: 40 → 5 (87.5% reduction)
+**New consolidated workflows with modern versions (Node 22, pnpm 9, basedpyright):**
+- `main-ci-cd.yml` - Complete CI/CD pipeline (lint, type-check, test, build, docker)
+- `deploy.yml` - Deployment to Vercel (frontend) and Render (backend)
+- `security.yml` - Security scanning (Trivy, CodeQL, dependency audits)
+- `e2e-tests.yml` - End-to-end testing with Playwright
+- `infrastructure.yml` - Database migrations, Roblox sync, TeamCity triggers
+
+**Deleted:** 35 old/redundant workflow files
+
+#### Docker Compose: 15 → 4 (73% reduction)
+**Essential files kept:**
+- `docker-compose.yml` - Base production configuration
+- `docker-compose.dev.yml` - Development overrides
+- `docker-compose.prod.yml` - Production overrides
+- `docker-compose.monitoring.yml` - Grafana/Prometheus/Jaeger stack
+
+**Deleted:** celery, collab, complete, core, fast-dev, phase2, redis-ha, secrets-dev, secure, swarm, teamcity
+
+#### Dockerfiles: 21 → 11 (48% reduction)
+**Canonical files documented in** `infrastructure/docker/dockerfiles/CURRENT_DOCKERFILES.md`
+
+**Deleted:** backend-optimized, backend-production-2025, backend-simple, celery-optimized, celery-production-2025, dashboard-fixed, dashboard-production-2025, dashboard.Dockerfile (old), dev.Dockerfile, test-dashboard-simple
+
+#### Python Cache Cleanup
+- Removed all `__pycache__` directories
+- Removed all `.pyc` and `.pyo` files
+- Removed all `.DS_Store` files (macOS metadata)
+
+### Benefits
+- ✅ **IDE Performance:** Dramatically faster indexing and file search
+- ✅ **Developer Experience:** Clear which files to use, no confusion
+- ✅ **CI/CD Reliability:** Modern versions prevent build failures
+- ✅ **Maintenance:** Reduced from managing 70+ config files to ~20
+
+### Where to Find Things Now
+- **Workflows:** `.github/workflows/` (5 files - see above)
+- **Docker Compose:** `infrastructure/docker/compose/` (4 files - see above)
+- **Dockerfiles:** `infrastructure/docker/dockerfiles/` (11 files - see CURRENT_DOCKERFILES.md)
+- **File Moves:** See `/docs/FILE_RELOCATION_MAP.md` for documentation relocations
+
+---
+
 ## 🏗️ Technology Stack
 
 ### Backend
