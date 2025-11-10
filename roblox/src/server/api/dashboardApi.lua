@@ -3,6 +3,11 @@
 -- Version: 1.0.0
 
 local HttpService = game:GetService("HttpService")
+local ServerStorage = game:GetService("ServerStorage")
+local Settings = nil
+pcall(function()
+    Settings = require(ServerStorage:WaitForChild("Config"):WaitForChild("settings"))
+end)
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local DataStoreService = game:GetService("DataStoreService")
@@ -11,8 +16,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Configuration
 local CONFIG = {
-    DASHBOARD_URL = "http://127.0.0.1:5179",
-    BACKEND_URL = "http://127.0.0.1:8009",
+    DASHBOARD_URL = (Settings and Settings.API and Settings.API.getDashboardUrl and Settings.API.getDashboardUrl()) or "http://127.0.0.1:5179",
+    BACKEND_URL = (Settings and Settings.API and Settings.API.getBaseUrl and Settings.API.getBaseUrl()) or "http://127.0.0.1:8009",
     -- Pusher configuration (real-time via backend bridge)
     PUSHER_KEY = "${PUSHER_KEY}",
     PUSHER_CLUSTER = "${PUSHER_CLUSTER}",

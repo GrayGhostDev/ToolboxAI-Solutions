@@ -49,6 +49,8 @@ Settings.API = {
         push = "/api/v1/roblox/push",
         sync = "/api/v1/roblox/sync",
         analytics = "/api/v1/roblox/analytics",
+        playersJoin = "/api/v1/roblox/players/join",
+        playersLeave = "/api/v1/roblox/players/leave",
 
         -- Content
         content = "/api/v1/content",

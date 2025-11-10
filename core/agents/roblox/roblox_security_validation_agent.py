@@ -19,7 +19,6 @@ logger = logging.getLogger(__name__)
 # LangChain imports with compatibility handling
 try:
     from langchain_core.messages import SystemMessage, HumanMessage
-    from langchain.tools import Tool, StructuredTool
     from langchain_openai import ChatOpenAI
     LANGCHAIN_CORE_AVAILABLE = True
 except ImportError:

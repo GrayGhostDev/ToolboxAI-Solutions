@@ -26,7 +26,9 @@ if not SECRET_KEY or len(SECRET_KEY) < 32 or SECRET_KEY == "your-secret-key-chan
     # Generate secure key if not provided or if default key is used
     SECRET_KEY = secrets.token_hex(32)
     import sys
-    print(f"WARNING: Generated new secret key. Set JWT_SECRET_KEY environment variable.", file=sys.stderr)
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.warning("Generated new secret key. Set JWT_SECRET_KEY environment variable.")
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30

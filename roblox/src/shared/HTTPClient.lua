@@ -20,7 +20,7 @@ HTTPClient.__index = HTTPClient
 
 -- Configuration
 local CONFIG = {
-    BASE_URL = "http://127.0.0.1:5001", -- Flask Bridge server
+    BASE_URL = "http://127.0.0.1:5001", -- Default: bridge server (overridden by Settings if available)
     TIMEOUT = 30,
     RETRY_ATTEMPTS = 3,
     RETRY_DELAY = 2
@@ -70,7 +70,19 @@ export type HTTPResponse = {
 -- Constructor
 function HTTPClient.new(baseUrl: string?)
     local self = setmetatable({}, HTTPClient)
-    self.baseUrl = baseUrl or CONFIG.BASE_URL
+    -- Try to load dynamic bridge URL from Settings if available
+    local resolvedBase = baseUrl
+    if not resolvedBase then
+        local ok, Settings = pcall(function()
+            return require(game.ServerStorage:WaitForChild("Config"):WaitForChild("settings"))
+        end)
+        if ok and Settings and Settings.API and Settings.API.getBridgeUrl then
+            resolvedBase = Settings.API.getBridgeUrl() or CONFIG.BASE_URL
+        else
+            resolvedBase = CONFIG.BASE_URL
+        end
+    end
+    self.baseUrl = resolvedBase
     self.headers = {
         ["Content-Type"] = "application/json",
         ["Accept"] = "application/json"

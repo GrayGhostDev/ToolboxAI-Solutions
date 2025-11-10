@@ -514,6 +514,23 @@ services:
     cap_drop: []
     user: root  # Run as root in development to avoid permission issues
 
+  # ----------------------------------------
+  # Redis Exporter (Development Override)
+  # ----------------------------------------
+  redis-exporter:
+    # Simplified configuration for development
+    # Remove custom entrypoint and command from base config
+    entrypoint: !override ["/redis_exporter"]
+    command: !override []
+    environment:
+      REDIS_ADDR: redis:6379
+      # No password in development (matches redis service config)
+    secrets: !override []  # Don't use secrets in dev
+    read_only: false  # Allow writes in development
+    user: root      # Run as root for easier debugging
+    security_opt: !override []
+    cap_drop: !override []
+
 # ============================================
 # DEVELOPMENT VOLUMES
 # ============================================

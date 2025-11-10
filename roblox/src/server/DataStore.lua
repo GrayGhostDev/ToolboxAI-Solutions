@@ -11,6 +11,10 @@
 
 local DataStoreService = game:GetService("DataStoreService")
 local HttpService = game:GetService("HttpService")
+local ServerStorage = game:GetService("ServerStorage")
+local okSettings, Settings = pcall(function()
+    return require(ServerStorage:WaitForChild("Config"):WaitForChild("settings"))
+end)
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local MessagingService = game:GetService("MessagingService")
@@ -30,9 +34,9 @@ local CONFIG = {
     -- Version control for data migration
     DATA_VERSION = 2,
     
-    -- API endpoints for backup
-    BACKUP_API_ENDPOINT = "http://127.0.0.1:8009/backup",
-    SYNC_API_ENDPOINT = "http://127.0.0.1:8009/sync"
+    -- API endpoints for backup (paths only; full URL built via Settings)
+    BACKUP_PATH = "/backup",
+    SYNC_PATH = "/sync"
 }
 
 -- DataStore Module
@@ -441,27 +445,22 @@ end
 -- Sync with backend API
 function DataStore:SyncWithBackend(player, data, operation)
     spawn(function()
-        local url = operation == "save" and CONFIG.BACKUP_API_ENDPOINT or CONFIG.SYNC_API_ENDPOINT
-        
-        local success, result = pcall(function()
-            return HttpService:RequestAsync({
-                Url = url,
-                Method = "POST",
-                Headers = {
-                    ["Content-Type"] = "application/json"
-                },
-                Body = HttpService:JSONEncode({
-                    userId = player.UserId,
-                    username = player.Name,
-                    operation = operation,
-                    data = data,
-                    timestamp = os.time()
-                })
-            })
-        end)
-        
-        if not success then
-            warn("[DataStore] Backend sync failed:", result)
+        if okSettings and Settings and Settings.makeSecureAPICall then
+            pcall(function()
+                Settings.makeSecureAPICall(
+                    operation == "save" and CONFIG.BACKUP_PATH or CONFIG.SYNC_PATH,
+                    "POST",
+                    {
+                        userId = player.UserId,
+                        username = player.Name,
+                        operation = operation,
+                        data = data,
+                        timestamp = os.time()
+                    }
+                )
+            end)
+        else
+            warn("[DataStore] Settings unavailable; skipping backend sync")
         end
     end)
 end
@@ -469,16 +468,13 @@ end
 -- Send analytics to backend
 function DataStore:SendAnalyticsToBackend(analyticsData)
     spawn(function()
-        pcall(function()
-            HttpService:RequestAsync({
-                Url = CONFIG.BACKUP_API_ENDPOINT .. "/analytics",
-                Method = "POST",
-                Headers = {
-                    ["Content-Type"] = "application/json"
-                },
-                Body = HttpService:JSONEncode(analyticsData)
-            })
-        end)
+        if okSettings and Settings and Settings.makeSecureAPICall then
+            pcall(function()
+                Settings.makeSecureAPICall(CONFIG.BACKUP_PATH .. "/analytics", "POST", analyticsData)
+            end)
+        else
+            warn("[DataStore] Settings unavailable; skipping analytics send")
+        end
     end)
 end
 

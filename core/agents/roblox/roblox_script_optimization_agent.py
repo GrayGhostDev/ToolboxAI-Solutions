@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 # LangChain imports with compatibility handling
 try:
-    from langchain.tools import StructuredTool, Tool
     from langchain_core.messages import HumanMessage, SystemMessage
     from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
     from langchain_openai import ChatOpenAI

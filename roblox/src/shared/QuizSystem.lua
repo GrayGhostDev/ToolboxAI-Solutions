@@ -34,8 +34,8 @@ local QUIZ_CONFIG = {
     MIN_PASS_PERCENTAGE = 70,
     MAX_HINTS_PER_QUESTION = 2,
 
-    -- Backend Integration (2025)
-    BACKEND_URL = "http://127.0.0.1:8009",
+    -- Backend Integration (2025) - resolved dynamically via Settings
+    BACKEND_URL = nil,
     QUIZ_ENDPOINT = "/api/v1/quiz",
     ANALYTICS_ENDPOINT = "/api/v1/analytics/quiz",
     RESULTS_ENDPOINT = "/api/v1/quiz/results"
@@ -109,6 +109,14 @@ function QuizSystem.new(quizData)
         instantFeedback = quizData.instant_feedback ~= false
     }
     
+    -- Resolve backend URL from Settings if available
+    local ok, Settings = pcall(function()
+        return require(game.ServerStorage:WaitForChild("Config"):WaitForChild("settings"))
+    end)
+    if ok and Settings and Settings.API and Settings.API.getBaseUrl then
+        QUIZ_CONFIG.BACKEND_URL = Settings.API.getBaseUrl()
+    end
+
     -- Remotes (assuming they exist in ReplicatedStorage)
     self.remotes = {
         submitAnswer = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Events"):WaitForChild("SubmitAnswer"),

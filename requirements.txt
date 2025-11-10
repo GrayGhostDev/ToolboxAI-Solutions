@@ -268,7 +268,8 @@ limits==5.6.0                        # Rate limiting utilities
 # ============================================================================
 cffi==2.0.0                          # C FFI
 pycparser==2.23                      # C parser
-ecdsa==0.19.1                        # ECDSA cryptography
+# ecdsa==0.19.1 removed due to CVE-2024-23342 (Minerva attack vulnerability)
+# Replaced with cryptography library which provides secure ECDSA implementation
 starkbank-ecdsa==2.2.0               # ECDSA signing
 rsa==4.9.1                           # RSA cryptography
 pyasn1==0.6.1                        # ASN.1 types

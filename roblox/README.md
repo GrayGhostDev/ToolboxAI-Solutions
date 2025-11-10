@@ -31,6 +31,10 @@ Secure Configuration
   - `DASHBOARD_URL` (e.g., `http://127.0.0.1:5179`)
   - Optional: `API_KEY`, `SECRET_KEY`, `Environment` (`development|staging|production`)
 - Non‑sensitive toggles are read from the manager; sensitive values must not be hardcoded.
+ - Modules now resolve URLs dynamically via `Config/settings.lua`:
+   - `src/shared/HTTPClient.lua` reads `Settings.API.getBridgeUrl()`
+   - `src/shared/QuizSystem.lua`/`src/shared/SecurityValidator.lua` read `Settings.API.getBaseUrl()`
+   - `src/Main.server.lua` uses `Settings.makeSecureAPICall()` for server→backend requests
 
 Realtime (Pusher)
 - Roblox does not expose a first‑class WebSocket client in all runtimes; this project uses a bridge service to subscribe to Pusher and exposes a lightweight HTTP polling endpoint to Studio/game code.

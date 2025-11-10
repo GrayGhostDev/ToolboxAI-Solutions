@@ -75,20 +75,20 @@ services:
     image: grafana/grafana:10.2.2
     container_name: toolboxai-grafana
     restart: unless-stopped
-    env_file:
-      - ./.env
-      - ./.env.secret
     ports:
       - "${GRAFANA_HOST_PORT:-3001}:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
       - GF_INSTALL_PLUGINS=grafana-piechart-panel
-      - GF_SERVER_ROOT_URL=https://grafana.toolboxai.com
+      - GF_SERVER_ROOT_URL=${GRAFANA_ROOT_URL:-http://localhost:3001}
       - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
     volumes:
       - grafana_data:/var/lib/grafana
       - ../../config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../../monitoring/grafana/dashboards:/etc/grafana/dashboards/monitoring:ro
+      - ../../grafana/dashboards:/etc/grafana/dashboards/application:ro
     networks:
       - monitoring
     healthcheck:

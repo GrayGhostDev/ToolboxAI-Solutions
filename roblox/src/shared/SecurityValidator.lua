@@ -45,9 +45,9 @@ local CONFIG = {
     SUSPICIOUS_PATTERN_THRESHOLD = 5,
     AUTO_BAN_THRESHOLD = 10,
 
-    -- Backend integration
-    API_BASE_URL = "http://127.0.0.1:8009",
-    SECURITY_ENDPOINT = "/api/v1/security/validate"
+    -- Backend integration (resolved dynamically via Settings when possible)
+    API_BASE_URL = nil,
+    SECURITY_ENDPOINT = "/api/v1/security/validate",
     
     -- Content validation
     VALID_CONTENT_TYPES = {
@@ -118,6 +118,15 @@ function SecurityValidator.new()
     local self = setmetatable({}, SecurityValidator)
 
     -- Core components
+    -- Resolve API base URL from Settings, fallback to default if missing
+    local ok, Settings = pcall(function()
+        return require(game.ServerStorage:WaitForChild("Config"):WaitForChild("settings"))
+    end)
+    if ok and Settings and Settings.API and Settings.API.getBaseUrl then
+        CONFIG.API_BASE_URL = Settings.API.getBaseUrl()
+    else
+        CONFIG.API_BASE_URL = CONFIG.API_BASE_URL or "http://127.0.0.1:8009"
+    end
     self.rateLimiter = self:createRateLimiter()
     self.validationCache = {}
     self.sanitizationLog = {}

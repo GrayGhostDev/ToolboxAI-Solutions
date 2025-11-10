@@ -1567,8 +1567,10 @@ class AdvancedSupervisorAgent:
                             # await session.commit()
 
                             pass  # Placeholder for actual cleanup
-                        finally:
-                            break  # Only need one session
+                        except Exception as cleanup_error:
+                            logger.error(f"Cleanup error: {cleanup_error}")
+                        # Only need one session - exit after first iteration
+                    break
 
                 await asyncio.sleep(86400)  # Daily cleanup
 

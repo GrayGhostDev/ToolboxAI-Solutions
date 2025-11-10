@@ -19,7 +19,6 @@ local Chat = game:GetService("Chat")
 
 -- Configuration
 local CONFIG = {
-    BACKEND_URL = "http://127.0.0.1:8009",
     DATA_STORE_NAME = "ToolboxAI_PlayerData",
     SESSION_TIMEOUT = 3600, -- 1 hour in seconds
     AUTOSAVE_INTERVAL = 60, -- seconds
@@ -164,7 +163,7 @@ end
 function PlayerManager:UpdateProgress(lessonId, progress)
     self.data.progress[lessonId] = progress
     
-    -- Send to backend
+    -- Send to backend securely
     spawn(function()
         local requestData = {
             student_id = self.userId,
@@ -172,16 +171,9 @@ function PlayerManager:UpdateProgress(lessonId, progress)
             progress = progress,
             timestamp = os.time()
         }
-        
         pcall(function()
-            HttpService:RequestAsync({
-                Url = CONFIG.BACKEND_URL .. "/api/roblox/progress",
-                Method = "POST",
-                Headers = {
-                    ["Content-Type"] = "application/json"
-                },
-                Body = HttpService:JSONEncode(requestData)
-            })
+            local ApiClient = require(game.ServerScriptService:WaitForChild("ApiClient"))
+            ApiClient.postKey("progress", requestData)
         end)
     end)
 end
@@ -236,19 +228,13 @@ function SessionManager:AddPlayer(playerManager)
     table.insert(self.participants, playerManager)
     playerManager.data.currentSession = self.sessionId
     
-    -- Notify backend
+    -- Notify backend (session join)
     spawn(function()
         pcall(function()
-            HttpService:RequestAsync({
-                Url = CONFIG.BACKEND_URL .. "/api/roblox/sessions/" .. self.sessionId .. "/players",
-                Method = "POST",
-                Headers = {
-                    ["Content-Type"] = "application/json"
-                },
-                Body = HttpService:JSONEncode({
-                    player_id = playerManager.userId,
-                    player_name = playerManager.player.Name
-                })
+            local ApiClient = require(game.ServerScriptService:WaitForChild("ApiClient"))
+            ApiClient.postKeyWithSuffix("sessions", "/" .. self.sessionId .. "/players", {
+                player_id = playerManager.userId,
+                player_name = playerManager.player.Name
             })
         end)
     end)
@@ -325,17 +311,11 @@ function SessionManager:EndSession()
     -- Send session summary to backend
     spawn(function()
         pcall(function()
-            HttpService:RequestAsync({
-                Url = CONFIG.BACKEND_URL .. "/api/roblox/sessions/" .. self.sessionId .. "/end",
-                Method = "POST",
-                Headers = {
-                    ["Content-Type"] = "application/json"
-                },
-                Body = HttpService:JSONEncode({
-                    end_time = os.time(),
-                    duration = os.time() - self.startTime,
-                    participants = #self.participants
-                })
+            local ApiClient = require(game.ServerScriptService:WaitForChild("ApiClient"))
+            ApiClient.postKeyWithSuffix("sessions", "/" .. self.sessionId .. "/end", {
+                end_time = os.time(),
+                duration = os.time() - self.startTime,
+                participants = #self.participants
             })
         end)
     end)
@@ -455,17 +435,11 @@ Players.PlayerAdded:Connect(function(player)
     -- Notify backend of player join
     spawn(function()
         pcall(function()
-            HttpService:RequestAsync({
-                Url = CONFIG.BACKEND_URL .. "/api/roblox/players/join",
-                Method = "POST",
-                Headers = {
-                    ["Content-Type"] = "application/json"
-                },
-                Body = HttpService:JSONEncode({
-                    player_id = tostring(player.UserId),
-                    player_name = player.Name,
-                    session_id = currentSession.sessionId
-                })
+            local ApiClient = require(game.ServerScriptService:WaitForChild("ApiClient"))
+            ApiClient.postKey("playersJoin", {
+                player_id = tostring(player.UserId),
+                player_name = player.Name,
+                session_id = currentSession.sessionId
             })
         end)
     end)
@@ -489,16 +463,10 @@ Players.PlayerRemoving:Connect(function(player)
         -- Notify backend
         spawn(function()
             pcall(function()
-                HttpService:RequestAsync({
-                    Url = CONFIG.BACKEND_URL .. "/api/roblox/players/leave",
-                    Method = "POST",
-                    Headers = {
-                        ["Content-Type"] = "application/json"
-                    },
-                    Body = HttpService:JSONEncode({
-                        player_id = tostring(player.UserId),
-                        session_time = os.time() - playerManager.data.joinTime
-                    })
+                local ApiClient = require(game.ServerScriptService:WaitForChild("ApiClient"))
+                ApiClient.postKey("playersLeave", {
+                    player_id = tostring(player.UserId),
+                    session_time = os.time() - playerManager.data.joinTime
                 })
             end)
         end)
