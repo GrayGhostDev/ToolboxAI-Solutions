@@ -45,7 +45,7 @@ COPY --chown=builduser:builduser apps/dashboard/package*.json ./
 # Using --legacy-peer-deps due to react-three/fiber version conflict
 RUN --mount=type=cache,target=/root/.npm,sharing=locked \
     --mount=type=cache,target=/app/.npm-cache,sharing=locked \
-    npm install --legacy-peer-deps --no-audit --no-fund --cache /app/.npm-cache && \
+    pnpm install --frozen-lockfile --legacy-peer-deps --no-audit --no-fund --cache /app/.npm-cache && \
     npm cache clean --force
 
 # Copy source code
@@ -91,7 +91,7 @@ USER builduser
 # Build the application with comprehensive error handling
 RUN set -e && \
     echo "🔨 Building ToolBoxAI Dashboard..." && \
-    npm run build && \
+    pnpm build && \
     echo "✅ Build completed successfully" && \
     ls -la dist/ && \
     # Verify essential files exist

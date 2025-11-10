@@ -13,9 +13,6 @@ FROM node:22-alpine AS builder
 
 # Set Node.js environment for production build
 ENV NODE_ENV=production \
-    NPM_CONFIG_UPDATE_NOTIFIER=false \
-    NPM_CONFIG_FUND=false \
-    NPM_CONFIG_AUDIT=false \
     GENERATE_SOURCEMAP=false
 
 # Install build dependencies (Alpine 3.20+ official packages)
@@ -36,16 +33,21 @@ RUN addgroup -g 1001 -S appuser && \
 # Set working directory
 WORKDIR /app
 
-# Copy package files first for better Docker layer caching
-COPY --chown=appuser:appuser apps/dashboard/package.json apps/dashboard/package-lock.json ./
+# Enable Corepack and install pnpm (2025 standard)
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+
+# Copy workspace configuration files first for pnpm workspace support
+COPY --chown=appuser:appuser pnpm-workspace.yaml .npmrc package.json pnpm-lock.yaml ./
+
+# Copy dashboard package.json
+COPY --chown=appuser:appuser apps/dashboard/package.json apps/dashboard/
 
 # Install ALL dependencies (including devDependencies like vite)
-# Set NODE_ENV to development temporarily to ensure devDependencies are installed
-RUN NODE_ENV=development npm install --no-audit --no-fund && \
+RUN pnpm install --frozen-lockfile && \
     echo "📦 Verifying vite installation:" && \
     ls -la node_modules/.bin/vite 2>&1 && \
     ls -la node_modules/vite/bin/vite.js 2>&1 && \
-    echo "✅ Vite installed successfully"
+    echo "✅ Vite installed with pnpm successfully"
 
 # Now copy the full dashboard source code
 COPY --chown=appuser:appuser apps/dashboard/ ./
@@ -90,7 +92,7 @@ USER appuser
 RUN set -e && \
     echo "🔨 Building ToolBoxAI Dashboard..." && \
     echo "📍 Node version: $(node --version)" && \
-    echo "📍 NPM version: $(npm --version)" && \
+    echo "📍 pnpm version: $(pnpm --version)" && \
     echo "📍 Working directory: $(pwd)" && \
     echo "📍 PATH: $PATH" && \
     echo "📍 Checking vite: $(ls -la node_modules/.bin/vite 2>&1)" && \
