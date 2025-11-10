@@ -8,6 +8,10 @@
   "ignoreCommand": "git diff --quiet HEAD^ HEAD ./",
   "rewrites": [
     {
+      "source": "/manifest.json",
+      "destination": "/manifest.json"
+    },
+    {
       "source": "/api/:path*",
       "destination": "https://toolboxai-backend-8j12.onrender.com/api/:path*"
     },
@@ -120,4 +124,3 @@
   "cleanUrls": true,
   "trailingSlash": false
 }
-

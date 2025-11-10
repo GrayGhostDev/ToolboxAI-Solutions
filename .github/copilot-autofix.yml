@@ -1,0 +1,297 @@
+# ============================================================================
+# GitHub Copilot Autofix Configuration
+# ============================================================================
+# Purpose: Configure AI-powered autofix suggestions for code scanning alerts
+# Documentation: https://docs.github.com/en/code-security/code-scanning
+# Last Updated: 2025-11-10
+# ============================================================================
+
+version: 1
+
+# ============================================================================
+# Autofix Settings
+# ============================================================================
+
+autofix:
+  # Enable autofix suggestions for code scanning alerts
+  enabled: true
+  
+  # Languages to enable autofix for
+  languages:
+    - python
+    - javascript
+    - typescript
+  
+  # Severity levels to provide autofix suggestions for
+  severity:
+    - error      # Critical security vulnerabilities
+    - warning    # Moderate security issues
+    - note       # Code quality and minor issues
+  
+  # Query rules to exclude from autofix (if needed)
+  # Format: rule ID from CodeQL
+  exclude_rules: []
+    # Example exclusions (uncomment if needed):
+    # - py/unreachable-statement  # Already suppressed in CodeQL config
+    # - js/useless-assignment     # May be intentional
+  
+  # ============================================================================
+  # Review and Approval Settings
+  # ============================================================================
+  
+  review:
+    # Require manual review before applying fixes
+    # Always true for security - never auto-apply
+    require_approval: true
+    
+    # Automatically create pull requests for fixes
+    # false = suggest in alert, developer creates PR manually
+    # true = auto-create PR with fix for review
+    auto_pr: false
+    
+    # Assign reviewers to autofix PRs
+    # Leave empty to use default CODEOWNERS
+    reviewers: []
+      # Example (uncomment and modify):
+      # - security-team
+      # - senior-devs
+    
+    # Require specific labels on autofix PRs
+    labels:
+      - security
+      - autofix
+      - needs-review
+    
+    # Branch naming pattern for autofix PRs
+    branch_prefix: "autofix"
+    # Results in: autofix/alert-123-sql-injection
+  
+  # ============================================================================
+  # Quality Controls
+  # ============================================================================
+  
+  quality:
+    # Minimum confidence score for suggestions (0-100)
+    # Higher = fewer but more accurate suggestions
+    min_confidence: 70
+    
+    # Require all tests to pass before suggesting
+    require_passing_tests: true
+    
+    # Maximum number of files a single fix can modify
+    # Prevents overly broad changes
+    max_files_per_fix: 5
+    
+    # Maximum lines changed per fix
+    # Keeps fixes focused and reviewable
+    max_lines_per_fix: 50
+  
+  # ============================================================================
+  # Notification Settings
+  # ============================================================================
+  
+  notifications:
+    # Notify when autofix suggestions are available
+    on_suggestion: true
+    
+    # Notify when autofix PR is created
+    on_pr_created: true
+    
+    # Notify when autofix is applied
+    on_fix_applied: true
+    
+    # Channels (configure in repository settings)
+    channels:
+      - github_notifications  # Default GitHub notifications
+      # - slack                # Requires Slack integration
+      # - email                # Email notifications
+  
+  # ============================================================================
+  # Advanced Settings
+  # ============================================================================
+  
+  advanced:
+    # Use GPT-4 for more accurate but slower suggestions
+    use_gpt4: true
+    
+    # Include detailed explanation with each suggestion
+    include_explanation: true
+    
+    # Show alternative fixes if available
+    show_alternatives: true
+    
+    # Maximum time to wait for suggestion (seconds)
+    timeout: 120
+    
+    # Retry failed suggestions
+    retry_on_failure: true
+    retry_count: 2
+
+# ============================================================================
+# Language-Specific Settings
+# ============================================================================
+
+languages:
+  python:
+    # Python-specific autofix settings
+    enabled: true
+    
+    # Prefer specific libraries for common fixes
+    preferences:
+      # SQL injection fixes
+      sql_library: "parameterized"  # or "sqlalchemy", "django-orm"
+      
+      # Input validation
+      validation_library: "pydantic"  # or "marshmallow", "cerberus"
+      
+      # Cryptography
+      crypto_library: "cryptography"  # or "pycryptodome"
+    
+    # Python version compatibility
+    min_python_version: "3.12"
+    
+    # Style guide to follow
+    style_guide: "pep8"
+  
+  javascript:
+    # JavaScript-specific settings
+    enabled: true
+    
+    preferences:
+      # XSS prevention
+      sanitization_library: "DOMPurify"  # or "sanitize-html"
+      
+      # Input validation
+      validation_library: "validator"  # or "joi"
+    
+    # Target environment
+    environment: "es2022"
+    
+    # Framework awareness
+    frameworks:
+      - "react"
+      - "node"
+  
+  typescript:
+    # TypeScript-specific settings
+    enabled: true
+    
+    # Inherit JavaScript settings
+    inherit_from: javascript
+    
+    # TypeScript version
+    target_version: "5.9"
+    
+    # Strict mode compatibility
+    strict_mode: true
+
+# ============================================================================
+# Testing Requirements
+# ============================================================================
+
+testing:
+  # Run tests before suggesting fixes
+  pre_check: true
+  
+  # Run tests after applying fixes
+  post_check: true
+  
+  # Test commands by language
+  commands:
+    python:
+      - "pytest"
+      - "python -m pytest --maxfail=1"
+    
+    javascript:
+      - "npm test"
+      - "npm run lint"
+    
+    typescript:
+      - "npm test"
+      - "npm run typecheck"
+  
+  # Coverage requirements
+  coverage:
+    # Maintain minimum coverage
+    maintain_coverage: true
+    
+    # Don't allow coverage to decrease
+    allow_decrease: false
+
+# ============================================================================
+# Documentation
+# ============================================================================
+
+documentation:
+  # Require documentation updates for security fixes
+  require_docs: true
+  
+  # Auto-generate fix documentation
+  auto_generate: true
+  
+  # Include in commit message
+  include_in_commit: true
+  
+  # Format for documentation
+  format: "markdown"
+
+# ============================================================================
+# Metrics and Reporting
+# ============================================================================
+
+metrics:
+  # Track autofix usage and quality
+  enabled: true
+  
+  # Metrics to collect
+  collect:
+    - acceptance_rate      # % of suggestions accepted
+    - time_to_fix         # Time from alert to fix
+    - fix_quality         # % of fixes that work
+    - false_positives     # Incorrect suggestions
+    - developer_feedback  # Ratings and comments
+  
+  # Reporting frequency
+  report_frequency: "weekly"
+  
+  # Report recipients
+  recipients:
+    - security-team@company.com
+
+# ============================================================================
+# Responsible Use Guidelines
+# ============================================================================
+
+responsible_use:
+  # Always review suggestions
+  - "Never blindly accept autofix suggestions"
+  - "Always test fixes before merging"
+  - "Verify fixes resolve the actual vulnerability"
+  - "Check for unintended side effects"
+  - "Maintain code quality standards"
+  - "Document security decisions"
+  - "Involve security team for critical fixes"
+  - "Monitor fixes in production"
+  
+  # Quality checklist (enforced)
+  checklist:
+    - label: "Fix reviewed by developer"
+      required: true
+    - label: "Tests passing"
+      required: true
+    - label: "Security validated"
+      required: true
+    - label: "Documentation updated"
+      required: false
+    - label: "Approved by reviewer"
+      required: true
+
+# ============================================================================
+# Notes
+# ============================================================================
+# - Autofix requires GitHub Advanced Security license
+# - Suggestions appear in code scanning alerts and PRs
+# - Always review and test before applying fixes
+# - Configure repository settings to enable autofix
+# - See docs/10-security/COPILOT_AUTOFIX_IMPLEMENTATION.md for details
+# ============================================================================
