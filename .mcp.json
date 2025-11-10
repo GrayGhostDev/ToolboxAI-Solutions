@@ -45,7 +45,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "@modelcontextprotocol/server-docker"
+        "@modelcontextprotocol/docker"
       ]
     },
     "toolboxai-mcp": {
@@ -83,7 +83,7 @@
       "args": [
         "exec",
         "-i",
-        "toolboxai-agent-coordinator",
+        "toolboxai-agents",
         "python",
         "-m",
         "core.mcp.servers.agent_coordinator"
