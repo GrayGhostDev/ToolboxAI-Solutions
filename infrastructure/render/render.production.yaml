@@ -29,6 +29,26 @@ services:
     buildCommand: |
       pip install --upgrade pip setuptools wheel
       pip install -r requirements.txt
+    preDeployCommand: |
+      echo "🔍 Starting pre-deployment validation..."
+      python -c "import sys; print(f'Python version: {sys.version}')"
+      echo "📦 Checking installed packages..."
+      pip check
+      echo "🔌 Validating application imports..."
+      python -c "
+      import sys
+      sys.path.insert(0, 'apps/backend')
+      try:
+          from apps.backend.main import app
+          print('✅ Application imports successful')
+          print('✅ Pre-deployment validation passed')
+      except Exception as e:
+          print(f'❌ Import validation failed: {e}')
+          import traceback
+          traceback.print_exc()
+          sys.exit(1)
+      "
+      echo "✅ All pre-deployment checks passed"
     startCommand: |
       gunicorn apps.backend.main:app \
         --bind 0.0.0.0:$PORT \
@@ -58,6 +78,11 @@ services:
         value: production
       - key: LOG_LEVEL
         value: info
+      # Application startup configuration
+      - key: SKIP_LIFESPAN
+        value: "false"
+      - key: TESTING
+        value: "false"
       - key: ALLOWED_ORIGINS
         value: https://toolboxai-dashboard.vercel.app,https://toolboxai-solutions-4sebumacd-grayghostdevs-projects.vercel.app,https://*.vercel.app,https://www.yourdomain.com
       - key: TRUSTED_HOSTS
