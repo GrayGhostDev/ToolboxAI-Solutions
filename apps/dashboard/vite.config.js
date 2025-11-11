@@ -148,10 +148,12 @@ export default defineConfig({
               return 'vendor-mantine';
             }
             // Animation libraries - depend on React hooks (useLayoutEffect)
-            // Strengthen pattern matching to catch all import variations
+            // CRITICAL: Must catch ALL framer-motion import variations to prevent loading before React
             if (id.includes('framer-motion') ||
                 id.includes('/framer-motion/') ||
-                id.includes('\\framer-motion\\')) {
+                id.includes('\\framer-motion\\') ||
+                id.match(/node_modules[/\\]framer-motion/) ||
+                id.match(/\.pnpm[/\\]framer-motion/)) {
               return 'vendor-mantine';
             }
             // Tabler icons - depends on React
