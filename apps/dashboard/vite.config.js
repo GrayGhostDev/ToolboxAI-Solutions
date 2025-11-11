@@ -128,50 +128,58 @@ export default defineConfig({
         experimentalMinChunkSize: 100000,
         // Manually separate vendor code with proper loading order
         manualChunks(id) {
-          // Bundle React and core deps into vendor chunk
-          if (id.includes('node_modules')) {
-            // React core - HIGHEST PRIORITY (loads first)
-            // Must catch react, react-dom, react-redux, react-router, @reduxjs/toolkit, @sentry
-            if (id.includes('/react/') || id.includes('/react-dom/') ||
-                id.includes('\\react\\') || id.includes('\\react-dom\\') ||
-                id.includes('react-redux') || id.includes('react-router') ||
-                id.includes('@reduxjs/toolkit') || id.includes('@remix-run/router') ||
-                id.includes('use-sync-external-store') || id.includes('@sentry')) {
-              return 'vendor-react';
-            }
-            // Mantine UI - depends on React
-            if (id.includes('@mantine')) {
-              return 'vendor-mantine';
-            }
-            // Emotion libraries - required by framer-motion peer dependency
-            if (id.includes('@emotion')) {
-              return 'vendor-mantine';
-            }
-            // Animation libraries - depend on React hooks (useLayoutEffect)
-            // CRITICAL: Must catch ALL framer-motion import variations to prevent loading before React
-            if (id.includes('framer-motion') ||
-                id.includes('/framer-motion/') ||
-                id.includes('\\framer-motion\\') ||
-                id.match(/node_modules[/\\]framer-motion/) ||
-                id.match(/\.pnpm[/\\]framer-motion/)) {
-              return 'vendor-mantine';
-            }
-            // Tabler icons - depends on React
-            if (id.includes('@tabler/icons')) {
-              return 'vendor-icons';
-            }
-            // React-Three-Fiber - MUST load AFTER React (uses React hooks)
-            // Check this BEFORE checking for 'three' to avoid bundling with Three.js core
-            if (id.includes('@react-three/fiber') || id.includes('@react-three/drei')) {
-              return 'vendor-react-three';
-            }
-            // Three.js core library (no React dependencies)
-            if (id.includes('/three/') || id.includes('\\three\\')) {
-              return 'vendor-three';
-            }
-            // Everything else
-            return 'vendor-other';
+          // Only process node_modules
+          if (!id.includes('node_modules')) {
+            return undefined;
           }
+
+          // React core - HIGHEST PRIORITY (loads first)
+          // Check for exact package boundaries using path separators
+          if (id.match(/node_modules[/\\]react[/\\]/) ||
+              id.match(/node_modules[/\\]react-dom[/\\]/) ||
+              id.match(/node_modules[/\\]react-redux[/\\]/) ||
+              id.match(/node_modules[/\\]react-router[/\\]/) ||
+              id.match(/node_modules[/\\]react-router-dom[/\\]/) ||
+              id.match(/node_modules[/\\]@reduxjs[/\\]toolkit[/\\]/) ||
+              id.match(/node_modules[/\\]@remix-run[/\\]router[/\\]/) ||
+              id.match(/node_modules[/\\]use-sync-external-store[/\\]/) ||
+              id.match(/node_modules[/\\]@sentry[/\\]/)) {
+            return 'vendor-react';
+          }
+
+          // Framer-Motion - MUST load AFTER React (uses React hooks like useLayoutEffect)
+          // CRITICAL: Check for exact package boundary to catch all framer-motion code
+          if (id.match(/node_modules[/\\]framer-motion[/\\]/)) {
+            return 'vendor-mantine';
+          }
+
+          // Mantine UI - depends on React
+          if (id.match(/node_modules[/\\]@mantine[/\\]/)) {
+            return 'vendor-mantine';
+          }
+
+          // Emotion libraries - required by framer-motion and Mantine
+          if (id.match(/node_modules[/\\]@emotion[/\\]/)) {
+            return 'vendor-mantine';
+          }
+
+          // Tabler icons - depends on React
+          if (id.match(/node_modules[/\\]@tabler[/\\]icons[/\\]/)) {
+            return 'vendor-icons';
+          }
+
+          // React-Three-Fiber - MUST load AFTER React (uses React hooks)
+          if (id.match(/node_modules[/\\]@react-three[/\\](fiber|drei)[/\\]/)) {
+            return 'vendor-react-three';
+          }
+
+          // Three.js core library (no React dependencies)
+          if (id.match(/node_modules[/\\]three[/\\]/)) {
+            return 'vendor-three';
+          }
+
+          // Everything else
+          return 'vendor-other';
         },
         // Ensure React chunk has priority in loading
         chunkFileNames: (chunkInfo) => {
