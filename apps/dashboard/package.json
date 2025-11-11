@@ -128,7 +128,7 @@
     "@graphql-codegen/typescript-operations": "^4.0.0",
     "@graphql-codegen/typescript-react-apollo": "^4.0.0",
     "@playwright/test": "^1.55.0",
-    "@sentry/cli": "^2.58.0",
+    "@sentry/cli": "^2.58.1",
     "@storybook/addon-docs": "^8.6.14",
     "@storybook/addon-essentials": "^8.6.14",
     "@storybook/addon-interactions": "^8.6.14",
