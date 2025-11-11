@@ -155,7 +155,7 @@
     "eslint-plugin-react-refresh": "^0.4.7",
     "globals": "^16.5.0",
     "happy-dom": "^20.0.2",
-    "jsdom": "^24.1.3",
+    "jsdom": "^27.1.0",
     "msw": "^2.11.2",
     "playwright": "^1.55.0",
     "postcss-preset-mantine": "^1.18.0",
