@@ -264,6 +264,22 @@ class Settings:
     def SENTRY_ENVIRONMENT(self):
         return self._config.env_name
 
+    def get_sentry_config(self) -> dict:
+        """
+        Get comprehensive Sentry configuration for monitoring initialization
+
+        Returns:
+            dict: Sentry configuration with all required parameters
+        """
+        return {
+            "environment": self.SENTRY_ENVIRONMENT or self.ENVIRONMENT,
+            "release": os.getenv("SENTRY_RELEASE", self.APP_VERSION),
+            "server_name": os.getenv("SENTRY_SERVER_NAME"),  # Optional, uses hostname if None
+            "traces_sample_rate": float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.1")),
+            "profiles_sample_rate": float(os.getenv("SENTRY_PROFILES_SAMPLE_RATE", "0.1")),
+            "send_default_pii": os.getenv("SENTRY_SEND_PII", "false").lower() in ("true", "1", "yes"),
+        }
+
     # LMS Integration
     @property
     def SCHOOLOGY_KEY(self):

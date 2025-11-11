@@ -11,6 +11,8 @@ import hashlib
 import secrets
 import logging
 from typing import Optional, Dict, Any, List
+
+from apps.backend.core.security.input_sanitizer import sanitize_for_logging, get_safe_error_response
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlencode
 
@@ -84,7 +86,7 @@ async def verify_ip_whitelist(request: Request) -> bool:
     allowed_ips = os.getenv("ROBLOX_ALLOWED_IPS", "127.0.0.1,::1").split(",")
 
     if client_ip not in allowed_ips:
-        logger.warning(f"Rejected request from non-whitelisted IP: {client_ip}")
+        logger.warning(f"Rejected request from non-whitelisted IP: {sanitize_for_logging(client_ip)}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"IP {client_ip} not whitelisted"
@@ -235,7 +237,7 @@ async def initiate_oauth(
         )
 
     except Exception as e:
-        logger.error(f"Failed to initiate OAuth2: {e}")
+        logger.error(f"Failed to initiate OAuth2: {sanitize_for_logging(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to initiate OAuth2 flow"
@@ -257,7 +259,7 @@ async def oauth_callback(
     try:
         # Validate state
         if state not in oauth2_states:
-            logger.warning(f"Invalid OAuth2 state: {state}")
+            logger.warning(f"Invalid OAuth2 state: {sanitize_for_logging(state)}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid state parameter"
@@ -331,7 +333,7 @@ async def oauth_callback(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"OAuth2 callback failed: {e}")
+        logger.error(f"OAuth2 callback failed: {sanitize_for_logging(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="OAuth2 callback failed"
@@ -372,7 +374,7 @@ async def refresh_token(
         return OAuth2TokenResponse(**response.json())
 
     except Exception as e:
-        logger.error(f"Token refresh failed: {e}")
+        logger.error(f"Token refresh failed: {sanitize_for_logging(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Token refresh failed"
@@ -410,7 +412,7 @@ async def revoke_token(
         return {"status": "revoked"}
 
     except Exception as e:
-        logger.error(f"Token revocation failed: {e}")
+        logger.error(f"Token revocation failed: {sanitize_for_logging(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Token revocation failed"
@@ -491,7 +493,7 @@ async def start_conversation(
         )
 
     except Exception as e:
-        logger.error(f"Failed to start conversation: {e}")
+        logger.error(f"Failed to start conversation: {sanitize_for_logging(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to start conversation"
@@ -561,7 +563,7 @@ async def check_rojo(
     except FileNotFoundError:
         return RojoCheckResponse(installed=False)
     except Exception as e:
-        logger.error(f"Rojo check failed: {e}")
+        logger.error(f"Rojo check failed: {sanitize_for_logging(e)}")
         return RojoCheckResponse(installed=False)
 
 
@@ -621,7 +623,7 @@ async def authenticate_pusher_channel(
         )
 
     except Exception as e:
-        logger.error(f"Pusher authentication failed: {e}")
+        logger.error(f"Pusher authentication failed: {sanitize_for_logging(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to authenticate channel"
@@ -703,7 +705,7 @@ async def generate_content(
             error_message=str(e)
         )
 
-        logger.error(f"Content generation failed: {e}")
+        logger.error(f"Content generation failed: {sanitize_for_logging(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Content generation failed"

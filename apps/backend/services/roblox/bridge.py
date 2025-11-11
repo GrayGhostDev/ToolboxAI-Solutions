@@ -23,6 +23,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, cast
 
+from apps.backend.core.security.input_sanitizer import sanitize_for_logging, get_safe_error_response
+
 import redis
 import requests
 from flask import Flask, Response, jsonify, request
@@ -382,7 +384,7 @@ class PersistentMemoryStore:
                 with open(backup_file, "r") as f:
                     self.store = json.load(f)
             except Exception as e:
-                logger.warning(f"Failed to load backup: {e}")
+                logger.warning(f"Failed to load backup: {sanitize_for_logging(e)}")
 
     def set(self, key, value):
         """Store a value"""
@@ -413,7 +415,7 @@ class PersistentMemoryStore:
                     json.dump(self.store, f)
                 self.last_backup = time.time()
             except Exception as e:
-                logger.warning(f"Failed to backup: {e}")
+                logger.warning(f"Failed to backup: {sanitize_for_logging(e)}")
 
 
 # Add parent directory to path for imports
@@ -671,7 +673,7 @@ class ContentBridge:
                 self.mcp_context = ContextManager()
                 logger.info("Agent systems integrated with Flask bridge")
             except Exception as e:
-                logger.error(f"Failed to initialize agent systems: {e}")
+                logger.error(f"Failed to initialize agent systems: {sanitize_for_logging(e)}")
                 AGENT_INTEGRATION = False
                 self.supervisor_agent = None
                 self.sparc_manager = None
@@ -800,7 +802,7 @@ class ContentBridge:
                     return self._auth_token
 
         except Exception as e:
-            logger.warning(f"Failed to get auth token: {e}")
+            logger.warning(f"Failed to get auth token: {sanitize_for_logging(e)}")
 
         # Return a demo token as last resort
         return "demo-token-flask-bridge"
@@ -1077,7 +1079,7 @@ def register_plugin():
 
     except (ValueError, KeyError, TypeError) as e:
         logger.error("Plugin registration failed: %s", e)
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify(get_safe_error_response(e)), 500
 
 
 @app.route("/plugin/<plugin_id>/heartbeat", methods=["POST"])
@@ -1114,7 +1116,7 @@ def plugin_heartbeat(plugin_id: str):
 
     except (ValueError, KeyError, redis.RedisError) as e:
         logger.error("Heartbeat failed for %s: %s", plugin_id, e)
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify(get_safe_error_response(e)), 500
 
 
 @app.route("/plugin/<plugin_id>", methods=["GET"])
@@ -1130,7 +1132,7 @@ def get_plugin_info(plugin_id: str):
 
     except (ValueError, KeyError, redis.RedisError) as e:
         logger.error("Get plugin info failed: %s", e)
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify(get_safe_error_response(e)), 500
 
 
 @app.route("/plugins", methods=["GET"])
@@ -1143,7 +1145,7 @@ def list_plugins():
 
     except (ValueError, redis.RedisError) as e:
         logger.error("List plugins failed: %s", e)
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify(get_safe_error_response(e)), 500
 
 
 # Content generation endpoints (simplified for Roblox)
@@ -1223,7 +1225,7 @@ def generate_terrain():
 
     except (ValueError, KeyError, requests.RequestException, requests.Timeout) as e:
         logger.error("Terrain generation failed: %s", e)
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify(get_safe_error_response(e)), 500
 
 
 def _extract_terrain_params(request_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -1283,7 +1285,7 @@ def generate_quiz():
 
     except (ValueError, KeyError, requests.RequestException, requests.Timeout) as e:
         logger.error("Quiz generation failed: %s", e)
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify(get_safe_error_response(e)), 500
 
 
 def _extract_quiz_params(request_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -1374,7 +1376,7 @@ def get_script_template(script_type: str):
 
     except (ValueError, KeyError) as e:
         logger.error("Script template request failed: %s", e)
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify(get_safe_error_response(e)), 500
 
 
 def _create_script_response(script_type: str, script_content: str) -> Response:
@@ -1453,7 +1455,7 @@ def get_metrics():
         )
     except Exception as e:
         logger.error("Metrics request failed: %s", e)
-        return jsonify({"error": str(e)}), 500
+        return jsonify(get_safe_error_response(e)), 500
 
 
 @app.route("/cache/clear", methods=["POST"])
@@ -1467,7 +1469,7 @@ def clear_cache():
 
     except (AttributeError, RuntimeError) as e:
         logger.error("Cache clear failed: %s", e)
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify(get_safe_error_response(e)), 500
 
 
 # Background cleanup task
@@ -1563,7 +1565,7 @@ def update_config():
 
     except Exception as e:
         logger.error("Configuration update failed: %s", e)
-        return jsonify({"success": False, "error": str(e)}), 400
+        return jsonify(get_safe_error_response(e)), 400
 
 
 # Missing test functions for compatibility
@@ -1599,7 +1601,7 @@ def sync_with_main_server(sync_data: Dict[str, Any]) -> Dict[str, Any]:
         else:
             return {"status": "error", "message": f"Sync failed: {response.status_code}"}
     except Exception as e:
-        logger.error(f"Sync error: {e}")
+        logger.error(f"Sync error: {sanitize_for_logging(e)}")
         return {"status": "error", "message": str(e)}
 
 
@@ -1715,8 +1717,11 @@ def trigger_agent_pipeline():
             return jsonify(response.json())
 
     except Exception as e:
-        logger.error(f"Agent pipeline error: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        logger.error(f"Agent pipeline error: {sanitize_for_logging(e)}")
+        response = get_safe_error_response(e)
+        response["status"] = "error"
+        response["message"] = response.pop("error")
+        return jsonify(response), 500
 
 
 @app.route("/plugin/database/query", methods=["POST"])
@@ -1766,8 +1771,11 @@ def query_database():
         return jsonify({"status": "success", "data": result})
 
     except Exception as e:
-        logger.error(f"Database query error: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        logger.error(f"Database query error: {sanitize_for_logging(e)}")
+        response = get_safe_error_response(e)
+        response["status"] = "error"
+        response["message"] = response.pop("error")
+        return jsonify(response), 500
 
 
 @app.route("/plugin/dashboard/sync", methods=["POST"])
@@ -1797,8 +1805,11 @@ def sync_with_dashboard():
             )
 
     except Exception as e:
-        logger.error(f"Dashboard sync error: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        logger.error(f"Dashboard sync error: {sanitize_for_logging(e)}")
+        response = get_safe_error_response(e)
+        response["status"] = "error"
+        response["message"] = response.pop("error")
+        return jsonify(response), 500
 
 
 @app.route("/plugin/session/start", methods=["POST"])
@@ -1827,8 +1838,11 @@ def start_plugin_session():
         )
 
     except Exception as e:
-        logger.error(f"Session start error: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        logger.error(f"Session start error: {sanitize_for_logging(e)}")
+        response = get_safe_error_response(e)
+        response["status"] = "error"
+        response["message"] = response.pop("error")
+        return jsonify(response), 500
 
 
 @app.route("/plugin/session/<session_id>/end", methods=["POST"])
@@ -1857,8 +1871,11 @@ def end_plugin_session(session_id):
         return jsonify({"status": "success", "message": "Session ended"})
 
     except Exception as e:
-        logger.error(f"Session end error: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        logger.error(f"Session end error: {sanitize_for_logging(e)}")
+        response = get_safe_error_response(e)
+        response["status"] = "error"
+        response["message"] = response.pop("error")
+        return jsonify(response), 500
 
 
 @app.route("/plugin/content/generate", methods=["POST"])
@@ -1875,8 +1892,11 @@ def generate_content():
         return jsonify({"status": "success", "content": result})
 
     except Exception as e:
-        logger.error(f"Content generation error: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        logger.error(f"Content generation error: {sanitize_for_logging(e)}")
+        response = get_safe_error_response(e)
+        response["status"] = "error"
+        response["message"] = response.pop("error")
+        return jsonify(response), 500
 
 
 @app.route("/plugin/progress/update", methods=["POST"])
@@ -1912,8 +1932,11 @@ def update_progress():
         return jsonify({"status": "success", "message": "Progress updated"})
 
     except Exception as e:
-        logger.error(f"Progress update error: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        logger.error(f"Progress update error: {sanitize_for_logging(e)}")
+        response = get_safe_error_response(e)
+        response["status"] = "error"
+        response["message"] = response.pop("error")
+        return jsonify(response), 500
 
 
 # New Flask routes for missing test endpoints
@@ -1928,8 +1951,11 @@ def plugin_communicate():
         result = handle_plugin_request(request_data)
         return jsonify(result)
     except Exception as e:
-        logger.error(f"Plugin communication error: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        logger.error(f"Plugin communication error: {sanitize_for_logging(e)}")
+        response = get_safe_error_response(e)
+        response["status"] = "error"
+        response["message"] = response.pop("error")
+        return jsonify(response), 500
 
 
 @app.route("/plugin/poll-messages", methods=["POST"])
@@ -1965,8 +1991,11 @@ def poll_messages():
         )
 
     except Exception as e:
-        logger.error(f"Message polling error: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        logger.error(f"Message polling error: {sanitize_for_logging(e)}")
+        response = get_safe_error_response(e)
+        response["status"] = "error"
+        response["message"] = response.pop("error")
+        return jsonify(response), 500
 
 
 @app.route("/plugin/send-message", methods=["POST"])
@@ -2000,8 +2029,11 @@ def send_message():
         )
 
     except Exception as e:
-        logger.error(f"Send message error: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        logger.error(f"Send message error: {sanitize_for_logging(e)}")
+        response = get_safe_error_response(e)
+        response["status"] = "error"
+        response["message"] = response.pop("error")
+        return jsonify(response), 500
 
 
 @app.route("/sync", methods=["POST"])
@@ -2015,8 +2047,11 @@ def sync_endpoint():
         result = sync_with_main_server(sync_data)
         return jsonify(result)
     except Exception as e:
-        logger.error(f"Sync error: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        logger.error(f"Sync error: {sanitize_for_logging(e)}")
+        response = get_safe_error_response(e)
+        response["status"] = "error"
+        response["message"] = response.pop("error")
+        return jsonify(response), 500
 
 
 @app.route("/generate_script", methods=["POST"])
@@ -2033,8 +2068,8 @@ def generate_script_endpoint():
         script = generate_roblox_script(script_type, parameters)
         return jsonify({"script": script})
     except Exception as e:
-        logger.error(f"Script generation error: {e}")
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"Script generation error: {sanitize_for_logging(e)}")
+        return jsonify(get_safe_error_response(e)), 500
 
 
 # Application initialization
