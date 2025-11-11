@@ -160,7 +160,7 @@
     "playwright": "^1.55.0",
     "postcss-preset-mantine": "^1.18.0",
     "postcss-simple-vars": "^7.0.1",
-    "storybook": "^8.6.14",
+    "storybook": "^10.0.7",
     "terser": "^5.44.1",
     "typescript": "^5.5.4",
     "vite": "^7.0.0",
