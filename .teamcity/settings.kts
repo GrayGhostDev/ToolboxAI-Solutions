@@ -137,6 +137,30 @@ project {
         param("env.TEAMCITY_PIPELINE_ACCESS_TOKEN", "%env.TEAMCITY_PIPELINE_ACCESS_TOKEN%")
         param("env.DOCKER_BUILDKIT", "1")
         param("env.COMPOSE_DOCKER_CLI_BUILD", "1")
+
+        // ============================================
+        // Authentication & Secrets
+        // ============================================
+        // Clerk Authentication
+        password("env.CLERK_SECRET_KEY", "credentialsJSON:clerk-secret-key", display = ParameterDisplay.HIDDEN)
+
+        // Pusher Real-time Configuration
+        param("env.PUSHER_APP_ID", "2050003")
+        param("env.PUSHER_KEY", "73f059a21bb304c7d68c")
+        password("env.PUSHER_SECRET", "credentialsJSON:pusher-secret", display = ParameterDisplay.HIDDEN)
+        param("env.PUSHER_CLUSTER", "us2")
+
+        // ============================================
+        // AI/ML API Keys
+        // ============================================
+        password("env.OPENAI_API_KEY", "credentialsJSON:openai-api-key", display = ParameterDisplay.HIDDEN)
+        password("env.ANTHROPIC_API_KEY", "credentialsJSON:anthropic-api-key", display = ParameterDisplay.HIDDEN)
+
+        // ============================================
+        // GitHub Integration
+        // ============================================
+        param("env.GITHUB_USERNAME", "GrayGhostDev")
+        password("env.GITHUB_TOKEN", "credentialsJSON:github-token", display = ParameterDisplay.HIDDEN)
     }
 
     // ============================================
