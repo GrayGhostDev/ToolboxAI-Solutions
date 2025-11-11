@@ -13,7 +13,7 @@ import functools
 import json
 import logging
 import socket
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import sentry_sdk
