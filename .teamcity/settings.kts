@@ -161,6 +161,68 @@ project {
         // ============================================
         param("env.GITHUB_USERNAME", "GrayGhostDev")
         password("env.GITHUB_TOKEN", "credentialsJSON:github-token", display = ParameterDisplay.HIDDEN)
+
+        // ============================================
+        // Database Configuration
+        // ============================================
+        param("env.POSTGRES_DB", "toolboxai_6rmgje4u")
+        param("env.POSTGRES_USER", "dbuser_4qnrmosa")
+        password("env.POSTGRES_PASSWORD", "credentialsJSON:postgres-password", display = ParameterDisplay.HIDDEN)
+        password("env.DATABASE_URL", "credentialsJSON:database-url", display = ParameterDisplay.HIDDEN)
+
+        // ============================================
+        // Redis Configuration
+        // ============================================
+        password("env.REDIS_PASSWORD", "credentialsJSON:redis-password", display = ParameterDisplay.HIDDEN)
+        password("env.REDIS_URL", "credentialsJSON:redis-url", display = ParameterDisplay.HIDDEN)
+
+        // ============================================
+        // Security Keys
+        // ============================================
+        password("env.JWT_SECRET_KEY", "credentialsJSON:jwt-secret-key", display = ParameterDisplay.HIDDEN)
+        password("env.CLERK_WEBHOOK_SIGNING_SECRET", "credentialsJSON:clerk-webhook-secret", display = ParameterDisplay.HIDDEN)
+
+        // ============================================
+        // Deployment Keys
+        // ============================================
+        password("env.RENDER_API_KEY", "credentialsJSON:render-api-key", display = ParameterDisplay.HIDDEN)
+        password("env.VERCEL_DEPLOY_HOOKS", "credentialsJSON:vercel-deploy-hooks", display = ParameterDisplay.HIDDEN)
+
+        // ============================================
+        // Communication Services
+        // ============================================
+        password("env.SENDGRID_API_KEY", "credentialsJSON:sendgrid-api-key", display = ParameterDisplay.HIDDEN)
+        param("env.SENDGRID_FROM_EMAIL", "curtis@grayghostdata.com")
+        param("env.SENDGRID_FROM_NAME", "The Gray Ghost")
+
+        param("env.TWILIO_ACCOUNT_SID", "AC554c2d9641861cbd82d7c4db296fd189")
+        password("env.TWILIO_AUTH_TOKEN", "credentialsJSON:twilio-auth-token", display = ParameterDisplay.HIDDEN)
+        password("env.TWILIO_API_SECRET", "credentialsJSON:twilio-api-secret", display = ParameterDisplay.HIDDEN)
+
+        // ============================================
+        // AI/ML Additional Keys
+        // ============================================
+        password("env.LANGCHAIN_API_KEY", "credentialsJSON:langchain-api-key", display = ParameterDisplay.HIDDEN)
+        param("env.LANGCHAIN_PROJECT", "ToolboxAI-Solutions")
+        param("env.LANGCHAIN_TRACING_V2", "true")
+
+        password("env.LANGCACHE_API_KEY", "credentialsJSON:langcache-api-key", display = ParameterDisplay.HIDDEN)
+        param("env.LANGCACHE_ENABLED", "true")
+
+        // ============================================
+        // Vault Configuration
+        // ============================================
+        param("env.VAULT_ADDR", "http://0.0.0.0:8200")
+        password("env.VAULT_ROOT_TOKEN", "credentialsJSON:vault-root-token", display = ParameterDisplay.HIDDEN)
+        password("env.VAULT_UNSEAL_KEY", "credentialsJSON:vault-unseal-key", display = ParameterDisplay.HIDDEN)
+
+        // ============================================
+        // Frontend Build Args
+        // ============================================
+        param("env.VITE_CLERK_PUBLISHABLE_KEY", "pk_test_Y2FzdWFsLWZpcmVmbHktMzkuY2xlcmsuYWNjb3VudHMuZGV2JA")
+        param("env.VITE_API_BASE_URL", "http://127.0.0.1:8009")
+        param("env.VITE_ENABLE_CLERK_AUTH", "true")
+        param("env.VITE_ENABLE_PUSHER", "true")
     }
 
     // ============================================
