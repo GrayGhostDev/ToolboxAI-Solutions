@@ -28,7 +28,7 @@ services:
     plan: starter # Start with Starter plan, upgrade to Pro if needed
     buildCommand: |
       pip install --upgrade pip setuptools wheel
-      pip install --only-binary=scipy,scikit-learn,numpy,pandas -r requirements.txt
+      pip install --only-binary=scipy,scikit-learn,numpy,pandas,asyncpg,pyarrow -r requirements.txt
     preDeployCommand: |
       echo "🔍 Starting pre-deployment validation..."
       python -c "import sys; print(f'Python version: {sys.version}')"
