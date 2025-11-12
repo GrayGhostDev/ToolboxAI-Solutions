@@ -27,7 +27,7 @@ jobs:
       VERCEL_BUILD_HOOK_URL: ${{ secrets.VERCEL_BUILD_HOOK_URL }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node.js 22
         uses: actions/setup-node@v4
