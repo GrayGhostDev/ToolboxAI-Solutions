@@ -23,7 +23,7 @@ jobs:
     if: github.event.action == 'opened'
     steps:
       - name: Add issue to project
-        uses: actions/add-to-project@v0.5.0
+        uses: actions/add-to-project@v1.0.2
         with:
           project-url: https://github.com/users/GrayGhostDev/projects/1
           github-token: ${{ secrets.GITHUB_TOKEN }}
