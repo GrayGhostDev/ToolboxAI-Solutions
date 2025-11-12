@@ -155,7 +155,7 @@ protobuf==4.25.8                     # Protocol buffers
 pandas==2.2.3                        # Data analysis
 numpy==1.26.4                        # Numerical computing
 scikit-learn==1.5.2                  # Machine learning
-# scipy==1.13.1                      # Scientific computing (removed - requires Fortran compiler, not used)
+scipy==1.13.1                        # Scientific computing (required by scikit-learn)
 pyarrow==14.0.2                      # Columnar data format
 joblib==1.5.2                        # Parallel processing
 threadpoolctl==3.6.0                 # Thread pool control
