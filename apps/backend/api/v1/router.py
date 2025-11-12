@@ -54,6 +54,9 @@ from .endpoints import user_notifications
 # Monitoring endpoints (2025-10-02)
 from .endpoints import api_metrics
 
+# MCP Context API - Pusher + Redis Hybrid (2025-11-12)
+from .endpoints import mcp_context
+
 # Create main API v1 router
 api_router = APIRouter()
 
@@ -104,6 +107,8 @@ api_router.include_router(user_notifications.router, tags=["user-notifications"]
 # Monitoring routers (2025-10-02) - Metrics and performance
 api_router.include_router(api_metrics.router, tags=["api-metrics"])
 
+# MCP Context router (2025-11-12) - Pusher + Redis hybrid implementation
+api_router.include_router(mcp_context.router, tags=["mcp"])
 
 # Health check endpoint
 @api_router.get("/health")
