@@ -35,7 +35,7 @@ jobs:
           pip-audit -r requirements.txt || true
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
 

@@ -60,7 +60,7 @@ jobs:
       # Frontend Linting
       - name: Setup pnpm
         if: matrix.component == 'frontend'
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
 
@@ -118,7 +118,7 @@ jobs:
       # Frontend Type Checking
       - name: Setup pnpm
         if: matrix.component == 'frontend'
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
 
@@ -180,7 +180,7 @@ jobs:
       # Frontend Unit Tests
       - name: Setup pnpm
         if: matrix.component == 'frontend'
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
 
@@ -302,7 +302,7 @@ jobs:
       # Frontend Build
       - name: Setup pnpm
         if: matrix.component == 'frontend'
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
 
