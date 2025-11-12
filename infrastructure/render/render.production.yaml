@@ -27,8 +27,9 @@ services:
     region: oregon
     plan: starter # Start with Starter plan, upgrade to Pro if needed
     buildCommand: |
+      apt-get update && apt-get install -y gfortran libopenblas-dev liblapack-dev
       pip install --upgrade pip setuptools wheel
-      pip install --prefer-binary -r requirements.txt
+      pip install -r requirements.txt
     preDeployCommand: |
       echo "🔍 Starting pre-deployment validation..."
       python -c "import sys; print(f'Python version: {sys.version}')"
