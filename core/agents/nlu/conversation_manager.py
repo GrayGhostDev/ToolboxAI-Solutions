@@ -327,7 +327,7 @@ class ConversationManager:
         Returns:
             Conversation ID
         """
-        memory = ConversationMemory(, memory_key="chat_history")
+        memory = ConversationMemory()
 
         # Set initial context if provided
         if initial_context:

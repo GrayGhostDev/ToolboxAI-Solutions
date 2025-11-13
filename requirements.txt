@@ -34,7 +34,7 @@ blinker==1.9.0                       # Signal support
 # DATABASE - PostgreSQL & Redis
 # ============================================================================
 SQLAlchemy==2.0.36                   # ORM
-# asyncpg==0.29.0                      # Async PostgreSQL driver (handled by render-build.sh)
+asyncpg==0.29.0                      # Async PostgreSQL driver
 psycopg2-binary==2.9.10              # PostgreSQL adapter
 redis==5.2.1                         # Redis client
 greenlet!=0.4.17                     # SQLAlchemy dependency
@@ -143,11 +143,12 @@ opentelemetry-exporter-otlp==1.21.0  # OTLP exporter
 opentelemetry-exporter-otlp-proto-common==1.21.0  # OTLP common
 opentelemetry-exporter-otlp-proto-grpc==1.21.0  # OTLP gRPC exporter
 opentelemetry-exporter-otlp-proto-http==1.21.0  # OTLP HTTP exporter
+opentelemetry-exporter-jaeger==1.21.0  # Jaeger tracing exporter
 opentelemetry-util-http==0.42b0      # HTTP utilities
 backoff<3.0.0,>=1.10.0               # Retry with backoff
 grpcio==1.75.1                       # gRPC framework
-googleapis-common-protos==1.70.0     # Google API protos
-protobuf==4.25.8                     # Protocol buffers
+googleapis-common-protos==1.52.0     # Google API protos (compatible with OpenTelemetry 1.21.0)
+protobuf==3.20.3                     # Protocol buffers (3.20.x for googleapis-common-protos 1.52 compatibility)
 
 # ============================================================================
 # DATA PROCESSING & ANALYTICS

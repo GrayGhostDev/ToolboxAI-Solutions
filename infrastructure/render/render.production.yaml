@@ -46,6 +46,14 @@ services:
           traceback.print_exc()
           sys.exit(1)
       "
+      # Setup Supabase SSL certificate if provided
+      if [ ! -z "$SUPABASE_SSL_CERT_B64" ]; then
+        echo "Setting up Supabase SSL certificate..."
+        mkdir -p /opt/render/project/.postgresql
+        echo "$SUPABASE_SSL_CERT_B64" | base64 -d > /opt/render/project/.postgresql/root.crt
+        chmod 600 /opt/render/project/.postgresql/root.crt
+        echo "SSL certificate configured at /opt/render/project/.postgresql/root.crt"
+      fi
       echo "✅ All pre-deployment checks passed"
     startCommand: |
       gunicorn apps.backend.main:app \
@@ -153,19 +161,7 @@ services:
       - fromGroup: toolboxai-secrets
     healthCheckPath: /health
     autoDeploy: true
-    # Zero-downtime deployment
-    preDeployCommand: |
-      echo "Starting pre-deployment health checks..."
-      python -c "import sys; print(f'Python version: {sys.version}')"
-      pip check
-      # Setup Supabase SSL certificate if provided
-      if [ ! -z "$SUPABASE_SSL_CERT_B64" ]; then
-        echo "Setting up Supabase SSL certificate..."
-        mkdir -p /opt/render/project/.postgresql
-        echo "$SUPABASE_SSL_CERT_B64" | base64 -d > /opt/render/project/.postgresql/root.crt
-        chmod 600 /opt/render/project/.postgresql/root.crt
-        echo "SSL certificate configured at /opt/render/project/.postgresql/root.crt"
-      fi
+    # Zero-downtime deployment enabled
 
   # Redis (managed) - Starter configuration
   - type: redis
