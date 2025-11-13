@@ -374,7 +374,7 @@ def health():
 
 if __name__ == "__main__":
     # Run with TLS in production
-    app.run(
+    app.invoke(
         host="0.0.0.0",
         port=443,
         ssl_context=("/tls/cert.pem", "/tls/key.pem")

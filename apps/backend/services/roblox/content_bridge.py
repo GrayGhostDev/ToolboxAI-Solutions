@@ -650,7 +650,7 @@ class RobloxContentBridge:
                 message="Generating educational content",
             )
 
-            pipeline_result = await self.pipeline.run(request, user_id, session)
+            pipeline_result = await self.pipeline.invoke(request, user_id, session)
 
             # Validate content for Roblox compatibility
             await websocket_pipeline_manager.update_pipeline_state(

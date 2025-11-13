@@ -21,9 +21,25 @@ import json
 from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
-from scipy import stats
-from sklearn.cluster import DBSCAN
-from sklearn.preprocessing import StandardScaler
+
+# Optional scientific computing dependencies
+try:
+    from scipy import stats
+    SCIPY_AVAILABLE = True
+except ImportError:
+    SCIPY_AVAILABLE = False
+    stats = None
+    logger.warning("scipy not available - trend anomaly detection will be disabled")
+
+try:
+    from sklearn.cluster import DBSCAN
+    from sklearn.preprocessing import StandardScaler
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
+    DBSCAN = None
+    StandardScaler = None
+    logger.warning("sklearn not available - some advanced features will be disabled")
 
 from .correlation import get_correlation_context, correlation_manager
 
@@ -307,8 +323,39 @@ class PatternDetector:
         if len(values) < 5:
             return False, 0.0
 
+        # Check if scipy is available
+        if not SCIPY_AVAILABLE:
+            logger.debug("scipy not available - using simplified trend detection")
+            # Fallback: Use simple slope calculation instead of linear regression
+            try:
+                # Calculate simple slope between first and last points
+                time_span = timestamps[-1] - timestamps[0]
+                if time_span == 0:
+                    return False, 0.0
+
+                slope = (values[-1] - values[0]) / time_span
+                intercept = values[0] - slope * timestamps[0]
+
+                # Calculate residuals
+                predicted = [slope * t + intercept for t in timestamps]
+                residuals = [abs(actual - pred) for actual, pred in zip(values, predicted)]
+
+                # Check if latest point is anomalous
+                current_residual = residuals[-1]
+                avg_residual = statistics.mean(residuals[:-1])
+
+                if avg_residual == 0:
+                    return False, 0.0
+
+                confidence = current_residual / avg_residual
+
+                return confidence > 2.0, confidence
+            except Exception as e:
+                logger.warning(f"Simplified trend detection error: {e}")
+                return False, 0.0
+
         try:
-            # Linear regression to find trend
+            # Linear regression to find trend (requires scipy)
             slope, intercept, r_value, p_value, std_err = stats.linregress(timestamps, values)
 
             # Calculate residuals

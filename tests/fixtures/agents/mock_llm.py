@@ -9,7 +9,7 @@ from typing import List, Dict, Any, Optional, Union
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langchain_core.language_models import BaseLLM
 from langchain_core.outputs import LLMResult, Generation
-from langchain_core.callbacks import CallbackManagerForLLMRun, AsyncCallbackManagerForLLMRun
+from langchain_core.callbacks import CallbackManagerForLLMRunForLLMRun, AsyncCallbackManagerForLLMRunForLLMRun
 from pydantic import Field
 
 
@@ -29,7 +29,7 @@ class MockLLM(BaseLLM):
         self,
         prompts: List[str],
         stop: Optional[List[str]] = None,
-        run_manager: Optional[CallbackManagerForLLMRun] = None,
+        run_manager: Optional[CallbackManagerForLLMRunForLLMRun] = None,
         **kwargs: Any,
     ) -> LLMResult:
         """Generate mock responses for prompts."""
@@ -46,7 +46,7 @@ class MockLLM(BaseLLM):
         self,
         prompts: List[str],
         stop: Optional[List[str]] = None,
-        run_manager: Optional[AsyncCallbackManagerForLLMRun] = None,
+        run_manager: Optional[AsyncCallbackManagerForLLMRunForLLMRun] = None,
         **kwargs: Any,
     ) -> LLMResult:
         """Async generate mock responses."""

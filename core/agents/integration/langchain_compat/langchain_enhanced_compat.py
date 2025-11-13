@@ -131,8 +131,8 @@ try:
     
     # Callbacks for streaming and monitoring
     from langchain_core.callbacks import (
-        AsyncCallbackManagerForChainRun,
-        CallbackManagerForChainRun,
+        AsyncCallbackManagerForLLMRunForChainRun,
+        CallbackManagerForLLMRunForChainRun,
         StreamingStdOutCallbackHandler,
         BaseCallbackHandler
     )
@@ -355,7 +355,7 @@ def create_chain_template(
     messages = [SystemMessage(content=system_prompt)]
     
     if include_history:
-        messages.append(MessagesPlaceholder(variable_name="history"))
+        messages.append(MessagesPlaceholder(variable_name="history", optional=True))
     
     messages.append(HumanMessage(content="{input}"))
     
@@ -392,7 +392,7 @@ def create_parallel_chain(chains: Dict[str, Any]) -> Any:
                 await asyncio.sleep(0.1)
                 return self.invoke(input_data)
         
-        return MockParallelChain(chains)
+        return MockParallelChain(chains, output_key="output")
     
     return RunnableParallel(chains)
 

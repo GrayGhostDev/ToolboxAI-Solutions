@@ -162,7 +162,7 @@ class AccessibilityTester:
         # Run accessibility tests
         results = await page.evaluate("""
             async () => {
-                const results = await axe.run();
+                const results = await axe.invoke();
                 return {
                     violations: results.violations,
                     passes: results.passes.length,

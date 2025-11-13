@@ -41,7 +41,7 @@ END = "end"
 # Temporarily disable LangChain imports due to Pydantic v2 compatibility
 # from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 # from langchain_openai import ChatOpenAI
-# from langchain.tools import Tool
+# from langchain_community.tools import Tool
 
 # Placeholder classes
 class BaseMessage:

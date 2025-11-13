@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 from playwright.async_api import async_playwright, Page, Browser, BrowserContext
-from langchain.tools import BaseTool, tool
+from langchain_community.tools import BaseTool, tool
 
 from core.agents.base_agent import BaseAgent
 from core.sparc.state_manager import StateManager

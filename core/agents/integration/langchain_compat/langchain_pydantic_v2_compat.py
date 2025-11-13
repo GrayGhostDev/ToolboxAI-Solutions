@@ -48,13 +48,13 @@ LANGCHAIN_AVAILABLE = False
 LLMChain = None
 BaseLanguageModel = None
 BasePromptTemplate = None
-BaseCallbackManager = None
+BaseCallbackManagerForLLMRun = None
 
 try:
     # Import core components first - these should work with 0.3.26
     from langchain_core.language_models import BaseLanguageModel
     from langchain_core.prompts import BasePromptTemplate, PromptTemplate
-    from langchain_core.callbacks import BaseCallbackManager
+    from langchain_core.callbacks import BaseCallbackManagerForLLMRun
     from langchain_core.runnables import Runnable
     from langchain_core.output_parsers import BaseOutputParser, StrOutputParser
     
@@ -170,7 +170,7 @@ except ImportError as e:
     class BasePromptTemplate:
         pass
 
-    class BaseCallbackManager:
+    class BaseCallbackManagerForLLMRun:
         pass
 
 
@@ -219,7 +219,7 @@ class CompatibleLLMChain:
     
     def __init__(self, llm: Optional[BaseLanguageModel] = None, 
                  prompt: Optional[BasePromptTemplate] = None, 
-                 callback_manager: Optional[BaseCallbackManager] = None,
+                 callback_manager: Optional[BaseCallbackManagerForLLMRun] = None,
                  **kwargs):
         """Initialize with proper error handling"""
         self.llm = llm
@@ -236,7 +236,7 @@ class CompatibleLLMChain:
                     prompt=prompt,
                     callback_manager=callback_manager,
                     **kwargs
-                )
+                , output_key="output")
             except Exception as e:
                 logger.warning(f"Failed to create LLMChain: {e}")
                 self._chain = None
@@ -257,7 +257,7 @@ class CompatibleLLMChain:
         """Async run with proper error handling"""
         try:
             if self._chain and hasattr(self._chain, 'arun'):
-                return await self._chain.arun(*args, **kwargs)
+                return await self._chain.ainvoke(*args, **kwargs)
             else:
                 # Fallback for testing
                 return await self._mock_arun(*args, **kwargs)
@@ -269,7 +269,7 @@ class CompatibleLLMChain:
         """Sync run with proper error handling"""
         try:
             if self._chain and hasattr(self._chain, 'run'):
-                return self._chain.run(*args, **kwargs)
+                return self._chain.invoke(*args, **kwargs)
             else:
                 # Fallback for testing
                 return self._mock_run(*args, **kwargs)
@@ -338,7 +338,7 @@ def create_compatible_chain(llm: Optional[BaseLanguageModel] = None,
                           prompt: Optional[BasePromptTemplate] = None,
                           **kwargs) -> CompatibleLLMChain:
     """Factory function to create compatible LLM chain"""
-    return CompatibleLLMChain(llm=llm, prompt=prompt, **kwargs)
+    return CompatibleLLMChain(llm=llm, prompt=prompt, **kwargs, verbose=False, verbose=False, output_key="output")
 
 
 def fix_async_await_patterns(func: Callable) -> Callable:

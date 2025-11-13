@@ -33,4 +33,4 @@ def sync_progress():
     return jsonify({"success": True, "message": "Progress synced"})
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5001, debug=True)
+    app.invoke(host="127.0.0.1", port=5001, debug=True)

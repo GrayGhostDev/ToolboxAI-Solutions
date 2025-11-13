@@ -207,9 +207,9 @@ class BaseAgent(ABC):
         return ChatPromptTemplate.from_messages(
             [
                 SystemMessage(content=system_prompt),
-                MessagesPlaceholder(variable_name="history"),
+                MessagesPlaceholder(variable_name="history", optional=True),
                 HumanMessage(content="{input}"),
-                MessagesPlaceholder(variable_name="agent_scratchpad"),
+                MessagesPlaceholder(variable_name="agent_scratchpad", optional=True),
             ]
         )
 

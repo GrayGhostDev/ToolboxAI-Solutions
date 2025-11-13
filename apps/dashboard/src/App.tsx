@@ -9,6 +9,7 @@ import { NotificationToast } from './components/notifications/NotificationToast'
 import { logger } from './utils/logger';
 import RealtimeToast from './components/notifications/RealtimeToast';
 import { COPPA_COMPLIANCE } from './config';
+import { isDevelopment as isDevelopmentEnv } from './utils/environment';
 // Auth Components
 import ClerkLogin from './components/auth/ClerkLogin';
 import ClerkSignUp from './components/auth/ClerkSignUp';
@@ -149,7 +150,7 @@ export default function App() {
   };
 
   // Check if we're in development mode
-  const isDevelopment = import.meta.env.VITE_ENV === 'development' || process.env.NODE_ENV === 'development';
+  const isDevelopment = isDevelopmentEnv();
 
   // If not authenticated and not bypassing auth, show auth routes
   if (!isAuthenticated && !bypassAuth) {

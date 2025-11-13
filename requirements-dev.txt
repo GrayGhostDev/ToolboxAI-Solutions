@@ -38,7 +38,7 @@ responses==0.25.3                    # HTTP mock responses
 # DEBUGGING & DEVELOPMENT
 # ============================================================================
 ipdb==0.13.13                        # IPython-based debugger
-ipython==8.30.0                      # Enhanced Python REPL
+ipython==8.18.1                      # Enhanced Python REPL
 matplotlib-inline==0.1.7             # IPython matplotlib integration
 
 # ============================================================================

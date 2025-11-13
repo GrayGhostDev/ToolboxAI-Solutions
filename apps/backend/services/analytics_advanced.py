@@ -13,11 +13,25 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestRegressor, IsolationForest
-from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_absolute_error, r2_score
+
+# Optional sklearn dependencies - graceful degradation if not available
+try:
+    from sklearn.ensemble import RandomForestRegressor, IsolationForest
+    from sklearn.linear_model import LinearRegression
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import mean_absolute_error, r2_score
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
+    RandomForestRegressor = None
+    IsolationForest = None
+    LinearRegression = None
+    StandardScaler = None
+    train_test_split = None
+    mean_absolute_error = None
+    r2_score = None
+
 import asyncio
 import json
 from sqlalchemy import select, func, and_, or_
@@ -36,6 +50,11 @@ from apps.backend.cache import cache_result
 import logging
 
 logger = logging.getLogger(__name__)
+
+if not SKLEARN_AVAILABLE:
+    logger.warning(
+        "sklearn not available - advanced ML features (predictions, anomaly detection) will use simplified fallbacks"
+    )
 
 
 @dataclass
@@ -82,7 +101,7 @@ class AdvancedAnalytics:
 
     def __init__(self, db_session: AsyncSession):
         self.session = db_session
-        self.scaler = StandardScaler()
+        self.scaler = StandardScaler() if SKLEARN_AVAILABLE else None
         self._models_cache: Dict[str, Any] = {}
 
     async def get_predictive_analytics(
@@ -125,19 +144,30 @@ class AdvancedAnalytics:
         # Feature engineering
         features = self._engineer_completion_features(user_data, course_data)
 
-        # Load or train model
-        model = await self._get_or_train_completion_model()
+        if not SKLEARN_AVAILABLE:
+            # Fallback: Simple heuristic-based prediction
+            logger.debug("Using simplified completion prediction (sklearn not available)")
+            # Use simple weighted average of features
+            probability = np.mean(features) if features else 0.5
+            confidence = 0.6  # Lower confidence for heuristic approach
+            factors = {
+                f"feature_{i}": features[i] if i < len(features) else 0
+                for i in range(min(5, len(features)))
+            }
+        else:
+            # Load or train model
+            model = await self._get_or_train_completion_model()
 
-        # Make prediction
-        X = np.array(features).reshape(1, -1)
-        X_scaled = self.scaler.fit_transform(X)
-        probability = model.predict_proba(X_scaled)[0][1]
+            # Make prediction
+            X = np.array(features).reshape(1, -1)
+            X_scaled = self.scaler.fit_transform(X)
+            probability = model.predict_proba(X_scaled)[0][1]
 
-        # Calculate confidence based on similar users
-        confidence = await self._calculate_prediction_confidence(user_id, course_id, "completion")
+            # Calculate confidence based on similar users
+            confidence = await self._calculate_prediction_confidence(user_id, course_id, "completion")
 
-        # Identify key factors
-        factors = self._analyze_feature_importance(model, features)
+            # Identify key factors
+            factors = self._analyze_feature_importance(model, features)
 
         # Generate recommendation
         recommendation = self._generate_completion_recommendation(probability, factors)
@@ -147,7 +177,7 @@ class AdvancedAnalytics:
             confidence=confidence,
             factors=factors,
             recommendation=recommendation,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(),
         )
 
     async def _predict_performance_trend(self, user_id: str) -> PredictionResult:
@@ -176,26 +206,53 @@ class AdvancedAnalytics:
         scores = [attempt.score / attempt.total_points for attempt in attempts]
         timestamps = [(attempt.created_at - attempts[0].created_at).days for attempt in attempts]
 
-        # Fit trend model
-        X = np.array(timestamps).reshape(-1, 1)
-        y = np.array(scores)
+        if not SKLEARN_AVAILABLE:
+            # Fallback: Simple linear trend using numpy
+            logger.debug("Using simplified performance trend (sklearn not available)")
+            X = np.array(timestamps)
+            y = np.array(scores)
 
-        model = LinearRegression()
-        model.fit(X, y)
+            # Simple linear regression using numpy
+            coeffs = np.polyfit(X, y, 1)  # Returns [slope, intercept]
+            slope, intercept = coeffs
 
-        # Predict next 30 days
-        future_days = timestamps[-1] + 30
-        future_score = model.predict([[future_days]])[0]
+            # Predict next 30 days
+            future_days = timestamps[-1] + 30
+            future_score = slope * future_days + intercept
 
-        # Calculate trend strength
-        r2 = r2_score(y, model.predict(X))
+            # Calculate R² manually
+            y_pred = slope * X + intercept
+            ss_res = np.sum((y - y_pred) ** 2)
+            ss_tot = np.sum((y - np.mean(y)) ** 2)
+            r2 = 1 - (ss_res / ss_tot) if ss_tot != 0 else 0
 
-        factors = {
-            "current_avg": np.mean(scores[-5:]),
-            "trend_slope": model.coef_[0],
-            "consistency": 1 - np.std(scores),
-            "recent_improvement": scores[-1] - scores[-5] if len(scores) >= 5 else 0,
-        }
+            factors = {
+                "current_avg": np.mean(scores[-5:]),
+                "trend_slope": float(slope),
+                "consistency": 1 - np.std(scores),
+                "recent_improvement": scores[-1] - scores[-5] if len(scores) >= 5 else 0,
+            }
+        else:
+            # Fit trend model with sklearn
+            X = np.array(timestamps).reshape(-1, 1)
+            y = np.array(scores)
+
+            model = LinearRegression()
+            model.fit(X, y)
+
+            # Predict next 30 days
+            future_days = timestamps[-1] + 30
+            future_score = model.predict([[future_days]])[0]
+
+            # Calculate trend strength
+            r2 = r2_score(y, model.predict(X))
+
+            factors = {
+                "current_avg": np.mean(scores[-5:]),
+                "trend_slope": model.coef_[0],
+                "consistency": 1 - np.std(scores),
+                "recent_improvement": scores[-1] - scores[-5] if len(scores) >= 5 else 0,
+            }
 
         recommendation = self._generate_performance_recommendation(future_score, factors)
 
@@ -414,14 +471,34 @@ class AdvancedAnalytics:
             [[row.activity_count, row.avg_score or 0, row.session_count] for row in user_metrics]
         )
 
-        # Detect anomalies
-        clf = IsolationForest(contamination=0.1, random_state=42)
-        predictions = clf.fit_predict(X)
+        if not SKLEARN_AVAILABLE:
+            # Fallback: Simple statistical anomaly detection
+            logger.debug("Using simplified anomaly detection (sklearn not available)")
+            # Use z-score method for each feature
+            anomalous_users = []
+            for i, row in enumerate(user_metrics):
+                z_scores = []
+                for j in range(X.shape[1]):
+                    mean = np.mean(X[:, j])
+                    std = np.std(X[:, j])
+                    if std > 0:
+                        z_score = abs((X[i, j] - mean) / std)
+                        z_scores.append(z_score)
 
-        # Get anomalous users
-        anomalous_users = [user_metrics[i].id for i, pred in enumerate(predictions) if pred == -1]
+                # If any z-score > 3 (outlier), mark as anomalous
+                if z_scores and max(z_scores) > 3:
+                    anomalous_users.append(row.id)
 
-        return anomalous_users
+            return anomalous_users
+        else:
+            # Detect anomalies with IsolationForest
+            clf = IsolationForest(contamination=0.1, random_state=42)
+            predictions = clf.fit_predict(X)
+
+            # Get anomalous users
+            anomalous_users = [user_metrics[i].id for i, pred in enumerate(predictions) if pred == -1]
+
+            return anomalous_users
 
     async def _analyze_content_effectiveness(self) -> Dict[str, Any]:
         """Analyze effectiveness of educational content"""
@@ -788,6 +865,10 @@ class AdvancedAnalytics:
 
     async def _get_or_train_completion_model(self):
         """Get cached model or train new one"""
+        if not SKLEARN_AVAILABLE:
+            logger.warning("sklearn not available - cannot create RandomForest model")
+            return None
+
         if "completion_model" not in self._models_cache:
             # In production, load pre-trained model
             # For now, create simple model

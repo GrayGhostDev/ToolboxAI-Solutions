@@ -161,7 +161,7 @@ if __name__ == "__main__":
     reload = os.getenv("ENVIRONMENT", "development") == "development"
 
     # Development server configuration with Docker support
-    uvicorn.run(
+    uvicorn.invoke(
         "apps.backend.main:app",
         host=host,
         port=port,

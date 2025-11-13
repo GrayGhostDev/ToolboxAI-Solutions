@@ -1,0 +1,27 @@
+# graphql.config.yml
+
+# This file configures the GraphQL Code Generator (https://the-guild.dev/graphql/codegen).
+# It introspects the backend GraphQL schema and generates TypeScript types and
+# React hooks for the frontend application.
+
+# The schema is fetched directly from the running backend's GraphQL endpoint.
+# Make sure the backend server is running before executing the codegen script.
+schema: http://localhost:8009/graphql
+
+# The documents (queries, mutations, subscriptions) are located in the frontend's source code.
+documents: "apps/dashboard/src/**/*.graphql"
+
+generates:
+  # This section defines the output of the code generation process.
+  apps/dashboard/src/generated/graphql.tsx:
+    plugins:
+      - "typescript"
+      - "typescript-operations"
+      - "typescript-react-apollo"
+    config:
+      # Configuration options for the generated code.
+      withHooks: true
+      withHOC: false
+      withComponent: false
+      apolloReactHooksImportFrom: "@apollo/client"
+      reactApolloVersion: 3

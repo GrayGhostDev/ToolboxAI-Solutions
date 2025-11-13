@@ -8,7 +8,7 @@
 
 import { AxiosResponse } from 'axios';
 import { apiClient } from './api';
-import * as mockData from './mock-data';
+import { loadMockDataModule, type MockDataModule } from './mock-loader';
 import {
   getDataSource,
   debugLog,
@@ -124,6 +124,14 @@ async function retryWithBackoff<T>(
 class DataService {
   private config = getEnvironmentConfig();
   private retryConfig: RetryConfig = defaultRetryConfig;
+  private mockModule: MockDataModule | null = null;
+
+  private async getMockModule(): Promise<MockDataModule> {
+    if (!this.mockModule) {
+      this.mockModule = await loadMockDataModule();
+    }
+    return this.mockModule;
+  }
 
   /**
    * Generic request handler that routes to mock or API
@@ -177,10 +185,10 @@ class DataService {
     data?: any
   ): Promise<DataServiceResponse<T>> {
     // Simulate network delay
-    await mockData.mockDelay(this.config.mockDelay);
+    const mockModule = await this.getMockModule();
+    await mockModule.mockDelay(this.config.mockDelay);
 
-    // Route to appropriate mock data based on endpoint
-    const mockResponse = this.getMockDataForEndpoint(endpoint, method, data);
+    const mockResponse = this.getMockDataForEndpoint(mockModule, endpoint, method, data);
 
     return {
       data: mockResponse as T,
@@ -249,43 +257,48 @@ class DataService {
   /**
    * Get mock data for a specific endpoint
    */
-  private getMockDataForEndpoint(endpoint: string, method: string, data?: any): any {
+  private getMockDataForEndpoint(
+    mockModule: MockDataModule,
+    endpoint: string,
+    method: string,
+    data?: any
+  ): any {
     // Handle different endpoints
     if (endpoint.includes('/classes')) {
-      return this.handleClassesMock(method, data);
+      return this.handleClassesMock(mockModule, method, data);
     }
     if (endpoint.includes('/lessons')) {
-      return this.handleLessonsMock(method, data);
+      return this.handleLessonsMock(mockModule, method, data);
     }
     if (endpoint.includes('/assessments')) {
-      return this.handleAssessmentsMock(method, data);
+      return this.handleAssessmentsMock(mockModule, method, data);
     }
     if (endpoint.includes('/messages')) {
-      return this.handleMessagesMock(method, data);
+      return this.handleMessagesMock(mockModule, method, data);
     }
     if (endpoint.includes('/dashboard/overview')) {
-      return mockData.mockDashboardOverview;
+      return mockModule.mockDashboardOverview;
     }
     if (endpoint.includes('/analytics/weekly_xp')) {
-      return mockData.mockAnalytics.weeklyXP;
+      return mockModule.mockAnalytics.weeklyXP;
     }
     if (endpoint.includes('/analytics/subject_mastery')) {
-      return mockData.mockAnalytics.subjectMastery;
+      return mockModule.mockAnalytics.subjectMastery;
     }
     if (endpoint.includes('/gamification/leaderboard')) {
-      return mockData.mockGamification;
+      return mockModule.mockGamification;
     }
     if (endpoint.includes('/compliance/status')) {
-      return mockData.mockComplianceStatus;
+      return mockModule.mockComplianceStatus;
     }
     if (endpoint.includes('/users')) {
-      return this.handleUsersMock(method, data);
+      return this.handleUsersMock(mockModule, method, data);
     }
     if (endpoint.includes('/schools')) {
-      return this.handleSchoolsMock(method, data);
+      return this.handleSchoolsMock(mockModule, method, data);
     }
     if (endpoint.includes('/admin')) {
-      return this.handleAdminMock(endpoint, method, data);
+      return this.handleAdminMock(mockModule, endpoint, method, data);
     }
 
     // Default empty response
@@ -293,12 +306,12 @@ class DataService {
   }
 
   // Mock handlers for different resources
-  private handleClassesMock(method: string, data?: any) {
+  private handleClassesMock(mockModule: MockDataModule, method: string, data?: any) {
     const cacheKey = 'classes';
 
     switch (method) {
       case 'GET':
-        return mockDataCache.get(cacheKey) || mockData.mockClasses;
+        return mockDataCache.get(cacheKey) || mockModule.mockClasses;
       case 'POST':
         const newClass = {
           id: `class-${Date.now()}`,
@@ -306,13 +319,13 @@ class DataService {
           students: data.students || 0,
           progress: data.progress || 0,
         };
-        const classes = mockDataCache.get(cacheKey) || mockData.mockClasses;
+        const classes = mockDataCache.get(cacheKey) || mockModule.mockClasses;
         const updated = { ...classes, classes: [...classes.classes, newClass] };
         mockDataCache.set(cacheKey, updated);
         return newClass;
       case 'PUT':
       case 'PATCH':
-        const classesForUpdate = mockDataCache.get(cacheKey) || mockData.mockClasses;
+        const classesForUpdate = mockDataCache.get(cacheKey) || mockModule.mockClasses;
         const updatedClasses = classesForUpdate.classes.map((c: any) =>
           c.id === data.id ? { ...c, ...data } : c
         );
@@ -320,38 +333,38 @@ class DataService {
         mockDataCache.set(cacheKey, result);
         return data;
       case 'DELETE':
-        const classesForDelete = mockDataCache.get(cacheKey) || mockData.mockClasses;
+        const classesForDelete = mockDataCache.get(cacheKey) || mockModule.mockClasses;
         const filtered = classesForDelete.classes.filter((c: any) => c.id !== data.id);
         mockDataCache.set(cacheKey, { ...classesForDelete, classes: filtered });
         return { success: true };
       default:
-        return mockData.mockClasses;
+        return mockModule.mockClasses;
     }
   }
 
-  private handleLessonsMock(method: string, data?: any) {
+  private handleLessonsMock(mockModule: MockDataModule, method: string, data?: any) {
     const cacheKey = 'lessons';
 
     switch (method) {
       case 'GET':
-        return mockDataCache.get(cacheKey) || mockData.mockLessons;
+        return mockDataCache.get(cacheKey) || mockModule.mockLessons;
       case 'POST':
         const newLesson = {
           id: `lesson-${Date.now()}`,
           ...data,
         };
-        const lessons = mockDataCache.get(cacheKey) || mockData.mockLessons;
+        const lessons = mockDataCache.get(cacheKey) || mockModule.mockLessons;
         const updated = { ...lessons, lessons: [...lessons.lessons, newLesson] };
         mockDataCache.set(cacheKey, updated);
         return newLesson;
       default:
-        return mockData.mockLessons;
+        return mockModule.mockLessons;
     }
   }
 
-  private handleAssessmentsMock(method: string, data?: any) {
+  private handleAssessmentsMock(mockModule: MockDataModule, method: string, data?: any) {
     if (method === 'GET') {
-      return { assessments: mockData.mockAssessments, totalCount: mockData.mockAssessments.length };
+      return { assessments: mockModule.mockAssessments, totalCount: mockModule.mockAssessments.length };
     }
     if (method === 'POST' && data) {
       return {
@@ -361,12 +374,12 @@ class DataService {
         score: Math.floor(Math.random() * 100),
       };
     }
-    return mockData.mockAssessments;
+    return mockModule.mockAssessments;
   }
 
-  private handleMessagesMock(method: string, data?: any) {
+  private handleMessagesMock(mockModule: MockDataModule, method: string, data?: any) {
     if (method === 'GET') {
-      return { messages: mockData.mockMessages, totalCount: mockData.mockMessages.length };
+      return { messages: mockModule.mockMessages, totalCount: mockModule.mockMessages.length };
     }
     if (method === 'POST') {
       return {
@@ -376,28 +389,28 @@ class DataService {
         read: false,
       };
     }
-    return mockData.mockMessages;
+    return mockModule.mockMessages;
   }
 
-  private handleUsersMock(method: string, data?: any) {
+  private handleUsersMock(mockModule: MockDataModule, method: string, data?: any) {
     const cacheKey = 'users';
 
     switch (method) {
       case 'GET':
-        return mockDataCache.get(cacheKey) || mockData.mockUsers;
+        return mockDataCache.get(cacheKey) || mockModule.mockUsers;
       case 'POST':
         const newUser = {
           id: Date.now(),
           ...data,
           is_active: true,
         };
-        const users = mockDataCache.get(cacheKey) || mockData.mockUsers;
+        const users = mockDataCache.get(cacheKey) || mockModule.mockUsers;
         const updated = { ...users, results: [...users.results, newUser] };
         mockDataCache.set(cacheKey, updated);
         return newUser;
       case 'PUT':
       case 'PATCH':
-        const usersForUpdate = mockDataCache.get(cacheKey) || mockData.mockUsers;
+        const usersForUpdate = mockDataCache.get(cacheKey) || mockModule.mockUsers;
         const updatedUsers = usersForUpdate.results.map((u: any) =>
           u.id === data.id ? { ...u, ...data } : u
         );
@@ -405,18 +418,18 @@ class DataService {
         mockDataCache.set(cacheKey, result);
         return data;
       case 'DELETE':
-        const usersForDelete = mockDataCache.get(cacheKey) || mockData.mockUsers;
+        const usersForDelete = mockDataCache.get(cacheKey) || mockModule.mockUsers;
         const filtered = usersForDelete.results.filter((u: any) => u.id !== data.id);
         mockDataCache.set(cacheKey, { ...usersForDelete, results: filtered });
         return { success: true };
       default:
-        return mockData.mockUsers;
+        return mockModule.mockUsers;
     }
   }
 
-  private handleSchoolsMock(method: string, data?: any) {
+  private handleSchoolsMock(mockModule: MockDataModule, method: string, data?: any) {
     if (method === 'GET') {
-      return mockData.mockSchools;
+      return mockModule.mockSchools;
     }
     if (method === 'POST') {
       return {
@@ -424,10 +437,15 @@ class DataService {
         ...data,
       };
     }
-    return mockData.mockSchools;
+    return mockModule.mockSchools;
   }
 
-  private handleAdminMock(endpoint: string, method: string, data?: any) {
+  private handleAdminMock(
+    mockModule: MockDataModule,
+    endpoint: string,
+    method: string,
+    data?: any
+  ) {
     // Admin analytics
     if (endpoint.includes('/admin/analytics')) {
       return {
@@ -437,7 +455,7 @@ class DataService {
         systemHealth: 98.5,
         apiLatency: 145,
         errorRate: 0.02,
-        charts: mockData.mockAnalytics,
+        charts: mockModule.mockAnalytics,
       };
     }
 

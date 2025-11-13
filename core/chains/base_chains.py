@@ -113,11 +113,11 @@ def create_agent_chain(
     messages = [SystemMessage(content=system_prompt)]
 
     if include_history:
-        messages.append(MessagesPlaceholder(variable_name="history"))
+        messages.append(MessagesPlaceholder(variable_name="history", optional=True))
 
     messages.extend([
         HumanMessage(content="{input}"),
-        MessagesPlaceholder(variable_name="agent_scratchpad")
+        MessagesPlaceholder(variable_name="agent_scratchpad", optional=True)
     ])
 
     prompt = ChatPromptTemplate.from_messages(messages)

@@ -102,11 +102,11 @@ Always prioritize:
         tools = []
 
         tools.append(
-            Tool(name="ValidateLuaSyntax", func=self._validate_lua_syntax, description="Validate Lua script syntax")
+            Tool(name="ValidateLuaSyntax", func=self._validate_lua_syntax, description="Validate Lua script syntax", return_direct=False)
         )
 
         tools.append(
-            Tool(name="OptimizeScript", func=self._optimize_script, description="Optimize Lua script for performance")
+            Tool(name="OptimizeScript", func=self._optimize_script, description="Optimize Lua script for performance", return_direct=False)
         )
 
         tools.append(

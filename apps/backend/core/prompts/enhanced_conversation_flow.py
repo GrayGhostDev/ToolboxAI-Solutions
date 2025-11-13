@@ -66,7 +66,7 @@ class StageChain:
         raise NotImplementedError
 
 
-class GreetingChain(StageChain):
+class GreetingChain(StageChain, output_key="output"):
     """Chain for greeting stage"""
 
     def __init__(self):
@@ -97,7 +97,7 @@ class GreetingChain(StageChain):
         }
 
 
-class DiscoveryChain(StageChain):
+class DiscoveryChain(StageChain, output_key="output"):
     """Chain for discovery stage - extracting learning objectives"""
 
     def __init__(self):
@@ -141,7 +141,7 @@ class DiscoveryChain(StageChain):
         }
 
 
-class RequirementsChain(StageChain):
+class RequirementsChain(StageChain, output_key="output"):
     """Chain for requirements gathering"""
 
     def __init__(self):
@@ -184,7 +184,7 @@ class RequirementsChain(StageChain):
         }
 
 
-class PersonalizationChain(StageChain):
+class PersonalizationChain(StageChain, output_key="output"):
     """Chain for personalization preferences"""
 
     def __init__(self):
@@ -233,7 +233,7 @@ class PersonalizationChain(StageChain):
         }
 
 
-class ContentDesignChain(StageChain):
+class ContentDesignChain(StageChain, output_key="output"):
     """Chain for content design with AI assistance"""
 
     def __init__(self):
@@ -287,7 +287,7 @@ class ContentDesignChain(StageChain):
         }
 
 
-class UniquenessChain(StageChain):
+class UniquenessChain(StageChain, output_key="output"):
     """Chain for adding unique creative elements"""
 
     def __init__(self):
@@ -330,7 +330,7 @@ class UniquenessChain(StageChain):
         }
 
 
-class ValidationChain(StageChain):
+class ValidationChain(StageChain, output_key="output"):
     """Chain for content validation and quality checks"""
 
     def __init__(self):

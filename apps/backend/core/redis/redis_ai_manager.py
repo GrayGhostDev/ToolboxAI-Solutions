@@ -198,7 +198,7 @@ class RedisAIManager:
         self._initialize_vector_index()
 
         # Initialize Redis OM models
-        Migrator().run()
+        Migrator().invoke()
 
         logger.info("Redis AI Manager initialized with vector search and AI features")
 

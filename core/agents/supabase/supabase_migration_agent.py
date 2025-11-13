@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from langchain.agents import AgentExecutor
 from langchain.memory import ConversationBufferMemory
 from langchain.schema import BaseMessage, HumanMessage, AIMessage
-from langchain.tools import BaseTool, tool
+from langchain_community.tools import BaseTool, tool
 
 from core.agents.base_agent import BaseAgent
 from core.sparc.state_manager import StateManager

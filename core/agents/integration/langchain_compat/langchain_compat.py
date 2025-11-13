@@ -49,7 +49,7 @@ try:
         JsonOutputParser,
         PydanticOutputParser
     )
-    from langchain.output_parsers import ResponseSchema, StructuredOutputParser
+    from langchain_core.output_parsers import ResponseSchema, StructuredOutputParser
 
     # LCEL Components - Core of modern LangChain
     from langchain_core.runnables import (
@@ -73,8 +73,8 @@ try:
 
     # Callbacks for streaming and monitoring
     from langchain_core.callbacks import (
-        AsyncCallbackManagerForChainRun,
-        CallbackManagerForChainRun,
+        AsyncCallbackManagerForLLMRunForChainRun,
+        CallbackManagerForLLMRunForChainRun,
         StreamingStdOutCallbackHandler
     )
 
@@ -207,7 +207,7 @@ def create_chain_template(
     ]
 
     if include_history:
-        messages.append(MessagesPlaceholder(variable_name="history"))
+        messages.append(MessagesPlaceholder(variable_name="history", optional=True))
 
     messages.append(HumanMessage(content="{input}"))
 

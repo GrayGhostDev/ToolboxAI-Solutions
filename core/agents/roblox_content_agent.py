@@ -14,7 +14,7 @@ from dataclasses import dataclass
 
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_core.prompts import ChatPromptTemplate
-from langchain.tools import Tool
+from langchain_community.tools import Tool
 from pydantic import BaseModel, Field
 
 from .base_agent import BaseAgent, AgentConfig, TaskResult, AgentState

@@ -501,7 +501,7 @@ local function getMemoryUsage()
     return collectgarbage("count") * 1024 -- Convert to bytes
 end
 
-local function profileMemory(name, func)
+local function profileMemory(name, func, memory_key="chat_history")
     collectgarbage("collect")
     local memBefore = getMemoryUsage()
 

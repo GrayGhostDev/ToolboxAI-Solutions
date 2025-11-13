@@ -256,7 +256,7 @@ class EducationalWikipediaSearch(BaseTool):
                 else:
                     enhanced_query += " high school"
 
-            result = self.wikipedia.run(enhanced_query)
+            result = self.wikipedia.invoke(enhanced_query)
 
             # Process and filter results for educational appropriateness
             educational_result = {
@@ -339,7 +339,7 @@ class EducationalWebSearch(BaseTool):
             if grade_level:
                 educational_query += f" grade {grade_level}"
 
-            results = self.search.run(educational_query)
+            results = self.search.invoke(educational_query)
 
             # Filter and enhance results
             filtered_results = {

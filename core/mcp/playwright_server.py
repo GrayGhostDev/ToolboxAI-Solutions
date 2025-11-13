@@ -588,7 +588,7 @@ class PlaywrightMCPServer:
         await self.playwright_agent.initialize()
 
         # Start server
-        async with self.server.run() as running_server:
+        async with self.server.invoke() as running_server:
             logger.info("Playwright MCP Server is running")
             await running_server
 

@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from langchain_core.prompts import PromptTemplate
-from langchain.tools import Tool
+from langchain_community.tools import Tool
 
 # Handle Document import with fallback
 try:
@@ -258,8 +258,8 @@ class RobloxContentGenerationAgent(BaseAgent):
         )
 
         if self.llm:
-            chain = LLMChain(llm=self.llm, prompt=prompt, verbose=False, output_key="output")
-            result = await chain.arun(
+            chain = LLMChain(llm=self.llm, prompt=prompt, verbose=False, output_key="output", verbose=False, verbose=False)
+            result = await chain.ainvoke(
                 subject=request.subject,
                 grade_level=request.grade_level,
                 objectives=", ".join(request.learning_objectives)

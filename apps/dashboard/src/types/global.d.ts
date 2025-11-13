@@ -176,6 +176,7 @@ declare namespace NodeJS {
   interface ProcessEnv {
     NODE_ENV: 'development' | 'production' | 'test';
     VITE_API_URL?: string;
+    VITE_API_BASE_URL?: string;
     VITE_WS_URL?: string;
     VITE_ENABLE_WEBSOCKET?: string;
     VITE_PUSHER_KEY?: string;
@@ -183,12 +184,15 @@ declare namespace NodeJS {
     VITE_PUSHER_AUTH_ENDPOINT?: string;
     VITE_ENABLE_CLERK_AUTH?: string;
     VITE_CLERK_PUBLISHABLE_KEY?: string;
+    VITE_ENV?: 'development' | 'staging' | 'production';
+    VITE_ENVIRONMENT?: 'development' | 'staging' | 'production';
   }
 }
 
 // Vite environment variables
 interface ImportMetaEnv {
   readonly VITE_API_URL: string;
+  readonly VITE_API_BASE_URL?: string;
   readonly VITE_WS_URL: string;
   readonly VITE_ENABLE_WEBSOCKET: string;
   readonly VITE_PUSHER_KEY: string;
@@ -196,6 +200,8 @@ interface ImportMetaEnv {
   readonly VITE_PUSHER_AUTH_ENDPOINT: string;
   readonly VITE_ENABLE_CLERK_AUTH: string;
   readonly VITE_CLERK_PUBLISHABLE_KEY: string;
+  readonly VITE_ENV?: 'development' | 'staging' | 'production';
+  readonly VITE_ENVIRONMENT?: 'development' | 'staging' | 'production';
 }
 
 interface ImportMeta {

@@ -25,7 +25,7 @@ ToolBoxAI-Solutions/
 
 ## Technology Stack
 
-- **Frontend**: React, Next.js, TypeScript, Mantine UI
+- **Frontend**: React, TypeScript, Mantine UI
 - **Backend**: Python, FastAPI, Supabase
 - **Package Manager**: pnpm (v9.15.0+)
 - **Node.js**: >=22

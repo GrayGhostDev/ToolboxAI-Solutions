@@ -11,27 +11,7 @@ import { useAppDispatch } from '../store';
 import { addNotification } from '../store/slices/uiSlice';
 import { isBypassMode } from '../utils/axios-config';
 import { logger } from '../utils/logger';
-import {
-  mockAssessments,
-  mockMessages,
-  mockReports,
-  mockSettings,
-  mockStudentData,
-  mockSchools,
-  mockUsers,
-  mockDashboardOverview,
-  mockAnalytics,
-  mockGamification,
-  mockComplianceStatus,
-  mockUnreadMessages,
-  mockClasses,
-  mockLessons,
-  mockDelay,
-  mockSubscription,
-  mockPaymentMethods,
-  mockInvoices,
-  mockBillingPlans
-} from '../services/mock-data';
+import { loadMockDataModule } from '../services/mock-loader';
 
 interface ApiCallState<T> {
   data: T | null;
@@ -69,33 +49,31 @@ export function useApiCall<T = any, P extends any[] = any[]>(
   const getMockData = useCallback(async (endpoint?: string): Promise<T | null> => {
     if (!isBypassMode() || !endpoint) return null;
 
-    await mockDelay();
+    const mockModule = await loadMockDataModule();
+    await mockModule.mockDelay();
 
-    // Map endpoints to mock data
     const mockMap: Record<string, any> = {
-      '/assessments': mockAssessments,
-      '/messages': mockMessages,
-      '/reports': mockReports,
-      '/settings': mockSettings,
-      '/student': mockStudentData,
-      '/schools': mockSchools,
-      '/users': mockUsers,
-      '/dashboard/overview': mockDashboardOverview,
-      '/analytics/weekly_xp': mockAnalytics.weeklyXP,
-      '/analytics/subject_mastery': mockAnalytics.subjectMastery,
-      '/gamification/leaderboard': mockGamification,
-      '/compliance/status': mockComplianceStatus,
-      '/messages/unread-count': mockUnreadMessages,
-      '/classes': mockClasses,
-      '/lessons': mockLessons,
-      // Billing endpoints
-      '/billing/subscription': mockSubscription,
-      '/billing/payment-methods': mockPaymentMethods,
-      '/billing/invoices': mockInvoices,
-      '/billing/plans': mockBillingPlans,
+      '/assessments': mockModule.mockAssessments,
+      '/messages': mockModule.mockMessages,
+      '/reports': mockModule.mockReports,
+      '/settings': mockModule.mockSettings,
+      '/student': mockModule.mockStudentData,
+      '/schools': mockModule.mockSchools,
+      '/users': mockModule.mockUsers,
+      '/dashboard/overview': mockModule.mockDashboardOverview,
+      '/analytics/weekly_xp': mockModule.mockAnalytics.weeklyXP,
+      '/analytics/subject_mastery': mockModule.mockAnalytics.subjectMastery,
+      '/gamification/leaderboard': mockModule.mockGamification,
+      '/compliance/status': mockModule.mockComplianceStatus,
+      '/messages/unread-count': mockModule.mockUnreadMessages,
+      '/classes': mockModule.mockClasses,
+      '/lessons': mockModule.mockLessons,
+      '/billing/subscription': mockModule.mockSubscription,
+      '/billing/payment-methods': mockModule.mockPaymentMethods,
+      '/billing/invoices': mockModule.mockInvoices,
+      '/billing/plans': mockModule.mockBillingPlans,
     };
 
-    // Find matching mock data
     for (const [pattern, data] of Object.entries(mockMap)) {
       if (endpoint.includes(pattern)) {
         return data as T;

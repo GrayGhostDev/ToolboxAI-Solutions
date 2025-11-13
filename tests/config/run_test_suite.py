@@ -331,5 +331,5 @@ class ComprehensiveTestRunner:
 
 if __name__ == "__main__":
     runner = ComprehensiveTestRunner()
-    exit_code = runner.run()
+    exit_code = runner.invoke()
     sys.exit(exit_code)

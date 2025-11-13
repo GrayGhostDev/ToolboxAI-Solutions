@@ -842,7 +842,7 @@ function NPCAI:update(deltaTime)
     self:updatePerception()
     
     -- Update memory
-    self:updateMemory(deltaTime)
+    self:updateMemory(deltaTime, memory_key="chat_history")
 end
 
 function NPCAI:updatePerception()
@@ -1182,7 +1182,7 @@ function NPCAI:speak(message)
     -- In actual implementation, create billboard GUI with text
 end
 
-function NPCAI:updateMemory(deltaTime)
+function NPCAI:updateMemory(deltaTime, memory_key="chat_history")
     -- Forget old memories
     for userId, memoryData in pairs(self.memory) do
         if tick() - memoryData.lastSeen > AI_CONFIG.MEMORY_DURATION then

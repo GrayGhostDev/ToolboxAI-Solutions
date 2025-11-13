@@ -44,7 +44,7 @@ from core.agents.database.advanced_agents import (
 # from langchain.memory import ConversationBufferMemory
 # from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 # from langchain_core.messages import AgentAction, AgentFinish
-# from langchain.tools import Tool
+# from langchain_community.tools import Tool
 # from langchain_openai import ChatOpenAI
 
 # Placeholder classes for LangChain compatibility
@@ -158,7 +158,7 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
 
         # LangChain components for intelligent decision-making
         self.llm = None
-        self.memory = ConversationBufferMemory(return_messages=True)
+        self.memory = ConversationBufferMemory(return_messages=True, memory_key="chat_history")
         self.agent_executor = None
 
         # Performance tracking
@@ -303,7 +303,7 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
                 Analyze the request and create an optimal execution plan.
                 Consider dependencies, priorities, and agent capabilities.
                 """),
-                MessagesPlaceholder(variable_name="chat_history"),
+                MessagesPlaceholder(variable_name="chat_history", optional=True),
                 ("human", "{input}")
             ])
 

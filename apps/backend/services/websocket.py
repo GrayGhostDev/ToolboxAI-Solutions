@@ -430,7 +430,7 @@ if __name__ == "__main__":
     )
 
     # Run the dashboard backend server
-    uvicorn.run(
+    uvicorn.invoke(
         "server.dashboard_backend:dashboard_app",
         host="127.0.0.1",
         port=8001,

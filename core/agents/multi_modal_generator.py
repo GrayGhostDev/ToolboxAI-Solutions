@@ -230,7 +230,7 @@ Format as JSON with clear structure.
                            "content_type", "style"]
         )
 
-        return LLMChain(llm=self.llm, prompt=prompt, verbose=False, output_key="output")
+        return LLMChain(llm=self.llm, prompt=prompt, verbose=False, output_key="output", verbose=False, verbose=False)
 
     def _initialize_code_generator(self) -> LLMChain:
         """Initialize Luau code generator"""
@@ -284,7 +284,7 @@ Format each script with proper Roblox service usage and event handling.
                            "interactions", "complexity"]
         )
 
-        return LLMChain(llm=self.llm, prompt=prompt, verbose=False, output_key="output")
+        return LLMChain(llm=self.llm, prompt=prompt, verbose=False, output_key="output", verbose=False, verbose=False)
 
     def _initialize_visual_generator(self) -> LLMChain:
         """Initialize visual content generator"""
@@ -338,7 +338,7 @@ Format as detailed specifications with hex codes, dimensions, and Roblox propert
                            "accessibility", "devices"]
         )
 
-        return LLMChain(llm=self.llm, prompt=prompt, verbose=False, output_key="output")
+        return LLMChain(llm=self.llm, prompt=prompt, verbose=False, output_key="output", verbose=False, verbose=False)
 
     def _initialize_audio_generator(self) -> LLMChain:
         """Initialize audio content generator"""
@@ -390,7 +390,7 @@ Provide detailed descriptions, timing, and implementation notes for Roblox Sound
             input_variables=["subject", "mood", "duration", "accessibility"]
         )
 
-        return LLMChain(llm=self.llm, prompt=prompt, verbose=False, output_key="output")
+        return LLMChain(llm=self.llm, prompt=prompt, verbose=False, output_key="output", verbose=False, verbose=False)
 
     def _initialize_asset_generator(self) -> LLMChain:
         """Initialize 3D asset and environment generator"""
@@ -447,7 +447,7 @@ Include Roblox Studio implementation details and performance considerations.
             input_variables=["subject", "setting", "scale", "performance", "max_players"]
         )
 
-        return LLMChain(llm=self.llm, prompt=prompt, verbose=False, output_key="output")
+        return LLMChain(llm=self.llm, prompt=prompt, verbose=False, output_key="output", verbose=False, verbose=False)
 
     def _load_generation_templates(self) -> Dict[str, Any]:
         """Load content generation templates"""

@@ -2097,7 +2097,7 @@ if __name__ == "__main__":
     flask_app = create_app()
 
     # Run server
-    flask_app.run(
+    flask_app.invoke(
         host="0.0.0.0",  # Flask typically listens on all interfaces
         port=settings.FLASK_PORT,
         debug=settings.DEBUG,

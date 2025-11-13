@@ -578,7 +578,7 @@ async def shutdown_event():
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(
+    uvicorn.invoke(
         "database.examples.fastapi_integration:app",
         host="0.0.0.0",
         port=8000,

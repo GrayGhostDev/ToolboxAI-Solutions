@@ -132,7 +132,7 @@ class LCELLLMChain:
     
     # Backward compatibility methods
     def run(self, *args, **kwargs) -> str:
-        """Backward compatibility with old LLMChain.run()"""
+        """Backward compatibility with old LLMChain.invoke()"""
         if args:
             input_data = args[0]
         else:
@@ -141,7 +141,7 @@ class LCELLLMChain:
         return self.invoke(input_data)
     
     async def arun(self, *args, **kwargs) -> str:
-        """Backward compatibility with old LLMChain.arun()"""
+        """Backward compatibility with old LLMChain.ainvoke()"""
         if args:
             input_data = args[0]
         else:
@@ -232,7 +232,7 @@ class LCELAgentExecutor:
     
     # Backward compatibility methods
     def run(self, *args, **kwargs) -> str:
-        """Backward compatibility with old AgentExecutor.run()"""
+        """Backward compatibility with old AgentExecutor.invoke()"""
         if args:
             input_data = args[0]
         else:
@@ -241,7 +241,7 @@ class LCELAgentExecutor:
         return self.invoke(input_data)
     
     async def arun(self, *args, **kwargs) -> str:
-        """Backward compatibility with old AgentExecutor.arun()"""
+        """Backward compatibility with old AgentExecutor.ainvoke()"""
         if args:
             input_data = args[0]
         else:
