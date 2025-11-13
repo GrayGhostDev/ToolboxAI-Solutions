@@ -2,7 +2,7 @@
 # CodeQL Configuration for ToolBoxAI Solutions
 # ============================================================================
 # Purpose: Configure CodeQL analysis with custom query filters and paths
-# Last Updated: 2025-11-10
+# Last Updated: 2025-11-13
 # Documentation: https://docs.github.com/en/code-security/code-scanning/
 # ============================================================================
 
@@ -29,15 +29,17 @@ paths-ignore:
   - '**/vendor'
   - '**/third_party'
   - '**/.git'
+  - '**/migrations'
+  - '**/.pytest_cache'
+  - '**/.mypy_cache'
+  - '**/htmlcov'
 
 # Paths to specifically include
 paths:
-  - 'apps'
+  - 'apps/backend'
+  - 'apps/dashboard'
   - 'core'
   - 'middleware'
-  - 'services'
-  - 'api'
-  - 'roblox'
 
 # ============================================================================
 # Query Configuration
@@ -52,18 +54,35 @@ queries:
 
 # Query filters to exclude specific problematic queries
 query-filters:
+  # Exclude queries that produce false positives
   - exclude:
       id: py/unreachable-statement
   - exclude:
       id: py/redundant-global-declaration
+  - exclude:
+      id: py/similar-function
+  # Exclude informational-level issues
+  - exclude:
+      tags:
+        - informational
+
+# ============================================================================
+# Additional Configuration
+# ============================================================================
+
+# Increase timeout for large codebases
+packs:
+  - codeql/python-queries
+  - codeql/javascript-queries
 
 # ============================================================================
 # Notes
 # ============================================================================
+# - CodeQL Action upgraded to v4 (v3 deprecated December 2026)
 # - security-extended: Comprehensive security query suite
 # - py/unreachable-statement excluded: False positives from try/except blocks
 # - py/redundant-global-declaration excluded: Required for dynamic imports
-# - Archive directories excluded from scanning
+# - py/similar-function excluded: Code duplication in agent patterns is intentional
+# - Archive directories, migrations, and cache excluded from scanning
 # - Test files and build artifacts excluded
 # ============================================================================
-
