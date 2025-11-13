@@ -50,13 +50,12 @@ supafunc==0.7.0                      # Supabase functions
 # ============================================================================
 # AI/ML STACK - LangChain & OpenAI
 # ============================================================================
-langchain==0.3.27                    # LangChain framework
-langchain-core==0.3.77               # LangChain core
-langchain-openai==0.2.14             # OpenAI integration
-langchain-text-splitters==0.3.11     # Text splitting utilities
-langgraph==0.2.62                    # LangGraph workflow orchestration
-langgraph-sdk<0.2.0,>=0.1.42         # LangGraph SDK
-langsmith==0.4.39                    # LangSmith tracing
+langchain==1.0.5                    # LangChain framework
+langchain-core==1.0.4               # LangChain core
+langchain-openai==1.0.2             # OpenAI integration
+langchain-text-splitters==1.0.0     # Text splitting utilities
+langgraph==1.0.3                    # LangGraph workflow orchestration
+langsmith==0.4.42                   # LangSmith tracing
 openai>=1.61.0                       # OpenAI API client (explicit dependency)
 tiktoken==0.12.0                     # OpenAI tokenizer
 
@@ -87,6 +86,7 @@ python-http-client==3.3.7            # SendGrid dependency
 # ASYNC TASK QUEUE - Celery
 # ============================================================================
 celery==5.5.3                        # Distributed task queue
+flower==2.0.1                        # Celery monitoring web UI
 kombu==5.5.4                         # Messaging library
 billiard==4.2.2                      # Process pool
 amqp==5.3.1                          # AMQP protocol
@@ -154,8 +154,8 @@ protobuf==4.25.8                     # Protocol buffers
 # ============================================================================
 pandas==2.2.3                        # Data analysis
 numpy==1.26.4                        # Numerical computing
-scikit-learn==1.5.2                  # Machine learning
-scipy==1.13.1                        # Scientific computing (required by scikit-learn)
+# scikit-learn==1.5.2                  # Machine learning (handled by render-build.sh)
+# scipy==1.13.1                        # Scientific computing (handled by render-build.sh)
 pyarrow==14.0.2                      # Columnar data format
 joblib==1.5.2                        # Parallel processing
 threadpoolctl==3.6.0                 # Thread pool control
