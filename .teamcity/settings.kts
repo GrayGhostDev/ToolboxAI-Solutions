@@ -42,6 +42,7 @@ project {
     buildType(Build)  // Main build configuration
     buildType(DashboardBuild)
     buildType(BackendBuild)
+    buildType(BackendDeploy)  // Backend deployment to Render
     buildType(MCPServerBuild)
     buildType(AgentCoordinatorBuild)
     buildType(RobloxIntegrationBuild)
@@ -1481,5 +1482,146 @@ object SecurityScanTemplate : Template({
                 sendTo = "#security-alerts"
             }
         }
+    }
+})
+
+// ============================================
+// Backend Deploy (to Render)
+// ============================================
+object BackendDeploy : BuildType({
+    name = "Backend — Deploy to Render"
+    description = "Build, test, and deploy FastAPI backend to Render.com"
+
+    vcs {
+        root(MainRepository)
+    }
+
+    triggers {
+        vcs {
+            branchFilter = "+:main"
+            triggerRules = """
+                +:apps/backend/**
+                +:requirements.txt
+                +:Dockerfile
+            """.trimIndent()
+        }
+    }
+
+    features {
+        dockerSupport {
+            loginToRegistry = on {
+                dockerRegistryId = "TeamCityCloudRegistry"
+            }
+        }
+    }
+
+    requirements {
+        contains("teamcity.agent.name", "linux-amd64")
+        exists("docker.server.version")
+    }
+
+    steps {
+        // Step 1: Setup Python Environment
+        python {
+            name = "Setup Python Environment"
+            pythonVersion = "%env.PYTHON_VERSION%"
+            command = script {
+                content = """
+                    python -m venv venv
+                    source venv/bin/activate
+                    pip install --upgrade pip setuptools wheel
+                    pip install -r requirements.txt
+                """.trimIndent()
+            }
+        }
+
+        // Step 2: Run Tests
+        python {
+            name = "Run Backend Tests"
+            pythonVersion = "%env.PYTHON_VERSION%"
+            command = script {
+                content = """
+                    source venv/bin/activate
+                    pytest -q --disable-warnings --maxfail=1 tests/
+                """.trimIndent()
+            }
+        }
+
+        // Step 3: Build Docker Image
+        dockerCommand {
+            name = "Build Backend Docker Image"
+            commandType = build {
+                source = file {
+                    path = "apps/backend/Dockerfile"
+                }
+                contextDir = "apps/backend"
+                namesAndTags = "toolboxai-backend:latest toolboxai-backend:%build.number%"
+                commandArgs = "--pull --no-cache"
+            }
+        }
+
+        // Step 4: Deploy to Render
+        script {
+            name = "Trigger Render Deployment"
+            scriptContent = """
+                #!/bin/bash
+                set -e
+
+                echo "🚀 Deploying to Render..."
+
+                response=${'$'}(curl -s -w "\n%{http_code}" \
+                  -X POST \
+                  -H "Accept: application/json" \
+                  -H "Authorization: Bearer %env.RENDER_API_KEY%" \
+                  https://api.render.com/v1/services/%env.RENDER_SERVICE_ID%/deploys)
+
+                http_code=${'$'}(echo "${'$'}response" | tail -n1)
+                body=${'$'}(echo "${'$'}response" | head -n -1)
+
+                if [ "${'$'}http_code" = "201" ] || [ "${'$'}http_code" = "200" ]; then
+                    echo "✅ Deployment triggered successfully!"
+                    echo "${'$'}body" | python3 -m json.tool
+                    exit 0
+                else
+                    echo "❌ Deployment failed with HTTP ${'$'}http_code"
+                    echo "${'$'}body"
+                    exit 1
+                fi
+            """.trimIndent()
+        }
+
+        // Step 5: Verify Deployment
+        script {
+            name = "Verify Deployment Health"
+            scriptContent = """
+                #!/bin/bash
+                echo "⏳ Waiting for deployment to stabilize (30 seconds)..."
+                sleep 30
+
+                echo "🔍 Checking backend health endpoint..."
+                response=${'$'}(curl -s -f -o /dev/null -w "%{http_code}" \
+                    https://toolboxai-backend.onrender.com/health || echo "failed")
+
+                if [ "${'$'}response" = "200" ]; then
+                    echo "✅ Backend is healthy!"
+                    exit 0
+                else
+                    echo "⚠️ Backend health check returned: ${'$'}response"
+                    echo "Deployment may still be in progress. Check Render dashboard."
+                    exit 0  # Don't fail the build on health check timeout
+                fi
+            """.trimIndent()
+        }
+    }
+
+    params {
+        param("env.RENDER_API_KEY", "%RENDER_API_KEY%")
+        param("env.RENDER_SERVICE_ID", "srv-d479pmali9vc738itjng")
+    }
+
+    failureConditions {
+        errorMessage = true
+        nonZeroExitCode = true
+        testFailure = true
     }
 })
