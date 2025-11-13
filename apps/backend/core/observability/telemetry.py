@@ -37,8 +37,9 @@ from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry.instrumentation.redis import RedisInstrumentor
 from opentelemetry.instrumentation.psycopg2 import Psycopg2Instrumentor
 from opentelemetry.instrumentation.logging import LoggingInstrumentor
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
+# GRPC exporters moved to lazy imports inside methods to avoid module-level crashes
+# from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+# from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
 logger = logging.getLogger(__name__)
@@ -237,8 +238,12 @@ class TelemetryManager:
             tracer_provider.add_span_processor(BatchSpanProcessor(jaeger_exporter))
 
         if self.config.otlp_endpoint:
-            otlp_exporter = OTLPSpanExporter(endpoint=self.config.otlp_endpoint, insecure=True)
-            tracer_provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
+            try:
+                from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+                otlp_exporter = OTLPSpanExporter(endpoint=self.config.otlp_endpoint, insecure=True)
+                tracer_provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
+            except Exception as e:
+                logger.warning(f"OTLP GRPC trace exporter failed: {e}")
 
         # Console exporter for debugging
         if logger.isEnabledFor(logging.DEBUG):
@@ -253,7 +258,12 @@ class TelemetryManager:
 
         # Create metric reader and exporter
         if self.config.otlp_endpoint:
-            metric_exporter = OTLPMetricExporter(endpoint=self.config.otlp_endpoint, insecure=True)
+            try:
+                from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
+                metric_exporter = OTLPMetricExporter(endpoint=self.config.otlp_endpoint, insecure=True)
+            except Exception as e:
+                logger.warning(f"OTLP GRPC metric exporter failed, using console: {e}")
+                metric_exporter = ConsoleMetricExporter()
         else:
             metric_exporter = ConsoleMetricExporter()
 

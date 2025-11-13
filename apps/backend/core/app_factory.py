@@ -16,8 +16,16 @@ from fastapi import FastAPI
 from apps.backend.core.config import settings
 from apps.backend.core.monitoring import initialize_sentry
 from apps.backend.core.logging import initialize_logging, logging_manager
+
 # Re-enabled telemetry for production observability (Phase 1.2 - Nov 2025)
-from apps.backend.core.observability.telemetry import telemetry_manager
+# Wrap in try/except to prevent import-time crashes from GRPC dependencies
+try:
+    from apps.backend.core.observability.telemetry import telemetry_manager
+    TELEMETRY_AVAILABLE = True
+except Exception as e:
+    logging.warning(f"Telemetry unavailable: {e}")
+    telemetry_manager = None
+    TELEMETRY_AVAILABLE = False
 
 # Will create these modules in subsequent steps
 try:
@@ -124,8 +132,9 @@ def create_app(
         initialize_sentry()
     initialize_logging()
 
-    # Initialize OpenTelemetry instrumentation (unless in testing mode)
-    if not testing_mode and not skip_lifespan:
+    # Initialize OpenTelemetry instrumentation (unless in testing mode or explicitly disabled)
+    telemetry_disabled = os.getenv("DISABLE_TELEMETRY", "false").lower() == "true"
+    if not testing_mode and not skip_lifespan and not telemetry_disabled and TELEMETRY_AVAILABLE:
         try:
             from apps.backend.core.observability.telemetry import init_telemetry, TelemetryConfig
             telemetry_config = TelemetryConfig(
