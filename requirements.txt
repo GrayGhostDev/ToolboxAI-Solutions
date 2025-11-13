@@ -34,7 +34,7 @@ blinker==1.9.0                       # Signal support
 # DATABASE - PostgreSQL & Redis
 # ============================================================================
 SQLAlchemy==2.0.36                   # ORM
-asyncpg==0.29.0                      # Async PostgreSQL driver
+# asyncpg==0.29.0                      # Async PostgreSQL driver (handled by render-build.sh)
 psycopg2-binary==2.9.10              # PostgreSQL adapter
 redis==5.2.1                         # Redis client
 greenlet!=0.4.17                     # SQLAlchemy dependency
@@ -156,7 +156,7 @@ pandas==2.2.3                        # Data analysis
 numpy==1.26.4                        # Numerical computing
 # scikit-learn==1.5.2                  # Machine learning (handled by render-build.sh)
 # scipy==1.13.1                        # Scientific computing (handled by render-build.sh)
-pyarrow==14.0.2                      # Columnar data format
+# pyarrow==14.0.2                      # Columnar data format (handled by render-build.sh)
 joblib==1.5.2                        # Parallel processing
 threadpoolctl==3.6.0                 # Thread pool control
 
