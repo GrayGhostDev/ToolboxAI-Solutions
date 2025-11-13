@@ -147,7 +147,7 @@ opentelemetry-exporter-jaeger==1.21.0  # Jaeger tracing exporter
 opentelemetry-util-http==0.42b0      # HTTP utilities
 backoff<3.0.0,>=1.10.0               # Retry with backoff
 grpcio==1.75.1                       # gRPC framework
-googleapis-common-protos==1.70.0     # Google API protos (pinned for protobuf 3.20.x compatibility)
+googleapis-common-protos~=1.52       # Google API protos (OpenTelemetry 1.21.0 compatible)
 protobuf==3.20.3                     # Protocol buffers pinned for 3.12 runtime
 
 # ============================================================================
