@@ -29,7 +29,6 @@ try:
 except ImportError:
     SCIPY_AVAILABLE = False
     stats = None
-    logger.warning("scipy not available - trend anomaly detection will be disabled")
 
 try:
     from sklearn.cluster import DBSCAN
@@ -39,11 +38,16 @@ except ImportError:
     SKLEARN_AVAILABLE = False
     DBSCAN = None
     StandardScaler = None
-    logger.warning("sklearn not available - some advanced features will be disabled")
 
 from .correlation import get_correlation_context, correlation_manager
 
 logger = logging.getLogger(__name__)
+
+# Log availability warnings after logger is defined
+if not SCIPY_AVAILABLE:
+    logger.warning("scipy not available - trend anomaly detection will be disabled")
+if not SKLEARN_AVAILABLE:
+    logger.warning("sklearn not available - some advanced features will be disabled")
 
 
 class AnomalyType(Enum):
