@@ -63,16 +63,17 @@ EXPOSE ${PORT}
 # Run application with gunicorn for production
 # Set protobuf implementation before starting to avoid C++ descriptor issues
 ENV PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-CMD ["gunicorn", "apps.backend.main:app", \
-     "--bind", "0.0.0.0:8000", \
-     "--workers", "2", \
-     "--worker-class", "uvicorn.workers.UvicornWorker", \
-     "--worker-connections", "500", \
-     "--max-requests", "5000", \
-     "--max-requests-jitter", "500", \
-     "--timeout", "30", \
-     "--keep-alive", "5", \
-     "--graceful-timeout", "30", \
-     "--access-logfile", "-", \
-     "--error-logfile", "-", \
-     "--log-level", "info"]
+# Use shell form to allow PORT variable expansion (Render.com injects PORT, defaults to 10000)
+CMD gunicorn apps.backend.main:app \
+     --bind 0.0.0.0:${PORT:-8000} \
+     --workers 2 \
+     --worker-class uvicorn.workers.UvicornWorker \
+     --worker-connections 500 \
+     --max-requests 5000 \
+     --max-requests-jitter 500 \
+     --timeout 30 \
+     --keep-alive 5 \
+     --graceful-timeout 30 \
+     --access-logfile - \
+     --error-logfile - \
+     --log-level info

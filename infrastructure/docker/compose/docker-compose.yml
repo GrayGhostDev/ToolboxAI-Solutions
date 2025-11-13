@@ -205,7 +205,7 @@ services:
     environment:
       <<: *common-variables
       HOST: 0.0.0.0
-      PORT: 8009
+      PORT: ${PORT:-8009}
       WORKERS: ${WORKERS:-4}
       DATABASE_URL_FILE: /run/secrets/database_url
       REDIS_URL_FILE: /run/secrets/redis_url
