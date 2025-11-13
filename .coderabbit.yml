@@ -5,8 +5,8 @@
 # AI Provider Configuration
 ai:
   provider: claude
-  model: claude-3-5-sonnet-20241022
-  max_tokens: 4096
+  model: claude-sonnet-4.5-latest
+  max_tokens: 8192
 
 # Review Settings
 reviews:
