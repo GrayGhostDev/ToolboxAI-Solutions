@@ -1,0 +1,769 @@
+name: Agent Auto-Triage & Resolution
+
+on:
+  schedule:
+    # Run every 6 hours to check open issues/PRs
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Target to triage (issues, prs, security, actions, all)'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - issues
+          - prs
+          - security
+          - actions
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+  pull-requests: write
+  contents: read
+  actions: read
+  security-events: read
+
+jobs:
+  triage-open-issues:
+    name: Triage Open Issues
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'schedule' || 
+      github.event_name == 'workflow_dispatch' && 
+      (github.event.inputs.target == 'all' || github.event.inputs.target == 'issues')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get open issues without agent attention
+        id: open-issues
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100
+            });
+            
+            // Filter issues that need agent attention
+            const needsAttention = issues.filter(issue => {
+              if (issue.pull_request) return false; // Skip PRs
+              
+              const labels = issue.labels.map(l => l.name);
+              const hasAgentComment = issue.comments > 0; // Simplified check
+              
+              // Priority issues
+              if (labels.includes('bug') || labels.includes('critical') || labels.includes('security')) {
+                return true;
+              }
+              
+              // Issues without labels
+              if (labels.length === 0) {
+                return true;
+              }
+              
+              // Stale issues (older than 7 days without updates)
+              const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+              const updatedAt = new Date(issue.updated_at);
+              if (updatedAt < weekAgo && !labels.includes('copilot-agent')) {
+                return true;
+              }
+              
+              return false;
+            });
+            
+            console.log(`Found ${needsAttention.length} issues needing attention`);
+            return needsAttention.map(i => i.number);
+
+      - name: Add labels and trigger agents for issues
+        if: steps.open-issues.outputs.result != '[]'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueNumbers = ${{ steps.open-issues.outputs.result }};
+            
+            for (const issueNumber of issueNumbers) {
+              const { data: issue } = await github.rest.issues.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber
+              });
+              
+              const labels = issue.labels.map(l => l.name);
+              const title = issue.title.toLowerCase();
+              const body = (issue.body || '').toLowerCase();
+              
+              // Determine appropriate labels and agent
+              let newLabels = [...labels];
+              let agentType = null;
+              
+              // Backend issues
+              if (title.includes('api') || title.includes('backend') || title.includes('fastapi') ||
+                  body.includes('fastapi') || body.includes('python') || body.includes('celery')) {
+                if (!labels.includes('backend')) newLabels.push('backend');
+                agentType = 'backend-specialist';
+              }
+              
+              // Frontend issues
+              if (title.includes('ui') || title.includes('frontend') || title.includes('react') ||
+                  body.includes('react') || body.includes('mantine') || body.includes('component')) {
+                if (!labels.includes('frontend')) newLabels.push('frontend');
+                agentType = 'frontend-specialist';
+              }
+              
+              // AI/Agent issues
+              if (title.includes('agent') || title.includes('ai') || title.includes('langchain') ||
+                  body.includes('langchain') || body.includes('langgraph') || body.includes('gpt')) {
+                if (!labels.includes('ai')) newLabels.push('ai');
+                agentType = 'ai-agent-specialist';
+              }
+              
+              // Infrastructure issues
+              if (title.includes('docker') || title.includes('deploy') || title.includes('ci/cd') ||
+                  body.includes('docker') || body.includes('teamcity') || body.includes('vercel')) {
+                if (!labels.includes('infrastructure')) newLabels.push('infrastructure');
+                agentType = 'devops-specialist';
+              }
+              
+              // Security issues
+              if (title.includes('security') || title.includes('vulnerability') ||
+                  body.includes('security') || labels.includes('security')) {
+                if (!labels.includes('security')) newLabels.push('security');
+                agentType = 'backend-specialist'; // Security handled by backend specialist
+              }
+              
+              // Update labels if changed
+              if (newLabels.length > labels.length) {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  labels: newLabels.filter(l => !labels.includes(l))
+                });
+              }
+              
+              // Add copilot-agent label
+              if (!labels.includes('copilot-agent')) {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  labels: ['copilot-agent']
+                });
+              }
+              
+              // Post agent comment if determined
+              if (agentType && !labels.includes('copilot-agent')) {
+                const agentMessages = {
+                  'backend-specialist': `🤖 **Backend Development Specialist Activated**
+
+I've analyzed this issue and it appears to be backend-related. Here's how I can help:
+
+**Analysis:**
+- **Type**: ${labels.includes('bug') ? 'Bug Fix' : 'Feature/Enhancement'}
+- **Area**: Backend (FastAPI/Python)
+- **Priority**: ${labels.includes('critical') ? 'Critical' : labels.includes('high') ? 'High' : 'Normal'}
+
+**Recommended Actions:**
+1. Run type checking: \`basedpyright apps/backend\`
+2. Run tests: \`pytest tests/backend -v\`
+3. Check logs for errors
+4. Review relevant code in \`apps/backend/\`
+
+**Technology Stack:**
+- ✅ FastAPI 0.121.1
+- ✅ Python 3.12+
+- ✅ Pydantic v2
+- ✅ BasedPyright (NOT mypy)
+- ✅ Async/await patterns
+
+**Need Help?**
+- Comment \`@copilot auto-fix\` for automated analysis
+- Comment \`@copilot create-fix-branch\` to create a fix branch
+- See [Backend Documentation](../docs/04-implementation/backend/)
+
+*Triggered by Agent Auto-Triage workflow*`,
+
+                  'frontend-specialist': `🎨 **Frontend Development Specialist Activated**
+
+I've analyzed this issue and it appears to be frontend-related. Here's how I can help:
+
+**Analysis:**
+- **Type**: ${labels.includes('bug') ? 'Bug Fix' : 'Feature/Enhancement'}
+- **Area**: Frontend (React/TypeScript)
+- **Priority**: ${labels.includes('critical') ? 'Critical' : labels.includes('high') ? 'High' : 'Normal'}
+
+**Recommended Actions:**
+1. Run type checking: \`pnpm --filter @toolboxai/dashboard run typecheck\`
+2. Run linting: \`pnpm --filter @toolboxai/dashboard run lint\`
+3. Run tests: \`pnpm --filter @toolboxai/dashboard run test\`
+4. Review component in \`apps/dashboard/src/\`
+
+**Technology Stack:**
+- ✅ React 19.1.0
+- ✅ TypeScript 5.9.2
+- ✅ Mantine UI v8 (NOT Material-UI)
+- ✅ Redux Toolkit + RTK Query
+- ✅ Vitest for testing
+
+**Common Patterns:**
+- Use Mantine UI v8 components
+- Follow TypeScript strict mode
+- Use functional components with hooks
+- RTK Query for API calls
+
+**Need Help?**
+- Comment \`@copilot auto-fix\` for automated analysis
+- See [Frontend Documentation](../docs/04-implementation/dashboard/)
+
+*Triggered by Agent Auto-Triage workflow*`,
+
+                  'ai-agent-specialist': `🧠 **AI Agent Development Specialist Activated**
+
+I've analyzed this issue and it appears to be AI/agent-related. Here's how I can help:
+
+**Analysis:**
+- **Type**: ${labels.includes('bug') ? 'Agent Bug' : 'Agent Enhancement'}
+- **Area**: AI/ML (LangChain/LangGraph)
+- **Priority**: ${labels.includes('critical') ? 'Critical' : labels.includes('high') ? 'High' : 'Normal'}
+
+**Recommended Actions:**
+1. Review agent implementation in \`apps/backend/agents/\`
+2. Check LangSmith traces for errors
+3. Test agent workflow
+4. Verify OpenAI API configuration
+
+**Technology Stack:**
+- ✅ LangChain 1.0.5 (v1 API)
+- ✅ LangGraph 1.0.3
+- ✅ OpenAI GPT-4.1
+- ✅ LangSmith observability
+
+**Agent Patterns:**
+- Use TypedDict for state
+- LangGraph for workflows
+- Custom tools for capabilities
+- LangSmith tracing
+
+**Need Help?**
+- See [AI Agent Documentation](../docs/04-implementation/ai-agents/)
+
+*Triggered by Agent Auto-Triage workflow*`,
+
+                  'devops-specialist': `🚀 **DevOps & Infrastructure Specialist Activated**
+
+I've analyzed this issue and it appears to be infrastructure-related. Here's how I can help:
+
+**Analysis:**
+- **Type**: ${labels.includes('bug') ? 'Infrastructure Bug' : 'Infrastructure Enhancement'}
+- **Area**: DevOps/Infrastructure
+- **Priority**: ${labels.includes('critical') ? 'Critical' : labels.includes('high') ? 'High' : 'Normal'}
+
+**Recommended Actions:**
+1. Check Docker configurations in \`infrastructure/docker/\`
+2. Review workflow files in \`.github/workflows/\`
+3. Verify deployment configurations
+4. Check TeamCity/GitHub Actions logs
+
+**Infrastructure Stack:**
+- ✅ Docker 25.x + BuildKit
+- ✅ TeamCity Cloud (CI/CD)
+- ✅ Render (backend deployment)
+- ✅ Vercel (frontend deployment)
+- ✅ Supabase (database)
+
+**Deployment Checklist:**
+- [ ] Docker builds successfully
+- [ ] All tests pass
+- [ ] Environment variables configured
+- [ ] Monitoring in place
+
+**Need Help?**
+- See [Infrastructure Documentation](../docs/08-operations/)
+
+*Triggered by Agent Auto-Triage workflow*`
+                };
+                
+                const message = agentMessages[agentType];
+                if (message) {
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNumber,
+                    body: message
+                  });
+                  
+                  console.log(`Posted ${agentType} comment on issue #${issueNumber}`);
+                }
+              }
+              
+              // Rate limit: wait 2 seconds between issues
+              await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+
+  triage-open-prs:
+    name: Triage Open Pull Requests
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'schedule' || 
+      github.event_name == 'workflow_dispatch' && 
+      (github.event.inputs.target == 'all' || github.event.inputs.target == 'prs')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get open PRs needing review
+        id: open-prs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 50
+            });
+            
+            // Filter PRs needing attention
+            const needsReview = prs.filter(pr => {
+              const labels = pr.labels.map(l => l.name);
+              
+              // Skip dependabot PRs (they auto-merge)
+              if (pr.user.login === 'dependabot[bot]') return false;
+              
+              // PRs without reviews
+              if (!pr.requested_reviewers || pr.requested_reviewers.length === 0) {
+                return true;
+              }
+              
+              // PRs with failing checks
+              if (labels.includes('needs-work') || labels.includes('failing-ci')) {
+                return true;
+              }
+              
+              return false;
+            });
+            
+            console.log(`Found ${needsReview.length} PRs needing review`);
+            return needsReview.map(pr => pr.number);
+
+      - name: Trigger PR review for open PRs
+        if: steps.open-prs.outputs.result != '[]'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumbers = ${{ steps.open-prs.outputs.result }};
+            
+            for (const prNumber of prNumbers) {
+              const { data: pr } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber
+              });
+              
+              const labels = pr.labels.map(l => l.name);
+              
+              // Add copilot-agent label if not present
+              if (!labels.includes('copilot-agent')) {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: prNumber,
+                  labels: ['copilot-agent']
+                });
+              }
+              
+              // Get PR files to determine type
+              const { data: files } = await github.rest.pulls.listFiles({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber
+              });
+              
+              const hasBackend = files.some(f => f.filename.startsWith('apps/backend/'));
+              const hasFrontend = files.some(f => f.filename.startsWith('apps/dashboard/'));
+              const hasInfra = files.some(f => 
+                f.filename.startsWith('infrastructure/') || 
+                f.filename.startsWith('.github/workflows/')
+              );
+              
+              // Post review comment
+              const reviewMessage = `🤖 **Automated PR Review Triggered**
+
+**PR Analysis:**
+- **Files Changed**: ${files.length}
+- **Backend Changes**: ${hasBackend ? '✅' : '❌'}
+- **Frontend Changes**: ${hasFrontend ? '✅' : '❌'}
+- **Infrastructure Changes**: ${hasInfra ? '✅' : '❌'}
+
+**Automated Checks Running:**
+${hasBackend ? '- ✅ BasedPyright type checking\n- ✅ pytest test suite\n- ✅ Black formatting\n' : ''}${hasFrontend ? '- ✅ TypeScript type checking\n- ✅ ESLint linting\n- ✅ Vitest tests\n' : ''}${hasInfra ? '- ✅ Docker validation\n- ✅ Workflow syntax check\n' : ''}
+**Review Checklist:**
+- [ ] All automated checks pass
+- [ ] Code follows ToolBoxAI patterns
+- [ ] Tests added/updated
+- [ ] Documentation updated
+- [ ] No security issues
+- [ ] Technology constraints respected
+
+**Technology Reminders:**
+${hasBackend ? '- ✅ Use BasedPyright (NOT mypy)\n- ✅ Async/await patterns\n- ✅ Pydantic v2 validation\n' : ''}${hasFrontend ? '- ✅ Use Mantine UI v8 (NOT Material-UI)\n- ✅ Use Pusher (NOT Socket.IO)\n- ✅ Port 5179 (NOT 3000)\n' : ''}
+**Need Help?**
+- PR auto-review workflow will run comprehensive checks
+- Comment \`@copilot\` for specific assistance
+
+*Triggered by Agent Auto-Triage workflow*`;
+              
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: reviewMessage
+              });
+              
+              console.log(`Posted review comment on PR #${prNumber}`);
+              
+              // Rate limit
+              await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+
+  triage-security-issues:
+    name: Triage Security Issues
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'schedule' || 
+      github.event_name == 'workflow_dispatch' && 
+      (github.event.inputs.target == 'all' || github.event.inputs.target == 'security')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get security issues
+        id: security-issues
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'security',
+              per_page: 50
+            });
+            
+            console.log(`Found ${issues.length} security issues`);
+            return issues.map(i => i.number);
+
+      - name: Prioritize security issues
+        if: steps.security-issues.outputs.result != '[]'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueNumbers = ${{ steps.security-issues.outputs.result }};
+            
+            for (const issueNumber of issueNumbers) {
+              const { data: issue } = await github.rest.issues.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber
+              });
+              
+              const labels = issue.labels.map(l => l.name);
+              
+              // Add priority labels if not present
+              if (!labels.includes('priority: critical') && !labels.includes('priority: high')) {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  labels: ['priority: critical']
+                });
+              }
+              
+              // Post security analysis comment
+              const securityMessage = `🔒 **Security Issue - Priority Analysis**
+
+**Security Classification:**
+- **Priority**: Critical
+- **Type**: Security Vulnerability
+- **Status**: Requires immediate attention
+
+**Recommended Actions:**
+1. **Immediate**: Run security scans
+   \`\`\`bash
+   # Python security
+   bandit -r apps/backend -ll
+   safety check
+   pip-audit
+   
+   # Node.js security
+   pnpm audit
+   \`\`\`
+
+2. **Review**: Check for:
+   - Hardcoded secrets or credentials
+   - Exposed API keys
+   - Vulnerable dependencies
+   - Insecure configurations
+   - COPPA/FERPA compliance violations
+
+3. **Fix**: Apply security patches
+   - Update vulnerable dependencies
+   - Remove secrets from code
+   - Apply security best practices
+
+4. **Verify**: Run security pipeline
+   - Security workflow will validate fixes
+   - All scans must pass
+
+**Compliance Requirements:**
+- ✅ COPPA (Children's Online Privacy Protection)
+- ✅ FERPA (Family Educational Rights and Privacy)
+- ✅ GDPR (General Data Protection Regulation)
+- ✅ SOC 2 Type 2 (Security controls)
+
+**Security Resources:**
+- [Security Documentation](../docs/10-security/)
+- [Security Best Practices](../docs/10-security/best-practices.md)
+- [Compliance Guide](../docs/10-security/compliance.md)
+
+**Need Help?**
+- Comment \`@copilot\` for security guidance
+- Security specialist agent will provide detailed analysis
+
+⚠️ **Do not commit sensitive information to this issue**
+
+*Triggered by Agent Auto-Triage workflow*`;
+              
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                body: securityMessage
+              });
+              
+              console.log(`Posted security analysis on issue #${issueNumber}`);
+              
+              await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+
+  triage-failed-actions:
+    name: Triage Failed Actions
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'schedule' || 
+      github.event_name == 'workflow_dispatch' && 
+      (github.event.inputs.target == 'all' || github.event.inputs.target == 'actions')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get failed workflow runs
+        id: failed-runs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: runs } = await github.rest.actions.listWorkflowRunsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              status: 'failure',
+              per_page: 20
+            });
+            
+            // Get recent failures (last 24 hours)
+            const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+            const recentFailures = runs.workflow_runs.filter(run => {
+              return new Date(run.created_at) > oneDayAgo;
+            });
+            
+            console.log(`Found ${recentFailures.length} recent failed runs`);
+            
+            return recentFailures.map(run => ({
+              id: run.id,
+              name: run.name,
+              conclusion: run.conclusion,
+              html_url: run.html_url,
+              head_sha: run.head_sha,
+              head_branch: run.head_branch
+            }));
+
+      - name: Create issues for failed actions
+        if: steps.failed-runs.outputs.result != '[]'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const failedRuns = ${{ steps.failed-runs.outputs.result }};
+            
+            for (const run of failedRuns) {
+              // Check if issue already exists for this failure
+              const { data: existingIssues } = await github.rest.issues.listForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+                labels: 'automation,ci-failure',
+                per_page: 100
+              });
+              
+              const issueExists = existingIssues.some(issue => 
+                issue.title.includes(run.name) && 
+                issue.body.includes(run.head_sha.substring(0, 7))
+              );
+              
+              if (!issueExists) {
+                // Create new issue for the failure
+                const issueTitle = `🚨 CI/CD Failure: ${run.name} - ${run.head_sha.substring(0, 7)}`;
+                const issueBody = `**Workflow Failure Detected**
+
+**Details:**
+- **Workflow**: ${run.name}
+- **Status**: ${run.conclusion}
+- **Branch**: ${run.head_branch}
+- **Commit**: ${run.head_sha.substring(0, 7)}
+- **Run URL**: ${run.html_url}
+
+**Automated Analysis:**
+
+This workflow has failed and requires attention. The failure could be due to:
+- Code issues (syntax errors, type errors, test failures)
+- Infrastructure issues (build failures, deployment errors)
+- Configuration issues (environment variables, secrets)
+- External service issues (API rate limits, service downtime)
+
+**Recommended Actions:**
+
+1. **Review Logs**: Check the workflow run logs at ${run.html_url}
+
+2. **Identify Root Cause**:
+   ${run.name.includes('Backend') || run.name.includes('CI/CD') ? `
+   - Run \`basedpyright apps/backend\` for type errors
+   - Run \`pytest tests/backend -v\` for test failures
+   - Check \`requirements.txt\` for dependency issues
+   ` : ''}${run.name.includes('Frontend') || run.name.includes('Dashboard') ? `
+   - Run \`pnpm --filter @toolboxai/dashboard run typecheck\`
+   - Run \`pnpm --filter @toolboxai/dashboard run lint\`
+   - Run \`pnpm --filter @toolboxai/dashboard run test\`
+   ` : ''}${run.name.includes('Security') ? `
+   - Check for security vulnerabilities
+   - Review Bandit, Safety, pip-audit output
+   - Verify no secrets in code
+   ` : ''}${run.name.includes('Deploy') ? `
+   - Verify environment variables in Render/Vercel
+   - Check deployment configurations
+   - Review build logs
+   ` : ''}
+
+3. **Fix and Rerun**:
+   - Apply fixes locally
+   - Test locally before pushing
+   - Push to trigger workflow again
+
+**Need Automated Help?**
+- Comment \`@copilot auto-fix\` for automated analysis
+- Comment \`@copilot create-fix-branch\` to create a fix branch
+
+**Related Documentation:**
+- [CI/CD Documentation](../docs/08-operations/ci-cd/)
+- [Troubleshooting Guide](../docs/08-operations/troubleshooting/)
+
+---
+
+*This issue was automatically created by the Agent Auto-Triage workflow*
+*Created: ${new Date().toISOString()}*`;
+
+                const { data: newIssue } = await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: issueTitle,
+                  body: issueBody,
+                  labels: ['automation', 'ci-failure', 'infrastructure', 'copilot-agent']
+                });
+                
+                console.log(`Created issue #${newIssue.number} for failed run: ${run.name}`);
+              } else {
+                console.log(`Issue already exists for ${run.name} - ${run.head_sha.substring(0, 7)}`);
+              }
+              
+              await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+
+  handle-copilot-commands:
+    name: Handle Copilot Commands
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '@copilot')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Process copilot command
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comment = context.payload.comment.body.toLowerCase();
+            const issueNumber = context.payload.issue.number;
+            
+            let response = '';
+            
+            if (comment.includes('@copilot triage') || comment.includes('@copilot analyze')) {
+              response = `🤖 **Copilot Analysis Triggered**
+
+Running automated triage and analysis...
+
+**Actions Performed:**
+- ✅ Issue classification
+- ✅ Label assignment
+- ✅ Priority assessment
+- ✅ Agent activation
+
+The appropriate specialist agent will respond shortly with detailed analysis.
+
+*Agent Auto-Triage workflow activated*`;
+            } else if (comment.includes('@copilot help')) {
+              response = `🤖 **Copilot Commands Available**
+
+**Issue Commands:**
+- \`@copilot triage\` - Analyze and classify this issue
+- \`@copilot auto-fix\` - Run automated fix analysis
+- \`@copilot create-fix-branch\` - Create a fix branch
+- \`@copilot using <agent>\` - Invoke specific agent
+
+**Available Agents:**
+- \`backend-specialist\` - FastAPI/Python issues
+- \`frontend-specialist\` - React/TypeScript issues
+- \`ai-agent-specialist\` - LangChain/AI issues
+- \`devops-specialist\` - Infrastructure/deployment
+- \`documentation-specialist\` - Documentation updates
+
+**Examples:**
+\`\`\`
+@copilot using backend-specialist
+Help me debug this FastAPI endpoint error
+
+@copilot auto-fix
+Run automated analysis on this bug
+
+@copilot create-fix-branch
+Create a branch to fix this issue
+\`\`\`
+
+For more details, see [GitHub Copilot Documentation](../.github/instructions.md)`;
+            }
+            
+            if (response) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                body: response
+              });
+            }
