@@ -70,6 +70,8 @@ services:
         --access-logfile - \
         --error-logfile - \
         --log-level info
+    # Python version controlled by .python-version file in repo root
+    # PYTHON_VERSION env var below is for application use only
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.7

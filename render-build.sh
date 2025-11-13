@@ -9,6 +9,16 @@ echo "========================================="
 echo "ToolBoxAI Backend Build Script"
 echo "========================================="
 
+# Verify Python version (must be 3.12.x for asyncpg compatibility)
+PYTHON_VERSION=$(python --version 2>&1 | awk '{print $2}')
+if [[ ! "$PYTHON_VERSION" =~ ^3\.12\. ]]; then
+    echo "❌ ERROR: Python 3.12.x required, found $PYTHON_VERSION"
+    echo "📌 asyncpg 0.29.0 is incompatible with Python 3.13+"
+    echo "📝 Ensure .python-version file exists with '3.12.7'"
+    exit 1
+fi
+echo "✅ Python version verified: $PYTHON_VERSION"
+
 # Upgrade pip, setuptools, wheel
 echo "📦 Upgrading pip, setuptools, and wheel..."
 python -m pip install --upgrade pip setuptools wheel
