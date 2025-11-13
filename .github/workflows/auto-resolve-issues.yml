@@ -1,0 +1,470 @@
+# Automated Issue Resolution with Copilot Agents
+# This workflow automatically attempts to resolve issues using specialized agents
+
+name: Auto-Resolve Issues with Agents
+
+on:
+  issues:
+    types: [labeled]
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+  pull-requests: write
+  contents: write
+
+jobs:
+  auto-fix-backend-issues:
+    name: Auto-Fix Backend Issues
+    runs-on: ubuntu-latest
+    if: |
+      contains(github.event.issue.labels.*.name, 'backend') &&
+      contains(github.event.issue.labels.*.name, 'bug')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      
+      - name: Run type checking
+        id: typecheck
+        run: |
+          basedpyright apps/backend > typecheck-results.txt 2>&1 || true
+          echo "results<<EOF" >> $GITHUB_OUTPUT
+          cat typecheck-results.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        continue-on-error: true
+      
+      - name: Run tests
+        id: tests
+        run: |
+          pytest apps/backend tests/backend -v --tb=short > test-results.txt 2>&1 || true
+          echo "results<<EOF" >> $GITHUB_OUTPUT
+          cat test-results.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        continue-on-error: true
+      
+      - name: Analyze and suggest fixes
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue_number = context.issue.number;
+            const issue = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue_number
+            });
+            
+            const typecheckResults = \`${{ steps.typecheck.outputs.results }}\`;
+            const testResults = \`${{ steps.tests.outputs.results }}\`;
+            
+            const comment_body = \`## 🔧 Automated Analysis - Backend Specialist
+            
+            I've analyzed this backend issue and run automated checks:
+            
+            ### Type Checking Results
+            \`\`\`
+            ${typecheckResults.slice(0, 1000)}
+            \`\`\`
+            
+            ### Test Results
+            \`\`\`
+            ${testResults.slice(0, 1000)}
+            \`\`\`
+            
+            ### Recommended Actions
+            
+            Based on the issue description, here are my suggestions:
+            
+            **For API Issues:**
+            1. Check if endpoint is properly defined in \`apps/backend/api/\`
+            2. Verify Pydantic models in \`apps/backend/models/\`
+            3. Ensure async/await pattern is used correctly
+            4. Validate Clerk JWT authentication is configured
+            
+            **For Database Issues:**
+            1. Check migration files in \`apps/backend/migrations/\`
+            2. Verify SQLAlchemy models are properly defined
+            3. Ensure Supabase connection is configured in \`.env\`
+            4. Run: \`alembic upgrade head\`
+            
+            **For Celery Issues:**
+            1. Check task definitions in \`apps/backend/tasks/\`
+            2. Verify Redis connection: \`redis-cli ping\`
+            3. Check Celery worker logs
+            4. Run: \`celery -A apps.backend.celery_app worker -l debug\`
+            
+            ### Next Steps
+            
+            - [ ] Review the automated analysis above
+            - [ ] Apply suggested fixes
+            - [ ] Run tests locally: \`pytest\`
+            - [ ] Run type checking: \`basedpyright .\`
+            - [ ] Create PR with fixes
+            
+            **Need more help?** Use: \`@copilot using backend-specialist <specific question>\`
+            \`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue_number,
+              body: comment_body
+            });
+
+  auto-fix-frontend-issues:
+    name: Auto-Fix Frontend Issues
+    runs-on: ubuntu-latest
+    if: |
+      contains(github.event.issue.labels.*.name, 'frontend') &&
+      contains(github.event.issue.labels.*.name, 'bug')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Run type checking
+        id: typecheck
+        run: |
+          pnpm --filter @toolboxai/dashboard run typecheck > typecheck-results.txt 2>&1 || true
+          echo "results<<EOF" >> $GITHUB_OUTPUT
+          cat typecheck-results.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        continue-on-error: true
+      
+      - name: Run lint
+        id: lint
+        run: |
+          pnpm --filter @toolboxai/dashboard lint > lint-results.txt 2>&1 || true
+          echo "results<<EOF" >> $GITHUB_OUTPUT
+          cat lint-results.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        continue-on-error: true
+      
+      - name: Run tests
+        id: tests
+        run: |
+          pnpm --filter @toolboxai/dashboard test > test-results.txt 2>&1 || true
+          echo "results<<EOF" >> $GITHUB_OUTPUT
+          cat test-results.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        continue-on-error: true
+      
+      - name: Analyze and suggest fixes
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue_number = context.issue.number;
+            const typecheckResults = \`${{ steps.typecheck.outputs.results }}\`;
+            const lintResults = \`${{ steps.lint.outputs.results }}\`;
+            const testResults = \`${{ steps.tests.outputs.results }}\`;
+            
+            const comment_body = \`## 🎨 Automated Analysis - Frontend Specialist
+            
+            I've analyzed this frontend issue and run automated checks:
+            
+            ### Type Checking Results
+            \`\`\`typescript
+            ${typecheckResults.slice(0, 800)}
+            \`\`\`
+            
+            ### Lint Results
+            \`\`\`
+            ${lintResults.slice(0, 800)}
+            \`\`\`
+            
+            ### Recommended Actions
+            
+            **For Component Issues:**
+            1. Ensure using \`Mantine UI v8\` components (NOT Material-UI)
+            2. Use functional components with TypeScript
+            3. Check component location: \`apps/dashboard/src/components/\`
+            4. Verify proper imports and exports
+            
+            **For State Management:**
+            1. Check Redux store: \`apps/dashboard/src/store/\`
+            2. Use RTK Query for API calls
+            3. Verify proper TypeScript interfaces
+            4. Check state slice definitions
+            
+            **For Styling:**
+            1. Use Mantine theme system
+            2. Check PostCSS configuration
+            3. Verify Tailwind classes (if used)
+            4. Ensure responsive design
+            
+            **For Authentication:**
+            1. Verify Clerk integration: \`@clerk/clerk-react\`
+            2. Check protected routes
+            3. Ensure JWT is included in API calls
+            4. Verify user context is available
+            
+            ### Critical Reminders
+            - ✅ Use Mantine UI v8 (NOT Material-UI)
+            - ✅ Use Pusher Channels (NOT Socket.IO)
+            - ✅ Port 5179 for dashboard (NOT 3000)
+            - ✅ Environment variables use \`VITE_\` prefix
+            
+            **Need more help?** Use: \`@copilot using frontend-specialist <specific question>\`
+            \`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue_number,
+              body: comment_body
+            });
+
+  auto-analyze-security:
+    name: Auto-Analyze Security Issues
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'security')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install security scanners
+        run: |
+          pip install bandit safety pip-audit
+      
+      - name: Run Bandit
+        id: bandit
+        run: |
+          bandit -r apps/backend -ll -f txt > bandit-results.txt 2>&1 || true
+          echo "results<<EOF" >> $GITHUB_OUTPUT
+          cat bandit-results.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        continue-on-error: true
+      
+      - name: Run Safety
+        id: safety
+        run: |
+          safety check --json > safety-results.json 2>&1 || true
+          python -c "import json; data=json.load(open('safety-results.json')); print(f'Found {len(data)} vulnerabilities' if isinstance(data, list) else 'No vulnerabilities')" > safety-summary.txt || echo "Safety check completed" > safety-summary.txt
+          echo "results<<EOF" >> $GITHUB_OUTPUT
+          cat safety-summary.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        continue-on-error: true
+      
+      - name: Run pip-audit
+        id: pipaudit
+        run: |
+          pip-audit > pip-audit-results.txt 2>&1 || true
+          echo "results<<EOF" >> $GITHUB_OUTPUT
+          cat pip-audit-results.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        continue-on-error: true
+      
+      - name: Post security analysis
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue_number = context.issue.number;
+            const banditResults = \`${{ steps.bandit.outputs.results }}\`;
+            const safetyResults = \`${{ steps.safety.outputs.results }}\`;
+            const pipAuditResults = \`${{ steps.pipaudit.outputs.results }}\`;
+            
+            const comment_body = \`## 🔒 Automated Security Analysis
+            
+            ### Security Scan Results
+            
+            **Bandit Code Security Scan:**
+            \`\`\`
+            ${banditResults.slice(0, 1000)}
+            \`\`\`
+            
+            **Safety Dependency Vulnerability Check:**
+            \`\`\`
+            ${safetyResults}
+            \`\`\`
+            
+            **Pip-Audit Results:**
+            \`\`\`
+            ${pipAuditResults.slice(0, 500)}
+            \`\`\`
+            
+            ### Security Checklist
+            
+            **Environment Variables:**
+            - [ ] No secrets in code or logs
+            - [ ] All secrets in \`.env\` (not tracked)
+            - [ ] \`.env.example\` updated as template
+            - [ ] Using Vault for production secrets
+            
+            **Authentication:**
+            - [ ] Clerk JWT validation on all endpoints
+            - [ ] Role-based access control (RBAC) implemented
+            - [ ] Session management via Redis
+            - [ ] MFA available for sensitive roles
+            
+            **Input Validation:**
+            - [ ] Pydantic v2 models for all requests
+            - [ ] SQL injection prevention (parameterized queries)
+            - [ ] XSS prevention in frontend
+            - [ ] CSRF protection enabled
+            
+            **Compliance:**
+            - [ ] COPPA compliant (no PII in logs)
+            - [ ] FERPA compliant (education data protected)
+            - [ ] GDPR compliant (data privacy)
+            - [ ] SOC 2 Type 2 requirements met
+            
+            ### Recommended Actions
+            
+            1. Review all security scan results above
+            2. Update dependencies with vulnerabilities
+            3. Fix any Bandit warnings (high/medium severity)
+            4. Test security fixes thoroughly
+            5. Document security decisions
+            
+            **Security Documentation:**
+            - [Security Policies](docs/10-security/)
+            - [Environment Variables](docs/10-security/ENV_FILES_DOCUMENTATION.md)
+            - [Security Workflow](.github/workflows/security.yml)
+            
+            **Critical:** Never commit secrets. Always review security scan results before deployment.
+            \`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue_number,
+              body: comment_body
+            });
+      
+      - name: Create security report
+        if: steps.bandit.outcome == 'success' || steps.safety.outcome == 'success'
+        run: |
+          mkdir -p security-reports
+          echo "# Security Scan Report - $(date)" > security-reports/report-${{ github.event.issue.number }}.md
+          echo "" >> security-reports/report-${{ github.event.issue.number }}.md
+          echo "## Bandit Results" >> security-reports/report-${{ github.event.issue.number }}.md
+          cat bandit-results.txt >> security-reports/report-${{ github.event.issue.number }}.md || echo "No results" >> security-reports/report-${{ github.event.issue.number }}.md
+          echo "" >> security-reports/report-${{ github.event.issue.number }}.md
+          echo "## Safety Results" >> security-reports/report-${{ github.event.issue.number }}.md
+          cat safety-summary.txt >> security-reports/report-${{ github.event.issue.number }}.md || echo "No results" >> security-reports/report-${{ github.event.issue.number }}.md
+      
+      - name: Upload security report
+        if: steps.bandit.outcome == 'success' || steps.safety.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report-${{ github.event.issue.number }}
+          path: security-reports/
+          retention-days: 90
+
+  create-fix-branch:
+    name: Create Fix Branch for Issue
+    runs-on: ubuntu-latest
+    if: |
+      github.event.comment.body contains '@copilot create-fix-branch' ||
+      (contains(github.event.issue.labels.*.name, 'bug') && 
+       github.event.comment.body contains '@copilot auto-fix')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Create fix branch
+        run: |
+          ISSUE_NUMBER=${{ github.event.issue.number }}
+          BRANCH_NAME="fix/issue-${ISSUE_NUMBER}-auto-generated"
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git checkout -b "${BRANCH_NAME}"
+          git push origin "${BRANCH_NAME}"
+          
+          echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
+      
+      - name: Comment with branch info
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue_number = context.issue.number;
+            const branch_name = process.env.BRANCH_NAME;
+            
+            const comment_body = \`## 🌿 Fix Branch Created
+            
+            I've created a new branch for this issue:
+            
+            **Branch:** \`${branch_name}\`
+            
+            ### Next Steps:
+            
+            1. Check out the branch:
+               \`\`\`bash
+               git fetch origin
+               git checkout ${branch_name}
+               \`\`\`
+            
+            2. Make your fixes in the appropriate files
+            
+            3. Test your changes:
+               \`\`\`bash
+               # Backend
+               pytest
+               basedpyright .
+               
+               # Frontend
+               pnpm --filter @toolboxai/dashboard test
+               pnpm --filter @toolboxai/dashboard run typecheck
+               \`\`\`
+            
+            4. Commit and push:
+               \`\`\`bash
+               git add .
+               git commit -m "fix: resolve issue #${issue_number}"
+               git push origin ${branch_name}
+               \`\`\`
+            
+            5. Create a pull request:
+               \`\`\`bash
+               gh pr create --title "Fix: Issue #${issue_number}" --body "Resolves #${issue_number}"
+               \`\`\`
+            
+            **Specialized help available:** Use \`@copilot using <agent-name>\` for agent-specific guidance.
+            \`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue_number,
+              body: comment_body
+            });

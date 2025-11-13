@@ -1,0 +1,179 @@
+# Auto-Label Issues and PRs Based on File Changes
+
+name: Auto-Label
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  issues:
+    types: [opened, edited]
+
+permissions:
+  issues: write
+  pull-requests: write
+  contents: read
+
+jobs:
+  auto-label:
+    name: Auto-Label Based on Changes
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Label based on file changes
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr_number = context.issue.number;
+            
+            // Get changed files
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr_number
+            });
+            
+            const changedFiles = files.map(f => f.filename);
+            const labelsToAdd = new Set();
+            
+            // Backend files
+            if (changedFiles.some(f => f.startsWith('apps/backend/') && f.endsWith('.py'))) {
+              labelsToAdd.add('backend');
+            }
+            
+            // Frontend files
+            if (changedFiles.some(f => f.startsWith('apps/dashboard/') && (f.endsWith('.tsx') || f.endsWith('.ts') || f.endsWith('.jsx') || f.endsWith('.js')))) {
+              labelsToAdd.add('frontend');
+            }
+            
+            // Documentation files
+            if (changedFiles.some(f => f.startsWith('docs/') || f === 'README.md' || f === 'CLAUDE.md')) {
+              labelsToAdd.add('documentation');
+            }
+            
+            // Infrastructure files
+            if (changedFiles.some(f => 
+              f.startsWith('infrastructure/') || 
+              f.startsWith('.github/workflows/') ||
+              f.includes('Dockerfile') ||
+              f.includes('docker-compose')
+            )) {
+              labelsToAdd.add('infrastructure');
+            }
+            
+            // Python files
+            if (changedFiles.some(f => f.endsWith('.py'))) {
+              labelsToAdd.add('python');
+            }
+            
+            // Add labels
+            if (labelsToAdd.size > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr_number,
+                labels: Array.from(labelsToAdd)
+              });
+            }
+      
+      - name: Label based on issue content
+        if: github.event_name == 'issues'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue_number = context.issue.number;
+            const issue_body = context.payload.issue.body || '';
+            const issue_title = context.payload.issue.title || '';
+            const content = (issue_title + ' ' + issue_body).toLowerCase();
+            
+            const labelsToAdd = new Set();
+            
+            // Backend keywords
+            if (content.match(/fastapi|uvicorn|sqlalchemy|celery|redis|backend|api|endpoint/i)) {
+              labelsToAdd.add('backend');
+            }
+            
+            // Frontend keywords
+            if (content.match(/react|typescript|mantine|frontend|ui|component|dashboard/i)) {
+              labelsToAdd.add('frontend');
+            }
+            
+            // Documentation keywords
+            if (content.match(/documentation|docs|readme|guide|tutorial/i)) {
+              labelsToAdd.add('documentation');
+            }
+            
+            // Infrastructure keywords
+            if (content.match(/docker|deployment|vercel|render|teamcity|infrastructure|ci\/cd/i)) {
+              labelsToAdd.add('infrastructure');
+            }
+            
+            // Bug detection
+            if (content.match(/bug|error|crash|fail|broken|not working/i)) {
+              labelsToAdd.add('bug');
+            }
+            
+            // Feature detection
+            if (content.match(/feature|enhancement|improve|add/i)) {
+              labelsToAdd.add('enhancement');
+            }
+            
+            // Add labels
+            if (labelsToAdd.size > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue_number,
+                labels: Array.from(labelsToAdd)
+              });
+            }
+
+  ensure-labels-exist:
+    name: Ensure Required Labels Exist
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Create missing labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const requiredLabels = [
+              { name: 'ai', color: '7C3AED', description: 'AI/ML and agent-related issues' },
+              { name: 'agents', color: '8B5CF6', description: 'LangChain/LangGraph agent development' },
+              { name: 'langchain', color: '9333EA', description: 'LangChain framework related' },
+              { name: 'deployment', color: 'F59E0B', description: 'Deployment and infrastructure' },
+              { name: 'docker', color: '0EA5E9', description: 'Docker and containerization' },
+              { name: 'docs', color: '10B981', description: 'Documentation' },
+              { name: 'copilot-agent', color: '6366F1', description: 'GitHub Copilot agent related' },
+            ];
+            
+            // Get existing labels
+            const { data: existingLabels } = await github.rest.issues.listLabelsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            
+            const existingLabelNames = existingLabels.map(l => l.name);
+            
+            // Create missing labels
+            for (const label of requiredLabels) {
+              if (!existingLabelNames.includes(label.name)) {
+                try {
+                  await github.rest.issues.createLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    name: label.name,
+                    color: label.color,
+                    description: label.description
+                  });
+                  console.log(\`Created label: \${label.name}\`);
+                } catch (error) {
+                  console.log(\`Label \${label.name} might already exist: \${error.message}\`);
+                }
+              }
+            }

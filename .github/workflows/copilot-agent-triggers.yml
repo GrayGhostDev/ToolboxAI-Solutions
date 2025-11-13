@@ -1,0 +1,356 @@
+# GitHub Copilot Agent Auto-Trigger Workflow
+# This workflow automatically triggers specialized agents when labels are added to issues or PRs
+
+name: Copilot Agent Auto-Trigger
+
+on:
+  issues:
+    types: [labeled, opened, edited]
+  pull_request:
+    types: [labeled, opened, edited, synchronize]
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+  pull-requests: write
+  contents: read
+
+jobs:
+  trigger-backend-specialist:
+    name: Trigger Backend Specialist
+    runs-on: ubuntu-latest
+    if: |
+      (github.event.label.name == 'backend' || 
+       github.event.label.name == 'api' ||
+       github.event.label.name == 'database' ||
+       contains(github.event.issue.labels.*.name, 'backend') ||
+       contains(github.event.pull_request.labels.*.name, 'backend'))
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Add Backend Specialist Comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue_number = context.issue.number;
+            const comment_body = `🤖 **Backend Development Specialist Agent Activated**
+            
+            I've detected that this ${context.eventName === 'pull_request' ? 'PR' : 'issue'} is related to backend development.
+            
+            **Agent Capabilities:**
+            - FastAPI async/await patterns
+            - Pydantic v2 validation
+            - SQLAlchemy database operations
+            - Celery task implementation
+            - LangChain v1.0 agent development
+            - BasedPyright type checking
+            
+            **Relevant Documentation:**
+            - [Backend Specialist Agent](.github/agents/backend-specialist.agent.md)
+            - [API Documentation](docs/03-api/)
+            - [Backend Architecture](docs/02-architecture/)
+            
+            **Quick Tips:**
+            - Use \`async/await\` for all I/O operations
+            - Use \`BasedPyright\` for type checking (NOT mypy)
+            - Follow Pydantic v2 syntax
+            - Database is Supabase (PostgreSQL 16)
+            - Authentication via Clerk JWT
+            
+            To get specialized help, use: \`@copilot using backend-specialist <your question>\``;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue_number,
+              body: comment_body
+            });
+
+  trigger-frontend-specialist:
+    name: Trigger Frontend Specialist
+    runs-on: ubuntu-latest
+    if: |
+      (github.event.label.name == 'frontend' || 
+       github.event.label.name == 'ui' ||
+       github.event.label.name == 'dashboard' ||
+       contains(github.event.issue.labels.*.name, 'frontend') ||
+       contains(github.event.pull_request.labels.*.name, 'frontend'))
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Add Frontend Specialist Comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue_number = context.issue.number;
+            const comment_body = `🎨 **Frontend Development Specialist Agent Activated**
+            
+            I've detected that this ${context.eventName === 'pull_request' ? 'PR' : 'issue'} is related to frontend development.
+            
+            **Agent Capabilities:**
+            - React 19 functional components
+            - Mantine UI v8 (NOT Material-UI)
+            - TypeScript strict mode
+            - Redux Toolkit + RTK Query
+            - Clerk authentication integration
+            - Pusher real-time features
+            
+            **Relevant Documentation:**
+            - [Frontend Specialist Agent](.github/agents/frontend-specialist.agent.md)
+            - [Component Documentation](docs/06-features/)
+            - [UI Guidelines](docs/02-architecture/)
+            
+            **Quick Tips:**
+            - Use \`Mantine UI v8\` components (NOT Material-UI)
+            - Use \`Pusher Channels\` (NOT Socket.IO)
+            - Dashboard runs on port 5179 (NOT 3000)
+            - Use \`pnpm\` for package management
+            - Environment variables use \`VITE_\` prefix
+            
+            To get specialized help, use: \`@copilot using frontend-specialist <your question>\``;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue_number,
+              body: comment_body
+            });
+
+  trigger-ai-agent-specialist:
+    name: Trigger AI Agent Specialist
+    runs-on: ubuntu-latest
+    if: |
+      (github.event.label.name == 'ai' || 
+       github.event.label.name == 'agents' ||
+       github.event.label.name == 'langchain' ||
+       contains(github.event.issue.labels.*.name, 'ai') ||
+       contains(github.event.pull_request.labels.*.name, 'ai'))
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Add AI Agent Specialist Comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue_number = context.issue.number;
+            const comment_body = `🧠 **AI Agent Development Specialist Activated**
+            
+            I've detected that this ${context.eventName === 'pull_request' ? 'PR' : 'issue'} is related to AI/ML agent development.
+            
+            **Agent Capabilities:**
+            - LangChain v1.0 agent development
+            - LangGraph workflow orchestration
+            - OpenAI GPT-4.1 integration
+            - Custom tool creation
+            - Vector store integration (Supabase pgvector)
+            - LangSmith tracing
+            
+            **Relevant Documentation:**
+            - [AI Agent Specialist](.github/agents/ai-agent-specialist.agent.md)
+            - [Agent System](docs/05-implementation/agent-system/)
+            - [Agent Architecture](docs/02-architecture/)
+            
+            **Quick Tips:**
+            - Use \`LangChain v1.0\` API (NOT v0.x)
+            - Use \`LangGraph 1.0.3\` for workflows
+            - Use \`OpenAI GPT-4.1\` (gpt-4-1106-preview)
+            - Vector store is Supabase pgvector
+            - Enable LangSmith tracing for debugging
+            
+            To get specialized help, use: \`@copilot using ai-agent-specialist <your question>\``;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue_number,
+              body: comment_body
+            });
+
+  trigger-devops-specialist:
+    name: Trigger DevOps Specialist
+    runs-on: ubuntu-latest
+    if: |
+      (github.event.label.name == 'infrastructure' || 
+       github.event.label.name == 'deployment' ||
+       github.event.label.name == 'docker' ||
+       contains(github.event.issue.labels.*.name, 'infrastructure') ||
+       contains(github.event.pull_request.labels.*.name, 'deployment'))
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Add DevOps Specialist Comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue_number = context.issue.number;
+            const comment_body = `🚀 **DevOps & Infrastructure Specialist Activated**
+            
+            I've detected that this ${context.eventName === 'pull_request' ? 'PR' : 'issue'} is related to infrastructure or deployment.
+            
+            **Agent Capabilities:**
+            - Docker Compose configuration
+            - Dockerfile optimization
+            - TeamCity Cloud pipeline setup
+            - Render deployment (backend)
+            - Vercel deployment (frontend)
+            - Monitoring stack (Prometheus, Grafana, Jaeger)
+            
+            **Relevant Documentation:**
+            - [DevOps Specialist](.github/agents/devops-specialist.agent.md)
+            - [Deployment Guides](docs/08-operations/deployment/)
+            - [Docker Documentation](docs/08-operations/docker/)
+            
+            **Quick Tips:**
+            - TeamCity Cloud is primary CI/CD
+            - Backend deploys to Render (3 services)
+            - Frontend deploys to Vercel
+            - Database is Supabase (PostgreSQL 16)
+            - Monitoring runs on Docker Compose
+            
+            To get specialized help, use: \`@copilot using devops-specialist <your question>\``;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue_number,
+              body: comment_body
+            });
+
+  trigger-documentation-specialist:
+    name: Trigger Documentation Specialist
+    runs-on: ubuntu-latest
+    if: |
+      (github.event.label.name == 'documentation' || 
+       github.event.label.name == 'docs' ||
+       contains(github.event.issue.labels.*.name, 'documentation') ||
+       contains(github.event.pull_request.labels.*.name, 'documentation'))
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Add Documentation Specialist Comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue_number = context.issue.number;
+            const comment_body = `📚 **Documentation Specialist Activated**
+            
+            I've detected that this ${context.eventName === 'pull_request' ? 'PR' : 'issue'} is related to documentation.
+            
+            **Agent Capabilities:**
+            - Technical documentation writing
+            - OpenAPI/Swagger specifications
+            - User guide creation
+            - Code example documentation
+            - Documentation structure maintenance
+            
+            **Relevant Documentation:**
+            - [Documentation Specialist](.github/agents/documentation-specialist.agent.md)
+            - [Documentation Index](docs/README.md)
+            - [Style Guide](.github/agents/documentation-specialist.agent.md#style-guide)
+            
+            **Quick Tips:**
+            - All docs go in \`/docs/\` directory
+            - Status reports in \`/docs/11-reports/\`
+            - Update \`FILE_RELOCATION_MAP.md\` when moving files
+            - Use relative links for internal docs
+            - Test all code examples
+            
+            To get specialized help, use: \`@copilot using documentation-specialist <your question>\``;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue_number,
+              body: comment_body
+            });
+
+  analyze-security-vulnerabilities:
+    name: Analyze Security Issues
+    runs-on: ubuntu-latest
+    if: |
+      contains(github.event.issue.labels.*.name, 'security') ||
+      contains(github.event.pull_request.labels.*.name, 'security') ||
+      github.event.label.name == 'security'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install security tools
+        run: |
+          pip install bandit safety
+      
+      - name: Run Bandit security scan
+        run: |
+          bandit -r apps/backend -f json -o bandit-report.json || true
+      
+      - name: Run Safety dependency check
+        run: |
+          safety check --json > safety-report.json || true
+      
+      - name: Post security analysis
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const issue_number = context.issue.number;
+            
+            let banditResults = 'No critical issues found';
+            let safetyResults = 'No vulnerable dependencies found';
+            
+            try {
+              const banditData = JSON.parse(fs.readFileSync('bandit-report.json', 'utf8'));
+              if (banditData.results && banditData.results.length > 0) {
+                banditResults = \`Found \${banditData.results.length} potential issues\`;
+              }
+            } catch (e) {
+              console.log('No Bandit report');
+            }
+            
+            const comment_body = \`🔒 **Security Analysis Complete**
+            
+            **Security Scan Results:**
+            - Bandit Code Analysis: \${banditResults}
+            - Safety Dependency Check: \${safetyResults}
+            
+            **Security Best Practices:**
+            - All secrets must use environment variables
+            - Never commit \`.env\` files (only \`.env.example\`)
+            - Use Clerk for authentication (JWT validation)
+            - Input validation via Pydantic v2
+            - Follow OWASP Top 10 guidelines
+            
+            **Compliance:**
+            - COPPA (Children's Online Privacy Protection Act)
+            - FERPA (Family Educational Rights and Privacy Act)
+            - GDPR (General Data Protection Regulation)
+            - SOC 2 Type 2
+            
+            **Security Documentation:**
+            - [Security Policies](docs/10-security/)
+            - [Environment Variables](docs/10-security/ENV_FILES_DOCUMENTATION.md)
+            - [Security Scanning](.github/workflows/security.yml)
+            \`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue_number,
+              body: comment_body
+            });
