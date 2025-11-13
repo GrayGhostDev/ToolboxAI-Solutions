@@ -11,7 +11,11 @@ ai:
 # Review Settings
 reviews:
   enabled: true
-  auto_review: true
+  auto_review:
+    enabled: true
+    drafts: false
+  review_status: true
+  collapse_walkthrough: false
   comment_on_changes: true
   max_files_per_review: 50
   max_file_size_kb: 500
@@ -77,7 +81,9 @@ claude:
 github:
   reviews:
     enabled: true
-    auto_review: true
+    auto_review:
+      enabled: true
+      drafts: false
     comment_on_changes: true
   webhooks:
     enabled: true
