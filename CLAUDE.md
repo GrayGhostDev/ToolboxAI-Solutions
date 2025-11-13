@@ -1,6 +1,6 @@
 # ToolBoxAI-Solutions - Claude Code Guide
 
-**Last Updated:** November 9, 2025
+**Last Updated:** November 13, 2025
 **Project Type:** Full-Stack AI-Powered Educational Platform
 **Status:** Production-Ready
 
@@ -17,6 +17,59 @@
 - **Role-Based Access:** Student, Educator, Parent, and Administrator roles
 - **Progress Tracking:** Comprehensive analytics and gamification
 - **Secure & Compliant:** COPPA, FERPA, GDPR, and SOC 2 Type 2 compliant
+
+---
+
+## 🤖 GitHub Copilot Agents & Triggers
+
+### Available Specialized Agents
+
+**Location:** `.github/agents/`
+
+ToolBoxAI has **6 specialized GitHub Copilot agents** for different development tasks:
+
+1. **Issue Resolution Agent** (`my-agent.agent.md`)
+   - **Triggers**: Issues, PRs, bug labels
+   - **Use for**: Bug fixes, issue resolution, code review
+
+2. **Backend Development Specialist** (`backend-specialist.agent.md`)
+   - **Triggers**: `apps/backend/**/*.py`, labels: `backend`, `api`
+   - **Use for**: FastAPI, SQLAlchemy, Celery, LangChain development
+
+3. **Frontend Development Specialist** (`frontend-specialist.agent.md`)
+   - **Triggers**: `apps/dashboard/**/*.{tsx,ts}`, labels: `frontend`, `ui`
+   - **Use for**: React 19, Mantine UI, TypeScript, Redux development
+
+4. **AI Agent Development Specialist** (`ai-agent-specialist.agent.md`)
+   - **Triggers**: `apps/backend/agents/**/*.py`, labels: `ai`, `agents`
+   - **Use for**: LangChain, LangGraph, OpenAI agent development
+
+5. **DevOps & Infrastructure Specialist** (`devops-specialist.agent.md`)
+   - **Triggers**: `infrastructure/**/*`, labels: `deployment`, `docker`
+   - **Use for**: Docker, TeamCity, Render, Vercel deployment
+
+6. **Documentation Specialist** (`documentation-specialist.agent.md`)
+   - **Triggers**: `docs/**/*.md`, labels: `documentation`
+   - **Use for**: Technical writing, API docs, user guides
+
+### How to Invoke Agents
+
+**In code comments:**
+```python
+# @copilot using backend-specialist
+# Create async FastAPI endpoint for user creation with Pydantic validation
+```
+
+**In PRs/Issues:**
+```markdown
+@copilot using frontend-specialist
+Create a Mantine Card component for displaying quiz results
+```
+
+**In terminal:**
+```bash
+gh copilot suggest "using ai-agent-specialist create LangGraph workflow"
+```
 
 ---
 
