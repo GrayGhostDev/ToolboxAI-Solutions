@@ -73,6 +73,8 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.7
+      - key: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
+        value: python
       - key: DATABASE_URL
         sync: false # Set to SUPABASE_DATABASE_URL in Render Dashboard
       - key: REDIS_URL
