@@ -3,15 +3,14 @@ DataLoaders for batch loading and N+1 query prevention
 """
 
 import uuid
-from typing import List, Dict, Any, Optional
 from collections import defaultdict
 
 from aiodataloader import DataLoader
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from database.models import User, Course, Lesson, Quiz, Enrollment
+from database.models import Course, Enrollment, Lesson, Quiz, User
 
 
 class UserLoader(DataLoader):
@@ -21,7 +20,7 @@ class UserLoader(DataLoader):
         super().__init__()
         self.db = db
 
-    async def batch_load_fn(self, user_ids: List[uuid.UUID]) -> List[Optional[User]]:
+    async def batch_load_fn(self, user_ids: list[uuid.UUID]) -> list[User | None]:
         """Batch load users by IDs"""
 
         # Query all users with matching IDs
@@ -43,7 +42,7 @@ class CourseLoader(DataLoader):
         super().__init__()
         self.db = db
 
-    async def batch_load_fn(self, course_ids: List[uuid.UUID]) -> List[Optional[Course]]:
+    async def batch_load_fn(self, course_ids: list[uuid.UUID]) -> list[Course | None]:
         """Batch load courses by IDs"""
 
         # Query all courses with matching IDs
@@ -65,7 +64,7 @@ class LessonLoader(DataLoader):
         super().__init__()
         self.db = db
 
-    async def batch_load_fn(self, lesson_ids: List[uuid.UUID]) -> List[Optional[Lesson]]:
+    async def batch_load_fn(self, lesson_ids: list[uuid.UUID]) -> list[Lesson | None]:
         """Batch load lessons by IDs"""
 
         # Query all lessons with matching IDs
@@ -87,7 +86,7 @@ class QuizLoader(DataLoader):
         super().__init__()
         self.db = db
 
-    async def batch_load_fn(self, quiz_ids: List[uuid.UUID]) -> List[Optional[Quiz]]:
+    async def batch_load_fn(self, quiz_ids: list[uuid.UUID]) -> list[Quiz | None]:
         """Batch load quizzes by IDs"""
 
         # Query all quizzes with matching IDs
@@ -109,7 +108,7 @@ class EnrollmentLoader(DataLoader):
         super().__init__()
         self.db = db
 
-    async def batch_load_fn(self, course_ids: List[uuid.UUID]) -> List[List[Enrollment]]:
+    async def batch_load_fn(self, course_ids: list[uuid.UUID]) -> list[list[Enrollment]]:
         """Batch load enrollments for multiple courses"""
 
         # Query all enrollments for the given course IDs
@@ -138,7 +137,7 @@ class StudentEnrollmentLoader(DataLoader):
         super().__init__()
         self.db = db
 
-    async def batch_load_fn(self, student_ids: List[uuid.UUID]) -> List[List[Enrollment]]:
+    async def batch_load_fn(self, student_ids: list[uuid.UUID]) -> list[list[Enrollment]]:
         """Batch load enrollments for multiple students"""
 
         # Query all enrollments for the given student IDs
@@ -160,7 +159,7 @@ class StudentEnrollmentLoader(DataLoader):
         return [enrollment_map.get(student_id, []) for student_id in student_ids]
 
 
-def create_loaders(db: AsyncSession) -> Dict[str, DataLoader]:
+def create_loaders(db: AsyncSession) -> dict[str, DataLoader]:
     """
     Create all DataLoader instances for a request
 

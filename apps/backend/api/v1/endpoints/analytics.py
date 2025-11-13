@@ -3,14 +3,15 @@ Analytics API Endpoints for ToolboxAI Educational Platform
 Provides analytics and gamification data for the dashboard.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import Dict, Any, List, Optional
-from datetime import datetime, timedelta
-import random
 import logging
+import random
+from datetime import datetime, timedelta
+from typing import Any
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+
 from apps.backend.api.auth.auth import get_current_user
 from database.models import User
-from apps.backend.services.database import db_service
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ analytics_router = APIRouter(tags=["Analytics"])
 
 
 @analytics_router.get("/overview")
-async def get_analytics_overview(current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+async def get_analytics_overview(current_user: User = Depends(get_current_user)) -> dict[str, Any]:
     """Get analytics overview for dashboard."""
 
     return {
@@ -38,10 +39,10 @@ async def get_analytics_overview(current_user: User = Depends(get_current_user))
 
 @analytics_router.get("/student-progress")
 async def get_student_progress(
-    student_id: Optional[str] = Query(None),
-    class_id: Optional[str] = Query(None),
+    student_id: str | None = Query(None),
+    class_id: str | None = Query(None),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get student progress data."""
 
     # Generate sample progress data
@@ -76,7 +77,7 @@ async def get_student_progress(
 
 
 @analytics_router.get("/weekly_xp")
-async def get_weekly_xp(current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+async def get_weekly_xp(current_user: User = Depends(get_current_user)) -> dict[str, Any]:
     """Get weekly XP progression for the current user."""
 
     # Generate sample weekly XP data
@@ -103,7 +104,7 @@ async def get_weekly_xp(current_user: User = Depends(get_current_user)) -> Dict[
 @analytics_router.get("/subject_mastery")
 async def get_subject_mastery(
     current_user: User = Depends(get_current_user),
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Get subject mastery levels for the current user."""
 
     subjects = [
@@ -126,7 +127,7 @@ async def get_leaderboard(
     timeframe: str = Query(default="week", enum=["day", "week", "month", "all"]),
     limit: int = Query(default=10, le=100),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get leaderboard data for the specified timeframe."""
 
     # Generate sample leaderboard data
@@ -192,7 +193,7 @@ compliance_router = APIRouter(prefix="/compliance", tags=["Compliance"])
 
 
 @compliance_router.get("/status")
-async def get_compliance_status(current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+async def get_compliance_status(current_user: User = Depends(get_current_user)) -> dict[str, Any]:
     """Get compliance status for the current user/organization."""
 
     if current_user.role.lower() != "admin":
@@ -261,11 +262,11 @@ users_router = APIRouter(prefix="/users", tags=["Users"])
 @users_router.get("/")
 async def list_users(
     search: str = Query(default="", description="Search term"),
-    role: Optional[str] = Query(default=None, description="Filter by role"),
+    role: str | None = Query(default=None, description="Filter by role"),
     limit: int = Query(default=20, le=100),
     offset: int = Query(default=0, ge=0),
     current_user: User = Depends(get_current_user),
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """List users (admin only)."""
 
     if current_user.role.lower() != "admin":
@@ -326,7 +327,7 @@ async def list_users(
 
 
 @users_router.get("/{user_id}")
-async def get_user(user_id: str, current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+async def get_user(user_id: str, current_user: User = Depends(get_current_user)) -> dict[str, Any]:
     """Get user details."""
 
     # Users can view their own profile, admins can view any
@@ -363,7 +364,7 @@ async def list_schools(
     limit: int = Query(default=20, le=100),
     offset: int = Query(default=0, ge=0),
     current_user: User = Depends(get_current_user),
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """List schools (admin only)."""
 
     if current_user.role.lower() != "admin":
@@ -419,7 +420,7 @@ async def list_schools(
 @schools_router.get("/{school_id}")
 async def get_school(
     school_id: str, current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get school details."""
 
     if current_user.role.lower() not in ["admin", "teacher"]:
@@ -452,8 +453,8 @@ async def get_school(
 
 @schools_router.post("/")
 async def create_school(
-    school_data: Dict[str, Any], current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+    school_data: dict[str, Any], current_user: User = Depends(get_current_user)
+) -> dict[str, Any]:
     """Create a new school (admin only)."""
 
     if current_user.role.lower() != "admin":
@@ -489,11 +490,11 @@ async def create_school(
 # Missing analytics endpoints for Reports page
 @analytics_router.get("/trends/engagement")
 async def get_engagement_trends(
-    start_date: Optional[datetime] = Query(None, description="Start date for trends"),
-    end_date: Optional[datetime] = Query(None, description="End date for trends"),
+    start_date: datetime | None = Query(None, description="Start date for trends"),
+    end_date: datetime | None = Query(None, description="End date for trends"),
     interval: str = Query("day", description="Interval for data points"),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get engagement trend data"""
 
     # Default to last 30 days if dates not provided
@@ -555,10 +556,10 @@ async def get_engagement_trends(
 
 @analytics_router.get("/trends/content")
 async def get_content_trends(
-    start_date: Optional[datetime] = Query(None, description="Start date for trends"),
-    end_date: Optional[datetime] = Query(None, description="End date for trends"),
+    start_date: datetime | None = Query(None, description="Start date for trends"),
+    end_date: datetime | None = Query(None, description="End date for trends"),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get content consumption trends"""
 
     # Default to last 30 days if dates not provided
@@ -631,10 +632,10 @@ async def get_content_trends(
 
 @analytics_router.get("/dashboard")
 async def get_dashboard_analytics(
-    start_date: Optional[datetime] = Query(None, description="Start date for analytics"),
-    end_date: Optional[datetime] = Query(None, description="End date for analytics"),
+    start_date: datetime | None = Query(None, description="Start date for analytics"),
+    end_date: datetime | None = Query(None, description="End date for analytics"),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get dashboard analytics for the specified date range"""
 
     # Default to last 30 days if dates not provided
@@ -740,7 +741,7 @@ async def get_dashboard_analytics(
 
 
 @analytics_router.get("/realtime")
-async def get_realtime_analytics(current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+async def get_realtime_analytics(current_user: User = Depends(get_current_user)) -> dict[str, Any]:
     """Get real-time analytics data"""
 
     # Generate real-time metrics
@@ -790,12 +791,12 @@ async def get_realtime_analytics(current_user: User = Depends(get_current_user))
 
 @analytics_router.get("/summary")
 async def get_summary_analytics(
-    date_from: Optional[str] = Query(None, description="Start date filter"),
-    date_to: Optional[str] = Query(None, description="End date filter"),
-    subject: Optional[str] = Query(None, description="Subject filter"),
-    grade_level: Optional[int] = Query(None, description="Grade level filter"),
+    date_from: str | None = Query(None, description="Start date filter"),
+    date_to: str | None = Query(None, description="End date filter"),
+    subject: str | None = Query(None, description="Subject filter"),
+    grade_level: int | None = Query(None, description="Grade level filter"),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get summary analytics data with optional filters"""
 
     # Calculate date range

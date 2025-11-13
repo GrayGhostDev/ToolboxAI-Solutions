@@ -1,6 +1,8 @@
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
+
 
 @pytest.fixture
 def mock_db_connection():
@@ -19,12 +21,13 @@ Validates query performance after optimization and measures execution times
 Target: All queries < 50ms
 """
 
-import time
+import os
 import statistics
 import sys
-import os
-from typing import List, Dict, Any, Tuple
+import time
 from contextlib import contextmanager
+from typing import Any, Dict, List, Tuple
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 

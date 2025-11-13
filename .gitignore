@@ -409,3 +409,7 @@ aiosqlite/
 fix_classes*.py
 .vercel
 *.backup.*
+
+# QODANA
+AmLZm_RvRvk_799331b8-be0c-4580-bcb4-6601912309d3_qodana.sarif.json
+

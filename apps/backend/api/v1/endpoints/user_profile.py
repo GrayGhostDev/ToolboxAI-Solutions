@@ -3,12 +3,12 @@ User Profile API endpoint
 Provides current user profile information
 """
 
-from typing import Optional, List
 from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from apps.backend.core.security.jwt_handler import get_current_user, TokenData
+from apps.backend.core.security.jwt_handler import TokenData, get_current_user
 
 router = APIRouter(tags=["User Profile"])
 
@@ -20,12 +20,12 @@ class UserProfile(BaseModel):
     username: str
     email: str
     role: str
-    displayName: Optional[str] = None
-    avatarUrl: Optional[str] = None
-    schoolId: Optional[str] = None
-    classIds: List[str] = []  # Python 3.9 compatible
+    displayName: str | None = None
+    avatarUrl: str | None = None
+    schoolId: str | None = None
+    classIds: list[str] = []  # Python 3.9 compatible
     createdAt: datetime
-    lastLogin: Optional[datetime] = None
+    lastLogin: datetime | None = None
     isActive: bool = True
 
 

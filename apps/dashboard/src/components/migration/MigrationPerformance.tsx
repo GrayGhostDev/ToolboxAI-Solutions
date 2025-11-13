@@ -94,7 +94,7 @@ export function MigrationPerformance() {
       title: 'Benchmark Started',
       message: 'Measuring performance of both component versions...',
       color: 'blue',
-      icon: <IconBenchmark size={rem(18)} />,
+      icon: <IconBenchmark size={18} />,
       autoClose: false,
     });
 
@@ -124,7 +124,7 @@ export function MigrationPerformance() {
         title: 'Benchmark Complete',
         message: 'Performance comparison results are ready!',
         color: 'green',
-        icon: <IconTrendingUp size={rem(18)} />,
+        icon: <IconTrendingUp size={18} />,
         autoClose: 3000,
       });
 

@@ -3,14 +3,14 @@ Roblox Open Cloud API Client
 Implements 2025 Open Cloud API v2 for asset management and data operations
 """
 
-import aiohttp
 import json
-import base64
-from typing import Dict, List, Optional, Any, Union
-from datetime import datetime, timedelta
-from enum import Enum
-from pydantic import BaseModel, Field
 import logging
+from datetime import datetime
+from enum import Enum
+from typing import Any
+
+import aiohttp
+from pydantic import BaseModel, Field
 
 from apps.backend.core.config import settings
 
@@ -52,18 +52,18 @@ class DataStoreEntry(BaseModel):
 
     key: str
     value: Any
-    metadata: Optional[Dict[str, Any]] = None
-    user_ids: Optional[List[str]] = None  # For GDPR compliance
-    created_time: Optional[datetime] = None
-    updated_time: Optional[datetime] = None
-    version: Optional[str] = None
+    metadata: dict[str, Any] | None = None
+    user_ids: list[str] | None = None  # For GDPR compliance
+    created_time: datetime | None = None
+    updated_time: datetime | None = None
+    version: str | None = None
 
 
 class MessagingServiceMessage(BaseModel):
     """Message for Universe Messaging Service"""
 
     topic: str
-    message: Dict[str, Any]
+    message: dict[str, Any]
 
 
 class PlacePublishRequest(BaseModel):
@@ -80,10 +80,10 @@ class OpenCloudAPIClient:
     Handles assets, data stores, messaging, and place management
     """
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None):
         self.api_key = api_key or getattr(settings, "ROBLOX_API_KEY", "")
         self.base_url = "https://apis.roblox.com"
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.session: aiohttp.ClientSession | None = None
         self.headers = {"x-api-key": self.api_key, "Content-Type": "application/json"}
 
     async def __aenter__(self):
@@ -98,7 +98,7 @@ class OpenCloudAPIClient:
 
     # ==================== Asset Management ====================
 
-    async def create_asset(self, asset: AssetDescription, file_content: bytes) -> Dict[str, Any]:
+    async def create_asset(self, asset: AssetDescription, file_content: bytes) -> dict[str, Any]:
         """
         Create a new asset in Roblox
 
@@ -159,7 +159,7 @@ class OpenCloudAPIClient:
             logger.error(f"Error creating asset: {e}")
             raise
 
-    async def update_asset(self, asset_id: str, file_content: bytes) -> Dict[str, Any]:
+    async def update_asset(self, asset_id: str, file_content: bytes) -> dict[str, Any]:
         """
         Update existing asset content
 
@@ -195,7 +195,7 @@ class OpenCloudAPIClient:
             logger.error(f"Error updating asset: {e}")
             raise
 
-    async def get_asset(self, asset_id: str) -> Dict[str, Any]:
+    async def get_asset(self, asset_id: str) -> dict[str, Any]:
         """
         Get asset information
 
@@ -273,7 +273,7 @@ class OpenCloudAPIClient:
 
     async def set_datastore_entry(
         self, universe_id: str, datastore_name: str, entry: DataStoreEntry, scope: str = "global"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Set entry in DataStore
 
@@ -360,7 +360,7 @@ class OpenCloudAPIClient:
         scope: str = "global",
         order: str = "desc",
         limit: int = 10,
-    ) -> List[DataStoreEntry]:
+    ) -> list[DataStoreEntry]:
         """
         Get entries from Ordered DataStore (for leaderboards)
 
@@ -409,7 +409,7 @@ class OpenCloudAPIClient:
 
     async def publish_message(
         self, universe_id: str, message: MessagingServiceMessage
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Publish message to Universe Messaging Service
 
@@ -449,7 +449,7 @@ class OpenCloudAPIClient:
 
     # ==================== Place Publishing ====================
 
-    async def publish_place(self, request: PlacePublishRequest) -> Dict[str, Any]:
+    async def publish_place(self, request: PlacePublishRequest) -> dict[str, Any]:
         """
         Publish a place to Roblox
 
@@ -486,8 +486,8 @@ class OpenCloudAPIClient:
     # ==================== Batch Operations ====================
 
     async def batch_create_assets(
-        self, assets: List[tuple[AssetDescription, bytes]]
-    ) -> List[Dict[str, Any]]:
+        self, assets: list[tuple[AssetDescription, bytes]]
+    ) -> list[dict[str, Any]]:
         """
         Create multiple assets in batch
 
@@ -509,8 +509,8 @@ class OpenCloudAPIClient:
         return results
 
     async def batch_set_datastore_entries(
-        self, universe_id: str, datastore_name: str, entries: List[DataStoreEntry]
-    ) -> List[Dict[str, Any]]:
+        self, universe_id: str, datastore_name: str, entries: list[DataStoreEntry]
+    ) -> list[dict[str, Any]]:
         """
         Set multiple datastore entries in batch
 

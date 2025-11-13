@@ -5,11 +5,10 @@ This file contains shared fixtures and configuration for testing
 the refactored backend application.
 """
 
-import os
 import asyncio
+import os
 import tempfile
-from typing import Generator, AsyncGenerator
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import FastAPI
@@ -21,7 +20,7 @@ os.environ["SKIP_LIFESPAN"] = "true"
 os.environ["ENVIRONMENT"] = "test"
 
 # Import after setting environment
-from apps.backend.core.app_factory import create_test_app, create_app
+from apps.backend.core.app_factory import create_app, create_test_app
 from apps.backend.main import app as main_app
 
 
@@ -60,30 +59,28 @@ def main_test_client(main_test_app) -> TestClient:
 @pytest.fixture
 def mock_pusher_service():
     """Mock Pusher service for testing"""
-    with patch('apps.backend.services.pusher.trigger_event') as mock_trigger, \
-         patch('apps.backend.services.pusher.authenticate_channel') as mock_auth, \
-         patch('apps.backend.services.pusher.verify_webhook') as mock_webhook:
+    with (
+        patch("apps.backend.services.pusher.trigger_event") as mock_trigger,
+        patch("apps.backend.services.pusher.authenticate_channel") as mock_auth,
+        patch("apps.backend.services.pusher.verify_webhook") as mock_webhook,
+    ):
 
         # Configure mock responses
         mock_trigger.return_value = {"channels": {"public": {}}, "event_id": "test_123"}
         mock_auth.return_value = {"auth": "test_auth_string"}
         mock_webhook.return_value = [{"name": "test_event", "data": {}}]
 
-        yield {
-            'trigger': mock_trigger,
-            'auth': mock_auth,
-            'webhook': mock_webhook
-        }
+        yield {"trigger": mock_trigger, "auth": mock_auth, "webhook": mock_webhook}
 
 
 @pytest.fixture
 def mock_agent_service():
     """Mock agent service for testing"""
-    with patch('apps.backend.agents.agent.generate_educational_content') as mock_generate:
+    with patch("apps.backend.agents.agent.generate_educational_content") as mock_generate:
         mock_generate.return_value = {
             "content": "Test educational content",
             "topic": "test topic",
-            "metadata": {"generated_by": "test_agent"}
+            "metadata": {"generated_by": "test_agent"},
         }
 
         yield mock_generate
@@ -92,8 +89,10 @@ def mock_agent_service():
 @pytest.fixture
 def mock_database():
     """Mock database connections for testing"""
-    with patch('apps.backend.core.database.get_session') as mock_session, \
-         patch('apps.backend.core.database.get_async_session') as mock_async_session:
+    with (
+        patch("apps.backend.core.database.get_session") as mock_session,
+        patch("apps.backend.core.database.get_async_session") as mock_async_session,
+    ):
 
         # Create mock sessions
         mock_db_session = MagicMock()
@@ -102,16 +101,13 @@ def mock_database():
         mock_session.return_value = mock_db_session
         mock_async_session.return_value = mock_async_db_session
 
-        yield {
-            'session': mock_db_session,
-            'async_session': mock_async_db_session
-        }
+        yield {"session": mock_db_session, "async_session": mock_async_db_session}
 
 
 @pytest.fixture
 def mock_redis():
     """Mock Redis connection for testing"""
-    with patch('apps.backend.core.redis.get_redis_client') as mock_redis_client:
+    with patch("apps.backend.core.redis.get_redis_client") as mock_redis_client:
         mock_client = MagicMock()
 
         # Configure common Redis operations
@@ -128,8 +124,9 @@ def mock_redis():
 @pytest.fixture
 def temp_config_file():
     """Create a temporary configuration file for testing"""
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.env', delete=False) as f:
-        f.write("""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".env", delete=False) as f:
+        f.write(
+            """
 TESTING=true
 SKIP_LIFESPAN=true
 DATABASE_URL=sqlite:///test.db
@@ -138,7 +135,8 @@ SECRET_KEY=test_secret_key_for_testing_only
 ENVIRONMENT=test
 APP_NAME=ToolboxAI Test
 APP_VERSION=1.0.0-test
-        """)
+        """
+        )
         f.flush()
 
         yield f.name
@@ -151,15 +149,18 @@ APP_VERSION=1.0.0-test
 def performance_monitor():
     """Fixture for performance monitoring"""
     from tests.test_refactored_backend_performance import PerformanceMetrics
+
     return PerformanceMetrics()
 
 
 @pytest.fixture
 def mock_external_services():
     """Mock all external services for isolated testing"""
-    with patch('apps.backend.services.pusher.PusherClient') as mock_pusher, \
-         patch('apps.backend.core.monitoring.sentry_sdk') as mock_sentry, \
-         patch('apps.backend.services.openai.OpenAI') as mock_openai:
+    with (
+        patch("apps.backend.services.pusher.PusherClient") as mock_pusher,
+        patch("apps.backend.core.monitoring.sentry_sdk") as mock_sentry,
+        patch("apps.backend.services.openai.OpenAI") as mock_openai,
+    ):
 
         # Configure mocks
         mock_pusher_instance = MagicMock()
@@ -170,9 +171,9 @@ def mock_external_services():
         mock_openai.return_value = mock_openai_instance
 
         yield {
-            'pusher': mock_pusher_instance,
-            'sentry': mock_sentry,
-            'openai': mock_openai_instance
+            "pusher": mock_pusher_instance,
+            "sentry": mock_sentry,
+            "openai": mock_openai_instance,
         }
 
 
@@ -184,13 +185,13 @@ def isolated_app():
         skip_sentry=True,
         testing_mode=True,
         title="Isolated Test App",
-        version="test"
+        version="test",
     )
 
     yield app
 
     # Cleanup if needed
-    if hasattr(app, 'state') and hasattr(app.state, 'cleanup'):
+    if hasattr(app, "state") and hasattr(app.state, "cleanup"):
         app.state.cleanup()
 
 
@@ -200,14 +201,10 @@ def mock_auth_user():
     from apps.backend.models.schemas import User
 
     mock_user = User(
-        id=123,
-        username="test_user",
-        email="test@example.com",
-        role="teacher",
-        is_active=True
+        id=123, username="test_user", email="test@example.com", role="teacher", is_active=True
     )
 
-    with patch('apps.backend.api.auth.auth.get_current_user') as mock_get_user:
+    with patch("apps.backend.api.auth.auth.get_current_user") as mock_get_user:
         mock_get_user.return_value = mock_user
         yield mock_user
 
@@ -237,24 +234,12 @@ pytest_plugins = ["pytest_asyncio"]
 
 def pytest_configure(config):
     """Configure pytest with custom markers"""
-    config.addinivalue_line(
-        "markers", "unit: mark test as a unit test"
-    )
-    config.addinivalue_line(
-        "markers", "integration: mark test as an integration test"
-    )
-    config.addinivalue_line(
-        "markers", "performance: mark test as a performance test"
-    )
-    config.addinivalue_line(
-        "markers", "slow: mark test as slow running"
-    )
-    config.addinivalue_line(
-        "markers", "requires_redis: mark test as requiring Redis"
-    )
-    config.addinivalue_line(
-        "markers", "requires_database: mark test as requiring database"
-    )
+    config.addinivalue_line("markers", "unit: mark test as a unit test")
+    config.addinivalue_line("markers", "integration: mark test as an integration test")
+    config.addinivalue_line("markers", "performance: mark test as a performance test")
+    config.addinivalue_line("markers", "slow: mark test as slow running")
+    config.addinivalue_line("markers", "requires_redis: mark test as requiring Redis")
+    config.addinivalue_line("markers", "requires_database: mark test as requiring database")
 
 
 def pytest_collection_modifyitems(config, items):
@@ -274,19 +259,15 @@ def pytest_collection_modifyitems(config, items):
 
 
 # Skip conditions for certain environments
-skip_if_no_redis = pytest.mark.skipif(
-    not os.environ.get("REDIS_URL"),
-    reason="Redis not available"
-)
+skip_if_no_redis = pytest.mark.skipif(not os.environ.get("REDIS_URL"), reason="Redis not available")
 
 skip_if_no_database = pytest.mark.skipif(
-    not os.environ.get("DATABASE_URL"),
-    reason="Database not available"
+    not os.environ.get("DATABASE_URL"), reason="Database not available"
 )
 
 skip_performance_tests = pytest.mark.skipif(
     os.environ.get("SKIP_PERFORMANCE_TESTS", "false").lower() == "true",
-    reason="Performance tests disabled"
+    reason="Performance tests disabled",
 )
 
 
@@ -315,7 +296,9 @@ class TestUtils:
     @staticmethod
     def assert_performance_acceptable(duration: float, max_duration: float, operation: str):
         """Assert that operation completed within acceptable time"""
-        assert duration < max_duration, f"{operation} took {duration:.3f}s, should be < {max_duration}s"
+        assert (
+            duration < max_duration
+        ), f"{operation} took {duration:.3f}s, should be < {max_duration}s"
 
 
 @pytest.fixture

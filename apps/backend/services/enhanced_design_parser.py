@@ -10,11 +10,8 @@ import json
 import logging
 import tempfile
 import zipfile
-import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Union
-import subprocess
-import base64
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -41,8 +38,8 @@ class EnhancedDesignParser:
         }
 
     async def parse_design_file(
-        self, file_path: Union[str, Path], save_output: bool = True
-    ) -> Dict[str, Any]:
+        self, file_path: str | Path, save_output: bool = True
+    ) -> dict[str, Any]:
         """Parse a design file into complete interpretable structure"""
         file_path = Path(file_path)
 
@@ -80,7 +77,7 @@ class EnhancedDesignParser:
             logger.error(f"Error parsing {file_path}: {e}")
             return {"success": False, "error": str(e), "parsed_data": None}
 
-    async def _save_parsed_data(self, result: Dict[str, Any]) -> Optional[Path]:
+    async def _save_parsed_data(self, result: dict[str, Any]) -> Path | None:
         """Save parsed data to the images folder"""
         try:
             # Create a safe filename
@@ -98,7 +95,7 @@ class EnhancedDesignParser:
             logger.error(f"Error saving parsed data: {e}")
             return None
 
-    async def _parse_figma_file(self, file_path: Path) -> Dict[str, Any]:
+    async def _parse_figma_file(self, file_path: Path) -> dict[str, Any]:
         """Parse Figma .fig file into complete structure"""
         try:
             # Try fig2sketch conversion first
@@ -132,7 +129,7 @@ class EnhancedDesignParser:
             logger.warning(f"fig2sketch conversion failed: {e}")
             return await self._extract_figma_metadata(file_path)
 
-    async def _parse_sketch_file(self, file_path: Path) -> Dict[str, Any]:
+    async def _parse_sketch_file(self, file_path: Path) -> dict[str, Any]:
         """Parse Sketch .sketch file into complete structure"""
         try:
             # Sketch files are ZIP archives
@@ -187,7 +184,7 @@ class EnhancedDesignParser:
                 "basic_info": await self._get_basic_file_info(file_path),
             }
 
-    async def _parse_xd_file(self, file_path: Path) -> Dict[str, Any]:
+    async def _parse_xd_file(self, file_path: Path) -> dict[str, Any]:
         """Parse Adobe XD .xd file into complete structure"""
         try:
             with zipfile.ZipFile(file_path, "r") as zip_ref:
@@ -241,7 +238,7 @@ class EnhancedDesignParser:
                 "basic_info": await self._get_basic_file_info(file_path),
             }
 
-    async def _parse_blend_file(self, file_path: Path) -> Dict[str, Any]:
+    async def _parse_blend_file(self, file_path: Path) -> dict[str, Any]:
         """Parse Blender .blend file into complete structure"""
         try:
             # Use blender to export data
@@ -335,7 +332,7 @@ with open('{json_path}', 'w') as f:
                 stdout, stderr = await result.communicate()
 
                 if result.returncode == 0 and json_path.exists():
-                    with open(json_path, "r") as f:
+                    with open(json_path) as f:
                         blend_data = json.load(f)
                     return {"format": "blender", "data": blend_data}
                 else:
@@ -348,10 +345,10 @@ with open('{json_path}', 'w') as f:
             logger.warning(f"Blender export failed: {e}")
             return await self._get_basic_blend_info(file_path)
 
-    async def _parse_obj_file(self, file_path: Path) -> Dict[str, Any]:
+    async def _parse_obj_file(self, file_path: Path) -> dict[str, Any]:
         """Parse .obj file into complete structure"""
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 lines = f.readlines()
 
             parsed_data = {
@@ -464,7 +461,7 @@ with open('{json_path}', 'w') as f:
                 "basic_info": await self._get_basic_file_info(file_path),
             }
 
-    async def _parse_image_file(self, file_path: Path) -> Dict[str, Any]:
+    async def _parse_image_file(self, file_path: Path) -> dict[str, Any]:
         """Parse image file into complete structure"""
         try:
             from PIL import Image
@@ -533,7 +530,7 @@ with open('{json_path}', 'w') as f:
                 "basic_info": await self._get_basic_file_info(file_path),
             }
 
-    async def _parse_video_file(self, file_path: Path) -> Dict[str, Any]:
+    async def _parse_video_file(self, file_path: Path) -> dict[str, Any]:
         """Parse video file into complete structure"""
         try:
             # Use ffprobe for detailed video analysis
@@ -614,7 +611,7 @@ with open('{json_path}', 'w') as f:
 
     # Helper methods for extracting specific data structures
 
-    def _extract_sketch_pages(self, doc_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _extract_sketch_pages(self, doc_data: dict[str, Any]) -> list[dict[str, Any]]:
         """Extract page information from Sketch document"""
         pages = []
         for page in doc_data.get("pages", []):
@@ -626,7 +623,7 @@ with open('{json_path}', 'w') as f:
             pages.append(page_info)
         return pages
 
-    def _extract_sketch_page_info(self, page_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_sketch_page_info(self, page_data: dict[str, Any]) -> dict[str, Any]:
         """Extract detailed page information"""
         return {
             "name": page_data.get("name", "Untitled"),
@@ -634,7 +631,7 @@ with open('{json_path}', 'w') as f:
             "layers": self._extract_sketch_layers(page_data),
         }
 
-    def _extract_sketch_artboards(self, page_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _extract_sketch_artboards(self, page_data: dict[str, Any]) -> list[dict[str, Any]]:
         """Extract artboard information"""
         artboards = []
         for layer in page_data.get("layers", []):
@@ -648,7 +645,7 @@ with open('{json_path}', 'w') as f:
                 artboards.append(artboard)
         return artboards
 
-    def _extract_sketch_layers(self, container: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _extract_sketch_layers(self, container: dict[str, Any]) -> list[dict[str, Any]]:
         """Extract layer information recursively"""
         layers = []
         for layer in container.get("layers", []):
@@ -664,7 +661,7 @@ with open('{json_path}', 'w') as f:
             layers.append(layer_info)
         return layers
 
-    def _extract_sketch_symbols(self, meta_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _extract_sketch_symbols(self, meta_data: dict[str, Any]) -> list[dict[str, Any]]:
         """Extract symbol information"""
         symbols = []
         for symbol in meta_data.get("symbols", []):
@@ -677,8 +674,8 @@ with open('{json_path}', 'w') as f:
         return symbols
 
     def _extract_sketch_colors(
-        self, zip_ref: zipfile.ZipFile, file_list: List[str]
-    ) -> List[Dict[str, Any]]:
+        self, zip_ref: zipfile.ZipFile, file_list: list[str]
+    ) -> list[dict[str, Any]]:
         """Extract color information from Sketch file"""
         colors = []
         # Look for color definitions in various files
@@ -693,8 +690,8 @@ with open('{json_path}', 'w') as f:
         return colors
 
     def _extract_sketch_styles(
-        self, zip_ref: zipfile.ZipFile, file_list: List[str]
-    ) -> List[Dict[str, Any]]:
+        self, zip_ref: zipfile.ZipFile, file_list: list[str]
+    ) -> list[dict[str, Any]]:
         """Extract style information from Sketch file"""
         styles = []
         # Look for style definitions
@@ -707,7 +704,7 @@ with open('{json_path}', 'w') as f:
                     continue
         return styles
 
-    def _process_sketch_color_data(self, color_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _process_sketch_color_data(self, color_data: dict[str, Any]) -> list[dict[str, Any]]:
         """Process color data from Sketch file"""
         colors = []
         # Implementation depends on Sketch file structure
@@ -718,7 +715,7 @@ with open('{json_path}', 'w') as f:
                     colors.append({"name": key, "value": value})
         return colors
 
-    def _process_sketch_style_data(self, style_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _process_sketch_style_data(self, style_data: dict[str, Any]) -> list[dict[str, Any]]:
         """Process style data from Sketch file"""
         styles = []
         # Implementation depends on Sketch file structure
@@ -728,7 +725,7 @@ with open('{json_path}', 'w') as f:
                     styles.append({"name": key, "value": value})
         return styles
 
-    def _extract_xd_artboard(self, artboard_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_xd_artboard(self, artboard_data: dict[str, Any]) -> dict[str, Any]:
         """Extract artboard information from XD file"""
         return {
             "name": artboard_data.get("name", "Untitled"),
@@ -737,7 +734,7 @@ with open('{json_path}', 'w') as f:
             "children": self._extract_xd_children(artboard_data.get("children", [])),
         }
 
-    def _extract_xd_component(self, component_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_xd_component(self, component_data: dict[str, Any]) -> dict[str, Any]:
         """Extract component information from XD file"""
         return {
             "name": component_data.get("name", "Untitled"),
@@ -746,7 +743,7 @@ with open('{json_path}', 'w') as f:
             "children": self._extract_xd_children(component_data.get("children", [])),
         }
 
-    def _extract_xd_children(self, children: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _extract_xd_children(self, children: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Extract children elements from XD file"""
         elements = []
         for child in children:
@@ -761,8 +758,8 @@ with open('{json_path}', 'w') as f:
         return elements
 
     def _extract_xd_interactions(
-        self, zip_ref: zipfile.ZipFile, file_list: List[str]
-    ) -> List[Dict[str, Any]]:
+        self, zip_ref: zipfile.ZipFile, file_list: list[str]
+    ) -> list[dict[str, Any]]:
         """Extract interaction data from XD file"""
         interactions = []
         # Look for interaction files
@@ -776,8 +773,8 @@ with open('{json_path}', 'w') as f:
         return interactions
 
     def _extract_xd_prototypes(
-        self, zip_ref: zipfile.ZipFile, file_list: List[str]
-    ) -> List[Dict[str, Any]]:
+        self, zip_ref: zipfile.ZipFile, file_list: list[str]
+    ) -> list[dict[str, Any]]:
         """Extract prototype data from XD file"""
         prototypes = []
         # Look for prototype files
@@ -790,7 +787,7 @@ with open('{json_path}', 'w') as f:
                     continue
         return prototypes
 
-    async def _extract_figma_metadata(self, file_path: Path) -> Dict[str, Any]:
+    async def _extract_figma_metadata(self, file_path: Path) -> dict[str, Any]:
         """Extract basic metadata from Figma file when conversion tools aren't available"""
         stat = file_path.stat()
         return {
@@ -800,7 +797,7 @@ with open('{json_path}', 'w') as f:
             "note": "Full parsing requires fig2sketch tool",
         }
 
-    async def _get_basic_file_info(self, file_path: Path) -> Dict[str, Any]:
+    async def _get_basic_file_info(self, file_path: Path) -> dict[str, Any]:
         """Get basic file information as fallback"""
         stat = file_path.stat()
         return {
@@ -809,7 +806,7 @@ with open('{json_path}', 'w') as f:
             "note": "Basic info only - full parsing not available",
         }
 
-    async def _get_basic_blend_info(self, file_path: Path) -> Dict[str, Any]:
+    async def _get_basic_blend_info(self, file_path: Path) -> dict[str, Any]:
         """Get basic Blender file information"""
         stat = file_path.stat()
         return {

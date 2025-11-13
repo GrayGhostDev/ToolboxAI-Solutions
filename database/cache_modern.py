@@ -11,19 +11,18 @@ Provides async Redis caching with:
 Reference: https://redis.readthedocs.io/en/stable/
 """
 
+import hashlib
 import json
 import logging
-import hashlib
 from datetime import timedelta
 from functools import wraps
-from typing import Any, Optional, Callable, TypeVar, ParamSpec, Union
+from typing import Any, Callable, Optional, ParamSpec, TypeVar, Union
 from uuid import UUID
 
-from redis.asyncio import Redis, ConnectionPool
+from redis.asyncio import ConnectionPool, Redis
 from redis.exceptions import RedisError
 
 from toolboxai_settings.settings import settings
-
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +78,7 @@ class CacheKeyBuilder:
         Returns:
             Serialized string
         """
+
         def serialize_value(val: Any) -> str:
             """Serialize single value."""
             if isinstance(val, UUID):
@@ -376,9 +376,7 @@ def cache_result(
             if key_builder:
                 cache_key = key_builder(*args, **kwargs)
             else:
-                cache_key = CacheKeyBuilder.build_key(
-                    prefix, func.__name__, args, kwargs
-                )
+                cache_key = CacheKeyBuilder.build_key(prefix, func.__name__, args, kwargs)
 
             # Try to get from cache
             cached = await redis_cache.get(cache_key)

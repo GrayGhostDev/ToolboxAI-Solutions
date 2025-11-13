@@ -3,15 +3,13 @@ Database Service for Dashboard Data
 Connects to PostgreSQL and fetches real data for all user roles.
 """
 
-import asyncio
-import asyncpg
-import os
 import logging
-from typing import Dict, Any, List, Optional, Union
-from datetime import datetime, timedelta
+import os
+from datetime import datetime
+from typing import Any
 from uuid import UUID
-import json
-from decimal import Decimal
+
+import asyncpg
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +18,7 @@ class DatabaseService:
     """Service for fetching real data from PostgreSQL database."""
 
     def __init__(self):
-        self.pool: Optional[asyncpg.Pool] = None
+        self.pool: asyncpg.Pool | None = None
         self.db_config = {
             "host": os.getenv("DB_HOST", "localhost"),
             "port": int(os.getenv("DB_PORT", 5432)),
@@ -62,7 +60,7 @@ class DatabaseService:
             self.pool = None
             logger.info("Database connection pool closed")
 
-    async def get_dashboard_data(self, role: str, user_id: int) -> Dict[str, Any]:
+    async def get_dashboard_data(self, role: str, user_id: int) -> dict[str, Any]:
         """Fetch dashboard data based on user role."""
         if not self.pool:
             await self.connect()
@@ -80,7 +78,7 @@ class DatabaseService:
         else:
             raise ValueError(f"Invalid role: {role}")
 
-    async def _get_teacher_dashboard(self, teacher_id: int) -> Dict[str, Any]:
+    async def _get_teacher_dashboard(self, teacher_id: int) -> dict[str, Any]:
         """Fetch dashboard data for teacher role."""
         if not self.pool:
             raise RuntimeError("Database connection pool is not initialized")
@@ -225,7 +223,7 @@ class DatabaseService:
                 "compliance": {"status": "Compliant", "pendingAlerts": 0},
             }
 
-    async def _get_student_dashboard(self, student_id: int) -> Dict[str, Any]:
+    async def _get_student_dashboard(self, student_id: int) -> dict[str, Any]:
         """Fetch dashboard data for student role."""
         if not self.pool:
             raise RuntimeError("Database connection pool is not initialized")
@@ -383,7 +381,7 @@ class DatabaseService:
                 "upcomingEvents": await self._get_student_upcoming_events(student_id, conn),
             }
 
-    async def _get_admin_dashboard(self, admin_id: int) -> Dict[str, Any]:
+    async def _get_admin_dashboard(self, admin_id: int) -> dict[str, Any]:
         """Fetch dashboard data for admin role."""
         if not self.pool:
             raise RuntimeError("Database connection pool is not initialized")
@@ -513,7 +511,7 @@ class DatabaseService:
                 "userGrowth": self._format_user_growth(user_growth),
             }
 
-    async def _get_parent_dashboard(self, parent_id: int) -> Dict[str, Any]:
+    async def _get_parent_dashboard(self, parent_id: int) -> dict[str, Any]:
         """Fetch dashboard data for parent role."""
         if not self.pool:
             raise RuntimeError("Database connection pool is not initialized")
@@ -696,7 +694,7 @@ class DatabaseService:
 
             return dashboard_data
 
-    async def _get_student_upcoming_events(self, student_id: int, conn) -> List[Dict[str, Any]]:
+    async def _get_student_upcoming_events(self, student_id: int, conn) -> list[dict[str, Any]]:
         """Get upcoming events for a student."""
         events = []
 
@@ -777,7 +775,7 @@ class DatabaseService:
         else:
             return "Just now"
 
-    def _format_user_growth(self, growth_data) -> Dict[str, Any]:
+    def _format_user_growth(self, growth_data) -> dict[str, Any]:
         """Format user growth data for charts."""
         months = []
         students = []
@@ -841,7 +839,7 @@ async def get_db_session():
         yield conn
 
 
-async def update_user_password(db, user_id: Union[str, UUID], password_hash: str) -> bool:
+async def update_user_password(db, user_id: str | UUID, password_hash: str) -> bool:
     """
     Update user's password hash in database.
 
@@ -868,7 +866,7 @@ async def update_user_password(db, user_id: Union[str, UUID], password_hash: str
             WHERE id = $2
             """,
             password_hash,
-            user_id_str
+            user_id_str,
         )
         logger.info(f"Password updated successfully for user {user_id_str}")
         return True

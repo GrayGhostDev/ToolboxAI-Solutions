@@ -3,14 +3,11 @@ Pusher Service for Roblox Real-time Communication
 Manages Pusher channels for Roblox Bridge integration
 """
 
-import os
-import json
 import logging
-import hashlib
-import hmac
-from typing import Dict, Any, Optional, List
+import os
 from datetime import datetime, timezone
 from enum import Enum
+from typing import Any
 
 import pusher
 from pydantic import BaseModel, Field
@@ -20,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 class RobloxChannelType(str, Enum):
     """Types of Pusher channels for Roblox integration"""
+
     CONVERSATION = "private-roblox-conversation"
     GENERATION = "private-roblox-generation"
     SYNC = "private-roblox-sync"
@@ -30,6 +28,7 @@ class RobloxChannelType(str, Enum):
 
 class RobloxEventType(str, Enum):
     """Event types for Roblox Pusher channels"""
+
     # Conversation events
     STAGE_CHANGED = "stage-changed"
     INPUT_PROCESSED = "input-processed"
@@ -61,10 +60,11 @@ class RobloxEventType(str, Enum):
 
 class PusherEvent(BaseModel):
     """Base model for Pusher events"""
+
     event_type: str = Field(description="Type of event")
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    data: Dict[str, Any] = Field(description="Event data")
-    metadata: Optional[Dict[str, Any]] = Field(default=None, description="Additional metadata")
+    data: dict[str, Any] = Field(description="Event data")
+    metadata: dict[str, Any] | None = Field(default=None, description="Additional metadata")
 
 
 class RobloxPusherService:
@@ -85,16 +85,12 @@ class RobloxPusherService:
             self.client = None
         else:
             self.client = pusher.Pusher(
-                app_id=self.app_id,
-                key=self.key,
-                secret=self.secret,
-                cluster=self.cluster,
-                ssl=True
+                app_id=self.app_id, key=self.key, secret=self.secret, cluster=self.cluster, ssl=True
             )
             logger.info(f"Pusher client initialized for cluster {self.cluster}")
 
         # Track active channels
-        self.active_channels: Dict[str, Dict[str, Any]] = {}
+        self.active_channels: dict[str, dict[str, Any]] = {}
 
     def get_channel_name(self, channel_type: RobloxChannelType, identifier: str) -> str:
         """
@@ -110,11 +106,8 @@ class RobloxPusherService:
         return f"{channel_type.value}-{identifier}"
 
     def authenticate_channel(
-        self,
-        channel_name: str,
-        socket_id: str,
-        user_data: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, str]:
+        self, channel_name: str, socket_id: str, user_data: dict[str, Any] | None = None
+    ) -> dict[str, str]:
         """
         Authenticate a private or presence channel
 
@@ -136,16 +129,11 @@ class RobloxPusherService:
                     user_data = {"user_id": "anonymous"}
 
                 auth = self.client.authenticate(
-                    channel=channel_name,
-                    socket_id=socket_id,
-                    custom_data=user_data
+                    channel=channel_name, socket_id=socket_id, custom_data=user_data
                 )
             else:
                 # Private channel authentication
-                auth = self.client.authenticate(
-                    channel=channel_name,
-                    socket_id=socket_id
-                )
+                auth = self.client.authenticate(channel=channel_name, socket_id=socket_id)
 
             logger.info(f"Authenticated channel {channel_name} for socket {socket_id}")
             return auth
@@ -155,11 +143,7 @@ class RobloxPusherService:
             raise
 
     def trigger_event(
-        self,
-        channel: str,
-        event: str,
-        data: Dict[str, Any],
-        socket_id: Optional[str] = None
+        self, channel: str, event: str, data: dict[str, Any], socket_id: str | None = None
     ) -> bool:
         """
         Trigger an event on a channel
@@ -178,12 +162,7 @@ class RobloxPusherService:
             return False
 
         try:
-            self.client.trigger(
-                channels=channel,
-                event_name=event,
-                data=data,
-                socket_id=socket_id
-            )
+            self.client.trigger(channels=channel, event_name=event, data=data, socket_id=socket_id)
 
             logger.debug(f"Triggered event {event} on channel {channel}")
             return True
@@ -192,10 +171,7 @@ class RobloxPusherService:
             logger.error(f"Failed to trigger event {event} on {channel}: {e}")
             return False
 
-    def batch_trigger(
-        self,
-        events: List[Dict[str, Any]]
-    ) -> bool:
+    def batch_trigger(self, events: list[dict[str, Any]]) -> bool:
         """
         Trigger multiple events in a single request
 
@@ -228,7 +204,7 @@ class RobloxPusherService:
         stage: str,
         progress: float,
         message: str,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: dict[str, Any] | None = None,
     ) -> bool:
         """Notify stage change in conversation flow"""
         channel = self.get_channel_name(RobloxChannelType.CONVERSATION, session_id)
@@ -238,16 +214,14 @@ class RobloxPusherService:
             "stage": stage,
             "progress": progress,
             "message": message,
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         if metadata:
             data["metadata"] = metadata
 
         return self.trigger_event(
-            channel=channel,
-            event=RobloxEventType.STAGE_CHANGED.value,
-            data=data
+            channel=channel, event=RobloxEventType.STAGE_CHANGED.value, data=data
         )
 
     def notify_generation_progress(
@@ -255,7 +229,7 @@ class RobloxPusherService:
         session_id: str,
         progress: float,
         status: str,
-        details: Optional[Dict[str, Any]] = None
+        details: dict[str, Any] | None = None,
     ) -> bool:
         """Notify content generation progress"""
         channel = self.get_channel_name(RobloxChannelType.GENERATION, session_id)
@@ -264,24 +238,18 @@ class RobloxPusherService:
             "session_id": session_id,
             "progress": progress,
             "status": status,
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         if details:
             data["details"] = details
 
         return self.trigger_event(
-            channel=channel,
-            event=RobloxEventType.GENERATION_PROGRESS.value,
-            data=data
+            channel=channel, event=RobloxEventType.GENERATION_PROGRESS.value, data=data
         )
 
     def notify_generation_complete(
-        self,
-        session_id: str,
-        project_id: str,
-        files_generated: int,
-        rojo_port: int
+        self, session_id: str, project_id: str, files_generated: int, rojo_port: int
     ) -> bool:
         """Notify that content generation is complete"""
         channel = self.get_channel_name(RobloxChannelType.GENERATION, session_id)
@@ -292,13 +260,11 @@ class RobloxPusherService:
             "files_generated": files_generated,
             "rojo_port": rojo_port,
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "status": "complete"
+            "status": "complete",
         }
 
         return self.trigger_event(
-            channel=channel,
-            event=RobloxEventType.GENERATION_COMPLETE.value,
-            data=data
+            channel=channel, event=RobloxEventType.GENERATION_COMPLETE.value, data=data
         )
 
     # ========================================
@@ -306,10 +272,7 @@ class RobloxPusherService:
     # ========================================
 
     def notify_rojo_connected(
-        self,
-        project_id: str,
-        port: int,
-        studio_session_id: Optional[str] = None
+        self, project_id: str, port: int, studio_session_id: str | None = None
     ) -> bool:
         """Notify that Rojo has connected to Studio"""
         channel = self.get_channel_name(RobloxChannelType.SYNC, project_id)
@@ -318,21 +281,15 @@ class RobloxPusherService:
             "project_id": project_id,
             "port": port,
             "studio_session_id": studio_session_id,
-            "connected_at": datetime.now(timezone.utc).isoformat()
+            "connected_at": datetime.now(timezone.utc).isoformat(),
         }
 
         return self.trigger_event(
-            channel=channel,
-            event=RobloxEventType.ROJO_CONNECTED.value,
-            data=data
+            channel=channel, event=RobloxEventType.ROJO_CONNECTED.value, data=data
         )
 
     def notify_rojo_sync_update(
-        self,
-        project_id: str,
-        files_synced: int,
-        files_pending: int,
-        sync_status: str
+        self, project_id: str, files_synced: int, files_pending: int, sync_status: str
     ) -> bool:
         """Notify Rojo sync progress"""
         channel = self.get_channel_name(RobloxChannelType.SYNC, project_id)
@@ -342,25 +299,18 @@ class RobloxPusherService:
             "files_synced": files_synced,
             "files_pending": files_pending,
             "sync_status": sync_status,
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         return self.trigger_event(
-            channel=channel,
-            event=RobloxEventType.ROJO_SYNC_UPDATE.value,
-            data=data
+            channel=channel, event=RobloxEventType.ROJO_SYNC_UPDATE.value, data=data
         )
 
     # ========================================
     # Authentication Events
     # ========================================
 
-    def notify_auth_success(
-        self,
-        user_id: str,
-        session_id: str,
-        expires_in: int
-    ) -> bool:
+    def notify_auth_success(self, user_id: str, session_id: str, expires_in: int) -> bool:
         """Notify successful authentication"""
         channel = self.get_channel_name(RobloxChannelType.AUTH, user_id)
 
@@ -368,21 +318,14 @@ class RobloxPusherService:
             "user_id": user_id,
             "session_id": session_id,
             "expires_in": expires_in,
-            "authenticated_at": datetime.now(timezone.utc).isoformat()
+            "authenticated_at": datetime.now(timezone.utc).isoformat(),
         }
 
         return self.trigger_event(
-            channel=channel,
-            event=RobloxEventType.AUTH_SUCCESS.value,
-            data=data
+            channel=channel, event=RobloxEventType.AUTH_SUCCESS.value, data=data
         )
 
-    def notify_auth_failed(
-        self,
-        user_id: str,
-        reason: str,
-        error_code: Optional[str] = None
-    ) -> bool:
+    def notify_auth_failed(self, user_id: str, reason: str, error_code: str | None = None) -> bool:
         """Notify failed authentication"""
         channel = self.get_channel_name(RobloxChannelType.AUTH, user_id)
 
@@ -390,25 +333,18 @@ class RobloxPusherService:
             "user_id": user_id,
             "reason": reason,
             "error_code": error_code,
-            "failed_at": datetime.now(timezone.utc).isoformat()
+            "failed_at": datetime.now(timezone.utc).isoformat(),
         }
 
         return self.trigger_event(
-            channel=channel,
-            event=RobloxEventType.AUTH_FAILED.value,
-            data=data
+            channel=channel, event=RobloxEventType.AUTH_FAILED.value, data=data
         )
 
     # ========================================
     # Studio Plugin Events
     # ========================================
 
-    def notify_plugin_connected(
-        self,
-        studio_id: str,
-        plugin_version: str,
-        user_id: str
-    ) -> bool:
+    def notify_plugin_connected(self, studio_id: str, plugin_version: str, user_id: str) -> bool:
         """Notify that Studio plugin has connected"""
         channel = self.get_channel_name(RobloxChannelType.STUDIO, studio_id)
 
@@ -416,21 +352,15 @@ class RobloxPusherService:
             "studio_id": studio_id,
             "plugin_version": plugin_version,
             "user_id": user_id,
-            "connected_at": datetime.now(timezone.utc).isoformat()
+            "connected_at": datetime.now(timezone.utc).isoformat(),
         }
 
         return self.trigger_event(
-            channel=channel,
-            event=RobloxEventType.PLUGIN_CONNECTED.value,
-            data=data
+            channel=channel, event=RobloxEventType.PLUGIN_CONNECTED.value, data=data
         )
 
     def notify_content_deployed(
-        self,
-        studio_id: str,
-        project_id: str,
-        asset_count: int,
-        deployment_time: float
+        self, studio_id: str, project_id: str, asset_count: int, deployment_time: float
     ) -> bool:
         """Notify that content has been deployed to Studio"""
         channel = self.get_channel_name(RobloxChannelType.STUDIO, studio_id)
@@ -440,21 +370,15 @@ class RobloxPusherService:
             "project_id": project_id,
             "asset_count": asset_count,
             "deployment_time": deployment_time,
-            "deployed_at": datetime.now(timezone.utc).isoformat()
+            "deployed_at": datetime.now(timezone.utc).isoformat(),
         }
 
         return self.trigger_event(
-            channel=channel,
-            event=RobloxEventType.CONTENT_DEPLOYED.value,
-            data=data
+            channel=channel, event=RobloxEventType.CONTENT_DEPLOYED.value, data=data
         )
 
     def notify_asset_uploaded(
-        self,
-        studio_id: str,
-        asset_id: str,
-        asset_type: str,
-        asset_name: str
+        self, studio_id: str, asset_id: str, asset_type: str, asset_name: str
     ) -> bool:
         """Notify that an asset has been uploaded"""
         channel = self.get_channel_name(RobloxChannelType.STUDIO, studio_id)
@@ -464,13 +388,11 @@ class RobloxPusherService:
             "asset_id": asset_id,
             "asset_type": asset_type,
             "asset_name": asset_name,
-            "uploaded_at": datetime.now(timezone.utc).isoformat()
+            "uploaded_at": datetime.now(timezone.utc).isoformat(),
         }
 
         return self.trigger_event(
-            channel=channel,
-            event=RobloxEventType.ASSET_UPLOADED.value,
-            data=data
+            channel=channel, event=RobloxEventType.ASSET_UPLOADED.value, data=data
         )
 
     # ========================================
@@ -483,7 +405,7 @@ class RobloxPusherService:
         identifier: str,
         error_code: str,
         error_message: str,
-        details: Optional[Dict[str, Any]] = None
+        details: dict[str, Any] | None = None,
     ) -> bool:
         """Notify that an error has occurred"""
         channel = self.get_channel_name(channel_type, identifier)
@@ -491,23 +413,21 @@ class RobloxPusherService:
         data = {
             "error_code": error_code,
             "error_message": error_message,
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         if details:
             data["details"] = details
 
         return self.trigger_event(
-            channel=channel,
-            event=RobloxEventType.ERROR_OCCURRED.value,
-            data=data
+            channel=channel, event=RobloxEventType.ERROR_OCCURRED.value, data=data
         )
 
     # ========================================
     # Presence Channel Management
     # ========================================
 
-    def get_workspace_members(self, workspace_id: str) -> Optional[Dict[str, Any]]:
+    def get_workspace_members(self, workspace_id: str) -> dict[str, Any] | None:
         """
         Get members currently in a workspace presence channel
 
@@ -552,7 +472,7 @@ class RobloxPusherService:
             logger.error(f"Failed to terminate channel {channel_name}: {e}")
             return False
 
-    def get_channel_stats(self) -> Optional[Dict[str, Any]]:
+    def get_channel_stats(self) -> dict[str, Any] | None:
         """
         Get statistics for all active channels
 
@@ -573,6 +493,7 @@ class RobloxPusherService:
 
 # Singleton instance
 _pusher_service = None
+
 
 def get_roblox_pusher_service() -> RobloxPusherService:
     """Get singleton Pusher service instance"""

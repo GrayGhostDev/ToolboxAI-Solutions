@@ -3,11 +3,11 @@ Supabase Client Integration
 Provides a centralized Supabase client for database and auth operations
 """
 
-import os
 import logging
-from typing import Optional
+import os
 from functools import lru_cache
-from supabase import create_client, Client
+
+from supabase import Client, create_client
 
 logger = logging.getLogger(__name__)
 
@@ -19,8 +19,8 @@ class SupabaseManager:
         self.url = os.getenv("SUPABASE_URL")
         self.anon_key = os.getenv("SUPABASE_ANON_KEY")
         self.service_role_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-        self._client: Optional[Client] = None
-        self._admin_client: Optional[Client] = None
+        self._client: Client | None = None
+        self._admin_client: Client | None = None
 
     @property
     def client(self) -> Client:
@@ -53,7 +53,7 @@ class SupabaseManager:
         """Test Supabase connection"""
         try:
             # Try a simple query to test connection
-            response = self.client.table('_test_').select("*").limit(1).execute()
+            response = self.client.table("_test_").select("*").limit(1).execute()
             logger.info("Supabase connection test successful")
             return True
         except Exception as e:
@@ -61,7 +61,7 @@ class SupabaseManager:
             return False
 
 
-@lru_cache()
+@lru_cache
 def get_supabase_manager() -> SupabaseManager:
     """Get cached Supabase manager instance"""
     return SupabaseManager()
@@ -75,4 +75,3 @@ def get_supabase_client() -> Client:
 def get_supabase_admin_client() -> Client:
     """Get Supabase admin client for dependency injection"""
     return get_supabase_manager().admin_client
-

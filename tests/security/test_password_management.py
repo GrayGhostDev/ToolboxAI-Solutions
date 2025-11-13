@@ -1,23 +1,28 @@
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest_asyncio
+
 """
 Comprehensive test suite for password_management.py
 Tests password strength validation, change workflows, history tracking, and rate limiting.
 """
 
+from unittest.mock import Mock, patch
+
 import pytest
-import time
-from unittest.mock import Mock, patch, AsyncMock
-from datetime import datetime, timedelta
 from fastapi import HTTPException, status
 
 from apps.backend.api.auth.password_management import (
-    PasswordStrengthRequirements, PasswordValidationResult, PasswordValidator,
-    PasswordChangeRequest, PasswordResetRequest, PasswordHistoryManager,
-    PasswordChangeService, get_password_service
+    PasswordChangeRequest,
+    PasswordChangeService,
+    PasswordHistoryManager,
+    PasswordResetRequest,
+    PasswordStrengthRequirements,
+    PasswordValidationResult,
+    PasswordValidator,
+    get_password_service,
 )
 
 
@@ -27,7 +32,7 @@ class TestPasswordStrengthRequirements:
     def test_default_requirements(self):
         """Test default password requirements"""
         req = PasswordStrengthRequirements()
-        
+
         assert req.MIN_LENGTH == 8
         assert req.MAX_LENGTH == 128
         assert req.REQUIRE_UPPERCASE is True
@@ -40,7 +45,7 @@ class TestPasswordStrengthRequirements:
     def test_common_passwords_contains_weak_passwords(self):
         """Test that common passwords set contains expected weak passwords"""
         req = PasswordStrengthRequirements()
-        
+
         weak_passwords = ["password", "123456", "qwerty", "admin"]
         for password in weak_passwords:
             assert password in req.COMMON_PASSWORDS
@@ -48,7 +53,7 @@ class TestPasswordStrengthRequirements:
     def test_forbidden_patterns(self):
         """Test forbidden patterns detection"""
         req = PasswordStrengthRequirements()
-        
+
         # Should contain patterns for repeated characters, sequences, etc.
         assert any("(.)" in pattern for pattern in req.FORBIDDEN_PATTERNS)
         assert any("012" in pattern or "123" in pattern for pattern in req.FORBIDDEN_PATTERNS)
@@ -67,9 +72,9 @@ class TestPasswordValidator:
             "MySecureP@ss1w7rd",
             "Complex!Pass1q7",
             "Str0ngP@ssword!",
-            "Test1q7!@#Password"
+            "Test1q7!@#Password",
         ]
-        
+
         for password in strong_passwords:
             result = self.validator.validate(password)
             assert result.is_valid is True
@@ -82,7 +87,7 @@ class TestPasswordValidator:
         result = self.validator.validate("Test1!")
         assert result.is_valid is False
         assert any("at least" in issue for issue in result.issues)
-        
+
         # Too long
         long_password = "A" * 130 + "1!"
         result = self.validator.validate(long_password)
@@ -95,17 +100,17 @@ class TestPasswordValidator:
         result = self.validator.validate("test123!@#")
         assert result.is_valid is False
         assert any("uppercase" in issue for issue in result.issues)
-        
+
         # Missing lowercase
         result = self.validator.validate("TEST123!@#")
         assert result.is_valid is False
         assert any("lowercase" in issue for issue in result.issues)
-        
+
         # Missing digit
         result = self.validator.validate("TestABC!@#")
         assert result.is_valid is False
         assert any("digit" in issue for issue in result.issues)
-        
+
         # Missing special character
         result = self.validator.validate("TestABC123")
         assert result.is_valid is False
@@ -114,7 +119,7 @@ class TestPasswordValidator:
     def test_common_password_detection(self):
         """Test detection of common passwords"""
         common_passwords = ["password", "123456", "qwerty"]
-        
+
         for password in common_passwords:
             result = self.validator.validate(password)
             assert result.is_valid is False
@@ -124,7 +129,7 @@ class TestPasswordValidator:
         """Test detection of username in password"""
         username = "testuser"
         password = "testuser123!"
-        
+
         result = self.validator.validate(password, username)
         assert result.is_valid is False
         assert any("username" in issue.lower() for issue in result.issues)
@@ -135,9 +140,9 @@ class TestPasswordValidator:
             "Test111123!",  # Repeated characters
             "Test123456!",  # Sequential numbers
             "Testabcdef!",  # Sequential letters
-            "Testqwerty!"   # Keyboard pattern
+            "Testqwerty!",  # Keyboard pattern
         ]
-        
+
         for password in pattern_passwords:
             result = self.validator.validate(password)
             # Some might still be valid if other criteria are strong
@@ -149,11 +154,11 @@ class TestPasswordValidator:
         # Weak password
         result = self.validator.validate("Test123!")
         weak_score = result.score
-        
+
         # Strong password
         result = self.validator.validate("VeryComplexP@ssw0rd123!")
         strong_score = result.score
-        
+
         assert strong_score > weak_score
 
     def test_length_bonus_scoring(self):
@@ -161,17 +166,17 @@ class TestPasswordValidator:
         # Base password
         result1 = self.validator.validate("Test123!@#")
         base_score = result1.score
-        
+
         # Longer password
         result2 = self.validator.validate("Test123!@#ExtraLength")
         long_score = result2.score
-        
+
         assert long_score >= base_score
 
     def test_suggestions_provided(self):
         """Test that validation provides helpful suggestions"""
         result = self.validator.validate("test")
-        
+
         assert len(result.suggestions) > 0
         assert any("character" in suggestion.lower() for suggestion in result.suggestions)
 
@@ -185,9 +190,9 @@ class TestPasswordChangeRequest:
             current_password="OldPassword123!",
             new_password="NewPassword123!",
             confirm_password="NewPassword123!",
-            logout_all_devices=True
+            logout_all_devices=True,
         )
-        
+
         assert request.current_password == "OldPassword123!"
         assert request.new_password == "NewPassword123!"
         assert request.confirm_password == "NewPassword123!"
@@ -200,7 +205,7 @@ class TestPasswordChangeRequest:
                 current_password="OldPassword123!",
                 new_password="NewPassword123!",
                 confirm_password="DifferentPassword123!",
-                logout_all_devices=True
+                logout_all_devices=True,
             )
 
     def test_model_validator_password_mismatch(self):
@@ -211,7 +216,7 @@ class TestPasswordChangeRequest:
                 "current_password": "OldPassword123!",
                 "new_password": "NewPassword123!",
                 "confirm_password": "NewPassword123!",
-                "logout_all_devices": True
+                "logout_all_devices": True,
             }
             # Simulate mismatched passwords
             request_data["confirm_password"] = "DifferentPassword123!"
@@ -230,9 +235,9 @@ class TestPasswordHistoryManager:
         """Test adding password to history with Redis"""
         user_id = "user123"
         password_hash = "hashed_password"
-        
+
         self.history_manager.add_to_history(user_id, password_hash)
-        
+
         key = f"{self.history_manager.HISTORY_PREFIX}{user_id}"
         self.mock_redis.lpush.assert_called_once_with(key, password_hash)
         self.mock_redis.ltrim.assert_called_once_with(key, 0, self.history_manager.MAX_HISTORY - 1)
@@ -243,9 +248,9 @@ class TestPasswordHistoryManager:
         history_manager = PasswordHistoryManager(None)
         user_id = "user123"
         password_hash = "hashed_password"
-        
+
         history_manager.add_to_history(user_id, password_hash)
-        
+
         assert user_id in history_manager._memory_history
         assert password_hash in history_manager._memory_history[user_id]
 
@@ -253,11 +258,11 @@ class TestPasswordHistoryManager:
         """Test memory history respects limit"""
         history_manager = PasswordHistoryManager(None)
         user_id = "user123"
-        
+
         # Add more passwords than the limit
         for i in range(10):
             history_manager.add_to_history(user_id, f"password_hash_{i}")
-        
+
         # Should only keep the most recent passwords
         assert len(history_manager._memory_history[user_id]) == history_manager.MAX_HISTORY
 
@@ -266,15 +271,15 @@ class TestPasswordHistoryManager:
         user_id = "user123"
         password = "TestPassword123!"
         old_hash = "old_hashed_password"
-        
+
         self.mock_redis.lrange.return_value = [old_hash]
-        
-        with patch('apps.backend.api.auth.password_management.verify_password') as mock_verify:
+
+        with patch("apps.backend.api.auth.password_management.verify_password") as mock_verify:
             mock_verify.return_value = True
-            
+
             result = self.history_manager.is_password_reused(user_id, password)
             assert result is True
-            
+
             mock_verify.return_value = False
             result = self.history_manager.is_password_reused(user_id, password)
             assert result is False
@@ -284,12 +289,12 @@ class TestPasswordHistoryManager:
         user_id = "user123"
         password = "TestPassword123!"
         old_hash = b"old_hashed_password"  # Bytes from Redis
-        
+
         self.mock_redis.lrange.return_value = [old_hash]
-        
-        with patch('apps.backend.api.auth.password_management.verify_password') as mock_verify:
+
+        with patch("apps.backend.api.auth.password_management.verify_password") as mock_verify:
             mock_verify.return_value = True
-            
+
             result = self.history_manager.is_password_reused(user_id, password)
             assert result is True
             mock_verify.assert_called_with(password, "old_hashed_password")
@@ -303,17 +308,16 @@ class TestPasswordChangeService:
         self.mock_session_manager = Mock()
         self.mock_redis = Mock()
         self.service = PasswordChangeService(
-            session_manager=self.mock_session_manager,
-            redis_client=self.mock_redis
+            session_manager=self.mock_session_manager, redis_client=self.mock_redis
         )
 
     def test_rate_limit_check_allowed(self):
         """Test rate limit check when allowed"""
         user_id = "user123"
         self.mock_redis.incr.return_value = 2
-        
+
         is_allowed, remaining = self.service._check_rate_limit(user_id)
-        
+
         assert is_allowed is True
         assert remaining == 3  # MAX_CHANGES_PER_DAY - 2
 
@@ -321,19 +325,18 @@ class TestPasswordChangeService:
         """Test rate limit check when exceeded"""
         user_id = "user123"
         self.mock_redis.incr.return_value = 6  # Exceeds MAX_CHANGES_PER_DAY
-        
+
         is_allowed, remaining = self.service._check_rate_limit(user_id)
-        
+
         assert is_allowed is False
         assert remaining == 0
 
     def test_rate_limit_without_redis(self):
         """Test rate limit check without Redis"""
         service = PasswordChangeService(
-            session_manager=self.mock_session_manager,
-            redis_client=None
+            session_manager=self.mock_session_manager, redis_client=None
         )
-        
+
         is_allowed, remaining = service._check_rate_limit("user123")
         assert is_allowed is True
         assert remaining == service.MAX_CHANGES_PER_DAY
@@ -344,27 +347,27 @@ class TestPasswordChangeService:
         # Setup
         self.mock_redis.incr.return_value = 1  # Within rate limit
         self.mock_session_manager.invalidate_all_user_sessions.return_value = 2
-        
-        with patch.object(self.service.validator, 'validate') as mock_validate:
+
+        with patch.object(self.service.validator, "validate") as mock_validate:
             mock_validate.return_value = PasswordValidationResult(
                 is_valid=True, score=85, issues=[], suggestions=[]
             )
-            
-            with patch.object(self.service.history_manager, 'is_password_reused') as mock_reused:
+
+            with patch.object(self.service.history_manager, "is_password_reused") as mock_reused:
                 mock_reused.return_value = False
-                
-                with patch('apps.backend.api.auth.password_management.hash_password') as mock_hash:
+
+                with patch("apps.backend.api.auth.password_management.hash_password") as mock_hash:
                     mock_hash.return_value = "new_hashed_password"
-                    
+
                     result = await self.service.change_password(
                         user_id="user123",
                         username="testuser",
                         current_password="OldPassword123!",
                         new_password="NewPassword123!",
                         request_ip="127.0.0.1",
-                        user_agent="Test Agent"
+                        user_agent="Test Agent",
                     )
-        
+
         assert result["success"] is True
         assert result["sessions_invalidated"] == 2
         assert "remaining_changes_today" in result
@@ -374,38 +377,38 @@ class TestPasswordChangeService:
     async def test_change_password_rate_limit_exceeded(self):
         """Test password change when rate limit is exceeded"""
         self.mock_redis.incr.return_value = 6  # Exceeds limit
-        
+
         with pytest.raises(HTTPException) as exc_info:
             await self.service.change_password(
                 user_id="user123",
                 username="testuser",
                 current_password="OldPassword123!",
-                new_password="NewPassword123!"
+                new_password="NewPassword123!",
             )
-        
+
         assert exc_info.value.status_code == status.HTTP_429_TOO_MANY_REQUESTS
 
     @pytest.mark.asyncio
     async def test_change_password_weak_password(self):
         """Test password change with weak new password"""
         self.mock_redis.incr.return_value = 1  # Within rate limit
-        
-        with patch.object(self.service.validator, 'validate') as mock_validate:
+
+        with patch.object(self.service.validator, "validate") as mock_validate:
             mock_validate.return_value = PasswordValidationResult(
                 is_valid=False,
                 score=30,
                 issues=["Password is too weak"],
-                suggestions=["Add more complexity"]
+                suggestions=["Add more complexity"],
             )
-            
+
             with pytest.raises(HTTPException) as exc_info:
                 await self.service.change_password(
                     user_id="user123",
                     username="testuser",
                     current_password="OldPassword123!",
-                    new_password="weak"
+                    new_password="weak",
                 )
-            
+
             assert exc_info.value.status_code == status.HTTP_400_BAD_REQUEST
             assert "security requirements" in str(exc_info.value.detail)
 
@@ -413,47 +416,47 @@ class TestPasswordChangeService:
     async def test_change_password_reused_password(self):
         """Test password change with previously used password"""
         self.mock_redis.incr.return_value = 1  # Within rate limit
-        
-        with patch.object(self.service.validator, 'validate') as mock_validate:
+
+        with patch.object(self.service.validator, "validate") as mock_validate:
             mock_validate.return_value = PasswordValidationResult(
                 is_valid=True, score=85, issues=[], suggestions=[]
             )
-            
-            with patch.object(self.service.history_manager, 'is_password_reused') as mock_reused:
+
+            with patch.object(self.service.history_manager, "is_password_reused") as mock_reused:
                 mock_reused.return_value = True
-                
+
                 with pytest.raises(HTTPException) as exc_info:
                     await self.service.change_password(
                         user_id="user123",
                         username="testuser",
                         current_password="OldPassword123!",
-                        new_password="ReusedPassword123!"
+                        new_password="ReusedPassword123!",
                     )
-                
+
                 assert exc_info.value.status_code == status.HTTP_400_BAD_REQUEST
                 assert "recently used" in str(exc_info.value.detail)
 
     @pytest.mark.asyncio
     async def test_reset_password_success(self):
         """Test successful admin password reset"""
-        with patch.object(self.service.validator, 'validate') as mock_validate:
+        with patch.object(self.service.validator, "validate") as mock_validate:
             mock_validate.return_value = PasswordValidationResult(
                 is_valid=True, score=70, issues=[], suggestions=[]
             )
-            
+
             self.mock_session_manager.invalidate_all_user_sessions.return_value = 3
-            
-            with patch('apps.backend.api.auth.password_management.hash_password') as mock_hash:
+
+            with patch("apps.backend.api.auth.password_management.hash_password") as mock_hash:
                 mock_hash.return_value = "reset_hashed_password"
-                
+
                 result = await self.service.reset_password(
                     admin_user_id="admin123",
                     target_user_id="user123",
                     new_password="ResetPassword123!",
                     reason="Forgot password",
-                    force_logout=True
+                    force_logout=True,
                 )
-        
+
         assert result["success"] is True
         assert result["sessions_invalidated"] == 3
         assert result["password_hash"] == "reset_hashed_password"
@@ -463,41 +466,41 @@ class TestPasswordChangeService:
     @pytest.mark.asyncio
     async def test_reset_password_weak_password(self):
         """Test admin password reset with weak password"""
-        with patch.object(self.service.validator, 'validate') as mock_validate:
+        with patch.object(self.service.validator, "validate") as mock_validate:
             mock_validate.return_value = PasswordValidationResult(
                 is_valid=False, score=30, issues=[], suggestions=[]
             )
-            
+
             with pytest.raises(HTTPException) as exc_info:
                 await self.service.reset_password(
                     admin_user_id="admin123",
                     target_user_id="user123",
                     new_password="weak",
-                    reason="Admin reset"
+                    reason="Admin reset",
                 )
-            
+
             assert exc_info.value.status_code == status.HTTP_400_BAD_REQUEST
             assert "too weak" in str(exc_info.value.detail)
 
     @pytest.mark.asyncio
     async def test_reset_password_no_force_logout(self):
         """Test admin password reset without forcing logout"""
-        with patch.object(self.service.validator, 'validate') as mock_validate:
+        with patch.object(self.service.validator, "validate") as mock_validate:
             mock_validate.return_value = PasswordValidationResult(
                 is_valid=True, score=70, issues=[], suggestions=[]
             )
-            
-            with patch('apps.backend.api.auth.password_management.hash_password') as mock_hash:
+
+            with patch("apps.backend.api.auth.password_management.hash_password") as mock_hash:
                 mock_hash.return_value = "reset_hashed_password"
-                
+
                 result = await self.service.reset_password(
                     admin_user_id="admin123",
                     target_user_id="user123",
                     new_password="ResetPassword123!",
                     reason="Admin reset",
-                    force_logout=False
+                    force_logout=False,
                 )
-        
+
         assert result["sessions_invalidated"] == 0
         self.mock_session_manager.invalidate_all_user_sessions.assert_not_called()
 
@@ -511,9 +514,9 @@ class TestPasswordResetRequest:
             user_id="user123",
             new_password="NewPassword123!",
             reason="User requested reset",
-            force_logout=True
+            force_logout=True,
         )
-        
+
         assert request.user_id == "user123"
         assert request.new_password == "NewPassword123!"
         assert request.reason == "User requested reset"
@@ -527,20 +530,21 @@ class TestGlobalService:
         """Test that get_password_service returns singleton"""
         service1 = get_password_service()
         service2 = get_password_service()
-        
+
         assert service1 is service2
 
     def test_get_password_service_with_custom_manager(self):
         """Test get_password_service with custom session manager"""
         mock_session_manager = Mock()
         mock_redis = Mock()
-        
+
         # Reset global instance
         import apps.backend.api.auth.password_management
+
         apps.backend.api.auth.password_management._password_service = None
-        
+
         service = get_password_service(mock_session_manager, mock_redis)
-        
+
         assert service.session_manager is mock_session_manager
         assert service.redis_client is mock_redis
 
@@ -555,22 +559,21 @@ class TestPasswordManagementIntegration:
         # Setup mocks
         mock_session_manager = Mock()
         mock_redis = Mock()
-        
+
         service = PasswordChangeService(
-            session_manager=mock_session_manager,
-            redis_client=mock_redis
+            session_manager=mock_session_manager, redis_client=mock_redis
         )
-        
+
         # Mock rate limiting
         mock_redis.incr.return_value = 1
         mock_redis.expire.return_value = True
-        
+
         # Mock session invalidation
         mock_session_manager.invalidate_all_user_sessions.return_value = 2
-        
-        with patch('apps.backend.api.auth.password_management.hash_password') as mock_hash:
+
+        with patch("apps.backend.api.auth.password_management.hash_password") as mock_hash:
             mock_hash.return_value = "new_hashed_password"
-            
+
             # Change password
             result = await service.change_password(
                 user_id="user123",
@@ -578,27 +581,28 @@ class TestPasswordManagementIntegration:
                 current_password="OldPassword123!",
                 new_password="NewSecurePassword123!",
                 request_ip="127.0.0.1",
-                user_agent="Test Browser"
+                user_agent="Test Browser",
             )
-        
+
         # Verify complete flow
         assert result["success"] is True
         assert "sessions_invalidated" in result
         assert "password_strength_score" in result
-        
+
         # Verify history was updated
-        service.history_manager.add_to_history.assert_called_once_with("user123", "new_hashed_password")
-        
+        service.history_manager.add_to_history.assert_called_once_with(
+            "user123", "new_hashed_password"
+        )
+
         # Verify sessions were invalidated
         mock_session_manager.invalidate_all_user_sessions.assert_called_once_with(
-            user_id="user123",
-            reason="password_change"
+            user_id="user123", reason="password_change"
         )
 
     def test_password_validation_comprehensive(self):
         """Test comprehensive password validation scenarios"""
         validator = PasswordValidator()
-        
+
         test_cases = [
             # (password, username, should_be_valid, expected_issues)
             ("VerySecureP@ssw0rd!", "testuser", True, []),
@@ -610,35 +614,35 @@ class TestPasswordManagementIntegration:
             ("NoSpecial123", "testuser", False, ["special"]),
             ("password123!", "testuser", False, ["common"]),
         ]
-        
+
         for password, username, should_be_valid, expected_issues in test_cases:
             result = validator.validate(password, username)
-            
+
             assert result.is_valid == should_be_valid
-            
+
             if not should_be_valid:
                 for expected_issue in expected_issues:
-                    assert any(expected_issue in issue.lower() for issue in result.issues), \
-                        f"Expected issue '{expected_issue}' not found in {result.issues}"
+                    assert any(
+                        expected_issue in issue.lower() for issue in result.issues
+                    ), f"Expected issue '{expected_issue}' not found in {result.issues}"
 
     def test_rate_limiting_behavior(self):
         """Test rate limiting behavior over time"""
         mock_session_manager = Mock()
         mock_redis = Mock()
-        
+
         service = PasswordChangeService(
-            session_manager=mock_session_manager,
-            redis_client=mock_redis
+            session_manager=mock_session_manager, redis_client=mock_redis
         )
-        
+
         user_id = "user123"
-        
+
         # Simulate multiple attempts
         for attempt in range(1, 8):
             mock_redis.incr.return_value = attempt
-            
+
             is_allowed, remaining = service._check_rate_limit(user_id)
-            
+
             if attempt <= service.MAX_CHANGES_PER_DAY:
                 assert is_allowed is True
                 assert remaining == service.MAX_CHANGES_PER_DAY - attempt
@@ -649,25 +653,22 @@ class TestPasswordManagementIntegration:
     def test_memory_fallback_functionality(self):
         """Test that memory fallback works when Redis is unavailable"""
         mock_session_manager = Mock()
-        
+
         # Service without Redis
-        service = PasswordChangeService(
-            session_manager=mock_session_manager,
-            redis_client=None
-        )
-        
+        service = PasswordChangeService(session_manager=mock_session_manager, redis_client=None)
+
         # Rate limiting should still work (always allow)
         is_allowed, remaining = service._check_rate_limit("user123")
         assert is_allowed is True
-        
+
         # History manager should use memory
         history_manager = service.history_manager
         assert history_manager.redis_client is None
-        
+
         # Test memory history functionality
         user_id = "user123"
         password_hash = "test_hash"
-        
+
         history_manager.add_to_history(user_id, password_hash)
         assert user_id in history_manager._memory_history
         assert password_hash in history_manager._memory_history[user_id]
@@ -679,21 +680,21 @@ class TestEdgeCases:
     def test_password_validator_edge_cases(self):
         """Test password validator with edge case inputs"""
         validator = PasswordValidator()
-        
+
         # Empty password
         result = validator.validate("")
         assert result.is_valid is False
-        
+
         # Very long password
         long_password = "A" * 200 + "1!"
         result = validator.validate(long_password)
         assert result.is_valid is False
-        
+
         # Password with only special characters
         special_only = "!@#$%^&*()"
         result = validator.validate(special_only)
         assert result.is_valid is False
-        
+
         # Unicode password
         unicode_password = "Test123!αβγδε"
         result = validator.validate(unicode_password)
@@ -701,37 +702,35 @@ class TestEdgeCases:
 
     def test_concurrent_password_changes(self):
         """Test handling of concurrent password change attempts"""
-        import threading
         import concurrent.futures
-        
+
         def simulate_password_change(user_id):
             mock_session_manager = Mock()
             mock_redis = Mock()
             mock_redis.incr.return_value = 1
-            
+
             service = PasswordChangeService(
-                session_manager=mock_session_manager,
-                redis_client=mock_redis
+                session_manager=mock_session_manager, redis_client=mock_redis
             )
-            
+
             try:
                 is_allowed, remaining = service._check_rate_limit(f"user{user_id}")
                 return is_allowed
             except Exception:
                 return False
-        
+
         # Test with multiple threads
         with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
             futures = [executor.submit(simulate_password_change, i) for i in range(20)]
             results = [future.result() for future in concurrent.futures.as_completed(futures)]
-        
+
         # All should succeed (mocked to return 1)
         assert all(results)
 
     def test_malformed_input_handling(self):
         """Test handling of malformed inputs"""
         validator = PasswordValidator()
-        
+
         # None input should not crash
         try:
             result = validator.validate(None)
@@ -739,7 +738,7 @@ class TestEdgeCases:
         except (TypeError, AttributeError):
             # Acceptable to raise these for None input
             pass
-        
+
         # Non-string input
         try:
             result = validator.validate(12345)

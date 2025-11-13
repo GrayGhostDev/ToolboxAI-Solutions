@@ -6,16 +6,13 @@ Multi-tenant: All models use organization_id for tenant isolation
 Updated: 2025-10-10 (Added multi-tenant support)
 """
 
-from sqlalchemy import (
-    Column, String, Integer, Float, Boolean, DateTime, JSON, Text,
-    ForeignKey, Enum as SQLEnum, UniqueConstraint, Index
-)
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from datetime import datetime, timezone
 from enum import Enum
-from typing import Optional, Dict, Any
+from typing import Any, Dict
+
+from sqlalchemy import JSON, Boolean, Column, DateTime
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint
+from sqlalchemy.orm import relationship
 
 # Import tenant-aware base models
 from database.models.base import TenantBaseModel
@@ -23,6 +20,7 @@ from database.models.base import TenantBaseModel
 
 class EnvironmentStatus(str, Enum):
     """Environment status enum"""
+
     CREATING = "creating"
     ACTIVE = "active"
     UPDATING = "updating"
@@ -33,6 +31,7 @@ class EnvironmentStatus(str, Enum):
 
 class EnvironmentVisibility(str, Enum):
     """Environment visibility enum"""
+
     PRIVATE = "private"
     PUBLIC = "public"
     SHARED = "shared"
@@ -46,6 +45,7 @@ class RobloxEnvironment(TenantBaseModel):
     Multi-tenant: organization_id inherited from TenantBaseModel
     Note: Uses Integer ID for backwards compatibility (overrides UUID default)
     """
+
     __tablename__ = "roblox_environments"
 
     # Override id to use Integer for backwards compatibility
@@ -73,7 +73,7 @@ class RobloxEnvironment(TenantBaseModel):
 
     # Environment structure and components
     components = Column(JSON)  # Parsed components from description
-    structure = Column(JSON)   # Rojo structure data
+    structure = Column(JSON)  # Rojo structure data
     visualization_data = Column(JSON)  # 3D visualization metadata
 
     # Usage statistics
@@ -95,9 +95,13 @@ class RobloxEnvironment(TenantBaseModel):
 
     # Relationships
     user = relationship("User", back_populates="roblox_environments")
-    sessions = relationship("RobloxSession", back_populates="environment", cascade="all, delete-orphan")
+    sessions = relationship(
+        "RobloxSession", back_populates="environment", cascade="all, delete-orphan"
+    )
     versions = relationship("RobloxEnvironment", backref="parent_environment", remote_side=[id])
-    shared_with = relationship("EnvironmentShare", back_populates="environment", cascade="all, delete-orphan")
+    shared_with = relationship(
+        "EnvironmentShare", back_populates="environment", cascade="all, delete-orphan"
+    )
 
     # Constraints and indexes (organization_id index auto-created by TenantMixin)
     __table_args__ = (
@@ -145,6 +149,7 @@ class RobloxSession(TenantBaseModel):
     Multi-tenant: organization_id inherited from TenantBaseModel
     Note: Uses Integer ID for backwards compatibility (overrides UUID default)
     """
+
     __tablename__ = "roblox_sessions"
 
     # Override id to use Integer for backwards compatibility
@@ -152,7 +157,9 @@ class RobloxSession(TenantBaseModel):
 
     # Note: organization_id, created_at, updated_at inherited from TenantBaseModel
 
-    environment_id = Column(Integer, ForeignKey("roblox_environments.id"), nullable=False, index=True)
+    environment_id = Column(
+        Integer, ForeignKey("roblox_environments.id"), nullable=False, index=True
+    )
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
 
     # Session info
@@ -196,6 +203,7 @@ class EnvironmentShare(TenantBaseModel):
     Multi-tenant: organization_id inherited from TenantBaseModel
     Note: Uses Integer ID for backwards compatibility (overrides UUID default)
     """
+
     __tablename__ = "environment_shares"
 
     # Override id to use Integer for backwards compatibility
@@ -203,7 +211,9 @@ class EnvironmentShare(TenantBaseModel):
 
     # Note: organization_id, created_at, updated_at inherited from TenantBaseModel
 
-    environment_id = Column(Integer, ForeignKey("roblox_environments.id"), nullable=False, index=True)
+    environment_id = Column(
+        Integer, ForeignKey("roblox_environments.id"), nullable=False, index=True
+    )
     shared_with_user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     shared_with_class_id = Column(Integer, ForeignKey("classes.id"), nullable=True, index=True)
 
@@ -228,7 +238,9 @@ class EnvironmentShare(TenantBaseModel):
     __table_args__ = (
         Index("idx_env_share_org_user", "organization_id", "shared_with_user_id"),
         Index("idx_env_share_org_class", "organization_id", "shared_with_class_id"),
-        UniqueConstraint("organization_id", "environment_id", "shared_with_user_id", name="uq_org_env_user_share"),
+        UniqueConstraint(
+            "organization_id", "environment_id", "shared_with_user_id", name="uq_org_env_user_share"
+        ),
     )
 
 
@@ -239,6 +251,7 @@ class EnvironmentTemplate(TenantBaseModel):
     Multi-tenant: organization_id inherited from TenantBaseModel
     Note: Uses Integer ID for backwards compatibility (overrides UUID default)
     """
+
     __tablename__ = "environment_templates"
 
     # Override id to use Integer for backwards compatibility
@@ -259,7 +272,7 @@ class EnvironmentTemplate(TenantBaseModel):
 
     # Educational metadata
     grade_levels = Column(JSON)  # Array of applicable grades
-    subjects = Column(JSON)      # Array of subjects
+    subjects = Column(JSON)  # Array of subjects
     standards_aligned = Column(JSON)  # Educational standards
 
     # Usage stats

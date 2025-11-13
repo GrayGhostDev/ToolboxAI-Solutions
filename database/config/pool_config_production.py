@@ -5,18 +5,14 @@ Implements advanced connection pooling strategies with PgBouncer integration
 for high-traffic production environments.
 """
 
-import os
 import logging
-from typing import Dict, Any, Optional
+import os
 from dataclasses import dataclass
+from typing import Any, Dict, Optional
+
 import psutil
 
-from database.pool_config import (
-    PoolConfig,
-    PoolStrategy,
-    PoolMonitor,
-    PoolConfigFactory
-)
+from database.pool_config import PoolConfig, PoolMonitor
 
 logger = logging.getLogger(__name__)
 
@@ -101,8 +97,7 @@ class ProductionPoolConfig(PoolConfig):
     def get_service_config(self, service_name: str) -> Dict[str, Any]:
         """Get pool configuration for a specific service"""
         return self.service_pool_configs.get(
-            service_name,
-            self.service_pool_configs["api_service"]  # Default to API config
+            service_name, self.service_pool_configs["api_service"]  # Default to API config
         )
 
 
@@ -139,18 +134,15 @@ class ProductionPoolManager:
             pool_recycle=900,  # 15 minutes
             pool_pre_ping=True,
             pool_reset_on_return="rollback",
-
             # Performance optimizations
             echo_pool=False,
             pool_use_lifo=True,
             connect_timeout=5,
-
             # PostgreSQL optimizations
             statement_timeout=30000,  # 30 seconds default
             idle_in_transaction_timeout=60000,  # 1 minute
             lock_timeout=10000,  # 10 seconds
             idle_session_timeout=300000,  # 5 minutes
-
             # Advanced features
             enable_pre_warming=True,
             pre_warm_connections=min(5, pool_size // 2),
@@ -159,7 +151,6 @@ class ProductionPoolManager:
             statement_cache_size=1024,
             enable_pipeline_mode=True,
             enable_connection_multiplexing=True,
-
             # Monitoring
             enable_pool_events=True,
             enable_statement_logging=False,
@@ -175,18 +166,11 @@ class ProductionPoolManager:
 
         # Pre-warm connections if enabled
         if self.config.enable_pre_warming:
-            await self._pre_warm_connections(
-                self.config.pre_warm_connections,
-                service_config
-            )
+            await self._pre_warm_connections(self.config.pre_warm_connections, service_config)
 
         logger.info(f"Production pools initialized for {service_name}")
 
-    async def _pre_warm_connections(
-        self,
-        count: int,
-        service_config: Dict[str, Any]
-    ):
+    async def _pre_warm_connections(self, count: int, service_config: Dict[str, Any]):
         """Pre-warm database connections to avoid cold start latency"""
         logger.info(f"Pre-warming {count} database connections")
 
@@ -207,10 +191,7 @@ class ProductionPoolManager:
         if not self.config.use_pgbouncer:
             return ""
 
-        database_url = os.getenv(
-            "DATABASE_URL",
-            "postgresql://user:pass@localhost/db"
-        )
+        database_url = os.getenv("DATABASE_URL", "postgresql://user:pass@localhost/db")
 
         # Parse database URL to extract components
         # In production, use proper URL parsing
@@ -395,10 +376,7 @@ dns_zone_check_period = 60
 
         # High utilization - consider increasing pool size
         if utilization > 80 and wait_percent > 20:
-            new_pool_size = min(
-                self.config.pool_size + 5,
-                50  # Maximum cap
-            )
+            new_pool_size = min(self.config.pool_size + 5, 50)  # Maximum cap
             if new_pool_size > self.config.pool_size:
                 logger.info(
                     f"Auto-tuning: Increasing pool size from "
@@ -408,10 +386,7 @@ dns_zone_check_period = 60
 
         # Low utilization - consider decreasing pool size
         elif utilization < 30 and active_connections < 10:
-            new_pool_size = max(
-                self.config.pool_size - 5,
-                10  # Minimum floor
-            )
+            new_pool_size = max(self.config.pool_size - 5, 10)  # Minimum floor
             if new_pool_size < self.config.pool_size:
                 logger.info(
                     f"Auto-tuning: Decreasing pool size from "
@@ -441,8 +416,4 @@ def get_production_pool_config(service_name: str = "api_service") -> ProductionP
 
 
 # Export main components
-__all__ = [
-    'ProductionPoolConfig',
-    'ProductionPoolManager',
-    'get_production_pool_config'
-]
+__all__ = ["ProductionPoolConfig", "ProductionPoolManager", "get_production_pool_config"]

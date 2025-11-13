@@ -9,13 +9,13 @@ changes while enabling the richer tenant context logic.
 """
 
 from apps.backend.middleware.tenant import (  # noqa: F401
-    TenantMiddleware,
     TenantContext,
+    TenantMiddleware,
     add_tenant_middleware,
-    get_tenant_context,
-    set_tenant_context,
-    require_tenant_context,
     get_current_tenant_id,
+    get_tenant_context,
+    require_tenant_context,
+    set_tenant_context,
     validate_tenant_access,
 )
 

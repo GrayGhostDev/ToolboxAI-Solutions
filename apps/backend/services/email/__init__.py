@@ -18,29 +18,22 @@ Created: 2025-11-09
 Version: 1.0.0
 """
 
-# SendGrid implementation and types
-from .sendgrid import (
-    SendGridEmailService,
-    EmailPriority,
-    EmailType,
-    EmailRecipient,
-    EmailAttachment,
-)
+# Factory for automatic service selection
+from .factory import get_email_service, get_email_service_singleton
 
 # Mock implementation for development
 from .mock import MockEmailService
 
-# Factory for automatic service selection
-from .factory import (
-    get_email_service,
-    get_email_service_singleton,
-)
-
 # Queue service for reliable delivery
-from .queue import (
-    EmailQueueService,
-    EmailStatus,
-    EmailJob,
+from .queue import EmailJob, EmailQueueService, EmailStatus
+
+# SendGrid implementation and types
+from .sendgrid import (
+    EmailAttachment,
+    EmailPriority,
+    EmailRecipient,
+    EmailType,
+    SendGridEmailService,
 )
 
 # Template engine
@@ -57,25 +50,20 @@ __all__ = [
     # Service implementations
     "SendGridEmailService",
     "MockEmailService",
-
     # Factory functions
     "get_email_service",
     "get_email_service_singleton",
-
     # Queue service
     "EmailQueueService",
     "EmailStatus",
     "EmailJob",
-
     # Template engine
     "EmailTemplateEngine",
-
     # Types and enums
     "EmailPriority",
     "EmailType",
     "EmailRecipient",
     "EmailAttachment",
-
     # Default instance
     "email_service",
 ]

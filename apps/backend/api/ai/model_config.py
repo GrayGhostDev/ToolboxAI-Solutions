@@ -3,12 +3,13 @@ GPT-4.1 Model Configuration - Phase 4
 Configuration and feature flags for GPT-4.1 migration
 """
 
-import os
 import json
+import os
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import Dict, Optional, Any, List
-from dataclasses import dataclass, field, asdict
 from enum import Enum
+from typing import Any
+
 import redis
 
 
@@ -46,11 +47,11 @@ class GPT41ModelConfig:
     target_latency_nano: int = 500
 
     # Feature support
-    supports_reasoning: Dict[str, bool] = field(
+    supports_reasoning: dict[str, bool] = field(
         default_factory=lambda: {"gpt-4.1": True, "gpt-4.1-mini": False, "gpt-4.1-nano": False}
     )
 
-    supports_vision: Dict[str, bool] = field(
+    supports_vision: dict[str, bool] = field(
         default_factory=lambda: {"gpt-4.1": True, "gpt-4.1-mini": True, "gpt-4.1-nano": False}
     )
 
@@ -120,8 +121,8 @@ class MigrationSchedule:
     phase: MigrationPhase
     start_date: str
     target_percentage: float
-    success_criteria: Dict[str, Any] = field(default_factory=dict)
-    rollback_criteria: Dict[str, Any] = field(default_factory=dict)
+    success_criteria: dict[str, Any] = field(default_factory=dict)
+    rollback_criteria: dict[str, Any] = field(default_factory=dict)
 
 
 # Migration schedule
@@ -186,14 +187,14 @@ MIGRATION_SCHEDULE = [
 class GPT41ConfigManager:
     """Manages GPT-4.1 configuration and feature flags"""
 
-    def __init__(self, redis_client: Optional[redis.Redis] = None):
+    def __init__(self, redis_client: redis.Redis | None = None):
         self.redis_client = redis_client or self._init_redis()
         self.config = GPT41ModelConfig()
         self.feature_flags = GPT41FeatureFlags()
         self._load_from_env()
         self._load_from_redis()
 
-    def _init_redis(self) -> Optional[redis.Redis]:
+    def _init_redis(self) -> redis.Redis | None:
         """Initialize Redis connection"""
         try:
             return redis.Redis(
@@ -287,7 +288,7 @@ class GPT41ConfigManager:
 
         return current_phase
 
-    def should_use_gpt41(self, user_id: Optional[str] = None) -> bool:
+    def should_use_gpt41(self, user_id: str | None = None) -> bool:
         """Determine if a request should use GPT-4.1"""
         if not self.feature_flags.enable_gpt41:
             return False
@@ -351,7 +352,7 @@ class GPT41ConfigManager:
 
         raise ValueError(f"Unknown phase: {phase}")
 
-    def get_deprecation_status(self) -> Dict[str, Any]:
+    def get_deprecation_status(self) -> dict[str, Any]:
         """Get deprecation status for GPT-4.5 Preview"""
         deprecation_date = datetime.strptime(self.config.deprecation_date, "%Y-%m-%d")
         now = datetime.now()
@@ -382,7 +383,7 @@ class GPT41ConfigManager:
 
         return status
 
-    def get_cost_comparison(self, input_tokens: int, output_tokens: int) -> Dict[str, Any]:
+    def get_cost_comparison(self, input_tokens: int, output_tokens: int) -> dict[str, Any]:
         """Compare costs between GPT-4.5 and GPT-4.1 variants"""
         # GPT-4.5 costs (for comparison)
         gpt45_input_cost = 10.0  # per 1M tokens
@@ -423,7 +424,7 @@ class GPT41ConfigManager:
 
 
 # Singleton instance
-_config_manager: Optional[GPT41ConfigManager] = None
+_config_manager: GPT41ConfigManager | None = None
 
 
 def get_gpt41_config() -> GPT41ConfigManager:

@@ -6,40 +6,38 @@ Tests swarm chat, task execution, session management, and educational content en
 Phase 2 Days 17-18: Agent swarm endpoint test implementation
 """
 
-import pytest
-from datetime import datetime
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
-from uuid import uuid4
 import json
+from datetime import datetime
+from unittest.mock import AsyncMock, Mock
+from uuid import uuid4
 
+import pytest
 from fastapi import HTTPException, WebSocket
-from fastapi.testclient import TestClient
 
 # Import endpoint functions and models directly
 from apps.backend.api.v1.endpoints.agent_swarm import (
-    chat_with_swarm,
-    chat_stream,
-    execute_agent_task,
-    get_session_info,
-    clear_session,
-    get_swarm_status,
-    reset_swarm,
-    create_lesson,
-    create_assessment,
-    analyze_student_progress,
-    personalize_content,
-    websocket_endpoint,
-    ChatMessage,
-    ChatResponse,
     AgentTaskRequest,
     AgentTaskResponse,
+    ChatMessage,
+    ChatResponse,
     SessionInfo,
     SwarmStatus,
+    analyze_student_progress,
+    chat_stream,
+    chat_with_swarm,
+    clear_session,
+    create_assessment,
+    create_lesson,
+    execute_agent_task,
+    get_session_info,
+    get_swarm_status,
+    personalize_content,
+    reset_swarm,
+    websocket_endpoint,
 )
 
 # Mock OrchestrationController and related classes
 from core.swarm.orchestration_controller import OrchestrationController
-
 
 # ============================================================================
 # Fixtures
@@ -140,14 +138,10 @@ class TestChatWithSwarm:
         assert result.suggestions == sample_process_result["response"]["suggestions"]
 
     @pytest.mark.asyncio
-    async def test_chat_with_session_id(
-        self, mock_orchestration_controller, sample_process_result
-    ):
+    async def test_chat_with_session_id(self, mock_orchestration_controller, sample_process_result):
         """Test chat with existing session ID."""
         session_id = str(uuid4())
-        message = ChatMessage(
-            message="Continue the lesson", session_id=session_id, context={}
-        )
+        message = ChatMessage(message="Continue the lesson", session_id=session_id, context={})
         mock_orchestration_controller.process_interaction.return_value = sample_process_result
 
         result = await chat_with_swarm(request=message, controller=mock_orchestration_controller)
@@ -165,7 +159,9 @@ class TestChatWithSwarm:
         )
 
         with pytest.raises(HTTPException) as exc_info:
-            await chat_with_swarm(request=sample_chat_message, controller=mock_orchestration_controller)
+            await chat_with_swarm(
+                request=sample_chat_message, controller=mock_orchestration_controller
+            )
 
         assert exc_info.value.status_code == 500
         assert "Processing failed" in str(exc_info.value.detail)
@@ -238,9 +234,7 @@ class TestExecuteAgentTask:
         assert result.execution_time > 0
 
     @pytest.mark.asyncio
-    async def test_execute_task_unknown_agent_type(
-        self, mock_orchestration_controller
-    ):
+    async def test_execute_task_unknown_agent_type(self, mock_orchestration_controller):
         """Test execution with unknown agent type."""
         request = AgentTaskRequest(
             agent_type="unknown_agent",
@@ -332,7 +326,9 @@ class TestClearSession:
         session_id = mock_session.session_id
         mock_orchestration_controller.sessions[session_id] = mock_session
 
-        result = await clear_session(session_id=session_id, controller=mock_orchestration_controller)
+        result = await clear_session(
+            session_id=session_id, controller=mock_orchestration_controller
+        )
 
         assert "cleared" in result["message"]
         assert session_id not in mock_orchestration_controller.sessions
@@ -593,6 +589,7 @@ class TestWebSocketEndpoint:
                 return json.dumps({"message": "Hello", "context": {}})
             else:
                 from fastapi import WebSocketDisconnect
+
                 raise WebSocketDisconnect()
 
         mock_websocket.receive_text.side_effect = receive_side_effect

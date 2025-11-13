@@ -3,22 +3,17 @@ Content Validation System for ensuring quality and completeness of educational c
 """
 
 import logging
-from typing import Dict, List, Optional, Any, Tuple
-from datetime import datetime
-import re
 from enum import Enum
+from typing import Any
 
 from .models import (
-    ConversationContext,
     ContentRequirements,
+    ConversationContext,
+    EngagementLevel,
+    GradeLevel,
     PersonalizationData,
     UniquenessEnhancement,
     ValidationResult,
-    ContentType,
-    GradeLevel,
-    SubjectArea,
-    EngagementLevel,
-    UniquenessFactor,
 )
 
 logger = logging.getLogger(__name__)
@@ -43,7 +38,7 @@ class ContentValidationSystem:
         self.quality_metrics = self._load_quality_metrics()
         self.standards = self._load_educational_standards()
 
-    def _load_validation_rules(self) -> Dict[str, Dict[str, Any]]:
+    def _load_validation_rules(self) -> dict[str, dict[str, Any]]:
         """Load validation rules for different content aspects"""
         return {
             "learning_objectives": {
@@ -90,7 +85,7 @@ class ContentValidationSystem:
             },
         }
 
-    def _load_quality_metrics(self) -> Dict[str, Dict[str, Any]]:
+    def _load_quality_metrics(self) -> dict[str, dict[str, Any]]:
         """Load quality metrics and scoring criteria"""
         return {
             "educational_value": {
@@ -139,7 +134,7 @@ class ContentValidationSystem:
             },
         }
 
-    def _load_educational_standards(self) -> Dict[str, Dict[str, Any]]:
+    def _load_educational_standards(self) -> dict[str, dict[str, Any]]:
         """Load educational standards for different grade levels and subjects"""
         return {
             "common_core": {
@@ -225,7 +220,7 @@ class ContentValidationSystem:
 
         return validation_result
 
-    async def validate_requirements(self, requirements: ContentRequirements) -> Dict[str, Any]:
+    async def validate_requirements(self, requirements: ContentRequirements) -> dict[str, Any]:
         """Validate content requirements"""
 
         result = {"errors": [], "warnings": [], "suggestions": [], "educational_value_score": 0.0}
@@ -258,7 +253,7 @@ class ContentValidationSystem:
 
     async def validate_personalization(
         self, personalization: PersonalizationData
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Validate personalization data"""
 
         result = {"warnings": [], "suggestions": [], "uniqueness_score": 0.0}
@@ -295,7 +290,7 @@ class ContentValidationSystem:
 
         return result
 
-    async def validate_uniqueness(self, uniqueness: UniquenessEnhancement) -> Dict[str, Any]:
+    async def validate_uniqueness(self, uniqueness: UniquenessEnhancement) -> dict[str, Any]:
         """Validate uniqueness enhancement data"""
 
         result = {"warnings": [], "suggestions": [], "uniqueness_score": 0.0}
@@ -332,7 +327,7 @@ class ContentValidationSystem:
 
         return result
 
-    async def _validate_learning_objectives(self, objectives: List[str]) -> Dict[str, Any]:
+    async def _validate_learning_objectives(self, objectives: list[str]) -> dict[str, Any]:
         """Validate learning objectives"""
 
         result = {"errors": [], "warnings": [], "suggestions": [], "score": 0.0}
@@ -375,7 +370,7 @@ class ContentValidationSystem:
 
     async def _validate_grade_level_appropriateness(
         self, requirements: ContentRequirements
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Validate grade level appropriateness"""
 
         result = {"warnings": [], "suggestions": [], "score": 0.0}
@@ -405,7 +400,7 @@ class ContentValidationSystem:
 
         return result
 
-    async def _validate_engagement_level(self, requirements: ContentRequirements) -> Dict[str, Any]:
+    async def _validate_engagement_level(self, requirements: ContentRequirements) -> dict[str, Any]:
         """Validate engagement level appropriateness"""
 
         result = {"warnings": [], "suggestions": [], "score": 0.0}
@@ -507,7 +502,7 @@ class ContentValidationSystem:
 
         return min(1.0, score)
 
-    async def get_validation_summary(self, context: ConversationContext) -> Dict[str, Any]:
+    async def get_validation_summary(self, context: ConversationContext) -> dict[str, Any]:
         """Get a summary of validation results"""
 
         validation_result = await self.validate_conversation_context(context)

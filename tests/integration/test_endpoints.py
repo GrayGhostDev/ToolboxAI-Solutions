@@ -3,23 +3,23 @@
 Simple test script to verify that the new endpoint files work correctly.
 """
 
-import pytest
 import os
+
+import pytest
 import requests
-import json
-from typing import Dict, Any
 
 # Skip all tests in this module as they require external services
 # Tests are now enabled by default since we've fixed the issues
 # To skip, set SKIP_INTEGRATION_TESTS=1
 pytestmark = pytest.mark.skipif(
-    os.environ.get('SKIP_INTEGRATION_TESTS'),
-    reason="Tests manually disabled. Remove SKIP_INTEGRATION_TESTS to enable"
+    os.environ.get("SKIP_INTEGRATION_TESTS"),
+    reason="Tests manually disabled. Remove SKIP_INTEGRATION_TESTS to enable",
 )
 
 # Test configuration
 BASE_URL = "http://localhost:8008"
 TEST_USER_CREDENTIALS = {"username": "teacher1", "password": "teacher123"}
+
 
 def get_auth_token() -> str:
     """Get authentication token for testing."""
@@ -34,15 +34,16 @@ def get_auth_token() -> str:
         print(f"Auth error: {e}")
         return ""
 
+
 def check_endpoint(endpoint: str, token: str, description: str) -> bool:
     """Check a specific endpoint (helper function, not a test)."""
     headers = {"Authorization": f"Bearer {token}"} if token else {}
-    
+
     try:
         response = requests.get(f"{BASE_URL}{endpoint}", headers=headers)
         print(f"Testing {description}: {endpoint}")
         print(f"  Status: {response.status_code}")
-        
+
         if response.status_code == 200:
             data = response.json()
             print(f"  Response type: {type(data)}")
@@ -57,17 +58,18 @@ def check_endpoint(endpoint: str, token: str, description: str) -> bool:
             if response.text:
                 print(f"  Error: {response.text[:200]}")
             return False
-            
+
     except Exception as e:
         print(f"  ❌ ERROR: {e}")
         return False
+
 
 @pytest.mark.integration
 def test_endpoints():
     """Test all educational platform endpoints."""
     print("🧪 Testing New Educational Platform Endpoints")
     print("=" * 50)
-    
+
     # Get authentication token
     print("🔐 Getting authentication token...")
     token = get_auth_token()
@@ -75,7 +77,7 @@ def test_endpoints():
         print("❌ Could not get auth token, testing without authentication...")
     else:
         print("✅ Authentication successful")
-    
+
     # Test endpoints that were showing 404 errors
     test_cases = [
         ("/assessments/", "Assessments list endpoint"),
@@ -90,21 +92,22 @@ def test_endpoints():
         ("/reports/1", "Report details"),
         ("/messages/1", "Message details"),
     ]
-    
+
     print(f"\n🚀 Testing {len(test_cases)} endpoints...")
     print("-" * 50)
-    
+
     success_count = 0
     for endpoint, description in test_cases:
         if check_endpoint(endpoint, token, description):
             success_count += 1
         print()
-    
+
     print("=" * 50)
     print(f"📊 Test Results: {success_count}/{len(test_cases)} endpoints working")
-    
+
     # Assert that at least some endpoints work
     assert success_count > 0, "No endpoints are working"
+
 
 if __name__ == "__main__":
     # Run test function directly when script is executed

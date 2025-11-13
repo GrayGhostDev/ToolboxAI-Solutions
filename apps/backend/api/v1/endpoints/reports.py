@@ -3,13 +3,15 @@ Reports API Endpoints for ToolboxAI Educational Platform
 Provides reporting, analytics, and statistics functionality for all user roles.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import Dict, Any, List, Optional
-from datetime import datetime, timedelta
 import logging
+from datetime import datetime, timedelta
+from typing import Any
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+
 from apps.backend.api.auth.auth import get_current_user
-from database.models import User
 from apps.backend.services.database import db_service
+from database.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -20,13 +22,13 @@ reports_router = APIRouter(tags=["Reports"])
 @reports_router.get("/")
 async def get_reports(
     current_user: User = Depends(get_current_user),
-    report_type: Optional[str] = None,
-    class_id: Optional[int] = None,
-    date_from: Optional[str] = None,
-    date_to: Optional[str] = None,
+    report_type: str | None = None,
+    class_id: int | None = None,
+    date_from: str | None = None,
+    date_to: str | None = None,
     limit: int = Query(default=10, le=100),
     offset: int = Query(default=0, ge=0),
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Get available reports based on user role and filters."""
 
     role = current_user.role.lower()
@@ -211,8 +213,8 @@ async def get_reports(
 async def get_report_templates(
     current_user: User = Depends(get_current_user),
     popular_only: bool = Query(default=False),
-    category: Optional[str] = None,
-) -> List[Dict[str, Any]]:
+    category: str | None = None,
+) -> list[dict[str, Any]]:
     """Get available report templates."""
 
     role = current_user.role.lower()
@@ -306,8 +308,8 @@ async def get_report_templates(
 
 @reports_router.get("/stats/overview")
 async def get_overview_statistics(
-    current_user: User = Depends(get_current_user), date_range: Optional[str] = "30d"
-) -> Dict[str, Any]:
+    current_user: User = Depends(get_current_user), date_range: str | None = "30d"
+) -> dict[str, Any]:
     """Get overview statistics based on user role."""
 
     role = current_user.role.lower()
@@ -462,7 +464,7 @@ async def get_overview_statistics(
 @reports_router.get("/{report_id}")
 async def get_report_details(
     report_id: int, current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get detailed information about a specific report."""
 
     role = current_user.role.lower()
@@ -547,8 +549,8 @@ async def get_report_details(
 
 @reports_router.post("/")
 async def create_report(
-    report_data: Dict[str, Any], current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+    report_data: dict[str, Any], current_user: User = Depends(get_current_user)
+) -> dict[str, Any]:
     """Create a new report (teachers and admins only)."""
 
     role = current_user.role.lower()
@@ -584,9 +586,9 @@ async def create_report(
 @reports_router.get("/analytics/engagement")
 async def get_engagement_analytics(
     current_user: User = Depends(get_current_user),
-    class_id: Optional[int] = None,
+    class_id: int | None = None,
     time_period: str = Query(default="7d"),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get student engagement analytics (teachers and admins only)."""
 
     role = current_user.role.lower()
@@ -629,8 +631,8 @@ async def get_engagement_analytics(
 
 @reports_router.post("/generate")
 async def generate_report(
-    report_data: Dict[str, Any], current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+    report_data: dict[str, Any], current_user: User = Depends(get_current_user)
+) -> dict[str, Any]:
     """Generate a new report - alias for create_report for frontend compatibility."""
 
     role = current_user.role.lower()
@@ -685,7 +687,7 @@ async def generate_report(
 @reports_router.get("/status/{report_id}")
 async def get_report_status(
     report_id: str, current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get the status of a specific report"""
 
     role = current_user.role.lower()

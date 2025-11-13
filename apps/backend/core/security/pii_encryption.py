@@ -7,23 +7,23 @@ Using AES-256-GCM with key management via Vault
 import base64
 import json
 import logging
-from typing import Any, Dict, List, Optional, Union, Type
+import os
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from functools import lru_cache
+from typing import Any
 
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
 from cryptography.hazmat.backends import default_backend
-import os
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
 
 logger = logging.getLogger(__name__)
 
 
 class PIIField(str, Enum):
     """Types of PII fields that require encryption"""
+
     EMAIL = "email"
     PHONE = "phone"
     SSN = "ssn"
@@ -43,6 +43,7 @@ class PIIField(str, Enum):
 @dataclass
 class EncryptedField:
     """Container for encrypted field data"""
+
     ciphertext: str  # Base64 encoded encrypted data
     nonce: str  # Base64 encoded nonce/IV
     tag: str  # Base64 encoded authentication tag
@@ -96,6 +97,7 @@ class PIIEncryptionManager:
         if self.vault_enabled:
             try:
                 from apps.backend.services.vault_manager import get_vault_manager
+
                 self.vault = get_vault_manager()
 
                 # Get or create data encryption key
@@ -117,15 +119,18 @@ class PIIEncryptionManager:
         self.data_key = os.urandom(self.key_size)
         self.key_version = 1
 
-        if self.vault_enabled and hasattr(self, 'vault'):
+        if self.vault_enabled and hasattr(self, "vault"):
             try:
                 # Store in Vault
-                self.vault.set_secret("apps/backend/encryption/data_key", {
-                    "key": base64.b64encode(self.data_key).decode('utf-8'),
-                    "version": self.key_version,
-                    "algorithm": self.algorithm,
-                    "created_at": datetime.now(timezone.utc).isoformat()
-                })
+                self.vault.set_secret(
+                    "apps/backend/encryption/data_key",
+                    {
+                        "key": base64.b64encode(self.data_key).decode("utf-8"),
+                        "version": self.key_version,
+                        "algorithm": self.algorithm,
+                        "created_at": datetime.now(timezone.utc).isoformat(),
+                    },
+                )
                 logger.info("Generated and stored new data encryption key")
             except Exception as e:
                 logger.error(f"Failed to store key in Vault: {e}")
@@ -141,16 +146,13 @@ class PIIEncryptionManager:
             length=self.key_size,
             salt=b"toolboxai_pii_salt",  # Should be random in production
             iterations=100000,
-            backend=default_backend()
+            backend=default_backend(),
         )
         self.data_key = kdf.derive(key_seed.encode())
         self.key_version = 0  # Local key version
 
     def encrypt_field(
-        self,
-        value: Any,
-        field_type: PIIField,
-        additional_data: Optional[bytes] = None
+        self, value: Any, field_type: PIIField, additional_data: bytes | None = None
     ) -> EncryptedField:
         """
         Encrypt a PII field
@@ -169,11 +171,11 @@ class PIIEncryptionManager:
         try:
             # Convert value to bytes
             if isinstance(value, str):
-                plaintext = value.encode('utf-8')
+                plaintext = value.encode("utf-8")
             elif isinstance(value, (int, float)):
-                plaintext = str(value).encode('utf-8')
+                plaintext = str(value).encode("utf-8")
             elif isinstance(value, dict):
-                plaintext = json.dumps(value).encode('utf-8')
+                plaintext = json.dumps(value).encode("utf-8")
             else:
                 plaintext = bytes(value)
 
@@ -186,9 +188,7 @@ class PIIEncryptionManager:
 
             # Create cipher
             cipher = Cipher(
-                algorithms.AES(self.data_key),
-                modes.GCM(nonce),
-                backend=default_backend()
+                algorithms.AES(self.data_key), modes.GCM(nonce), backend=default_backend()
             )
             encryptor = cipher.encryptor()
 
@@ -201,11 +201,11 @@ class PIIEncryptionManager:
 
             # Create encrypted field
             encrypted = EncryptedField(
-                ciphertext=base64.b64encode(ciphertext).decode('utf-8'),
-                nonce=base64.b64encode(nonce).decode('utf-8'),
-                tag=base64.b64encode(encryptor.tag).decode('utf-8'),
+                ciphertext=base64.b64encode(ciphertext).decode("utf-8"),
+                nonce=base64.b64encode(nonce).decode("utf-8"),
+                tag=base64.b64encode(encryptor.tag).decode("utf-8"),
                 field_type=field_type,
-                key_version=self.key_version
+                key_version=self.key_version,
             )
 
             # Create searchable index if needed
@@ -221,11 +221,7 @@ class PIIEncryptionManager:
             logger.error(f"Encryption failed for {field_type}: {e}")
             raise
 
-    def decrypt_field(
-        self,
-        encrypted: EncryptedField,
-        additional_data: Optional[bytes] = None
-    ) -> Any:
+    def decrypt_field(self, encrypted: EncryptedField, additional_data: bytes | None = None) -> Any:
         """
         Decrypt a PII field
 
@@ -253,11 +249,7 @@ class PIIEncryptionManager:
             key = self._get_key_for_version(encrypted.key_version)
 
             # Create cipher
-            cipher = Cipher(
-                algorithms.AES(key),
-                modes.GCM(nonce, tag),
-                backend=default_backend()
-            )
+            cipher = Cipher(algorithms.AES(key), modes.GCM(nonce, tag), backend=default_backend())
             decryptor = cipher.decryptor()
 
             # Add additional authenticated data if provided
@@ -272,7 +264,7 @@ class PIIEncryptionManager:
 
             # Convert back to original type
             try:
-                return plaintext.decode('utf-8')
+                return plaintext.decode("utf-8")
             except:
                 return plaintext
 
@@ -281,10 +273,8 @@ class PIIEncryptionManager:
             raise
 
     def encrypt_document(
-        self,
-        document: Dict[str, Any],
-        field_mappings: Dict[str, PIIField]
-    ) -> Dict[str, Any]:
+        self, document: dict[str, Any], field_mappings: dict[str, PIIField]
+    ) -> dict[str, Any]:
         """
         Encrypt multiple fields in a document
 
@@ -299,20 +289,15 @@ class PIIEncryptionManager:
 
         for field_name, field_type in field_mappings.items():
             if field_name in document and document[field_name] is not None:
-                encrypted_field = self.encrypt_field(
-                    document[field_name],
-                    field_type
-                )
+                encrypted_field = self.encrypt_field(document[field_name], field_type)
                 # Store as dict for serialization
                 encrypted_doc[field_name] = self._serialize_encrypted_field(encrypted_field)
 
         return encrypted_doc
 
     def decrypt_document(
-        self,
-        encrypted_doc: Dict[str, Any],
-        field_mappings: Dict[str, PIIField]
-    ) -> Dict[str, Any]:
+        self, encrypted_doc: dict[str, Any], field_mappings: dict[str, PIIField]
+    ) -> dict[str, Any]:
         """
         Decrypt multiple fields in a document
 
@@ -327,9 +312,7 @@ class PIIEncryptionManager:
 
         for field_name, field_type in field_mappings.items():
             if field_name in encrypted_doc and encrypted_doc[field_name] is not None:
-                encrypted_field = self._deserialize_encrypted_field(
-                    encrypted_doc[field_name]
-                )
+                encrypted_field = self._deserialize_encrypted_field(encrypted_doc[field_name])
                 decrypted_doc[field_name] = self.decrypt_field(encrypted_field)
 
         return decrypted_doc
@@ -351,7 +334,7 @@ class PIIEncryptionManager:
         if field_type == PIIField.PHONE:
             # Keep format like (XXX) XXX-XXXX
             # Encrypt only the digits
-            digits = ''.join(c for c in value if c.isdigit())
+            digits = "".join(c for c in value if c.isdigit())
             encrypted_digits = self._simple_format_preserve(digits)
 
             # Reconstruct with original format
@@ -359,7 +342,7 @@ class PIIEncryptionManager:
             digit_index = 0
             for i, char in enumerate(value):
                 if char.isdigit() and digit_index < len(encrypted_digits):
-                    result = result[:i] + encrypted_digits[digit_index] + result[i+1:]
+                    result = result[:i] + encrypted_digits[digit_index] + result[i + 1 :]
                     digit_index += 1
 
             return EncryptedField(
@@ -367,22 +350,22 @@ class PIIEncryptionManager:
                 nonce="",  # Not used in FPE
                 tag="",  # Not used in FPE
                 field_type=field_type,
-                key_version=self.key_version
+                key_version=self.key_version,
             )
 
         elif field_type == PIIField.SSN:
             # Keep format like XXX-XX-XXXX
             # Only encrypt, maintain dashes
-            parts = value.split('-')
+            parts = value.split("-")
             encrypted_parts = [self._simple_format_preserve(part) for part in parts]
-            result = '-'.join(encrypted_parts)
+            result = "-".join(encrypted_parts)
 
             return EncryptedField(
                 ciphertext=result,
                 nonce="",
                 tag="",
                 field_type=field_type,
-                key_version=self.key_version
+                key_version=self.key_version,
             )
 
         # Default: regular encryption
@@ -424,25 +407,19 @@ class PIIEncryptionManager:
         import hashlib
 
         # Create HMAC-based blind index
-        index_key = hashlib.sha256(
-            self.data_key + b"_index_" + field_type.value.encode()
-        ).digest()
+        index_key = hashlib.sha256(self.data_key + b"_index_" + field_type.value.encode()).digest()
 
         # Create index
         h = hashlib.sha256()
         h.update(index_key)
-        h.update(str(value).encode('utf-8'))
+        h.update(str(value).encode("utf-8"))
         blind_index = h.hexdigest()
 
         # Store index (in production, store in database)
         # This allows searching without decryption
         logger.debug(f"Created blind index for {field_type}: {blind_index[:8]}...")
 
-    def search_encrypted(
-        self,
-        search_value: Any,
-        field_type: PIIField
-    ) -> str:
+    def search_encrypted(self, search_value: Any, field_type: PIIField) -> str:
         """
         Generate blind index for searching encrypted data
 
@@ -459,13 +436,11 @@ class PIIEncryptionManager:
             raise ValueError(f"Field type {field_type} is not searchable")
 
         # Generate same blind index
-        index_key = hashlib.sha256(
-            self.data_key + b"_index_" + field_type.value.encode()
-        ).digest()
+        index_key = hashlib.sha256(self.data_key + b"_index_" + field_type.value.encode()).digest()
 
         h = hashlib.sha256()
         h.update(index_key)
-        h.update(str(search_value).encode('utf-8'))
+        h.update(str(search_value).encode("utf-8"))
 
         return h.hexdigest()
 
@@ -485,12 +460,15 @@ class PIIEncryptionManager:
             self.key_version += 1
 
             # Store old key for decryption of existing data
-            if self.vault_enabled and hasattr(self, 'vault'):
-                self.vault.set_secret(f"apps/backend/encryption/data_key_v{old_version}", {
-                    "key": base64.b64encode(old_key).decode('utf-8'),
-                    "version": old_version,
-                    "retired_at": datetime.now(timezone.utc).isoformat()
-                })
+            if self.vault_enabled and hasattr(self, "vault"):
+                self.vault.set_secret(
+                    f"apps/backend/encryption/data_key_v{old_version}",
+                    {
+                        "key": base64.b64encode(old_key).decode("utf-8"),
+                        "version": old_version,
+                        "retired_at": datetime.now(timezone.utc).isoformat(),
+                    },
+                )
 
             logger.info(f"Encryption key rotated to version {self.key_version}")
             return True
@@ -513,7 +491,7 @@ class PIIEncryptionManager:
             return self.data_key
 
         # Retrieve old key from Vault
-        if self.vault_enabled and hasattr(self, 'vault'):
+        if self.vault_enabled and hasattr(self, "vault"):
             try:
                 old_key_data = self.vault.get_secret(f"apps/backend/encryption/data_key_v{version}")
                 if old_key_data:
@@ -523,7 +501,7 @@ class PIIEncryptionManager:
 
         raise ValueError(f"Encryption key version {version} not found")
 
-    def _serialize_encrypted_field(self, field: EncryptedField) -> Dict:
+    def _serialize_encrypted_field(self, field: EncryptedField) -> dict:
         """Serialize EncryptedField for storage"""
         return {
             "ciphertext": field.ciphertext,
@@ -532,10 +510,10 @@ class PIIEncryptionManager:
             "field_type": field.field_type.value,
             "key_version": field.key_version,
             "encrypted_at": field.encrypted_at.isoformat(),
-            "algorithm": field.algorithm
+            "algorithm": field.algorithm,
         }
 
-    def _deserialize_encrypted_field(self, data: Dict) -> EncryptedField:
+    def _deserialize_encrypted_field(self, data: dict) -> EncryptedField:
         """Deserialize EncryptedField from storage"""
         return EncryptedField(
             ciphertext=data["ciphertext"],
@@ -544,7 +522,7 @@ class PIIEncryptionManager:
             field_type=PIIField(data["field_type"]),
             key_version=data["key_version"],
             encrypted_at=datetime.fromisoformat(data["encrypted_at"]),
-            algorithm=data.get("algorithm", "AES-256-GCM")
+            algorithm=data.get("algorithm", "AES-256-GCM"),
         )
 
     def _audit_encryption(self, field_type: PIIField, operation: str):
@@ -559,7 +537,7 @@ class PIIEncryptionManager:
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "operation": operation,
             "field_type": field_type.value,
-            "key_version": self.key_version
+            "key_version": self.key_version,
         }
 
         logger.debug(f"PII encryption audit: {json.dumps(audit_entry)}")
@@ -568,7 +546,7 @@ class PIIEncryptionManager:
 
 
 # Singleton instance
-_pii_manager: Optional[PIIEncryptionManager] = None
+_pii_manager: PIIEncryptionManager | None = None
 
 
 def get_pii_manager() -> PIIEncryptionManager:
@@ -581,14 +559,14 @@ def get_pii_manager() -> PIIEncryptionManager:
 
 
 # Convenience functions
-def encrypt_pii(value: Any, field_type: str) -> Dict:
+def encrypt_pii(value: Any, field_type: str) -> dict:
     """Encrypt PII value"""
     manager = get_pii_manager()
     encrypted = manager.encrypt_field(value, PIIField(field_type))
     return manager._serialize_encrypted_field(encrypted)
 
 
-def decrypt_pii(encrypted_data: Dict) -> Any:
+def decrypt_pii(encrypted_data: dict) -> Any:
     """Decrypt PII value"""
     manager = get_pii_manager()
     encrypted = manager._deserialize_encrypted_field(encrypted_data)

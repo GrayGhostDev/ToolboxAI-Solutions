@@ -6,18 +6,18 @@ agent swarm, including workflow management, schema registration, and health moni
 """
 
 import logging
-from typing import Dict, Any, Optional, List
 from datetime import datetime
+from typing import Any
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from apps.backend.api.auth.auth import get_current_user
 from apps.backend.models.schemas import User
 from apps.backend.services.integration_agents import (
-    get_integration_manager,
     execute_integration_workflow,
+    get_integration_manager,
 )
 from core.agents.integration import IntegrationPlatform
 
@@ -32,7 +32,7 @@ class AgentStatusResponse(BaseModel):
 
     initialized: bool
     timestamp: str
-    agents: Dict[str, Dict[str, Any]]
+    agents: dict[str, dict[str, Any]]
     overall_health: str = Field(description="Overall health: healthy, degraded, unhealthy")
 
 
@@ -41,11 +41,9 @@ class WorkflowCreateRequest(BaseModel):
 
     name: str = Field(..., description="Workflow name")
     description: str = Field(..., description="Workflow description")
-    template: Optional[str] = Field(None, description="Template name to use")
-    custom_tasks: Optional[List[Dict[str, Any]]] = Field(
-        None, description="Custom task definitions"
-    )
-    parameters: Optional[Dict[str, Any]] = Field(
+    template: str | None = Field(None, description="Template name to use")
+    custom_tasks: list[dict[str, Any]] | None = Field(None, description="Custom task definitions")
+    parameters: dict[str, Any] | None = Field(
         default_factory=dict, description="Workflow parameters"
     )
 
@@ -53,7 +51,7 @@ class WorkflowCreateRequest(BaseModel):
 class WorkflowExecuteRequest(BaseModel):
     """Request model for executing a workflow"""
 
-    parameters: Optional[Dict[str, Any]] = Field(
+    parameters: dict[str, Any] | None = Field(
         default_factory=dict, description="Execution parameters"
     )
     async_execution: bool = Field(False, description="Execute asynchronously")
@@ -62,11 +60,11 @@ class WorkflowExecuteRequest(BaseModel):
 class WorkflowResponse(BaseModel):
     """Response model for workflow operations"""
 
-    workflow_id: Optional[str]
+    workflow_id: str | None
     success: bool
-    output: Optional[Dict[str, Any]]
-    error: Optional[str]
-    execution_time: Optional[float]
+    output: dict[str, Any] | None
+    error: str | None
+    execution_time: float | None
 
 
 class SchemaRegistrationRequest(BaseModel):
@@ -74,7 +72,7 @@ class SchemaRegistrationRequest(BaseModel):
 
     schema_name: str = Field(..., description="Schema name")
     schema_type: str = Field("json_schema", description="Schema type (json_schema, protobuf, avro)")
-    definition: Dict[str, Any] = Field(..., description="Schema definition")
+    definition: dict[str, Any] = Field(..., description="Schema definition")
     platform: str = Field(..., description="Platform (backend, frontend, roblox)")
     version: str = Field("1.0.0", description="Schema version")
 
@@ -84,7 +82,7 @@ class DataSyncRequest(BaseModel):
 
     source_platform: str = Field(..., description="Source platform")
     target_platform: str = Field(..., description="Target platform")
-    data: Dict[str, Any] = Field(..., description="Data to synchronize")
+    data: dict[str, Any] = Field(..., description="Data to synchronize")
     sync_mode: str = Field("immediate", description="Sync mode: immediate, batch, scheduled")
 
 
@@ -101,7 +99,7 @@ class EventBroadcastRequest(BaseModel):
 
 @router.get("/status", response_model=AgentStatusResponse)
 async def get_integration_status(
-    agent_name: Optional[str] = Query(None, description="Specific agent name to check"),
+    agent_name: str | None = Query(None, description="Specific agent name to check"),
     current_user: User = Depends(get_current_user),
 ):
     """
@@ -333,7 +331,7 @@ async def register_schema(
             }
         )
 
-    except KeyError as e:
+    except KeyError:
         raise HTTPException(status_code=400, detail=f"Invalid platform: {request.platform}")
     except Exception as e:
         logger.error(f"Error registering schema: {e}")
@@ -413,7 +411,7 @@ async def broadcast_event(
 
 @router.get("/metrics")
 async def get_integration_metrics(
-    platform: Optional[str] = Query(None, description="Filter by platform"),
+    platform: str | None = Query(None, description="Filter by platform"),
     current_user: User = Depends(get_current_user),
 ):
     """
@@ -526,6 +524,7 @@ async def perform_health_check(
             # Check Redis connectivity
             try:
                 import redis.asyncio as redis
+
                 from apps.backend.core.config import settings
 
                 if hasattr(settings, "REDIS_URL") and settings.REDIS_URL:

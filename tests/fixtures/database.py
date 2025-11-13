@@ -3,17 +3,19 @@ Database test fixtures for ToolboxAI test suite.
 
 Provides reusable database fixtures for testing.
 """
-import pytest
-from unittest.mock import Mock, MagicMock, AsyncMock
-from datetime import datetime
-from typing import AsyncGenerator, Generator
-import uuid
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session
 
 # Add parent directory to path for imports
 import sys
+import uuid
+from collections.abc import AsyncGenerator
+from datetime import datetime
 from pathlib import Path
+from unittest.mock import AsyncMock, Mock
+
+import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 
@@ -30,7 +32,7 @@ def mock_db_session():
     session.refresh = Mock()
     session.merge = Mock()
     session.delete = Mock()
-    
+
     # Configure query chain
     query_mock = Mock()
     query_mock.filter = Mock(return_value=query_mock)
@@ -42,7 +44,7 @@ def mock_db_session():
     query_mock.offset = Mock(return_value=query_mock)
     query_mock.order_by = Mock(return_value=query_mock)
     session.query.return_value = query_mock
-    
+
     return session
 
 
@@ -62,7 +64,7 @@ async def mock_async_db_session():
     session.merge = Mock()
     session.delete = Mock()
     session.begin = AsyncMock()
-    
+
     # Configure async execute with proper result handling
     result_mock = AsyncMock()
     scalars_mock = Mock()
@@ -75,11 +77,11 @@ async def mock_async_db_session():
     result_mock.scalar_one = Mock(side_effect=Exception("No rows found"))
     result_mock.scalar_one_or_none = Mock(return_value=None)
     session.execute = AsyncMock(return_value=result_mock)
-    
+
     # Support async context manager protocol (2025 best practice)
     session.__aenter__ = AsyncMock(return_value=session)
     session.__aexit__ = AsyncMock(return_value=None)
-    
+
     return session
 
 
@@ -98,8 +100,8 @@ def test_user():
             "first_name": "Test",
             "last_name": "User",
             "avatar_url": None,
-            "bio": "Test user for automated testing"
-        }
+            "bio": "Test user for automated testing",
+        },
     }
 
 
@@ -119,8 +121,8 @@ def test_teacher():
             "last_name": "Teacher",
             "avatar_url": None,
             "bio": "Test teacher for automated testing",
-            "subjects": ["Mathematics", "Science"]
-        }
+            "subjects": ["Mathematics", "Science"],
+        },
     }
 
 
@@ -140,8 +142,8 @@ def test_admin():
             "last_name": "Admin",
             "avatar_url": None,
             "bio": "Test admin for automated testing",
-            "permissions": ["all"]
-        }
+            "permissions": ["all"],
+        },
     }
 
 
@@ -161,11 +163,7 @@ def test_content():
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow(),
         "tags": ["algebra", "equations"],
-        "metadata": {
-            "version": "1.0",
-            "language": "en",
-            "prerequisites": []
-        }
+        "metadata": {"version": "1.0", "language": "en", "prerequisites": []},
     }
 
 
@@ -190,16 +188,16 @@ def test_course():
                 "course_id": course_id,
                 "title": "Module 1: Variables and Expressions",
                 "order": 1,
-                "is_locked": False
+                "is_locked": False,
             },
             {
                 "id": str(uuid.uuid4()),
                 "course_id": course_id,
                 "title": "Module 2: Linear Equations",
                 "order": 2,
-                "is_locked": True
-            }
-        ]
+                "is_locked": True,
+            },
+        ],
     }
 
 
@@ -225,9 +223,9 @@ def test_assessment():
                 "type": "multiple_choice",
                 "points": 10,
                 "options": ["13", "10", "15", "8"],
-                "correct_answer": "13"
+                "correct_answer": "13",
             }
-        ]
+        ],
     }
 
 
@@ -247,9 +245,9 @@ def test_submission():
                 "question_id": str(uuid.uuid4()),
                 "answer": "13",
                 "is_correct": True,
-                "points_earned": 10
+                "points_earned": 10,
             }
-        ]
+        ],
     }
 
 
@@ -257,27 +255,27 @@ def test_submission():
 def mock_db_models():
     """Mock database models."""
     models = Mock()
-    
+
     # User model
     models.User = Mock()
     models.User.__name__ = "User"
     models.User.query = Mock()
-    
+
     # Content model
     models.Content = Mock()
     models.Content.__name__ = "Content"
     models.Content.query = Mock()
-    
+
     # Course model
     models.Course = Mock()
     models.Course.__name__ = "Course"
     models.Course.query = Mock()
-    
+
     # Assessment model
     models.Assessment = Mock()
     models.Assessment.__name__ = "Assessment"
     models.Assessment.query = Mock()
-    
+
     return models
 
 
@@ -297,11 +295,11 @@ def mock_db_connection():
 async def async_db_generator():
     """Async database session generator for dependency injection."""
     session = await mock_async_db_session()
-    
+
     async def get_session() -> AsyncGenerator[AsyncSession, None]:
         try:
             yield session
         finally:
             await session.close()
-    
+
     return get_session

@@ -1,8 +1,11 @@
 """Project standards compliance tests"""
-import pytest
-from pathlib import Path
+
 import json
+from pathlib import Path
+
+import pytest
 import yaml
+
 
 class TestProjectStandards:
     """Test compliance with project standards"""
@@ -17,7 +20,7 @@ class TestProjectStandards:
             "pytest.ini",
             ".gitignore",
             ".env.example",
-            "apps/dashboard/package.json"
+            "apps/dashboard/package.json",
         ]
 
         missing_files = []
@@ -35,21 +38,25 @@ class TestProjectStandards:
         # Check Python version
         python_version_file = project_root / ".python-version"
         if python_version_file.exists():
-            with open(python_version_file, 'r') as f:
+            with open(python_version_file) as f:
                 python_version = f.read().strip()
 
             # Should be a valid Python version
             assert python_version.startswith("3."), f"Invalid Python version: {python_version}"
-            assert len(python_version.split(".")) >= 2, f"Incomplete Python version: {python_version}"
+            assert (
+                len(python_version.split(".")) >= 2
+            ), f"Incomplete Python version: {python_version}"
 
         # Check Node version
         nvmrc_file = project_root / ".nvmrc"
         if nvmrc_file.exists():
-            with open(nvmrc_file, 'r') as f:
+            with open(nvmrc_file) as f:
                 node_version = f.read().strip()
 
             # Should be a valid Node version
-            assert node_version.isdigit() and int(node_version) >= 18, f"Invalid Node version: {node_version}"
+            assert (
+                node_version.isdigit() and int(node_version) >= 18
+            ), f"Invalid Node version: {node_version}"
 
     def test_package_json_validity(self):
         """Test package.json files are valid"""
@@ -57,13 +64,13 @@ class TestProjectStandards:
 
         package_json_files = [
             project_root / "package.json",
-            project_root / "apps/dashboard/package.json"
+            project_root / "apps/dashboard/package.json",
         ]
 
         for package_file in package_json_files:
             if package_file.exists():
                 try:
-                    with open(package_file, 'r') as f:
+                    with open(package_file) as f:
                         package_data = json.load(f)
 
                     # Should have required fields
@@ -73,7 +80,9 @@ class TestProjectStandards:
                     # Version should follow semver
                     version = package_data["version"]
                     version_parts = version.split(".")
-                    assert len(version_parts) >= 3, f"Invalid version format in {package_file}: {version}"
+                    assert (
+                        len(version_parts) >= 3
+                    ), f"Invalid version format in {package_file}: {version}"
 
                 except json.JSONDecodeError as e:
                     pytest.fail(f"Invalid JSON in {package_file}: {e}")
@@ -84,18 +93,20 @@ class TestProjectStandards:
 
         compose_files = [
             project_root / "infrastructure/docker/docker-compose.dev.yml",
-            project_root / "docker-compose.yml"
+            project_root / "docker-compose.yml",
         ]
 
         for compose_file in compose_files:
             if compose_file.exists():
                 try:
-                    with open(compose_file, 'r') as f:
+                    with open(compose_file) as f:
                         compose_data = yaml.safe_load(f)
 
                     # Should have required structure
                     assert "services" in compose_data, f"Missing 'services' in {compose_file}"
-                    assert len(compose_data["services"]) > 0, f"No services defined in {compose_file}"
+                    assert (
+                        len(compose_data["services"]) > 0
+                    ), f"No services defined in {compose_file}"
 
                 except yaml.YAMLError as e:
                     pytest.fail(f"Invalid YAML in {compose_file}: {e}")
@@ -107,17 +118,11 @@ class TestProjectStandards:
         gitignore_file = project_root / ".gitignore"
         assert gitignore_file.exists(), ".gitignore file is missing"
 
-        with open(gitignore_file, 'r') as f:
+        with open(gitignore_file) as f:
             gitignore_content = f.read()
 
         # Should ignore common patterns
-        required_patterns = [
-            "node_modules",
-            "*.pyc",
-            "__pycache__",
-            ".env",
-            "*.log"
-        ]
+        required_patterns = ["node_modules", "*.pyc", "__pycache__", ".env", "*.log"]
 
         missing_patterns = []
         for pattern in required_patterns:
@@ -133,23 +138,20 @@ class TestProjectStandards:
         env_example_file = project_root / ".env.example"
         assert env_example_file.exists(), ".env.example file is missing"
 
-        with open(env_example_file, 'r') as f:
+        with open(env_example_file) as f:
             env_content = f.read()
 
         # Should contain key sections
-        required_sections = [
-            "DATABASE",
-            "REDIS",
-            "JWT",
-            "PUSHER"
-        ]
+        required_sections = ["DATABASE", "REDIS", "JWT", "PUSHER"]
 
         for section in required_sections:
             assert section in env_content, f"Missing {section} configuration in .env.example"
 
         # Should have security warnings
         security_keywords = ["NEVER commit", "secure", "production"]
-        has_security_warning = any(keyword.lower() in env_content.lower() for keyword in security_keywords)
+        has_security_warning = any(
+            keyword.lower() in env_content.lower() for keyword in security_keywords
+        )
         assert has_security_warning, "Missing security warnings in .env.example"
 
     def test_test_structure_compliance(self):
@@ -178,7 +180,7 @@ class TestProjectStandards:
         readme_file = project_root / "README.md"
         assert readme_file.exists(), "README.md is missing"
 
-        with open(readme_file, 'r', encoding='utf-8') as f:
+        with open(readme_file, encoding="utf-8") as f:
             readme_content = f.read()
 
         # Should contain key sections
@@ -201,7 +203,7 @@ class TestProjectStandards:
         lock_files = [
             project_root / "requirements.lock",
             project_root / "poetry.lock",
-            project_root / "apps/dashboard/package-lock.json"
+            project_root / "apps/dashboard/package-lock.json",
         ]
 
         has_lock_file = any(lock_file.exists() for lock_file in lock_files)
@@ -215,7 +217,7 @@ class TestProjectStandards:
         python_quality_files = [
             project_root / "pyproject.toml",
             project_root / ".bandit",
-            project_root / "mypy.ini"
+            project_root / "mypy.ini",
         ]
 
         python_quality_configured = any(file.exists() for file in python_quality_files)
@@ -226,7 +228,7 @@ class TestProjectStandards:
         js_quality_files = [
             project_root / "apps/dashboard/.eslintrc.js",
             project_root / "apps/dashboard/.eslintrc.json",
-            project_root / "apps/dashboard/tsconfig.json"
+            project_root / "apps/dashboard/tsconfig.json",
         ]
 
         js_quality_configured = any(file.exists() for file in js_quality_files)
@@ -240,7 +242,7 @@ class TestProjectStandards:
         ci_dirs = [
             project_root / ".github/workflows",
             project_root / ".gitlab-ci.yml",
-            project_root / "azure-pipelines.yml"
+            project_root / "azure-pipelines.yml",
         ]
 
         has_ci_config = any(

@@ -3,21 +3,21 @@ MFA API Routes
 Phase 3 Implementation - Complete MFA endpoints
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
-from datetime import datetime
 import logging
+from datetime import datetime
 
-from apps.backend.api.auth.mfa import (
-    MFAService,
-    MFAMethod,
-    MFAFeatureFlags,
-    MFARateLimitError,
-    get_mfa_service,
-    get_mfa_feature_flags,
-)
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field
+
 from apps.backend.api.auth.auth import get_current_user
+from apps.backend.api.auth.mfa import (
+    MFAFeatureFlags,
+    MFAMethod,
+    MFARateLimitError,
+    MFAService,
+    get_mfa_feature_flags,
+    get_mfa_service,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -30,8 +30,8 @@ class MFASetupInitRequest(BaseModel):
     """Request to initialize MFA setup"""
 
     method: MFAMethod
-    phone_number: Optional[str] = Field(None, description="Phone for SMS method")
-    email: Optional[str] = Field(None, description="Email for email method")
+    phone_number: str | None = Field(None, description="Phone for SMS method")
+    email: str | None = Field(None, description="Email for email method")
 
 
 class MFASetupConfirmRequest(BaseModel):
@@ -46,14 +46,14 @@ class MFAVerifyRequest(BaseModel):
 
     method: MFAMethod
     code: str = Field(..., description="Verification code or backup code")
-    device_id: Optional[str] = Field(None, description="Device identifier for trust")
+    device_id: str | None = Field(None, description="Device identifier for trust")
     trust_device: bool = Field(False, description="Whether to trust this device")
 
 
 class MFADisableRequest(BaseModel):
     """Request to disable MFA"""
 
-    method: Optional[MFAMethod] = Field(None, description="Specific method to disable")
+    method: MFAMethod | None = Field(None, description="Specific method to disable")
     password: str = Field(..., description="Current password for verification")
 
 
@@ -274,8 +274,8 @@ async def verify_mfa(
 @router.post("/resend", status_code=status.HTTP_200_OK)
 async def resend_mfa_code(
     method: MFAMethod,
-    phone_number: Optional[str] = None,
-    email: Optional[str] = None,
+    phone_number: str | None = None,
+    email: str | None = None,
     current_user: dict = Depends(get_current_user),
     mfa_service: MFAService = Depends(get_mfa_service),
 ):

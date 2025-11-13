@@ -19,7 +19,8 @@ Standards: Python 3.12, FastAPI async
 
 import logging
 import time
-from typing import Callable
+from collections.abc import Callable
+
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
@@ -68,18 +69,18 @@ class PerformanceMonitoringMiddleware(BaseHTTPMiddleware):
                 endpoint=endpoint,
                 method=method,
                 duration=duration,
-                status_code=response.status_code
+                status_code=response.status_code,
             )
 
             # Add performance headers
             response.headers["X-Response-Time"] = f"{duration:.3f}s"
-            response.headers["X-Request-ID"] = str(request.state.request_id) if hasattr(request.state, "request_id") else "unknown"
+            response.headers["X-Request-ID"] = (
+                str(request.state.request_id) if hasattr(request.state, "request_id") else "unknown"
+            )
 
             # Log slow requests
             if duration > 1.0:
-                logger.warning(
-                    f"Slow request: {method} {endpoint} took {duration:.3f}s"
-                )
+                logger.warning(f"Slow request: {method} {endpoint} took {duration:.3f}s")
 
             return response
 
@@ -89,21 +90,14 @@ class PerformanceMonitoringMiddleware(BaseHTTPMiddleware):
 
             # Record error metrics
             self._record_metrics(
-                endpoint=endpoint,
-                method=method,
-                duration=duration,
-                status_code=500
+                endpoint=endpoint, method=method, duration=duration, status_code=500
             )
 
-            logger.error(
-                f"Request error: {method} {endpoint} - {str(e)}",
-                exc_info=True
-            )
+            logger.error(f"Request error: {method} {endpoint} - {str(e)}", exc_info=True)
 
             raise
 
-    def _record_metrics(self, endpoint: str, method: str,
-                       duration: float, status_code: int):
+    def _record_metrics(self, endpoint: str, method: str, duration: float, status_code: int):
         """
         Record request metrics.
 

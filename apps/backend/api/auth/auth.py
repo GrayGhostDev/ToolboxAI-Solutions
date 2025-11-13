@@ -23,8 +23,9 @@ from passlib.context import CryptContext
 from requests_oauthlib import OAuth1Session
 
 from apps.backend.core.config import settings
-from apps.backend.models.schemas import Session, User
 from apps.backend.core.security.rate_limiter import get_rate_limit_manager
+from apps.backend.models.schemas import Session, User
+
 # Secure JWT secret management
 try:
     from apps.backend.core.security.jwt import get_secure_jwt_secret
@@ -32,6 +33,7 @@ except ImportError:
     # Fallback for development
     def get_secure_jwt_secret():
         return settings.JWT_SECRET_KEY
+
 
 logger = logging.getLogger(__name__)
 
@@ -71,9 +73,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 # JWT Security
-security = HTTPBearer(
-    auto_error=False
-)  # Don't auto-error, handle missing auth manually
+security = HTTPBearer(auto_error=False)  # Don't auto-error, handle missing auth manually
 
 # Redis client for session management and rate limiting
 try:
@@ -139,9 +139,7 @@ class JWTManager:
     """JWT token management"""
 
     @staticmethod
-    def create_access_token(
-        data: Dict[str, Any], expires_delta: Optional[timedelta] = None
-    ) -> str:
+    def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
         """Create JWT access token"""
         to_encode = data.copy()
 
@@ -167,9 +165,7 @@ class JWTManager:
 
     @staticmethod
     def create_refresh_token(
-        user_id: str,
-        token_family: Optional[str] = None,
-        expires_delta: Optional[timedelta] = None
+        user_id: str, token_family: Optional[str] = None, expires_delta: Optional[timedelta] = None
     ) -> tuple[str, str]:
         """Create JWT refresh token with family tracking for rotation
 
@@ -194,10 +190,12 @@ class JWTManager:
                 days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS
             )
 
-        to_encode.update({
-            "exp": int(expire.timestamp()),
-            "iat": int(datetime.now(timezone.utc).timestamp()),
-        })
+        to_encode.update(
+            {
+                "exp": int(expire.timestamp()),
+                "iat": int(datetime.now(timezone.utc).timestamp()),
+            }
+        )
 
         encoded_jwt = jwt.encode(
             to_encode, get_secure_jwt_secret(), algorithm=settings.JWT_ALGORITHM
@@ -209,11 +207,13 @@ class JWTManager:
             redis_client.setex(
                 family_key,
                 int(timedelta(days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS * 2).total_seconds()),
-                json.dumps({
-                    "user_id": user_id,
-                    "latest_jti": to_encode["jti"],
-                    "created_at": datetime.now(timezone.utc).isoformat()
-                })
+                json.dumps(
+                    {
+                        "user_id": user_id,
+                        "latest_jti": to_encode["jti"],
+                        "created_at": datetime.now(timezone.utc).isoformat(),
+                    }
+                ),
             )
 
         return encoded_jwt, token_family
@@ -313,8 +313,19 @@ class SessionManager:
             "user_id": session.user_id,
             "roblox_user_id": session.roblox_user_id,
             "studio_id": session.studio_id,
-            "created_at": session.created_at.isoformat() if getattr(session, "created_at", None) else datetime.now(timezone.utc).isoformat(),
-            "expires_at": session.expires_at.isoformat() if getattr(session, "expires_at", None) else (datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)).isoformat(),
+            "created_at": (
+                session.created_at.isoformat()
+                if getattr(session, "created_at", None)
+                else datetime.now(timezone.utc).isoformat()
+            ),
+            "expires_at": (
+                session.expires_at.isoformat()
+                if getattr(session, "expires_at", None)
+                else (
+                    datetime.now(timezone.utc)
+                    + timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
+                ).isoformat()
+            ),
         }
 
         if redis_client:
@@ -383,6 +394,7 @@ class RateLimiter:
 
         # Convert async call to sync for backward compatibility
         import asyncio
+
         try:
             loop = asyncio.get_event_loop()
         except RuntimeError:
@@ -394,7 +406,7 @@ class RateLimiter:
                 identifier=identifier,
                 max_requests=max_requests,
                 window_seconds=window_seconds,
-                source="auth"
+                source="auth",
             )
         )
         return allowed
@@ -413,13 +425,15 @@ class RateLimiter:
 
                 # Convert to async check
                 manager = get_rate_limit_manager()
-                requests_limit = max_requests if max_requests is not None else settings.RATE_LIMIT_PER_MINUTE
+                requests_limit = (
+                    max_requests if max_requests is not None else settings.RATE_LIMIT_PER_MINUTE
+                )
 
                 allowed, _ = await manager.check_rate_limit(
                     identifier=identifier,
                     max_requests=requests_limit,
                     window_seconds=window_seconds,
-                    source="auth"
+                    source="auth",
                 )
 
                 if not allowed:
@@ -436,9 +450,7 @@ class LMSAuthenticator:
     """LMS platform authentication"""
 
     @staticmethod
-    def get_schoology_session(
-        user_token: str = None, user_secret: str = None
-    ) -> OAuth1Session:
+    def get_schoology_session(user_token: str = None, user_secret: str = None) -> OAuth1Session:
         """Create Schoology OAuth1 session"""
         if not settings.SCHOOLOGY_KEY or not settings.SCHOOLOGY_SECRET:
             raise ValueError("Schoology API credentials not configured")
@@ -515,16 +527,17 @@ async def get_current_user(
     # SECURE: Development mode bypass ONLY if explicitly enabled via feature flag
     # This prevents accidental bypass activation in production
     try:
-        from apps.backend.core.feature_flags import get_feature_flags, FeatureFlag
+        from apps.backend.core.feature_flags import FeatureFlag, get_feature_flags
+
         feature_flags = get_feature_flags()
 
         # Triple-check: feature flag + environment + explicit testing opt-out
         development_bypass_enabled = (
-            feature_flags.is_enabled(FeatureFlag.DEVELOPMENT_AUTH_BYPASS) and
-            settings.DEBUG and
-            settings.ENVIRONMENT == "development" and
-            not os.getenv("TESTING", "false").lower() == "true" and
-            not os.getenv("DISABLE_AUTH_BYPASS", "false").lower() == "true"
+            feature_flags.is_enabled(FeatureFlag.DEVELOPMENT_AUTH_BYPASS)
+            and settings.DEBUG
+            and settings.ENVIRONMENT == "development"
+            and not os.getenv("TESTING", "false").lower() == "true"
+            and not os.getenv("DISABLE_AUTH_BYPASS", "false").lower() == "true"
         )
 
         if development_bypass_enabled:
@@ -625,12 +638,12 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
         if user_data:
             # Convert database user to User model
             return User(
-                id=str(user_data['id']),
-                username=user_data['username'],
-                email=user_data['email'],
-                role=user_data['role'],
+                id=str(user_data["id"]),
+                username=user_data["username"],
+                email=user_data["email"],
+                role=user_data["role"],
                 grade_level=None,  # Can be fetched from DB if needed
-                last_active=datetime.now(timezone.utc)
+                last_active=datetime.now(timezone.utc),
             )
 
     except ImportError:
@@ -639,6 +652,7 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
         try:
             import sys
             from pathlib import Path
+
             # Add parent directory to path for database import
             sys.path.insert(0, str(Path(__file__).parent.parent.parent))
             from apps.backend.database.core.connection_manager import db_manager
@@ -650,14 +664,17 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
             # Query the educational_platform database for the user
             with db_manager.get_session("education") as session:
                 from sqlalchemy import text
+
                 result = session.execute(
-                    text("""
+                    text(
+                        """
                         SELECT id, username, email, password_hash, role, created_at
                         FROM users
                         WHERE (username = :username OR email = :username) AND is_active = true
                         LIMIT 1
-                    """),
-                    {"username": username}
+                    """
+                    ),
+                    {"username": username},
                 )
 
                 user_row = result.fetchone()
@@ -671,7 +688,7 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
                             id=str(user_row.id),
                             username=user_row.username,
                             email=user_row.email,
-                            role=user_row.role
+                            role=user_row.role,
                         )
         except Exception as inner_e:
             logger.error(f"Connection manager authentication error: {inner_e}")
@@ -682,19 +699,24 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
 
     # SECURE: Check development test credentials only if feature flag enabled
     try:
-        from apps.backend.core.feature_flags import get_feature_flags, FeatureFlag
+        from apps.backend.core.feature_flags import FeatureFlag, get_feature_flags
+
         feature_flags = get_feature_flags()
 
-        if (feature_flags.is_enabled(FeatureFlag.DEVELOPMENT_AUTH_BYPASS) and
-            settings.DEBUG and settings.ENVIRONMENT == "development"):
+        if (
+            feature_flags.is_enabled(FeatureFlag.DEVELOPMENT_AUTH_BYPASS)
+            and settings.DEBUG
+            and settings.ENVIRONMENT == "development"
+        ):
 
             # Use secure test data generator instead of hardcoded credentials
             from apps.backend.core.security.test_data_generator import get_development_credentials
+
             dev_credentials = get_development_credentials()
 
             # Check against generated development credentials
             for cred in dev_credentials:
-                if (username == cred["username"] or username == cred["email"]):
+                if username == cred["username"] or username == cred["email"]:
                     # Verify password using the secure hash
                     if verify_password(password, cred["password_hash"]):
                         return User(
@@ -705,8 +727,12 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
                         )
 
             # Also check demo credentials if configured (but only specific ones)
-            if (settings.DEMO_USERNAME and settings.DEMO_PASSWORD and
-                username == settings.DEMO_USERNAME and password == settings.DEMO_PASSWORD):
+            if (
+                settings.DEMO_USERNAME
+                and settings.DEMO_PASSWORD
+                and username == settings.DEMO_USERNAME
+                and password == settings.DEMO_PASSWORD
+            ):
                 return User(
                     id="demo-user-001",
                     username=settings.DEMO_USERNAME,
@@ -724,12 +750,14 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
 
         # Only allow fallback test users in testing environment or if explicitly enabled
         testing_allowed = (
-            os.getenv("TESTING", "false").lower() == "true" or
-            os.getenv("ALLOW_TEST_FALLBACK", "false").lower() == "true"
+            os.getenv("TESTING", "false").lower() == "true"
+            or os.getenv("ALLOW_TEST_FALLBACK", "false").lower() == "true"
         )
 
         if not testing_allowed:
-            logger.info("Test fallback authentication disabled - use proper database authentication")
+            logger.info(
+                "Test fallback authentication disabled - use proper database authentication"
+            )
             return None
 
         test_credentials = get_testing_credentials()
@@ -769,7 +797,7 @@ async def authenticate_user(username: str, password: str) -> Optional[User]:
         id=user_data["id"],
         username=user_data["username"],
         email=user_data["email"],
-        role=user_data["role"]
+        role=user_data["role"],
     )
 
 
@@ -779,7 +807,7 @@ def create_user_token(user: User) -> str:
         "sub": str(user.id),  # Convert UUID to string for JSON serialization
         "username": user.username,
         "email": user.email,
-        "role": user.role.value if hasattr(user.role, 'value') else user.role,  # Handle enum
+        "role": user.role.value if hasattr(user.role, "value") else user.role,  # Handle enum
     }
     return JWTManager.create_access_token(token_data)
 
@@ -798,7 +826,7 @@ def check_permission(user: User, required_permission: str) -> bool:
     permission_hierarchy = {
         "admin": ["admin", "teacher", "student"],
         "teacher": ["teacher", "student"],
-        "student": ["student"]
+        "student": ["student"],
     }
 
     # Get user's available permissions
@@ -809,9 +837,7 @@ def check_permission(user: User, required_permission: str) -> bool:
 
 
 # Rate limiting decorator for use with FastAPI
-def rate_limit(
-    max_requests: int = None, window_seconds: int = DEFAULT_RATE_LIMIT_WINDOW
-):
+def rate_limit(max_requests: int = None, window_seconds: int = DEFAULT_RATE_LIMIT_WINDOW):
     """Rate limiting decorator for FastAPI endpoints"""
 
     def decorator(func):
@@ -819,9 +845,7 @@ def rate_limit(
         async def wrapper(request: Request, *args, **kwargs):
             client_ip = request.client.host
             user_agent = request.headers.get("User-Agent", "unknown")
-            identifier = (
-                f"{client_ip}:{hashlib.md5(user_agent.encode()).hexdigest()[:8]}"
-            )
+            identifier = f"{client_ip}:{hashlib.md5(user_agent.encode()).hexdigest()[:8]}"
 
             # Use centralized rate limit manager
             manager = get_rate_limit_manager()
@@ -829,7 +853,7 @@ def rate_limit(
                 identifier=identifier,
                 max_requests=max_requests or settings.RATE_LIMIT_PER_MINUTE,
                 window_seconds=window_seconds,
-                source="auth"
+                source="auth",
             )
 
             if not allowed:
@@ -919,11 +943,11 @@ def decode_token(token: str) -> dict:
     """Decode a JWT token"""
     try:
         # Simplified implementation for testing
-        import json
         import base64
+        import json
 
         # Basic JWT structure: header.payload.signature
-        parts = token.split('.')
+        parts = token.split(".")
         if len(parts) != 3:
             return {"error": "Invalid token format"}
 
@@ -931,7 +955,7 @@ def decode_token(token: str) -> dict:
         payload = parts[1]
         padding = 4 - len(payload) % 4
         if padding != 4:
-            payload += '=' * padding
+            payload += "=" * padding
 
         decoded = base64.urlsafe_b64decode(payload)
         return json.loads(decoded)

@@ -17,6 +17,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
+
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -83,9 +84,7 @@ class SecretsManager:
     def _init_encryption(self) -> Optional[Fernet]:
         """Initialize encryption for local secrets"""
         if not self.master_key:
-            logger.warning(
-                "No master key provided, local secrets will not be encrypted"
-            )
+            logger.warning("No master key provided, local secrets will not be encrypted")
             return None
 
         # Derive encryption key from master key
@@ -159,9 +158,7 @@ class SecretsManager:
                     for config_data in custom_configs:
                         config = SecretConfig(
                             name=config_data["name"],
-                            provider=SecretProvider(
-                                config_data.get("provider", "environment")
-                            ),
+                            provider=SecretProvider(config_data.get("provider", "environment")),
                             required=config_data.get("required", True),
                             default_value=config_data.get("default_value"),
                             rotation_days=config_data.get("rotation_days"),
@@ -274,8 +271,8 @@ class SecretsManager:
     def _load_azure_secret(self, name: str) -> Optional[str]:
         """Load secret from Azure Key Vault"""
         try:
-            from azure.keyvault.secrets import SecretClient
             from azure.identity import DefaultAzureCredential
+            from azure.keyvault.secrets import SecretClient
 
             vault_url = os.getenv("AZURE_VAULT_URL")
             credential = DefaultAzureCredential()
@@ -391,9 +388,7 @@ class SecretsManager:
             raise SecretValidationError("Database URL is required")
 
         # Basic format check
-        if not value.startswith(
-            ("postgresql://", "postgres://", "mysql://", "sqlite://")
-        ):
+        if not value.startswith(("postgresql://", "postgres://", "mysql://", "sqlite://")):
             raise SecretValidationError("Invalid database URL format")
 
         # Check for default passwords
@@ -415,9 +410,7 @@ class SecretsManager:
         return {
             "total_secrets": len(self.secrets),
             "configured_secrets": len(self.secret_configs),
-            "providers_used": list(
-                set(c.provider.value for c in self.secret_configs.values())
-            ),
+            "providers_used": list(set(c.provider.value for c in self.secret_configs.values())),
             "rotation_needed": self.check_rotation_needed(),
             "encryption_enabled": self.cipher_suite is not None,
         }

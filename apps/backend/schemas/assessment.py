@@ -2,7 +2,14 @@
 Assessment schema definitions
 """
 
-from ..models.schemas import Quiz, QuizQuestion, QuizOption, QuizResponse, QuizType, DifficultyLevel
+from ..models.schemas import (
+    DifficultyLevel,
+    Quiz,
+    QuizOption,
+    QuizQuestion,
+    QuizResponse,
+    QuizType,
+)
 
 # Assessment-related schemas
 AssessmentRequest = Quiz

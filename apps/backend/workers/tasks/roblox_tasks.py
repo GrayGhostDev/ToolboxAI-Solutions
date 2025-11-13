@@ -13,17 +13,17 @@ Features:
 - Performance metrics and optimization reports
 """
 
-import logging
-from typing import Dict, Any, Optional, List
-from datetime import datetime
 import asyncio
+import logging
+from datetime import datetime
+from typing import Any
 
-from apps.backend.workers.celery_app import app, TenantAwareTask
-from core.agents.roblox.roblox_script_optimization_agent import (
-    RobloxScriptOptimizationAgent,
-    OptimizationLevel,
-)
+from apps.backend.workers.celery_app import TenantAwareTask, app
 from core.agents.base_agent import AgentConfig, AgentState
+from core.agents.roblox.roblox_script_optimization_agent import (
+    OptimizationLevel,
+    RobloxScriptOptimizationAgent,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +38,8 @@ async def optimize_roblox_script(
     optimization_level: str = "balanced",
     preserve_comments: bool = True,
     generate_report: bool = True,
-    **kwargs
-) -> Dict[str, Any]:
+    **kwargs,
+) -> dict[str, Any]:
     """
     Optimize Roblox Luau script using RobloxScriptOptimizationAgent.
 
@@ -67,20 +67,25 @@ async def optimize_roblox_script(
         )
     """
     # Set tenant context
-    self.set_tenant_context(organization_id, {
-        "script_id": script_id,
-        "script_name": script_name,
-        "optimization_level": optimization_level
-    })
+    self.set_tenant_context(
+        organization_id,
+        {
+            "script_id": script_id,
+            "script_name": script_name,
+            "optimization_level": optimization_level,
+        },
+    )
 
     try:
-        logger.info(f"Starting Roblox script optimization for script {script_id} in org {organization_id}")
+        logger.info(
+            f"Starting Roblox script optimization for script {script_id} in org {organization_id}"
+        )
 
         # Initialize RobloxScriptOptimizationAgent
         level_map = {
             "conservative": OptimizationLevel.CONSERVATIVE,
             "balanced": OptimizationLevel.BALANCED,
-            "aggressive": OptimizationLevel.AGGRESSIVE
+            "aggressive": OptimizationLevel.AGGRESSIVE,
         }
         opt_level = level_map.get(optimization_level.lower(), OptimizationLevel.BALANCED)
 
@@ -89,11 +94,10 @@ async def optimize_roblox_script(
             model="gpt-4",
             temperature=0.1,  # Low temperature for consistent optimizations
             system_prompt="You are an expert Roblox Luau script optimizer specializing in performance and memory optimization.",
-            verbose=True
+            verbose=True,
         )
         optimizer_agent = RobloxScriptOptimizationAgent(
-            config=agent_config,
-            optimization_level=opt_level
+            config=agent_config, optimization_level=opt_level
         )
 
         # Prepare agent state
@@ -105,18 +109,19 @@ async def optimize_roblox_script(
                 "optimization_level": optimization_level,
                 "preserve_comments": preserve_comments,
                 "script_id": script_id,
-                "organization_id": organization_id
+                "organization_id": organization_id,
             },
             "metadata": {
                 "task_id": self.request.id,
                 "tenant_id": organization_id,
-                "initiated_at": datetime.utcnow().isoformat()
-            }
+                "initiated_at": datetime.utcnow().isoformat(),
+            },
         }
 
         # Trigger Pusher notification - optimization started
         try:
             from apps.backend.services.roblox.pusher import pusher_service
+
             await pusher_service.trigger_event(
                 channel=f"org-{organization_id}",
                 event="script-optimization-started",
@@ -126,8 +131,8 @@ async def optimize_roblox_script(
                     "script_name": script_name,
                     "optimization_level": optimization_level,
                     "progress": 0,
-                    "status": "processing"
-                }
+                    "status": "processing",
+                },
             )
         except Exception as e:
             logger.warning(f"Failed to send Pusher start notification: {e}")
@@ -142,8 +147,8 @@ async def optimize_roblox_script(
                     "task_id": self.request.id,
                     "progress": 25,
                     "status": "analyzing",
-                    "message": "Analyzing script for performance issues"
-                }
+                    "message": "Analyzing script for performance issues",
+                },
             )
         except Exception as e:
             logger.warning(f"Failed to send Pusher progress notification: {e}")
@@ -153,7 +158,7 @@ async def optimize_roblox_script(
         result = await optimizer_agent._process_task(agent_state)
 
         # Extract result data
-        result_data = result.result if hasattr(result, 'result') else result
+        result_data = result.result if hasattr(result, "result") else result
 
         # Trigger Pusher notification - optimization progress
         try:
@@ -165,8 +170,8 @@ async def optimize_roblox_script(
                     "task_id": self.request.id,
                     "progress": 75,
                     "status": "finalizing",
-                    "message": "Generating optimization report"
-                }
+                    "message": "Generating optimization report",
+                },
             )
         except Exception as e:
             logger.warning(f"Failed to send Pusher progress notification: {e}")
@@ -178,7 +183,7 @@ async def optimize_roblox_script(
                 # Use agent's report generation method
                 optimization_report = optimizer_agent.generate_optimization_report(
                     script_code,
-                    optimizer_agent.optimize_script(script_code, opt_level, preserve_comments)
+                    optimizer_agent.optimize_script(script_code, opt_level, preserve_comments),
                 )
             except Exception as e:
                 logger.warning(f"Failed to generate optimization report: {e}")
@@ -202,11 +207,14 @@ async def optimize_roblox_script(
                 "optimized_at": datetime.utcnow().isoformat(),
                 "tenant_context": self.tenant_context,
                 "issues_count": len(result_data.get("issues_found", [])),
-                "critical_issues": len([
-                    i for i in result_data.get("issues_found", [])
-                    if i.get("severity") == "critical"
-                ])
-            }
+                "critical_issues": len(
+                    [
+                        i
+                        for i in result_data.get("issues_found", [])
+                        if i.get("severity") == "critical"
+                    ]
+                ),
+            },
         }
 
         # Trigger Pusher notification - optimization completed
@@ -224,9 +232,9 @@ async def optimize_roblox_script(
                         "issues_found": len(result_data.get("issues_found", [])),
                         "critical_issues": response["metadata"]["critical_issues"],
                         "performance_gain": result_data.get("performance_gain", "Unknown"),
-                        "optimization_level": optimization_level
-                    }
-                }
+                        "optimization_level": optimization_level,
+                    },
+                },
             )
         except Exception as e:
             logger.warning(f"Failed to send Pusher completion notification: {e}")
@@ -235,11 +243,14 @@ async def optimize_roblox_script(
         return response
 
     except Exception as e:
-        logger.error(f"Roblox script optimization failed for script {script_id}: {e}", exc_info=True)
+        logger.error(
+            f"Roblox script optimization failed for script {script_id}: {e}", exc_info=True
+        )
 
         # Trigger Pusher notification - optimization failed
         try:
             from apps.backend.services.roblox.pusher import pusher_service
+
             await pusher_service.trigger_event(
                 channel=f"org-{organization_id}",
                 event="script-optimization-failed",
@@ -248,8 +259,8 @@ async def optimize_roblox_script(
                     "task_id": self.request.id,
                     "progress": 0,
                     "status": "failed",
-                    "error": str(e)
-                }
+                    "error": str(e),
+                },
             )
         except Exception as pusher_error:
             logger.warning(f"Failed to send Pusher error notification: {pusher_error}")
@@ -265,6 +276,7 @@ def run_async_task(coro):
     if loop.is_running():
         # If loop is already running, create a new one
         import concurrent.futures
+
         with concurrent.futures.ThreadPoolExecutor() as pool:
             return pool.submit(asyncio.run, coro).result()
     else:

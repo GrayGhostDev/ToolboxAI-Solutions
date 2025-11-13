@@ -5,22 +5,20 @@ Centralized rate limiting for the application with Redis support for distributed
 Enhanced for 2025 production environments with Render Redis integration.
 """
 
-import time
-import hashlib
+import asyncio
+import logging
 import os
 import ssl
-from typing import Dict, Tuple, Optional, Union, Any
+import time
 from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
-import asyncio
-import logging
-import json
-from datetime import datetime, timedelta
+from typing import Any
 
 try:
     import redis.asyncio as redis
     from redis.asyncio import ConnectionPool
+
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
@@ -46,8 +44,8 @@ class RateLimitConfig:
     max_requests: int = 100
     window_seconds: int = 60
     mode: RateLimitMode = RateLimitMode.SLIDING_WINDOW
-    burst_size: Optional[int] = None
-    refill_rate: Optional[float] = None
+    burst_size: int | None = None
+    refill_rate: float | None = None
 
 
 class RateLimitManager:
@@ -65,21 +63,21 @@ class RateLimitManager:
     _instance = None
 
     def __init__(self):
-        self.request_counts: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
-        self.window_starts: Dict[str, float] = {}
+        self.request_counts: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+        self.window_starts: dict[str, float] = {}
         self.lock = asyncio.Lock()
         self.mode: RateLimitMode = RateLimitMode.SLIDING_WINDOW
 
         # Redis connection
-        self.redis_client: Optional['redis.Redis'] = None
-        self.redis_pool: Optional[ConnectionPool] = None
+        self.redis_client: redis.Redis | None = None
+        self.redis_pool: ConnectionPool | None = None
         self.redis_connected = False
 
         # Determine Redis URL based on environment
         self._configure_redis_url()
 
         # Configuration
-        self.use_redis = REDIS_AVAILABLE and getattr(settings, 'REDIS_CLOUD_ENABLED', False)
+        self.use_redis = REDIS_AVAILABLE and getattr(settings, "REDIS_CLOUD_ENABLED", False)
         self.redis_prefix = "rate_limit:"
         self.redis_ttl = 3600  # 1 hour TTL for keys
 
@@ -91,15 +89,15 @@ class RateLimitManager:
     def _configure_redis_url(self):
         """Configure Redis URL based on environment and available settings."""
         # Check for Redis Cloud configuration
-        if getattr(settings, 'REDIS_CLOUD_ENABLED', False):
+        if getattr(settings, "REDIS_CLOUD_ENABLED", False):
             # Use Redis Cloud URL from environment
-            self.redis_url = os.getenv('REDIS_URL')
+            self.redis_url = os.getenv("REDIS_URL")
             self.redis_cloud = True
-            self.redis_cert_path = os.getenv('REDIS_CLOUD_CA_CERT_PATH')
+            self.redis_cert_path = os.getenv("REDIS_CLOUD_CA_CERT_PATH")
             logger.info("Using Redis Cloud configuration")
         else:
             # Fall back to local Redis
-            self.redis_url = os.getenv('REDIS_LOCAL_URL', 'redis://localhost:6379/1')
+            self.redis_url = os.getenv("REDIS_LOCAL_URL", "redis://localhost:6379/1")
             self.redis_cloud = False
             self.redis_cert_path = None
             logger.info("Using local Redis configuration")
@@ -140,6 +138,7 @@ class RateLimitManager:
 
                     # Parse the Redis URL to get connection parameters
                     from urllib.parse import urlparse
+
                     parsed_url = urlparse(self.redis_url)
 
                     # Create SSL context for Redis Cloud
@@ -156,9 +155,9 @@ class RateLimitManager:
                         socket_connect_timeout=5,
                         socket_timeout=5,
                         retry_on_timeout=True,
-                        ssl_cert_reqs='required',
+                        ssl_cert_reqs="required",
                         ssl_ca_certs=self.redis_cert_path if self.redis_cert_path else None,
-                        max_connections=100
+                        max_connections=100,
                     )
 
                     self.redis_client = redis.Redis(connection_pool=self.redis_pool)
@@ -170,7 +169,7 @@ class RateLimitManager:
                         encoding="utf-8",
                         decode_responses=True,
                         socket_connect_timeout=5,
-                        max_connections=100
+                        max_connections=100,
                     )
 
             # Test connection
@@ -178,7 +177,9 @@ class RateLimitManager:
             self.redis_connected = True
 
             # Log connection info (mask sensitive parts)
-            safe_url = self.redis_url.split('@')[-1] if '@' in self.redis_url else 'redis://localhost'
+            safe_url = (
+                self.redis_url.split("@")[-1] if "@" in self.redis_url else "redis://localhost"
+            )
             logger.info(f"Connected to Redis for rate limiting: ...@{safe_url}")
 
             return True
@@ -217,7 +218,7 @@ class RateLimitManager:
         max_requests: int = None,
         window_seconds: int = 60,
         source: str = "api",
-    ) -> Tuple[bool, Optional[int]]:
+    ) -> tuple[bool, int | None]:
         """
         Check if a request is within rate limits.
 
@@ -250,17 +251,11 @@ class RateLimitManager:
             asyncio.create_task(self.connect_redis())
 
         # Fallback to in-memory rate limiting
-        return await self._check_rate_limit_memory(
-            identifier, max_requests, window_seconds, source
-        )
+        return await self._check_rate_limit_memory(identifier, max_requests, window_seconds, source)
 
     async def _check_rate_limit_redis(
-        self,
-        identifier: str,
-        max_requests: int,
-        window_seconds: int,
-        source: str
-    ) -> Optional[Tuple[bool, Optional[int]]]:
+        self, identifier: str, max_requests: int, window_seconds: int, source: str
+    ) -> tuple[bool, int | None] | None:
         """
         Check rate limit using Redis for distributed systems.
 
@@ -300,12 +295,8 @@ class RateLimitManager:
             return None
 
     async def _check_rate_limit_memory(
-        self,
-        identifier: str,
-        max_requests: int,
-        window_seconds: int,
-        source: str
-    ) -> Tuple[bool, Optional[int]]:
+        self, identifier: str, max_requests: int, window_seconds: int, source: str
+    ) -> tuple[bool, int | None]:
         """
         Check rate limit using in-memory storage (fallback).
 
@@ -336,7 +327,7 @@ class RateLimitManager:
 
             return True, None
 
-    async def reset_limits(self, identifier: Optional[str] = None):
+    async def reset_limits(self, identifier: str | None = None):
         """
         Reset rate limits for an identifier or all identifiers.
         Supports both Redis and in-memory storage.
@@ -388,7 +379,7 @@ class RateLimitManager:
         self.window_starts.clear()
         logger.debug("All rate limits cleared")
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """
         Get rate limiting metrics for Prometheus export.
 
@@ -451,7 +442,9 @@ class RateLimitManager:
 
         lines.append("# HELP rate_limit_redis_connected Redis connection status")
         lines.append("# TYPE rate_limit_redis_connected gauge")
-        lines.append(f"rate_limit_redis_connected {1 if metrics['rate_limit_redis_connected'] else 0}")
+        lines.append(
+            f"rate_limit_redis_connected {1 if metrics['rate_limit_redis_connected'] else 0}"
+        )
 
         return "\n".join(lines)
 
@@ -484,7 +477,7 @@ class RateLimitManager:
                 logger.error(f"Error in rate limit cleanup: {e}")
                 await asyncio.sleep(60)  # Continue after error
 
-    def get_current_usage(self, identifier: str, source: str = "api") -> Dict[str, Any]:
+    def get_current_usage(self, identifier: str, source: str = "api") -> dict[str, Any]:
         """
         Get current usage statistics for an identifier.
 
@@ -568,13 +561,14 @@ rate_limit_manager = get_rate_limit_manager()
 
 
 # Rate limit decorator for FastAPI endpoints
+from collections.abc import Callable
 from functools import wraps
-from fastapi import Request, HTTPException, status
-from typing import Callable, Optional
+
+from fastapi import HTTPException, Request, status
 
 
 def rate_limit(
-    max_requests: int = 100, window_seconds: int = 60, identifier_func: Optional[Callable] = None
+    max_requests: int = 100, window_seconds: int = 60, identifier_func: Callable | None = None
 ):
     """
     Rate limiting decorator for FastAPI endpoints.

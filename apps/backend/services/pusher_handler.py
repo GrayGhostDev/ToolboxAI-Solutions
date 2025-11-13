@@ -6,20 +6,16 @@ and simplified real-time communication management.
 """
 
 import asyncio
-import json
 import logging
-from typing import Any, Dict, List, Optional, Set
 from datetime import datetime, timezone
+from typing import Any
 
 from apps.backend.core.config import settings
-from apps.backend.services.pusher import (
-    trigger_event as pusher_trigger_event,
-    authenticate_channel as pusher_authenticate,
-    PusherUnavailable,
-)
-from apps.backend.services.roblox.ai_agent import roblox_ai_agent
 from apps.backend.services.design_file_converter import design_file_converter
 from apps.backend.services.design_folder_scanner import design_folder_scanner
+from apps.backend.services.pusher import PusherUnavailable
+from apps.backend.services.pusher import trigger_event as pusher_trigger_event
+from apps.backend.services.roblox.ai_agent import roblox_ai_agent
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +24,8 @@ class PusherHandler:
     """Handles real-time communication through Pusher channels"""
 
     def __init__(self):
-        self.active_users: Dict[str, Dict[str, Any]] = {}
-        self.channel_subscriptions: Dict[str, Set[str]] = {}  # channel -> set of user_ids
+        self.active_users: dict[str, dict[str, Any]] = {}
+        self.channel_subscriptions: dict[str, set[str]] = {}  # channel -> set of user_ids
         self.message_handlers = {
             "agent_chat_user": self._handle_agent_chat_user,
             "ai_message": self._handle_ai_message,
@@ -52,7 +48,7 @@ class PusherHandler:
         }
 
     async def handle_message(
-        self, message_type: str, payload: Dict[str, Any], user_id: str = None, channel: str = None
+        self, message_type: str, payload: dict[str, Any], user_id: str = None, channel: str = None
     ) -> None:
         """Route incoming message to appropriate handler"""
         try:
@@ -75,7 +71,7 @@ class PusherHandler:
             await self._send_error_message(user_id, f"Error processing message: {str(e)}", channel)
 
     async def _handle_agent_chat_user(
-        self, payload: Dict[str, Any], user_id: str = None, channel: str = None
+        self, payload: dict[str, Any], user_id: str = None, channel: str = None
     ) -> None:
         """Handle user chat message to AI agent"""
         try:
@@ -105,7 +101,7 @@ class PusherHandler:
             raise
 
     async def _handle_ai_message(
-        self, payload: Dict[str, Any], user_id: str = None, channel: str = None
+        self, payload: dict[str, Any], user_id: str = None, channel: str = None
     ) -> None:
         """Handle AI message from frontend"""
         try:
@@ -141,7 +137,7 @@ class PusherHandler:
             raise
 
     async def _handle_roblox_agent_request(
-        self, payload: Dict[str, Any], user_id: str = None, channel: str = None
+        self, payload: dict[str, Any], user_id: str = None, channel: str = None
     ) -> None:
         """Handle Roblox environment generation request"""
         try:
@@ -169,7 +165,7 @@ class PusherHandler:
             raise
 
     async def _handle_environment_create(
-        self, payload: Dict[str, Any], user_id: str = None, channel: str = None
+        self, payload: dict[str, Any], user_id: str = None, channel: str = None
     ) -> None:
         """Handle environment creation request"""
         try:
@@ -225,7 +221,7 @@ class PusherHandler:
             )
 
     async def _handle_analytics_request(
-        self, payload: Dict[str, Any], user_id: str = None, channel: str = None
+        self, payload: dict[str, Any], user_id: str = None, channel: str = None
     ) -> None:
         """Handle real-time analytics request"""
         try:
@@ -250,7 +246,7 @@ class PusherHandler:
             raise
 
     async def _handle_design_file_process(
-        self, payload: Dict[str, Any], user_id: str = None, channel: str = None
+        self, payload: dict[str, Any], user_id: str = None, channel: str = None
     ) -> None:
         """Handle design file processing request"""
         try:
@@ -279,7 +275,7 @@ class PusherHandler:
             )
 
     async def _handle_design_folder_scan(
-        self, payload: Dict[str, Any], user_id: str = None, channel: str = None
+        self, payload: dict[str, Any], user_id: str = None, channel: str = None
     ) -> None:
         """Handle design folder scan request"""
         try:
@@ -306,7 +302,7 @@ class PusherHandler:
             await self._send_error_message(user_id, f"Design folder scan error: {str(e)}", channel)
 
     async def _handle_design_file_search(
-        self, payload: Dict[str, Any], user_id: str = None, channel: str = None
+        self, payload: dict[str, Any], user_id: str = None, channel: str = None
     ) -> None:
         """Handle design file search request"""
         try:
@@ -368,7 +364,7 @@ class PusherHandler:
             logger.error(f"Error monitoring environment generation: {e}")
 
     async def _send_to_user(
-        self, user_id: str, message: Dict[str, Any], channel: str = None
+        self, user_id: str, message: dict[str, Any], channel: str = None
     ) -> None:
         """Send message to specific user through Pusher"""
         try:
@@ -390,7 +386,7 @@ class PusherHandler:
         except Exception as e:
             logger.error(f"Error sending message to user {user_id}: {e}")
 
-    async def _send_to_conversation(self, conversation_id: str, message: Dict[str, Any]) -> None:
+    async def _send_to_conversation(self, conversation_id: str, message: dict[str, Any]) -> None:
         """Send message to conversation channel through Pusher"""
         try:
             channel = f"private-conversation-{conversation_id}"
@@ -400,7 +396,7 @@ class PusherHandler:
         except Exception as e:
             logger.error(f"Error sending to conversation {conversation_id}: {e}")
 
-    async def _send_to_channel(self, channel: str, event: str, data: Dict[str, Any]) -> None:
+    async def _send_to_channel(self, channel: str, event: str, data: dict[str, Any]) -> None:
         """Send event to specific channel through Pusher"""
         try:
             pusher_trigger_event(channel, event, data)
@@ -429,20 +425,20 @@ class PusherHandler:
             logger.error(f"Error sending error message: {e}")
 
     async def _queue_message_for_retry(
-        self, message_type: str, payload: Dict[str, Any], user_id: str
+        self, message_type: str, payload: dict[str, Any], user_id: str
     ) -> None:
         """Queue message for retry when Pusher becomes available"""
         # In production, this would use a persistent queue (Redis, RabbitMQ, etc.)
         logger.info(f"Queuing message for retry: {message_type} for user {user_id}")
 
-    async def broadcast_content_update(self, content_data: Dict[str, Any]) -> None:
+    async def broadcast_content_update(self, content_data: dict[str, Any]) -> None:
         """Broadcast content update to all subscribers"""
         try:
             await self._send_to_channel(self.channels["content"], "content_update", content_data)
         except Exception as e:
             logger.error(f"Failed to broadcast content update: {e}")
 
-    def add_user(self, user_id: str, user_info: Dict[str, Any]) -> None:
+    def add_user(self, user_id: str, user_info: dict[str, Any]) -> None:
         """Track active user"""
         self.active_users[user_id] = {
             "info": user_info,
@@ -494,11 +490,11 @@ class PusherHandler:
         """Get number of active users"""
         return len(self.active_users)
 
-    def get_user_info(self, user_id: str) -> Optional[Dict[str, Any]]:
+    def get_user_info(self, user_id: str) -> dict[str, Any] | None:
         """Get user information"""
         return self.active_users.get(user_id)
 
-    async def get_stats(self) -> Dict[str, Any]:
+    async def get_stats(self) -> dict[str, Any]:
         """Get handler statistics"""
         return {
             "active_users": len(self.active_users),
@@ -541,23 +537,23 @@ pusher_handler = PusherHandler()
 
 # Convenience functions for backward compatibility
 async def handle_pusher_message(
-    message_type: str, payload: Dict[str, Any], user_id: str = None, channel: str = None
+    message_type: str, payload: dict[str, Any], user_id: str = None, channel: str = None
 ) -> None:
     """Handle message through Pusher"""
     await pusher_handler.handle_message(message_type, payload, user_id, channel)
 
 
-async def broadcast_message(channel: str, event: str, data: Dict[str, Any]) -> None:
+async def broadcast_message(channel: str, event: str, data: dict[str, Any]) -> None:
     """Broadcast message to channel"""
     await pusher_handler._send_to_channel(channel, event, data)
 
 
-async def broadcast_content_update(content_data: Dict[str, Any]) -> None:
+async def broadcast_content_update(content_data: dict[str, Any]) -> None:
     """Broadcast content update to all subscribers"""
     await pusher_handler.broadcast_content_update(content_data)
 
 
-def add_user(user_id: str, user_info: Dict[str, Any]) -> None:
+def add_user(user_id: str, user_info: dict[str, Any]) -> None:
     """Add user to tracking"""
     pusher_handler.add_user(user_id, user_info)
 

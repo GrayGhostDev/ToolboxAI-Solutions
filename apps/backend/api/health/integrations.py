@@ -3,15 +3,15 @@ Integration Health Check Endpoints
 Specialized endpoints for monitoring specific service integrations
 """
 
-from fastapi import APIRouter, HTTPException, status
-from typing import Dict, Any, List
 import asyncio
-import aiohttp
+import os
 import socket
 import time
 from datetime import datetime, timezone
-import os
-import ssl
+from typing import Any
+
+import aiohttp
+from fastapi import APIRouter
 
 try:
     from toolboxai_settings import settings
@@ -27,7 +27,7 @@ router = APIRouter(tags=["Integration Health"])
 
 
 @router.get("/health/integrations")
-async def integration_health_overview() -> Dict[str, Any]:
+async def integration_health_overview() -> dict[str, Any]:
     """Overview of all integration health statuses"""
     start_time = time.time()
 
@@ -71,44 +71,45 @@ async def integration_health_overview() -> Dict[str, Any]:
 
 
 @router.get("/health/database")
-async def database_health_detailed() -> Dict[str, Any]:
+async def database_health_detailed() -> dict[str, Any]:
     """Detailed database connection health"""
     return await check_database_integrations()
 
 
 @router.get("/health/apis")
-async def api_health_detailed() -> Dict[str, Any]:
+async def api_health_detailed() -> dict[str, Any]:
     """Detailed external API health"""
     return await check_api_integrations()
 
 
 @router.get("/health/realtime")
-async def realtime_health_detailed() -> Dict[str, Any]:
+async def realtime_health_detailed() -> dict[str, Any]:
     """Detailed real-time service health"""
     return await check_realtime_integrations()
 
 
 @router.get("/health/agents")
-async def agent_health_detailed() -> Dict[str, Any]:
+async def agent_health_detailed() -> dict[str, Any]:
     """Detailed agent orchestration health"""
     return await check_agent_integrations()
 
 
 @router.get("/health/roblox")
-async def roblox_health_detailed() -> Dict[str, Any]:
+async def roblox_health_detailed() -> dict[str, Any]:
     """Detailed Roblox integration health"""
     return await check_roblox_integrations()
 
 
-async def check_database_integrations() -> Dict[str, Any]:
+async def check_database_integrations() -> dict[str, Any]:
     """Check all database-related integrations"""
     try:
         checks = {}
 
         # PostgreSQL connection
         try:
-            from database.connection import get_async_session
             from sqlalchemy import text
+
+            from database.connection import get_async_session
 
             async with get_async_session() as session:
                 # Test basic connection
@@ -143,7 +144,6 @@ async def check_database_integrations() -> Dict[str, Any]:
 
         # Redis connection
         try:
-            from database.connection import get_redis_client
             import redis.asyncio as redis
 
             redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
@@ -189,7 +189,7 @@ async def check_database_integrations() -> Dict[str, Any]:
         return {"database_integrations": {"healthy": False, "error": str(e)}}
 
 
-async def check_api_integrations() -> Dict[str, Any]:
+async def check_api_integrations() -> dict[str, Any]:
     """Check external API integrations"""
     try:
         checks = {}
@@ -338,7 +338,7 @@ async def check_api_integrations() -> Dict[str, Any]:
         return {"api_integrations": {"healthy": False, "error": str(e)}}
 
 
-async def check_realtime_integrations() -> Dict[str, Any]:
+async def check_realtime_integrations() -> dict[str, Any]:
     """Check real-time communication integrations"""
     try:
         checks = {}
@@ -447,7 +447,7 @@ async def check_realtime_integrations() -> Dict[str, Any]:
         return {"realtime_integrations": {"healthy": False, "error": str(e)}}
 
 
-async def check_agent_integrations() -> Dict[str, Any]:
+async def check_agent_integrations() -> dict[str, Any]:
     """Check agent orchestration integrations"""
     try:
         checks = {}
@@ -557,7 +557,9 @@ async def check_agent_integrations() -> Dict[str, Any]:
                 agent_tests["multi_modal_generator"] = {"importable": False, "error": str(e)}
 
             try:
-                from core.agents.enhanced_content_pipeline import EnhancedContentPipelineAgent
+                from core.agents.enhanced_content_pipeline import (
+                    EnhancedContentPipelineAgent,
+                )
 
                 agent_tests["enhanced_content_pipeline"] = {"importable": True}
             except ImportError as e:
@@ -583,7 +585,7 @@ async def check_agent_integrations() -> Dict[str, Any]:
         return {"agent_integrations": {"healthy": False, "error": str(e)}}
 
 
-async def check_roblox_integrations() -> Dict[str, Any]:
+async def check_roblox_integrations() -> dict[str, Any]:
     """Check Roblox-specific integrations"""
     try:
         checks = {}

@@ -5,10 +5,11 @@ Tests PostgreSQL connection pooling, role-based dashboard data fetching,
 and query execution for teacher, student, admin, and parent dashboards.
 """
 
-import pytest
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
 from datetime import datetime, timedelta
 from decimal import Decimal
+from unittest.mock import AsyncMock, patch
+
+import pytest
 
 from apps.backend.services.database import DatabaseService, db_service
 
@@ -45,7 +46,9 @@ class TestDatabaseConnection:
     @pytest.mark.asyncio
     async def test_connect_success(self, database_service):
         """Test successful database connection"""
-        with patch('apps.backend.services.database.asyncpg.create_pool', new_callable=AsyncMock) as mock_create_pool:
+        with patch(
+            "apps.backend.services.database.asyncpg.create_pool", new_callable=AsyncMock
+        ) as mock_create_pool:
             mock_pool = AsyncMock()
             mock_create_pool.return_value = mock_pool
 
@@ -64,7 +67,9 @@ class TestDatabaseConnection:
         existing_pool = AsyncMock()
         database_service.pool = existing_pool
 
-        with patch('apps.backend.services.database.asyncpg.create_pool', new_callable=AsyncMock) as mock_create_pool:
+        with patch(
+            "apps.backend.services.database.asyncpg.create_pool", new_callable=AsyncMock
+        ) as mock_create_pool:
             await database_service.connect()
 
             # Should not create new pool
@@ -74,7 +79,9 @@ class TestDatabaseConnection:
     @pytest.mark.asyncio
     async def test_connect_failure(self, database_service):
         """Test connection failure"""
-        with patch('apps.backend.services.database.asyncpg.create_pool', new_callable=AsyncMock) as mock_create_pool:
+        with patch(
+            "apps.backend.services.database.asyncpg.create_pool", new_callable=AsyncMock
+        ) as mock_create_pool:
             mock_create_pool.side_effect = Exception("Connection failed")
 
             with pytest.raises(Exception) as exc_info:
@@ -112,14 +119,15 @@ class TestGetDashboardData:
     @pytest.mark.asyncio
     async def test_get_dashboard_data_teacher(self, database_service):
         """Test dashboard data for teacher role"""
-        mock_teacher_data = {
-            "role": "teacher",
-            "kpis": {"activeClasses": 3},
-            "classes": []
-        }
+        mock_teacher_data = {"role": "teacher", "kpis": {"activeClasses": 3}, "classes": []}
 
-        with patch.object(database_service, '_get_teacher_dashboard', new_callable=AsyncMock, return_value=mock_teacher_data):
-            with patch.object(database_service, 'connect', new_callable=AsyncMock):
+        with patch.object(
+            database_service,
+            "_get_teacher_dashboard",
+            new_callable=AsyncMock,
+            return_value=mock_teacher_data,
+        ):
+            with patch.object(database_service, "connect", new_callable=AsyncMock):
                 database_service.pool = AsyncMock()
 
                 result = await database_service.get_dashboard_data("teacher", 123)
@@ -130,13 +138,15 @@ class TestGetDashboardData:
     @pytest.mark.asyncio
     async def test_get_dashboard_data_student(self, database_service):
         """Test dashboard data for student role"""
-        mock_student_data = {
-            "role": "student",
-            "studentData": {"xp": 1000}
-        }
+        mock_student_data = {"role": "student", "studentData": {"xp": 1000}}
 
-        with patch.object(database_service, '_get_student_dashboard', new_callable=AsyncMock, return_value=mock_student_data):
-            with patch.object(database_service, 'connect', new_callable=AsyncMock):
+        with patch.object(
+            database_service,
+            "_get_student_dashboard",
+            new_callable=AsyncMock,
+            return_value=mock_student_data,
+        ):
+            with patch.object(database_service, "connect", new_callable=AsyncMock):
                 database_service.pool = AsyncMock()
 
                 result = await database_service.get_dashboard_data("student", 456)
@@ -147,13 +157,15 @@ class TestGetDashboardData:
     @pytest.mark.asyncio
     async def test_get_dashboard_data_admin(self, database_service):
         """Test dashboard data for admin role"""
-        mock_admin_data = {
-            "role": "admin",
-            "stats": {"totalUsers": 1000}
-        }
+        mock_admin_data = {"role": "admin", "stats": {"totalUsers": 1000}}
 
-        with patch.object(database_service, '_get_admin_dashboard', new_callable=AsyncMock, return_value=mock_admin_data):
-            with patch.object(database_service, 'connect', new_callable=AsyncMock):
+        with patch.object(
+            database_service,
+            "_get_admin_dashboard",
+            new_callable=AsyncMock,
+            return_value=mock_admin_data,
+        ):
+            with patch.object(database_service, "connect", new_callable=AsyncMock):
                 database_service.pool = AsyncMock()
 
                 result = await database_service.get_dashboard_data("admin", 789)
@@ -164,13 +176,15 @@ class TestGetDashboardData:
     @pytest.mark.asyncio
     async def test_get_dashboard_data_parent(self, database_service):
         """Test dashboard data for parent role"""
-        mock_parent_data = {
-            "role": "parent",
-            "children": []
-        }
+        mock_parent_data = {"role": "parent", "children": []}
 
-        with patch.object(database_service, '_get_parent_dashboard', new_callable=AsyncMock, return_value=mock_parent_data):
-            with patch.object(database_service, 'connect', new_callable=AsyncMock):
+        with patch.object(
+            database_service,
+            "_get_parent_dashboard",
+            new_callable=AsyncMock,
+            return_value=mock_parent_data,
+        ):
+            with patch.object(database_service, "connect", new_callable=AsyncMock):
                 database_service.pool = AsyncMock()
 
                 result = await database_service.get_dashboard_data("parent", 999)
@@ -193,8 +207,13 @@ class TestGetDashboardData:
         """Test role matching is case insensitive"""
         mock_data = {"role": "teacher"}
 
-        with patch.object(database_service, '_get_teacher_dashboard', new_callable=AsyncMock, return_value=mock_data):
-            with patch.object(database_service, 'connect', new_callable=AsyncMock):
+        with patch.object(
+            database_service,
+            "_get_teacher_dashboard",
+            new_callable=AsyncMock,
+            return_value=mock_data,
+        ):
+            with patch.object(database_service, "connect", new_callable=AsyncMock):
                 database_service.pool = AsyncMock()
 
                 result = await database_service.get_dashboard_data("TEACHER", 123)
@@ -207,8 +226,13 @@ class TestGetDashboardData:
         database_service.pool = None
         mock_data = {"role": "teacher"}
 
-        with patch.object(database_service, '_get_teacher_dashboard', new_callable=AsyncMock, return_value=mock_data):
-            with patch.object(database_service, 'connect', new_callable=AsyncMock) as mock_connect:
+        with patch.object(
+            database_service,
+            "_get_teacher_dashboard",
+            new_callable=AsyncMock,
+            return_value=mock_data,
+        ):
+            with patch.object(database_service, "connect", new_callable=AsyncMock) as mock_connect:
                 database_service.pool = AsyncMock()  # Set after connect
 
                 await database_service.get_dashboard_data("teacher", 123)
@@ -225,16 +249,34 @@ class TestTeacherDashboard:
         """Test successful teacher dashboard retrieval"""
         # Mock database responses
         mock_connection.fetch.side_effect = [
-            [{"id": 1, "name": "Math 101", "subject": "Math", "grade_level": 5, "student_count": 20}],  # classes
-            [{"id": 1, "title": "Homework", "type": "assignment", "due_date": datetime.now(), "class_id": 1, "submissions": 15, "graded": 10}],  # assignments
+            [
+                {
+                    "id": 1,
+                    "name": "Math 101",
+                    "subject": "Math",
+                    "grade_level": 5,
+                    "student_count": 20,
+                }
+            ],  # classes
+            [
+                {
+                    "id": 1,
+                    "title": "Homework",
+                    "type": "assignment",
+                    "due_date": datetime.now(),
+                    "class_id": 1,
+                    "submissions": 15,
+                    "graded": 10,
+                }
+            ],  # assignments
             [],  # recent_activity
-            []   # lessons
+            [],  # lessons
         ]
         mock_connection.fetchrow.return_value = {
             "average_grade": Decimal("85.5"),
             "active_students": 20,
             "total_submissions": 50,
-            "pending_grading": 5
+            "pending_grading": 5,
         }
 
         mock_pool = AsyncMock()
@@ -268,7 +310,7 @@ class TestTeacherDashboard:
             "average_grade": None,
             "active_students": 0,
             "total_submissions": 0,
-            "pending_grading": 0
+            "pending_grading": 0,
         }
 
         mock_pool = AsyncMock()
@@ -298,7 +340,7 @@ class TestStudentDashboard:
             "level": 5,
             "streak_days": 7,
             "total_badges": 12,
-            "rank_position": 3
+            "rank_position": 3,
         }
 
         # Mock other queries
@@ -307,10 +349,15 @@ class TestStudentDashboard:
             [],  # assignments
             [],  # achievements
             [],  # leaderboard
-            []   # activity
+            [],  # activity
         ]
 
-        with patch.object(database_service, '_get_student_upcoming_events', new_callable=AsyncMock, return_value=[]):
+        with patch.object(
+            database_service,
+            "_get_student_upcoming_events",
+            new_callable=AsyncMock,
+            return_value=[],
+        ):
             mock_pool = AsyncMock()
             mock_pool.acquire.return_value.__aenter__.return_value = mock_connection
             database_service.pool = mock_pool
@@ -333,7 +380,7 @@ class TestStudentDashboard:
             "level": 3,
             "streak_days": 5,
             "total_badges": 8,
-            "rank_position": 5
+            "rank_position": 5,
         }
 
         mock_assignments = [
@@ -344,7 +391,7 @@ class TestStudentDashboard:
                 "due_date": datetime.now() + timedelta(days=2),
                 "status": "in_progress",
                 "grade": None,
-                "progress": 50
+                "progress": 50,
             }
         ]
 
@@ -353,10 +400,15 @@ class TestStudentDashboard:
             mock_assignments,
             [],  # achievements
             [],  # leaderboard
-            []   # activity
+            [],  # activity
         ]
 
-        with patch.object(database_service, '_get_student_upcoming_events', new_callable=AsyncMock, return_value=[]):
+        with patch.object(
+            database_service,
+            "_get_student_upcoming_events",
+            new_callable=AsyncMock,
+            return_value=[],
+        ):
             mock_pool = AsyncMock()
             mock_pool.acquire.return_value.__aenter__.return_value = mock_connection
             database_service.pool = mock_pool
@@ -382,26 +434,23 @@ class TestAdminDashboard:
                 "total_schools": 50,
                 "total_classes": 200,
                 "total_assignments": 500,
-                "total_lessons": 300
+                "total_lessons": 300,
             },
-            {  # compliance
-                "coppa_compliant": 45,
-                "ferpa_compliant": 48,
-                "pending_reviews": 2
-            },
+            {"coppa_compliant": 45, "ferpa_compliant": 48, "pending_reviews": 2},  # compliance
             {  # api_metrics
                 "total_calls": 50000,
                 "avg_response_time": Decimal("125.5"),
-                "errors": 10
-            }
+                "errors": 10,
+            },
         ]
 
-        mock_connection.fetch.side_effect = [
-            [],  # user_growth
-            []   # events
-        ]
+        mock_connection.fetch.side_effect = [[], []]  # user_growth  # events
 
-        mock_connection.fetchval.side_effect = [500, 100, 5]  # students, lessons, pending assessments
+        mock_connection.fetchval.side_effect = [
+            500,
+            100,
+            5,
+        ]  # students, lessons, pending assessments
 
         mock_pool = AsyncMock()
         mock_pool.acquire.return_value.__aenter__.return_value = mock_connection
@@ -433,7 +482,7 @@ class TestParentDashboard:
                 "gpa": Decimal("3.8"),
                 "attendance_rate": Decimal("95.5"),
                 "xp_points": 1200,
-                "level": 4
+                "level": 4,
             }
         ]
 
@@ -449,7 +498,7 @@ class TestParentDashboard:
             "present": 85,
             "absent": 3,
             "tardy": 2,
-            "total": 90
+            "total": 90,
         }
 
         mock_pool = AsyncMock()
@@ -537,14 +586,12 @@ class TestStudentUpcomingEvents:
     """Test student upcoming events helper"""
 
     @pytest.mark.asyncio
-    async def test_get_student_upcoming_events_with_assignments(self, database_service, mock_connection):
+    async def test_get_student_upcoming_events_with_assignments(
+        self, database_service, mock_connection
+    ):
         """Test upcoming events with assignments"""
         mock_assignments = [
-            {
-                "title": "Math Test",
-                "due_date": datetime.now() + timedelta(days=2),
-                "type": "quiz"
-            }
+            {"title": "Math Test", "due_date": datetime.now() + timedelta(days=2), "type": "quiz"}
         ]
         mock_connection.fetch.side_effect = [mock_assignments, []]
 
@@ -554,13 +601,12 @@ class TestStudentUpcomingEvents:
         assert result[0]["type"] == "assessment"
 
     @pytest.mark.asyncio
-    async def test_get_student_upcoming_events_with_lessons(self, database_service, mock_connection):
+    async def test_get_student_upcoming_events_with_lessons(
+        self, database_service, mock_connection
+    ):
         """Test upcoming events with lessons"""
         mock_lessons = [
-            {
-                "title": "Science Experiment",
-                "scheduled_at": datetime.now() + timedelta(days=1)
-            }
+            {"title": "Science Experiment", "scheduled_at": datetime.now() + timedelta(days=1)}
         ]
         mock_connection.fetch.side_effect = [[], mock_lessons]
 
@@ -571,23 +617,22 @@ class TestStudentUpcomingEvents:
         assert "Roblox" in result[0]["event"]
 
     @pytest.mark.asyncio
-    async def test_get_student_upcoming_events_sorted_by_date(self, database_service, mock_connection):
+    async def test_get_student_upcoming_events_sorted_by_date(
+        self, database_service, mock_connection
+    ):
         """Test events are sorted by date"""
         future_assignment = {
             "title": "Future Test",
             "due_date": datetime.now() + timedelta(days=5),
-            "type": "quiz"
+            "type": "quiz",
         }
         near_assignment = {
             "title": "Near Test",
             "due_date": datetime.now() + timedelta(days=1),
-            "type": "assignment"
+            "type": "assignment",
         }
 
-        mock_connection.fetch.side_effect = [
-            [future_assignment, near_assignment],
-            []
-        ]
+        mock_connection.fetch.side_effect = [[future_assignment, near_assignment], []]
 
         result = await database_service._get_student_upcoming_events(123, mock_connection)
 
@@ -595,10 +640,16 @@ class TestStudentUpcomingEvents:
         assert "Near Test" in result[0]["event"]
 
     @pytest.mark.asyncio
-    async def test_get_student_upcoming_events_limited_to_four(self, database_service, mock_connection):
+    async def test_get_student_upcoming_events_limited_to_four(
+        self, database_service, mock_connection
+    ):
         """Test events limited to 4 items"""
         many_assignments = [
-            {"title": f"Assignment {i}", "due_date": datetime.now() + timedelta(days=i), "type": "assignment"}
+            {
+                "title": f"Assignment {i}",
+                "due_date": datetime.now() + timedelta(days=i),
+                "type": "assignment",
+            }
             for i in range(1, 10)
         ]
 
@@ -631,7 +682,7 @@ class TestDatabaseConfiguration:
 
     def test_default_configuration(self):
         """Test default database configuration"""
-        with patch.dict('os.environ', {}, clear=True):
+        with patch.dict("os.environ", {}, clear=True):
             service = DatabaseService()
 
             assert service.db_config["host"] == "localhost"
@@ -646,10 +697,10 @@ class TestDatabaseConfiguration:
             "DB_PORT": "5433",
             "DB_USER": "custom_user",
             "DB_PASSWORD": "custom_pass",
-            "DB_NAME": "custom_db"
+            "DB_NAME": "custom_db",
         }
 
-        with patch.dict('os.environ', env_vars):
+        with patch.dict("os.environ", env_vars):
             service = DatabaseService()
 
             assert service.db_config["host"] == "custom-host"

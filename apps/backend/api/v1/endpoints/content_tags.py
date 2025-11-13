@@ -19,22 +19,16 @@ Standards: Python 3.12, FastAPI async, Pydantic v2
 
 import logging
 from datetime import datetime
-from typing import Annotated, Optional
+from typing import Annotated
 from uuid import UUID, uuid4
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    Query,
-    status,
-)
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.api.auth.auth import get_current_user
 from apps.backend.core.deps import get_async_db
-from apps.backend.middleware.tenant import get_tenant_context, TenantContext
+from apps.backend.middleware.tenant import TenantContext, get_tenant_context
 from apps.backend.models.schemas import User
 
 logger = logging.getLogger(__name__)
@@ -48,6 +42,7 @@ router = APIRouter(
 
 # === Pydantic v2 Models ===
 
+
 class Tag(BaseModel):
     """Tag model with Pydantic v2"""
 
@@ -56,9 +51,9 @@ class Tag(BaseModel):
     id: UUID
     name: str
     slug: str
-    description: Optional[str] = None
-    color: Optional[str] = Field(None, pattern="^#[0-9A-Fa-f]{6}$")
-    category: Optional[str] = None
+    description: str | None = None
+    color: str | None = Field(None, pattern="^#[0-9A-Fa-f]{6}$")
+    category: str | None = None
     usage_count: int = 0
     created_at: datetime
     created_by: UUID
@@ -71,9 +66,9 @@ class TagCreateRequest(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     name: str = Field(..., min_length=1, max_length=50)
-    description: Optional[str] = Field(None, max_length=200)
-    color: Optional[str] = Field(None, pattern="^#[0-9A-Fa-f]{6}$")
-    category: Optional[str] = Field(None, max_length=50)
+    description: str | None = Field(None, max_length=200)
+    color: str | None = Field(None, pattern="^#[0-9A-Fa-f]{6}$")
+    category: str | None = Field(None, max_length=50)
 
 
 class TagUpdateRequest(BaseModel):
@@ -81,10 +76,10 @@ class TagUpdateRequest(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    name: Optional[str] = Field(None, min_length=1, max_length=50)
-    description: Optional[str] = Field(None, max_length=200)
-    color: Optional[str] = Field(None, pattern="^#[0-9A-Fa-f]{6}$")
-    category: Optional[str] = Field(None, max_length=50)
+    name: str | None = Field(None, min_length=1, max_length=50)
+    description: str | None = Field(None, max_length=200)
+    color: str | None = Field(None, pattern="^#[0-9A-Fa-f]{6}$")
+    category: str | None = Field(None, max_length=50)
 
 
 class TagListResponse(BaseModel):
@@ -125,10 +120,7 @@ class TagMergeRequest(BaseModel):
 
     source_tag_ids: list[UUID] = Field(..., min_length=1)
     target_tag_id: UUID
-    delete_source_tags: bool = Field(
-        default=True,
-        description="Delete source tags after merge"
-    )
+    delete_source_tags: bool = Field(default=True, description="Delete source tags after merge")
 
 
 class TagMergeResponse(BaseModel):
@@ -144,6 +136,7 @@ class TagMergeResponse(BaseModel):
 
 # === API Endpoints ===
 
+
 @router.get(
     "",
     response_model=TagListResponse,
@@ -155,8 +148,8 @@ async def list_tags(
     tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=100),
-    search: Optional[str] = Query(None, max_length=50),
-    category: Optional[str] = Query(None, max_length=50),
+    search: str | None = Query(None, max_length=50),
+    category: str | None = Query(None, max_length=50),
     sort_by: str = Query("name", pattern="^(name|usage_count|created_at)$"),
     sort_order: str = Query("asc", pattern="^(asc|desc)$"),
 ) -> TagListResponse:
@@ -192,8 +185,7 @@ async def list_tags(
     except Exception as e:
         logger.error(f"Failed to list tags: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to list tags"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to list tags"
         )
 
 
@@ -259,8 +251,7 @@ async def create_tag(
         logger.error(f"Failed to create tag: {str(e)}", exc_info=True)
         await session.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create tag"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create tag"
         )
 
 
@@ -291,18 +282,14 @@ async def get_tag(
         logger.info(f"Getting tag: {tag_id}")
 
         # TODO: Implement actual tag retrieval
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Tag not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found")
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to get tag: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get tag"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get tag"
         )
 
 
@@ -342,10 +329,7 @@ async def update_tag(
         # - Regenerate slug if name changed
         # - Save to database
 
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Tag not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found")
 
     except HTTPException:
         raise
@@ -353,8 +337,7 @@ async def update_tag(
         logger.error(f"Failed to update tag: {str(e)}", exc_info=True)
         await session.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update tag"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to update tag"
         )
 
 
@@ -393,8 +376,7 @@ async def delete_tag(
         logger.error(f"Failed to delete tag: {str(e)}", exc_info=True)
         await session.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete tag"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete tag"
         )
 
 
@@ -440,8 +422,7 @@ async def get_popular_tags(
     except Exception as e:
         logger.error(f"Failed to get popular tags: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get popular tags"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get popular tags"
         )
 
 
@@ -474,9 +455,7 @@ async def merge_tags(
         HTTPException: If merge fails
     """
     try:
-        logger.info(
-            f"Merging {len(request.source_tag_ids)} tags into {request.target_tag_id}"
-        )
+        logger.info(f"Merging {len(request.source_tag_ids)} tags into {request.target_tag_id}")
 
         # TODO: Implement actual tag merging
         # - Validate all tags exist
@@ -484,10 +463,7 @@ async def merge_tags(
         # - Delete source tags if requested
         # - Update usage counts
 
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Target tag not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target tag not found")
 
     except HTTPException:
         raise
@@ -495,6 +471,5 @@ async def merge_tags(
         logger.error(f"Failed to merge tags: {str(e)}", exc_info=True)
         await session.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to merge tags"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to merge tags"
         )

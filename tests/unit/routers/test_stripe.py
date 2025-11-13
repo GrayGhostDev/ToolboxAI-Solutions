@@ -5,9 +5,9 @@ Tests all Stripe payment endpoints including checkout sessions, subscriptions,
 customer management, invoices, and webhook handling.
 """
 
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, AsyncMock, patch
-from datetime import datetime, timezone
 from fastapi import status
 from fastapi.testclient import TestClient
 
@@ -94,7 +94,7 @@ def mock_stripe_service():
         {
             "event_type": "checkout.session.completed",
             "event_id": "evt_123456",
-        }
+        },
     )
 
     return service
@@ -131,12 +131,13 @@ class TestCheckoutSession:
         self, test_client, sample_checkout_request, mock_current_user, mock_stripe_service
     ):
         """Test successful checkout session creation"""
-        with patch('apps.backend.api.routers.stripe.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
-                with patch('apps.backend.api.routers.stripe.log_audit'):
+        with patch(
+            "apps.backend.api.routers.stripe.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
+                with patch("apps.backend.api.routers.stripe.log_audit"):
                     response = test_client.post(
-                        "/api/v1/stripe/checkout",
-                        json=sample_checkout_request
+                        "/api/v1/stripe/checkout", json=sample_checkout_request
                     )
 
         assert response.status_code == status.HTTP_200_OK
@@ -160,13 +161,12 @@ class TestCheckoutSession:
             "mode": "payment",
         }
 
-        with patch('apps.backend.api.routers.stripe.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
-                with patch('apps.backend.api.routers.stripe.log_audit'):
-                    response = test_client.post(
-                        "/api/v1/stripe/checkout",
-                        json=request_data
-                    )
+        with patch(
+            "apps.backend.api.routers.stripe.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
+                with patch("apps.backend.api.routers.stripe.log_audit"):
+                    response = test_client.post("/api/v1/stripe/checkout", json=request_data)
 
         assert response.status_code == status.HTTP_200_OK
 
@@ -179,15 +179,14 @@ class TestCheckoutSession:
             "mode": "subscription",
         }
 
-        with patch('apps.backend.api.routers.stripe.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
-                with patch('apps.backend.api.routers.stripe.log_audit'):
-                    with patch('apps.backend.api.routers.stripe.settings') as mock_settings:
+        with patch(
+            "apps.backend.api.routers.stripe.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
+                with patch("apps.backend.api.routers.stripe.log_audit"):
+                    with patch("apps.backend.api.routers.stripe.settings") as mock_settings:
                         mock_settings.FRONTEND_URL = "https://example.com"
-                        response = test_client.post(
-                            "/api/v1/stripe/checkout",
-                            json=request_data
-                        )
+                        response = test_client.post("/api/v1/stripe/checkout", json=request_data)
 
         assert response.status_code == status.HTTP_200_OK
 
@@ -202,12 +201,11 @@ class TestCheckoutSession:
         """Test checkout session creation with Stripe API error"""
         mock_stripe_service.create_checkout_session.side_effect = Exception("Stripe API error")
 
-        with patch('apps.backend.api.routers.stripe.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
-                response = test_client.post(
-                    "/api/v1/stripe/checkout",
-                    json=sample_checkout_request
-                )
+        with patch(
+            "apps.backend.api.routers.stripe.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
+                response = test_client.post("/api/v1/stripe/checkout", json=sample_checkout_request)
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         data = response.json()
@@ -222,12 +220,13 @@ class TestSubscriptionCreation:
         self, test_client, sample_subscription_request, mock_current_user, mock_stripe_service
     ):
         """Test successful subscription creation"""
-        with patch('apps.backend.api.routers.stripe.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
-                with patch('apps.backend.api.routers.stripe.log_audit'):
+        with patch(
+            "apps.backend.api.routers.stripe.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
+                with patch("apps.backend.api.routers.stripe.log_audit"):
                     response = test_client.post(
-                        "/api/v1/stripe/subscriptions",
-                        json=sample_subscription_request
+                        "/api/v1/stripe/subscriptions", json=sample_subscription_request
                     )
 
         assert response.status_code == status.HTTP_200_OK
@@ -242,7 +241,7 @@ class TestSubscriptionCreation:
             user_id="user_123",
             email="test@example.com",
             name="Test User",
-            payment_method_id="pm_123456"
+            payment_method_id="pm_123456",
         )
         mock_stripe_service.create_subscription.assert_called_once()
 
@@ -262,32 +261,28 @@ class TestSubscriptionCreation:
             "trial_end": None,
         }
 
-        with patch('apps.backend.api.routers.stripe.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
-                with patch('apps.backend.api.routers.stripe.log_audit'):
-                    response = test_client.post(
-                        "/api/v1/stripe/subscriptions",
-                        json=request_data
-                    )
+        with patch(
+            "apps.backend.api.routers.stripe.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
+                with patch("apps.backend.api.routers.stripe.log_audit"):
+                    response = test_client.post("/api/v1/stripe/subscriptions", json=request_data)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["data"]["status"] == "active"
         assert data["data"]["trial_end"] is None
 
-    def test_create_subscription_missing_price_id(
-        self, test_client, mock_current_user
-    ):
+    def test_create_subscription_missing_price_id(self, test_client, mock_current_user):
         """Test subscription creation with missing price_id"""
         request_data = {
             "trial_days": 14,
         }
 
-        with patch('apps.backend.api.routers.stripe.get_current_user', return_value=mock_current_user):
-            response = test_client.post(
-                "/api/v1/stripe/subscriptions",
-                json=request_data
-            )
+        with patch(
+            "apps.backend.api.routers.stripe.get_current_user", return_value=mock_current_user
+        ):
+            response = test_client.post("/api/v1/stripe/subscriptions", json=request_data)
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -297,11 +292,12 @@ class TestSubscriptionCreation:
         """Test subscription creation with Stripe API error"""
         mock_stripe_service.create_subscription.side_effect = Exception("Payment method required")
 
-        with patch('apps.backend.api.routers.stripe.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
+        with patch(
+            "apps.backend.api.routers.stripe.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
                 response = test_client.post(
-                    "/api/v1/stripe/subscriptions",
-                    json=sample_subscription_request
+                    "/api/v1/stripe/subscriptions", json=sample_subscription_request
                 )
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -321,12 +317,13 @@ class TestSubscriptionUpdate:
             "price_id": "price_new_789",
         }
 
-        with patch('apps.backend.api.routers.stripe.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
-                with patch('apps.backend.api.routers.stripe.log_audit'):
+        with patch(
+            "apps.backend.api.routers.stripe.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
+                with patch("apps.backend.api.routers.stripe.log_audit"):
                     response = test_client.patch(
-                        "/api/v1/stripe/subscriptions/sub_123456",
-                        json=request_data
+                        "/api/v1/stripe/subscriptions/sub_123456", json=request_data
                     )
 
         assert response.status_code == status.HTTP_200_OK
@@ -353,12 +350,13 @@ class TestSubscriptionUpdate:
             "cancel_at_period_end": True,
         }
 
-        with patch('apps.backend.api.routers.stripe.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
-                with patch('apps.backend.api.routers.stripe.log_audit'):
+        with patch(
+            "apps.backend.api.routers.stripe.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
+                with patch("apps.backend.api.routers.stripe.log_audit"):
                     response = test_client.patch(
-                        "/api/v1/stripe/subscriptions/sub_123456",
-                        json=request_data
+                        "/api/v1/stripe/subscriptions/sub_123456", json=request_data
                     )
 
         assert response.status_code == status.HTTP_200_OK
@@ -373,12 +371,13 @@ class TestSubscriptionUpdate:
             "metadata": {"upgrade_reason": "annual_discount"},
         }
 
-        with patch('apps.backend.api.routers.stripe.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
-                with patch('apps.backend.api.routers.stripe.log_audit'):
+        with patch(
+            "apps.backend.api.routers.stripe.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
+                with patch("apps.backend.api.routers.stripe.log_audit"):
                     response = test_client.patch(
-                        "/api/v1/stripe/subscriptions/sub_123456",
-                        json=request_data
+                        "/api/v1/stripe/subscriptions/sub_123456", json=request_data
                     )
 
         assert response.status_code == status.HTTP_200_OK
@@ -390,11 +389,12 @@ class TestSubscriptionUpdate:
         request_data = {"price_id": "price_invalid"}
         mock_stripe_service.update_subscription.side_effect = Exception("Invalid price")
 
-        with patch('apps.backend.api.routers.stripe.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
+        with patch(
+            "apps.backend.api.routers.stripe.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
                 response = test_client.patch(
-                    "/api/v1/stripe/subscriptions/sub_123456",
-                    json=request_data
+                    "/api/v1/stripe/subscriptions/sub_123456", json=request_data
                 )
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -416,9 +416,11 @@ class TestSubscriptionCancellation:
             "canceled_at": None,
         }
 
-        with patch('apps.backend.api.routers.stripe.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
-                with patch('apps.backend.api.routers.stripe.log_audit'):
+        with patch(
+            "apps.backend.api.routers.stripe.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
+                with patch("apps.backend.api.routers.stripe.log_audit"):
                     response = test_client.delete(
                         "/api/v1/stripe/subscriptions/sub_123456?immediately=false"
                     )
@@ -429,17 +431,18 @@ class TestSubscriptionCancellation:
 
         # Verify cancellation was called correctly
         mock_stripe_service.cancel_subscription.assert_called_once_with(
-            subscription_id="sub_123456",
-            immediately=False
+            subscription_id="sub_123456", immediately=False
         )
 
     def test_cancel_subscription_immediately(
         self, test_client, mock_current_user, mock_stripe_service
     ):
         """Test immediate subscription cancellation"""
-        with patch('apps.backend.api.routers.stripe.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
-                with patch('apps.backend.api.routers.stripe.log_audit'):
+        with patch(
+            "apps.backend.api.routers.stripe.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
+                with patch("apps.backend.api.routers.stripe.log_audit"):
                     response = test_client.delete(
                         "/api/v1/stripe/subscriptions/sub_123456?immediately=true"
                     )
@@ -451,8 +454,7 @@ class TestSubscriptionCancellation:
 
         # Verify immediate cancellation
         mock_stripe_service.cancel_subscription.assert_called_once_with(
-            subscription_id="sub_123456",
-            immediately=True
+            subscription_id="sub_123456", immediately=True
         )
 
     def test_cancel_subscription_stripe_error(
@@ -461,11 +463,11 @@ class TestSubscriptionCancellation:
         """Test subscription cancellation with Stripe API error"""
         mock_stripe_service.cancel_subscription.side_effect = Exception("Subscription not found")
 
-        with patch('apps.backend.api.routers.stripe.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
-                response = test_client.delete(
-                    "/api/v1/stripe/subscriptions/sub_invalid"
-                )
+        with patch(
+            "apps.backend.api.routers.stripe.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
+                response = test_client.delete("/api/v1/stripe/subscriptions/sub_invalid")
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         data = response.json()
@@ -476,12 +478,12 @@ class TestSubscriptionCancellation:
 class TestCustomerInfo:
     """Test customer information endpoint"""
 
-    def test_get_customer_info_success(
-        self, test_client, mock_current_user, mock_stripe_service
-    ):
+    def test_get_customer_info_success(self, test_client, mock_current_user, mock_stripe_service):
         """Test successful customer info retrieval"""
-        with patch('apps.backend.api.routers.stripe.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
+        with patch(
+            "apps.backend.api.routers.stripe.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
                 response = test_client.get("/api/v1/stripe/customer")
 
         assert response.status_code == status.HTTP_200_OK
@@ -495,8 +497,10 @@ class TestCustomerInfo:
         self, test_client, mock_current_user, mock_stripe_service
     ):
         """Test customer info endpoint creates customer if not exists"""
-        with patch('apps.backend.api.routers.stripe.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
+        with patch(
+            "apps.backend.api.routers.stripe.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
                 response = test_client.get("/api/v1/stripe/customer")
 
         # Verify customer creation was called
@@ -509,8 +513,10 @@ class TestCustomerInfo:
         """Test customer info retrieval with Stripe API error"""
         mock_stripe_service.create_customer.side_effect = Exception("API error")
 
-        with patch('apps.backend.api.routers.stripe.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
+        with patch(
+            "apps.backend.api.routers.stripe.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
                 response = test_client.get("/api/v1/stripe/customer")
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -522,12 +528,12 @@ class TestCustomerInfo:
 class TestInvoices:
     """Test invoice listing endpoint"""
 
-    def test_get_invoices_success(
-        self, test_client, mock_current_user, mock_stripe_service
-    ):
+    def test_get_invoices_success(self, test_client, mock_current_user, mock_stripe_service):
         """Test successful invoice retrieval"""
-        with patch('apps.backend.api.routers.stripe.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
+        with patch(
+            "apps.backend.api.routers.stripe.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
                 response = test_client.get("/api/v1/stripe/invoices")
 
         assert response.status_code == status.HTTP_200_OK
@@ -537,12 +543,12 @@ class TestInvoices:
         assert data["data"]["invoices"][0]["id"] == "in_123456"
         assert data["data"]["invoices"][0]["status"] == "paid"
 
-    def test_get_invoices_with_limit(
-        self, test_client, mock_current_user, mock_stripe_service
-    ):
+    def test_get_invoices_with_limit(self, test_client, mock_current_user, mock_stripe_service):
         """Test invoice retrieval with custom limit"""
-        with patch('apps.backend.api.routers.stripe.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
+        with patch(
+            "apps.backend.api.routers.stripe.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
                 response = test_client.get("/api/v1/stripe/invoices?limit=20")
 
         assert response.status_code == status.HTTP_200_OK
@@ -551,28 +557,28 @@ class TestInvoices:
         call_args = mock_stripe_service.get_invoices.call_args
         assert call_args.kwargs["limit"] == 20
 
-    def test_get_invoices_empty_list(
-        self, test_client, mock_current_user, mock_stripe_service
-    ):
+    def test_get_invoices_empty_list(self, test_client, mock_current_user, mock_stripe_service):
         """Test invoice retrieval with no invoices"""
         mock_stripe_service.get_invoices.return_value = []
 
-        with patch('apps.backend.api.routers.stripe.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
+        with patch(
+            "apps.backend.api.routers.stripe.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
                 response = test_client.get("/api/v1/stripe/invoices")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert len(data["data"]["invoices"]) == 0
 
-    def test_get_invoices_stripe_error(
-        self, test_client, mock_current_user, mock_stripe_service
-    ):
+    def test_get_invoices_stripe_error(self, test_client, mock_current_user, mock_stripe_service):
         """Test invoice retrieval with Stripe API error"""
         mock_stripe_service.get_invoices.side_effect = Exception("API error")
 
-        with patch('apps.backend.api.routers.stripe.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
+        with patch(
+            "apps.backend.api.routers.stripe.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
                 response = test_client.get("/api/v1/stripe/invoices")
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -585,18 +591,14 @@ class TestWebhookHandler:
     """Test Stripe webhook handling endpoint"""
 
     @pytest.mark.asyncio
-    async def test_handle_webhook_success(
-        self, test_client, mock_stripe_service
-    ):
+    async def test_handle_webhook_success(self, test_client, mock_stripe_service):
         """Test successful webhook processing"""
         payload = b'{"type": "checkout.session.completed"}'
         signature = "t=1234567890,v1=signature_here"
 
-        with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
+        with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
             response = test_client.post(
-                "/api/v1/stripe/webhook",
-                data=payload,
-                headers={"Stripe-Signature": signature}
+                "/api/v1/stripe/webhook", data=payload, headers={"Stripe-Signature": signature}
             )
 
         assert response.status_code == status.HTTP_200_OK
@@ -607,28 +609,20 @@ class TestWebhookHandler:
 
         # Verify webhook handler was called
         mock_stripe_service.handle_webhook.assert_called_once_with(
-            payload=payload,
-            signature=signature
+            payload=payload, signature=signature
         )
 
     @pytest.mark.asyncio
-    async def test_handle_webhook_invalid_signature(
-        self, test_client, mock_stripe_service
-    ):
+    async def test_handle_webhook_invalid_signature(self, test_client, mock_stripe_service):
         """Test webhook with invalid signature"""
         payload = b'{"type": "checkout.session.completed"}'
         signature = "invalid_signature"
 
-        mock_stripe_service.handle_webhook.return_value = (
-            False,
-            {"error": "Invalid signature"}
-        )
+        mock_stripe_service.handle_webhook.return_value = (False, {"error": "Invalid signature"})
 
-        with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
+        with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
             response = test_client.post(
-                "/api/v1/stripe/webhook",
-                data=payload,
-                headers={"Stripe-Signature": signature}
+                "/api/v1/stripe/webhook", data=payload, headers={"Stripe-Signature": signature}
             )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -636,29 +630,19 @@ class TestWebhookHandler:
         assert "signature" in data["detail"].lower() or "verification" in data["detail"].lower()
 
     @pytest.mark.asyncio
-    async def test_handle_webhook_missing_signature(
-        self, test_client, mock_stripe_service
-    ):
+    async def test_handle_webhook_missing_signature(self, test_client, mock_stripe_service):
         """Test webhook with missing signature header"""
         payload = b'{"type": "checkout.session.completed"}'
 
-        mock_stripe_service.handle_webhook.return_value = (
-            False,
-            {"error": "Signature required"}
-        )
+        mock_stripe_service.handle_webhook.return_value = (False, {"error": "Signature required"})
 
-        with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
-            response = test_client.post(
-                "/api/v1/stripe/webhook",
-                data=payload
-            )
+        with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
+            response = test_client.post("/api/v1/stripe/webhook", data=payload)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     @pytest.mark.asyncio
-    async def test_handle_webhook_payment_succeeded(
-        self, test_client, mock_stripe_service
-    ):
+    async def test_handle_webhook_payment_succeeded(self, test_client, mock_stripe_service):
         """Test webhook for payment_intent.succeeded event"""
         payload = b'{"type": "payment_intent.succeeded"}'
         signature = "t=1234567890,v1=valid_signature"
@@ -668,14 +652,12 @@ class TestWebhookHandler:
             {
                 "event_type": "payment_intent.succeeded",
                 "event_id": "evt_payment_123",
-            }
+            },
         )
 
-        with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
+        with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
             response = test_client.post(
-                "/api/v1/stripe/webhook",
-                data=payload,
-                headers={"Stripe-Signature": signature}
+                "/api/v1/stripe/webhook", data=payload, headers={"Stripe-Signature": signature}
             )
 
         assert response.status_code == status.HTTP_200_OK
@@ -683,9 +665,7 @@ class TestWebhookHandler:
         assert data["data"]["event_type"] == "payment_intent.succeeded"
 
     @pytest.mark.asyncio
-    async def test_handle_webhook_subscription_updated(
-        self, test_client, mock_stripe_service
-    ):
+    async def test_handle_webhook_subscription_updated(self, test_client, mock_stripe_service):
         """Test webhook for customer.subscription.updated event"""
         payload = b'{"type": "customer.subscription.updated"}'
         signature = "t=1234567890,v1=valid_signature"
@@ -695,14 +675,12 @@ class TestWebhookHandler:
             {
                 "event_type": "customer.subscription.updated",
                 "event_id": "evt_sub_123",
-            }
+            },
         )
 
-        with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
+        with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
             response = test_client.post(
-                "/api/v1/stripe/webhook",
-                data=payload,
-                headers={"Stripe-Signature": signature}
+                "/api/v1/stripe/webhook", data=payload, headers={"Stripe-Signature": signature}
             )
 
         assert response.status_code == status.HTTP_200_OK
@@ -710,20 +688,16 @@ class TestWebhookHandler:
         assert data["data"]["event_type"] == "customer.subscription.updated"
 
     @pytest.mark.asyncio
-    async def test_handle_webhook_processing_error(
-        self, test_client, mock_stripe_service
-    ):
+    async def test_handle_webhook_processing_error(self, test_client, mock_stripe_service):
         """Test webhook processing with internal error"""
         payload = b'{"type": "checkout.session.completed"}'
         signature = "t=1234567890,v1=signature_here"
 
         mock_stripe_service.handle_webhook.side_effect = Exception("Database error")
 
-        with patch('apps.backend.api.routers.stripe.stripe_service', mock_stripe_service):
+        with patch("apps.backend.api.routers.stripe.stripe_service", mock_stripe_service):
             response = test_client.post(
-                "/api/v1/stripe/webhook",
-                data=payload,
-                headers={"Stripe-Signature": signature}
+                "/api/v1/stripe/webhook", data=payload, headers={"Stripe-Signature": signature}
             )
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -782,9 +756,7 @@ class TestRequestModels:
 
         # With values
         request2 = SubscriptionUpdateRequest(
-            price_id="price_new",
-            cancel_at_period_end=True,
-            metadata={"reason": "upgrade"}
+            price_id="price_new", cancel_at_period_end=True, metadata={"reason": "upgrade"}
         )
         assert request2.price_id == "price_new"
         assert request2.cancel_at_period_end is True

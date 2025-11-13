@@ -5,30 +5,27 @@ Provides REST API access to the Master Orchestrator and agent management system,
 enabling task submission, status monitoring, and agent coordination.
 """
 
-from typing import Dict, List, Any, Optional
-from datetime import datetime
 import asyncio
 import logging
+from datetime import datetime
+from typing import Any
 
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel, Field
-from uuid import uuid4
 
+from core.agents.agent_registry import AgentFactory, AgentRegistry
+from core.agents.github_agents.resource_monitor_agent import ResourceMonitorAgent
 from core.agents.master_orchestrator import (
+    AgentSystemType,
     MasterOrchestrator,
     OrchestratorConfig,
-    AgentSystemType,
     TaskPriority,
     TaskStatus,
 )
-from core.agents.agent_registry import AgentRegistry, AgentFactory
 from core.agents.worktree_coordinator import (
-    WorktreeAgentCoordinator,
-    WorktreeTaskType,
     TaskDistributionStrategy as DistributionStrategy,
 )
-from core.agents.github_agents.resource_monitor_agent import ResourceMonitorAgent
+from core.agents.worktree_coordinator import WorktreeAgentCoordinator, WorktreeTaskType
 
 logger = logging.getLogger(__name__)
 
@@ -36,11 +33,11 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Agent Orchestrator"])
 
 # Global instances (initialized on startup)
-_orchestrator: Optional[MasterOrchestrator] = None
-_registry: Optional[AgentRegistry] = None
-_factory: Optional[AgentFactory] = None
-_worktree_coordinator: Optional[WorktreeAgentCoordinator] = None
-_resource_monitor: Optional[ResourceMonitorAgent] = None
+_orchestrator: MasterOrchestrator | None = None
+_registry: AgentRegistry | None = None
+_factory: AgentFactory | None = None
+_worktree_coordinator: WorktreeAgentCoordinator | None = None
+_resource_monitor: ResourceMonitorAgent | None = None
 
 
 # =================== Pydantic Models ===================
@@ -50,9 +47,9 @@ class TaskSubmission(BaseModel):
     """Request model for task submission."""
 
     agent_type: AgentSystemType
-    task_data: Dict[str, Any]
+    task_data: dict[str, Any]
     priority: TaskPriority = TaskPriority.MEDIUM
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: dict[str, Any] | None = None
 
 
 class TaskResponse(BaseModel):
@@ -62,8 +59,8 @@ class TaskResponse(BaseModel):
     status: TaskStatus
     agent_type: str
     created_at: datetime
-    message: Optional[str] = None
-    result: Optional[Dict[str, Any]] = None
+    message: str | None = None
+    result: dict[str, Any] | None = None
 
 
 class AgentInfo(BaseModel):
@@ -72,19 +69,19 @@ class AgentInfo(BaseModel):
     name: str
     category: str
     description: str
-    capabilities: List[str]
+    capabilities: list[str]
     status: str
-    metrics: Optional[Dict[str, Any]] = None
+    metrics: dict[str, Any] | None = None
 
 
 class SystemStatus(BaseModel):
     """Overall system status."""
 
-    orchestrator: Dict[str, Any]
-    agents: Dict[str, int]
-    tasks: Dict[str, int]
-    resources: Dict[str, Any]
-    worktrees: Optional[Dict[str, Any]] = None
+    orchestrator: dict[str, Any]
+    agents: dict[str, int]
+    tasks: dict[str, int]
+    resources: dict[str, Any]
+    worktrees: dict[str, Any] | None = None
 
 
 class WorktreeTask(BaseModel):
@@ -92,8 +89,8 @@ class WorktreeTask(BaseModel):
 
     task_type: WorktreeTaskType
     description: str
-    requirements: List[str] = Field(default_factory=list)
-    files: List[str] = Field(default_factory=list)
+    requirements: list[str] = Field(default_factory=list)
+    files: list[str] = Field(default_factory=list)
     strategy: DistributionStrategy = DistributionStrategy.CAPABILITY_BASED
 
 
@@ -224,10 +221,10 @@ async def get_task_status(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/agents", response_model=List[AgentInfo])
+@router.get("/agents", response_model=list[AgentInfo])
 async def list_agents(
-    category: Optional[str] = None, registry: AgentRegistry = Depends(get_registry)
-) -> List[AgentInfo]:
+    category: str | None = None, registry: AgentRegistry = Depends(get_registry)
+) -> list[AgentInfo]:
     """
     List all registered agents, optionally filtered by category.
     """
@@ -335,7 +332,7 @@ async def distribute_worktree_task(
 @router.get("/worktree/sessions")
 async def get_worktree_sessions(
     coordinator: WorktreeAgentCoordinator = Depends(get_worktree_coordinator),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get information about active worktree sessions.
     """
@@ -350,7 +347,7 @@ async def get_worktree_sessions(
 @router.get("/resources/monitor")
 async def monitor_resources(
     monitor: ResourceMonitorAgent = Depends(get_resource_monitor),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get current resource utilization snapshot.
     """
@@ -372,7 +369,7 @@ async def monitor_resources(
 @router.get("/resources/alerts")
 async def get_resource_alerts(
     monitor: ResourceMonitorAgent = Depends(get_resource_monitor),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get active resource alerts.
     """
@@ -394,7 +391,7 @@ async def get_resource_alerts(
 @router.post("/resources/optimize")
 async def optimize_resources(
     monitor: ResourceMonitorAgent = Depends(get_resource_monitor),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Apply resource optimization recommendations.
     """
@@ -416,7 +413,7 @@ async def optimize_resources(
 @router.delete("/shutdown")
 async def shutdown_orchestrator(
     orchestrator: MasterOrchestrator = Depends(get_orchestrator),
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """
     Gracefully shutdown the orchestrator.
     """

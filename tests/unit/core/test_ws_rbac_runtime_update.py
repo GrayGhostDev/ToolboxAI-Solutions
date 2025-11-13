@@ -1,4 +1,3 @@
-import pytest_asyncio
 import sys
 from pathlib import Path
 
@@ -9,8 +8,9 @@ if str(project_root) not in sys.path:
 
 
 import pytest
-from apps.backend.main import get_ws_rbac, set_ws_rbac, WSRoleOverrides
+
 from apps.backend.api.auth.auth import User
+from apps.backend.main import WSRoleOverrides, get_ws_rbac, set_ws_rbac
 
 
 @pytest.mark.asyncio(loop_scope="function")
@@ -28,4 +28,3 @@ async def test_rbac_get_and_set_runtime_mapping():
     assert updated["status"] == "ok"
     eff = updated["effective_required_roles"]
     assert eff.get("subscribe") == "teacher"
-

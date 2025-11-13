@@ -3,13 +3,11 @@
 Minimal test to verify Roblox configuration
 """
 
-import os
-import json
 from pathlib import Path
 
-print("="*60)
+print("=" * 60)
 print("ROBLOX CONFIGURATION CHECK")
-print("="*60)
+print("=" * 60)
 
 # Load and check .env.local
 env_path = Path(".env.local")
@@ -31,7 +29,7 @@ if env_path.exists():
         "ROBLOX_CLIENT_ID",
         "ROBLOX_UNIVERSE_ID",
         "ROJO_SERVER_PORT",
-        "ENABLE_ROBLOX_INTEGRATION"
+        "ENABLE_ROBLOX_INTEGRATION",
     ]
 
     print("\nConfiguration Status:")
@@ -63,7 +61,7 @@ files_to_check = [
     "apps/backend/schemas/roblox.py",
     "apps/backend/routers/roblox.py",
     "roblox/Config/default.project.json",
-    "roblox/plugins/AIContentGenerator.lua"
+    "roblox/plugins/AIContentGenerator.lua",
 ]
 
 all_files_exist = True
@@ -104,9 +102,9 @@ except Exception as e:
     print(f"  ❌ Decryption test failed: {e}")
 
 # Summary
-print("\n" + "="*60)
+print("\n" + "=" * 60)
 print("INTEGRATION STATUS SUMMARY")
-print("="*60)
+print("=" * 60)
 
 if all_present and all_files_exist:
     print("✅ Roblox Bridge integration is fully configured!")
@@ -121,4 +119,4 @@ if all_present and all_files_exist:
 else:
     print("⚠️  Some configuration is missing. Please check the issues above.")
 
-print("\n" + "="*60)
+print("\n" + "=" * 60)

@@ -5,17 +5,17 @@ Tests agent lifecycle management, task execution, routing, performance monitorin
 and integration with Supabase and Pusher for real-time updates.
 """
 
-import pytest
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from datetime import datetime, timezone
 import uuid
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 from apps.backend.services.agent_service import (
+    AgentInfo,
     AgentService,
     AgentStatus,
-    TaskStatus,
-    AgentInfo,
     TaskInfo,
+    TaskStatus,
     get_agent_service,
     shutdown_agent_service,
 )
@@ -25,10 +25,9 @@ from apps.backend.services.agent_service import (
 def mock_content_agent():
     """Mock ContentGenerationAgent"""
     agent = AsyncMock()
-    agent.generate_content = AsyncMock(return_value={
-        "content": "Test content",
-        "quality_score": 0.95
-    })
+    agent.generate_content = AsyncMock(
+        return_value={"content": "Test content", "quality_score": 0.95}
+    )
     return agent
 
 
@@ -36,10 +35,9 @@ def mock_content_agent():
 def mock_quiz_agent():
     """Mock QuizGenerationAgent"""
     agent = AsyncMock()
-    agent.generate_quiz = AsyncMock(return_value={
-        "questions": [{"q": "Test?", "a": "Answer"}],
-        "quality_score": 0.90
-    })
+    agent.generate_quiz = AsyncMock(
+        return_value={"questions": [{"q": "Test?", "a": "Answer"}], "quality_score": 0.90}
+    )
     return agent
 
 
@@ -49,7 +47,9 @@ def mock_supabase_service():
     service = AsyncMock()
     service.is_available = Mock(return_value=True)
     service.create_agent_instance = AsyncMock(return_value={"id": "db_agent_123"})
-    service.get_agent_instance = AsyncMock(return_value={"id": "db_agent_123", "agent_id": "agent_123"})
+    service.get_agent_instance = AsyncMock(
+        return_value={"id": "db_agent_123", "agent_id": "agent_123"}
+    )
     service.create_task_execution = AsyncMock(return_value={"id": "db_task_123"})
     service.update_task_execution = AsyncMock()
     service.store_agent_metrics = AsyncMock()
@@ -59,12 +59,26 @@ def mock_supabase_service():
 @pytest.fixture
 def agent_service_with_mocks(mock_content_agent, mock_quiz_agent):
     """AgentService with mocked agents"""
-    with patch('apps.backend.services.agent_service.ContentGenerationAgent', return_value=mock_content_agent):
-        with patch('apps.backend.services.agent_service.QuizGenerationAgent', return_value=mock_quiz_agent):
-            with patch('apps.backend.services.agent_service.TerrainGenerationAgent', return_value=AsyncMock()):
-                with patch('apps.backend.services.agent_service.ScriptGenerationAgent', return_value=AsyncMock()):
-                    with patch('apps.backend.services.agent_service.CodeReviewAgent', return_value=AsyncMock()):
-                        with patch('apps.backend.services.agent_service.SUPABASE_AVAILABLE', False):
+    with patch(
+        "apps.backend.services.agent_service.ContentGenerationAgent",
+        return_value=mock_content_agent,
+    ):
+        with patch(
+            "apps.backend.services.agent_service.QuizGenerationAgent", return_value=mock_quiz_agent
+        ):
+            with patch(
+                "apps.backend.services.agent_service.TerrainGenerationAgent",
+                return_value=AsyncMock(),
+            ):
+                with patch(
+                    "apps.backend.services.agent_service.ScriptGenerationAgent",
+                    return_value=AsyncMock(),
+                ):
+                    with patch(
+                        "apps.backend.services.agent_service.CodeReviewAgent",
+                        return_value=AsyncMock(),
+                    ):
+                        with patch("apps.backend.services.agent_service.SUPABASE_AVAILABLE", False):
                             service = AgentService()
                             return service
 
@@ -102,12 +116,27 @@ class TestAgentServiceInitialization:
 
     def test_service_without_supabase(self):
         """Test service initializes without Supabase"""
-        with patch('apps.backend.services.agent_service.SUPABASE_AVAILABLE', False):
-            with patch('apps.backend.services.agent_service.ContentGenerationAgent', return_value=AsyncMock()):
-                with patch('apps.backend.services.agent_service.QuizGenerationAgent', return_value=AsyncMock()):
-                    with patch('apps.backend.services.agent_service.TerrainGenerationAgent', return_value=AsyncMock()):
-                        with patch('apps.backend.services.agent_service.ScriptGenerationAgent', return_value=AsyncMock()):
-                            with patch('apps.backend.services.agent_service.CodeReviewAgent', return_value=AsyncMock()):
+        with patch("apps.backend.services.agent_service.SUPABASE_AVAILABLE", False):
+            with patch(
+                "apps.backend.services.agent_service.ContentGenerationAgent",
+                return_value=AsyncMock(),
+            ):
+                with patch(
+                    "apps.backend.services.agent_service.QuizGenerationAgent",
+                    return_value=AsyncMock(),
+                ):
+                    with patch(
+                        "apps.backend.services.agent_service.TerrainGenerationAgent",
+                        return_value=AsyncMock(),
+                    ):
+                        with patch(
+                            "apps.backend.services.agent_service.ScriptGenerationAgent",
+                            return_value=AsyncMock(),
+                        ):
+                            with patch(
+                                "apps.backend.services.agent_service.CodeReviewAgent",
+                                return_value=AsyncMock(),
+                            ):
                                 service = AgentService()
 
                                 assert service.supabase_service is None
@@ -197,11 +226,11 @@ class TestTaskExecution:
         """Test successful task execution"""
         service = agent_service_with_mocks
 
-        with patch('apps.backend.services.agent_service.trigger_task_event', new_callable=AsyncMock):
+        with patch(
+            "apps.backend.services.agent_service.trigger_task_event", new_callable=AsyncMock
+        ):
             result = await service.execute_task(
-                "content_generator",
-                "generate",
-                {"subject": "Math", "grade_level": 5}
+                "content_generator", "generate", {"subject": "Math", "grade_level": 5}
             )
 
         assert result["success"] is True
@@ -218,11 +247,7 @@ class TestTaskExecution:
         for agent in service.agents.values():
             agent.status = AgentStatus.BUSY
 
-        result = await service.execute_task(
-            "content_generator",
-            "generate",
-            {"subject": "Math"}
-        )
+        result = await service.execute_task("content_generator", "generate", {"subject": "Math"})
 
         assert result["success"] is False
         assert result["status"] == "queued"
@@ -233,11 +258,11 @@ class TestTaskExecution:
         """Test task execution creates task record"""
         service = agent_service_with_mocks
 
-        with patch('apps.backend.services.agent_service.trigger_task_event', new_callable=AsyncMock):
+        with patch(
+            "apps.backend.services.agent_service.trigger_task_event", new_callable=AsyncMock
+        ):
             result = await service.execute_task(
-                "content_generator",
-                "generate",
-                {"subject": "Math"}
+                "content_generator", "generate", {"subject": "Math"}
             )
 
         task_id = result["task_id"]
@@ -253,12 +278,10 @@ class TestTaskExecution:
         initial_agent = list(service.agents.values())[0]
         initial_status = initial_agent.status
 
-        with patch('apps.backend.services.agent_service.trigger_task_event', new_callable=AsyncMock):
-            await service.execute_task(
-                initial_agent.agent_type,
-                "generate",
-                {"subject": "Math"}
-            )
+        with patch(
+            "apps.backend.services.agent_service.trigger_task_event", new_callable=AsyncMock
+        ):
+            await service.execute_task(initial_agent.agent_type, "generate", {"subject": "Math"})
 
         # Agent should be back to IDLE after task completion
         assert initial_agent.status == AgentStatus.IDLE
@@ -268,12 +291,11 @@ class TestTaskExecution:
         """Test task execution with user_id"""
         service = agent_service_with_mocks
 
-        with patch('apps.backend.services.agent_service.trigger_task_event', new_callable=AsyncMock) as mock_trigger:
+        with patch(
+            "apps.backend.services.agent_service.trigger_task_event", new_callable=AsyncMock
+        ) as mock_trigger:
             await service.execute_task(
-                "content_generator",
-                "generate",
-                {"subject": "Math"},
-                user_id="user_123"
+                "content_generator", "generate", {"subject": "Math"}, user_id="user_123"
             )
 
         # Verify user_id was passed to trigger events
@@ -409,11 +431,11 @@ class TestTaskStatus:
         """Test getting task status"""
         service = agent_service_with_mocks
 
-        with patch('apps.backend.services.agent_service.trigger_task_event', new_callable=AsyncMock):
+        with patch(
+            "apps.backend.services.agent_service.trigger_task_event", new_callable=AsyncMock
+        ):
             result = await service.execute_task(
-                "content_generator",
-                "generate",
-                {"subject": "Math"}
+                "content_generator", "generate", {"subject": "Math"}
             )
 
         task_id = result["task_id"]
@@ -493,11 +515,7 @@ class TestTaskQueue:
         for agent in service.agents.values():
             agent.status = AgentStatus.BUSY
 
-        result = await service.execute_task(
-            "content_generator",
-            "generate",
-            {"subject": "Math"}
-        )
+        result = await service.execute_task("content_generator", "generate", {"subject": "Math"})
 
         assert len(service.task_queue) > 0
         assert result["status"] == "queued"
@@ -514,7 +532,9 @@ class TestTaskQueue:
         service.tasks[task_id] = task
         service.task_queue.append(task_id)
 
-        with patch('apps.backend.services.agent_service.trigger_task_event', new_callable=AsyncMock):
+        with patch(
+            "apps.backend.services.agent_service.trigger_task_event", new_callable=AsyncMock
+        ):
             await service._process_task_queue()
 
         # Queue should be empty after processing
@@ -528,18 +548,37 @@ class TestSupabaseIntegration:
     @pytest.mark.asyncio
     async def test_persist_agent_to_supabase(self, mock_supabase_service):
         """Test persisting agent to Supabase"""
-        with patch('apps.backend.services.agent_service.get_supabase_service', return_value=mock_supabase_service):
-            with patch('apps.backend.services.agent_service.SUPABASE_AVAILABLE', True):
-                with patch('apps.backend.services.agent_service.ContentGenerationAgent', return_value=AsyncMock()):
-                    with patch('apps.backend.services.agent_service.QuizGenerationAgent', return_value=AsyncMock()):
-                        with patch('apps.backend.services.agent_service.TerrainGenerationAgent', return_value=AsyncMock()):
-                            with patch('apps.backend.services.agent_service.ScriptGenerationAgent', return_value=AsyncMock()):
-                                with patch('apps.backend.services.agent_service.CodeReviewAgent', return_value=AsyncMock()):
+        with patch(
+            "apps.backend.services.agent_service.get_supabase_service",
+            return_value=mock_supabase_service,
+        ):
+            with patch("apps.backend.services.agent_service.SUPABASE_AVAILABLE", True):
+                with patch(
+                    "apps.backend.services.agent_service.ContentGenerationAgent",
+                    return_value=AsyncMock(),
+                ):
+                    with patch(
+                        "apps.backend.services.agent_service.QuizGenerationAgent",
+                        return_value=AsyncMock(),
+                    ):
+                        with patch(
+                            "apps.backend.services.agent_service.TerrainGenerationAgent",
+                            return_value=AsyncMock(),
+                        ):
+                            with patch(
+                                "apps.backend.services.agent_service.ScriptGenerationAgent",
+                                return_value=AsyncMock(),
+                            ):
+                                with patch(
+                                    "apps.backend.services.agent_service.CodeReviewAgent",
+                                    return_value=AsyncMock(),
+                                ):
                                     # Create service with Supabase
                                     service = AgentService()
 
                                     # Wait for async tasks
                                     import asyncio
+
                                     await asyncio.sleep(0.1)
 
                                     # Verify Supabase connection
@@ -580,12 +619,11 @@ class TestPusherIntegration:
         """Test triggering task events via Pusher"""
         service = agent_service_with_mocks
 
-        with patch('apps.backend.services.agent_service.trigger_task_event', new_callable=AsyncMock) as mock_trigger:
+        with patch(
+            "apps.backend.services.agent_service.trigger_task_event", new_callable=AsyncMock
+        ) as mock_trigger:
             await service.execute_task(
-                "content_generator",
-                "generate",
-                {"subject": "Math"},
-                user_id="user_123"
+                "content_generator", "generate", {"subject": "Math"}, user_id="user_123"
             )
 
         # Should trigger task_started and task_completed events
@@ -596,12 +634,10 @@ class TestPusherIntegration:
         """Test sending status updates"""
         service = agent_service_with_mocks
 
-        with patch('apps.backend.services.agent_service.trigger_agent_event', new_callable=AsyncMock) as mock_trigger:
-            await service._notify_status_update(
-                "agent_123",
-                "status_change",
-                {"status": "busy"}
-            )
+        with patch(
+            "apps.backend.services.agent_service.trigger_agent_event", new_callable=AsyncMock
+        ) as mock_trigger:
+            await service._notify_status_update("agent_123", "status_change", {"status": "busy"})
 
         mock_trigger.assert_called_once()
 
@@ -641,11 +677,12 @@ class TestGlobalServiceInstance:
 
     def test_get_agent_service_creates_instance(self):
         """Test get_agent_service creates global instance"""
-        with patch('apps.backend.services.agent_service.AgentService') as MockService:
+        with patch("apps.backend.services.agent_service.AgentService") as MockService:
             mock_instance = MockService.return_value
 
             # Reset global instance
             import apps.backend.services.agent_service as service_module
+
             service_module._agent_service = None
 
             service = get_agent_service()
@@ -703,11 +740,11 @@ class TestErrorHandling:
         # Make agent raise exception
         mock_content_agent.generate_content.side_effect = Exception("Agent error")
 
-        with patch('apps.backend.services.agent_service.trigger_task_event', new_callable=AsyncMock):
+        with patch(
+            "apps.backend.services.agent_service.trigger_task_event", new_callable=AsyncMock
+        ):
             result = await service.execute_task(
-                "content_generator",
-                "generate",
-                {"subject": "Math"}
+                "content_generator", "generate", {"subject": "Math"}
             )
 
         assert result["success"] is False
@@ -726,12 +763,10 @@ class TestErrorHandling:
         # Make agent raise exception
         mock_content_agent.generate_content.side_effect = Exception("Agent error")
 
-        with patch('apps.backend.services.agent_service.trigger_task_event', new_callable=AsyncMock):
-            await service.execute_task(
-                "content_generator",
-                "generate",
-                {"subject": "Math"}
-            )
+        with patch(
+            "apps.backend.services.agent_service.trigger_task_event", new_callable=AsyncMock
+        ):
+            await service.execute_task("content_generator", "generate", {"subject": "Math"})
 
         assert agent.total_tasks_failed == initial_failed + 1
         assert agent.status == AgentStatus.IDLE  # Back to idle after failure

@@ -13,7 +13,6 @@ import asyncio
 import logging
 import uuid
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -24,6 +23,7 @@ try:
         StateManager,
         SwarmController,
     )
+
     BACKEND_COMPONENTS_AVAILABLE = True
 except ImportError as e:
     logger.warning("Backend orchestration components not available: %s", str(e))
@@ -32,10 +32,12 @@ except ImportError as e:
 # Import MainCoordinator from the correct location
 try:
     from apps.backend.agents.implementations import MainCoordinator
+
     MAIN_COORDINATOR_AVAILABLE = True
 except ImportError:
     try:
         from core.coordinators.main_coordinator import MainCoordinator
+
         MAIN_COORDINATOR_AVAILABLE = True
     except ImportError as e:
         logger.warning("MainCoordinator not available: %s", str(e))
@@ -56,9 +58,9 @@ class TestOrchestrationEngine:
     async def test_orchestration_engine_initialization(self, orchestration_engine):
         """Test orchestration engine initialization"""
         assert orchestration_engine is not None
-        assert hasattr(orchestration_engine, 'workflow_definitions')
-        assert hasattr(orchestration_engine, 'execution_state')
-        assert hasattr(orchestration_engine, 'task_dependencies')
+        assert hasattr(orchestration_engine, "workflow_definitions")
+        assert hasattr(orchestration_engine, "execution_state")
+        assert hasattr(orchestration_engine, "task_dependencies")
 
         # Check workflow definitions
         assert "content_generation" in orchestration_engine.workflow_definitions
@@ -72,11 +74,7 @@ class TestOrchestrationEngine:
     @pytest.mark.asyncio
     async def test_workflow_orchestration_content_generation(self, orchestration_engine):
         """Test content generation workflow orchestration"""
-        context = {
-            "subject": "Mathematics",
-            "grade_level": 5,
-            "topic": "Fractions"
-        }
+        context = {"subject": "Mathematics", "grade_level": 5, "topic": "Fractions"}
 
         result = await orchestration_engine.orchestrate("content_generation", context)
 
@@ -150,20 +148,16 @@ class TestStateManager:
     @pytest.fixture
     def state_manager(self):
         """Create state manager for testing"""
-        return StateManager(
-            max_history=100,
-            learning_rate=0.01,
-            success_weight=1.0
-        )
+        return StateManager(max_history=100, learning_rate=0.01, success_weight=1.0)
 
     @pytest.mark.asyncio
     async def test_state_manager_initialization(self, state_manager):
         """Test state manager initialization"""
         assert state_manager is not None
-        assert hasattr(state_manager, 'state')
-        assert hasattr(state_manager, 'policy')
-        assert hasattr(state_manager, 'reward_calculator')
-        assert hasattr(state_manager, 'context')
+        assert hasattr(state_manager, "state")
+        assert hasattr(state_manager, "policy")
+        assert hasattr(state_manager, "reward_calculator")
+        assert hasattr(state_manager, "context")
 
         # Check policy initialization
         policy = state_manager.policy
@@ -176,11 +170,7 @@ class TestStateManager:
     async def test_sparc_cycle_execution(self, state_manager):
         """Test SPARC cycle execution"""
         task = {"type": "learning_task", "subject": "Mathematics"}
-        user_context = {
-            "user_id": "test_user",
-            "performance_score": 0.7,
-            "engagement_level": 0.8
-        }
+        user_context = {"user_id": "test_user", "performance_score": 0.7, "engagement_level": 0.8}
 
         result = await state_manager.execute_cycle(task, user_context)
 
@@ -222,21 +212,17 @@ class TestStateManager:
         """Test policy application for action decisions"""
         # Test different scenarios
         scenarios = [
-            {
-                "state": {"content_loaded": False},
-                "context": {},
-                "expected_action": "load_content"
-            },
+            {"state": {"content_loaded": False}, "context": {}, "expected_action": "load_content"},
             {
                 "state": {"content_loaded": True},
                 "context": {"assessment_due": True},
-                "expected_action": "start_assessment"
+                "expected_action": "start_assessment",
             },
             {
                 "state": {"content_loaded": True, "learning_metrics": {"engagement_level": 0.3}},
                 "context": {"performance_score": 0.4},
-                "expected_action": "increase_engagement"
-            }
+                "expected_action": "increase_engagement",
+            },
         ]
 
         for scenario in scenarios:
@@ -252,7 +238,13 @@ class TestStateManager:
                 assert True  # Expected action type found
             else:
                 # Action should still be valid even if different from expected
-                assert action["type"] in ["load_content", "start_assessment", "increase_engagement", "provide_assistance", "continue_lesson"]
+                assert action["type"] in [
+                    "load_content",
+                    "start_assessment",
+                    "increase_engagement",
+                    "provide_assistance",
+                    "continue_lesson",
+                ]
 
     @pytest.mark.asyncio
     async def test_reward_calculation(self, state_manager):
@@ -302,21 +294,17 @@ class TestSwarmController:
     @pytest.fixture
     def swarm_controller(self):
         """Create swarm controller for testing"""
-        return SwarmController(
-            num_workers=3,
-            consensus_threshold=0.7,
-            voting_method="majority"
-        )
+        return SwarmController(num_workers=3, consensus_threshold=0.7, voting_method="majority")
 
     @pytest.mark.asyncio
     async def test_swarm_controller_initialization(self, swarm_controller):
         """Test swarm controller initialization"""
         assert swarm_controller is not None
-        assert hasattr(swarm_controller, 'num_workers')
-        assert hasattr(swarm_controller, 'task_queue')
-        assert hasattr(swarm_controller, 'results_queue')
-        assert hasattr(swarm_controller, 'load_balancer')
-        assert hasattr(swarm_controller, 'consensus_config')
+        assert hasattr(swarm_controller, "num_workers")
+        assert hasattr(swarm_controller, "task_queue")
+        assert hasattr(swarm_controller, "results_queue")
+        assert hasattr(swarm_controller, "load_balancer")
+        assert hasattr(swarm_controller, "consensus_config")
 
         assert swarm_controller.num_workers == 3
         assert swarm_controller.consensus_config["threshold"] == 0.7
@@ -327,7 +315,7 @@ class TestSwarmController:
         tasks = [
             {"id": "task_1", "type": "content_generation", "complexity": 1},
             {"id": "task_2", "type": "quiz_generation", "complexity": 2},
-            {"id": "task_3", "type": "terrain_generation", "complexity": 1}
+            {"id": "task_3", "type": "terrain_generation", "complexity": 1},
         ]
 
         results = await swarm_controller.distribute_tasks(tasks)
@@ -351,9 +339,7 @@ class TestSwarmController:
     async def test_consensus_mechanism(self, swarm_controller):
         """Test consensus mechanism"""
         # Create tasks that would generate multiple results for consensus
-        tasks = [
-            {"id": "consensus_task", "type": "content_generation", "complexity": 1}
-        ]
+        tasks = [{"id": "consensus_task", "type": "content_generation", "complexity": 1}]
 
         # Run with consensus required
         results = await swarm_controller.distribute_tasks(tasks, consensus_required=True)
@@ -367,16 +353,15 @@ class TestSwarmController:
                 assert isinstance(result["consensus_achieved"], bool)
                 if result["consensus_achieved"]:
                     assert "consensus_score" in result
-                    assert result["consensus_score"] >= swarm_controller.consensus_config["threshold"]
+                    assert (
+                        result["consensus_score"] >= swarm_controller.consensus_config["threshold"]
+                    )
 
     @pytest.mark.asyncio
     async def test_load_balancing(self, swarm_controller):
         """Test load balancing across workers"""
         # Create many tasks to test load balancing
-        tasks = [
-            {"id": f"task_{i}", "type": "test_task", "complexity": 1}
-            for i in range(10)
-        ]
+        tasks = [{"id": f"task_{i}", "type": "test_task", "complexity": 1} for i in range(10)]
 
         results = await swarm_controller.distribute_tasks(tasks)
 
@@ -396,9 +381,7 @@ class TestSwarmController:
     async def test_swarm_error_handling(self, swarm_controller):
         """Test swarm error handling"""
         # Create task that might cause errors
-        error_tasks = [
-            {"id": "error_task", "type": "invalid_type", "complexity": 1}
-        ]
+        error_tasks = [{"id": "error_task", "type": "invalid_type", "complexity": 1}]
 
         results = await swarm_controller.distribute_tasks(error_tasks)
 
@@ -444,21 +427,18 @@ class TestStateManager:
     def state_manager(self):
         """Create state manager for testing"""
         return StateManager(
-            max_history=50,
-            learning_rate=0.01,
-            success_weight=1.0,
-            efficiency_weight=0.5
+            max_history=50, learning_rate=0.01, success_weight=1.0, efficiency_weight=0.5
         )
 
     @pytest.mark.asyncio
     async def test_state_manager_initialization(self, state_manager):
         """Test state manager initialization"""
         assert state_manager is not None
-        assert hasattr(state_manager, 'state')
-        assert hasattr(state_manager, 'policy')
-        assert hasattr(state_manager, 'reward_calculator')
-        assert hasattr(state_manager, 'context')
-        assert hasattr(state_manager, 'state_history')
+        assert hasattr(state_manager, "state")
+        assert hasattr(state_manager, "policy")
+        assert hasattr(state_manager, "reward_calculator")
+        assert hasattr(state_manager, "context")
+        assert hasattr(state_manager, "state_history")
 
         # Check initial configuration
         assert state_manager.max_history_size == 50
@@ -468,17 +448,13 @@ class TestStateManager:
     @pytest.mark.asyncio
     async def test_sparc_cycle_complete(self, state_manager):
         """Test complete SPARC cycle execution"""
-        task = {
-            "type": "learning_task",
-            "subject": "Mathematics",
-            "difficulty": "medium"
-        }
+        task = {"type": "learning_task", "subject": "Mathematics", "difficulty": "medium"}
 
         user_context = {
             "user_id": "test_user_123",
             "performance_score": 0.75,
             "engagement_level": 0.8,
-            "learning_style": "visual"
+            "learning_style": "visual",
         }
 
         result = await state_manager.execute_cycle(task, user_context)
@@ -540,18 +516,18 @@ class TestStateManager:
             {
                 "state": {"content_loaded": False, "environment_ready": True},
                 "context": {},
-                "expected_priority": "high"
+                "expected_priority": "high",
             },
             {
                 "state": {"content_loaded": True, "learning_metrics": {"engagement_level": 0.3}},
                 "context": {"performance_score": 0.4},
-                "expected_priority": "high"
+                "expected_priority": "high",
             },
             {
                 "state": {"content_loaded": True, "quiz_active": False},
                 "context": {"assessment_due": True},
-                "expected_priority": "medium"
-            }
+                "expected_priority": "medium",
+            },
         ]
 
         for scenario in test_scenarios:
@@ -573,25 +549,23 @@ class TestStateManager:
             {
                 "result": {"success": True, "execution_time": 0.05},
                 "action": {"priority": "high"},
-                "expected_reward_range": (1.0, 2.0)
+                "expected_reward_range": (1.0, 2.0),
             },
             {
                 "result": {"success": False, "execution_time": 0.1},
                 "action": {"priority": "low"},
-                "expected_reward_range": (-1.0, 0.5)
+                "expected_reward_range": (-1.0, 0.5),
             },
             {
                 "result": {"success": True, "execution_time": 0.8},
                 "action": {"priority": "medium"},
-                "expected_reward_range": (0.5, 1.5)
-            }
+                "expected_reward_range": (0.5, 1.5),
+            },
         ]
 
         for test_case in test_cases:
             reward = await state_manager._calculate_reward(
-                test_case["result"],
-                {"content_loaded": True},
-                test_case["action"]
+                test_case["result"], {"content_loaded": True}, test_case["action"]
             )
 
             min_reward, max_reward = test_case["expected_reward_range"]
@@ -633,10 +607,10 @@ class TestMainCoordinator:
     async def test_main_coordinator_initialization(self, main_coordinator):
         """Test main coordinator initialization"""
         assert main_coordinator is not None
-        assert hasattr(main_coordinator, 'orchestrator')
-        assert hasattr(main_coordinator, 'sparc_manager')
-        assert hasattr(main_coordinator, 'active_sessions')
-        assert hasattr(main_coordinator, 'performance_metrics')
+        assert hasattr(main_coordinator, "orchestrator")
+        assert hasattr(main_coordinator, "sparc_manager")
+        assert hasattr(main_coordinator, "active_sessions")
+        assert hasattr(main_coordinator, "performance_metrics")
 
         # Check component initialization
         assert main_coordinator.orchestrator is not None
@@ -649,7 +623,7 @@ class TestMainCoordinator:
             "type": "content_generation",
             "subject": "Science",
             "grade_level": 6,
-            "learning_objectives": ["Understand gravity"]
+            "learning_objectives": ["Understand gravity"],
         }
 
         result = await main_coordinator.coordinate(request)
@@ -737,11 +711,7 @@ class TestIntegrationWorkflows:
             "grade_level": 7,
             "topic": "Photosynthesis",
             "learning_objectives": ["Understand plant biology"],
-            "features": {
-                "include_quiz": True,
-                "include_terrain": True,
-                "include_scripts": True
-            }
+            "features": {"include_quiz": True, "include_terrain": True, "include_scripts": True},
         }
 
         # Execute through coordinator
@@ -775,7 +745,9 @@ class TestIntegrationWorkflows:
 
         # Use SPARC result to inform orchestration
         if sparc_result.get("action", {}).get("type") == "load_content":
-            orchestration_result = await orchestrator.orchestrate("content_generation", sparc_context)
+            orchestration_result = await orchestrator.orchestrate(
+                "content_generation", sparc_context
+            )
 
             assert orchestration_result is not None
             assert "status" in orchestration_result
@@ -790,7 +762,7 @@ class TestIntegrationWorkflows:
         swarm_tasks = [
             {"id": "content_task", "type": "content_generation", "subject": "Math"},
             {"id": "quiz_task", "type": "quiz_generation", "subject": "Math"},
-            {"id": "terrain_task", "type": "terrain_generation", "subject": "Math"}
+            {"id": "terrain_task", "type": "terrain_generation", "subject": "Math"},
         ]
 
         # Process through swarm
@@ -819,7 +791,7 @@ class TestQualityAssurance:
             ("OrchestrationEngine", OrchestrationEngine()),
             ("StateManager", StateManager()),
             ("SwarmController", SwarmController()),
-            ("MainCoordinator", MainCoordinator())
+            ("MainCoordinator", MainCoordinator()),
         ]
 
         component_scores = {}
@@ -847,7 +819,9 @@ class TestQualityAssurance:
 
         # All components should achieve high quality scores
         for component_name, score in component_scores.items():
-            assert score >= 0.85, f"Component {component_name} scored {score:.2f}, below 85% threshold"
+            assert (
+                score >= 0.85
+            ), f"Component {component_name} scored {score:.2f}, below 85% threshold"
 
         # Overall system quality should be high
         overall_quality = sum(component_scores.values()) / len(component_scores)
@@ -861,7 +835,7 @@ class TestQualityAssurance:
             {"component": "orchestration", "error_type": "invalid_workflow"},
             {"component": "state", "error_type": "invalid_context"},
             {"component": "swarm", "error_type": "worker_failure"},
-            {"component": "coordination", "error_type": "session_error"}
+            {"component": "coordination", "error_type": "session_error"},
         ]
 
         recovery_scores = []
@@ -904,7 +878,9 @@ class TestQualityAssurance:
 
         # Error recovery quality should be high
         avg_recovery_quality = sum(recovery_scores) / len(recovery_scores)
-        assert avg_recovery_quality >= 0.85, f"Error recovery quality {avg_recovery_quality:.2f} below 85%"
+        assert (
+            avg_recovery_quality >= 0.85
+        ), f"Error recovery quality {avg_recovery_quality:.2f} below 85%"
 
     @pytest.mark.asyncio
     async def test_performance_under_stress(self):
@@ -918,7 +894,7 @@ class TestQualityAssurance:
                 "type": "content_generation",
                 "subject": f"Subject{i}",
                 "grade_level": (i % 8) + 1,
-                "topic": f"Topic{i}"
+                "topic": f"Topic{i}",
             }
             for i in range(15)  # 15 concurrent requests
         ]
@@ -936,15 +912,18 @@ class TestQualityAssurance:
 
         # Success rate should remain high
         successful_results = [
-            r for r in results
-            if isinstance(r, dict) and r.get("status") == "success"
+            r for r in results if isinstance(r, dict) and r.get("status") == "success"
         ]
 
         success_rate = len(successful_results) / len(results)
         assert success_rate >= 0.85  # 85% success rate under stress
 
-        logger.info("Stress test completed: %d/%d successful in %.2f seconds",
-                   len(successful_results), len(results), total_time)
+        logger.info(
+            "Stress test completed: %d/%d successful in %.2f seconds",
+            len(successful_results),
+            len(results),
+            total_time,
+        )
 
 
 if __name__ == "__main__":

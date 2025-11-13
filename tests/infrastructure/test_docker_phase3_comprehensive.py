@@ -16,21 +16,13 @@ This module provides 10 comprehensive tests for Docker infrastructure:
 Tests follow enterprise security and performance standards.
 """
 
-import asyncio
-import json
-import os
-import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Any, Tuple
-import pytest
+from typing import Any
+
 import docker
-from docker.models.containers import Container
-from docker.types import Mount
+import pytest
 import yaml
-import subprocess
-import tempfile
-import hashlib
 
 
 @pytest.mark.integration
@@ -85,7 +77,7 @@ class TestDockerPhase3Comprehensive:
         - Security options (no-new-privileges)
         - Secrets not in environment variables
         """
-        with open(self.compose_file, 'r') as f:
+        with open(self.compose_file) as f:
             compose_config = yaml.safe_load(f)
 
         services = compose_config.get("services", {})
@@ -98,7 +90,7 @@ class TestDockerPhase3Comprehensive:
                 "capabilities_dropped": False,
                 "security_opts": False,
                 "no_secrets_in_env": False,
-                "issues": []
+                "issues": [],
             }
 
             # Check non-root user
@@ -116,8 +108,10 @@ class TestDockerPhase3Comprehensive:
                     results["issues"].append("No user specification found")
 
             # Check read-only filesystem
-            if service_config.get("read_only") is True or \
-               (service_config.get("security_opt") and "read_only" in str(service_config.get("security_opt"))):
+            if service_config.get("read_only") is True or (
+                service_config.get("security_opt")
+                and "read_only" in str(service_config.get("security_opt"))
+            ):
                 results["read_only_fs"] = True
 
                 # Check tmpfs for writable directories
@@ -145,8 +139,10 @@ class TestDockerPhase3Comprehensive:
             if isinstance(environment, dict):
                 env_vars = environment
             elif isinstance(environment, list):
-                env_vars = {item.split("=")[0]: item.split("=")[1] if "=" in item else None
-                          for item in environment}
+                env_vars = {
+                    item.split("=")[0]: item.split("=")[1] if "=" in item else None
+                    for item in environment
+                }
             else:
                 env_vars = {}
 
@@ -155,7 +151,11 @@ class TestDockerPhase3Comprehensive:
             secrets_in_env = []
             for key, value in env_vars.items():
                 if any(keyword in key.upper() for keyword in sensitive_keywords):
-                    if not (str(value).endswith("_FILE") or str(value).startswith("${") or str(value).startswith("/run/secrets")):
+                    if not (
+                        str(value).endswith("_FILE")
+                        or str(value).startswith("${")
+                        or str(value).startswith("/run/secrets")
+                    ):
                         secrets_in_env.append(key)
 
             if not secrets_in_env:
@@ -236,25 +236,23 @@ class TestDockerPhase3Comprehensive:
             size_mb = size_bytes / (1024 * 1024)
 
             # Check against target
-            target_mb = self.image_size_targets.get(service_name, float('inf'))
+            target_mb = self.image_size_targets.get(service_name, float("inf"))
 
             size_results[service_name] = {
                 "size_mb": size_mb,
                 "target_mb": target_mb,
                 "meets_target": size_mb <= target_mb,
-                "tags": image.tags
+                "tags": image.tags,
             }
 
             if service_name in self.image_size_targets and size_mb > target_mb:
-                failures.append(
-                    f"{service_name}: {size_mb:.1f}MB exceeds target {target_mb}MB"
-                )
+                failures.append(f"{service_name}: {size_mb:.1f}MB exceeds target {target_mb}MB")
 
         # Check for multi-stage builds
         dockerfiles = list(Path("infrastructure/docker/dockerfiles").glob("*.Dockerfile"))
 
         for dockerfile_path in dockerfiles:
-            with open(dockerfile_path, 'r') as f:
+            with open(dockerfile_path) as f:
                 content = f.read()
 
             service_name = dockerfile_path.stem
@@ -279,7 +277,9 @@ class TestDockerPhase3Comprehensive:
         for service_name, results in size_results.items():
             if "size_mb" in results:
                 status = "✓" if results["meets_target"] else "✗"
-                print(f"{service_name}: {status} {results['size_mb']:.1f}MB / {results['target_mb']}MB target")
+                print(
+                    f"{service_name}: {status} {results['size_mb']:.1f}MB / {results['target_mb']}MB target"
+                )
                 if "multistage" in results:
                     print(f"  Multi-stage: {'✓' if results['multistage'] else '✗'}")
                 if "alpine_or_slim" in results:
@@ -303,10 +303,10 @@ class TestDockerPhase3Comprehensive:
         - Deploy configuration for production
         - Monitoring labels
         """
-        with open(self.compose_file, 'r') as f:
+        with open(self.compose_file) as f:
             base_config = yaml.safe_load(f)
 
-        with open(self.prod_compose_file, 'r') as f:
+        with open(self.prod_compose_file) as f:
             prod_config = yaml.safe_load(f)
 
         services = base_config.get("services", {})
@@ -323,7 +323,7 @@ class TestDockerPhase3Comprehensive:
                 "logging": False,
                 "deploy_config": False,
                 "labels": False,
-                "issues": []
+                "issues": [],
             }
 
             # Check health check
@@ -437,7 +437,7 @@ class TestDockerPhase3Comprehensive:
         toolboxai_containers = [c for c in containers if "toolboxai" in c.name]
 
         # Build dependency graph from compose file
-        with open(self.compose_file, 'r') as f:
+        with open(self.compose_file) as f:
             compose_config = yaml.safe_load(f)
 
         services = compose_config.get("services", {})
@@ -464,12 +464,14 @@ class TestDockerPhase3Comprehensive:
             # Extract service name
             service_name = container.name.replace("toolboxai-", "")
 
-            container_info.append({
-                "name": service_name,
-                "created": datetime.fromisoformat(created_time.replace('Z', '+00:00')),
-                "started": datetime.fromisoformat(started_time.replace('Z', '+00:00')),
-                "status": container.status
-            })
+            container_info.append(
+                {
+                    "name": service_name,
+                    "created": datetime.fromisoformat(created_time.replace("Z", "+00:00")),
+                    "started": datetime.fromisoformat(started_time.replace("Z", "+00:00")),
+                    "status": container.status,
+                }
+            )
 
         # Sort by start time
         container_info.sort(key=lambda x: x["started"])
@@ -486,15 +488,15 @@ class TestDockerPhase3Comprehensive:
                 deps = dependency_graph[service_name]
                 for dep in deps:
                     if dep not in started_services:
-                        failures.append(
-                            f"{service_name} started before dependency {dep}"
-                        )
+                        failures.append(f"{service_name} started before dependency {dep}")
 
             started_services.add(service_name)
 
         # Check network isolation
         networks = self.docker_client.networks.list()
-        toolboxai_networks = [n for n in networks if "toolboxai" in n.name or any("br-" in n.name for n in networks)]
+        toolboxai_networks = [
+            n for n in networks if "toolboxai" in n.name or any("br-" in n.name for n in networks)
+        ]
 
         # Verify internal networks exist
         network_names = [n.name for n in networks]
@@ -532,7 +534,7 @@ class TestDockerPhase3Comprehensive:
         - Monitoring endpoints exposed
         - Metrics collection configured
         """
-        with open(self.compose_file, 'r') as f:
+        with open(self.compose_file) as f:
             compose_config = yaml.safe_load(f)
 
         services = compose_config.get("services", {})
@@ -547,7 +549,7 @@ class TestDockerPhase3Comprehensive:
                 "memory_reservation": None,
                 "has_limits": False,
                 "has_reservations": False,
-                "issues": []
+                "issues": [],
             }
 
             deploy_config = service_config.get("deploy", {})
@@ -584,7 +586,7 @@ class TestDockerPhase3Comprehensive:
         # Check monitoring configuration
         prometheus_config = Path("infrastructure/monitoring/prometheus/prometheus-unified.yml")
         if prometheus_config.exists():
-            with open(prometheus_config, 'r') as f:
+            with open(prometheus_config) as f:
                 prom_config = yaml.safe_load(f)
 
             scrape_configs = prom_config.get("scrape_configs", [])
@@ -643,7 +645,7 @@ class TestDockerPhase3Comprehensive:
         - No unnecessary network exposure
         - Firewall rules via network policies
         """
-        with open(self.compose_file, 'r') as f:
+        with open(self.compose_file) as f:
             compose_config = yaml.safe_load(f)
 
         networks_config = compose_config.get("networks", {})
@@ -660,7 +662,7 @@ class TestDockerPhase3Comprehensive:
                 "internal": is_internal,
                 "should_be_internal": network_name in ["database", "cache", "mcp"],
                 "services": [],
-                "issues": []
+                "issues": [],
             }
 
             # Database, cache, and MCP networks should be internal
@@ -735,7 +737,7 @@ class TestDockerPhase3Comprehensive:
         - Environment variables use *_FILE pattern
         - No secrets in logs or health checks
         """
-        with open(self.compose_file, 'r') as f:
+        with open(self.compose_file) as f:
             compose_config = yaml.safe_load(f)
 
         secrets_config = compose_config.get("secrets", {})
@@ -747,7 +749,7 @@ class TestDockerPhase3Comprehensive:
             "non_external_secrets": [],
             "services_using_secrets": {},
             "hardcoded_findings": [],
-            "issues": []
+            "issues": [],
         }
 
         # Check all secrets are external
@@ -756,9 +758,7 @@ class TestDockerPhase3Comprehensive:
                 secrets_results["external_secrets"] += 1
             else:
                 secrets_results["non_external_secrets"].append(secret_name)
-                secrets_results["issues"].append(
-                    f"Secret '{secret_name}' not marked as external"
-                )
+                secrets_results["issues"].append(f"Secret '{secret_name}' not marked as external")
 
         # Check service secret usage
         for service_name, service_config in services.items():
@@ -771,8 +771,10 @@ class TestDockerPhase3Comprehensive:
             if isinstance(environment, dict):
                 env_vars = environment
             elif isinstance(environment, list):
-                env_vars = {item.split("=")[0]: item.split("=")[1] if "=" in item else None
-                          for item in environment}
+                env_vars = {
+                    item.split("=")[0]: item.split("=")[1] if "=" in item else None
+                    for item in environment
+                }
             else:
                 env_vars = {}
 
@@ -781,28 +783,34 @@ class TestDockerPhase3Comprehensive:
             for key, value in env_vars.items():
                 if any(pattern in key.upper() for pattern in sensitive_patterns):
                     # Should end with _FILE or reference /run/secrets
-                    if value and not (str(value).endswith("_FILE") or
-                                    "/run/secrets" in str(value) or
-                                    str(value).startswith("${}")):
-                        secrets_results["hardcoded_findings"].append({
-                            "service": service_name,
-                            "variable": key,
-                            "pattern": "Does not use _FILE or /run/secrets"
-                        })
+                    if value and not (
+                        str(value).endswith("_FILE")
+                        or "/run/secrets" in str(value)
+                        or str(value).startswith("${}")
+                    ):
+                        secrets_results["hardcoded_findings"].append(
+                            {
+                                "service": service_name,
+                                "variable": key,
+                                "pattern": "Does not use _FILE or /run/secrets",
+                            }
+                        )
 
         # Check Dockerfiles for hardcoded secrets
         dockerfiles = list(Path("infrastructure/docker/dockerfiles").glob("*.Dockerfile"))
 
         for dockerfile_path in dockerfiles:
-            with open(dockerfile_path, 'r') as f:
+            with open(dockerfile_path) as f:
                 content = f.read()
 
             # Look for hardcoded secrets
             if "password=" in content.lower() or "secret=" in content.lower():
-                secrets_results["hardcoded_findings"].append({
-                    "file": str(dockerfile_path),
-                    "pattern": "Possible hardcoded secret in Dockerfile"
-                })
+                secrets_results["hardcoded_findings"].append(
+                    {
+                        "file": str(dockerfile_path),
+                        "pattern": "Possible hardcoded secret in Dockerfile",
+                    }
+                )
 
         failures = []
 
@@ -878,7 +886,7 @@ class TestDockerPhase3Comprehensive:
                 "retries": None,
                 "start_period": None,
                 "current_status": None,
-                "issues": []
+                "issues": [],
             }
 
             if health_config:
@@ -960,7 +968,7 @@ class TestDockerPhase3Comprehensive:
         - Recovery scripts available
         - Backup encryption enabled
         """
-        with open(self.compose_file, 'r') as f:
+        with open(self.compose_file) as f:
             compose_config = yaml.safe_load(f)
 
         volumes = compose_config.get("volumes", {})
@@ -970,7 +978,7 @@ class TestDockerPhase3Comprehensive:
             "persistent_volumes": [],
             "backup_services": [],
             "recovery_scripts": [],
-            "issues": []
+            "issues": [],
         }
 
         # Identify persistent volumes
@@ -1034,7 +1042,7 @@ class TestDockerPhase3Comprehensive:
         - Horizontal scaling capability
         - Failover mechanisms
         """
-        with open(self.prod_compose_file, 'r') as f:
+        with open(self.prod_compose_file) as f:
             prod_config = yaml.safe_load(f)
 
         services = prod_config.get("services", {})
@@ -1051,7 +1059,7 @@ class TestDockerPhase3Comprehensive:
                 "update_strategy": None,
                 "restart_policy": "restart_policy" in deploy_config,
                 "is_ha_ready": False,
-                "issues": []
+                "issues": [],
             }
 
             # Check update configuration
@@ -1061,10 +1069,16 @@ class TestDockerPhase3Comprehensive:
 
                 # Zero-downtime deployment needs start-first or rolling
                 if results["update_strategy"] not in ["start-first", "rolling"]:
-                    results["issues"].append(f"Update strategy '{results['update_strategy']}' may cause downtime")
+                    results["issues"].append(
+                        f"Update strategy '{results['update_strategy']}' may cause downtime"
+                    )
 
             # Check if service is HA-ready
-            if results["replicas"] >= 2 and results["has_update_config"] and results["restart_policy"]:
+            if (
+                results["replicas"] >= 2
+                and results["has_update_config"]
+                and results["restart_policy"]
+            ):
                 results["is_ha_ready"] = True
 
             ha_results[service_name] = results
@@ -1117,7 +1131,7 @@ class TestDockerPhase3Comprehensive:
 # ============================================
 # Phase 3 Test Summary Generator
 # ============================================
-def generate_phase3_summary(test_results: Dict[str, Any]) -> str:
+def generate_phase3_summary(test_results: dict[str, Any]) -> str:
     """Generate comprehensive Phase 3 test summary."""
 
     summary = f"""

@@ -3,19 +3,19 @@ Security Headers Middleware
 Implements comprehensive security headers and secure error handling
 """
 
+import hashlib
 import json
 import logging
-import hashlib
-import secrets
-from typing import Dict, List, Optional, Any, Callable
-from datetime import datetime, timezone
-import traceback
 import re
+import secrets
+import traceback
+from datetime import datetime, timezone
+from typing import Any
 
 from fastapi import Request, Response, status
 from fastapi.responses import JSONResponse
-from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.exceptions import HTTPException
+from starlette.middleware.base import BaseHTTPMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -41,10 +41,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         app,
         enable_hsts: bool = True,
         enable_csp: bool = True,
-        csp_directives: Optional[Dict[str, str]] = None,
+        csp_directives: dict[str, str] | None = None,
         frame_options: str = "DENY",
         enable_nonce: bool = True,
-        report_uri: Optional[str] = None
+        report_uri: str | None = None,
     ):
         """
         Initialize Security Headers Middleware
@@ -76,7 +76,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "frame-ancestors": "'none'",
             "base-uri": "'self'",
             "form-action": "'self'",
-            "upgrade-insecure-requests": ""
+            "upgrade-insecure-requests": "",
         }
 
     async def dispatch(self, request: Request, call_next) -> Response:
@@ -112,12 +112,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             # Return secure error response
             return self._create_secure_error_response(e, request)
 
-    def _add_security_headers(
-        self,
-        response: Response,
-        request: Request,
-        nonce: Optional[str] = None
-    ):
+    def _add_security_headers(self, response: Response, request: Request, nonce: str | None = None):
         """
         Add security headers to response
 
@@ -174,7 +169,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # Add custom security header
         response.headers["X-ToolboxAI-Security"] = "enabled"
 
-    def _build_csp_header(self, nonce: Optional[str] = None) -> str:
+    def _build_csp_header(self, nonce: str | None = None) -> str:
         """
         Build Content Security Policy header
 
@@ -213,7 +208,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             r"/api/v1/users/",
             r"/api/v1/admin/",
             r"/api/v1/gdpr/",
-            r"/api/v1/payments/"
+            r"/api/v1/payments/",
         ]
 
         for pattern in sensitive_patterns:
@@ -222,11 +217,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         return False
 
-    def _create_secure_error_response(
-        self,
-        error: Exception,
-        request: Request
-    ) -> JSONResponse:
+    def _create_secure_error_response(self, error: Exception, request: Request) -> JSONResponse:
         """
         Create secure error response without leaking sensitive information
 
@@ -266,7 +257,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 "message": message,
                 "status": status_code,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
-                "path": str(request.url.path)
+                "path": str(request.url.path),
             }
         }
 
@@ -274,13 +265,11 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         if request.app.debug:
             error_response["error"]["debug"] = {
                 "type": error.__class__.__name__,
-                "detail": str(error)
+                "detail": str(error),
             }
 
         return JSONResponse(
-            status_code=status_code,
-            content=error_response,
-            headers={"X-Error-ID": error_id}
+            status_code=status_code, content=error_response, headers={"X-Error-ID": error_id}
         )
 
 
@@ -305,36 +294,27 @@ class SecureErrorHandler:
         self.debug_mode = debug_mode
         self.error_patterns = self._init_error_patterns()
 
-    def _init_error_patterns(self) -> List[Dict[str, Any]]:
+    def _init_error_patterns(self) -> list[dict[str, Any]]:
         """Initialize patterns for sanitizing error messages"""
         return [
-            {
-                "pattern": r"(password|secret|token|key)[\s=:]+[\S]+",
-                "replacement": "[REDACTED]"
-            },
+            {"pattern": r"(password|secret|token|key)[\s=:]+[\S]+", "replacement": "[REDACTED]"},
             {
                 "pattern": r"\b(?:\d{1,3}\.){3}\d{1,3}\b",  # IP addresses
-                "replacement": "[IP_REDACTED]"
+                "replacement": "[IP_REDACTED]",
             },
             {
                 "pattern": r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}",  # Emails
-                "replacement": "[EMAIL_REDACTED]"
+                "replacement": "[EMAIL_REDACTED]",
             },
-            {
-                "pattern": r"/home/[\w/]+",  # File paths
-                "replacement": "[PATH_REDACTED]"
-            },
+            {"pattern": r"/home/[\w/]+", "replacement": "[PATH_REDACTED]"},  # File paths
             {
                 "pattern": r"line \d+ in [\w\.]+",  # Stack trace details
-                "replacement": "[TRACE_REDACTED]"
-            }
+                "replacement": "[TRACE_REDACTED]",
+            },
         ]
 
     def handle_error(
-        self,
-        error: Exception,
-        request: Optional[Request] = None,
-        context: Optional[Dict] = None
+        self, error: Exception, request: Request | None = None, context: dict | None = None
     ) -> JSONResponse:
         """
         Handle error and return secure response
@@ -365,7 +345,7 @@ class SecureErrorHandler:
                 "id": error_id,
                 "category": error_category,
                 "message": safe_message,
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
         }
 
@@ -379,7 +359,7 @@ class SecureErrorHandler:
             response_data["error"]["debug"] = {
                 "type": error.__class__.__name__,
                 "module": error.__class__.__module__,
-                "original_message": str(error)[:500]  # Truncate long messages
+                "original_message": str(error)[:500],  # Truncate long messages
             }
 
         # Determine status code
@@ -388,10 +368,7 @@ class SecureErrorHandler:
         return JSONResponse(
             status_code=status_code,
             content=response_data,
-            headers={
-                "X-Error-ID": error_id,
-                "X-Content-Type-Options": "nosniff"
-            }
+            headers={"X-Error-ID": error_id, "X-Content-Type-Options": "nosniff"},
         )
 
     def _generate_error_id(self, error: Exception) -> str:
@@ -403,8 +380,8 @@ class SecureErrorHandler:
         self,
         error: Exception,
         error_id: str,
-        request: Optional[Request] = None,
-        context: Optional[Dict] = None
+        request: Request | None = None,
+        context: dict | None = None,
     ):
         """Log error with full details"""
         log_data = {
@@ -412,7 +389,7 @@ class SecureErrorHandler:
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "error_type": error.__class__.__name__,
             "error_message": str(error),
-            "traceback": traceback.format_exc()
+            "traceback": traceback.format_exc(),
         }
 
         if request:
@@ -421,7 +398,7 @@ class SecureErrorHandler:
                 "path": str(request.url.path),
                 "query": str(request.url.query),
                 "headers": self._sanitize_headers(dict(request.headers)),
-                "client": request.client.host if request.client else None
+                "client": request.client.host if request.client else None,
             }
 
         if context:
@@ -463,14 +440,9 @@ class SecureErrorHandler:
 
         return sanitized
 
-    def _sanitize_headers(self, headers: Dict[str, str]) -> Dict[str, str]:
+    def _sanitize_headers(self, headers: dict[str, str]) -> dict[str, str]:
         """Sanitize headers to remove sensitive values"""
-        sensitive_headers = [
-            "authorization",
-            "cookie",
-            "x-api-key",
-            "x-auth-token"
-        ]
+        sensitive_headers = ["authorization", "cookie", "x-api-key", "x-auth-token"]
 
         sanitized = {}
         for key, value in headers.items():

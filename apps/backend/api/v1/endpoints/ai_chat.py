@@ -4,25 +4,27 @@ Provides a conversational AI interface to help teachers create Roblox educationa
 Integrates with LangChain/LangGraph for intelligent content generation and guidance.
 """
 
+import asyncio
+import json
+import logging
+import time
+import uuid
+from collections.abc import AsyncGenerator
+from datetime import datetime
+from enum import Enum
+from typing import Any
+
 from fastapi import (
     APIRouter,
+    BackgroundTasks,
     Depends,
     HTTPException,
     WebSocket,
     WebSocketDisconnect,
-    BackgroundTasks,
     status,
 )
 from fastapi.responses import StreamingResponse
-from typing import Dict, Any, List, Optional, AsyncGenerator
-from datetime import datetime
-import logging
-import json
-import uuid
-import asyncio
-import time
 from pydantic import BaseModel, Field, field_validator
-from enum import Enum
 
 # Import dependencies
 try:
@@ -59,7 +61,7 @@ except ImportError:
 
 try:
     import openai
-    from openai import OpenAI, AsyncOpenAI
+    from openai import AsyncOpenAI, OpenAI
 
     OPENAI_AVAILABLE = True
 except ImportError:
@@ -82,23 +84,23 @@ except ImportError:
             class MockUser(BaseModel):
                 email: str = "test@example.com"
                 role: str = "teacher"
-                id: Optional[str] = "test_user_id"
+                id: str | None = "test_user_id"
 
             return MockUser()
 
 
 # Model imports
 try:
-    from apps.backend.models.schemas import User, BaseResponse
+    from apps.backend.models.schemas import BaseResponse, User
 except ImportError:
     try:
-        from apps.backend.models.schemas import User, BaseResponse
+        from apps.backend.models.schemas import BaseResponse, User
     except ImportError:
         # Fallback models
         class User(BaseModel):
             email: str
             role: str
-            id: Optional[str] = None
+            id: str | None = None
 
         class BaseResponse(BaseModel):
             success: bool = True
@@ -193,15 +195,15 @@ class IntentType(str, Enum):
 class CreateConversationRequest(BaseModel):
     """Create new conversation"""
 
-    title: Optional[str] = Field(None, description="Conversation title")
-    context: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Initial context")
+    title: str | None = Field(None, description="Conversation title")
+    context: dict[str, Any] | None = Field(default_factory=dict, description="Initial context")
 
 
 class SendMessageRequest(BaseModel):
     """Send message in conversation"""
 
     message: str = Field(..., min_length=1, max_length=5000, description="User message")
-    attachments: Optional[List[Dict[str, Any]]] = Field(None, description="File attachments")
+    attachments: list[dict[str, Any]] | None = Field(None, description="File attachments")
 
     @field_validator("message")
     def validate_message(cls, v):
@@ -217,7 +219,7 @@ class MessageResponse(BaseModel):
     role: MessageRole = Field(..., description="Message role")
     content: str = Field(..., description="Message content")
     timestamp: datetime = Field(..., description="Message timestamp")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="Additional metadata")
+    metadata: dict[str, Any] | None = Field(None, description="Additional metadata")
 
 
 class ConversationResponse(BaseModel):
@@ -228,8 +230,8 @@ class ConversationResponse(BaseModel):
     status: ConversationStatus = Field(..., description="Conversation status")
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
-    messages: List[MessageResponse] = Field(..., description="Conversation messages")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="Conversation metadata")
+    messages: list[MessageResponse] = Field(..., description="Conversation messages")
+    metadata: dict[str, Any] | None = Field(None, description="Conversation metadata")
 
 
 class StreamingToken(BaseModel):
@@ -237,7 +239,7 @@ class StreamingToken(BaseModel):
 
     token: str = Field(..., description="Token text")
     is_final: bool = Field(default=False, description="Is this the final token")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="Token metadata")
+    metadata: dict[str, Any] | None = Field(None, description="Token metadata")
 
 
 # =============================================================================
@@ -248,11 +250,11 @@ class StreamingToken(BaseModel):
 class ConversationState(BaseModel):
     """State for LangGraph conversation workflow"""
 
-    messages: List[Dict[str, Any]] = Field(default_factory=list)
-    intent: Optional[IntentType] = None
-    context: Dict[str, Any] = Field(default_factory=dict)
-    current_task: Optional[str] = None
-    generated_content: Optional[Dict[str, Any]] = None
+    messages: list[dict[str, Any]] = Field(default_factory=list)
+    intent: IntentType | None = None
+    context: dict[str, Any] = Field(default_factory=dict)
+    current_task: str | None = None
+    generated_content: dict[str, Any] | None = None
 
 
 class RobloxAssistantGraph:
@@ -444,8 +446,8 @@ class RobloxAssistantGraph:
         ]:
             try:
                 # Import here to avoid circular imports
+
                 from httpx import AsyncClient
-                from typing import Literal
 
                 # Map intent to content type
                 content_type_map = {
@@ -953,8 +955,8 @@ You MUST present a complete design with:
 # IN-MEMORY STORAGE (Replace with database in production)
 # =============================================================================
 
-conversations: Dict[str, Dict[str, Any]] = {}
-messages: Dict[str, List[Dict[str, Any]]] = {}
+conversations: dict[str, dict[str, Any]] = {}
+messages: dict[str, list[dict[str, Any]]] = {}
 
 # Global assistant instance
 assistant_graph = None
@@ -968,7 +970,7 @@ class ChatConnectionManager:
     """Manages WebSocket connections for chat"""
 
     def __init__(self):
-        self.active_connections: Dict[str, WebSocket] = {}
+        self.active_connections: dict[str, WebSocket] = {}
 
     async def connect(self, websocket: WebSocket, conversation_id: str):
         """Connect websocket to conversation"""
@@ -1323,10 +1325,10 @@ async def get_conversation(
     )
 
 
-@router.get("/conversations", response_model=List[ConversationResponse])
+@router.get("/conversations", response_model=list[ConversationResponse])
 async def list_conversations(
     current_user: User = Depends(get_current_user), limit: int = 20, offset: int = 0
-) -> List[ConversationResponse]:
+) -> list[ConversationResponse]:
     """List user's conversations"""
 
     user_id = current_user.id if hasattr(current_user, "id") else current_user.email

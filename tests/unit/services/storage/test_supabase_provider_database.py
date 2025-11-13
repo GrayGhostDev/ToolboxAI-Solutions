@@ -9,22 +9,21 @@ Created: 2025-10-10
 Version: 1.0.0
 """
 
-import pytest
-from uuid import uuid4, UUID
 from datetime import datetime, timezone
-from unittest.mock import Mock, patch, AsyncMock
-from io import BytesIO
+from unittest.mock import AsyncMock, Mock, patch
+from uuid import uuid4
 
-from apps.backend.services.storage.supabase_provider import SupabaseStorageProvider
+import pytest
+
 from apps.backend.services.storage.storage_service import (
-    UploadOptions,
+    AccessDeniedError,
+    FileNotFoundError,
     ListOptions,
     StorageError,
     TenantIsolationError,
-    AccessDeniedError,
-    FileNotFoundError,
 )
-from database.models.storage import File, FileAccessLog, FileStatus, FileCategory
+from apps.backend.services.storage.supabase_provider import SupabaseStorageProvider
+from database.models.storage import FileAccessLog, FileCategory, FileStatus
 
 
 @pytest.fixture
@@ -42,11 +41,8 @@ def user_id():
 @pytest.fixture
 async def storage_provider(org_id, user_id):
     """Fixture for Supabase storage provider with mocked Supabase client"""
-    with patch('apps.backend.services.storage.supabase_provider.create_client'):
-        provider = SupabaseStorageProvider(
-            organization_id=str(org_id),
-            user_id=str(user_id)
-        )
+    with patch("apps.backend.services.storage.supabase_provider.create_client"):
+        provider = SupabaseStorageProvider(organization_id=str(org_id), user_id=str(user_id))
         yield provider
 
 
@@ -64,8 +60,8 @@ def sample_file_data(org_id, user_id):
             file_category="educational_content",
             virus_scan=True,
             tags=["test", "educational"],
-            metadata={"subject": "mathematics"}
-        )
+            metadata={"subject": "mathematics"},
+        ),
     }
 
 
@@ -78,7 +74,9 @@ class TestCreateFileRecord:
     ):
         """Test successful file record creation"""
         # Mock database session
-        with patch('apps.backend.services.storage.supabase_provider.get_async_session') as mock_session:
+        with patch(
+            "apps.backend.services.storage.supabase_provider.get_async_session"
+        ) as mock_session:
             mock_db = AsyncMock()
             mock_session.return_value.__aenter__.return_value = mock_db
 
@@ -99,11 +97,11 @@ class TestCreateFileRecord:
             mock_db.refresh.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_create_file_record_database_error(
-        self, storage_provider, sample_file_data
-    ):
+    async def test_create_file_record_database_error(self, storage_provider, sample_file_data):
         """Test file record creation with database error"""
-        with patch('apps.backend.services.storage.supabase_provider.get_async_session') as mock_session:
+        with patch(
+            "apps.backend.services.storage.supabase_provider.get_async_session"
+        ) as mock_session:
             mock_db = AsyncMock()
             mock_db.commit.side_effect = Exception("Database connection failed")
             mock_session.return_value.__aenter__.return_value = mock_db
@@ -124,7 +122,9 @@ class TestGetFileRecord:
         """Test successful file record retrieval"""
         file_id = uuid4()
 
-        with patch('apps.backend.services.storage.supabase_provider.get_async_session') as mock_session:
+        with patch(
+            "apps.backend.services.storage.supabase_provider.get_async_session"
+        ) as mock_session:
             # Mock file record
             mock_file = Mock()
             mock_file.id = file_id
@@ -155,7 +155,9 @@ class TestGetFileRecord:
         """Test file record retrieval when file doesn't exist"""
         file_id = uuid4()
 
-        with patch('apps.backend.services.storage.supabase_provider.get_async_session') as mock_session:
+        with patch(
+            "apps.backend.services.storage.supabase_provider.get_async_session"
+        ) as mock_session:
             mock_db = AsyncMock()
             mock_result = AsyncMock()
             mock_result.scalar_one_or_none.return_value = None
@@ -173,7 +175,9 @@ class TestGetFileRecord:
         """Test that soft-deleted files are not returned"""
         file_id = uuid4()
 
-        with patch('apps.backend.services.storage.supabase_provider.get_async_session') as mock_session:
+        with patch(
+            "apps.backend.services.storage.supabase_provider.get_async_session"
+        ) as mock_session:
             mock_db = AsyncMock()
             mock_result = AsyncMock()
             # Soft-deleted file should not be returned
@@ -191,7 +195,9 @@ class TestListFileRecords:
     @pytest.mark.asyncio
     async def test_list_files_success(self, storage_provider, org_id):
         """Test successful file listing"""
-        with patch('apps.backend.services.storage.supabase_provider.get_async_session') as mock_session:
+        with patch(
+            "apps.backend.services.storage.supabase_provider.get_async_session"
+        ) as mock_session:
             # Mock file records
             mock_files = [
                 Mock(
@@ -201,7 +207,7 @@ class TestListFileRecords:
                     mime_type="application/pdf",
                     status=FileStatus.AVAILABLE,
                     cdn_url=f"https://cdn.example.com/file{i}.pdf",
-                    created_at=datetime.now(timezone.utc)
+                    created_at=datetime.now(timezone.utc),
                 )
                 for i in range(3)
             ]
@@ -224,7 +230,9 @@ class TestListFileRecords:
     @pytest.mark.asyncio
     async def test_list_files_with_filters(self, storage_provider):
         """Test file listing with category filter"""
-        with patch('apps.backend.services.storage.supabase_provider.get_async_session') as mock_session:
+        with patch(
+            "apps.backend.services.storage.supabase_provider.get_async_session"
+        ) as mock_session:
             mock_db = AsyncMock()
             mock_result = AsyncMock()
             mock_result.scalars.return_value.all.return_value = []
@@ -232,9 +240,7 @@ class TestListFileRecords:
             mock_session.return_value.__aenter__.return_value = mock_db
 
             options = ListOptions(
-                category="educational_content",
-                mime_type="application/pdf",
-                limit=20
+                category="educational_content", mime_type="application/pdf", limit=20
             )
             result = await storage_provider._list_file_records(options)
 
@@ -250,7 +256,9 @@ class TestDeleteFileRecord:
         """Test successful file deletion"""
         file_id = uuid4()
 
-        with patch('apps.backend.services.storage.supabase_provider.get_async_session') as mock_session:
+        with patch(
+            "apps.backend.services.storage.supabase_provider.get_async_session"
+        ) as mock_session:
             mock_file = Mock(id=file_id, organization_id=org_id)
             mock_db = AsyncMock()
             mock_result = AsyncMock()
@@ -270,7 +278,9 @@ class TestDeleteFileRecord:
         """Test deletion of non-existent file"""
         file_id = uuid4()
 
-        with patch('apps.backend.services.storage.supabase_provider.get_async_session') as mock_session:
+        with patch(
+            "apps.backend.services.storage.supabase_provider.get_async_session"
+        ) as mock_session:
             mock_db = AsyncMock()
             mock_result = AsyncMock()
             mock_result.scalar_one_or_none.return_value = None
@@ -290,12 +300,10 @@ class TestSoftDeleteFileRecord:
         """Test successful soft deletion"""
         file_id = uuid4()
 
-        with patch('apps.backend.services.storage.supabase_provider.get_async_session') as mock_session:
-            mock_file = Mock(
-                id=file_id,
-                organization_id=org_id,
-                deleted_at=None
-            )
+        with patch(
+            "apps.backend.services.storage.supabase_provider.get_async_session"
+        ) as mock_session:
+            mock_file = Mock(id=file_id, organization_id=org_id, deleted_at=None)
             mock_db = AsyncMock()
             mock_result = AsyncMock()
             mock_result.scalar_one_or_none.return_value = mock_file
@@ -316,7 +324,9 @@ class TestSoftDeleteFileRecord:
         """Test soft deletion of already deleted file"""
         file_id = uuid4()
 
-        with patch('apps.backend.services.storage.supabase_provider.get_async_session') as mock_session:
+        with patch(
+            "apps.backend.services.storage.supabase_provider.get_async_session"
+        ) as mock_session:
             mock_db = AsyncMock()
             mock_result = AsyncMock()
             mock_result.scalar_one_or_none.return_value = None
@@ -337,7 +347,9 @@ class TestUpdateFilePath:
         file_id = uuid4()
         new_path = "org_123/files/2025/10/new-location.pdf"
 
-        with patch('apps.backend.services.storage.supabase_provider.get_async_session') as mock_session:
+        with patch(
+            "apps.backend.services.storage.supabase_provider.get_async_session"
+        ) as mock_session:
             mock_file = Mock(id=file_id, organization_id=org_id, storage_path="old_path")
             mock_db = AsyncMock()
             mock_result = AsyncMock()
@@ -362,7 +374,9 @@ class TestTrackFileAccess:
         file_id = uuid4()
         action = "download"
 
-        with patch('apps.backend.services.storage.supabase_provider.get_async_session') as mock_session:
+        with patch(
+            "apps.backend.services.storage.supabase_provider.get_async_session"
+        ) as mock_session:
             mock_db = AsyncMock()
             mock_session.return_value.__aenter__.return_value = mock_db
 
@@ -386,7 +400,9 @@ class TestTrackFileAccess:
         """Test that audit logging failures don't break operations"""
         file_id = uuid4()
 
-        with patch('apps.backend.services.storage.supabase_provider.get_async_session') as mock_session:
+        with patch(
+            "apps.backend.services.storage.supabase_provider.get_async_session"
+        ) as mock_session:
             mock_db = AsyncMock()
             mock_db.commit.side_effect = Exception("Database error")
             mock_session.return_value.__aenter__.return_value = mock_db
@@ -403,12 +419,10 @@ class TestValidateTenantAccess:
         """Test successful tenant access validation"""
         file_id = uuid4()
 
-        with patch('apps.backend.services.storage.supabase_provider.get_async_session') as mock_session:
-            mock_file = Mock(
-                id=file_id,
-                organization_id=org_id,
-                deleted_at=None
-            )
+        with patch(
+            "apps.backend.services.storage.supabase_provider.get_async_session"
+        ) as mock_session:
+            mock_file = Mock(id=file_id, organization_id=org_id, deleted_at=None)
             mock_db = AsyncMock()
             mock_result = AsyncMock()
             mock_result.scalar_one_or_none.return_value = mock_file
@@ -427,11 +441,11 @@ class TestValidateTenantAccess:
         file_id = uuid4()
         wrong_org_id = uuid4()
 
-        with patch('apps.backend.services.storage.supabase_provider.get_async_session') as mock_session:
+        with patch(
+            "apps.backend.services.storage.supabase_provider.get_async_session"
+        ) as mock_session:
             mock_file = Mock(
-                id=file_id,
-                organization_id=wrong_org_id,  # Different org
-                deleted_at=None
+                id=file_id, organization_id=wrong_org_id, deleted_at=None  # Different org
             )
             mock_db = AsyncMock()
             mock_result = AsyncMock()
@@ -448,11 +462,11 @@ class TestValidateTenantAccess:
         """Test access validation for deleted file"""
         file_id = uuid4()
 
-        with patch('apps.backend.services.storage.supabase_provider.get_async_session') as mock_session:
+        with patch(
+            "apps.backend.services.storage.supabase_provider.get_async_session"
+        ) as mock_session:
             mock_file = Mock(
-                id=file_id,
-                organization_id=org_id,
-                deleted_at=datetime.now(timezone.utc)  # Deleted
+                id=file_id, organization_id=org_id, deleted_at=datetime.now(timezone.utc)  # Deleted
             )
             mock_db = AsyncMock()
             mock_result = AsyncMock()
@@ -469,7 +483,9 @@ class TestValidateTenantAccess:
         """Test access validation for non-existent file"""
         file_id = uuid4()
 
-        with patch('apps.backend.services.storage.supabase_provider.get_async_session') as mock_session:
+        with patch(
+            "apps.backend.services.storage.supabase_provider.get_async_session"
+        ) as mock_session:
             mock_db = AsyncMock()
             mock_result = AsyncMock()
             mock_result.scalar_one_or_none.return_value = None

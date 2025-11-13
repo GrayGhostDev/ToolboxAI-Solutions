@@ -4,9 +4,8 @@ CI Database Setup Script
 Creates database tables for continuous integration testing
 """
 
-import os
-import sys
 import asyncio
+import sys
 from pathlib import Path
 
 # Add project root to path
@@ -15,14 +14,15 @@ sys.path.insert(0, str(project_root))
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.ext.asyncio import create_async_engine
-from database.models import Base
+
 from database.connection import DATABASE_URL
+from database.models import Base
 
 
 def create_tables_sync():
     """Create database tables synchronously for CI."""
     # Use synchronous URL
-    sync_url = DATABASE_URL.replace('postgresql+asyncpg://', 'postgresql://')
+    sync_url = DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
 
     print(f"Creating database tables for CI testing...")
     print(f"Database URL: {sync_url.split('@')[1]}")  # Hide credentials in output
@@ -42,12 +42,16 @@ def create_tables_sync():
 
         # Verify tables were created
         with engine.connect() as conn:
-            result = conn.execute(text("""
+            result = conn.execute(
+                text(
+                    """
                 SELECT table_name
                 FROM information_schema.tables
                 WHERE table_schema = 'public'
                 ORDER BY table_name
-            """))
+            """
+                )
+            )
             tables = [row[0] for row in result]
 
             if tables:
@@ -85,12 +89,16 @@ async def create_tables_async():
 
         # Verify tables
         async with engine.connect() as conn:
-            result = await conn.execute(text("""
+            result = await conn.execute(
+                text(
+                    """
                 SELECT table_name
                 FROM information_schema.tables
                 WHERE table_schema = 'public'
                 ORDER BY table_name
-            """))
+            """
+                )
+            )
             tables = [row[0] for row in result]
 
             if tables:

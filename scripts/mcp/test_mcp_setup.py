@@ -1,14 +1,10 @@
-import pytest_asyncio
 #!/usr/bin/env python3
 """
 Test script to verify MCP setup
 """
 
-import sys
-import os
 import asyncio
-import websockets
-import json
+import sys
 from pathlib import Path
 
 # Add project paths (repo root is three levels up: scripts/mcp/ -> project root)
@@ -56,7 +52,7 @@ async def test_mcp_server():
     try:
         from core.mcp.server import MCPServer
 
-        server = MCPServer(port=9877, max_tokens=1000)  # Use different port for testing
+        MCPServer(port=9877, max_tokens=1000)  # Use different port for testing
         print("✅ MCP Server created successfully")
         return True
     except Exception as e:

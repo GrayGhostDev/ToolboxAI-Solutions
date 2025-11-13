@@ -4,14 +4,12 @@ Implements the same interface as SendGrid but logs emails instead of sending
 """
 
 import logging
-import json
-from typing import List, Dict, Any, Optional, Union
 from datetime import datetime, timezone
+from typing import Any
+
 from apps.backend.services.email.sendgrid import (
     EmailRecipient,
-    EmailAttachment,
-    EmailPriority,
-    EmailType
+    EmailType,
 )
 
 logger = logging.getLogger(__name__)
@@ -32,12 +30,12 @@ class MockEmailService:
 
     async def send_email(
         self,
-        to_emails: Union[str, List[str], List[EmailRecipient]],
+        to_emails: str | list[str] | list[EmailRecipient],
         subject: str,
-        html_content: Optional[str] = None,
-        text_content: Optional[str] = None,
-        **kwargs
-    ) -> Dict[str, Any]:
+        html_content: str | None = None,
+        text_content: str | None = None,
+        **kwargs,
+    ) -> dict[str, Any]:
         """
         Mock send email - logs the email instead of sending
         """
@@ -67,7 +65,7 @@ class MockEmailService:
             "html_content": html_content[:200] if html_content else None,
             "text_content": text_content[:200] if text_content else None,
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            **kwargs
+            **kwargs,
         }
         self.sent_emails.append(email_data)
 
@@ -92,40 +90,31 @@ class MockEmailService:
             "message_id": message_id,
             "status_code": 202,
             "provider": "mock",
-            "note": "Email logged but not sent (mock mode)"
+            "note": "Email logged but not sent (mock mode)",
         }
 
     async def send_welcome_email(
-        self,
-        user_email: str,
-        user_name: str,
-        verification_url: Optional[str] = None,
-        **kwargs
-    ) -> Dict[str, Any]:
+        self, user_email: str, user_name: str, verification_url: str | None = None, **kwargs
+    ) -> dict[str, Any]:
         """Mock welcome email"""
         return await self.send_email(
             to_emails=user_email,
             subject=f"Welcome to {self.from_name}, {user_name}!",
-            html_content=kwargs.get('html_content', f"<h2>Welcome {user_name}!</h2>"),
-            text_content=kwargs.get('text_content', f"Welcome {user_name}!"),
-            email_type=EmailType.WELCOME
+            html_content=kwargs.get("html_content", f"<h2>Welcome {user_name}!</h2>"),
+            text_content=kwargs.get("text_content", f"Welcome {user_name}!"),
+            email_type=EmailType.WELCOME,
         )
 
     async def send_password_reset_email(
-        self,
-        user_email: str,
-        user_name: str,
-        reset_token: str,
-        reset_url: str,
-        **kwargs
-    ) -> Dict[str, Any]:
+        self, user_email: str, user_name: str, reset_token: str, reset_url: str, **kwargs
+    ) -> dict[str, Any]:
         """Mock password reset email"""
         return await self.send_email(
             to_emails=user_email,
             subject="Reset Your Password",
-            html_content=kwargs.get('html_content', f"<p>Reset password for {user_name}</p>"),
-            text_content=kwargs.get('text_content', f"Reset password for {user_name}"),
-            email_type=EmailType.PASSWORD_RESET
+            html_content=kwargs.get("html_content", f"<p>Reset password for {user_name}</p>"),
+            text_content=kwargs.get("text_content", f"Reset password for {user_name}"),
+            email_type=EmailType.PASSWORD_RESET,
         )
 
     async def send_verification_email(
@@ -134,18 +123,18 @@ class MockEmailService:
         user_name: str,
         verification_code: str,
         verification_url: str,
-        **kwargs
-    ) -> Dict[str, Any]:
+        **kwargs,
+    ) -> dict[str, Any]:
         """Mock verification email"""
         return await self.send_email(
             to_emails=user_email,
             subject="Verify Your Email",
-            html_content=kwargs.get('html_content', f"<p>Verify email for {user_name}</p>"),
-            text_content=kwargs.get('text_content', f"Verify email for {user_name}"),
-            email_type=EmailType.VERIFICATION
+            html_content=kwargs.get("html_content", f"<p>Verify email for {user_name}</p>"),
+            text_content=kwargs.get("text_content", f"Verify email for {user_name}"),
+            email_type=EmailType.VERIFICATION,
         )
 
-    def get_sent_emails(self) -> List[Dict[str, Any]]:
+    def get_sent_emails(self) -> list[dict[str, Any]]:
         """Get all sent emails (for testing)"""
         return self.sent_emails
 

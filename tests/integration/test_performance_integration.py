@@ -9,17 +9,21 @@ Target: >95% integration coverage for performance optimization systems.
 """
 
 import asyncio
-import pytest
 import time
-from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, AsyncMock, MagicMock
-from typing import Any, Dict, List
+from datetime import datetime
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 from apps.backend.core.performance_optimization import (
-    PerformanceOptimizationManager, get_performance_manager,
-    performance_optimization_context, initialize_performance_optimizations,
-    get_optimization_health, get_optimization_metrics, warm_all_caches,
-    get_optimization_status_for_health_check
+    PerformanceOptimizationManager,
+    get_optimization_health,
+    get_optimization_metrics,
+    get_optimization_status_for_health_check,
+    get_performance_manager,
+    initialize_performance_optimizations,
+    performance_optimization_context,
+    warm_all_caches,
 )
 
 
@@ -35,9 +39,15 @@ class TestPerformanceOptimizationManager:
     @pytest.fixture
     def mock_all_optimizations(self):
         """Mock all optimization systems."""
-        with patch('apps.backend.core.performance_optimization.initialize_cache') as mock_cache, \
-             patch('apps.backend.core.performance_optimization.initialize_db_optimization') as mock_db, \
-             patch('apps.backend.core.performance_optimization.get_optimized_pusher_service') as mock_pusher:
+        with (
+            patch("apps.backend.core.performance_optimization.initialize_cache") as mock_cache,
+            patch(
+                "apps.backend.core.performance_optimization.initialize_db_optimization"
+            ) as mock_db,
+            patch(
+                "apps.backend.core.performance_optimization.get_optimized_pusher_service"
+            ) as mock_pusher,
+        ):
 
             # Mock successful initialization
             mock_cache.return_value = None
@@ -46,10 +56,10 @@ class TestPerformanceOptimizationManager:
             mock_pusher.return_value = mock_pusher_instance
 
             yield {
-                'cache': mock_cache,
-                'db': mock_db,
-                'pusher': mock_pusher,
-                'pusher_instance': mock_pusher_instance
+                "cache": mock_cache,
+                "db": mock_db,
+                "pusher": mock_pusher,
+                "pusher_instance": mock_pusher_instance,
             }
 
     async def test_initialize_all_optimizations_success(self, manager, mock_all_optimizations):
@@ -65,14 +75,14 @@ class TestPerformanceOptimizationManager:
         assert len(result["failed_services"]) == 0
 
         # Verify all services were initialized
-        mock_all_optimizations['cache'].assert_called_once()
-        mock_all_optimizations['db'].assert_called_once()
-        mock_all_optimizations['pusher'].assert_called_once()
+        mock_all_optimizations["cache"].assert_called_once()
+        mock_all_optimizations["db"].assert_called_once()
+        mock_all_optimizations["pusher"].assert_called_once()
 
     async def test_initialize_partial_failure(self, manager, mock_all_optimizations):
         """Test initialization with some services failing."""
         # Make database initialization fail
-        mock_all_optimizations['db'].side_effect = Exception("Database connection failed")
+        mock_all_optimizations["db"].side_effect = Exception("Database connection failed")
 
         result = await manager.initialize_all_optimizations()
 
@@ -90,9 +100,9 @@ class TestPerformanceOptimizationManager:
     async def test_initialize_all_failures(self, manager, mock_all_optimizations):
         """Test initialization with all services failing."""
         # Make all services fail
-        mock_all_optimizations['cache'].side_effect = Exception("Cache failed")
-        mock_all_optimizations['db'].side_effect = Exception("Database failed")
-        mock_all_optimizations['pusher'].side_effect = Exception("Pusher failed")
+        mock_all_optimizations["cache"].side_effect = Exception("Cache failed")
+        mock_all_optimizations["db"].side_effect = Exception("Database failed")
+        mock_all_optimizations["pusher"].side_effect = Exception("Pusher failed")
 
         result = await manager.initialize_all_optimizations()
 
@@ -114,11 +124,11 @@ class TestPerformanceOptimizationManager:
         assert manager.initialization_time == first_init_time
 
         # Services should only be initialized once
-        mock_all_optimizations['cache'].assert_called_once()
+        mock_all_optimizations["cache"].assert_called_once()
 
-    @patch('apps.backend.core.performance_optimization.get_cache_health')
-    @patch('apps.backend.core.performance_optimization.get_db_health')
-    @patch('apps.backend.core.performance_optimization.get_pusher_health')
+    @patch("apps.backend.core.performance_optimization.get_cache_health")
+    @patch("apps.backend.core.performance_optimization.get_db_health")
+    @patch("apps.backend.core.performance_optimization.get_pusher_health")
     async def test_get_comprehensive_health_status_all_healthy(
         self, mock_pusher_health, mock_db_health, mock_cache_health, manager
     ):
@@ -140,9 +150,9 @@ class TestPerformanceOptimizationManager:
         assert health["services"]["pusher"]["status"] == "healthy"
         assert "timestamp" in health
 
-    @patch('apps.backend.core.performance_optimization.get_cache_health')
-    @patch('apps.backend.core.performance_optimization.get_db_health')
-    @patch('apps.backend.core.performance_optimization.get_pusher_health')
+    @patch("apps.backend.core.performance_optimization.get_cache_health")
+    @patch("apps.backend.core.performance_optimization.get_db_health")
+    @patch("apps.backend.core.performance_optimization.get_pusher_health")
     async def test_get_comprehensive_health_status_degraded(
         self, mock_pusher_health, mock_db_health, mock_cache_health, manager
     ):
@@ -157,9 +167,9 @@ class TestPerformanceOptimizationManager:
         assert health["overall_status"] == "degraded"
         assert health["services"]["database"]["status"] == "unhealthy"
 
-    @patch('apps.backend.core.performance_optimization.get_cache_health')
-    @patch('apps.backend.core.performance_optimization.get_db_health')
-    @patch('apps.backend.core.performance_optimization.get_pusher_health')
+    @patch("apps.backend.core.performance_optimization.get_cache_health")
+    @patch("apps.backend.core.performance_optimization.get_db_health")
+    @patch("apps.backend.core.performance_optimization.get_pusher_health")
     async def test_get_comprehensive_health_status_with_errors(
         self, mock_pusher_health, mock_db_health, mock_cache_health, manager
     ):
@@ -175,9 +185,9 @@ class TestPerformanceOptimizationManager:
         assert health["services"]["cache"]["status"] == "unhealthy"
         assert "error" in health["services"]["cache"]
 
-    @patch('apps.backend.core.performance_optimization.get_cache_health')
-    @patch('apps.backend.core.performance_optimization.get_db_health')
-    @patch('apps.backend.core.performance_optimization.get_pusher_health')
+    @patch("apps.backend.core.performance_optimization.get_cache_health")
+    @patch("apps.backend.core.performance_optimization.get_db_health")
+    @patch("apps.backend.core.performance_optimization.get_pusher_health")
     async def test_get_performance_metrics(
         self, mock_pusher_health, mock_db_health, mock_cache_health, manager
     ):
@@ -185,17 +195,17 @@ class TestPerformanceOptimizationManager:
         # Mock health responses with metrics
         mock_cache_health.return_value = {
             "status": "healthy",
-            "stats": {"hits": 1500, "misses": 100, "hit_rate": 0.94}
+            "stats": {"hits": 1500, "misses": 100, "hit_rate": 0.94},
         }
         mock_db_health.return_value = {
             "status": "healthy",
             "connection_pool": {"size": 20, "active": 8},
             "query_performance": {"avg_time": 0.045, "slow_queries": 2},
-            "prepared_statements": {"usage": 250}
+            "prepared_statements": {"usage": 250},
         }
         mock_pusher_health.return_value = {
             "status": "healthy",
-            "performance": {"events_sent": 500, "latency": 0.025}
+            "performance": {"events_sent": 500, "latency": 0.025},
         }
 
         manager.initialized = True
@@ -215,9 +225,9 @@ class TestPerformanceOptimizationManager:
         assert result["status"] == "skipped"
         assert result["reason"] == "Performance optimizations not initialized"
 
-    @patch('apps.backend.core.cache.warmer')
-    @patch('apps.backend.core.db_optimization.optimizer')
-    @patch('apps.backend.core.cache.cache')
+    @patch("apps.backend.core.cache.warmer")
+    @patch("apps.backend.core.db_optimization.optimizer")
+    @patch("apps.backend.core.cache.cache")
     async def test_warm_caches_success(self, mock_cache, mock_optimizer, mock_warmer, manager):
         """Test successful cache warming."""
         manager.initialized = True
@@ -238,7 +248,7 @@ class TestPerformanceOptimizationManager:
         assert mock_optimizer.execute_optimized_query.call_count >= 2
         assert mock_cache.set.call_count >= 3
 
-    @patch('apps.backend.core.cache.warmer')
+    @patch("apps.backend.core.cache.warmer")
     async def test_warm_caches_with_errors(self, mock_warmer, manager):
         """Test cache warming with some operations failing."""
         manager.initialized = True
@@ -282,16 +292,12 @@ class TestGlobalPerformanceManager:
 class TestPerformanceOptimizationContext:
     """Test performance optimization context manager."""
 
-    @patch('apps.backend.core.performance_optimization.get_performance_manager')
+    @patch("apps.backend.core.performance_optimization.get_performance_manager")
     async def test_performance_optimization_context_success(self, mock_get_manager):
         """Test successful context manager usage."""
         mock_manager = AsyncMock()
-        mock_manager.initialize_all_optimizations = AsyncMock(
-            return_value={"status": "completed"}
-        )
-        mock_manager.warm_caches = AsyncMock(
-            return_value={"status": "completed"}
-        )
+        mock_manager.initialize_all_optimizations = AsyncMock(return_value={"status": "completed"})
+        mock_manager.warm_caches = AsyncMock(return_value={"status": "completed"})
         mock_get_manager.return_value = mock_manager
 
         async with performance_optimization_context() as manager:
@@ -301,7 +307,7 @@ class TestPerformanceOptimizationContext:
         mock_manager.initialize_all_optimizations.assert_called_once()
         mock_manager.warm_caches.assert_called_once()
 
-    @patch('apps.backend.core.performance_optimization.get_performance_manager')
+    @patch("apps.backend.core.performance_optimization.get_performance_manager")
     async def test_performance_optimization_context_with_error(self, mock_get_manager):
         """Test context manager with error inside context."""
         mock_manager = AsyncMock()
@@ -321,13 +327,11 @@ class TestPerformanceOptimizationContext:
 class TestConvenienceFunctions:
     """Test convenience functions for performance optimization."""
 
-    @patch('apps.backend.core.performance_optimization.get_performance_manager')
+    @patch("apps.backend.core.performance_optimization.get_performance_manager")
     async def test_initialize_performance_optimizations(self, mock_get_manager):
         """Test initialize_performance_optimizations convenience function."""
         mock_manager = Mock()
-        mock_manager.initialize_all_optimizations = AsyncMock(
-            return_value={"status": "completed"}
-        )
+        mock_manager.initialize_all_optimizations = AsyncMock(return_value={"status": "completed"})
         mock_get_manager.return_value = mock_manager
 
         result = await initialize_performance_optimizations()
@@ -335,7 +339,7 @@ class TestConvenienceFunctions:
         assert result["status"] == "completed"
         mock_manager.initialize_all_optimizations.assert_called_once()
 
-    @patch('apps.backend.core.performance_optimization.get_performance_manager')
+    @patch("apps.backend.core.performance_optimization.get_performance_manager")
     async def test_get_optimization_health(self, mock_get_manager):
         """Test get_optimization_health convenience function."""
         mock_manager = Mock()
@@ -349,7 +353,7 @@ class TestConvenienceFunctions:
         assert result["overall_status"] == "healthy"
         mock_manager.get_comprehensive_health_status.assert_called_once()
 
-    @patch('apps.backend.core.performance_optimization.get_performance_manager')
+    @patch("apps.backend.core.performance_optimization.get_performance_manager")
     async def test_get_optimization_metrics(self, mock_get_manager):
         """Test get_optimization_metrics convenience function."""
         mock_manager = Mock()
@@ -363,7 +367,7 @@ class TestConvenienceFunctions:
         assert result["optimization_enabled"] is True
         mock_manager.get_performance_metrics.assert_called_once()
 
-    @patch('apps.backend.core.performance_optimization.get_performance_manager')
+    @patch("apps.backend.core.performance_optimization.get_performance_manager")
     async def test_warm_all_caches(self, mock_get_manager):
         """Test warm_all_caches convenience function."""
         mock_manager = Mock()
@@ -378,7 +382,7 @@ class TestConvenienceFunctions:
         assert result["successful_warmups"] == 3
         mock_manager.warm_caches.assert_called_once()
 
-    @patch('apps.backend.core.performance_optimization.get_performance_manager')
+    @patch("apps.backend.core.performance_optimization.get_performance_manager")
     async def test_get_optimization_status_for_health_check(self, mock_get_manager):
         """Test get_optimization_status_for_health_check function."""
         mock_manager = Mock()
@@ -387,7 +391,7 @@ class TestConvenienceFunctions:
         mock_manager.services_status = {
             "cache": {"status": "initialized"},
             "database": {"status": "initialized"},
-            "pusher": {"status": "failed"}
+            "pusher": {"status": "failed"},
         }
         mock_get_manager.return_value = mock_manager
 
@@ -397,11 +401,7 @@ class TestConvenienceFunctions:
             "performance_optimization": {
                 "enabled": True,
                 "initialization_time": "2023-01-01T12:00:00",
-                "services": {
-                    "cache": "initialized",
-                    "database": "initialized",
-                    "pusher": "failed"
-                }
+                "services": {"cache": "initialized", "database": "initialized", "pusher": "failed"},
             }
         }
 
@@ -418,40 +418,65 @@ class TestPerformanceOptimizationIntegration:
         mocks = {}
 
         # Mock cache system
-        with patch('apps.backend.core.performance_optimization.initialize_cache') as mock_init_cache:
-            with patch('apps.backend.core.performance_optimization.get_cache_health') as mock_cache_health:
-                with patch('apps.backend.core.cache.warmer') as mock_warmer:
-                    with patch('apps.backend.core.cache.cache') as mock_cache:
-                        mocks['init_cache'] = mock_init_cache
-                        mocks['cache_health'] = mock_cache_health
-                        mocks['warmer'] = mock_warmer
-                        mocks['cache'] = mock_cache
+        with patch(
+            "apps.backend.core.performance_optimization.initialize_cache"
+        ) as mock_init_cache:
+            with patch(
+                "apps.backend.core.performance_optimization.get_cache_health"
+            ) as mock_cache_health:
+                with patch("apps.backend.core.cache.warmer") as mock_warmer:
+                    with patch("apps.backend.core.cache.cache") as mock_cache:
+                        mocks["init_cache"] = mock_init_cache
+                        mocks["cache_health"] = mock_cache_health
+                        mocks["warmer"] = mock_warmer
+                        mocks["cache"] = mock_cache
 
                         # Mock database system
-                        with patch('apps.backend.core.performance_optimization.initialize_db_optimization') as mock_init_db:
-                            with patch('apps.backend.core.performance_optimization.get_db_health') as mock_db_health:
-                                with patch('apps.backend.core.db_optimization.optimizer') as mock_optimizer:
-                                    mocks['init_db'] = mock_init_db
-                                    mocks['db_health'] = mock_db_health
-                                    mocks['optimizer'] = mock_optimizer
+                        with patch(
+                            "apps.backend.core.performance_optimization.initialize_db_optimization"
+                        ) as mock_init_db:
+                            with patch(
+                                "apps.backend.core.performance_optimization.get_db_health"
+                            ) as mock_db_health:
+                                with patch(
+                                    "apps.backend.core.db_optimization.optimizer"
+                                ) as mock_optimizer:
+                                    mocks["init_db"] = mock_init_db
+                                    mocks["db_health"] = mock_db_health
+                                    mocks["optimizer"] = mock_optimizer
 
                                     # Mock Pusher system
-                                    with patch('apps.backend.core.performance_optimization.get_optimized_pusher_service') as mock_get_pusher:
-                                        with patch('apps.backend.core.performance_optimization.get_pusher_health') as mock_pusher_health:
-                                            mocks['get_pusher'] = mock_get_pusher
-                                            mocks['pusher_health'] = mock_pusher_health
+                                    with patch(
+                                        "apps.backend.core.performance_optimization.get_optimized_pusher_service"
+                                    ) as mock_get_pusher:
+                                        with patch(
+                                            "apps.backend.core.performance_optimization.get_pusher_health"
+                                        ) as mock_pusher_health:
+                                            mocks["get_pusher"] = mock_get_pusher
+                                            mocks["pusher_health"] = mock_pusher_health
 
                                             # Setup default successful responses
                                             mock_init_cache.return_value = None
                                             mock_init_db.return_value = None
                                             mock_get_pusher.return_value = AsyncMock()
 
-                                            mock_cache_health.return_value = {"status": "healthy", "stats": {"hits": 100}}
-                                            mock_db_health.return_value = {"status": "healthy", "connection_pool": {"active": 5}}
-                                            mock_pusher_health.return_value = {"status": "healthy", "performance": {"events": 50}}
+                                            mock_cache_health.return_value = {
+                                                "status": "healthy",
+                                                "stats": {"hits": 100},
+                                            }
+                                            mock_db_health.return_value = {
+                                                "status": "healthy",
+                                                "connection_pool": {"active": 5},
+                                            }
+                                            mock_pusher_health.return_value = {
+                                                "status": "healthy",
+                                                "performance": {"events": 50},
+                                            }
 
                                             mock_warmer.warm_user_dashboard = AsyncMock()
-                                            mock_optimizer.execute_optimized_query = AsyncMock(return_value=[{"result": "ok"}])
+                                            mock_optimizer.execute_optimized_query = AsyncMock(
+                                                return_value=[{"result": "ok"}]
+                                            )
                                             mock_cache.set = AsyncMock()
 
                                             yield mocks
@@ -500,7 +525,7 @@ class TestPerformanceOptimizationIntegration:
             manager.get_performance_metrics(),
             manager.warm_caches(),
             get_optimization_health(),
-            get_optimization_metrics()
+            get_optimization_metrics(),
         ]
 
         results = await asyncio.gather(*tasks)
@@ -524,8 +549,11 @@ class TestPerformanceOptimizationIntegration:
         await manager.initialize_all_optimizations()
 
         # Now simulate component failures during operations
-        mock_all_systems['cache_health'].side_effect = Exception("Cache connection lost")
-        mock_all_systems['db_health'].return_value = {"status": "unhealthy", "error": "Database timeout"}
+        mock_all_systems["cache_health"].side_effect = Exception("Cache connection lost")
+        mock_all_systems["db_health"].return_value = {
+            "status": "unhealthy",
+            "error": "Database timeout",
+        }
 
         # Health check should handle failures gracefully
         health = await manager.get_comprehensive_health_status()
@@ -566,7 +594,7 @@ class TestPerformanceOptimizationIntegration:
         async def slow_init():
             await asyncio.sleep(0.1)
 
-        mock_all_systems['init_cache'].side_effect = slow_init
+        mock_all_systems["init_cache"].side_effect = slow_init
 
         start_time = time.time()
         result = await manager.initialize_all_optimizations()
@@ -588,18 +616,18 @@ class TestPerformanceOptimizationIntegration:
         warming_calls = []
 
         async def track_user_warming(user_id, role):
-            warming_calls.append(('user', user_id, role))
+            warming_calls.append(("user", user_id, role))
 
         async def track_query_warming(query, params, use_cache=True):
-            warming_calls.append(('query', query, params))
+            warming_calls.append(("query", query, params))
             return [{"result": "ok"}]
 
         async def track_cache_set(key, data, ttl):
-            warming_calls.append(('cache', key, data))
+            warming_calls.append(("cache", key, data))
 
-        mock_all_systems['warmer'].warm_user_dashboard.side_effect = track_user_warming
-        mock_all_systems['optimizer'].execute_optimized_query.side_effect = track_query_warming
-        mock_all_systems['cache'].set.side_effect = track_cache_set
+        mock_all_systems["warmer"].warm_user_dashboard.side_effect = track_user_warming
+        mock_all_systems["optimizer"].execute_optimized_query.side_effect = track_query_warming
+        mock_all_systems["cache"].set.side_effect = track_cache_set
 
         # Perform cache warming
         result = await manager.warm_caches()
@@ -608,9 +636,9 @@ class TestPerformanceOptimizationIntegration:
         assert result["successful_warmups"] == 3
 
         # Verify different types of warming occurred
-        user_warmings = [call for call in warming_calls if call[0] == 'user']
-        query_warmings = [call for call in warming_calls if call[0] == 'query']
-        cache_sets = [call for call in warming_calls if call[0] == 'cache']
+        user_warmings = [call for call in warming_calls if call[0] == "user"]
+        query_warmings = [call for call in warming_calls if call[0] == "query"]
+        cache_sets = [call for call in warming_calls if call[0] == "cache"]
 
         assert len(user_warmings) == 4  # 4 sample users
         assert len(query_warmings) >= 2  # At least 2 common queries
@@ -624,12 +652,24 @@ class TestPerformanceOptimizationStressTest:
     @pytest.fixture
     def mock_high_load_systems(self):
         """Mock systems configured for high load testing."""
-        with patch('apps.backend.core.performance_optimization.initialize_cache') as mock_init_cache:
-            with patch('apps.backend.core.performance_optimization.get_cache_health') as mock_cache_health:
-                with patch('apps.backend.core.performance_optimization.initialize_db_optimization') as mock_init_db:
-                    with patch('apps.backend.core.performance_optimization.get_db_health') as mock_db_health:
-                        with patch('apps.backend.core.performance_optimization.get_optimized_pusher_service') as mock_get_pusher:
-                            with patch('apps.backend.core.performance_optimization.get_pusher_health') as mock_pusher_health:
+        with patch(
+            "apps.backend.core.performance_optimization.initialize_cache"
+        ) as mock_init_cache:
+            with patch(
+                "apps.backend.core.performance_optimization.get_cache_health"
+            ) as mock_cache_health:
+                with patch(
+                    "apps.backend.core.performance_optimization.initialize_db_optimization"
+                ) as mock_init_db:
+                    with patch(
+                        "apps.backend.core.performance_optimization.get_db_health"
+                    ) as mock_db_health:
+                        with patch(
+                            "apps.backend.core.performance_optimization.get_optimized_pusher_service"
+                        ) as mock_get_pusher:
+                            with patch(
+                                "apps.backend.core.performance_optimization.get_pusher_health"
+                            ) as mock_pusher_health:
 
                                 # Setup responses
                                 mock_init_cache.return_value = None
@@ -639,22 +679,22 @@ class TestPerformanceOptimizationStressTest:
                                 # Simulate realistic performance metrics
                                 mock_cache_health.return_value = {
                                     "status": "healthy",
-                                    "stats": {"hits": 50000, "misses": 5000, "hit_rate": 0.91}
+                                    "stats": {"hits": 50000, "misses": 5000, "hit_rate": 0.91},
                                 }
                                 mock_db_health.return_value = {
                                     "status": "healthy",
                                     "connection_pool": {"active": 18, "total": 20},
-                                    "query_performance": {"avg_time": 0.035, "slow_queries": 15}
+                                    "query_performance": {"avg_time": 0.035, "slow_queries": 15},
                                 }
                                 mock_pusher_health.return_value = {
                                     "status": "healthy",
-                                    "performance": {"events_sent": 10000, "avg_latency": 0.022}
+                                    "performance": {"events_sent": 10000, "avg_latency": 0.022},
                                 }
 
                                 yield {
-                                    'cache_health': mock_cache_health,
-                                    'db_health': mock_db_health,
-                                    'pusher_health': mock_pusher_health
+                                    "cache_health": mock_cache_health,
+                                    "db_health": mock_db_health,
+                                    "pusher_health": mock_pusher_health,
                                 }
 
     async def test_concurrent_health_checks(self, mock_high_load_systems):
@@ -671,9 +711,9 @@ class TestPerformanceOptimizationStressTest:
         assert all(result["overall_status"] == "healthy" for result in results)
 
         # Verify health check functions were called many times
-        assert mock_high_load_systems['cache_health'].call_count == 100
-        assert mock_high_load_systems['db_health'].call_count == 100
-        assert mock_high_load_systems['pusher_health'].call_count == 100
+        assert mock_high_load_systems["cache_health"].call_count == 100
+        assert mock_high_load_systems["db_health"].call_count == 100
+        assert mock_high_load_systems["pusher_health"].call_count == 100
 
     async def test_concurrent_metrics_collection(self, mock_high_load_systems):
         """Test concurrent metrics collection under load."""
@@ -704,7 +744,12 @@ class TestPerformanceOptimizationStressTest:
         assert all(result["status"] in ["completed", "partial_failure"] for result in results)
 
         # All managers should be initialized
-        assert all(manager.initialized for manager in managers if len(result.get("successful_services", [])) > 0 for result in results)
+        assert all(
+            manager.initialized
+            for manager in managers
+            if len(result.get("successful_services", [])) > 0
+            for result in results
+        )
 
     async def test_performance_under_simulated_load(self, mock_high_load_systems):
         """Test performance optimization behavior under simulated load."""

@@ -8,19 +8,21 @@ This module provides advanced analytics capabilities including:
 - Advanced data visualization
 """
 
-from typing import Dict, List, Optional, Any, Tuple
-from datetime import datetime, timedelta
 from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
+
 import numpy as np
 import pandas as pd
 
 # Optional sklearn dependencies - graceful degradation if not available
 try:
-    from sklearn.ensemble import RandomForestRegressor, IsolationForest
+    from sklearn.ensemble import IsolationForest, RandomForestRegressor
     from sklearn.linear_model import LinearRegression
-    from sklearn.preprocessing import StandardScaler
-    from sklearn.model_selection import train_test_split
     from sklearn.metrics import mean_absolute_error, r2_score
+    from sklearn.model_selection import train_test_split
+    from sklearn.preprocessing import StandardScaler
+
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False
@@ -32,22 +34,17 @@ except ImportError:
     mean_absolute_error = None
     r2_score = None
 
-import asyncio
-import json
-from sqlalchemy import select, func, and_, or_
-from sqlalchemy.ext.asyncio import AsyncSession
+import logging
+
 from apps.backend.database.models.models import (
-    User,
-    Course,
-    Lesson,
-    Quiz,
-    QuizAttempt,
-    UserProgress,
     Analytics,
     Content,
+    QuizAttempt,
+    User,
+    UserProgress,
 )
-from apps.backend.cache import cache_result
-import logging
+from sqlalchemy import and_, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +60,7 @@ class PredictionResult:
 
     prediction: float
     confidence: float
-    factors: Dict[str, float]
+    factors: dict[str, float]
     recommendation: str
     timestamp: datetime
 
@@ -76,9 +73,9 @@ class InsightResult:
     title: str
     description: str
     impact_score: float
-    affected_users: List[str]
-    recommendations: List[str]
-    data: Dict[str, Any]
+    affected_users: list[str]
+    recommendations: list[str]
+    data: dict[str, Any]
 
 
 @dataclass
@@ -90,10 +87,10 @@ class AnalyticsReport:
     generated_at: datetime
     period_start: datetime
     period_end: datetime
-    sections: List[Dict[str, Any]]
-    insights: List[InsightResult]
-    predictions: List[PredictionResult]
-    visualizations: List[Dict[str, Any]]
+    sections: list[dict[str, Any]]
+    insights: list[InsightResult]
+    predictions: list[PredictionResult]
+    visualizations: list[dict[str, Any]]
 
 
 class AdvancedAnalytics:
@@ -102,12 +99,12 @@ class AdvancedAnalytics:
     def __init__(self, db_session: AsyncSession):
         self.session = db_session
         self.scaler = StandardScaler() if SKLEARN_AVAILABLE else None
-        self._models_cache: Dict[str, Any] = {}
+        self._models_cache: dict[str, Any] = {}
 
     async def get_predictive_analytics(
         self,
-        user_id: Optional[str] = None,
-        course_id: Optional[str] = None,
+        user_id: str | None = None,
+        course_id: str | None = None,
         metric_type: str = "completion_probability",
     ) -> PredictionResult:
         """
@@ -164,7 +161,9 @@ class AdvancedAnalytics:
             probability = model.predict_proba(X_scaled)[0][1]
 
             # Calculate confidence based on similar users
-            confidence = await self._calculate_prediction_confidence(user_id, course_id, "completion")
+            confidence = await self._calculate_prediction_confidence(
+                user_id, course_id, "completion"
+            )
 
             # Identify key factors
             factors = self._analyze_feature_importance(model, features)
@@ -359,8 +358,8 @@ class AdvancedAnalytics:
         )
 
     async def get_ml_insights(
-        self, scope: str = "platform", entity_id: Optional[str] = None
-    ) -> List[InsightResult]:
+        self, scope: str = "platform", entity_id: str | None = None
+    ) -> list[InsightResult]:
         """
         Generate machine learning insights
 
@@ -385,7 +384,7 @@ class AdvancedAnalytics:
 
         return insights
 
-    async def _get_platform_insights(self) -> List[InsightResult]:
+    async def _get_platform_insights(self) -> list[InsightResult]:
         """Generate platform-wide insights"""
         insights = []
 
@@ -444,7 +443,7 @@ class AdvancedAnalytics:
 
         return insights
 
-    async def _detect_activity_anomalies(self) -> List[str]:
+    async def _detect_activity_anomalies(self) -> list[str]:
         """Detect anomalies in user activity using Isolation Forest"""
 
         # Get user activity metrics
@@ -496,11 +495,13 @@ class AdvancedAnalytics:
             predictions = clf.fit_predict(X)
 
             # Get anomalous users
-            anomalous_users = [user_metrics[i].id for i, pred in enumerate(predictions) if pred == -1]
+            anomalous_users = [
+                user_metrics[i].id for i, pred in enumerate(predictions) if pred == -1
+            ]
 
             return anomalous_users
 
-    async def _analyze_content_effectiveness(self) -> Dict[str, Any]:
+    async def _analyze_content_effectiveness(self) -> dict[str, Any]:
         """Analyze effectiveness of educational content"""
 
         # Get content performance metrics
@@ -545,7 +546,7 @@ class AdvancedAnalytics:
             "average_score": np.mean([c.avg_quiz_score for c in content_metrics]),
         }
 
-    async def _analyze_learning_paths(self) -> Dict[str, Any]:
+    async def _analyze_learning_paths(self) -> dict[str, Any]:
         """Analyze and optimize learning paths"""
 
         # Get sequence data
@@ -606,7 +607,7 @@ class AdvancedAnalytics:
         report_type: str,
         start_date: datetime,
         end_date: datetime,
-        filters: Optional[Dict[str, Any]] = None,
+        filters: dict[str, Any] | None = None,
     ) -> AnalyticsReport:
         """
         Generate custom analytics report
@@ -667,8 +668,8 @@ class AdvancedAnalytics:
         )
 
     async def _generate_executive_sections(
-        self, start_date: datetime, end_date: datetime, filters: Optional[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+        self, start_date: datetime, end_date: datetime, filters: dict[str, Any] | None
+    ) -> list[dict[str, Any]]:
         """Generate executive summary report sections"""
         sections = []
 
@@ -692,7 +693,7 @@ class AdvancedAnalytics:
 
         return sections
 
-    async def _get_key_metrics(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
+    async def _get_key_metrics(self, start_date: datetime, end_date: datetime) -> dict[str, Any]:
         """Get key platform metrics"""
 
         # Total users
@@ -736,8 +737,8 @@ class AdvancedAnalytics:
         }
 
     def _generate_executive_visualizations(
-        self, sections: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+        self, sections: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Generate visualization configurations for executive report"""
         visualizations = []
 
@@ -794,7 +795,7 @@ class AdvancedAnalytics:
 
     # Helper methods for recommendations
     def _generate_completion_recommendation(
-        self, probability: float, factors: Dict[str, float]
+        self, probability: float, factors: dict[str, float]
     ) -> str:
         """Generate recommendation based on completion probability"""
         if probability > 0.8:
@@ -811,7 +812,7 @@ class AdvancedAnalytics:
             )
 
     def _generate_performance_recommendation(
-        self, future_score: float, factors: Dict[str, float]
+        self, future_score: float, factors: dict[str, float]
     ) -> str:
         """Generate recommendation based on performance prediction"""
         if factors["trend_slope"] > 0.01:
@@ -824,7 +825,7 @@ class AdvancedAnalytics:
             return "Stable performance. Consider challenging content to promote growth."
 
     def _generate_engagement_recommendation(
-        self, forecast: float, factors: Dict[str, float]
+        self, forecast: float, factors: dict[str, float]
     ) -> str:
         """Generate recommendation based on engagement forecast"""
         if factors["volatility"] > 0.5:
@@ -834,7 +835,7 @@ class AdvancedAnalytics:
         else:
             return "Stable engagement. Maintain current content delivery schedule."
 
-    def _generate_dropout_recommendation(self, risk_score: float, factors: Dict[str, float]) -> str:
+    def _generate_dropout_recommendation(self, risk_score: float, factors: dict[str, float]) -> str:
         """Generate recommendation based on dropout risk"""
         if risk_score > 0.7:
             return "Critical dropout risk. Immediate intervention required: personal outreach recommended."
@@ -846,19 +847,19 @@ class AdvancedAnalytics:
             return "Low dropout risk. Continue normal engagement patterns."
 
     # Utility methods
-    async def _get_user_analytics_data(self, user_id: str) -> Dict[str, Any]:
+    async def _get_user_analytics_data(self, user_id: str) -> dict[str, Any]:
         """Get comprehensive analytics data for a user"""
         # Implementation would fetch various user metrics
         return {}
 
-    async def _get_course_analytics_data(self, course_id: str) -> Dict[str, Any]:
+    async def _get_course_analytics_data(self, course_id: str) -> dict[str, Any]:
         """Get comprehensive analytics data for a course"""
         # Implementation would fetch various course metrics
         return {}
 
     def _engineer_completion_features(
-        self, user_data: Dict[str, Any], course_data: Dict[str, Any]
-    ) -> List[float]:
+        self, user_data: dict[str, Any], course_data: dict[str, Any]
+    ) -> list[float]:
         """Engineer features for completion prediction"""
         # Implementation would create feature vector
         return [0.0] * 10  # Placeholder
@@ -884,7 +885,7 @@ class AdvancedAnalytics:
         # Implementation would analyze similar cases
         return 0.85  # Placeholder
 
-    def _analyze_feature_importance(self, model: Any, features: List[float]) -> Dict[str, float]:
+    def _analyze_feature_importance(self, model: Any, features: list[float]) -> dict[str, float]:
         """Analyze feature importance from model"""
         # Implementation would extract feature importances
         return {
@@ -895,7 +896,7 @@ class AdvancedAnalytics:
             "peer_comparison": 0.1,
         }
 
-    async def _get_recent_activity(self, user_id: str, course_id: str, days: int) -> Dict[str, Any]:
+    async def _get_recent_activity(self, user_id: str, course_id: str, days: int) -> dict[str, Any]:
         """Get recent activity metrics for a user"""
         # Implementation would fetch recent activity
         return {
@@ -906,75 +907,75 @@ class AdvancedAnalytics:
             "peer_comparison": 0.72,
         }
 
-    async def _get_course_insights(self, course_id: str) -> List[InsightResult]:
+    async def _get_course_insights(self, course_id: str) -> list[InsightResult]:
         """Generate course-specific insights"""
         # Implementation would analyze course data
         return []
 
-    async def _get_user_insights(self, user_id: str) -> List[InsightResult]:
+    async def _get_user_insights(self, user_id: str) -> list[InsightResult]:
         """Generate user-specific insights"""
         # Implementation would analyze user data
         return []
 
     async def _generate_performance_sections(
-        self, start_date: datetime, end_date: datetime, filters: Optional[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+        self, start_date: datetime, end_date: datetime, filters: dict[str, Any] | None
+    ) -> list[dict[str, Any]]:
         """Generate performance report sections"""
         # Implementation would create performance sections
         return []
 
     async def _generate_engagement_sections(
-        self, start_date: datetime, end_date: datetime, filters: Optional[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+        self, start_date: datetime, end_date: datetime, filters: dict[str, Any] | None
+    ) -> list[dict[str, Any]]:
         """Generate engagement report sections"""
         # Implementation would create engagement sections
         return []
 
     async def _generate_content_sections(
-        self, start_date: datetime, end_date: datetime, filters: Optional[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+        self, start_date: datetime, end_date: datetime, filters: dict[str, Any] | None
+    ) -> list[dict[str, Any]]:
         """Generate content effectiveness sections"""
         # Implementation would create content sections
         return []
 
     def _generate_performance_visualizations(
-        self, sections: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+        self, sections: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Generate performance visualizations"""
         # Implementation would create visualization configs
         return []
 
     def _generate_engagement_visualizations(
-        self, sections: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+        self, sections: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Generate engagement visualizations"""
         # Implementation would create visualization configs
         return []
 
     def _generate_content_visualizations(
-        self, sections: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+        self, sections: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Generate content visualizations"""
         # Implementation would create visualization configs
         return []
 
     async def _calculate_growth_metrics(
         self, start_date: datetime, end_date: datetime
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Calculate growth metrics over time period"""
         # Implementation would calculate growth
         return {"user_growth": 15.5, "content_growth": 22.3, "engagement_growth": 8.7}
 
     async def _get_top_performers(
         self, start_date: datetime, end_date: datetime
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get top performing users"""
         # Implementation would fetch top performers
         return []
 
     async def _identify_challenges(
         self, start_date: datetime, end_date: datetime
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Identify challenges and opportunities"""
         # Implementation would analyze challenges
         return {"challenges": [], "opportunities": []}
@@ -986,7 +987,7 @@ async def generate_analytics_report(
     report_type: str,
     start_date: datetime,
     end_date: datetime,
-    filters: Optional[Dict[str, Any]] = None,
+    filters: dict[str, Any] | None = None,
     format: str = "json",
 ) -> Any:
     """

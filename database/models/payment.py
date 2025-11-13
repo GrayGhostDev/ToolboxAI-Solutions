@@ -9,25 +9,22 @@ Multi-tenant: All models use organization_id for tenant isolation
 @updated 2025-10-10 (Added multi-tenant support)
 """
 
-from sqlalchemy import (
-    Column, String, Integer, Float, Boolean, DateTime, JSON, Text,
-    ForeignKey, Enum as SQLEnum, Numeric, UniqueConstraint, Index
-)
+from enum import Enum
+
+from sqlalchemy import JSON, Boolean, Column, DateTime
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import ForeignKey, Index, Integer, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.sql import func
-from datetime import datetime, timezone
-from decimal import Decimal
-from enum import Enum
-from typing import Optional, Dict, Any
 
 # Import tenant-aware base models
 from database.models.base import TenantBaseModel
 
+
 # Enums
 class PaymentStatus(str, Enum):
     """Payment status enum"""
+
     PENDING = "pending"
     PROCESSING = "processing"
     SUCCEEDED = "succeeded"
@@ -36,8 +33,10 @@ class PaymentStatus(str, Enum):
     REFUNDED = "refunded"
     PARTIALLY_REFUNDED = "partially_refunded"
 
+
 class SubscriptionStatus(str, Enum):
     """Subscription status enum"""
+
     TRIALING = "trialing"
     ACTIVE = "active"
     INCOMPLETE = "incomplete"
@@ -47,16 +46,20 @@ class SubscriptionStatus(str, Enum):
     UNPAID = "unpaid"
     PAUSED = "paused"
 
+
 class SubscriptionTier(str, Enum):
     """Subscription tier enum"""
+
     FREE = "free"
     STARTER = "starter"
     PROFESSIONAL = "professional"
     ENTERPRISE = "enterprise"
     CUSTOM = "custom"
 
+
 class PaymentMethod(str, Enum):
     """Payment method types"""
+
     CARD = "card"
     BANK_ACCOUNT = "bank_account"
     PAYPAL = "paypal"
@@ -64,13 +67,16 @@ class PaymentMethod(str, Enum):
     GOOGLE_PAY = "google_pay"
     CRYPTO = "crypto"
 
+
 class InvoiceStatus(str, Enum):
     """Invoice status enum"""
+
     DRAFT = "draft"
     OPEN = "open"
     PAID = "paid"
     VOIDED = "voided"
     UNCOLLECTIBLE = "uncollectible"
+
 
 # Models
 class Customer(TenantBaseModel):
@@ -80,6 +86,7 @@ class Customer(TenantBaseModel):
     Multi-tenant: organization_id inherited from TenantBaseModel
     Note: Uses Integer ID for backwards compatibility (overrides UUID default)
     """
+
     __tablename__ = "customers"
 
     # Override id to use Integer for backwards compatibility
@@ -112,8 +119,12 @@ class Customer(TenantBaseModel):
 
     # Relationships
     user = relationship("User", back_populates="customer")
-    subscriptions = relationship("Subscription", back_populates="customer", cascade="all, delete-orphan")
-    payment_methods = relationship("CustomerPaymentMethod", back_populates="customer", cascade="all, delete-orphan")
+    subscriptions = relationship(
+        "Subscription", back_populates="customer", cascade="all, delete-orphan"
+    )
+    payment_methods = relationship(
+        "CustomerPaymentMethod", back_populates="customer", cascade="all, delete-orphan"
+    )
     payments = relationship("Payment", back_populates="customer", cascade="all, delete-orphan")
     invoices = relationship("Invoice", back_populates="customer", cascade="all, delete-orphan")
 
@@ -123,12 +134,14 @@ class Customer(TenantBaseModel):
         Index("idx_customer_org_stripe", "organization_id", "stripe_customer_id"),
     )
 
+
 class Subscription(TenantBaseModel):
     """
     Subscription model - Manages recurring billing subscriptions
 
     Multi-tenant: organization_id inherited from TenantBaseModel
     """
+
     __tablename__ = "subscriptions"
 
     # Override id to use Integer for backwards compatibility
@@ -177,8 +190,12 @@ class Subscription(TenantBaseModel):
 
     # Relationships
     customer = relationship("Customer", back_populates="subscriptions")
-    subscription_items = relationship("SubscriptionItem", back_populates="subscription", cascade="all, delete-orphan")
-    usage_records = relationship("UsageRecord", back_populates="subscription", cascade="all, delete-orphan")
+    subscription_items = relationship(
+        "SubscriptionItem", back_populates="subscription", cascade="all, delete-orphan"
+    )
+    usage_records = relationship(
+        "UsageRecord", back_populates="subscription", cascade="all, delete-orphan"
+    )
 
     # Constraints and indexes (organization_id index auto-created by TenantMixin)
     __table_args__ = (
@@ -188,12 +205,14 @@ class Subscription(TenantBaseModel):
         Index("idx_subscription_stripe", "stripe_subscription_id"),
     )
 
+
 class SubscriptionItem(TenantBaseModel):
     """
     Subscription Item model - Individual items within a subscription
 
     Multi-tenant: organization_id inherited from TenantBaseModel
     """
+
     __tablename__ = "subscription_items"
 
     # Override id to use Integer for backwards compatibility
@@ -219,12 +238,14 @@ class SubscriptionItem(TenantBaseModel):
     # Relationships
     subscription = relationship("Subscription", back_populates="subscription_items")
 
+
 class CustomerPaymentMethod(TenantBaseModel):
     """
     Payment Method model - Stores customer payment methods
 
     Multi-tenant: organization_id inherited from TenantBaseModel
     """
+
     __tablename__ = "payment_methods"
 
     # Override id to use Integer for backwards compatibility
@@ -275,12 +296,14 @@ class CustomerPaymentMethod(TenantBaseModel):
         Index("idx_payment_method_org_default", "organization_id", "customer_id", "is_default"),
     )
 
+
 class Payment(TenantBaseModel):
     """
     Payment model - Records all payment transactions
 
     Multi-tenant: organization_id inherited from TenantBaseModel
     """
+
     __tablename__ = "payments"
 
     # Override id to use Integer for backwards compatibility
@@ -351,12 +374,14 @@ class Payment(TenantBaseModel):
         Index("idx_payment_stripe_charge", "stripe_charge_id"),
     )
 
+
 class Invoice(TenantBaseModel):
     """
     Invoice model - Billing invoices for subscriptions and one-time charges
 
     Multi-tenant: organization_id inherited from TenantBaseModel
     """
+
     __tablename__ = "invoices"
 
     # Override id to use Integer for backwards compatibility
@@ -416,7 +441,9 @@ class Invoice(TenantBaseModel):
     # Relationships
     customer = relationship("Customer", back_populates="invoices")
     subscription = relationship("Subscription")
-    invoice_items = relationship("InvoiceItem", back_populates="invoice", cascade="all, delete-orphan")
+    invoice_items = relationship(
+        "InvoiceItem", back_populates="invoice", cascade="all, delete-orphan"
+    )
     payments = relationship("Payment", back_populates="invoice")
 
     # Constraints and indexes (organization_id index auto-created by TenantMixin)
@@ -429,12 +456,14 @@ class Invoice(TenantBaseModel):
         Index("idx_invoice_org_due", "organization_id", "due_date"),
     )
 
+
 class InvoiceItem(TenantBaseModel):
     """
     Invoice Item model - Line items on an invoice
 
     Multi-tenant: organization_id inherited from TenantBaseModel
     """
+
     __tablename__ = "invoice_items"
 
     # Override id to use Integer for backwards compatibility
@@ -469,12 +498,14 @@ class InvoiceItem(TenantBaseModel):
     # Relationships
     invoice = relationship("Invoice", back_populates="invoice_items")
 
+
 class Refund(TenantBaseModel):
     """
     Refund model - Tracks refund transactions
 
     Multi-tenant: organization_id inherited from TenantBaseModel
     """
+
     __tablename__ = "refunds"
 
     # Override id to use Integer for backwards compatibility
@@ -507,12 +538,14 @@ class Refund(TenantBaseModel):
         Index("idx_refund_stripe", "stripe_refund_id"),
     )
 
+
 class UsageRecord(TenantBaseModel):
     """
     Usage Record model - Tracks metered billing usage
 
     Multi-tenant: organization_id inherited from TenantBaseModel
     """
+
     __tablename__ = "usage_records"
 
     # Override id to use Integer for backwards compatibility
@@ -540,6 +573,7 @@ class UsageRecord(TenantBaseModel):
         Index("idx_usage_org_timestamp", "organization_id", "timestamp"),
     )
 
+
 class Coupon(TenantBaseModel):
     """
     Coupon model - Discount coupons for subscriptions
@@ -547,6 +581,7 @@ class Coupon(TenantBaseModel):
     Multi-tenant: organization_id inherited from TenantBaseModel
     Special: Allows nullable organization_id for platform-wide coupons
     """
+
     __tablename__ = "coupons"
 
     # Override id to use Integer for backwards compatibility
@@ -558,7 +593,7 @@ class Coupon(TenantBaseModel):
         UUID(as_uuid=True),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=True,  # Platform-wide coupons have NULL
-        index=True
+        index=True,
     )
 
     # Note: created_at, updated_at inherited from TenantBaseModel

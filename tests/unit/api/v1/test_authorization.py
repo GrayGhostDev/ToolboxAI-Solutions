@@ -15,9 +15,10 @@ Version: 1.0.0
 Standards: pytest-asyncio, Python 3.12, 2025 Implementation Standards
 """
 
+from uuid import uuid4
+
 import pytest
 from httpx import AsyncClient
-from uuid import uuid4
 
 
 class TestRoleBasedAccessControl:
@@ -108,9 +109,7 @@ class TestRoleAssignment:
     ):
         """Test admin can assign roles to users"""
         user_id = str(uuid4())
-        role_data = {
-            "role": "teacher"
-        }
+        role_data = {"role": "teacher"}
 
         response = await async_client.patch(
             f"/api/v1/users/{user_id}/role",
@@ -128,9 +127,7 @@ class TestRoleAssignment:
     ):
         """Test non-admin cannot assign roles"""
         user_id = str(uuid4())
-        role_data = {
-            "role": "admin"
-        }
+        role_data = {"role": "admin"}
 
         response = await async_client.patch(
             f"/api/v1/users/{user_id}/role",
@@ -148,9 +145,7 @@ class TestRoleAssignment:
     ):
         """Test cannot assign non-existent role"""
         user_id = str(uuid4())
-        role_data = {
-            "role": "superuser"  # Invalid role
-        }
+        role_data = {"role": "superuser"}  # Invalid role
 
         response = await async_client.patch(
             f"/api/v1/users/{user_id}/role",
@@ -420,9 +415,7 @@ class TestPermissionManagement:
     ):
         """Test admin can grant specific permission to user"""
         user_id = str(uuid4())
-        permission_data = {
-            "permission": "content:publish"
-        }
+        permission_data = {"permission": "content:publish"}
 
         response = await async_client.post(
             f"/api/v1/users/{user_id}/permissions",
@@ -457,9 +450,7 @@ class TestPermissionManagement:
     ):
         """Test non-admin cannot grant permissions"""
         user_id = str(uuid4())
-        permission_data = {
-            "permission": "admin:all"
-        }
+        permission_data = {"permission": "admin:all"}
 
         response = await async_client.post(
             f"/api/v1/users/{user_id}/permissions",

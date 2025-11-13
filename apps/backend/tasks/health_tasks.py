@@ -5,17 +5,18 @@ Background tasks for health checks and integration monitoring
 """
 
 import asyncio
-from typing import Dict, List, Any
 from datetime import datetime
+from typing import Any
+
+import redis
 from celery import shared_task
 from celery.utils.log import get_task_logger
-import redis
 from sqlalchemy import text
 
-from apps.backend.core.database import get_db
 from apps.backend.core.config import settings
-from apps.backend.services.websocket_pipeline_manager import websocket_pipeline_manager
+from apps.backend.core.database import get_db
 from apps.backend.services.supabase_service import supabase_service
+from apps.backend.services.websocket_pipeline_manager import websocket_pipeline_manager
 
 logger = get_task_logger(__name__)
 
@@ -28,7 +29,7 @@ logger = get_task_logger(__name__)
     queue="high_priority",
     priority=9,
 )
-def check_integrations(self) -> Dict[str, Any]:
+def check_integrations(self) -> dict[str, Any]:
     """
     Check health of all external integrations
 
@@ -45,7 +46,7 @@ def check_integrations(self) -> Dict[str, Any]:
         "timestamp": datetime.utcnow().isoformat(),
         "status": "healthy",
         "checks": {},
-        "errors": []
+        "errors": [],
     }
 
     # Check database
@@ -74,13 +75,15 @@ def check_integrations(self) -> Dict[str, Any]:
 
     # Check Pusher
     try:
-        if hasattr(settings, 'PUSHER_APP_ID') and settings.PUSHER_APP_ID:
+        if hasattr(settings, "PUSHER_APP_ID") and settings.PUSHER_APP_ID:
             # Try to send a test event via Pusher
-            test_result = asyncio.run(websocket_pipeline_manager.send_event(
-                channel='test-health-check',
-                event_type='ping',
-                data={'timestamp': datetime.utcnow().isoformat()}
-            ))
+            test_result = asyncio.run(
+                websocket_pipeline_manager.send_event(
+                    channel="test-health-check",
+                    event_type="ping",
+                    data={"timestamp": datetime.utcnow().isoformat()},
+                )
+            )
 
             if test_result:
                 results["checks"]["pusher"] = {"status": "up", "latency_ms": 0}
@@ -98,7 +101,7 @@ def check_integrations(self) -> Dict[str, Any]:
 
     # Check Supabase
     try:
-        if hasattr(settings, 'SUPABASE_URL') and settings.SUPABASE_URL:
+        if hasattr(settings, "SUPABASE_URL") and settings.SUPABASE_URL:
             # Try a simple connection test
             test_result = supabase_service.ping()
 
@@ -131,7 +134,7 @@ def check_integrations(self) -> Dict[str, Any]:
     queue="high_priority",
     priority=8,
 )
-def check_database_health(self) -> Dict[str, Any]:
+def check_database_health(self) -> dict[str, Any]:
     """Check database connection pool and performance"""
     try:
         db = next(get_db())
@@ -141,15 +144,11 @@ def check_database_health(self) -> Dict[str, Any]:
         return {
             "status": "healthy",
             "tables": table_count,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
     except Exception as e:
         logger.error(f"Database health check failed: {e}")
-        return {
-            "status": "unhealthy",
-            "error": str(e),
-            "timestamp": datetime.utcnow().isoformat()
-        }
+        return {"status": "unhealthy", "error": str(e), "timestamp": datetime.utcnow().isoformat()}
 
 
 @shared_task(
@@ -160,7 +159,7 @@ def check_database_health(self) -> Dict[str, Any]:
     queue="high_priority",
     priority=8,
 )
-def check_redis_health(self) -> Dict[str, Any]:
+def check_redis_health(self) -> dict[str, Any]:
     """Check Redis connectivity and memory usage"""
     try:
         redis_client = redis.from_url(settings.REDIS_URL)
@@ -169,12 +168,8 @@ def check_redis_health(self) -> Dict[str, Any]:
         return {
             "status": "healthy",
             "memory_used_mb": int(info.get("used_memory", 0)) / (1024 * 1024),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
     except Exception as e:
         logger.error(f"Redis health check failed: {e}")
-        return {
-            "status": "unhealthy",
-            "error": str(e),
-            "timestamp": datetime.utcnow().isoformat()
-        }
+        return {"status": "unhealthy", "error": str(e), "timestamp": datetime.utcnow().isoformat()}

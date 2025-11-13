@@ -6,14 +6,8 @@ Implements rotating file handlers to prevent unbounded log growth
 import logging
 import logging.handlers
 import os
-import time
-import uuid
-from pathlib import Path
-from typing import Optional, Dict, Any
-from functools import wraps
 import sys
-from fastapi import Request
-from starlette.middleware.base import BaseHTTPMiddleware
+from pathlib import Path
 
 
 class LoggingConfig:
@@ -43,10 +37,10 @@ class LoggingConfig:
     def setup_logging(
         cls,
         app_name: str = "toolboxai",
-        log_level: Optional[str] = None,
+        log_level: str | None = None,
         enable_console: bool = True,
         enable_file: bool = True,
-        log_dir: Optional[Path] = None,
+        log_dir: Path | None = None,
     ) -> None:
         """
         Setup application-wide logging configuration
@@ -200,7 +194,6 @@ class LoggingConfig:
             days: Number of days to keep logs
         """
         import time
-        from datetime import datetime, timedelta
 
         cutoff_time = time.time() - (days * 24 * 60 * 60)
 
@@ -225,7 +218,7 @@ class TimedRotatingLogger:
     """
 
     @classmethod
-    def setup_daily_rotation(cls, app_name: str, log_dir: Optional[Path] = None) -> logging.Logger:
+    def setup_daily_rotation(cls, app_name: str, log_dir: Path | None = None) -> logging.Logger:
         """
         Setup a logger with daily rotation
 
@@ -326,8 +319,8 @@ logging_manager = LoggingManager()
 try:
     from .logging_middleware import (
         CorrelationIDMiddleware,
-        log_error,
         log_audit,
+        log_error,
         log_execution_time,
     )
 except ImportError:

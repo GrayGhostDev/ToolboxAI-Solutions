@@ -28,34 +28,31 @@ from pathlib import Path
 
 try:
     # If 'apps' cannot be imported, add project root to sys.path
-    import apps  # type: ignore
+    pass  # type: ignore
 except Exception:  # ModuleNotFoundError or others during bootstrap
     project_root = Path(__file__).resolve().parents[2]  # repo root
     if str(project_root) not in sys.path:
         sys.path.insert(0, str(project_root))
 
-import os
 import logging
-from typing import Dict, Any
-from datetime import datetime, timezone
-import json
-import uuid
-
-# Import application factory and configuration
-from apps.backend.core.app_factory import create_app
-from apps.backend.core.config import settings
-from apps.backend.core.logging import logging_manager
+import os
 
 # Import FastAPI components for test endpoints
 from fastapi import HTTPException
 from fastapi.responses import Response
 
 # Import Prometheus metrics
-from prometheus_client import generate_latest, CONTENT_TYPE_LATEST, REGISTRY
+from prometheus_client import CONTENT_TYPE_LATEST, REGISTRY, generate_latest
+
+# Import application factory and configuration
+from apps.backend.core.app_factory import create_app
+from apps.backend.core.config import settings
+from apps.backend.core.logging import logging_manager
 
 # Initialize Sentry monitoring
 try:
     from apps.backend.config.sentry import init_sentry
+
     init_sentry()
 except ImportError:
     logging.warning("Sentry configuration not found, monitoring disabled")
@@ -84,7 +81,7 @@ async def get_metrics():
     return Response(
         content=metrics_data,
         media_type=CONTENT_TYPE_LATEST,
-        headers={"Content-Type": CONTENT_TYPE_LATEST}
+        headers={"Content-Type": CONTENT_TYPE_LATEST},
     )
 
 
@@ -151,8 +148,9 @@ async def get_migration_status():
 # =============================================================================
 
 if __name__ == "__main__":
-    import uvicorn
     import os
+
+    import uvicorn
 
     # Get configuration from environment variables or settings
     host = os.getenv("HOST", "0.0.0.0")  # Docker-friendly default

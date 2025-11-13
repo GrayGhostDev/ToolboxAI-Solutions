@@ -20,30 +20,19 @@ Standards: Python 3.12, FastAPI async, Pydantic v2
 
 import logging
 from datetime import datetime, timedelta
-from typing import Annotated, Optional
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    Query,
-    BackgroundTasks,
-    status,
-)
-from pydantic import BaseModel, ConfigDict, Field, field_validator, EmailStr
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete, func
 
 from apps.backend.api.auth.auth import get_current_user, require_role
 from apps.backend.core.deps import get_async_db
 from apps.backend.models.schemas import User
 from apps.backend.services.tenant_provisioner import TenantProvisioner
-from database.models.tenant import (
-    Organization,
-    OrganizationStatus,
-    SubscriptionTier,
-)
+from database.models.tenant import Organization, OrganizationStatus, SubscriptionTier
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +45,7 @@ router = APIRouter(
 
 
 # === Pydantic v2 Models ===
+
 
 class TenantCreateRequest(BaseModel):
     """Request model for creating a new tenant with Pydantic v2"""
@@ -72,10 +62,10 @@ class TenantCreateRequest(BaseModel):
     trial_days: int = Field(default=14, ge=0, le=90)
 
     # Optional fields
-    display_name: Optional[str] = Field(None, max_length=250)
-    description: Optional[str] = None
-    website: Optional[str] = Field(None, max_length=500)
-    phone: Optional[str] = Field(None, max_length=50)
+    display_name: str | None = Field(None, max_length=250)
+    description: str | None = None
+    website: str | None = Field(None, max_length=500)
+    phone: str | None = Field(None, max_length=50)
     timezone: str = Field(default="UTC")
     locale: str = Field(default="en-US")
 
@@ -85,15 +75,15 @@ class TenantUpdateRequest(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    name: Optional[str] = Field(None, min_length=1, max_length=200)
-    display_name: Optional[str] = Field(None, max_length=250)
-    description: Optional[str] = None
-    email: Optional[EmailStr] = None
-    phone: Optional[str] = None
-    website: Optional[str] = None
-    status: Optional[OrganizationStatus] = None
-    subscription_tier: Optional[SubscriptionTier] = None
-    is_active: Optional[bool] = None
+    name: str | None = Field(None, min_length=1, max_length=200)
+    display_name: str | None = Field(None, max_length=250)
+    description: str | None = None
+    email: EmailStr | None = None
+    phone: str | None = None
+    website: str | None = None
+    status: OrganizationStatus | None = None
+    subscription_tier: SubscriptionTier | None = None
+    is_active: bool | None = None
 
 
 class TenantLimitsUpdateRequest(BaseModel):
@@ -101,11 +91,11 @@ class TenantLimitsUpdateRequest(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    max_users: Optional[int] = Field(None, ge=1, le=10000)
-    max_classes: Optional[int] = Field(None, ge=1, le=1000)
-    max_storage_gb: Optional[float] = Field(None, ge=0.1, le=1000.0)
-    max_api_calls_per_month: Optional[int] = Field(None, ge=100, le=10000000)
-    max_roblox_sessions: Optional[int] = Field(None, ge=1, le=1000)
+    max_users: int | None = Field(None, ge=1, le=10000)
+    max_classes: int | None = Field(None, ge=1, le=1000)
+    max_storage_gb: float | None = Field(None, ge=0.1, le=1000.0)
+    max_api_calls_per_month: int | None = Field(None, ge=100, le=10000000)
+    max_roblox_sessions: int | None = Field(None, ge=1, le=1000)
 
 
 class TenantResponse(BaseModel):
@@ -116,13 +106,13 @@ class TenantResponse(BaseModel):
     id: UUID
     name: str
     slug: str
-    display_name: Optional[str] = None
-    email: Optional[str] = None
+    display_name: str | None = None
+    email: str | None = None
     status: OrganizationStatus
     subscription_tier: SubscriptionTier
     is_active: bool
     created_at: datetime
-    updated_at: Optional[datetime] = None
+    updated_at: datetime | None = None
 
     # Usage stats
     current_users: int = 0
@@ -152,8 +142,8 @@ class TenantProvisionRequest(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     create_admin_user: bool = Field(default=True)
-    admin_email: Optional[EmailStr] = None
-    admin_username: Optional[str] = None
+    admin_email: EmailStr | None = None
+    admin_username: str | None = None
     send_welcome_email: bool = Field(default=True)
     initialize_defaults: bool = Field(default=True)
 
@@ -165,7 +155,7 @@ class TenantProvisionResponse(BaseModel):
 
     tenant_id: UUID
     status: str
-    admin_user_id: Optional[UUID] = None
+    admin_user_id: UUID | None = None
     message: str
     provisioned_at: datetime
 
@@ -184,6 +174,7 @@ class TenantMigrationRequest(BaseModel):
 
 
 # === API Endpoints ===
+
 
 @router.post(
     "",
@@ -221,7 +212,7 @@ async def create_tenant(
         if existing.scalar_one_or_none():
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=f"Tenant with slug '{request.slug}' already exists"
+                detail=f"Tenant with slug '{request.slug}' already exists",
             )
 
         # Create organization
@@ -238,7 +229,9 @@ async def create_tenant(
             timezone=request.timezone,
             locale=request.locale,
             subscription_tier=request.subscription_tier,
-            status=OrganizationStatus.TRIAL if request.trial_days > 0 else OrganizationStatus.ACTIVE,
+            status=(
+                OrganizationStatus.TRIAL if request.trial_days > 0 else OrganizationStatus.ACTIVE
+            ),
             max_users=request.max_users,
             max_classes=request.max_classes,
             max_storage_gb=request.max_storage_gb,
@@ -279,8 +272,7 @@ async def create_tenant(
         logger.error(f"Failed to create tenant: {str(e)}", exc_info=True)
         await session.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create tenant"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create tenant"
         )
 
 
@@ -294,8 +286,8 @@ async def list_tenants(
     session: Annotated[AsyncSession, Depends(get_async_db)],
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=100),
-    status_filter: Optional[OrganizationStatus] = None,
-    tier_filter: Optional[SubscriptionTier] = None,
+    status_filter: OrganizationStatus | None = None,
+    tier_filter: SubscriptionTier | None = None,
     active_only: bool = True,
 ) -> TenantListResponse:
     """
@@ -367,8 +359,7 @@ async def list_tenants(
     except Exception as e:
         logger.error(f"Failed to list tenants: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to list tenants"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to list tenants"
         )
 
 
@@ -396,16 +387,11 @@ async def get_tenant(
         HTTPException: If tenant not found
     """
     try:
-        result = await session.execute(
-            select(Organization).where(Organization.id == tenant_id)
-        )
+        result = await session.execute(select(Organization).where(Organization.id == tenant_id))
         organization = result.scalar_one_or_none()
 
         if not organization:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Tenant not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
 
         return TenantResponse(
             id=organization.id,
@@ -431,8 +417,7 @@ async def get_tenant(
     except Exception as e:
         logger.error(f"Failed to get tenant: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get tenant details"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get tenant details"
         )
 
 
@@ -462,16 +447,11 @@ async def update_tenant(
         HTTPException: If tenant not found or update fails
     """
     try:
-        result = await session.execute(
-            select(Organization).where(Organization.id == tenant_id)
-        )
+        result = await session.execute(select(Organization).where(Organization.id == tenant_id))
         organization = result.scalar_one_or_none()
 
         if not organization:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Tenant not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
 
         # Update fields
         update_data = request.model_dump(exclude_unset=True)
@@ -510,8 +490,7 @@ async def update_tenant(
         logger.error(f"Failed to update tenant: {str(e)}", exc_info=True)
         await session.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update tenant"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to update tenant"
         )
 
 
@@ -541,16 +520,11 @@ async def delete_tenant(
         HTTPException: If tenant not found or deletion fails
     """
     try:
-        result = await session.execute(
-            select(Organization).where(Organization.id == tenant_id)
-        )
+        result = await session.execute(select(Organization).where(Organization.id == tenant_id))
         organization = result.scalar_one_or_none()
 
         if not organization:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Tenant not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
 
         if permanent:
             # Hard delete
@@ -571,8 +545,7 @@ async def delete_tenant(
         logger.error(f"Failed to delete tenant: {str(e)}", exc_info=True)
         await session.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete tenant"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete tenant"
         )
 
 
@@ -611,16 +584,11 @@ async def provision_tenant(
         HTTPException: If tenant not found or provisioning fails
     """
     try:
-        result = await session.execute(
-            select(Organization).where(Organization.id == tenant_id)
-        )
+        result = await session.execute(select(Organization).where(Organization.id == tenant_id))
         organization = result.scalar_one_or_none()
 
         if not organization:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Tenant not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
 
         logger.info(f"Provisioning tenant: {tenant_id}")
 
@@ -634,25 +602,28 @@ async def provision_tenant(
             admin_username=request.admin_username,
             create_admin=request.create_admin_user,
             initialize_defaults=request.initialize_defaults,
-            send_welcome_email=request.send_welcome_email
+            send_welcome_email=request.send_welcome_email,
         )
 
         # Check for errors
         if provisioning_result["status"] == "failed":
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Tenant provisioning failed: {'; '.join(provisioning_result['errors'])}"
+                detail=f"Tenant provisioning failed: {'; '.join(provisioning_result['errors'])}",
             )
 
         # Extract admin user ID from result
         admin_user_id = provisioning_result.get("admin_user_id")
         if admin_user_id:
             from uuid import UUID
+
             admin_user_id = UUID(admin_user_id) if isinstance(admin_user_id, str) else admin_user_id
 
         # Determine response message
         if provisioning_result["status"] == "partial_success":
-            message = f"Tenant provisioned with warnings: {'; '.join(provisioning_result['errors'])}"
+            message = (
+                f"Tenant provisioned with warnings: {'; '.join(provisioning_result['errors'])}"
+            )
         elif provisioning_result["status"] == "already_provisioned":
             message = provisioning_result["message"]
         else:
@@ -673,8 +644,7 @@ async def provision_tenant(
     except Exception as e:
         logger.error(f"Failed to provision tenant: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to provision tenant"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to provision tenant"
         )
 
 
@@ -704,16 +674,11 @@ async def update_tenant_limits(
         HTTPException: If tenant not found or update fails
     """
     try:
-        result = await session.execute(
-            select(Organization).where(Organization.id == tenant_id)
-        )
+        result = await session.execute(select(Organization).where(Organization.id == tenant_id))
         organization = result.scalar_one_or_none()
 
         if not organization:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Tenant not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
 
         # Update limits
         update_data = request.model_dump(exclude_unset=True)
@@ -753,5 +718,5 @@ async def update_tenant_limits(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update tenant limits"
+            detail="Failed to update tenant limits",
         )

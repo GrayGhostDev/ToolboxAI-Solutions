@@ -6,15 +6,15 @@ Background tasks for sending notifications via Pusher and webhooks
 
 import json
 from datetime import datetime
-from typing import Dict, List, Any, Optional
-from celery import shared_task, group
-from celery.utils.log import get_task_logger
-import httpx
+from typing import Any
 
-from apps.backend.core.config import settings
-from apps.backend.services.pusher import pusher_service as pusher_client
+import httpx
+from celery import group, shared_task
+from celery.utils.log import get_task_logger
+
 from apps.backend.core.database import SessionLocal
-from database.models import User, Notification
+from apps.backend.services.pusher import pusher_service as pusher_client
+from database.models import Notification
 
 logger = get_task_logger(__name__)
 
@@ -33,9 +33,9 @@ def send_notification(
     notification_type: str,
     title: str,
     message: str,
-    data: Optional[Dict[str, Any]] = None,
-    channels: Optional[List[str]] = None,
-) -> Dict[str, Any]:
+    data: dict[str, Any] | None = None,
+    channels: list[str] | None = None,
+) -> dict[str, Any]:
     """
     Send notification to a specific user
 
@@ -106,25 +106,27 @@ def send_notification(
         # Send via Email
         if "email" in channels:
             try:
-                from apps.backend.workers.tasks.email_tasks import send_notification_email
+                from apps.backend.workers.tasks.email_tasks import (
+                    send_notification_email,
+                )
 
                 # Queue email notification task
                 email_result = send_notification_email.apply_async(
                     kwargs={
-                        'user_id': user_id,
-                        'notification_type': notification_type,
-                        'title': title,
-                        'message': message,
-                        'action_url': data.get('action_url') if data else None,
-                        'organization_id': data.get('organization_id') if data else None,
+                        "user_id": user_id,
+                        "notification_type": notification_type,
+                        "title": title,
+                        "message": message,
+                        "action_url": data.get("action_url") if data else None,
+                        "organization_id": data.get("organization_id") if data else None,
                     },
-                    countdown=5  # Delay email by 5 seconds to ensure Pusher notification arrives first
+                    countdown=5,  # Delay email by 5 seconds to ensure Pusher notification arrives first
                 )
 
                 delivery_results["email"] = {
                     "success": True,
                     "message_id": str(email_result.id),
-                    "status": "queued"
+                    "status": "queued",
                 }
                 logger.info(f"Email notification queued for user {user_id}: {title}")
 
@@ -209,12 +211,12 @@ def send_notification(
 )
 def send_bulk_notifications(
     self,
-    user_ids: List[str],
+    user_ids: list[str],
     notification_type: str,
     title: str,
     message: str,
-    data: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
+    data: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """
     Send notifications to multiple users in parallel
 
@@ -291,8 +293,8 @@ def send_bulk_notifications(
     priority=6,
 )
 def process_webhook_event(
-    self, event_type: str, event_data: Dict[str, Any], source: str = "external"
-) -> Dict[str, Any]:
+    self, event_type: str, event_data: dict[str, Any], source: str = "external"
+) -> dict[str, Any]:
     """
     Process incoming webhook events
 

@@ -3,21 +3,22 @@ API test fixtures for ToolboxAI test suite.
 
 Provides reusable API fixtures for testing.
 """
-import pytest
-from unittest.mock import Mock, MagicMock, AsyncMock, patch
-from typing import Dict, Any, Optional
-import json
-import jwt
-from datetime import datetime, timedelta
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
-from httpx import AsyncClient
-import redis
-from faker import Faker
+
 
 # Add parent directory to path for imports
 import sys
+from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Any
+from unittest.mock import AsyncMock, Mock
+
+import jwt
+import pytest
+import redis
+from faker import Faker
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 fake = Faker()
@@ -30,7 +31,7 @@ def mock_request():
     request.headers = {
         "content-type": "application/json",
         "user-agent": "TestClient/1.0",
-        "host": "localhost:8008"
+        "host": "localhost:8008",
     }
     request.query_params = {}
     request.path_params = {}
@@ -47,20 +48,17 @@ def mock_auth_headers(test_user):
     """Create mock authentication headers with JWT token."""
     secret_key = "test_secret_key"
     algorithm = "HS256"
-    
+
     payload = {
         "sub": test_user["id"],
         "username": test_user["username"],
         "role": test_user["role"],
-        "exp": datetime.utcnow() + timedelta(hours=1)
+        "exp": datetime.utcnow() + timedelta(hours=1),
     }
-    
+
     token = jwt.encode(payload, secret_key, algorithm=algorithm)
-    
-    return {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
+
+    return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
 
 @pytest.fixture(scope="session")
@@ -79,6 +77,7 @@ def event_loop():
     Prevents "event loop already running" errors.
     """
     import asyncio
+
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()
@@ -88,33 +87,29 @@ def event_loop():
 def test_client():
     """Create a test client for FastAPI application."""
     app = FastAPI()
-    
+
     # Add test routes
     @app.get("/health")
     def health_check():
         return {"status": "healthy"}
-    
+
     @app.post("/api/v1/auth/login")
     def login(username: str, password: str):
         return {
             "access_token": "test_token",
             "token_type": "bearer",
-            "user": {
-                "id": "test_id",
-                "username": username,
-                "role": "student"
-            }
+            "user": {"id": "test_id", "username": username, "role": "student"},
         }
-    
+
     @app.get("/api/v1/users/me")
     def get_current_user():
         return {
             "id": "test_id",
             "username": "test_user",
             "email": "test@example.com",
-            "role": "student"
+            "role": "student",
         }
-    
+
     return TestClient(app)
 
 
@@ -124,27 +119,23 @@ async def async_test_client():
     Create an async test client for FastAPI application (2025 pattern).
     Uses proper context manager to ensure resources are cleaned up.
     """
-    from httpx import AsyncClient, ASGITransport
-    
+    from httpx import ASGITransport, AsyncClient
+
     app = FastAPI()
-    
+
     # Add test routes
     @app.get("/health")
     async def health_check():
         return {"status": "healthy"}
-    
+
     @app.post("/api/v1/auth/login")
     async def login(username: str, password: str):
         return {
             "access_token": "test_token",
             "token_type": "bearer",
-            "user": {
-                "id": "test_id",
-                "username": username,
-                "role": "student"
-            }
+            "user": {"id": "test_id", "username": username, "role": "student"},
         }
-    
+
     # Use ASGITransport for proper async testing (2025 best practice)
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -221,36 +212,31 @@ def mock_pusher_client():
     client = Mock()
     client.trigger = Mock(return_value={"success": True})
     client.trigger_batch = Mock(return_value={"success": True})
-    client.authenticate = Mock(return_value={
-        "auth": "test_auth_string",
-        "channel_data": "{}"
-    })
+    client.authenticate = Mock(return_value={"auth": "test_auth_string", "channel_data": "{}"})
     client.validate_webhook = Mock(return_value=True)
-    client.get_channel_info = Mock(return_value={
-        "occupied": True,
-        "user_count": 5
-    })
+    client.get_channel_info = Mock(return_value={"occupied": True, "user_count": 5})
     return client
 
 
 @pytest.fixture
 def api_response_factory():
     """Factory for creating standard API responses."""
+
     def create_response(
         status: str = "success",
-        data: Optional[Any] = None,
-        message: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        status_code: int = 200
+        data: Any | None = None,
+        message: str | None = None,
+        metadata: dict[str, Any] | None = None,
+        status_code: int = 200,
     ):
         response = {
             "status": status,
             "data": data or {},
             "message": message or "",
-            "metadata": metadata or {}
+            "metadata": metadata or {},
         }
         return response, status_code
-    
+
     return create_response
 
 
@@ -258,7 +244,7 @@ def api_response_factory():
 def mock_http_client():
     """Create a mock HTTP client for external API calls."""
     client = Mock()
-    
+
     # Mock GET request
     get_response = Mock()
     get_response.status_code = 200
@@ -266,7 +252,7 @@ def mock_http_client():
     get_response.text = '{"result": "success"}'
     get_response.headers = {"content-type": "application/json"}
     client.get = Mock(return_value=get_response)
-    
+
     # Mock POST request
     post_response = Mock()
     post_response.status_code = 201
@@ -274,7 +260,7 @@ def mock_http_client():
     post_response.text = '{"id": "created_id"}'
     post_response.headers = {"content-type": "application/json"}
     client.post = Mock(return_value=post_response)
-    
+
     # Mock PUT request
     put_response = Mock()
     put_response.status_code = 200
@@ -282,14 +268,14 @@ def mock_http_client():
     put_response.text = '{"updated": true}'
     put_response.headers = {"content-type": "application/json"}
     client.put = Mock(return_value=put_response)
-    
+
     # Mock DELETE request
     delete_response = Mock()
     delete_response.status_code = 204
     delete_response.text = ""
     delete_response.headers = {}
     client.delete = Mock(return_value=delete_response)
-    
+
     return client
 
 
@@ -299,18 +285,20 @@ def mock_oauth_provider():
     provider = Mock()
     provider.authorize_url = "https://oauth.example.com/authorize"
     provider.token_url = "https://oauth.example.com/token"
-    provider.get_authorize_url = Mock(return_value="https://oauth.example.com/authorize?client_id=test")
-    provider.get_token = Mock(return_value={
-        "access_token": "mock_access_token",
-        "refresh_token": "mock_refresh_token",
-        "expires_in": 3600,
-        "token_type": "Bearer"
-    })
-    provider.get_user_info = Mock(return_value={
-        "id": "oauth_user_id",
-        "email": "oauth@example.com",
-        "name": "OAuth User"
-    })
+    provider.get_authorize_url = Mock(
+        return_value="https://oauth.example.com/authorize?client_id=test"
+    )
+    provider.get_token = Mock(
+        return_value={
+            "access_token": "mock_access_token",
+            "refresh_token": "mock_refresh_token",
+            "expires_in": 3600,
+            "token_type": "Bearer",
+        }
+    )
+    provider.get_user_info = Mock(
+        return_value={"id": "oauth_user_id", "email": "oauth@example.com", "name": "OAuth User"}
+    )
     return provider
 
 
@@ -366,7 +354,7 @@ def api_test_data():
                 "id": fake.uuid4(),
                 "username": fake.user_name(),
                 "email": fake.email(),
-                "role": fake.random_element(["student", "teacher", "admin"])
+                "role": fake.random_element(["student", "teacher", "admin"]),
             }
             for _ in range(5)
         ],
@@ -375,7 +363,7 @@ def api_test_data():
                 "id": fake.uuid4(),
                 "title": fake.sentence(nb_words=4),
                 "description": fake.text(max_nb_chars=200),
-                "subject": fake.random_element(["Mathematics", "Science", "English", "History"])
+                "subject": fake.random_element(["Mathematics", "Science", "English", "History"]),
             }
             for _ in range(3)
         ],
@@ -384,8 +372,8 @@ def api_test_data():
                 "id": fake.uuid4(),
                 "title": fake.sentence(nb_words=3),
                 "type": fake.random_element(["quiz", "test", "assignment"]),
-                "points": fake.random_int(min=10, max=100, step=10)
+                "points": fake.random_int(min=10, max=100, step=10),
             }
             for _ in range(4)
-        ]
+        ],
     }

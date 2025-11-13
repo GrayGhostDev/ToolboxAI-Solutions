@@ -18,19 +18,16 @@ Version: 1.0.0
 """
 
 import asyncio
-import json
 import os
-import time
-import uuid
-from datetime import datetime, timezone
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
 # Configure for Docker environment
 os.environ["REDIS_URL"] = "redis://localhost:6381/0"
-os.environ["DATABASE_URL"] = "postgresql://eduplatform:eduplatform2024@localhost:5434/educational_platform_dev"
+os.environ["DATABASE_URL"] = (
+    "postgresql://eduplatform:eduplatform2024@localhost:5434/educational_platform_dev"
+)
 
 # Import test utilities
 try:
@@ -38,6 +35,7 @@ try:
         get_docker_config,
         get_docker_service_status,
     )
+
     DOCKER_CONFIG_AVAILABLE = True
 except ImportError:
     DOCKER_CONFIG_AVAILABLE = False
@@ -62,6 +60,7 @@ class TestDockerAgentSystem:
         # Test Redis connectivity
         try:
             import redis.asyncio as redis
+
             redis_client = redis.from_url(docker_config.get_redis_url(), decode_responses=True)
             await redis_client.ping()
             await redis_client.close()
@@ -73,6 +72,7 @@ class TestDockerAgentSystem:
         # Test PostgreSQL connectivity
         try:
             import asyncpg
+
             conn = await asyncpg.connect(docker_config.get_postgres_url())
             await conn.execute("SELECT 1")
             await conn.close()
@@ -81,7 +81,9 @@ class TestDockerAgentSystem:
             print(f"PostgreSQL connection failed: {e}")
             postgres_healthy = False
 
-        print(f"✅ Docker services connectivity - Redis: {redis_healthy}, PostgreSQL: {postgres_healthy}")
+        print(
+            f"✅ Docker services connectivity - Redis: {redis_healthy}, PostgreSQL: {postgres_healthy}"
+        )
 
         # At least one service should be healthy for Docker environment
         assert redis_healthy or postgres_healthy, "At least one Docker service should be accessible"
@@ -145,7 +147,7 @@ class TestDockerAgentSystem:
         """Test Pusher integration in Docker environment"""
         try:
             # Mock Pusher client for testing
-            with patch('apps.backend.services.pusher.get_pusher_client') as mock_client:
+            with patch("apps.backend.services.pusher.get_pusher_client") as mock_client:
                 mock_pusher = Mock()
                 mock_client.return_value = mock_pusher
 
@@ -154,9 +156,7 @@ class TestDockerAgentSystem:
 
                 # Test event triggering
                 await trigger_event(
-                    channel="test-channel",
-                    event="test-event",
-                    data={"test": "data"}
+                    channel="test-channel", event="test-event", data={"test": "data"}
                 )
 
                 # Verify Pusher was called
@@ -176,7 +176,9 @@ class TestDockerAgentSystem:
         """Test Docker environment variables and configuration"""
         # Override environment variables for Docker testing
         os.environ["REDIS_URL"] = "redis://localhost:6381/0"
-        os.environ["DATABASE_URL"] = "postgresql://eduplatform:eduplatform2024@localhost:5434/educational_platform_dev"
+        os.environ["DATABASE_URL"] = (
+            "postgresql://eduplatform:eduplatform2024@localhost:5434/educational_platform_dev"
+        )
         os.environ["REDIS_PORT"] = "6381"
         os.environ["POSTGRES_PORT"] = "5434"
 
@@ -187,13 +189,13 @@ class TestDockerAgentSystem:
             "POSTGRES_HOST": os.getenv("POSTGRES_HOST", "localhost"),
             "POSTGRES_PORT": os.getenv("POSTGRES_PORT", "5434"),
             "REDIS_HOST": os.getenv("REDIS_HOST", "localhost"),
-            "REDIS_PORT": os.getenv("REDIS_PORT", "6381")
+            "REDIS_PORT": os.getenv("REDIS_PORT", "6381"),
         }
 
         print("🔍 Docker Environment Variables:")
         for var, value in docker_vars.items():
             masked_value = value
-            if value and any(secret in var.lower() for secret in ['password', 'key', 'secret']):
+            if value and any(secret in var.lower() for secret in ["password", "key", "secret"]):
                 masked_value = "***"
             print(f"  {var}: {masked_value}")
 
@@ -206,7 +208,9 @@ class TestDockerAgentSystem:
         docker_postgres_configured = "5434" in database_url or os.getenv("POSTGRES_PORT") == "5434"
 
         assert docker_redis_configured, f"Redis should use Docker port 6381, got: {redis_url}"
-        assert docker_postgres_configured, f"PostgreSQL should use Docker port 5434, got: {database_url}"
+        assert (
+            docker_postgres_configured
+        ), f"PostgreSQL should use Docker port 5434, got: {database_url}"
 
         print("✅ Docker environment variables validated")
         return True
@@ -226,7 +230,8 @@ class TestDockerAgentSystem:
             if "password" in url:
                 # Mask password in URL
                 import re
-                masked_url = re.sub(r'://([^:]+):([^@]+)@', r'://\1:***@', url)
+
+                masked_url = re.sub(r"://([^:]+):([^@]+)@", r"://\1:***@", url)
             print(f"  {service}: {masked_url}")
 
         # Validate service URLs contain Docker ports
@@ -244,9 +249,9 @@ async def test_complete_docker_integration():
     Master test for complete Docker-based agent system integration.
     Tests all components in Docker environment and ensures >85% functionality.
     """
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("DOCKER AGENT SYSTEM INTEGRATION TEST")
-    print("="*80)
+    print("=" * 80)
 
     test_instance = TestDockerAgentSystem()
 
@@ -278,17 +283,19 @@ async def test_complete_docker_integration():
     # Calculate integration coverage
     coverage_percentage = (successful_tests / len(integration_tests)) * 100
 
-    print(f"\n" + "="*80)
+    print(f"\n" + "=" * 80)
     print("DOCKER INTEGRATION COVERAGE REPORT")
-    print("="*80)
+    print("=" * 80)
     for test_name, success in test_results.items():
         status = "✅ PASS" if success else "❌ FAIL"
         print(f"{test_name:<40} {status}")
-    print("="*80)
+    print("=" * 80)
     print(f"Coverage: {coverage_percentage:.1f}% ({successful_tests}/{len(integration_tests)})")
 
     # Validate coverage threshold (85% minimum)
-    assert coverage_percentage >= 85, f"Docker integration coverage {coverage_percentage:.1f}% below 85% threshold"
+    assert (
+        coverage_percentage >= 85
+    ), f"Docker integration coverage {coverage_percentage:.1f}% below 85% threshold"
 
     print(f"🎉 DOCKER AGENT SYSTEM INTEGRATION: PASSED - {coverage_percentage:.1f}% coverage")
 
@@ -297,7 +304,7 @@ async def test_complete_docker_integration():
         "successful_tests": successful_tests,
         "total_tests": len(integration_tests),
         "test_results": test_results,
-        "environment": "docker"
+        "environment": "docker",
     }
 
 

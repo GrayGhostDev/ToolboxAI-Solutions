@@ -1,4 +1,5 @@
 import pytest_asyncio
+
 """
 Test CORS Security Configuration
 
@@ -14,9 +15,12 @@ if str(project_root) not in sys.path:
 
 
 
-import pytest
 from unittest.mock import Mock, patch
-from apps.backend.core.security.cors import SecureCORSConfig, CORSMiddlewareWithLogging
+
+import pytest
+
+from apps.backend.core.security.cors import CORSMiddlewareWithLogging, SecureCORSConfig
+
 
 class TestSecureCORSConfig:
     """Test SecureCORSConfig class"""
@@ -110,6 +114,19 @@ class TestSecureCORSConfig:
         assert config.is_origin_allowed("https://dashboard.example.com") is True
         assert config.is_origin_allowed("https://evil.com") is False
         assert config.is_origin_allowed("http://app.example.com") is False  # Wrong protocol
+
+    def test_wildcard_subdomain_matching(self):
+        """Ensure wildcard subdomain patterns are converted to regex."""
+        config = SecureCORSConfig(
+            environment="production",
+            allowed_origins=["https://*.example.com"]
+        )
+
+        assert config.allowed_origins == []  # Wildcard moved to regex handling
+        assert config.allowed_origins_regex is not None
+        assert config.is_origin_allowed("https://preview.example.com") is True
+        assert config.is_origin_allowed("https://foo.bar.example.com") is True
+        assert config.is_origin_allowed("https://malicious.com") is False
     
     def test_cors_headers_generation(self):
         """Test CORS headers generation"""

@@ -26,44 +26,33 @@ Usage:
     pytest tests/security/test_multi_tenant_security_audit.py --tb=short
 """
 
+from uuid import UUID, uuid4
+
 import pytest
-from uuid import uuid4, UUID
-from typing import List, Dict, Any
-from datetime import datetime, timedelta
-
 from fastapi.testclient import TestClient
+from sqlalchemy import text
+from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm import Session
-from sqlalchemy import text, select
-from sqlalchemy.exc import IntegrityError, ProgrammingError
-
-# Import models
-from database.models.agent_models import AgentInstance, AgentExecution
-from database.models.roblox_models import RobloxEnvironment
-from database.models.payment import Customer, Subscription
-from database.models.content_pipeline_models import EnhancedContentGeneration
-from database.models import Organization, User
 
 # Import application
 from apps.backend.main import app
+from database.models import Organization, User
 
+# Import models
+from database.models.agent_models import AgentExecution, AgentInstance
+from database.models.payment import Customer, Subscription
+from database.models.roblox_models import RobloxEnvironment
 
 # ============================================================================
 # Test Fixtures
 # ============================================================================
 
+
 @pytest.fixture(scope="function")
 def security_test_orgs(db_session: Session) -> tuple[Organization, Organization]:
     """Create two organizations for security testing"""
-    org1 = Organization(
-        id=uuid4(),
-        name="Secure Org 1",
-        domain="secure-org-1.test"
-    )
-    org2 = Organization(
-        id=uuid4(),
-        name="Secure Org 2",
-        domain="secure-org-2.test"
-    )
+    org1 = Organization(id=uuid4(), name="Secure Org 1", domain="secure-org-1.test")
+    org2 = Organization(id=uuid4(), name="Secure Org 2", domain="secure-org-2.test")
 
     db_session.add_all([org1, org2])
     db_session.commit()
@@ -78,23 +67,16 @@ def security_test_orgs(db_session: Session) -> tuple[Organization, Organization]
 
 @pytest.fixture(scope="function")
 def security_test_users(
-    db_session: Session,
-    security_test_orgs: tuple[Organization, Organization]
+    db_session: Session, security_test_orgs: tuple[Organization, Organization]
 ) -> tuple[User, User]:
     """Create users in each organization"""
     org1, org2 = security_test_orgs
 
     user1 = User(
-        id=9001,
-        email="attacker@secure-org-1.test",
-        username="attacker1",
-        organization_id=org1.id
+        id=9001, email="attacker@secure-org-1.test", username="attacker1", organization_id=org1.id
     )
     user2 = User(
-        id=9002,
-        email="victim@secure-org-2.test",
-        username="victim2",
-        organization_id=org2.id
+        id=9002, email="victim@secure-org-2.test", username="victim2", organization_id=org2.id
     )
 
     db_session.add_all([user1, user2])
@@ -118,6 +100,7 @@ def test_client() -> TestClient:
 # Cross-Organization Data Access Tests
 # ============================================================================
 
+
 class TestCrossOrganizationAccess:
     """Test attempts to access data from other organizations"""
 
@@ -125,7 +108,7 @@ class TestCrossOrganizationAccess:
         self,
         db_session: Session,
         security_test_orgs: tuple[Organization, Organization],
-        security_test_users: tuple[User, User]
+        security_test_users: tuple[User, User],
     ):
         """Verify user from org1 cannot query org2's agents"""
         org1, org2 = security_test_orgs
@@ -138,7 +121,7 @@ class TestCrossOrganizationAccess:
             agent_type="CONTENT_GENERATOR",
             status="BUSY",
             organization_id=org2.id,
-            created_by_id=user2.id
+            created_by_id=user2.id,
         )
         db_session.add(agent2)
         db_session.commit()
@@ -147,9 +130,7 @@ class TestCrossOrganizationAccess:
         db_session.execute(text(f"SET app.current_organization_id = '{org1.id}'"))
 
         # Attempt to query org2's agent
-        result = db_session.query(AgentInstance).filter_by(
-            agent_id="secret-agent-org2"
-        ).all()
+        result = db_session.query(AgentInstance).filter_by(agent_id="secret-agent-org2").all()
 
         # Should return empty - org2's data not visible to org1
         assert len(result) == 0, "Cross-organization data leaked!"
@@ -158,7 +139,7 @@ class TestCrossOrganizationAccess:
         self,
         db_session: Session,
         security_test_orgs: tuple[Organization, Organization],
-        security_test_users: tuple[User, User]
+        security_test_users: tuple[User, User],
     ):
         """Verify querying by ID from wrong org returns nothing"""
         org1, org2 = security_test_orgs
@@ -166,10 +147,7 @@ class TestCrossOrganizationAccess:
 
         # Create environment in org2
         env2 = RobloxEnvironment(
-            user_id=user2.id,
-            name="Secret Environment",
-            place_id="999999",
-            organization_id=org2.id
+            user_id=user2.id, name="Secret Environment", place_id="999999", organization_id=org2.id
         )
         db_session.add(env2)
         db_session.flush()
@@ -180,9 +158,7 @@ class TestCrossOrganizationAccess:
         db_session.execute(text(f"SET app.current_organization_id = '{org1.id}'"))
 
         # Attempt to access org2's environment by ID
-        result = db_session.query(RobloxEnvironment).filter_by(
-            id=secret_env_id
-        ).first()
+        result = db_session.query(RobloxEnvironment).filter_by(id=secret_env_id).first()
 
         # Should return None - RLS policy blocks access
         assert result is None, "Accessed other organization's data by ID!"
@@ -191,7 +167,7 @@ class TestCrossOrganizationAccess:
         self,
         db_session: Session,
         security_test_orgs: tuple[Organization, Organization],
-        security_test_users: tuple[User, User]
+        security_test_users: tuple[User, User],
     ):
         """Verify JOINs cannot expose cross-organization data"""
         org1, org2 = security_test_orgs
@@ -204,7 +180,7 @@ class TestCrossOrganizationAccess:
             agent_type="CONTENT_GENERATOR",
             status="IDLE",
             organization_id=org2.id,
-            created_by_id=user2.id
+            created_by_id=user2.id,
         )
         db_session.add(agent2)
         db_session.flush()
@@ -214,7 +190,7 @@ class TestCrossOrganizationAccess:
             agent_instance_id=agent2.id,
             execution_id="join-test-exec",
             status="RUNNING",
-            organization_id=org2.id
+            organization_id=org2.id,
         )
         db_session.add(execution2)
         db_session.commit()
@@ -223,11 +199,12 @@ class TestCrossOrganizationAccess:
         db_session.execute(text(f"SET app.current_organization_id = '{org1.id}'"))
 
         # Attempt to join and access org2 data
-        result = db_session.query(AgentExecution).join(
-            AgentInstance
-        ).filter(
-            AgentExecution.execution_id == "join-test-exec"
-        ).all()
+        result = (
+            db_session.query(AgentExecution)
+            .join(AgentInstance)
+            .filter(AgentExecution.execution_id == "join-test-exec")
+            .all()
+        )
 
         # Should return empty - RLS blocks cross-org JOIN
         assert len(result) == 0, "Cross-organization JOIN exposed data!"
@@ -237,13 +214,12 @@ class TestCrossOrganizationAccess:
 # RLS Policy Bypass Attempts
 # ============================================================================
 
+
 class TestRLSPolicyBypass:
     """Test attempts to bypass Row Level Security policies"""
 
     def test_cannot_bypass_rls_with_union(
-        self,
-        db_session: Session,
-        security_test_orgs: tuple[Organization, Organization]
+        self, db_session: Session, security_test_orgs: tuple[Organization, Organization]
     ):
         """Verify UNION queries cannot bypass RLS"""
         org1, org2 = security_test_orgs
@@ -253,16 +229,19 @@ class TestRLSPolicyBypass:
 
         # Attempt UNION to access all organizations
         with pytest.raises((ProgrammingError, Exception)):
-            db_session.execute(text("""
+            db_session.execute(
+                text(
+                    """
                 SELECT * FROM agent_instances WHERE organization_id = :org1
                 UNION
                 SELECT * FROM agent_instances WHERE organization_id = :org2
-            """), {"org1": str(org1.id), "org2": str(org2.id)})
+            """
+                ),
+                {"org1": str(org1.id), "org2": str(org2.id)},
+            )
 
     def test_cannot_bypass_rls_with_cte(
-        self,
-        db_session: Session,
-        security_test_orgs: tuple[Organization, Organization]
+        self, db_session: Session, security_test_orgs: tuple[Organization, Organization]
     ):
         """Verify CTE (WITH clause) respects RLS"""
         org1, org2 = security_test_orgs
@@ -271,12 +250,16 @@ class TestRLSPolicyBypass:
         db_session.execute(text(f"SET app.current_organization_id = '{org1.id}'"))
 
         # Attempt CTE to access all data
-        result = db_session.execute(text("""
+        result = db_session.execute(
+            text(
+                """
             WITH all_agents AS (
                 SELECT * FROM agent_instances
             )
             SELECT COUNT(*) FROM all_agents
-        """))
+        """
+            )
+        )
 
         # Should only count org1's agents
         # (This test verifies RLS is applied to CTEs)
@@ -284,9 +267,7 @@ class TestRLSPolicyBypass:
         # Count should be org1's agents only, not all agents
 
     def test_cannot_bypass_rls_by_resetting_context(
-        self,
-        db_session: Session,
-        security_test_orgs: tuple[Organization, Organization]
+        self, db_session: Session, security_test_orgs: tuple[Organization, Organization]
     ):
         """Verify RESET command doesn't bypass RLS if policies enforced"""
         org1, org2 = security_test_orgs
@@ -311,6 +292,7 @@ class TestRLSPolicyBypass:
 # API Endpoint Authorization Tests
 # ============================================================================
 
+
 class TestAPIEndpointAuthorization:
     """Test API endpoint authorization and organization filtering"""
 
@@ -318,7 +300,7 @@ class TestAPIEndpointAuthorization:
         self,
         test_client: TestClient,
         security_test_orgs: tuple[Organization, Organization],
-        security_test_users: tuple[User, User]
+        security_test_users: tuple[User, User],
     ):
         """Verify /agents endpoint only returns user's org data"""
         org1, org2 = security_test_orgs
@@ -329,8 +311,7 @@ class TestAPIEndpointAuthorization:
 
         # Request agents (should only get org1 agents)
         response = test_client.get(
-            "/api/v1/agents/instances",
-            headers={"Authorization": f"Bearer {token1}"}
+            "/api/v1/agents/instances", headers={"Authorization": f"Bearer {token1}"}
         )
 
         assert response.status_code == 200
@@ -345,7 +326,7 @@ class TestAPIEndpointAuthorization:
         test_client: TestClient,
         db_session: Session,
         security_test_orgs: tuple[Organization, Organization],
-        security_test_users: tuple[User, User]
+        security_test_users: tuple[User, User],
     ):
         """Verify accessing org2 resource ID from org1 returns 404"""
         org1, org2 = security_test_orgs
@@ -358,7 +339,7 @@ class TestAPIEndpointAuthorization:
             agent_type="CONTENT_GENERATOR",
             status="IDLE",
             organization_id=org2.id,
-            created_by_id=user2.id
+            created_by_id=user2.id,
         )
         db_session.add(agent2)
         db_session.commit()
@@ -367,8 +348,7 @@ class TestAPIEndpointAuthorization:
         token1 = generate_test_token(user1, org1)
 
         response = test_client.get(
-            f"/api/v1/agents/instances/{agent2.id}",
-            headers={"Authorization": f"Bearer {token1}"}
+            f"/api/v1/agents/instances/{agent2.id}", headers={"Authorization": f"Bearer {token1}"}
         )
 
         # Should return 404 (not 403 to avoid information leakage)
@@ -380,7 +360,7 @@ class TestAPIEndpointAuthorization:
         test_client: TestClient,
         db_session: Session,
         security_test_orgs: tuple[Organization, Organization],
-        security_test_users: tuple[User, User]
+        security_test_users: tuple[User, User],
     ):
         """Verify modifying org2 resource from org1 fails"""
         org1, org2 = security_test_orgs
@@ -391,7 +371,7 @@ class TestAPIEndpointAuthorization:
             user_id=user2.id,
             stripe_customer_id="cus_secret",
             email=user2.email,
-            organization_id=org2.id
+            organization_id=org2.id,
         )
         db_session.add(customer2)
         db_session.flush()
@@ -400,7 +380,7 @@ class TestAPIEndpointAuthorization:
             customer_id=customer2.id,
             stripe_subscription_id="sub_secret",
             status="active",
-            organization_id=org2.id
+            organization_id=org2.id,
         )
         db_session.add(subscription2)
         db_session.commit()
@@ -410,7 +390,7 @@ class TestAPIEndpointAuthorization:
 
         response = test_client.delete(
             f"/api/v1/payments/subscriptions/{subscription2.id}",
-            headers={"Authorization": f"Bearer {token1}"}
+            headers={"Authorization": f"Bearer {token1}"},
         )
 
         # Should return 404 or 403
@@ -421,7 +401,7 @@ class TestAPIEndpointAuthorization:
         test_client: TestClient,
         db_session: Session,
         security_test_orgs: tuple[Organization, Organization],
-        security_test_users: tuple[User, User]
+        security_test_users: tuple[User, User],
     ):
         """Verify creating resource sets user's organization_id"""
         org1, org2 = security_test_orgs
@@ -437,17 +417,15 @@ class TestAPIEndpointAuthorization:
                 "name": "Test Environment",
                 "description": "Security test",
                 "grade_level": "high-school",
-                "subject": "science"
-            }
+                "subject": "science",
+            },
         )
 
         assert response.status_code in [200, 201, 202]  # Various success codes
 
         # Verify created resource has correct organization_id
         env_name = "Test Environment"
-        env = db_session.query(RobloxEnvironment).filter_by(
-            name=env_name
-        ).first()
+        env = db_session.query(RobloxEnvironment).filter_by(name=env_name).first()
 
         if env:
             assert env.organization_id == org1.id, "Wrong organization_id set!"
@@ -457,6 +435,7 @@ class TestAPIEndpointAuthorization:
 # Parameter Tampering Tests
 # ============================================================================
 
+
 class TestParameterTampering:
     """Test attempts to tamper with request parameters"""
 
@@ -464,7 +443,7 @@ class TestParameterTampering:
         self,
         test_client: TestClient,
         security_test_orgs: tuple[Organization, Organization],
-        security_test_users: tuple[User, User]
+        security_test_users: tuple[User, User],
     ):
         """Verify injecting organization_id parameter is ignored"""
         org1, org2 = security_test_orgs
@@ -480,8 +459,8 @@ class TestParameterTampering:
                 "name": "Tampered Env",
                 "description": "Tampering attempt",
                 "organization_id": str(org2.id),  # Attempt to inject org2
-                "grade_level": "middle-school"
-            }
+                "grade_level": "middle-school",
+            },
         )
 
         # Should ignore injected org_id and use token's org_id
@@ -492,7 +471,7 @@ class TestParameterTampering:
         test_client: TestClient,
         db_session: Session,
         security_test_orgs: tuple[Organization, Organization],
-        security_test_users: tuple[User, User]
+        security_test_users: tuple[User, User],
     ):
         """Verify updating resource cannot change organization_id"""
         org1, org2 = security_test_orgs
@@ -505,7 +484,7 @@ class TestParameterTampering:
             agent_type="CONTENT_GENERATOR",
             status="IDLE",
             organization_id=org1.id,
-            created_by_id=user1.id
+            created_by_id=user1.id,
         )
         db_session.add(agent1)
         db_session.commit()
@@ -516,10 +495,7 @@ class TestParameterTampering:
         response = test_client.patch(
             f"/api/v1/agents/instances/{agent1.id}",
             headers={"Authorization": f"Bearer {token1}"},
-            json={
-                "organization_id": str(org2.id),  # Tampering attempt
-                "status": "BUSY"
-            }
+            json={"organization_id": str(org2.id), "status": "BUSY"},  # Tampering attempt
         )
 
         # Verify organization_id unchanged
@@ -531,6 +507,7 @@ class TestParameterTampering:
 # SQL Injection Tests
 # ============================================================================
 
+
 class TestSQLInjection:
     """Test SQL injection attack attempts"""
 
@@ -538,7 +515,7 @@ class TestSQLInjection:
         self,
         test_client: TestClient,
         security_test_orgs: tuple[Organization, Organization],
-        security_test_users: tuple[User, User]
+        security_test_users: tuple[User, User],
     ):
         """Verify SQL injection attempts in filters are blocked"""
         org1, org2 = security_test_orgs
@@ -551,7 +528,7 @@ class TestSQLInjection:
 
         response = test_client.get(
             f"/api/v1/agents/instances?agent_id={malicious_input}",
-            headers={"Authorization": f"Bearer {token1}"}
+            headers={"Authorization": f"Bearer {token1}"},
         )
 
         # Should not return unexpected data
@@ -569,6 +546,7 @@ class TestSQLInjection:
 # Information Leakage Tests
 # ============================================================================
 
+
 class TestInformationLeakage:
     """Test for information disclosure vulnerabilities"""
 
@@ -576,7 +554,7 @@ class TestInformationLeakage:
         self,
         test_client: TestClient,
         security_test_orgs: tuple[Organization, Organization],
-        security_test_users: tuple[User, User]
+        security_test_users: tuple[User, User],
     ):
         """Verify error messages don't reveal other org exists"""
         org1, org2 = security_test_orgs
@@ -588,8 +566,7 @@ class TestInformationLeakage:
         fake_id = uuid4()
 
         response = test_client.get(
-            f"/api/v1/agents/instances/{fake_id}",
-            headers={"Authorization": f"Bearer {token1}"}
+            f"/api/v1/agents/instances/{fake_id}", headers={"Authorization": f"Bearer {token1}"}
         )
 
         # Should return generic 404
@@ -604,7 +581,7 @@ class TestInformationLeakage:
         self,
         test_client: TestClient,
         security_test_orgs: tuple[Organization, Organization],
-        security_test_users: tuple[User, User]
+        security_test_users: tuple[User, User],
     ):
         """Verify list endpoints don't reveal total counts across orgs"""
         org1, org2 = security_test_orgs
@@ -613,8 +590,7 @@ class TestInformationLeakage:
         token1 = generate_test_token(user1, org1)
 
         response = test_client.get(
-            "/api/v1/agents/instances",
-            headers={"Authorization": f"Bearer {token1}"}
+            "/api/v1/agents/instances", headers={"Authorization": f"Bearer {token1}"}
         )
 
         assert response.status_code == 200
@@ -631,6 +607,7 @@ class TestInformationLeakage:
 # Privilege Escalation Tests
 # ============================================================================
 
+
 class TestPrivilegeEscalation:
     """Test attempts to escalate privileges"""
 
@@ -638,7 +615,7 @@ class TestPrivilegeEscalation:
         self,
         test_client: TestClient,
         security_test_orgs: tuple[Organization, Organization],
-        security_test_users: tuple[User, User]
+        security_test_users: tuple[User, User],
     ):
         """Verify regular user cannot access admin endpoints"""
         org1, org2 = security_test_orgs
@@ -649,8 +626,7 @@ class TestPrivilegeEscalation:
 
         # Attempt to access admin endpoint
         response = test_client.get(
-            "/api/v1/admin/organizations",
-            headers={"Authorization": f"Bearer {token1}"}
+            "/api/v1/admin/organizations", headers={"Authorization": f"Bearer {token1}"}
         )
 
         # Should return 403 Forbidden
@@ -660,7 +636,7 @@ class TestPrivilegeEscalation:
         self,
         test_client: TestClient,
         security_test_orgs: tuple[Organization, Organization],
-        security_test_users: tuple[User, User]
+        security_test_users: tuple[User, User],
     ):
         """Verify user cannot elevate their own role"""
         org1, org2 = security_test_orgs
@@ -672,7 +648,7 @@ class TestPrivilegeEscalation:
         response = test_client.patch(
             f"/api/v1/users/{user1.id}",
             headers={"Authorization": f"Bearer {token1}"},
-            json={"role": "admin"}
+            json={"role": "admin"},
         )
 
         # Should be rejected
@@ -683,11 +659,8 @@ class TestPrivilegeEscalation:
 # Test Utilities
 # ============================================================================
 
-def generate_test_token(
-    user: User,
-    org: Organization,
-    role: str = "user"
-) -> str:
+
+def generate_test_token(user: User, org: Organization, role: str = "user") -> str:
     """Generate JWT token for testing"""
     from apps.backend.core.security import create_access_token
 
@@ -695,7 +668,7 @@ def generate_test_token(
         "sub": str(user.id),
         "email": user.email,
         "organization_id": str(org.id),
-        "role": role
+        "role": role,
     }
 
     return create_access_token(token_data)
@@ -705,7 +678,8 @@ def generate_test_token(
 # Security Audit Report Generator
 # ============================================================================
 
-def generate_security_audit_report(test_results: Dict[str, bool]) -> str:
+
+def generate_security_audit_report(test_results: dict[str, bool]) -> str:
     """Generate comprehensive security audit report"""
     from datetime import datetime
 
@@ -734,7 +708,9 @@ def generate_security_audit_report(test_results: Dict[str, bool]) -> str:
     report.append(f"  Passed: {passed}")
     report.append(f"  Failed: {failed}")
     report.append(f"  Total: {passed + failed}")
-    report.append(f"\nSecurity Status: {'✅ SECURE' if failed == 0 else '❌ VULNERABILITIES FOUND'}")
+    report.append(
+        f"\nSecurity Status: {'✅ SECURE' if failed == 0 else '❌ VULNERABILITIES FOUND'}"
+    )
     report.append("=" * 80)
 
     return "\n".join(report)

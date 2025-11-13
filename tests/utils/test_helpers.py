@@ -4,21 +4,22 @@ Test Helper Utilities
 Provides reusable helper functions and utilities for testing across the project.
 """
 
-from typing import Dict, Any, List, Optional, Callable
-from unittest.mock import Mock, AsyncMock, MagicMock
-from datetime import datetime, timedelta
-from uuid import UUID, uuid4
-import json
 import asyncio
+import json
+from collections.abc import Callable
+from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Any
+from unittest.mock import AsyncMock, Mock
+from uuid import UUID, uuid4
 
 from fastapi import status
 from starlette.responses import Response
 
-
 # ============================================================================
 # API Testing Helpers
 # ============================================================================
+
 
 class APITestHelper:
     """Helper class for testing FastAPI endpoints."""
@@ -27,8 +28,8 @@ class APITestHelper:
     def assert_success_response(
         response: Response,
         expected_status: int = status.HTTP_200_OK,
-        expected_keys: List[str] = None
-    ) -> Dict[str, Any]:
+        expected_keys: list[str] = None,
+    ) -> dict[str, Any]:
         """
         Assert that an API response is successful.
 
@@ -43,8 +44,9 @@ class APITestHelper:
         Raises:
             AssertionError: If response doesn't match expectations
         """
-        assert response.status_code == expected_status, \
-            f"Expected {expected_status}, got {response.status_code}: {response.json()}"
+        assert (
+            response.status_code == expected_status
+        ), f"Expected {expected_status}, got {response.status_code}: {response.json()}"
 
         data = response.json()
 
@@ -58,8 +60,8 @@ class APITestHelper:
     def assert_error_response(
         response: Response,
         expected_status: int = status.HTTP_400_BAD_REQUEST,
-        expected_detail: str = None
-    ) -> Dict[str, Any]:
+        expected_detail: str = None,
+    ) -> dict[str, Any]:
         """
         Assert that an API response is an error.
 
@@ -74,33 +76,30 @@ class APITestHelper:
         Raises:
             AssertionError: If response doesn't match expectations
         """
-        assert response.status_code == expected_status, \
-            f"Expected {expected_status}, got {response.status_code}"
+        assert (
+            response.status_code == expected_status
+        ), f"Expected {expected_status}, got {response.status_code}"
 
         data = response.json()
-        assert "detail" in data or "message" in data, \
-            "Error response should contain 'detail' or 'message'"
+        assert (
+            "detail" in data or "message" in data
+        ), "Error response should contain 'detail' or 'message'"
 
         if expected_detail:
             detail = data.get("detail", data.get("message", ""))
-            assert expected_detail.lower() in detail.lower(), \
-                f"Expected '{expected_detail}' in error detail, got: {detail}"
+            assert (
+                expected_detail.lower() in detail.lower()
+            ), f"Expected '{expected_detail}' in error detail, got: {detail}"
 
         return data
 
     @staticmethod
-    def create_auth_headers(token: str, content_type: str = "application/json") -> Dict[str, str]:
+    def create_auth_headers(token: str, content_type: str = "application/json") -> dict[str, str]:
         """Create authentication headers."""
-        return {
-            "Authorization": f"Bearer {token}",
-            "Content-Type": content_type
-        }
+        return {"Authorization": f"Bearer {token}", "Content-Type": content_type}
 
     @staticmethod
-    def create_multipart_form_data(
-        files: Dict[str, tuple],
-        data: Dict[str, Any] = None
-    ) -> tuple:
+    def create_multipart_form_data(files: dict[str, tuple], data: dict[str, Any] = None) -> tuple:
         """
         Create multipart form data for file uploads.
 
@@ -122,14 +121,13 @@ class APITestHelper:
 # Database Testing Helpers
 # ============================================================================
 
+
 class DatabaseTestHelper:
     """Helper class for database testing."""
 
     @staticmethod
     def create_mock_query_result(
-        items: List[Any] = None,
-        count: int = None,
-        first_item: Any = None
+        items: list[Any] = None, count: int = None, first_item: Any = None
     ) -> Mock:
         """
         Create mock database query result.
@@ -166,7 +164,7 @@ class DatabaseTestHelper:
         return mock_query
 
     @staticmethod
-    def create_mock_session(query_results: Dict[Any, List[Any]] = None) -> Mock:
+    def create_mock_session(query_results: dict[Any, list[Any]] = None) -> Mock:
         """
         Create mock database session.
 
@@ -180,6 +178,7 @@ class DatabaseTestHelper:
 
         # Configure query method
         if query_results:
+
             def mock_query(model_class):
                 items = query_results.get(model_class, [])
                 return DatabaseTestHelper.create_mock_query_result(items=items)
@@ -209,6 +208,7 @@ class DatabaseTestHelper:
                 # Make database changes
                 # Changes are automatically rolled back after block
         """
+
         class TestTransaction:
             def __init__(self, session):
                 self.session = session
@@ -227,15 +227,14 @@ class DatabaseTestHelper:
 # Mock Data Generators
 # ============================================================================
 
+
 class MockDataGenerator:
     """Generate mock data for testing."""
 
     @staticmethod
     def generate_user_data(
-        role: str = "student",
-        organization_id: UUID = None,
-        **overrides
-    ) -> Dict[str, Any]:
+        role: str = "student", organization_id: UUID = None, **overrides
+    ) -> dict[str, Any]:
         """Generate mock user data."""
         user_id = overrides.get("id", uuid4())
 
@@ -247,15 +246,13 @@ class MockDataGenerator:
             "organization_id": organization_id or uuid4(),
             "is_active": True,
             "created_at": datetime.utcnow(),
-            **overrides
+            **overrides,
         }
 
     @staticmethod
     def generate_content_data(
-        created_by: int = None,
-        organization_id: UUID = None,
-        **overrides
-    ) -> Dict[str, Any]:
+        created_by: int = None, organization_id: UUID = None, **overrides
+    ) -> dict[str, Any]:
         """Generate mock educational content data."""
         return {
             "id": overrides.get("id", 1),
@@ -267,15 +264,13 @@ class MockDataGenerator:
             "created_by": created_by or 1,
             "organization_id": organization_id or uuid4(),
             "created_at": datetime.utcnow(),
-            **overrides
+            **overrides,
         }
 
     @staticmethod
     def generate_class_data(
-        teacher_id: int = None,
-        organization_id: UUID = None,
-        **overrides
-    ) -> Dict[str, Any]:
+        teacher_id: int = None, organization_id: UUID = None, **overrides
+    ) -> dict[str, Any]:
         """Generate mock class data."""
         return {
             "id": overrides.get("id", 1),
@@ -287,15 +282,11 @@ class MockDataGenerator:
             "organization_id": organization_id or uuid4(),
             "is_active": True,
             "created_at": datetime.utcnow(),
-            **overrides
+            **overrides,
         }
 
     @staticmethod
-    def generate_jwt_token(
-        user_id: int = 1,
-        role: str = "student",
-        exp_minutes: int = 60
-    ) -> str:
+    def generate_jwt_token(user_id: int = 1, role: str = "student", exp_minutes: int = 60) -> str:
         """
         Generate a mock JWT token.
 
@@ -306,7 +297,7 @@ class MockDataGenerator:
         payload = {
             "sub": str(user_id),
             "role": role,
-            "exp": (datetime.utcnow() + timedelta(minutes=exp_minutes)).isoformat()
+            "exp": (datetime.utcnow() + timedelta(minutes=exp_minutes)).isoformat(),
         }
 
         # Create a fake JWT-like token (not actually signed)
@@ -320,6 +311,7 @@ class MockDataGenerator:
 # ============================================================================
 # Async Testing Helpers
 # ============================================================================
+
 
 class AsyncTestHelper:
     """Helpers for async testing."""
@@ -353,9 +345,7 @@ class AsyncTestHelper:
 
     @staticmethod
     async def wait_for_condition(
-        condition: Callable,
-        timeout_seconds: float = 5.0,
-        check_interval: float = 0.1
+        condition: Callable, timeout_seconds: float = 5.0, check_interval: float = 0.1
     ) -> bool:
         """
         Wait for a condition to become true.
@@ -387,14 +377,13 @@ class AsyncTestHelper:
 # File Testing Helpers
 # ============================================================================
 
+
 class FileTestHelper:
     """Helpers for file-based testing."""
 
     @staticmethod
     def create_temp_file(
-        content: bytes = b"test content",
-        suffix: str = ".txt",
-        temp_dir: Path = None
+        content: bytes = b"test content", suffix: str = ".txt", temp_dir: Path = None
     ) -> Path:
         """
         Create temporary file with content.
@@ -416,10 +405,11 @@ class FileTestHelper:
             fd, path = tempfile.mkstemp(suffix=suffix)
 
         try:
-            with open(fd, 'wb') as f:
+            with open(fd, "wb") as f:
                 f.write(content)
         except Exception:
             import os
+
             os.close(fd)
             raise
 
@@ -429,16 +419,15 @@ class FileTestHelper:
     def create_mock_upload_file(
         filename: str = "test.txt",
         content: bytes = b"test content",
-        content_type: str = "text/plain"
+        content_type: str = "text/plain",
     ):
         """Create mock FastAPI UploadFile."""
-        from fastapi import UploadFile
         from io import BytesIO
 
+        from fastapi import UploadFile
+
         return UploadFile(
-            filename=filename,
-            file=BytesIO(content),
-            headers={"content-type": content_type}
+            filename=filename, file=BytesIO(content), headers={"content-type": content_type}
         )
 
     @staticmethod
@@ -452,13 +441,15 @@ class FileTestHelper:
         """Assert file content matches expected."""
         FileTestHelper.assert_file_exists(path)
         actual_content = path.read_bytes()
-        assert actual_content == expected_content, \
-            f"File content mismatch. Expected {len(expected_content)} bytes, got {len(actual_content)}"
+        assert (
+            actual_content == expected_content
+        ), f"File content mismatch. Expected {len(expected_content)} bytes, got {len(actual_content)}"
 
 
 # ============================================================================
 # Performance Testing Helpers
 # ============================================================================
+
 
 class PerformanceTestHelper:
     """Helpers for performance testing."""
@@ -496,11 +487,7 @@ class PerformanceTestHelper:
         return result, duration
 
     @staticmethod
-    def assert_execution_time(
-        duration: float,
-        max_seconds: float,
-        message: str = None
-    ):
+    def assert_execution_time(duration: float, max_seconds: float, message: str = None):
         """Assert that execution time is within acceptable range."""
         msg = message or f"Execution time {duration:.3f}s exceeded max {max_seconds}s"
         assert duration <= max_seconds, msg
@@ -516,11 +503,13 @@ class PerformanceTestHelper:
 
         def __enter__(self):
             import time
+
             self.start_time = time.time()
             return self
 
         def __exit__(self, *args):
             import time
+
             self.end_time = time.time()
             self.duration = self.end_time - self.start_time
 
@@ -533,6 +522,7 @@ class PerformanceTestHelper:
 # ============================================================================
 # Validation Helpers
 # ============================================================================
+
 
 class ValidationHelper:
     """Helpers for validation testing."""
@@ -550,7 +540,8 @@ class ValidationHelper:
     def assert_valid_email(email: str):
         """Assert that string is a valid email."""
         import re
-        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+
+        pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
         assert re.match(pattern, email), f"Invalid email: {email}"
 
     @staticmethod
@@ -558,17 +549,14 @@ class ValidationHelper:
         """Assert that value is a valid datetime."""
         if isinstance(value, str):
             try:
-                datetime.fromisoformat(value.replace('Z', '+00:00'))
+                datetime.fromisoformat(value.replace("Z", "+00:00"))
             except ValueError:
                 raise AssertionError(f"Invalid datetime string: {value}")
         elif not isinstance(value, datetime):
             raise AssertionError(f"Expected datetime, got {type(value)}")
 
     @staticmethod
-    def assert_pagination_response(
-        data: Dict[str, Any],
-        expected_keys: List[str] = None
-    ):
+    def assert_pagination_response(data: dict[str, Any], expected_keys: list[str] = None):
         """Assert that response contains valid pagination structure."""
         default_keys = ["items", "total", "page", "size"]
         keys_to_check = expected_keys or default_keys
@@ -584,34 +572,32 @@ class ValidationHelper:
 # RBAC Testing Helpers
 # ============================================================================
 
+
 class RBACTestHelper:
     """Helpers for RBAC testing."""
 
     @staticmethod
     def assert_permission_granted(response: Response):
         """Assert that permission was granted (2xx status)."""
-        assert 200 <= response.status_code < 300, \
-            f"Expected permission granted, got {response.status_code}: {response.json()}"
+        assert (
+            200 <= response.status_code < 300
+        ), f"Expected permission granted, got {response.status_code}: {response.json()}"
 
     @staticmethod
     def assert_permission_denied(response: Response, expected_status: int = 403):
         """Assert that permission was denied."""
-        assert response.status_code == expected_status, \
-            f"Expected {expected_status}, got {response.status_code}"
+        assert (
+            response.status_code == expected_status
+        ), f"Expected {expected_status}, got {response.status_code}"
 
     @staticmethod
     def assert_authentication_required(response: Response):
         """Assert that authentication is required (401)."""
-        assert response.status_code == 401, \
-            f"Expected 401 Unauthorized, got {response.status_code}"
+        assert response.status_code == 401, f"Expected 401 Unauthorized, got {response.status_code}"
 
     @staticmethod
     def test_endpoint_permissions(
-        client,
-        endpoint: str,
-        method: str,
-        users: Dict[str, tuple],
-        data: Dict = None
+        client, endpoint: str, method: str, users: dict[str, tuple], data: dict = None
     ):
         """
         Test endpoint with multiple user roles.
@@ -661,7 +647,7 @@ class RBACTestHelper:
             results[role_name] = {
                 "passed": passed,
                 "status_code": response.status_code,
-                "should_pass": should_pass
+                "should_pass": should_pass,
             }
 
             # Assert individual result
@@ -677,12 +663,8 @@ class RBACTestHelper:
 # Convenience Functions
 # ============================================================================
 
-def create_test_user(
-    db_session,
-    role: str = "student",
-    organization_id: UUID = None,
-    **kwargs
-):
+
+def create_test_user(db_session, role: str = "student", organization_id: UUID = None, **kwargs):
     """
     Create a test user in the database.
 
@@ -698,9 +680,7 @@ def create_test_user(
     from database.models import User
 
     user_data = MockDataGenerator.generate_user_data(
-        role=role,
-        organization_id=organization_id,
-        **kwargs
+        role=role, organization_id=organization_id, **kwargs
     )
 
     user = User(**user_data)
@@ -719,7 +699,7 @@ def create_test_organization(db_session, **kwargs):
         name=kwargs.get("name", "Test Organization"),
         domain=kwargs.get("domain", "test.edu"),
         is_active=kwargs.get("is_active", True),
-        **{k: v for k, v in kwargs.items() if k not in ["name", "domain", "is_active"]}
+        **{k: v for k, v in kwargs.items() if k not in ["name", "domain", "is_active"]},
     )
 
     db_session.add(org)

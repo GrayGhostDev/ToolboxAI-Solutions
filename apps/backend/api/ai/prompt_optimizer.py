@@ -3,13 +3,12 @@ GPT-4.1 Prompt Optimizer - Phase 4
 Optimizes prompts for GPT-4.1's more literal and precise instruction following
 """
 
-import re
-import json
 import hashlib
-from typing import Dict, List, Tuple, Optional, Any
+import logging
+import re
 from dataclasses import dataclass, field
 from enum import Enum
-import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -31,10 +30,10 @@ class OptimizationResult:
 
     original: str
     optimized: str
-    optimizations_applied: List[OptimizationType]
+    optimizations_applied: list[OptimizationType]
     tokens_saved: int
     complexity_score: float
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class GPT41PromptOptimizer:
@@ -50,7 +49,7 @@ class GPT41PromptOptimizer:
         self.optimization_rules = self._load_optimization_rules()
         self.cache = {}
 
-    def _load_optimization_rules(self) -> Dict[str, List[Tuple[str, str]]]:
+    def _load_optimization_rules(self) -> dict[str, list[tuple[str, str]]]:
         """Load optimization rules for GPT-4.1"""
         return {
             "redundant_phrases": [
@@ -115,7 +114,7 @@ class GPT41PromptOptimizer:
         }
 
     def optimize_prompt(
-        self, prompt: str, context: Optional[Dict[str, Any]] = None
+        self, prompt: str, context: dict[str, Any] | None = None
     ) -> OptimizationResult:
         """
         Optimize a prompt for GPT-4.1
@@ -186,7 +185,7 @@ class GPT41PromptOptimizer:
 
         return result
 
-    def _apply_literal_optimizations(self, prompt: str) -> Tuple[str, int]:
+    def _apply_literal_optimizations(self, prompt: str) -> tuple[str, int]:
         """Apply optimizations for GPT-4.1's literal instruction following"""
         original = prompt
         count = 0
@@ -203,7 +202,7 @@ class GPT41PromptOptimizer:
 
         return prompt, count
 
-    def _remove_redundancies(self, prompt: str) -> Tuple[str, int]:
+    def _remove_redundancies(self, prompt: str) -> tuple[str, int]:
         """Remove redundant instructions and explanations"""
         count = 0
 
@@ -225,7 +224,7 @@ class GPT41PromptOptimizer:
 
         return prompt, count
 
-    def _simplify_structure(self, prompt: str) -> Tuple[str, int]:
+    def _simplify_structure(self, prompt: str) -> tuple[str, int]:
         """Simplify prompt structure for clearer instructions"""
         count = 0
 
@@ -291,7 +290,7 @@ class GPT41PromptOptimizer:
 
         return min(1.0, complexity)
 
-    def optimize_tool_descriptions(self, tools: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def optimize_tool_descriptions(self, tools: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """
         Optimize tool/function descriptions for GPT-4.1
         GPT-4.1 recommendation: Use API field descriptions exclusively
@@ -335,10 +334,10 @@ class GPT41PromptOptimizer:
     def create_structured_prompt(
         self,
         task: str,
-        context: Optional[str] = None,
-        format: Optional[str] = None,
-        examples: Optional[List[str]] = None,
-        constraints: Optional[List[str]] = None,
+        context: str | None = None,
+        format: str | None = None,
+        examples: list[str] | None = None,
+        constraints: list[str] | None = None,
     ) -> str:
         """
         Create a structured prompt optimized for GPT-4.1
@@ -384,7 +383,7 @@ class GPT41PromptOptimizer:
 
         return result.optimized
 
-    def batch_optimize(self, prompts: List[str]) -> List[OptimizationResult]:
+    def batch_optimize(self, prompts: list[str]) -> list[OptimizationResult]:
         """Optimize multiple prompts in batch"""
         results = []
         total_tokens_saved = 0
@@ -401,7 +400,7 @@ class GPT41PromptOptimizer:
 
         return results
 
-    def analyze_prompt_patterns(self, prompts: List[str]) -> Dict[str, Any]:
+    def analyze_prompt_patterns(self, prompts: list[str]) -> dict[str, Any]:
         """Analyze patterns in prompts to identify optimization opportunities"""
         patterns = {
             "common_redundancies": {},
@@ -447,7 +446,7 @@ class GPT41PromptOptimizer:
 
 
 # Singleton instance
-_optimizer: Optional[GPT41PromptOptimizer] = None
+_optimizer: GPT41PromptOptimizer | None = None
 
 
 def get_prompt_optimizer() -> GPT41PromptOptimizer:
@@ -468,10 +467,10 @@ def optimize_prompt(prompt: str) -> str:
 
 def create_gpt41_prompt(
     task: str,
-    context: Optional[str] = None,
-    format: Optional[str] = None,
-    examples: Optional[List[str]] = None,
-    constraints: Optional[List[str]] = None,
+    context: str | None = None,
+    format: str | None = None,
+    examples: list[str] | None = None,
+    constraints: list[str] | None = None,
 ) -> str:
     """Create an optimized structured prompt for GPT-4.1"""
     optimizer = get_prompt_optimizer()

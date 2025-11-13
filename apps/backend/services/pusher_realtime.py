@@ -4,18 +4,15 @@ Provides full realtime communication using Pusher Channels
 """
 
 import logging
-import json
-from typing import Any, Dict, Optional, List, Set
 from datetime import datetime, timezone
-import asyncio
-from functools import wraps
+from typing import Any
 
 from apps.backend.core.config import settings
 from apps.backend.services.pusher import (
+    PusherUnavailable,
+    authenticate_channel,
     get_pusher_client,
     trigger_event,
-    authenticate_channel,
-    PusherUnavailable,
 )
 from apps.backend.services.rate_limit_manager import get_rate_limit_manager
 
@@ -34,16 +31,16 @@ DEFAULT_CHANNELS = [
 ]
 
 # Track connected users (via presence channels)
-connected_users: Dict[str, Dict[str, Any]] = {}
+connected_users: dict[str, dict[str, Any]] = {}
 
 # Channel subscriptions
-channel_subscriptions: Dict[str, Set[str]] = {}
+channel_subscriptions: dict[str, set[str]] = {}
 
 # RBAC helpers
 _role_hierarchy = {"student": 1, "teacher": 2, "admin": 3}
 
 
-def _get_required_roles() -> Dict[str, str]:
+def _get_required_roles() -> dict[str, str]:
     """Get required roles for channels from settings"""
     try:
         mapping = getattr(settings, "PUSHER_RBAC_REQUIRED_ROLES", None)
@@ -98,8 +95,8 @@ class PusherRealtimeService:
             logger.error(f"Failed to initialize Pusher: {e}")
 
     async def authenticate_user(
-        self, socket_id: str, channel: str, user_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, socket_id: str, channel: str, user_data: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Authenticate user for private/presence channel access
         """
@@ -145,9 +142,9 @@ class PusherRealtimeService:
         self,
         channel: str,
         event: str,
-        data: Dict[str, Any],
-        exclude_socket_id: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        data: dict[str, Any],
+        exclude_socket_id: str | None = None,
+    ) -> dict[str, Any]:
         """
         Broadcast event to a channel
         """
@@ -164,21 +161,21 @@ class PusherRealtimeService:
         logger.debug(f"Broadcast event '{event}' to channel '{channel}'")
         return result
 
-    async def send_to_user(self, user_id: str, event: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def send_to_user(self, user_id: str, event: str, data: dict[str, Any]) -> dict[str, Any]:
         """
         Send event to specific user via their private channel
         """
         channel = f"private-user-{user_id}"
         return await self.broadcast_event(channel, event, data)
 
-    async def send_to_role(self, role: str, event: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def send_to_role(self, role: str, event: str, data: dict[str, Any]) -> dict[str, Any]:
         """
         Send event to all users with specific role
         """
         channel = f"private-{role}"
         return await self.broadcast_event(channel, event, data)
 
-    async def handle_presence_event(self, channel: str, event: str, user_data: Dict[str, Any]):
+    async def handle_presence_event(self, channel: str, event: str, user_data: dict[str, Any]):
         """
         Handle presence channel events (member_added, member_removed)
         """
@@ -199,13 +196,13 @@ class PusherRealtimeService:
                 channel_subscriptions[user_id].discard(channel)
             logger.info(f"User {user_id} left presence channel {channel}")
 
-    def get_connected_users(self) -> List[Dict[str, Any]]:
+    def get_connected_users(self) -> list[dict[str, Any]]:
         """
         Get list of connected users
         """
         return list(connected_users.values())
 
-    def get_user_channels(self, user_id: str) -> List[str]:
+    def get_user_channels(self, user_id: str) -> list[str]:
         """
         Get channels a user is subscribed to
         """
@@ -223,7 +220,7 @@ class PusherRealtimeService:
 
 
 # Global instance
-_pusher_service: Optional[PusherRealtimeService] = None
+_pusher_service: PusherRealtimeService | None = None
 
 
 def get_pusher_service() -> PusherRealtimeService:
@@ -241,13 +238,13 @@ pusher_service = get_pusher_service()
 
 
 # Event handlers for common operations
-async def emit_dashboard_update(data: Dict[str, Any]):
+async def emit_dashboard_update(data: dict[str, Any]):
     """Emit dashboard update to all connected clients"""
     service = get_pusher_service()
     return await service.broadcast_event("public-dashboard", "dashboard-update", data)
 
 
-async def emit_content_generated(content_id: str, content_data: Dict[str, Any]):
+async def emit_content_generated(content_id: str, content_data: dict[str, Any]):
     """Emit content generation completion"""
     service = get_pusher_service()
     return await service.broadcast_event(
@@ -272,7 +269,7 @@ async def emit_quiz_submitted(quiz_id: str, student_id: str, score: float):
     )
 
 
-async def emit_agent_status(agent_name: str, status: str, details: Optional[Dict[str, Any]] = None):
+async def emit_agent_status(agent_name: str, status: str, details: dict[str, Any] | None = None):
     """Emit agent status update"""
     service = get_pusher_service()
     return await service.broadcast_event(
@@ -283,7 +280,7 @@ async def emit_agent_status(agent_name: str, status: str, details: Optional[Dict
 
 
 # Status endpoint data
-def get_pusher_status() -> Dict[str, Any]:
+def get_pusher_status() -> dict[str, Any]:
     """
     Get Pusher service status for monitoring
     """

@@ -1,4 +1,5 @@
 # Development Tools and Testing Dependencies
+# ============================================================
 # Install with: pip install -r requirements-dev.txt
 # These packages are NOT needed for production runtime
 
@@ -7,8 +8,9 @@
 # ============================================================================
 black==24.10.0                       # Code formatter
 isort==5.13.2                        # Import sorting
-mypy==1.13.0                         # Static type checking
-mypy_extensions==1.1.0               # Mypy extensions
+basedpyright==1.33.0                 # Static type checking (project standard)
+# mypy==1.13.0                       # DEPRECATED: Use basedpyright instead
+# mypy_extensions==1.1.0             # DEPRECATED: Use basedpyright instead
 ruff==0.8.4                          # Fast Python linter
 EditorConfig==0.17.1                 # Editor configuration
 

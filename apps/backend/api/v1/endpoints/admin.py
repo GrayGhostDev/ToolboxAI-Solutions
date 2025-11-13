@@ -3,11 +3,13 @@ Admin API Endpoints for ToolboxAI Educational Platform
 Provides administrative functionality for user management.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import Dict, Any, List, Optional
-from datetime import datetime
-import uuid
 import logging
+import uuid
+from datetime import datetime
+from typing import Any
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+
 from apps.backend.api.auth.auth import get_current_user
 from database.models import User
 
@@ -27,12 +29,12 @@ admin_router = APIRouter(tags=["Admin"])
 async def list_users(
     page: int = Query(default=1, ge=1, description="Page number"),
     page_size: int = Query(default=20, ge=1, le=100, description="Items per page"),
-    search: Optional[str] = Query(default=None, description="Search term"),
-    role: Optional[str] = Query(default=None, description="Filter by role"),
+    search: str | None = Query(default=None, description="Search term"),
+    role: str | None = Query(default=None, description="Filter by role"),
     sort_by: str = Query(default="created_at", description="Sort field"),
     sort_order: str = Query(default="desc", enum=["asc", "desc"], description="Sort order"),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """List users with pagination and filtering (admin only)."""
 
     if current_user.role.lower() != "admin":
@@ -210,8 +212,8 @@ async def list_users(
 
 @admin_router.post("/users")
 async def create_user(
-    user_data: Dict[str, Any], current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+    user_data: dict[str, Any], current_user: User = Depends(get_current_user)
+) -> dict[str, Any]:
     """Create a new user (admin only)."""
 
     if current_user.role.lower() != "admin":
@@ -315,7 +317,7 @@ async def create_user(
 
 
 @admin_router.get("/users/{user_id}")
-async def get_user(user_id: str, current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+async def get_user(user_id: str, current_user: User = Depends(get_current_user)) -> dict[str, Any]:
     """Get user details (admin only)."""
 
     if current_user.role.lower() != "admin":
@@ -367,8 +369,8 @@ async def get_user(user_id: str, current_user: User = Depends(get_current_user))
 
 @admin_router.put("/users/{user_id}")
 async def update_user(
-    user_id: str, update_data: Dict[str, Any], current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+    user_id: str, update_data: dict[str, Any], current_user: User = Depends(get_current_user)
+) -> dict[str, Any]:
     """Update user details (admin only)."""
 
     if current_user.role.lower() != "admin":
@@ -439,7 +441,7 @@ async def update_user(
 @admin_router.delete("/users/{user_id}")
 async def deactivate_user(
     user_id: str, current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Deactivate user (admin only). We don't actually delete users, just deactivate them."""
 
     if current_user.role.lower() != "admin":

@@ -13,25 +13,26 @@ Tests cover:
 """
 
 import json
-import os
-import xml.etree.ElementTree as ET
-from unittest.mock import Mock, patch, mock_open, MagicMock
+from unittest.mock import MagicMock, Mock, mock_open, patch
+
 import pytest
 
 # Import the module under test
 from core.coordinators import policies
 
-
 # ============================================================================
 # Test Environment Variables
 # ============================================================================
+
 
 class TestEnvironmentVariables:
     """Test environment variable configuration"""
 
     def test_test_pass_threshold_default(self):
         """Test TEST_PASS_THRESHOLD has default value"""
-        assert policies.TEST_PASS_THRESHOLD == 0.95 or isinstance(policies.TEST_PASS_THRESHOLD, float)
+        assert policies.TEST_PASS_THRESHOLD == 0.95 or isinstance(
+            policies.TEST_PASS_THRESHOLD, float
+        )
 
     def test_coverage_min_default(self):
         """Test COVERAGE_MIN has default value"""
@@ -49,6 +50,7 @@ class TestEnvironmentVariables:
 # ============================================================================
 # Test Regex Pattern
 # ============================================================================
+
 
 class TestRegexPattern:
     """Test stub detection regex pattern"""
@@ -114,12 +116,13 @@ class TestRegexPattern:
 # Test Helper Function
 # ============================================================================
 
+
 class TestRunHelper:
     """Test _run helper function"""
 
     def test_run_calls_subprocess(self):
         """Test _run calls subprocess.run"""
-        with patch('subprocess.run') as mock_run:
+        with patch("subprocess.run") as mock_run:
             mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
 
             policies._run(["echo", "test"])
@@ -128,7 +131,7 @@ class TestRunHelper:
 
     def test_run_passes_command(self):
         """Test _run passes command to subprocess"""
-        with patch('subprocess.run') as mock_run:
+        with patch("subprocess.run") as mock_run:
             mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
 
             cmd = ["python", "--version"]
@@ -140,30 +143,31 @@ class TestRunHelper:
 
     def test_run_captures_output(self):
         """Test _run captures output"""
-        with patch('subprocess.run') as mock_run:
+        with patch("subprocess.run") as mock_run:
             mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
 
             policies._run(["test"])
 
             # Verify capture_output=True
             call_kwargs = mock_run.call_args[1]
-            assert call_kwargs['capture_output'] is True
+            assert call_kwargs["capture_output"] is True
 
     def test_run_uses_text_mode(self):
         """Test _run uses text mode"""
-        with patch('subprocess.run') as mock_run:
+        with patch("subprocess.run") as mock_run:
             mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
 
             policies._run(["test"])
 
             # Verify text=True
             call_kwargs = mock_run.call_args[1]
-            assert call_kwargs['text'] is True
+            assert call_kwargs["text"] is True
 
 
 # ============================================================================
 # Test check_no_stubs
 # ============================================================================
+
 
 class TestCheckNoStubs:
     """Test check_no_stubs function"""
@@ -228,23 +232,18 @@ class TestCheckNoStubs:
 # Test check_tests
 # ============================================================================
 
+
 class TestCheckTests:
     """Test check_tests function"""
 
     def test_check_tests_passes_with_good_results(self):
         """Test check_tests passes with good test results"""
-        pytest_json = {
-            "summary": {
-                "passed": 95,
-                "failed": 0,
-                "total": 100
-            }
-        }
+        pytest_json = {"summary": {"passed": 95, "failed": 0, "total": 100}}
 
-        with patch('core.coordinators.policies._run') as mock_run:
+        with patch("core.coordinators.policies._run") as mock_run:
             mock_run.return_value = Mock(returncode=0)
 
-            with patch('builtins.open', mock_open(read_data=json.dumps(pytest_json))):
+            with patch("builtins.open", mock_open(read_data=json.dumps(pytest_json))):
                 result, message = policies.check_tests()
 
         assert result is True
@@ -252,7 +251,7 @@ class TestCheckTests:
 
     def test_check_tests_fails_when_pytest_fails(self):
         """Test check_tests fails when pytest returns nonzero"""
-        with patch('core.coordinators.policies._run') as mock_run:
+        with patch("core.coordinators.policies._run") as mock_run:
             mock_run.return_value = Mock(returncode=1)
 
             result, message = policies.check_tests()
@@ -262,18 +261,12 @@ class TestCheckTests:
 
     def test_check_tests_fails_with_low_pass_ratio(self):
         """Test check_tests fails with low pass ratio"""
-        pytest_json = {
-            "summary": {
-                "passed": 50,
-                "failed": 50,
-                "total": 100
-            }
-        }
+        pytest_json = {"summary": {"passed": 50, "failed": 50, "total": 100}}
 
-        with patch('core.coordinators.policies._run') as mock_run:
+        with patch("core.coordinators.policies._run") as mock_run:
             mock_run.return_value = Mock(returncode=0)
 
-            with patch('builtins.open', mock_open(read_data=json.dumps(pytest_json))):
+            with patch("builtins.open", mock_open(read_data=json.dumps(pytest_json))):
                 result, message = policies.check_tests()
 
         assert result is False
@@ -281,10 +274,10 @@ class TestCheckTests:
 
     def test_check_tests_handles_parse_error(self):
         """Test check_tests handles JSON parse error"""
-        with patch('core.coordinators.policies._run') as mock_run:
+        with patch("core.coordinators.policies._run") as mock_run:
             mock_run.return_value = Mock(returncode=0)
 
-            with patch('builtins.open', mock_open(read_data="invalid json")):
+            with patch("builtins.open", mock_open(read_data="invalid json")):
                 result, message = policies.check_tests()
 
         assert result is False
@@ -292,27 +285,22 @@ class TestCheckTests:
 
     def test_check_tests_handles_missing_file(self):
         """Test check_tests handles missing report file"""
-        with patch('core.coordinators.policies._run') as mock_run:
+        with patch("core.coordinators.policies._run") as mock_run:
             mock_run.return_value = Mock(returncode=0)
 
-            with patch('builtins.open', side_effect=FileNotFoundError()):
+            with patch("builtins.open", side_effect=FileNotFoundError()):
                 result, message = policies.check_tests()
 
         assert result is False
 
     def test_check_tests_handles_zero_total(self):
         """Test check_tests handles zero total tests"""
-        pytest_json = {
-            "summary": {
-                "passed": 0,
-                "total": 0
-            }
-        }
+        pytest_json = {"summary": {"passed": 0, "total": 0}}
 
-        with patch('core.coordinators.policies._run') as mock_run:
+        with patch("core.coordinators.policies._run") as mock_run:
             mock_run.return_value = Mock(returncode=0)
 
-            with patch('builtins.open', mock_open(read_data=json.dumps(pytest_json))):
+            with patch("builtins.open", mock_open(read_data=json.dumps(pytest_json))):
                 result, message = policies.check_tests()
 
         # Should handle division by zero
@@ -320,10 +308,12 @@ class TestCheckTests:
 
     def test_check_tests_calls_pytest_with_correct_args(self):
         """Test check_tests calls pytest with correct arguments"""
-        with patch('core.coordinators.policies._run') as mock_run:
+        with patch("core.coordinators.policies._run") as mock_run:
             mock_run.return_value = Mock(returncode=0)
 
-            with patch('builtins.open', mock_open(read_data='{"summary":{"passed":10,"total":10}}')):
+            with patch(
+                "builtins.open", mock_open(read_data='{"summary":{"passed":10,"total":10}}')
+            ):
                 policies.check_tests()
 
             # Verify pytest called with correct args
@@ -337,6 +327,7 @@ class TestCheckTests:
 # Test check_coverage
 # ============================================================================
 
+
 class TestCheckCoverage:
     """Test check_coverage function"""
 
@@ -344,7 +335,7 @@ class TestCheckCoverage:
         """Test check_coverage passes with good coverage"""
         xml_content = '<?xml version="1.0"?><coverage line-rate="0.85"></coverage>'
 
-        with patch('xml.etree.ElementTree.parse') as mock_parse:
+        with patch("xml.etree.ElementTree.parse") as mock_parse:
             mock_tree = MagicMock()
             mock_tree.getroot.return_value.attrib = {"line-rate": "0.85"}
             mock_parse.return_value = mock_tree
@@ -356,7 +347,7 @@ class TestCheckCoverage:
 
     def test_check_coverage_fails_with_low_coverage(self):
         """Test check_coverage fails with low coverage"""
-        with patch('xml.etree.ElementTree.parse') as mock_parse:
+        with patch("xml.etree.ElementTree.parse") as mock_parse:
             mock_tree = MagicMock()
             mock_tree.getroot.return_value.attrib = {"line-rate": "0.50"}
             mock_parse.return_value = mock_tree
@@ -368,7 +359,7 @@ class TestCheckCoverage:
 
     def test_check_coverage_handles_parse_error(self):
         """Test check_coverage handles XML parse error"""
-        with patch('xml.etree.ElementTree.parse', side_effect=Exception("Parse error")):
+        with patch("xml.etree.ElementTree.parse", side_effect=Exception("Parse error")):
             result, message = policies.check_coverage()
 
         assert result is False
@@ -376,14 +367,14 @@ class TestCheckCoverage:
 
     def test_check_coverage_handles_missing_file(self):
         """Test check_coverage handles missing coverage file"""
-        with patch('xml.etree.ElementTree.parse', side_effect=FileNotFoundError()):
+        with patch("xml.etree.ElementTree.parse", side_effect=FileNotFoundError()):
             result, message = policies.check_coverage()
 
         assert result is False
 
     def test_check_coverage_handles_missing_attribute(self):
         """Test check_coverage handles missing line-rate attribute"""
-        with patch('xml.etree.ElementTree.parse') as mock_parse:
+        with patch("xml.etree.ElementTree.parse") as mock_parse:
             mock_tree = MagicMock()
             mock_tree.getroot.return_value.attrib = {}
             mock_parse.return_value = mock_tree
@@ -395,7 +386,7 @@ class TestCheckCoverage:
 
     def test_check_coverage_returns_tuple(self):
         """Test check_coverage returns tuple of (bool, str)"""
-        with patch('xml.etree.ElementTree.parse') as mock_parse:
+        with patch("xml.etree.ElementTree.parse") as mock_parse:
             mock_tree = MagicMock()
             mock_tree.getroot.return_value.attrib = {"line-rate": "0.90"}
             mock_parse.return_value = mock_tree
@@ -410,12 +401,13 @@ class TestCheckCoverage:
 # Test check_lint
 # ============================================================================
 
+
 class TestCheckLint:
     """Test check_lint function"""
 
     def test_check_lint_passes_when_ruff_succeeds(self):
         """Test check_lint passes when ruff succeeds"""
-        with patch('core.coordinators.policies._run') as mock_run:
+        with patch("core.coordinators.policies._run") as mock_run:
             mock_run.return_value = Mock(returncode=0, stderr="")
 
             result, message = policies.check_lint()
@@ -425,7 +417,7 @@ class TestCheckLint:
 
     def test_check_lint_fails_when_ruff_fails(self):
         """Test check_lint fails when ruff fails"""
-        with patch('core.coordinators.policies._run') as mock_run:
+        with patch("core.coordinators.policies._run") as mock_run:
             mock_run.return_value = Mock(returncode=1, stderr="Linting errors found")
 
             result, message = policies.check_lint()
@@ -435,7 +427,7 @@ class TestCheckLint:
 
     def test_check_lint_calls_ruff_with_correct_args(self):
         """Test check_lint calls ruff with correct arguments"""
-        with patch('core.coordinators.policies._run') as mock_run:
+        with patch("core.coordinators.policies._run") as mock_run:
             mock_run.return_value = Mock(returncode=0, stderr="")
 
             policies.check_lint()
@@ -449,7 +441,7 @@ class TestCheckLint:
         """Test check_lint truncates very long error messages"""
         long_error = "E" * 5000
 
-        with patch('core.coordinators.policies._run') as mock_run:
+        with patch("core.coordinators.policies._run") as mock_run:
             mock_run.return_value = Mock(returncode=1, stderr=long_error)
 
             result, message = policies.check_lint()
@@ -459,7 +451,7 @@ class TestCheckLint:
 
     def test_check_lint_returns_tuple(self):
         """Test check_lint returns tuple of (bool, str)"""
-        with patch('core.coordinators.policies._run') as mock_run:
+        with patch("core.coordinators.policies._run") as mock_run:
             mock_run.return_value = Mock(returncode=0, stderr="")
 
             result, message = policies.check_lint()
@@ -472,12 +464,13 @@ class TestCheckLint:
 # Test check_typecheck
 # ============================================================================
 
+
 class TestCheckTypecheck:
     """Test check_typecheck function"""
 
     def test_check_typecheck_passes_when_mypy_succeeds(self):
         """Test check_typecheck passes when mypy succeeds"""
-        with patch('core.coordinators.policies._run') as mock_run:
+        with patch("core.coordinators.policies._run") as mock_run:
             mock_run.return_value = Mock(returncode=0, stdout="")
 
             result, message = policies.check_typecheck()
@@ -487,7 +480,7 @@ class TestCheckTypecheck:
 
     def test_check_typecheck_fails_when_mypy_fails(self):
         """Test check_typecheck fails when mypy fails"""
-        with patch('core.coordinators.policies._run') as mock_run:
+        with patch("core.coordinators.policies._run") as mock_run:
             mock_run.return_value = Mock(returncode=1, stdout="Type errors found")
 
             result, message = policies.check_typecheck()
@@ -497,7 +490,7 @@ class TestCheckTypecheck:
 
     def test_check_typecheck_calls_mypy_with_correct_args(self):
         """Test check_typecheck calls mypy with correct arguments"""
-        with patch('core.coordinators.policies._run') as mock_run:
+        with patch("core.coordinators.policies._run") as mock_run:
             mock_run.return_value = Mock(returncode=0, stdout="")
 
             policies.check_typecheck()
@@ -510,7 +503,7 @@ class TestCheckTypecheck:
         """Test check_typecheck truncates very long output"""
         long_output = "T" * 5000
 
-        with patch('core.coordinators.policies._run') as mock_run:
+        with patch("core.coordinators.policies._run") as mock_run:
             mock_run.return_value = Mock(returncode=1, stdout=long_output)
 
             result, message = policies.check_typecheck()
@@ -520,7 +513,7 @@ class TestCheckTypecheck:
 
     def test_check_typecheck_returns_tuple(self):
         """Test check_typecheck returns tuple of (bool, str)"""
-        with patch('core.coordinators.policies._run') as mock_run:
+        with patch("core.coordinators.policies._run") as mock_run:
             mock_run.return_value = Mock(returncode=0, stdout="")
 
             result, message = policies.check_typecheck()
@@ -533,16 +526,19 @@ class TestCheckTypecheck:
 # Test Edge Cases and Integration
 # ============================================================================
 
+
 class TestEdgeCasesAndIntegration:
     """Test edge cases and integration scenarios"""
 
     def test_all_checks_return_consistent_format(self):
         """Test all check functions return consistent format"""
-        with patch('core.coordinators.policies._run') as mock_run:
+        with patch("core.coordinators.policies._run") as mock_run:
             mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
 
-            with patch('builtins.open', mock_open(read_data='{"summary":{"passed":10,"total":10}}')):
-                with patch('xml.etree.ElementTree.parse') as mock_parse:
+            with patch(
+                "builtins.open", mock_open(read_data='{"summary":{"passed":10,"total":10}}')
+            ):
+                with patch("xml.etree.ElementTree.parse") as mock_parse:
                     mock_tree = MagicMock()
                     mock_tree.getroot.return_value.attrib = {"line-rate": "0.90"}
                     mock_parse.return_value = mock_tree
@@ -553,7 +549,7 @@ class TestEdgeCasesAndIntegration:
                         policies.check_tests(),
                         policies.check_coverage(),
                         policies.check_lint(),
-                        policies.check_typecheck()
+                        policies.check_typecheck(),
                     ]
 
                     for result, message in checks:
@@ -570,6 +566,7 @@ class TestEdgeCasesAndIntegration:
 # ============================================================================
 # Test Module Constants
 # ============================================================================
+
 
 class TestModuleConstants:
     """Test module-level constants"""

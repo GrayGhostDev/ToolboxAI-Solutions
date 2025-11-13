@@ -14,15 +14,15 @@ Features:
 - Database persistence for generated content
 """
 
-import logging
-from typing import Dict, Any, Optional, List
-from datetime import datetime
 import asyncio
+import logging
+from datetime import datetime
+from typing import Any
 
-from apps.backend.workers.celery_app import app, TenantAwareTask
+from apps.backend.workers.celery_app import TenantAwareTask, app
+from core.agents.base_agent import AgentConfig, AgentState
 from core.agents.content_agent import ContentAgent
 from core.agents.quiz_agent import QuizAgent
-from core.agents.base_agent import AgentConfig, AgentState
 
 logger = logging.getLogger(__name__)
 
@@ -35,10 +35,10 @@ async def generate_lesson_content(
     subject: str,
     topic: str,
     grade_level: str,
-    learning_objectives: Optional[List[str]] = None,
+    learning_objectives: list[str] | None = None,
     duration: int = 45,
-    **kwargs
-) -> Dict[str, Any]:
+    **kwargs,
+) -> dict[str, Any]:
     """
     Generate educational lesson content using ContentAgent.
 
@@ -69,14 +69,14 @@ async def generate_lesson_content(
         )
     """
     # Set tenant context
-    self.set_tenant_context(organization_id, {
-        "lesson_id": lesson_id,
-        "subject": subject,
-        "topic": topic
-    })
+    self.set_tenant_context(
+        organization_id, {"lesson_id": lesson_id, "subject": subject, "topic": topic}
+    )
 
     try:
-        logger.info(f"Starting lesson content generation for lesson {lesson_id} in org {organization_id}")
+        logger.info(
+            f"Starting lesson content generation for lesson {lesson_id} in org {organization_id}"
+        )
 
         # Initialize ContentAgent
         agent_config = AgentConfig(
@@ -84,7 +84,7 @@ async def generate_lesson_content(
             model="gpt-4",
             temperature=0.7,
             system_prompt="You are an expert educational content creator for Roblox learning environments.",
-            verbose=True
+            verbose=True,
         )
         content_agent = ContentAgent(config=agent_config)
 
@@ -98,18 +98,19 @@ async def generate_lesson_content(
                 "learning_objectives": learning_objectives or [],
                 "duration": duration,
                 "lesson_id": lesson_id,
-                "organization_id": organization_id
+                "organization_id": organization_id,
             },
             "metadata": {
                 "task_id": self.request.id,
                 "tenant_id": organization_id,
-                "initiated_at": datetime.utcnow().isoformat()
-            }
+                "initiated_at": datetime.utcnow().isoformat(),
+            },
         }
 
         # Trigger Pusher notification - content generation started
         try:
             from apps.backend.services.roblox.pusher import pusher_service
+
             await pusher_service.trigger_event(
                 channel=f"org-{organization_id}",
                 event="content-generation-started",
@@ -118,8 +119,8 @@ async def generate_lesson_content(
                     "task_id": self.request.id,
                     "topic": topic,
                     "progress": 0,
-                    "status": "processing"
-                }
+                    "status": "processing",
+                },
             )
         except Exception as e:
             logger.warning(f"Failed to send Pusher start notification: {e}")
@@ -138,8 +139,8 @@ async def generate_lesson_content(
                     "task_id": self.request.id,
                     "progress": 75,
                     "status": "finalizing",
-                    "message": "Content generated, finalizing details"
-                }
+                    "message": "Content generated, finalizing details",
+                },
             )
         except Exception as e:
             logger.warning(f"Failed to send Pusher progress notification: {e}")
@@ -157,8 +158,8 @@ async def generate_lesson_content(
                 "task_id": self.request.id,
                 "generated_at": datetime.utcnow().isoformat(),
                 "tenant_context": self.tenant_context,
-                "quality_metrics": result.get("quality_metrics", {})
-            }
+                "quality_metrics": result.get("quality_metrics", {}),
+            },
         }
 
         # Trigger Pusher notification - content generation completed
@@ -175,9 +176,9 @@ async def generate_lesson_content(
                         "topic": topic,
                         "vocabulary_count": len(result.get("content", {}).get("vocabulary", [])),
                         "interactive_elements": len(result.get("interactive_elements", [])),
-                        "has_assessments": bool(result.get("assessments"))
-                    }
-                }
+                        "has_assessments": bool(result.get("assessments")),
+                    },
+                },
             )
         except Exception as e:
             logger.warning(f"Failed to send Pusher completion notification: {e}")
@@ -191,6 +192,7 @@ async def generate_lesson_content(
         # Trigger Pusher notification - content generation failed
         try:
             from apps.backend.services.roblox.pusher import pusher_service
+
             await pusher_service.trigger_event(
                 channel=f"org-{organization_id}",
                 event="content-generation-failed",
@@ -199,8 +201,8 @@ async def generate_lesson_content(
                     "task_id": self.request.id,
                     "progress": 0,
                     "status": "failed",
-                    "error": str(e)
-                }
+                    "error": str(e),
+                },
             )
         except Exception as pusher_error:
             logger.warning(f"Failed to send Pusher error notification: {pusher_error}")
@@ -219,11 +221,11 @@ async def generate_quiz_questions(
     grade_level: str,
     num_questions: int = 10,
     difficulty: str = "medium",
-    question_types: Optional[List[str]] = None,
-    learning_objectives: Optional[List[str]] = None,
-    lesson_id: Optional[str] = None,
-    **kwargs
-) -> Dict[str, Any]:
+    question_types: list[str] | None = None,
+    learning_objectives: list[str] | None = None,
+    lesson_id: str | None = None,
+    **kwargs,
+) -> dict[str, Any]:
     """
     Generate quiz questions using QuizAgent.
 
@@ -255,15 +257,20 @@ async def generate_quiz_questions(
         )
     """
     # Set tenant context
-    self.set_tenant_context(organization_id, {
-        "assessment_id": assessment_id,
-        "subject": subject,
-        "topic": topic,
-        "lesson_id": lesson_id
-    })
+    self.set_tenant_context(
+        organization_id,
+        {
+            "assessment_id": assessment_id,
+            "subject": subject,
+            "topic": topic,
+            "lesson_id": lesson_id,
+        },
+    )
 
     try:
-        logger.info(f"Starting quiz generation for assessment {assessment_id} in org {organization_id}")
+        logger.info(
+            f"Starting quiz generation for assessment {assessment_id} in org {organization_id}"
+        )
 
         # Initialize QuizAgent
         agent_config = AgentConfig(
@@ -271,7 +278,7 @@ async def generate_quiz_questions(
             model="gpt-3.5-turbo",
             temperature=0.5,  # Lower temperature for more consistent questions
             system_prompt="You are an expert assessment designer creating educational quizzes for Roblox learning environments.",
-            verbose=True
+            verbose=True,
         )
         quiz_agent = QuizAgent(config=agent_config)
 
@@ -288,18 +295,19 @@ async def generate_quiz_questions(
                 "learning_objectives": learning_objectives or [],
                 "lesson_id": lesson_id,
                 "assessment_id": assessment_id,
-                "organization_id": organization_id
+                "organization_id": organization_id,
             },
             "metadata": {
                 "task_id": self.request.id,
                 "tenant_id": organization_id,
-                "initiated_at": datetime.utcnow().isoformat()
-            }
+                "initiated_at": datetime.utcnow().isoformat(),
+            },
         }
 
         # Trigger Pusher notification - quiz generation started
         try:
             from apps.backend.services.roblox.pusher import pusher_service
+
             await pusher_service.trigger_event(
                 channel=f"org-{organization_id}",
                 event="quiz-generation-started",
@@ -309,8 +317,8 @@ async def generate_quiz_questions(
                     "topic": topic,
                     "num_questions": num_questions,
                     "progress": 0,
-                    "status": "processing"
-                }
+                    "status": "processing",
+                },
             )
         except Exception as e:
             logger.warning(f"Failed to send Pusher start notification: {e}")
@@ -334,8 +342,8 @@ async def generate_quiz_questions(
                 "task_id": self.request.id,
                 "generated_at": datetime.utcnow().isoformat(),
                 "tenant_context": self.tenant_context,
-                "metrics": result.get("metrics", {})
-            }
+                "metrics": result.get("metrics", {}),
+            },
         }
 
         # Trigger Pusher notification - quiz generation completed
@@ -352,10 +360,10 @@ async def generate_quiz_questions(
                         "title": result.get("quiz", {}).get("title", ""),
                         "num_questions": len(result.get("quiz", {}).get("questions", [])),
                         "time_limit": result.get("quiz", {}).get("time_limit"),
-                        "passing_score": result.get("quiz", {}).get("passing_score")
+                        "passing_score": result.get("quiz", {}).get("passing_score"),
                     },
-                    "quality_score": result.get("quality_score", 0.0)
-                }
+                    "quality_score": result.get("quality_score", 0.0),
+                },
             )
         except Exception as e:
             logger.warning(f"Failed to send Pusher completion notification: {e}")
@@ -369,6 +377,7 @@ async def generate_quiz_questions(
         # Trigger Pusher notification - quiz generation failed
         try:
             from apps.backend.services.roblox.pusher import pusher_service
+
             await pusher_service.trigger_event(
                 channel=f"org-{organization_id}",
                 event="quiz-generation-failed",
@@ -377,8 +386,8 @@ async def generate_quiz_questions(
                     "task_id": self.request.id,
                     "progress": 0,
                     "status": "failed",
-                    "error": str(e)
-                }
+                    "error": str(e),
+                },
             )
         except Exception as pusher_error:
             logger.warning(f"Failed to send Pusher error notification: {pusher_error}")
@@ -394,6 +403,7 @@ def run_async_task(coro):
     if loop.is_running():
         # If loop is already running, create a new one
         import concurrent.futures
+
         with concurrent.futures.ThreadPoolExecutor() as pool:
             return pool.submit(asyncio.run, coro).result()
     else:

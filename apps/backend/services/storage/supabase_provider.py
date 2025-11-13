@@ -11,37 +11,37 @@ Version: 1.0.0
 
 import asyncio
 import logging
-from io import BytesIO
-from typing import Any, Dict, List, Optional, Union, AsyncGenerator, BinaryIO
+from collections.abc import AsyncGenerator
+from typing import Any, BinaryIO
 from uuid import UUID, uuid4
 
 import aiohttp
-from supabase import create_client, Client
-from gotrue.errors import AuthApiError
 from storage3.utils import StorageException
 
+from supabase import Client, create_client
+from toolboxai_settings.settings import settings
+
+from .file_validator import FileValidator
+from .image_processor import ImageProcessor
+from .security import SecurityManager
 from .storage_service import (
-    StorageService,
-    UploadOptions,
-    UploadResult,
-    UploadProgress,
-    UploadStatus,
+    AccessDeniedError,
     DownloadOptions,
     DownloadResult,
-    ListOptions,
     FileInfo,
-    StorageError,
-    TenantIsolationError,
-    QuotaExceededError,
     FileNotFoundError,
-    AccessDeniedError,
+    ListOptions,
+    QuotaExceededError,
+    StorageError,
+    StorageService,
+    TenantIsolationError,
+    UploadOptions,
+    UploadProgress,
+    UploadResult,
+    UploadStatus,
 )
-from .file_validator import FileValidator
-from .virus_scanner import VirusScanner
-from .image_processor import ImageProcessor
 from .tenant_storage import TenantStorageManager
-from .security import SecurityManager
-from toolboxai_settings.settings import settings
+from .virus_scanner import VirusScanner
 
 logger = logging.getLogger(__name__)
 
@@ -59,12 +59,7 @@ class SupabaseStorageProvider(StorageService):
     - Quota management and monitoring
     """
 
-    def __init__(
-        self,
-        organization_id: Optional[str] = None,
-        user_id: Optional[str] = None,
-        **kwargs
-    ):
+    def __init__(self, organization_id: str | None = None, user_id: str | None = None, **kwargs):
         """
         Initialize Supabase storage provider.
 
@@ -83,7 +78,7 @@ class SupabaseStorageProvider(StorageService):
 
         self.supabase: Client = create_client(
             settings.supabase.url,
-            settings.supabase.service_role_key  # Use service role for storage operations
+            settings.supabase.service_role_key,  # Use service role for storage operations
         )
 
         # Initialize components
@@ -95,21 +90,20 @@ class SupabaseStorageProvider(StorageService):
 
         # Configuration
         import os
+
         self.default_bucket = os.getenv("SUPABASE_STORAGE_BUCKET", "toolboxai-uploads")
         self.max_file_size = kwargs.get("max_file_size", 100 * 1024 * 1024)  # 100MB
         self.chunk_size = kwargs.get("chunk_size", 1024 * 1024)  # 1MB chunks
         self.enable_cdn = kwargs.get("enable_cdn", True)
         self.cdn_transformations = kwargs.get("cdn_transformations", True)
 
-        logger.info(
-            f"SupabaseStorageProvider initialized for org: {organization_id}"
-        )
+        logger.info(f"SupabaseStorageProvider initialized for org: {organization_id}")
 
     async def upload_file(
         self,
-        file_data: Union[bytes, BinaryIO],
+        file_data: bytes | BinaryIO,
         filename: str,
-        options: Optional[UploadOptions] = None
+        options: UploadOptions | None = None,
     ) -> UploadResult:
         """
         Upload a file to Supabase Storage.
@@ -127,16 +121,11 @@ class SupabaseStorageProvider(StorageService):
 
         try:
             # Convert file data to bytes if needed
-            if hasattr(file_data, 'read'):
+            if hasattr(file_data, "read"):
                 file_data = file_data.read()
 
             # Update progress
-            self._update_upload_progress(
-                upload_id,
-                UploadStatus.UPLOADING,
-                0,
-                len(file_data)
-            )
+            self._update_upload_progress(upload_id, UploadStatus.UPLOADING, 0, len(file_data))
 
             # Validate file
             if options.content_validation:
@@ -174,10 +163,7 @@ class SupabaseStorageProvider(StorageService):
 
             # Upload to Supabase
             self._update_upload_progress(
-                upload_id,
-                UploadStatus.PROCESSING,
-                len(file_data),
-                len(file_data)
+                upload_id, UploadStatus.PROCESSING, len(file_data), len(file_data)
             )
 
             try:
@@ -187,8 +173,8 @@ class SupabaseStorageProvider(StorageService):
                     file_options={
                         "content-type": self.file_validator.get_mime_type(filename),
                         "cache-control": "3600",
-                        "upsert": False
-                    }
+                        "upsert": False,
+                    },
                 )
                 logger.debug(f"Supabase upload response: {response}")
 
@@ -208,16 +194,14 @@ class SupabaseStorageProvider(StorageService):
                 bucket_name=bucket_name,
                 file_size=len(file_data),
                 checksum=checksum,
-                options=options
+                options=options,
             )
 
             # Process image if applicable
             thumbnail_url = None
             if options.generate_thumbnails and self._is_image_file(filename):
                 try:
-                    thumbnail_url = await self._process_image(
-                        file_data, storage_path, bucket_name
-                    )
+                    thumbnail_url = await self._process_image(file_data, storage_path, bucket_name)
                 except Exception as e:
                     logger.warning(f"Thumbnail generation failed: {e}")
 
@@ -228,10 +212,7 @@ class SupabaseStorageProvider(StorageService):
 
             # Update progress to completed
             self._update_upload_progress(
-                upload_id,
-                UploadStatus.COMPLETED,
-                len(file_data),
-                len(file_data)
+                upload_id, UploadStatus.COMPLETED, len(file_data), len(file_data)
             )
 
             result = UploadResult(
@@ -248,8 +229,10 @@ class SupabaseStorageProvider(StorageService):
                 processing_metadata={
                     "bucket_name": bucket_name,
                     "compliance_check": compliance_check.to_dict(),
-                    "validation_result": validation_result.to_dict() if options.content_validation else {}
-                }
+                    "validation_result": (
+                        validation_result.to_dict() if options.content_validation else {}
+                    ),
+                },
             )
 
             logger.info(f"File upload completed: {file_id} -> {storage_path}")
@@ -257,11 +240,7 @@ class SupabaseStorageProvider(StorageService):
 
         except Exception as e:
             # Update progress to failed
-            self._update_upload_progress(
-                upload_id,
-                UploadStatus.FAILED,
-                error_message=str(e)
-            )
+            self._update_upload_progress(upload_id, UploadStatus.FAILED, error_message=str(e))
 
             logger.error(f"File upload failed: {e}")
             if isinstance(e, StorageError):
@@ -273,7 +252,7 @@ class SupabaseStorageProvider(StorageService):
         file_stream: AsyncGenerator[bytes, None],
         filename: str,
         total_size: int,
-        options: Optional[UploadOptions] = None
+        options: UploadOptions | None = None,
     ) -> AsyncGenerator[UploadProgress, UploadResult]:
         """
         Upload large file using resumable upload with progress tracking.
@@ -298,10 +277,7 @@ class SupabaseStorageProvider(StorageService):
         try:
             # Initialize progress
             progress = self._update_upload_progress(
-                upload_id,
-                UploadStatus.UPLOADING,
-                0,
-                total_size
+                upload_id, UploadStatus.UPLOADING, 0, total_size
             )
             yield progress
 
@@ -315,10 +291,7 @@ class SupabaseStorageProvider(StorageService):
 
                 # Update progress
                 progress = self._update_upload_progress(
-                    upload_id,
-                    UploadStatus.UPLOADING,
-                    bytes_uploaded,
-                    total_size
+                    upload_id, UploadStatus.UPLOADING, bytes_uploaded, total_size
                 )
                 yield progress
 
@@ -327,14 +300,11 @@ class SupabaseStorageProvider(StorageService):
                     await asyncio.sleep(0.01)
 
             # Combine all chunks
-            file_data = b''.join(file_chunks)
+            file_data = b"".join(file_chunks)
 
             # Update status to processing
             progress = self._update_upload_progress(
-                upload_id,
-                UploadStatus.PROCESSING,
-                bytes_uploaded,
-                total_size
+                upload_id, UploadStatus.PROCESSING, bytes_uploaded, total_size
             )
             yield progress
 
@@ -346,19 +316,13 @@ class SupabaseStorageProvider(StorageService):
 
         except Exception as e:
             # Update progress to failed
-            self._update_upload_progress(
-                upload_id,
-                UploadStatus.FAILED,
-                error_message=str(e)
-            )
+            self._update_upload_progress(upload_id, UploadStatus.FAILED, error_message=str(e))
 
             logger.error(f"Multipart upload failed: {e}")
             raise StorageError(f"Multipart upload failed: {str(e)}")
 
     async def download_file(
-        self,
-        file_id: UUID,
-        options: Optional[DownloadOptions] = None
+        self, file_id: UUID, options: DownloadOptions | None = None
     ) -> DownloadResult:
         """
         Download a file from Supabase Storage.
@@ -384,8 +348,7 @@ class SupabaseStorageProvider(StorageService):
 
             # Generate signed URL
             signed_url = await self.generate_signed_url(
-                file_id,
-                expires_in=options.signed_url_expires_in
+                file_id, expires_in=options.signed_url_expires_in
             )
 
             # Track access if enabled
@@ -397,7 +360,7 @@ class SupabaseStorageProvider(StorageService):
                 file_url=signed_url,
                 content_type=file_record.get("mime_type", ""),
                 content_length=file_record.get("file_size", 0),
-                metadata=file_record.get("metadata", {}) if options.include_metadata else {}
+                metadata=file_record.get("metadata", {}) if options.include_metadata else {},
             )
 
             return result
@@ -409,9 +372,7 @@ class SupabaseStorageProvider(StorageService):
             raise StorageError(f"Download failed: {str(e)}")
 
     async def get_file_stream(
-        self,
-        file_id: UUID,
-        chunk_size: int = 8192
+        self, file_id: UUID, chunk_size: int = 8192
     ) -> AsyncGenerator[bytes, None]:
         """
         Get file content as a stream.
@@ -490,10 +451,7 @@ class SupabaseStorageProvider(StorageService):
                 raise
             raise StorageError(f"Deletion failed: {str(e)}")
 
-    async def list_files(
-        self,
-        options: Optional[ListOptions] = None
-    ) -> List[FileInfo]:
+    async def list_files(self, options: ListOptions | None = None) -> list[FileInfo]:
         """
         List files in storage.
 
@@ -523,7 +481,7 @@ class SupabaseStorageProvider(StorageService):
                     created_at=file_record["created_at"],
                     updated_at=file_record["updated_at"],
                     metadata=file_record.get("metadata", {}) if options.include_metadata else {},
-                    tags=file_record.get("tags", [])
+                    tags=file_record.get("tags", []),
                 )
                 file_infos.append(file_info)
 
@@ -533,7 +491,7 @@ class SupabaseStorageProvider(StorageService):
             logger.error(f"File listing failed: {e}")
             raise StorageError(f"Listing failed: {str(e)}")
 
-    async def get_file_info(self, file_id: UUID) -> Optional[FileInfo]:
+    async def get_file_info(self, file_id: UUID) -> FileInfo | None:
         """
         Get information about a specific file.
 
@@ -560,7 +518,7 @@ class SupabaseStorageProvider(StorageService):
                 created_at=file_record["created_at"],
                 updated_at=file_record["updated_at"],
                 metadata=file_record.get("metadata", {}),
-                tags=file_record.get("tags", [])
+                tags=file_record.get("tags", []),
             )
 
         except Exception as e:
@@ -568,10 +526,7 @@ class SupabaseStorageProvider(StorageService):
             raise StorageError(f"Get file info failed: {str(e)}")
 
     async def generate_signed_url(
-        self,
-        file_id: UUID,
-        expires_in: int = 3600,
-        permission: str = "read"
+        self, file_id: UUID, expires_in: int = 3600, permission: str = "read"
     ) -> str:
         """
         Generate a signed URL for file access.
@@ -616,10 +571,7 @@ class SupabaseStorageProvider(StorageService):
             raise StorageError(f"Signed URL generation failed: {str(e)}")
 
     async def copy_file(
-        self,
-        source_file_id: UUID,
-        destination_path: str,
-        options: Optional[UploadOptions] = None
+        self, source_file_id: UUID, destination_path: str, options: UploadOptions | None = None
     ) -> UploadResult:
         """
         Copy a file to a new location.
@@ -648,16 +600,14 @@ class SupabaseStorageProvider(StorageService):
             async with aiohttp.ClientSession() as session:
                 async with session.get(download_result.file_url) as response:
                     if response.status != 200:
-                        raise StorageError(f"Failed to download source file: HTTP {response.status}")
+                        raise StorageError(
+                            f"Failed to download source file: HTTP {response.status}"
+                        )
 
                     file_data = await response.read()
 
             # Upload to new location
-            result = await self.upload_file(
-                file_data,
-                source_record["original_filename"],
-                options
-            )
+            result = await self.upload_file(file_data, source_record["original_filename"], options)
 
             logger.info(f"File copied: {source_file_id} -> {result.file_id}")
             return result
@@ -668,11 +618,7 @@ class SupabaseStorageProvider(StorageService):
                 raise
             raise StorageError(f"Copy failed: {str(e)}")
 
-    async def move_file(
-        self,
-        file_id: UUID,
-        new_path: str
-    ) -> bool:
+    async def move_file(self, file_id: UUID, new_path: str) -> bool:
         """
         Move a file to a new location.
 
@@ -699,9 +645,7 @@ class SupabaseStorageProvider(StorageService):
             # Move in Supabase Storage
             try:
                 # Supabase doesn't have a direct move operation, so we copy and delete
-                copy_response = self.supabase.storage.from_(bucket_name).copy(
-                    old_path, new_path
-                )
+                copy_response = self.supabase.storage.from_(bucket_name).copy(old_path, new_path)
 
                 if copy_response:
                     delete_response = self.supabase.storage.from_(bucket_name).remove([old_path])
@@ -738,20 +682,15 @@ class SupabaseStorageProvider(StorageService):
     def _is_image_file(self, filename: str) -> bool:
         """Check if file is an image"""
         mime_type = self.file_validator.get_mime_type(filename)
-        return mime_type.startswith('image/')
+        return mime_type.startswith("image/")
 
     async def _process_image(
-        self,
-        image_data: bytes,
-        storage_path: str,
-        bucket_name: str
-    ) -> Optional[str]:
+        self, image_data: bytes, storage_path: str, bucket_name: str
+    ) -> str | None:
         """Process image and generate thumbnail"""
         try:
             variants = await self.image_processor.process_image(
-                image_data,
-                generate_thumbnails=True,
-                optimize=True
+                image_data, generate_thumbnails=True, optimize=True
             )
 
             # Upload thumbnail
@@ -761,7 +700,7 @@ class SupabaseStorageProvider(StorageService):
                 self.supabase.storage.from_(bucket_name).upload(
                     path=thumbnail_path,
                     file=variants["thumbnail"].data,
-                    file_options={"content-type": "image/jpeg"}
+                    file_options={"content-type": "image/jpeg"},
                 )
 
                 return await self._get_cdn_url(bucket_name, thumbnail_path)
@@ -771,7 +710,7 @@ class SupabaseStorageProvider(StorageService):
 
         return None
 
-    async def _get_cdn_url(self, bucket_name: str, storage_path: str) -> Optional[str]:
+    async def _get_cdn_url(self, bucket_name: str, storage_path: str) -> str | None:
         """Get CDN URL for file"""
         if not self.enable_cdn:
             return None
@@ -785,7 +724,7 @@ class SupabaseStorageProvider(StorageService):
 
     # Database operations (these would use your existing database models)
 
-    async def _create_file_record(self, **kwargs) -> Dict[str, Any]:
+    async def _create_file_record(self, **kwargs) -> dict[str, Any]:
         """
         Create file record in database using SQLAlchemy File model
 
@@ -795,9 +734,9 @@ class SupabaseStorageProvider(StorageService):
         Returns:
             Created file record as dictionary
         """
-        from database.models.storage import File, FileStatus, FileCategory
+
         from database.connection import get_async_session
-        from sqlalchemy import select
+        from database.models.storage import File, FileCategory, FileStatus
 
         async for session in get_async_session():
             try:
@@ -815,13 +754,19 @@ class SupabaseStorageProvider(StorageService):
                     file_size=kwargs["file_size"],
                     checksum=kwargs.get("checksum"),
                     mime_type=self.file_validator.get_mime_type(kwargs["filename"]),
-                    file_extension=kwargs["filename"].rsplit(".", 1)[-1] if "." in kwargs["filename"] else None,
+                    file_extension=(
+                        kwargs["filename"].rsplit(".", 1)[-1] if "." in kwargs["filename"] else None
+                    ),
                     status=FileStatus.AVAILABLE,
-                    category=FileCategory(options.file_category) if options and hasattr(options, 'file_category') else FileCategory.MEDIA_RESOURCE,
+                    category=(
+                        FileCategory(options.file_category)
+                        if options and hasattr(options, "file_category")
+                        else FileCategory.MEDIA_RESOURCE
+                    ),
                     uploaded_by=self.user_id,
                     virus_scanned=options.virus_scan if options else False,
-                    tags=options.tags if options and hasattr(options, 'tags') else [],
-                    metadata=options.metadata if options and hasattr(options, 'metadata') else {},
+                    tags=options.tags if options and hasattr(options, "tags") else [],
+                    metadata=options.metadata if options and hasattr(options, "metadata") else {},
                 )
 
                 session.add(file_record)
@@ -842,7 +787,9 @@ class SupabaseStorageProvider(StorageService):
                     "mime_type": file_record.mime_type,
                     "checksum": file_record.checksum,
                     "status": file_record.status.value,
-                    "created_at": file_record.created_at.isoformat() if file_record.created_at else None,
+                    "created_at": (
+                        file_record.created_at.isoformat() if file_record.created_at else None
+                    ),
                 }
 
             except Exception as e:
@@ -850,7 +797,7 @@ class SupabaseStorageProvider(StorageService):
                 logger.error(f"Error creating file record: {e}")
                 raise StorageError(f"Failed to create file record: {str(e)}")
 
-    async def _get_file_record(self, file_id: UUID) -> Optional[Dict[str, Any]]:
+    async def _get_file_record(self, file_id: UUID) -> dict[str, Any] | None:
         """
         Get file record from database by ID
 
@@ -860,9 +807,10 @@ class SupabaseStorageProvider(StorageService):
         Returns:
             File record as dictionary or None if not found
         """
-        from database.models.storage import File
+        from sqlalchemy import and_, select
+
         from database.connection import get_async_session
-        from sqlalchemy import select, and_
+        from database.models.storage import File
 
         async for session in get_async_session():
             try:
@@ -871,7 +819,7 @@ class SupabaseStorageProvider(StorageService):
                     and_(
                         File.id == file_id,
                         File.organization_id == self.organization_id,
-                        File.deleted_at.is_(None)  # Exclude soft-deleted files
+                        File.deleted_at.is_(None),  # Exclude soft-deleted files
                     )
                 )
 
@@ -895,15 +843,19 @@ class SupabaseStorageProvider(StorageService):
                     "category": file_record.category.value,
                     "cdn_url": file_record.cdn_url,
                     "thumbnail_url": file_record.thumbnail_url,
-                    "created_at": file_record.created_at.isoformat() if file_record.created_at else None,
-                    "updated_at": file_record.updated_at.isoformat() if file_record.updated_at else None,
+                    "created_at": (
+                        file_record.created_at.isoformat() if file_record.created_at else None
+                    ),
+                    "updated_at": (
+                        file_record.updated_at.isoformat() if file_record.updated_at else None
+                    ),
                 }
 
             except Exception as e:
                 logger.error(f"Error getting file record {file_id}: {e}")
                 raise StorageError(f"Failed to get file record: {str(e)}")
 
-    async def _list_file_records(self, options: ListOptions) -> List[Dict[str, Any]]:
+    async def _list_file_records(self, options: ListOptions) -> list[dict[str, Any]]:
         """
         List file records from database with filters
 
@@ -913,9 +865,10 @@ class SupabaseStorageProvider(StorageService):
         Returns:
             List of file records as dictionaries
         """
-        from database.models.storage import File, FileCategory, FileStatus
+        from sqlalchemy import and_, desc, select
+
         from database.connection import get_async_session
-        from sqlalchemy import select, and_, or_, desc
+        from database.models.storage import File, FileCategory, FileStatus
 
         async for session in get_async_session():
             try:
@@ -923,30 +876,30 @@ class SupabaseStorageProvider(StorageService):
                 stmt = select(File).where(
                     and_(
                         File.organization_id == self.organization_id,
-                        File.deleted_at.is_(None)  # Exclude soft-deleted
+                        File.deleted_at.is_(None),  # Exclude soft-deleted
                     )
                 )
 
                 # Apply filters from options
-                if hasattr(options, 'category') and options.category:
+                if hasattr(options, "category") and options.category:
                     stmt = stmt.where(File.category == FileCategory(options.category))
 
-                if hasattr(options, 'mime_type') and options.mime_type:
+                if hasattr(options, "mime_type") and options.mime_type:
                     stmt = stmt.where(File.mime_type.like(f"{options.mime_type}%"))
 
-                if hasattr(options, 'status') and options.status:
+                if hasattr(options, "status") and options.status:
                     stmt = stmt.where(File.status == FileStatus(options.status))
 
-                if hasattr(options, 'uploaded_by') and options.uploaded_by:
+                if hasattr(options, "uploaded_by") and options.uploaded_by:
                     stmt = stmt.where(File.uploaded_by == options.uploaded_by)
 
                 # Apply ordering
                 stmt = stmt.order_by(desc(File.created_at))
 
                 # Apply pagination
-                if hasattr(options, 'limit') and options.limit:
+                if hasattr(options, "limit") and options.limit:
                     stmt = stmt.limit(options.limit)
-                if hasattr(options, 'offset') and options.offset:
+                if hasattr(options, "offset") and options.offset:
                     stmt = stmt.offset(options.offset)
 
                 # Execute query
@@ -978,18 +931,16 @@ class SupabaseStorageProvider(StorageService):
         Args:
             file_id: UUID of the file to delete
         """
-        from database.models.storage import File
+        from sqlalchemy import and_, select
+
         from database.connection import get_async_session
-        from sqlalchemy import select, and_, delete
+        from database.models.storage import File
 
         async for session in get_async_session():
             try:
                 # Verify ownership before deleting
                 stmt = select(File).where(
-                    and_(
-                        File.id == file_id,
-                        File.organization_id == self.organization_id
-                    )
+                    and_(File.id == file_id, File.organization_id == self.organization_id)
                 )
                 result = await session.execute(stmt)
                 file_record = result.scalar_one_or_none()
@@ -1017,10 +968,12 @@ class SupabaseStorageProvider(StorageService):
         Args:
             file_id: UUID of the file to soft delete
         """
-        from database.models.storage import File, FileStatus
-        from database.connection import get_async_session
-        from sqlalchemy import select, and_
         from datetime import datetime, timezone
+
+        from sqlalchemy import and_, select
+
+        from database.connection import get_async_session
+        from database.models.storage import File, FileStatus
 
         async for session in get_async_session():
             try:
@@ -1029,7 +982,7 @@ class SupabaseStorageProvider(StorageService):
                     and_(
                         File.id == file_id,
                         File.organization_id == self.organization_id,
-                        File.deleted_at.is_(None)
+                        File.deleted_at.is_(None),
                     )
                 )
                 result = await session.execute(stmt)
@@ -1062,18 +1015,16 @@ class SupabaseStorageProvider(StorageService):
             file_id: UUID of the file
             new_path: New storage path
         """
-        from database.models.storage import File
+        from sqlalchemy import and_, select
+
         from database.connection import get_async_session
-        from sqlalchemy import select, and_
+        from database.models.storage import File
 
         async for session in get_async_session():
             try:
                 # Find file record
                 stmt = select(File).where(
-                    and_(
-                        File.id == file_id,
-                        File.organization_id == self.organization_id
-                    )
+                    and_(File.id == file_id, File.organization_id == self.organization_id)
                 )
                 result = await session.execute(stmt)
                 file_record = result.scalar_one_or_none()
@@ -1103,8 +1054,8 @@ class SupabaseStorageProvider(StorageService):
             file_id: UUID of the accessed file
             action: Action performed (view, download, share, delete, etc.)
         """
-        from database.models.storage import FileAccessLog
         from database.connection import get_async_session
+        from database.models.storage import FileAccessLog
 
         async for session in get_async_session():
             try:
@@ -1114,10 +1065,12 @@ class SupabaseStorageProvider(StorageService):
                     user_id=self.user_id,
                     organization_id=self.organization_id,
                     action=action,
-                    ip_address=getattr(self, '_request_ip', None),  # Set from request context if available
-                    user_agent=getattr(self, '_request_user_agent', None),
+                    ip_address=getattr(
+                        self, "_request_ip", None
+                    ),  # Set from request context if available
+                    user_agent=getattr(self, "_request_user_agent", None),
                     access_granted=True,
-                    metadata={}
+                    metadata={},
                 )
 
                 session.add(access_log)
@@ -1144,9 +1097,10 @@ class SupabaseStorageProvider(StorageService):
             TenantIsolationError: If organization mismatch detected
             AccessDeniedError: If user doesn't have permission
         """
-        from database.models.storage import File
+        from sqlalchemy import select
+
         from database.connection import get_async_session
-        from sqlalchemy import select, and_
+        from database.models.storage import File
 
         async for session in get_async_session():
             try:

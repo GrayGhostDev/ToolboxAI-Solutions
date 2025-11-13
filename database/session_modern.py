@@ -12,18 +12,16 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional
 from uuid import UUID
 
-from sqlalchemy.ext.asyncio import (
-    AsyncSession,
-    AsyncEngine,
-    create_async_engine,
-    async_sessionmaker,
-)
-from sqlalchemy.pool import NullPool, QueuePool
 from sqlalchemy import event, exc
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+from sqlalchemy.pool import QueuePool
 
 from toolboxai_settings.settings import settings
-
 
 logger = logging.getLogger(__name__)
 
@@ -64,9 +62,7 @@ class DatabaseSessionManager:
         if url.startswith("postgresql://"):
             url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
         elif not url.startswith("postgresql+asyncpg://"):
-            raise ValueError(
-                f"Database URL must use asyncpg driver. Got: {url[:20]}..."
-            )
+            raise ValueError(f"Database URL must use asyncpg driver. Got: {url[:20]}...")
 
         return url
 
@@ -236,9 +232,7 @@ class DatabaseSessionManager:
         return self._current_tenant_id
 
     @asynccontextmanager
-    async def tenant_session(
-        self, tenant_id: UUID
-    ) -> AsyncGenerator[AsyncSession, None]:
+    async def tenant_session(self, tenant_id: UUID) -> AsyncGenerator[AsyncSession, None]:
         """
         Create session with tenant context for RLS.
 
@@ -260,9 +254,7 @@ class DatabaseSessionManager:
 
             async with self.session() as session:
                 # Set tenant context in PostgreSQL session
-                await session.execute(
-                    f"SET app.current_tenant = '{tenant_id}'"
-                )
+                await session.execute(f"SET app.current_tenant = '{tenant_id}'")
                 yield session
         finally:
             # Restore previous tenant context

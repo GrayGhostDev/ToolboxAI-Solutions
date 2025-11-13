@@ -13,24 +13,24 @@ Multi-Tenant Security:
 @updated 2025-10-11
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Request, Header, status, BackgroundTasks
+import logging
+from datetime import datetime
+from typing import Any
+from uuid import UUID
+
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, validator
-from typing import Optional, List, Dict, Any
-from datetime import datetime, timedelta
-from uuid import UUID
-import logging
-import stripe
+from sqlalchemy import select, text
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from apps.backend.services.stripe_service import stripe_service
 from apps.backend.core.auth import get_current_user
-from apps.backend.core.config import settings
-from apps.backend.core.deps import get_current_organization_id  # Multi-tenant filtering
+
 # from apps.backend.core.rate_limiter import rate_limit
 from apps.backend.core.deps import get_async_db as get_session
-from database.models.payment import Customer, Subscription, Payment, Invoice
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, text
+from apps.backend.core.deps import get_current_organization_id  # Multi-tenant filtering
+from apps.backend.services.stripe_service import stripe_service
+from database.models.payment import Customer, Subscription
 
 logger = logging.getLogger(__name__)
 
@@ -42,9 +42,9 @@ class CreateCustomerRequest(BaseModel):
     """Request model for creating a customer"""
 
     email: str = Field(..., description="Customer email")
-    name: Optional[str] = Field(None, description="Customer name")
-    phone: Optional[str] = Field(None, description="Customer phone")
-    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    name: str | None = Field(None, description="Customer name")
+    phone: str | None = Field(None, description="Customer phone")
+    metadata: dict[str, Any] | None = Field(default_factory=dict)
 
 
 class CreateSubscriptionRequest(BaseModel):
@@ -52,16 +52,16 @@ class CreateSubscriptionRequest(BaseModel):
 
     price_id: str = Field(..., description="Stripe price ID")
     trial_days: int = Field(14, ge=0, le=30, description="Trial period in days")
-    payment_method_id: Optional[str] = Field(None, description="Payment method ID")
-    coupon: Optional[str] = Field(None, description="Coupon code")
+    payment_method_id: str | None = Field(None, description="Payment method ID")
+    coupon: str | None = Field(None, description="Coupon code")
 
 
 class UpdateSubscriptionRequest(BaseModel):
     """Request model for updating a subscription"""
 
-    price_id: Optional[str] = Field(None, description="New price ID for upgrade/downgrade")
-    quantity: Optional[int] = Field(None, ge=1, description="Subscription quantity")
-    cancel_at_period_end: Optional[bool] = Field(None, description="Cancel at period end")
+    price_id: str | None = Field(None, description="New price ID for upgrade/downgrade")
+    quantity: int | None = Field(None, ge=1, description="Subscription quantity")
+    cancel_at_period_end: bool | None = Field(None, description="Cancel at period end")
 
 
 class CreatePaymentIntentRequest(BaseModel):
@@ -69,8 +69,8 @@ class CreatePaymentIntentRequest(BaseModel):
 
     amount: int = Field(..., ge=50, description="Amount in cents (minimum 50)")
     currency: str = Field("usd", description="Currency code")
-    description: Optional[str] = Field(None, description="Payment description")
-    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    description: str | None = Field(None, description="Payment description")
+    metadata: dict[str, Any] | None = Field(default_factory=dict)
 
 
 class AttachPaymentMethodRequest(BaseModel):
@@ -83,22 +83,20 @@ class AttachPaymentMethodRequest(BaseModel):
 class CreateCheckoutSessionRequest(BaseModel):
     """Request model for creating a checkout session"""
 
-    price_id: Optional[str] = Field(None, description="Price ID for subscriptions")
+    price_id: str | None = Field(None, description="Price ID for subscriptions")
     mode: str = Field("payment", description="Checkout mode: payment or subscription")
-    success_url: Optional[str] = Field(None, description="Success redirect URL")
-    cancel_url: Optional[str] = Field(None, description="Cancel redirect URL")
-    line_items: Optional[List[Dict[str, Any]]] = Field(None, description="Custom line items")
-    trial_days: Optional[int] = Field(
-        None, ge=0, le=30, description="Trial period for subscriptions"
-    )
+    success_url: str | None = Field(None, description="Success redirect URL")
+    cancel_url: str | None = Field(None, description="Cancel redirect URL")
+    line_items: list[dict[str, Any]] | None = Field(None, description="Custom line items")
+    trial_days: int | None = Field(None, ge=0, le=30, description="Trial period for subscriptions")
 
 
 class CreateRefundRequest(BaseModel):
     """Request model for creating a refund"""
 
-    payment_id: Optional[str] = Field(None, description="Payment ID to refund")
-    charge_id: Optional[str] = Field(None, description="Charge ID to refund")
-    amount: Optional[int] = Field(None, ge=1, description="Amount to refund in cents")
+    payment_id: str | None = Field(None, description="Payment ID to refund")
+    charge_id: str | None = Field(None, description="Charge ID to refund")
+    amount: int | None = Field(None, ge=1, description="Amount to refund in cents")
     reason: str = Field("requested_by_customer", description="Refund reason")
 
     @validator("payment_id")
@@ -109,7 +107,7 @@ class CreateRefundRequest(BaseModel):
 
 
 # Customer Endpoints
-@router.post("/customers", response_model=Dict[str, Any])
+@router.post("/customers", response_model=dict[str, Any])
 # @rate_limit(max_calls=10, time_window=60)
 async def create_customer(
     request: CreateCustomerRequest,
@@ -131,7 +129,8 @@ async def create_customer(
         # Check if customer already exists for this organization
         result = await db.execute(
             select(Customer).filter(
-                Customer.user_id == current_user.id, Customer.organization_id == org_id  # Organization filter
+                Customer.user_id == current_user.id,
+                Customer.organization_id == org_id,  # Organization filter
             )
         )
         existing_customer = result.scalar_one_or_none()
@@ -184,7 +183,7 @@ async def create_customer(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/customers/me", response_model=Dict[str, Any])
+@router.get("/customers/me", response_model=dict[str, Any])
 async def get_my_customer(
     org_id: UUID = Depends(get_current_organization_id),  # Multi-tenant isolation
     current_user=Depends(get_current_user),
@@ -203,7 +202,8 @@ async def get_my_customer(
         # Query with organization filter
         result = await db.execute(
             select(Customer).filter(
-                Customer.user_id == current_user.id, Customer.organization_id == org_id  # Organization filter
+                Customer.user_id == current_user.id,
+                Customer.organization_id == org_id,  # Organization filter
             )
         )
         customer = result.scalar_one_or_none()
@@ -228,7 +228,7 @@ async def get_my_customer(
 
 
 # Subscription Endpoints
-@router.post("/subscriptions", response_model=Dict[str, Any])
+@router.post("/subscriptions", response_model=dict[str, Any])
 # @rate_limit(max_calls=5, time_window=60)
 async def create_subscription(
     request: CreateSubscriptionRequest,
@@ -249,7 +249,8 @@ async def create_subscription(
         # Get customer with organization filter
         result = await db.execute(
             select(Customer).filter(
-                Customer.user_id == current_user.id, Customer.organization_id == org_id  # Organization filter
+                Customer.user_id == current_user.id,
+                Customer.organization_id == org_id,  # Organization filter
             )
         )
         customer = result.scalar_one_or_none()
@@ -306,7 +307,7 @@ async def create_subscription(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/subscriptions", response_model=Dict[str, Any])
+@router.get("/subscriptions", response_model=dict[str, Any])
 async def get_my_subscriptions(
     org_id: UUID = Depends(get_current_organization_id),  # Multi-tenant isolation
     current_user=Depends(get_current_user),
@@ -325,7 +326,8 @@ async def get_my_subscriptions(
         # Get customer with organization filter
         result = await db.execute(
             select(Customer).filter(
-                Customer.user_id == current_user.id, Customer.organization_id == org_id  # Organization filter
+                Customer.user_id == current_user.id,
+                Customer.organization_id == org_id,  # Organization filter
             )
         )
         customer = result.scalar_one_or_none()
@@ -336,7 +338,9 @@ async def get_my_subscriptions(
         # Get subscriptions from database with organization filter
         result = await db.execute(
             select(Subscription)
-            .filter(Subscription.customer_id == customer.id, Subscription.organization_id == org_id)  # Organization filter
+            .filter(
+                Subscription.customer_id == customer.id, Subscription.organization_id == org_id
+            )  # Organization filter
             .order_by(Subscription.created_at.desc())
         )
         subscriptions = result.scalars().all()
@@ -365,7 +369,7 @@ async def get_my_subscriptions(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.patch("/subscriptions/{subscription_id}", response_model=Dict[str, Any])
+@router.patch("/subscriptions/{subscription_id}", response_model=dict[str, Any])
 # @rate_limit(max_calls=5, time_window=60)
 async def update_subscription(
     subscription_id: str,
@@ -397,7 +401,9 @@ async def update_subscription(
         subscription = result.scalar_one_or_none()
 
         if not subscription:
-            raise HTTPException(status_code=404, detail="Subscription not found or you don't have access")
+            raise HTTPException(
+                status_code=404, detail="Subscription not found or you don't have access"
+            )
 
         # Handle cancellation
         if request.cancel_at_period_end is not None:
@@ -431,7 +437,7 @@ async def update_subscription(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.delete("/subscriptions/{subscription_id}", response_model=Dict[str, Any])
+@router.delete("/subscriptions/{subscription_id}", response_model=dict[str, Any])
 # @rate_limit(max_calls=5, time_window=60)
 async def cancel_subscription(
     subscription_id: str,
@@ -463,7 +469,9 @@ async def cancel_subscription(
         subscription = result.scalar_one_or_none()
 
         if not subscription:
-            raise HTTPException(status_code=404, detail="Subscription not found or you don't have access")
+            raise HTTPException(
+                status_code=404, detail="Subscription not found or you don't have access"
+            )
 
         # Cancel subscription
         cancelled = await stripe_service.cancel_subscription(
@@ -490,7 +498,7 @@ async def cancel_subscription(
 
 
 # Payment Method Endpoints
-@router.post("/payment-methods", response_model=Dict[str, Any])
+@router.post("/payment-methods", response_model=dict[str, Any])
 # @rate_limit(max_calls=10, time_window=60)
 async def attach_payment_method(
     request: AttachPaymentMethodRequest,
@@ -511,7 +519,8 @@ async def attach_payment_method(
         # Get customer with organization filter
         result = await db.execute(
             select(Customer).filter(
-                Customer.user_id == current_user.id, Customer.organization_id == org_id  # Organization filter
+                Customer.user_id == current_user.id,
+                Customer.organization_id == org_id,  # Organization filter
             )
         )
         customer = result.scalar_one_or_none()
@@ -535,7 +544,7 @@ async def attach_payment_method(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/payment-methods", response_model=Dict[str, Any])
+@router.get("/payment-methods", response_model=dict[str, Any])
 async def get_payment_methods(
     org_id: UUID = Depends(get_current_organization_id),  # Multi-tenant isolation
     current_user=Depends(get_current_user),
@@ -554,7 +563,8 @@ async def get_payment_methods(
         # Get customer with organization filter
         result = await db.execute(
             select(Customer).filter(
-                Customer.user_id == current_user.id, Customer.organization_id == org_id  # Organization filter
+                Customer.user_id == current_user.id,
+                Customer.organization_id == org_id,  # Organization filter
             )
         )
         customer = result.scalar_one_or_none()
@@ -575,7 +585,7 @@ async def get_payment_methods(
 
 
 # One-time Payment Endpoints
-@router.post("/payment-intents", response_model=Dict[str, Any])
+@router.post("/payment-intents", response_model=dict[str, Any])
 # @rate_limit(max_calls=10, time_window=60)
 async def create_payment_intent(
     request: CreatePaymentIntentRequest,
@@ -596,7 +606,8 @@ async def create_payment_intent(
         # Get customer if exists with organization filter
         result = await db.execute(
             select(Customer).filter(
-                Customer.user_id == current_user.id, Customer.organization_id == org_id  # Organization filter
+                Customer.user_id == current_user.id,
+                Customer.organization_id == org_id,  # Organization filter
             )
         )
         customer = result.scalar_one_or_none()
@@ -622,7 +633,7 @@ async def create_payment_intent(
 
 
 # Checkout Session Endpoints
-@router.post("/checkout/sessions", response_model=Dict[str, Any])
+@router.post("/checkout/sessions", response_model=dict[str, Any])
 # @rate_limit(max_calls=5, time_window=60)
 async def create_checkout_session(
     request: CreateCheckoutSessionRequest,
@@ -643,7 +654,8 @@ async def create_checkout_session(
         # Get customer if exists with organization filter
         result = await db.execute(
             select(Customer).filter(
-                Customer.user_id == current_user.id, Customer.organization_id == org_id  # Organization filter
+                Customer.user_id == current_user.id,
+                Customer.organization_id == org_id,  # Organization filter
             )
         )
         customer = result.scalar_one_or_none()
@@ -713,7 +725,7 @@ async def stripe_webhook(
 
 
 # Invoice Endpoints
-@router.get("/invoices", response_model=Dict[str, Any])
+@router.get("/invoices", response_model=dict[str, Any])
 async def get_invoices(
     limit: int = 10,
     org_id: UUID = Depends(get_current_organization_id),  # Multi-tenant isolation
@@ -733,7 +745,8 @@ async def get_invoices(
         # Get customer with organization filter
         result = await db.execute(
             select(Customer).filter(
-                Customer.user_id == current_user.id, Customer.organization_id == org_id  # Organization filter
+                Customer.user_id == current_user.id,
+                Customer.organization_id == org_id,  # Organization filter
             )
         )
         customer = result.scalar_one_or_none()
@@ -754,7 +767,7 @@ async def get_invoices(
 
 
 # Refund Endpoints
-@router.post("/refunds", response_model=Dict[str, Any])
+@router.post("/refunds", response_model=dict[str, Any])
 # @rate_limit(max_calls=5, time_window=60)
 async def create_refund(
     request: CreateRefundRequest,
@@ -796,7 +809,7 @@ async def create_refund(
 
 
 # Revenue Analytics Endpoints (Admin only)
-@router.get("/analytics/revenue", response_model=Dict[str, Any])
+@router.get("/analytics/revenue", response_model=dict[str, Any])
 async def get_revenue_analytics(
     start_date: datetime,
     end_date: datetime,

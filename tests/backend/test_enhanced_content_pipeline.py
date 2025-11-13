@@ -1,5 +1,6 @@
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 """
@@ -8,66 +9,50 @@ Tests all components of the Week 2 implementation
 """
 
 import asyncio
-import json
-import pytest
-from datetime import datetime, timedelta
-from typing import Dict, Any, List
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
-import pytest_asyncio
-from fastapi.testclient import TestClient
+import pytest
 from fastapi import WebSocket
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-# Import components to test
-from core.agents.enhanced_content_pipeline import (
-    EnhancedContentPipeline,
-    PipelineState,
-    PipelineStage,
-    ContentGenerationRequest
+from core.agents.adaptive_learning_engine import (
+    AdaptiveLearningEngine,
+    DifficultyLevel,
+    LearnerMetrics,
+    LearnerProfile,
 )
 from core.agents.content_quality_validator import (
     ContentQualityValidator,
-    ValidationReport,
     QualityScore,
-    ValidationIssue
+    ValidationIssue,
+    ValidationReport,
 )
-from core.agents.adaptive_learning_engine import (
-    AdaptiveLearningEngine,
-    LearnerProfile,
-    DifficultyLevel,
-    LearnerMetrics
+
+# Import components to test
+from core.agents.enhanced_content_pipeline import (
+    ContentGenerationRequest,
+    EnhancedContentPipeline,
+    PipelineStage,
+    PipelineState,
 )
 from core.agents.multi_modal_generator import (
-    MultiModalGenerator,
-    GenerationRequest,
+    ContentModality,
     GeneratedContent,
-    ContentModality
+    GenerationRequest,
+    MultiModalGenerator,
 )
-from tests.fixtures.pusher_test_utils import (
-    WebSocketPipelineManager
-)
-from database.models import (
-    EnhancedContentGeneration,
-    ContentQualityMetrics,
-    LearningProfile
-)
+from tests.fixtures.pusher_test_utils import WebSocketPipelineManager
 
 
 # Fixtures
 @pytest.fixture
 async def async_db_session():
     """Create async database session for testing"""
-    engine = create_async_engine(
-        "sqlite+aiosqlite:///:memory:",
-        echo=False
-    )
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
 
-    async_session = sessionmaker(
-        engine, class_=AsyncSession, expire_on_commit=False
-    )
+    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     async with async_session() as session:
         yield session
@@ -96,12 +81,9 @@ def mock_llm():
 @pytest.fixture
 async def pipeline():
     """Create enhanced content pipeline instance"""
-    with patch('core.agents.enhanced_content_pipeline.get_llm') as mock_get_llm:
+    with patch("core.agents.enhanced_content_pipeline.get_llm") as mock_get_llm:
         mock_get_llm.return_value = AsyncMock()
-        pipeline = EnhancedContentPipeline(
-            name="test-pipeline",
-            description="Test pipeline"
-        )
+        pipeline = EnhancedContentPipeline(name="test-pipeline", description="Test pipeline")
         await pipeline.initialize()
         yield pipeline
 
@@ -109,10 +91,7 @@ async def pipeline():
 @pytest.fixture
 async def quality_validator():
     """Create content quality validator instance"""
-    validator = ContentQualityValidator(
-        name="test-validator",
-        description="Test validator"
-    )
+    validator = ContentQualityValidator(name="test-validator", description="Test validator")
     await validator.initialize()
     return validator
 
@@ -120,10 +99,7 @@ async def quality_validator():
 @pytest.fixture
 async def adaptive_engine():
     """Create adaptive learning engine instance"""
-    engine = AdaptiveLearningEngine(
-        name="test-engine",
-        description="Test adaptive engine"
-    )
+    engine = AdaptiveLearningEngine(name="test-engine", description="Test adaptive engine")
     await engine.initialize()
     return engine
 
@@ -131,12 +107,9 @@ async def adaptive_engine():
 @pytest.fixture
 async def multi_modal_generator(mock_llm):
     """Create multi-modal generator instance"""
-    with patch('core.agents.multi_modal_generator.get_llm') as mock_get_llm:
+    with patch("core.agents.multi_modal_generator.get_llm") as mock_get_llm:
         mock_get_llm.return_value = mock_llm
-        generator = MultiModalGenerator(
-            name="test-generator",
-            description="Test generator"
-        )
+        generator = MultiModalGenerator(name="test-generator", description="Test generator")
         await generator.initialize()
         yield generator
 
@@ -169,7 +142,7 @@ class TestEnhancedContentPipeline:
             age_group="10-12",
             difficulty="intermediate",
             content_type="lesson",
-            learning_objectives=["Learn loops", "Understand variables"]
+            learning_objectives=["Learn loops", "Understand variables"],
         )
 
         state = pipeline.create_initial_state(request)
@@ -186,17 +159,14 @@ class TestEnhancedContentPipeline:
             pipeline_id=str(uuid4()),
             current_stage=PipelineStage.IDEATION,
             request=ContentGenerationRequest(
-                topic="Game Development",
-                age_group="8-10",
-                difficulty="beginner"
-            )
+                topic="Game Development", age_group="8-10", difficulty="beginner"
+            ),
         )
 
-        with patch.object(pipeline, 'ideation_agent') as mock_agent:
-            mock_agent.execute = AsyncMock(return_value={
-                "ideas": ["idea1", "idea2"],
-                "selected_concept": "Game basics"
-            })
+        with patch.object(pipeline, "ideation_agent") as mock_agent:
+            mock_agent.execute = AsyncMock(
+                return_value={"ideas": ["idea1", "idea2"], "selected_concept": "Game basics"}
+            )
 
             result = await pipeline._ideation_stage(state)
 
@@ -210,15 +180,17 @@ class TestEnhancedContentPipeline:
         state = PipelineState(
             pipeline_id=str(uuid4()),
             current_stage=PipelineStage.GENERATION,
-            outputs={"ideation_output": {"concept": "test"}}
+            outputs={"ideation_output": {"concept": "test"}},
         )
 
-        with patch.object(pipeline, 'generation_agent') as mock_agent:
-            mock_agent.execute = AsyncMock(return_value={
-                "content": "Generated lesson",
-                "scripts": ["script1.lua"],
-                "assets": []
-            })
+        with patch.object(pipeline, "generation_agent") as mock_agent:
+            mock_agent.execute = AsyncMock(
+                return_value={
+                    "content": "Generated lesson",
+                    "scripts": ["script1.lua"],
+                    "assets": [],
+                }
+            )
 
             result = await pipeline._generation_stage(state)
 
@@ -231,20 +203,13 @@ class TestEnhancedContentPipeline:
         state = PipelineState(
             pipeline_id=str(uuid4()),
             current_stage=PipelineStage.VALIDATION,
-            outputs={
-                "generation_output": {
-                    "content": "Test content",
-                    "scripts": []
-                }
-            }
+            outputs={"generation_output": {"content": "Test content", "scripts": []}},
         )
 
-        with patch.object(pipeline, 'validation_agent') as mock_agent:
-            mock_agent.execute = AsyncMock(return_value={
-                "quality_score": 0.85,
-                "issues": [],
-                "passed": True
-            })
+        with patch.object(pipeline, "validation_agent") as mock_agent:
+            mock_agent.execute = AsyncMock(
+                return_value={"quality_score": 0.85, "issues": [], "passed": True}
+            )
 
             result = await pipeline._validation_stage(state)
 
@@ -254,12 +219,9 @@ class TestEnhancedContentPipeline:
     @pytest.mark.asyncio
     async def test_pipeline_error_handling(self, pipeline):
         """Test pipeline handles errors gracefully"""
-        state = PipelineState(
-            pipeline_id=str(uuid4()),
-            current_stage=PipelineStage.IDEATION
-        )
+        state = PipelineState(pipeline_id=str(uuid4()), current_stage=PipelineStage.IDEATION)
 
-        with patch.object(pipeline, 'ideation_agent') as mock_agent:
+        with patch.object(pipeline, "ideation_agent") as mock_agent:
             mock_agent.execute = AsyncMock(side_effect=Exception("Test error"))
 
             result = await pipeline._ideation_stage(state)
@@ -278,12 +240,10 @@ class TestContentQualityValidator:
         content = {
             "text": "Learn about variables in programming",
             "learning_objectives": ["Understand variables"],
-            "exercises": ["Create a variable"]
+            "exercises": ["Create a variable"],
         }
 
-        score = await quality_validator._validate_educational_value(
-            content, target_age=10
-        )
+        score = await quality_validator._validate_educational_value(content, target_age=10)
 
         assert isinstance(score, QualityScore)
         assert 0 <= score.score <= 1.0
@@ -292,14 +252,9 @@ class TestContentQualityValidator:
     @pytest.mark.asyncio
     async def test_safety_compliance(self, quality_validator):
         """Test content safety validation"""
-        content = {
-            "text": "Safe educational content for kids",
-            "scripts": ["print('Hello World')"]
-        }
+        content = {"text": "Safe educational content for kids", "scripts": ["print('Hello World')"]}
 
-        issues = await quality_validator._check_safety_compliance(
-            content, target_age=8
-        )
+        issues = await quality_validator._check_safety_compliance(content, target_age=8)
 
         assert isinstance(issues, list)
         assert all(isinstance(i, ValidationIssue) for i in issues)
@@ -307,19 +262,19 @@ class TestContentQualityValidator:
     @pytest.mark.asyncio
     async def test_auto_fix_capability(self, quality_validator):
         """Test auto-fix for common issues"""
-        content = {
-            "text": "learnprogramming",  # Missing spaces
-            "code": "print('test')"
-        }
+        content = {"text": "learnprogramming", "code": "print('test')"}  # Missing spaces
 
-        fixed = await quality_validator._auto_fix_issues(content, [
-            ValidationIssue(
-                severity="low",
-                category="formatting",
-                message="Missing spaces",
-                suggestion="Add spaces between words"
-            )
-        ])
+        fixed = await quality_validator._auto_fix_issues(
+            content,
+            [
+                ValidationIssue(
+                    severity="low",
+                    category="formatting",
+                    message="Missing spaces",
+                    suggestion="Add spaces between words",
+                )
+            ],
+        )
 
         assert fixed != content
 
@@ -330,13 +285,11 @@ class TestContentQualityValidator:
             "title": "Introduction to Coding",
             "text": "Learn the basics of programming",
             "scripts": ["local x = 10"],
-            "difficulty": "beginner"
+            "difficulty": "beginner",
         }
 
         report = await quality_validator.validate_content(
-            content=content,
-            content_type="lesson",
-            target_age=10
+            content=content, content_type="lesson", target_age=10
         )
 
         assert isinstance(report, ValidationReport)
@@ -353,10 +306,7 @@ class TestAdaptiveLearningEngine:
     async def test_learner_profile_creation(self, adaptive_engine):
         """Test creation of learner profile"""
         profile = await adaptive_engine.create_learner_profile(
-            user_id="test-user-123",
-            age=10,
-            skill_level="beginner",
-            interests=["gaming", "art"]
+            user_id="test-user-123", age=10, skill_level="beginner", interests=["gaming", "art"]
         )
 
         assert isinstance(profile, LearnerProfile)
@@ -368,8 +318,7 @@ class TestAdaptiveLearningEngine:
         """Test dynamic difficulty adjustment"""
         # Test increasing difficulty for high performance
         level, adjustment = await adaptive_engine.optimize_difficulty(
-            user_id="test-user",
-            performance=0.9
+            user_id="test-user", performance=0.9
         )
 
         assert level in [DifficultyLevel.INTERMEDIATE, DifficultyLevel.ADVANCED]
@@ -377,8 +326,7 @@ class TestAdaptiveLearningEngine:
 
         # Test decreasing difficulty for low performance
         level, adjustment = await adaptive_engine.optimize_difficulty(
-            user_id="test-user",
-            performance=0.3
+            user_id="test-user", performance=0.3
         )
 
         assert level in [DifficultyLevel.BEGINNER, DifficultyLevel.INTERMEDIATE]
@@ -393,7 +341,7 @@ class TestAdaptiveLearningEngine:
             accuracy=0.85,
             engagement_score=0.9,
             time_on_task=1200,
-            attempts_count=3
+            attempts_count=3,
         )
 
         await adaptive_engine.update_metrics(metrics)
@@ -406,9 +354,7 @@ class TestAdaptiveLearningEngine:
     async def test_personalized_recommendations(self, adaptive_engine):
         """Test generation of personalized recommendations"""
         recommendations = await adaptive_engine.generate_recommendations(
-            user_id="test-user",
-            current_performance=0.7,
-            interests=["coding", "games"]
+            user_id="test-user", current_performance=0.7, interests=["coding", "games"]
         )
 
         assert isinstance(recommendations, list)
@@ -426,7 +372,7 @@ class TestMultiModalGenerator:
         request = GenerationRequest(
             modality=ContentModality.TEXT,
             topic="Variables in Programming",
-            parameters={"length": "medium", "style": "educational"}
+            parameters={"length": "medium", "style": "educational"},
         )
 
         content = await multi_modal_generator._generate_text(request)
@@ -441,7 +387,7 @@ class TestMultiModalGenerator:
         request = GenerationRequest(
             modality=ContentModality.CODE,
             topic="Player movement script",
-            parameters={"language": "luau", "complexity": "beginner"}
+            parameters={"language": "luau", "complexity": "beginner"},
         )
 
         content = await multi_modal_generator._generate_code(request)
@@ -456,11 +402,7 @@ class TestMultiModalGenerator:
         request = GenerationRequest(
             modality=ContentModality.MULTI,
             topic="Complete lesson on loops",
-            parameters={
-                "include_text": True,
-                "include_code": True,
-                "include_visual": True
-            }
+            parameters={"include_text": True, "include_code": True, "include_visual": True},
         )
 
         contents = await multi_modal_generator.generate(request)
@@ -499,7 +441,7 @@ class TestWebSocketPipelineManager:
             pipeline_id=pipeline_id,
             stage=PipelineStage.GENERATION,
             progress=50.0,
-            message="Generating content"
+            message="Generating content",
         )
 
         websocket.send_json.assert_called()
@@ -514,18 +456,18 @@ class TestWebSocketPipelineManager:
         websocket_manager.connections[pipeline_id] = {websocket}
 
         await websocket_manager.send_error(
-            pipeline_id=pipeline_id,
-            error_message="Test error",
-            error_details={"code": 500}
+            pipeline_id=pipeline_id, error_message="Test error", error_details={"code": 500}
         )
 
-        websocket.send_json.assert_called_with({
-            "type": "error",
-            "pipeline_id": pipeline_id,
-            "message": "Test error",
-            "details": {"code": 500},
-            "timestamp": pytest.Any(str)
-        })
+        websocket.send_json.assert_called_with(
+            {
+                "type": "error",
+                "pipeline_id": pipeline_id,
+                "message": "Test error",
+                "details": {"code": 500},
+                "timestamp": pytest.Any(str),
+            }
+        )
 
     @pytest.mark.asyncio
     async def test_heartbeat_mechanism(self, websocket_manager):
@@ -534,9 +476,7 @@ class TestWebSocketPipelineManager:
         pipeline_id = str(uuid4())
 
         # Start heartbeat task
-        task = asyncio.create_task(
-            websocket_manager._heartbeat(websocket, pipeline_id)
-        )
+        task = asyncio.create_task(websocket_manager._heartbeat(websocket, pipeline_id))
 
         # Wait briefly
         await asyncio.sleep(0.1)
@@ -565,31 +505,35 @@ class TestPipelineIntegration:
             learning_objectives=[
                 "Understand basic scripting concepts",
                 "Create first Roblox script",
-                "Learn about game objects"
-            ]
+                "Learn about game objects",
+            ],
         )
 
         # Mock agent responses
-        with patch.object(pipeline, 'ideation_agent') as mock_ideation, \
-             patch.object(pipeline, 'generation_agent') as mock_generation, \
-             patch.object(pipeline, 'validation_agent') as mock_validation:
+        with (
+            patch.object(pipeline, "ideation_agent") as mock_ideation,
+            patch.object(pipeline, "generation_agent") as mock_generation,
+            patch.object(pipeline, "validation_agent") as mock_validation,
+        ):
 
-            mock_ideation.execute = AsyncMock(return_value={
-                "ideas": ["Interactive coding tutorial"],
-                "selected_concept": "Learn by building"
-            })
+            mock_ideation.execute = AsyncMock(
+                return_value={
+                    "ideas": ["Interactive coding tutorial"],
+                    "selected_concept": "Learn by building",
+                }
+            )
 
-            mock_generation.execute = AsyncMock(return_value={
-                "content": "Complete lesson content",
-                "scripts": ["game.Workspace.Part.Touched"],
-                "assets": ["tutorial_world.rbxl"]
-            })
+            mock_generation.execute = AsyncMock(
+                return_value={
+                    "content": "Complete lesson content",
+                    "scripts": ["game.Workspace.Part.Touched"],
+                    "assets": ["tutorial_world.rbxl"],
+                }
+            )
 
-            mock_validation.execute = AsyncMock(return_value={
-                "quality_score": 0.92,
-                "issues": [],
-                "passed": True
-            })
+            mock_validation.execute = AsyncMock(
+                return_value={"quality_score": 0.92, "issues": [], "passed": True}
+            )
 
             # Execute pipeline
             result = await pipeline.execute(request)
@@ -608,17 +552,14 @@ class TestPipelineIntegration:
             user_id="student-123",
             age=11,
             skill_level="intermediate",
-            interests=["gaming", "puzzles"]
+            interests=["gaming", "puzzles"],
         )
 
         # Generate adapted content
         request = GenerationRequest(
             modality=ContentModality.MULTI,
             topic="Advanced loops and iterations",
-            parameters={
-                "learner_profile": profile,
-                "adapt_to_zpd": True
-            }
+            parameters={"learner_profile": profile, "adapt_to_zpd": True},
         )
 
         contents = await multi_modal_generator.generate(request)
@@ -635,11 +576,7 @@ class TestPerformance:
     async def test_concurrent_pipeline_execution(self, pipeline):
         """Test multiple concurrent pipeline executions"""
         requests = [
-            ContentGenerationRequest(
-                topic=f"Topic {i}",
-                age_group="10-12",
-                difficulty="beginner"
-            )
+            ContentGenerationRequest(topic=f"Topic {i}", age_group="10-12", difficulty="beginner")
             for i in range(5)
         ]
 
@@ -666,7 +603,7 @@ class TestPerformance:
             pipeline_id=pipeline_id,
             stage=PipelineStage.PROCESSING,
             progress=50.0,
-            message="Processing"
+            message="Processing",
         )
 
         # Verify all received update
@@ -697,11 +634,13 @@ class TestEndToEnd:
 
 # Run tests with coverage
 if __name__ == "__main__":
-    pytest.main([
-        __file__,
-        "-v",
-        "--cov=core.agents",
-        "--cov=apps.backend.services",
-        "--cov-report=html",
-        "--cov-report=term-missing"
-    ])
+    pytest.main(
+        [
+            __file__,
+            "-v",
+            "--cov=core.agents",
+            "--cov=apps.backend.services",
+            "--cov-report=html",
+            "--cov-report=term-missing",
+        ]
+    )

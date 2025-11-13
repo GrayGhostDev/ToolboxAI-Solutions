@@ -7,15 +7,22 @@ and subscription management for the ToolBoxAI Educational Platform.
 
 import uuid
 from datetime import datetime
-from typing import Optional, Dict, Any
 from enum import Enum as PyEnum
+from typing import Any, Dict, Optional
 
 from sqlalchemy import (
-    Column, String, Integer, Float, Boolean, DateTime, Text, JSON,
-    Index, CheckConstraint, Enum
+    Boolean,
+    CheckConstraint,
+    Column,
+    DateTime,
+    Enum,
+    Float,
+    Index,
+    Integer,
+    String,
+    Text,
 )
-from sqlalchemy.dialects.postgresql import UUID, JSONB
-from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.sql import func
 
 from database.models.models import Base
@@ -23,6 +30,7 @@ from database.models.models import Base
 
 class OrganizationStatus(PyEnum):
     """Organization status enumeration"""
+
     ACTIVE = "active"
     SUSPENDED = "suspended"
     TRIAL = "trial"
@@ -32,6 +40,7 @@ class OrganizationStatus(PyEnum):
 
 class SubscriptionTier(PyEnum):
     """Subscription tier enumeration"""
+
     FREE = "free"
     BASIC = "basic"
     PROFESSIONAL = "professional"
@@ -44,6 +53,7 @@ class Organization(Base):
     Organization model for multi-tenant isolation.
     Each organization represents a separate tenant with isolated data.
     """
+
     __tablename__ = "organizations"
 
     # Primary identification
@@ -72,12 +82,12 @@ class Organization(Base):
     subscription_tier = Column(
         Enum(SubscriptionTier, values_callable=lambda x: [e.value for e in x]),
         default=SubscriptionTier.FREE,
-        nullable=False
+        nullable=False,
     )
     status = Column(
         Enum(OrganizationStatus, values_callable=lambda x: [e.value for e in x]),
         default=OrganizationStatus.TRIAL,
-        nullable=False
+        nullable=False,
     )
 
     # Billing information
@@ -161,23 +171,22 @@ class Organization(Base):
 
     __table_args__ = (
         # Indexes for performance
-        Index('idx_organization_slug', 'slug'),
-        Index('idx_organization_status', 'status'),
-        Index('idx_organization_subscription', 'subscription_tier'),
-        Index('idx_organization_active', 'is_active'),
-        Index('idx_organization_trial_expires', 'trial_expires_at'),
-        Index('idx_organization_subscription_expires', 'subscription_expires_at'),
-        Index('idx_organization_created', 'created_at'),
-
+        Index("idx_organization_slug", "slug"),
+        Index("idx_organization_status", "status"),
+        Index("idx_organization_subscription", "subscription_tier"),
+        Index("idx_organization_active", "is_active"),
+        Index("idx_organization_trial_expires", "trial_expires_at"),
+        Index("idx_organization_subscription_expires", "subscription_expires_at"),
+        Index("idx_organization_created", "created_at"),
         # Constraints
-        CheckConstraint('max_users > 0', name='check_max_users_positive'),
-        CheckConstraint('max_classes >= 0', name='check_max_classes_non_negative'),
-        CheckConstraint('max_storage_gb >= 0', name='check_max_storage_non_negative'),
-        CheckConstraint('current_users >= 0', name='check_current_users_non_negative'),
-        CheckConstraint('current_classes >= 0', name='check_current_classes_non_negative'),
-        CheckConstraint('current_storage_gb >= 0', name='check_current_storage_non_negative'),
-        CheckConstraint('data_retention_days > 0', name='check_retention_days_positive'),
-        CheckConstraint('rate_limit_per_minute > 0', name='check_rate_limit_positive'),
+        CheckConstraint("max_users > 0", name="check_max_users_positive"),
+        CheckConstraint("max_classes >= 0", name="check_max_classes_non_negative"),
+        CheckConstraint("max_storage_gb >= 0", name="check_max_storage_non_negative"),
+        CheckConstraint("current_users >= 0", name="check_current_users_non_negative"),
+        CheckConstraint("current_classes >= 0", name="check_current_classes_non_negative"),
+        CheckConstraint("current_storage_gb >= 0", name="check_current_storage_non_negative"),
+        CheckConstraint("data_retention_days > 0", name="check_retention_days_positive"),
+        CheckConstraint("rate_limit_per_minute > 0", name="check_rate_limit_positive"),
     )
 
     def __repr__(self) -> str:
@@ -212,11 +221,25 @@ class Organization(Base):
     def usage_percentage(self) -> Dict[str, float]:
         """Get usage percentages for various limits"""
         return {
-            'users': (self.current_users / self.max_users * 100) if self.max_users > 0 else 0,
-            'classes': (self.current_classes / self.max_classes * 100) if self.max_classes > 0 else 0,
-            'storage': (self.current_storage_gb / self.max_storage_gb * 100) if self.max_storage_gb > 0 else 0,
-            'api_calls': (self.current_api_calls_this_month / self.max_api_calls_per_month * 100) if self.max_api_calls_per_month > 0 else 0,
-            'roblox_sessions': (self.current_roblox_sessions / self.max_roblox_sessions * 100) if self.max_roblox_sessions > 0 else 0,
+            "users": (self.current_users / self.max_users * 100) if self.max_users > 0 else 0,
+            "classes": (
+                (self.current_classes / self.max_classes * 100) if self.max_classes > 0 else 0
+            ),
+            "storage": (
+                (self.current_storage_gb / self.max_storage_gb * 100)
+                if self.max_storage_gb > 0
+                else 0
+            ),
+            "api_calls": (
+                (self.current_api_calls_this_month / self.max_api_calls_per_month * 100)
+                if self.max_api_calls_per_month > 0
+                else 0
+            ),
+            "roblox_sessions": (
+                (self.current_roblox_sessions / self.max_roblox_sessions * 100)
+                if self.max_roblox_sessions > 0
+                else 0
+            ),
         }
 
     def is_feature_enabled(self, feature_name: str) -> bool:
@@ -247,22 +270,24 @@ class Organization(Base):
 
     def increment_usage(self, metric: str, amount: int = 1) -> None:
         """Increment usage counter for a metric"""
-        if metric == 'users':
+        if metric == "users":
             self.current_users = min(self.current_users + amount, self.max_users)
-        elif metric == 'classes':
+        elif metric == "classes":
             self.current_classes = min(self.current_classes + amount, self.max_classes)
-        elif metric == 'api_calls':
+        elif metric == "api_calls":
             self.current_api_calls_this_month += amount
-        elif metric == 'roblox_sessions':
-            self.current_roblox_sessions = min(self.current_roblox_sessions + amount, self.max_roblox_sessions)
+        elif metric == "roblox_sessions":
+            self.current_roblox_sessions = min(
+                self.current_roblox_sessions + amount, self.max_roblox_sessions
+            )
 
     def decrement_usage(self, metric: str, amount: int = 1) -> None:
         """Decrement usage counter for a metric"""
-        if metric == 'users':
+        if metric == "users":
             self.current_users = max(0, self.current_users - amount)
-        elif metric == 'classes':
+        elif metric == "classes":
             self.current_classes = max(0, self.current_classes - amount)
-        elif metric == 'roblox_sessions':
+        elif metric == "roblox_sessions":
             self.current_roblox_sessions = max(0, self.current_roblox_sessions - amount)
 
 
@@ -270,6 +295,7 @@ class OrganizationInvitation(Base):
     """
     Organization invitation model for inviting users to join an organization.
     """
+
     __tablename__ = "organization_invitations"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -300,11 +326,11 @@ class OrganizationInvitation(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     __table_args__ = (
-        Index('idx_org_invitation_token', 'invitation_token'),
-        Index('idx_org_invitation_email', 'email'),
-        Index('idx_org_invitation_organization', 'organization_id'),
-        Index('idx_org_invitation_expires', 'expires_at'),
-        Index('idx_org_invitation_status', 'accepted_at', 'declined_at', 'cancelled_at'),
+        Index("idx_org_invitation_token", "invitation_token"),
+        Index("idx_org_invitation_email", "email"),
+        Index("idx_org_invitation_organization", "organization_id"),
+        Index("idx_org_invitation_expires", "expires_at"),
+        Index("idx_org_invitation_status", "accepted_at", "declined_at", "cancelled_at"),
     )
 
     @property
@@ -327,6 +353,7 @@ class OrganizationUsageLog(Base):
     """
     Track organization usage over time for analytics and billing.
     """
+
     __tablename__ = "organization_usage_logs"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -356,7 +383,7 @@ class OrganizationUsageLog(Base):
     usage_data = Column(JSONB, default={})
 
     __table_args__ = (
-        Index('idx_org_usage_organization_date', 'organization_id', 'log_date'),
-        Index('idx_org_usage_type_date', 'log_type', 'log_date'),
-        Index('idx_org_usage_billing_period', 'billing_period_start', 'billing_period_end'),
+        Index("idx_org_usage_organization_date", "organization_id", "log_date"),
+        Index("idx_org_usage_type_date", "log_type", "log_date"),
+        Index("idx_org_usage_billing_period", "billing_period_start", "billing_period_end"),
     )

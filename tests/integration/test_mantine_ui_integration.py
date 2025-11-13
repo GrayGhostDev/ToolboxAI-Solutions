@@ -5,17 +5,10 @@ This module tests Mantine UI component rendering, theme application,
 and migration examples to ensure complete Mantine integration works correctly.
 """
 
-import asyncio
-import json
-import os
 import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
+
 import pytest
-import aiohttp
-from pathlib import Path
-from playwright.async_api import async_playwright, Page, Browser, BrowserContext
-from playwright.sync_api import expect
+from playwright.async_api import Page, async_playwright
 
 
 @pytest.mark.integration
@@ -31,9 +24,7 @@ class TestMantineUIIntegration:
             browser = await p.chromium.launch(headless=True)
             context = await browser.new_context(
                 viewport={"width": 1920, "height": 1080},
-                extra_http_headers={
-                    "Accept-Language": "en-US,en;q=0.9"
-                }
+                extra_http_headers={"Accept-Language": "en-US,en;q=0.9"},
             )
 
             # Add console log capture
@@ -61,14 +52,21 @@ class TestMantineUIIntegration:
 
         # Expected Mantine components to test
         self.mantine_components = [
-            "Button", "Card", "Input", "Text", "Badge", "Chip",
-            "Notification", "Modal", "Drawer", "Table", "Form"
+            "Button",
+            "Card",
+            "Input",
+            "Text",
+            "Badge",
+            "Chip",
+            "Notification",
+            "Modal",
+            "Drawer",
+            "Table",
+            "Form",
         ]
 
         # Mantine theme properties
-        self.theme_properties = [
-            "colors", "spacing", "fontSizes", "radius", "shadows"
-        ]
+        self.theme_properties = ["colors", "spacing", "fontSizes", "radius", "shadows"]
 
     @pytest.mark.asyncio
     async def test_dashboard_loads_with_mantine(self, page: Page):
@@ -82,7 +80,8 @@ class TestMantineUIIntegration:
             await page.wait_for_selector("[data-testid='app'], #root, #app", timeout=10000)
 
             # Check if Mantine styles are loaded
-            mantine_styles = await page.evaluate("""
+            mantine_styles = await page.evaluate(
+                """
                 () => {
                     const stylesheets = Array.from(document.styleSheets);
                     return stylesheets.some(sheet => {
@@ -96,10 +95,12 @@ class TestMantineUIIntegration:
                         }
                     });
                 }
-            """)
+            """
+            )
 
             # Check for Mantine CSS variables
-            css_variables = await page.evaluate("""
+            css_variables = await page.evaluate(
+                """
                 () => {
                     const rootStyle = getComputedStyle(document.documentElement);
                     const mantineVars = [];
@@ -111,7 +112,8 @@ class TestMantineUIIntegration:
                     }
                     return mantineVars;
                 }
-            """)
+            """
+            )
 
             assert len(css_variables) > 0 or mantine_styles, "Mantine styles should be loaded"
 
@@ -127,7 +129,8 @@ class TestMantineUIIntegration:
             await page.wait_for_selector("[data-testid='app'], #root, #app", timeout=10000)
 
             # Check for Mantine theme context
-            theme_available = await page.evaluate("""
+            theme_available = await page.evaluate(
+                """
                 () => {
                     // Check if MantineProvider is in the React tree
                     const reactFiberKey = Object.keys(document.body).find(key =>
@@ -151,15 +154,18 @@ class TestMantineUIIntegration:
 
                     return false;
                 }
-            """)
+            """
+            )
 
             # Alternative check: look for Mantine-specific DOM attributes
-            mantine_elements = await page.evaluate("""
+            mantine_elements = await page.evaluate(
+                """
                 () => {
                     const elements = document.querySelectorAll('[data-mantine-*], [class*="mantine"]');
                     return elements.length;
                 }
-            """)
+            """
+            )
 
             assert theme_available or mantine_elements > 0, "Mantine theme should be available"
 
@@ -249,7 +255,9 @@ class TestMantineUIIntegration:
 
                 if len(required_inputs) > 0:
                     # Try to submit form without filling required fields
-                    submit_button = await form.query_selector("button[type='submit'], input[type='submit']")
+                    submit_button = await form.query_selector(
+                        "button[type='submit'], input[type='submit']"
+                    )
 
                     if submit_button:
                         await submit_button.click()
@@ -270,7 +278,9 @@ class TestMantineUIIntegration:
                             validity = await required_inputs[0].evaluate("el => el.validity.valid")
                             validation_working = not validity
 
-                        assert validation_working, "Form validation should prevent invalid submission"
+                        assert (
+                            validation_working
+                        ), "Form validation should prevent invalid submission"
 
         except Exception as e:
             pytest.skip(f"Form validation test failed: {e}")
@@ -306,7 +316,8 @@ class TestMantineUIIntegration:
                     assert len(notification_text.strip()) > 0, "Notification should have content"
 
             # Test programmatic notification creation
-            notification_created = await page.evaluate("""
+            notification_created = await page.evaluate(
+                """
                 () => {
                     try {
                         // Try to access Mantine notifications API
@@ -323,7 +334,8 @@ class TestMantineUIIntegration:
                         return false;
                     }
                 }
-            """)
+            """
+            )
 
             if notification_created:
                 await page.wait_for_timeout(500)
@@ -438,7 +450,8 @@ class TestMantineUIIntegration:
 
             if len(theme_switchers) > 0:
                 # Get initial theme
-                initial_theme = await page.evaluate("""
+                initial_theme = await page.evaluate(
+                    """
                     () => {
                         const root = document.documentElement;
                         return {
@@ -447,14 +460,16 @@ class TestMantineUIIntegration:
                             dataTheme: root.getAttribute('data-theme')
                         };
                     }
-                """)
+                """
+                )
 
                 # Click theme switcher
                 await theme_switchers[0].click()
                 await page.wait_for_timeout(500)
 
                 # Get new theme
-                new_theme = await page.evaluate("""
+                new_theme = await page.evaluate(
+                    """
                     () => {
                         const root = document.documentElement;
                         return {
@@ -463,13 +478,14 @@ class TestMantineUIIntegration:
                             dataTheme: root.getAttribute('data-theme')
                         };
                     }
-                """)
+                """
+                )
 
                 # Theme should have changed
                 theme_changed = (
-                    initial_theme["backgroundColor"] != new_theme["backgroundColor"] or
-                    initial_theme["color"] != new_theme["color"] or
-                    initial_theme["dataTheme"] != new_theme["dataTheme"]
+                    initial_theme["backgroundColor"] != new_theme["backgroundColor"]
+                    or initial_theme["color"] != new_theme["color"]
+                    or initial_theme["dataTheme"] != new_theme["dataTheme"]
                 )
 
                 assert theme_changed, "Theme should change when switcher is clicked"
@@ -489,7 +505,8 @@ class TestMantineUIIntegration:
             await page.set_viewport_size({"width": 1920, "height": 1080})
             await page.wait_for_timeout(500)
 
-            desktop_layout = await page.evaluate("""
+            desktop_layout = await page.evaluate(
+                """
                 () => {
                     const elements = document.querySelectorAll('[class*="responsive"], [class*="desktop"], [class*="large"]');
                     return {
@@ -501,13 +518,15 @@ class TestMantineUIIntegration:
                         ).length
                     };
                 }
-            """)
+            """
+            )
 
             # Test mobile view
             await page.set_viewport_size({"width": 375, "height": 667})
             await page.wait_for_timeout(500)
 
-            mobile_layout = await page.evaluate("""
+            mobile_layout = await page.evaluate(
+                """
                 () => {
                     const elements = document.querySelectorAll('[class*="responsive"], [class*="mobile"], [class*="small"]');
                     return {
@@ -519,16 +538,18 @@ class TestMantineUIIntegration:
                         ).length
                     };
                 }
-            """)
+            """
+            )
 
             # Layout should adapt to different screen sizes
             layout_responsive = (
-                desktop_layout["visibleElements"] != mobile_layout["visibleElements"] or
-                desktop_layout["hiddenElements"] != mobile_layout["hiddenElements"]
+                desktop_layout["visibleElements"] != mobile_layout["visibleElements"]
+                or desktop_layout["hiddenElements"] != mobile_layout["hiddenElements"]
             )
 
             # At minimum, page should be usable on mobile
-            page_usable = await page.evaluate("""
+            page_usable = await page.evaluate(
+                """
                 () => {
                     const body = document.body;
                     const bodyWidth = body.getBoundingClientRect().width;
@@ -537,7 +558,8 @@ class TestMantineUIIntegration:
                     // Check if content fits in viewport
                     return bodyWidth <= viewportWidth + 20; // Allow small overflow
                 }
-            """)
+            """
+            )
 
             assert page_usable, "Page should be usable on mobile devices"
 
@@ -553,7 +575,8 @@ class TestMantineUIIntegration:
             await page.wait_for_selector("[data-testid='app'], #root, #app", timeout=10000)
 
             # Check for aria labels and roles
-            accessibility_features = await page.evaluate("""
+            accessibility_features = await page.evaluate(
+                """
                 () => {
                     const elementsWithAria = document.querySelectorAll('[aria-label], [aria-labelledby], [role]');
                     const focusableElements = document.querySelectorAll('button, input, select, textarea, a[href]');
@@ -572,7 +595,8 @@ class TestMantineUIIntegration:
                         properTabIndex: properTabIndex
                     };
                 }
-            """)
+            """
+            )
 
             # Should have accessibility features
             assert accessibility_features["ariaElements"] > 0, "Should have ARIA labels/roles"
@@ -581,7 +605,13 @@ class TestMantineUIIntegration:
             # Test keyboard navigation
             await page.keyboard.press("Tab")
             focused_element = await page.evaluate("() => document.activeElement.tagName")
-            assert focused_element in ["BUTTON", "INPUT", "A", "SELECT", "TEXTAREA"], "Tab should focus interactive elements"
+            assert focused_element in [
+                "BUTTON",
+                "INPUT",
+                "A",
+                "SELECT",
+                "TEXTAREA",
+            ], "Tab should focus interactive elements"
 
         except Exception as e:
             pytest.skip(f"Accessibility test failed: {e}")
@@ -596,7 +626,8 @@ class TestMantineUIIntegration:
             await page.wait_for_selector("[data-testid='app'], #root, #app", timeout=10000)
 
             # Measure render performance
-            performance_metrics = await page.evaluate("""
+            performance_metrics = await page.evaluate(
+                """
                 () => {
                     const perfEntries = performance.getEntriesByType('navigation');
                     const paintEntries = performance.getEntriesByType('paint');
@@ -608,14 +639,19 @@ class TestMantineUIIntegration:
                         firstContentfulPaint: paintEntries.find(entry => entry.name === 'first-contentful-paint')?.startTime
                     };
                 }
-            """)
+            """
+            )
 
             # Performance benchmarks
             if performance_metrics["domContentLoaded"]:
-                assert performance_metrics["domContentLoaded"] < 3000, "DOM should load within 3 seconds"
+                assert (
+                    performance_metrics["domContentLoaded"] < 3000
+                ), "DOM should load within 3 seconds"
 
             if performance_metrics["firstContentfulPaint"]:
-                assert performance_metrics["firstContentfulPaint"] < 2000, "First contentful paint should be under 2 seconds"
+                assert (
+                    performance_metrics["firstContentfulPaint"] < 2000
+                ), "First contentful paint should be under 2 seconds"
 
             # Test component re-render performance
             start_time = time.time()
@@ -630,7 +666,9 @@ class TestMantineUIIntegration:
             end_time = time.time()
             interaction_time = (end_time - start_time) * 1000  # Convert to ms
 
-            assert interaction_time < 1000, f"Component interactions should be fast: {interaction_time}ms"
+            assert (
+                interaction_time < 1000
+            ), f"Component interactions should be fast: {interaction_time}ms"
 
         except Exception as e:
             pytest.skip(f"Performance test failed: {e}")
@@ -651,7 +689,8 @@ class TestMantineMigrationExamples:
             await page.wait_for_selector("[data-testid='app'], #root, #app", timeout=10000)
 
             # Check for both Mantine and MUI styles
-            both_libraries = await page.evaluate("""
+            both_libraries = await page.evaluate(
+                """
                 () => {
                     const stylesheets = Array.from(document.styleSheets);
                     let hasMantine = false;
@@ -673,7 +712,8 @@ class TestMantineMigrationExamples:
 
                     return { hasMantine, hasMui };
                 }
-            """)
+            """
+            )
 
             # Both libraries should be able to coexist
             if both_libraries["hasMantine"] and both_libraries["hasMui"]:
@@ -693,7 +733,8 @@ class TestMantineMigrationExamples:
             await page.wait_for_selector("[data-testid='app'], #root, #app", timeout=10000)
 
             # Test common component patterns
-            migration_components = await page.evaluate("""
+            migration_components = await page.evaluate(
+                """
                 () => {
                     const components = {
                         buttons: document.querySelectorAll('button').length,
@@ -706,7 +747,8 @@ class TestMantineMigrationExamples:
 
                     return components;
                 }
-            """)
+            """
+            )
 
             # Should have some interactive components
             total_components = sum(migration_components.values())
@@ -724,7 +766,8 @@ class TestMantineMigrationExamples:
             await page.wait_for_selector("[data-testid='app'], #root, #app", timeout=10000)
 
             # Check for theme variables
-            theme_variables = await page.evaluate("""
+            theme_variables = await page.evaluate(
+                """
                 () => {
                     const rootStyle = getComputedStyle(document.documentElement);
                     const variables = {};
@@ -739,17 +782,24 @@ class TestMantineMigrationExamples:
 
                     return variables;
                 }
-            """)
+            """
+            )
 
             # Should have Mantine theme variables
             theme_var_count = Object.keys(theme_variables).length
 
             if theme_var_count > 0:
                 # Check for essential theme variables
-                essential_vars = ["--mantine-color-primary", "--mantine-spacing", "--mantine-radius"];
+                essential_vars = [
+                    "--mantine-color-primary",
+                    "--mantine-spacing",
+                    "--mantine-radius",
+                ]
                 for var_name in essential_vars:
                     if var_name in theme_variables:
-                        assert len(theme_variables[var_name].strip()) > 0, f"Theme variable {var_name} should have value"
+                        assert (
+                            len(theme_variables[var_name].strip()) > 0
+                        ), f"Theme variable {var_name} should have value"
 
         except Exception as e:
             pytest.skip(f"Theme migration test failed: {e}")
@@ -770,28 +820,34 @@ class TestMantinePerformanceIntegration:
             resources = []
 
             def handle_response(response):
-                if response.url.endswith('.js') or response.url.endswith('.css'):
-                    resources.append({
-                        'url': response.url,
-                        'size': len(response.body()) if hasattr(response, 'body') else 0,
-                        'type': 'js' if response.url.endswith('.js') else 'css'
-                    })
+                if response.url.endswith(".js") or response.url.endswith(".css"):
+                    resources.append(
+                        {
+                            "url": response.url,
+                            "size": len(response.body()) if hasattr(response, "body") else 0,
+                            "type": "js" if response.url.endswith(".js") else "css",
+                        }
+                    )
 
-            page.on('response', handle_response)
+            page.on("response", handle_response)
 
             await page.goto("http://localhost:5179", wait_until="networkidle")
             await page.wait_for_selector("[data-testid='app'], #root, #app", timeout=10000)
 
             # Calculate total bundle size
-            total_js_size = sum(r['size'] for r in resources if r['type'] == 'js')
-            total_css_size = sum(r['size'] for r in resources if r['type'] == 'css')
+            total_js_size = sum(r["size"] for r in resources if r["type"] == "js")
+            total_css_size = sum(r["size"] for r in resources if r["type"] == "css")
 
             # Bundle size should be reasonable (these are loose limits)
             if total_js_size > 0:
-                assert total_js_size < 10 * 1024 * 1024, f"JS bundle too large: {total_js_size / 1024 / 1024:.2f}MB"
+                assert (
+                    total_js_size < 10 * 1024 * 1024
+                ), f"JS bundle too large: {total_js_size / 1024 / 1024:.2f}MB"
 
             if total_css_size > 0:
-                assert total_css_size < 2 * 1024 * 1024, f"CSS bundle too large: {total_css_size / 1024 / 1024:.2f}MB"
+                assert (
+                    total_css_size < 2 * 1024 * 1024
+                ), f"CSS bundle too large: {total_css_size / 1024 / 1024:.2f}MB"
 
         except Exception as e:
             pytest.skip(f"Bundle size test failed: {e}")
@@ -834,7 +890,8 @@ class TestMantinePerformanceIntegration:
             await page.wait_for_selector("[data-testid='app'], #root, #app", timeout=10000)
 
             # Get initial memory usage
-            initial_memory = await page.evaluate("""
+            initial_memory = await page.evaluate(
+                """
                 () => {
                     if (performance.memory) {
                         return {
@@ -845,7 +902,8 @@ class TestMantinePerformanceIntegration:
                     }
                     return null;
                 }
-            """)
+            """
+            )
 
             if initial_memory:
                 # Interact with components to potentially increase memory
@@ -855,7 +913,8 @@ class TestMantinePerformanceIntegration:
                     await page.wait_for_timeout(50)
 
                 # Get memory after interaction
-                final_memory = await page.evaluate("""
+                final_memory = await page.evaluate(
+                    """
                     () => {
                         if (performance.memory) {
                             return {
@@ -866,14 +925,17 @@ class TestMantinePerformanceIntegration:
                         }
                         return null;
                     }
-                """)
+                """
+                )
 
                 if final_memory:
                     memory_increase = final_memory["used"] - initial_memory["used"]
                     memory_increase_mb = memory_increase / (1024 * 1024)
 
                     # Memory increase should be reasonable
-                    assert memory_increase_mb < 50, f"Memory increase too high: {memory_increase_mb:.2f}MB"
+                    assert (
+                        memory_increase_mb < 50
+                    ), f"Memory increase too high: {memory_increase_mb:.2f}MB"
 
         except Exception as e:
             pytest.skip(f"Memory usage test failed: {e}")

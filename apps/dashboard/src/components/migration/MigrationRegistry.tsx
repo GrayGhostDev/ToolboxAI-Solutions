@@ -190,7 +190,7 @@ export function MigrationRegistry() {
       title: 'Migration Updated',
       message: `${componentId} switched to ${newStatus.toUpperCase()}`,
       color: newStatus === 'mantine' ? 'green' : 'blue',
-      icon: newStatus === 'mantine' ? <IconCheck size={rem(18)} /> : <IconBrandReact size={rem(18)} />,
+      icon: newStatus === 'mantine' ? <IconCheck size={18} /> : <IconBrandReact size={18} />,
     });
   };
 

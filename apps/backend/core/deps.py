@@ -5,19 +5,19 @@ Provides common dependencies for FastAPI endpoints.
 """
 
 import logging
-from typing import Optional, AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, Generator
 from uuid import UUID
+
+import jwt
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
-from sqlalchemy import text
-import jwt
-from datetime import datetime, timedelta
 
-from database.session_modern import get_async_session as get_sqlalchemy_async_session
-from database.models import User
 from apps.backend.core.database import SessionLocal
+from database.models import User
+from database.session_modern import get_async_session as get_sqlalchemy_async_session
 from toolboxai_settings import settings
 
 # Security scheme
@@ -42,7 +42,7 @@ async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
         yield None
 
 
-def get_db() -> Generator[Optional[Session], None, None]:
+def get_db() -> Generator[Session | None, None, None]:
     """
     Get database session for sync operations.
 
@@ -62,7 +62,7 @@ def get_db() -> Generator[Optional[Session], None, None]:
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Optional[AsyncSession] = Depends(get_async_db),
+    db: AsyncSession | None = Depends(get_async_db),
 ) -> User:
     """
     Get current authenticated user from JWT token.
@@ -182,7 +182,7 @@ require_teacher_or_student = require_role(["admin", "teacher", "student"])
 
 async def get_current_organization_id(
     current_user: User = Depends(get_current_user),
-    db: Optional[AsyncSession] = Depends(get_async_db),
+    db: AsyncSession | None = Depends(get_async_db),
 ) -> UUID:
     """
     Extract organization_id from current authenticated user.
@@ -212,10 +212,10 @@ async def get_current_organization_id(
             )
             return agents.scalars().all()
     """
-    if not hasattr(current_user, 'organization_id') or current_user.organization_id is None:
+    if not hasattr(current_user, "organization_id") or current_user.organization_id is None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="User must belong to an organization to access this resource"
+            detail="User must belong to an organization to access this resource",
         )
 
     # Set PostgreSQL session variable for RLS policies (if database available)
@@ -233,7 +233,7 @@ async def get_current_organization_id(
 
 def get_current_organization_id_sync(
     current_user: User = Depends(get_current_user),
-    db: Optional[Session] = Depends(get_db),
+    db: Session | None = Depends(get_db),
 ) -> UUID:
     """
     Extract organization_id from current user (sync version).
@@ -259,18 +259,16 @@ def get_current_organization_id_sync(
             query = TenantAwareQuery(db, AgentInstance, org_id)
             return query.all()
     """
-    if not hasattr(current_user, 'organization_id') or current_user.organization_id is None:
+    if not hasattr(current_user, "organization_id") or current_user.organization_id is None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="User must belong to an organization to access this resource"
+            detail="User must belong to an organization to access this resource",
         )
 
     # Set PostgreSQL session variable for RLS policies (if database available)
     if db is not None:
         try:
-            db.execute(
-                text(f"SET app.current_organization_id = '{current_user.organization_id}'")
-            )
+            db.execute(text(f"SET app.current_organization_id = '{current_user.organization_id}'"))
         except Exception:
             # RLS may not be enabled in all environments (dev/test)
             pass
@@ -317,7 +315,7 @@ async def verify_organization_access(
     if resource_org_id != current_org_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You do not have access to resources from this organization"
+            detail="You do not have access to resources from this organization",
         )
     return True
 

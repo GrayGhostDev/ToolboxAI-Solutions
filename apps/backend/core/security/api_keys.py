@@ -3,19 +3,21 @@ API Key Authentication System for Roblox Plugins
 Provides secure, scoped API keys for automated plugin access
 """
 
-import secrets
 import hashlib
 import logging
-from typing import Dict, Optional, List, Any
-from datetime import datetime, timezone, timedelta
+import secrets
+import uuid
+from datetime import datetime, timedelta, timezone
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
 import redis.asyncio as redis
 from pydantic import BaseModel, Field
-from sqlalchemy import Column, String, Integer, DateTime, Boolean, JSON, Enum as SQLEnum
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import JSON, Boolean, Column, DateTime
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import Integer, String, delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete
-import uuid
+from sqlalchemy.ext.declarative import declarative_base
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +26,7 @@ Base = declarative_base()
 
 class APIKeyScope(str, Enum):
     """API key permission scopes"""
+
     READ = "read"
     WRITE = "write"
     DEPLOY = "deploy"
@@ -36,6 +39,7 @@ class APIKeyScope(str, Enum):
 
 class APIKeyStatus(str, Enum):
     """API key status"""
+
     ACTIVE = "active"
     REVOKED = "revoked"
     EXPIRED = "expired"
@@ -44,6 +48,7 @@ class APIKeyStatus(str, Enum):
 
 class APIKeyModel(Base):
     """Database model for API keys"""
+
     __tablename__ = "api_keys"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -70,11 +75,12 @@ class APIKeyModel(Base):
     rate_limit = Column(Integer, default=1000)  # Requests per hour
 
     # Additional data
-    additional_metadata = Column('metadata', JSON, default=dict)
+    additional_metadata = Column("metadata", JSON, default=dict)
 
 
 class APIKeyCreate(BaseModel):
     """API key creation request"""
+
     name: str = Field(min_length=3, max_length=100)
     description: Optional[str] = Field(None, max_length=500)
     scopes: List[APIKeyScope] = Field(default=[APIKeyScope.READ])
@@ -86,6 +92,7 @@ class APIKeyCreate(BaseModel):
 
 class APIKeyResponse(BaseModel):
     """API key response"""
+
     key_id: str
     api_key: Optional[str] = Field(None, description="Only provided on creation")
     name: str
@@ -101,6 +108,7 @@ class APIKeyResponse(BaseModel):
 
 class APIKeyValidation(BaseModel):
     """API key validation result"""
+
     is_valid: bool
     key_id: Optional[str] = None
     user_id: Optional[str] = None
@@ -117,7 +125,7 @@ class APIKeyManager:
         self,
         redis_url: str = "redis://localhost:6379",
         key_prefix: str = "roblox:apikey:",
-        rate_limit_window: int = 3600  # 1 hour in seconds
+        rate_limit_window: int = 3600,  # 1 hour in seconds
     ):
         self.redis_url = redis_url
         self.redis_client: Optional[redis.Redis] = None
@@ -129,9 +137,7 @@ class APIKeyManager:
         """Initialize Redis connection"""
         try:
             self.redis_client = await redis.from_url(
-                self.redis_url,
-                encoding="utf-8",
-                decode_responses=True
+                self.redis_url, encoding="utf-8", decode_responses=True
             )
             logger.info("API Key Manager initialized")
         except Exception as e:
@@ -153,10 +159,7 @@ class APIKeyManager:
         return hashlib.sha512(api_key.encode()).hexdigest()
 
     async def create_api_key(
-        self,
-        db: AsyncSession,
-        user_id: str,
-        request: APIKeyCreate
+        self, db: AsyncSession, user_id: str, request: APIKeyCreate
     ) -> APIKeyResponse:
         """Create a new API key"""
         try:
@@ -179,7 +182,7 @@ class APIKeyManager:
                 place_ids=request.place_ids or [],
                 ip_whitelist=request.ip_whitelist or [],
                 expires_at=expires_at,
-                rate_limit=request.rate_limit
+                rate_limit=request.rate_limit,
             )
 
             db.add(db_key)
@@ -193,7 +196,7 @@ class APIKeyManager:
                 "scopes": ",".join([scope for scope in db_key.scopes]),
                 "place_ids": ",".join(db_key.place_ids) if db_key.place_ids else "",
                 "rate_limit": str(db_key.rate_limit),
-                "status": db_key.status.value
+                "status": db_key.status.value,
             }
 
             # Store with TTL if key expires
@@ -201,10 +204,7 @@ class APIKeyManager:
             if expires_at:
                 ttl = int((expires_at - datetime.now(timezone.utc)).total_seconds())
 
-            await self.redis_client.hset(
-                f"{self.key_prefix}{key_hash}",
-                mapping=cache_data
-            )
+            await self.redis_client.hset(f"{self.key_prefix}{key_hash}", mapping=cache_data)
 
             if ttl and ttl > 0:
                 await self.redis_client.expire(f"{self.key_prefix}{key_hash}", ttl)
@@ -222,7 +222,7 @@ class APIKeyManager:
                 created_at=db_key.created_at,
                 expires_at=db_key.expires_at,
                 rate_limit=db_key.rate_limit,
-                usage_count=db_key.usage_count
+                usage_count=db_key.usage_count,
             )
 
         except Exception as e:
@@ -235,7 +235,7 @@ class APIKeyManager:
         api_key: str,
         required_scope: Optional[APIKeyScope] = None,
         place_id: Optional[str] = None,
-        client_ip: Optional[str] = None
+        client_ip: Optional[str] = None,
     ) -> APIKeyValidation:
         """Validate an API key"""
         try:
@@ -245,32 +245,33 @@ class APIKeyManager:
             cached_data = await self.redis_client.hgetall(f"{self.key_prefix}{key_hash}")
 
             if not cached_data:
-                return APIKeyValidation(
-                    is_valid=False,
-                    error="Invalid API key"
-                )
+                return APIKeyValidation(is_valid=False, error="Invalid API key")
 
             # Check status
             if cached_data.get("status") != APIKeyStatus.ACTIVE.value:
                 return APIKeyValidation(
-                    is_valid=False,
-                    error=f"API key is {cached_data.get('status', 'invalid')}"
+                    is_valid=False, error=f"API key is {cached_data.get('status', 'invalid')}"
                 )
 
             # Check scope
             scopes = cached_data.get("scopes", "").split(",") if cached_data.get("scopes") else []
-            if required_scope and required_scope.value not in scopes and APIKeyScope.ADMIN.value not in scopes:
+            if (
+                required_scope
+                and required_scope.value not in scopes
+                and APIKeyScope.ADMIN.value not in scopes
+            ):
                 return APIKeyValidation(
                     is_valid=False,
-                    error=f"Insufficient permissions. Required scope: {required_scope.value}"
+                    error=f"Insufficient permissions. Required scope: {required_scope.value}",
                 )
 
             # Check place ID restriction
-            place_ids = cached_data.get("place_ids", "").split(",") if cached_data.get("place_ids") else []
+            place_ids = (
+                cached_data.get("place_ids", "").split(",") if cached_data.get("place_ids") else []
+            )
             if place_ids and place_id and place_id not in place_ids:
                 return APIKeyValidation(
-                    is_valid=False,
-                    error=f"API key not authorized for place ID: {place_id}"
+                    is_valid=False, error=f"API key not authorized for place ID: {place_id}"
                 )
 
             # Check rate limit
@@ -286,8 +287,7 @@ class APIKeyManager:
 
             if current_count > rate_limit:
                 return APIKeyValidation(
-                    is_valid=False,
-                    error=f"Rate limit exceeded. Limit: {rate_limit}/hour"
+                    is_valid=False, error=f"Rate limit exceeded. Limit: {rate_limit}/hour"
                 )
 
             # Update last used timestamp (async, don't wait)
@@ -299,48 +299,33 @@ class APIKeyManager:
                 user_id=cached_data.get("user_id"),
                 scopes=scopes,
                 place_ids=place_ids,
-                rate_limit_remaining=max(0, rate_limit - current_count)
+                rate_limit_remaining=max(0, rate_limit - current_count),
             )
 
         except Exception as e:
             logger.error(f"Error validating API key: {e}")
-            return APIKeyValidation(
-                is_valid=False,
-                error="Internal validation error"
-            )
+            return APIKeyValidation(is_valid=False, error="Internal validation error")
 
     async def _update_last_used(self, key_hash: str):
         """Update last used timestamp for API key"""
         try:
             # Update in cache
             await self.redis_client.hset(
-                f"{self.key_prefix}{key_hash}",
-                "last_used",
-                datetime.now(timezone.utc).isoformat()
+                f"{self.key_prefix}{key_hash}", "last_used", datetime.now(timezone.utc).isoformat()
             )
 
             # Increment usage counter
-            await self.redis_client.hincrby(
-                f"{self.key_prefix}{key_hash}",
-                "usage_count",
-                1
-            )
+            await self.redis_client.hincrby(f"{self.key_prefix}{key_hash}", "usage_count", 1)
         except Exception as e:
             logger.warning(f"Failed to update last used timestamp: {e}")
 
-    async def revoke_api_key(
-        self,
-        db: AsyncSession,
-        key_id: str,
-        user_id: str
-    ) -> bool:
+    async def revoke_api_key(self, db: AsyncSession, key_id: str, user_id: str) -> bool:
         """Revoke an API key"""
         try:
             # Find the key
             result = await db.execute(
                 select(APIKeyModel).where(
-                    APIKeyModel.key_id == key_id,
-                    APIKeyModel.user_id == user_id
+                    APIKeyModel.key_id == key_id, APIKeyModel.user_id == user_id
                 )
             )
             db_key = result.scalar_one_or_none()
@@ -367,10 +352,7 @@ class APIKeyManager:
             return False
 
     async def list_api_keys(
-        self,
-        db: AsyncSession,
-        user_id: str,
-        include_revoked: bool = False
+        self, db: AsyncSession, user_id: str, include_revoked: bool = False
     ) -> List[APIKeyResponse]:
         """List API keys for a user"""
         try:
@@ -393,7 +375,7 @@ class APIKeyManager:
                     created_at=key.created_at,
                     expires_at=key.expires_at,
                     rate_limit=key.rate_limit,
-                    usage_count=key.usage_count
+                    usage_count=key.usage_count,
                 )
                 for key in keys
             ]
@@ -410,8 +392,7 @@ class APIKeyManager:
             # Find expired keys
             result = await db.execute(
                 select(APIKeyModel).where(
-                    APIKeyModel.expires_at < now,
-                    APIKeyModel.status == APIKeyStatus.ACTIVE
+                    APIKeyModel.expires_at < now, APIKeyModel.status == APIKeyStatus.ACTIVE
                 )
             )
             expired_keys = result.scalars().all()

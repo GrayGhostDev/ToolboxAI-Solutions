@@ -19,16 +19,16 @@ Usage:
 """
 
 import logging
+import re
 import time
-from typing import Callable, Dict, List, Optional, Set
+from collections.abc import Callable
+
+from starlette import status
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from starlette.responses import Response, JSONResponse
-from starlette import status
-import re
+from starlette.responses import JSONResponse, Response
 
 from apps.backend.core.security.rbac_manager import rbac_manager
-
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ class RBACMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
 
         # Public paths that don't require authentication
-        self.public_paths: Set[str] = {
+        self.public_paths: set[str] = {
             "/",
             "/docs",
             "/redoc",
@@ -63,14 +63,14 @@ class RBACMiddleware(BaseHTTPMiddleware):
         }
 
         # Path patterns that should bypass RBAC (regex)
-        self.bypass_patterns: List[re.Pattern] = [
+        self.bypass_patterns: list[re.Pattern] = [
             re.compile(r"^/static/.*"),
             re.compile(r"^/api/health/.*"),
             re.compile(r"^/_internal/.*"),
         ]
 
         # Map HTTP methods to actions
-        self.method_action_map: Dict[str, str] = {
+        self.method_action_map: dict[str, str] = {
             "GET": "read",
             "POST": "create",
             "PUT": "update",
@@ -86,7 +86,7 @@ class RBACMiddleware(BaseHTTPMiddleware):
 
         logger.info("RBACMiddleware initialized")
 
-    def _build_path_permissions(self) -> Dict[str, Dict[str, str]]:
+    def _build_path_permissions(self) -> dict[str, dict[str, str]]:
         """
         Build mapping of paths to required permissions.
 
@@ -102,7 +102,6 @@ class RBACMiddleware(BaseHTTPMiddleware):
                 "PATCH": "content:update:own",
                 "DELETE": "content:delete:own",
             },
-
             # Agent endpoints
             r"/api/v1/agents/?.*": {
                 "GET": "agent:read:organization",
@@ -110,11 +109,9 @@ class RBACMiddleware(BaseHTTPMiddleware):
                 "PUT": "agent:update:own",
                 "DELETE": "agent:delete:own",
             },
-
             r"/api/v1/agents/.*/execute": {
                 "POST": "agent:execute:organization",
             },
-
             # User management
             r"/api/v1/users/?.*": {
                 "GET": "user:read:organization",
@@ -123,7 +120,6 @@ class RBACMiddleware(BaseHTTPMiddleware):
                 "PATCH": "user:update:own",
                 "DELETE": "user:delete:all",  # Only admins
             },
-
             # Organization management
             r"/api/v1/organizations/?.*": {
                 "GET": "organization:read:organization",
@@ -131,13 +127,11 @@ class RBACMiddleware(BaseHTTPMiddleware):
                 "PUT": "organization:update:organization",
                 "DELETE": "organization:delete:all",  # Only admins
             },
-
             # Analytics
             r"/api/v1/analytics/?.*": {
                 "GET": "analytics:read:organization",
                 "POST": "analytics:export:organization",
             },
-
             # System management (admin only)
             r"/api/v1/system/?.*": {
                 "GET": "system:monitor",
@@ -168,7 +162,7 @@ class RBACMiddleware(BaseHTTPMiddleware):
 
         return False
 
-    def _get_required_permission(self, path: str, method: str) -> Optional[str]:
+    def _get_required_permission(self, path: str, method: str) -> str | None:
         """
         Get required permission for path and method.
 
@@ -194,7 +188,7 @@ class RBACMiddleware(BaseHTTPMiddleware):
 
         return None
 
-    def _extract_user_from_request(self, request: Request) -> Optional[Dict]:
+    def _extract_user_from_request(self, request: Request) -> dict | None:
         """
         Extract user from request state (set by auth middleware).
 
@@ -209,12 +203,12 @@ class RBACMiddleware(BaseHTTPMiddleware):
 
     def _log_access_attempt(
         self,
-        user_id: Optional[int],
+        user_id: int | None,
         path: str,
         method: str,
-        permission: Optional[str],
+        permission: str | None,
         granted: bool,
-        duration_ms: float
+        duration_ms: float,
     ):
         """
         Log access attempt for audit trail.
@@ -274,7 +268,7 @@ class RBACMiddleware(BaseHTTPMiddleware):
 
             return JSONResponse(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                content={"detail": "Authentication required"}
+                content={"detail": "Authentication required"},
             )
 
         # Get required permission for this path/method
@@ -299,12 +293,7 @@ class RBACMiddleware(BaseHTTPMiddleware):
 
         if not has_permission:
             self._log_access_attempt(
-                user.get('id'),
-                path,
-                method,
-                required_permission,
-                False,
-                duration_ms
+                user.get("id"), path, method, required_permission, False, duration_ms
             )
 
             return JSONResponse(
@@ -312,18 +301,13 @@ class RBACMiddleware(BaseHTTPMiddleware):
                 content={
                     "detail": f"Insufficient permissions. Required: {required_permission}",
                     "required_permission": required_permission,
-                    "user_role": user.get('role')
-                }
+                    "user_role": user.get("role"),
+                },
             )
 
         # Permission granted - log and proceed
         self._log_access_attempt(
-            user.get('id'),
-            path,
-            method,
-            required_permission,
-            True,
-            duration_ms
+            user.get("id"), path, method, required_permission, True, duration_ms
         )
 
         # Add permission info to request state for endpoint use
@@ -352,9 +336,9 @@ class OrganizationScopingMiddleware(BaseHTTPMiddleware):
         """
         user = getattr(request.state, "user", None)
 
-        if user and user.get('organization_id'):
+        if user and user.get("organization_id"):
             # Set organization context in request state
-            request.state.organization_id = user.get('organization_id')
+            request.state.organization_id = user.get("organization_id")
 
             # Can also set PostgreSQL session variable for RLS
             # This would be done in database dependency

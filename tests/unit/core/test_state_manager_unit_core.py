@@ -1,4 +1,3 @@
-import pytest_asyncio
 import sys
 from pathlib import Path
 
@@ -8,8 +7,7 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 
-import asyncio
-from datetime import datetime
+
 import pytest
 
 from core.sparc.state_manager import StateManager, StateType
@@ -41,11 +39,9 @@ async def test_initialize_state_defaults_populates_metadata_and_history():
 async def test_initialize_state_with_custom_data_sets_educational_context():
     manager = StateManager(history_size=10)
 
-    state = await manager.initialize_state({
-        "subject_area": "Science",
-        "grade_level": 7,
-        "content": "Intro to Solar System"
-    })
+    state = await manager.initialize_state(
+        {"subject_area": "Science", "grade_level": 7, "content": "Intro to Solar System"}
+    )
 
     assert state.subject_area == "Science"
     assert state.grade_level == 7
@@ -59,18 +55,22 @@ async def test_calculate_reward_balances_objectives_and_time():
     manager = StateManager()
 
     # Fast and complete -> high reward
-    r_fast_complete = await manager.calculate_reward({
-        "objectives_met": 5,
-        "total_objectives": 5,
-        "execution_time": 3.0,
-    })
+    r_fast_complete = await manager.calculate_reward(
+        {
+            "objectives_met": 5,
+            "total_objectives": 5,
+            "execution_time": 3.0,
+        }
+    )
 
     # Slow and partial -> lower reward
-    r_slow_partial = await manager.calculate_reward({
-        "objectives_met": 2,
-        "total_objectives": 5,
-        "execution_time": 120.0,
-    })
+    r_slow_partial = await manager.calculate_reward(
+        {
+            "objectives_met": 2,
+            "total_objectives": 5,
+            "execution_time": 120.0,
+        }
+    )
 
     assert 0.0 <= r_slow_partial <= 1.0
     assert 0.0 <= r_fast_complete <= 1.0
@@ -78,4 +78,3 @@ async def test_calculate_reward_balances_objectives_and_time():
 
     # Quality metrics should record last reward
     assert "last_reward" in manager.quality_metrics
-

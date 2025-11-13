@@ -5,20 +5,18 @@ database replicas, edge caching, and observability metrics.
 """
 
 import asyncio
-import pytest
 import time
-from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, AsyncMock
-import json
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 import redis
-from typing import Dict, Any, List
+from database.replica_router import ConsistencyLevel, ReplicaRouter
 
 from apps.backend.core.circuit_breaker import CircuitBreaker, CircuitBreakerError
-from apps.backend.core.rate_limiter import RateLimiter, RateLimitExceeded
 from apps.backend.core.edge_cache import EdgeCache
-from apps.backend.core.observability.telemetry import MetricsCollector
 from apps.backend.core.observability.anomaly_detection import AnomalyDetector
-from database.replica_router import ReplicaRouter, ConsistencyLevel
+from apps.backend.core.observability.telemetry import MetricsCollector
+from apps.backend.core.rate_limiter import RateLimiter
 
 
 class TestLoadBalancingWithObservability:
@@ -31,7 +29,7 @@ class TestLoadBalancingWithObservability:
             name="test_service",
             failure_threshold=3,
             recovery_timeout=5,
-            expected_exception=Exception
+            expected_exception=Exception,
         )
         yield cb
         await cb.reset()
@@ -39,20 +37,13 @@ class TestLoadBalancingWithObservability:
     @pytest.fixture
     async def rate_limiter(self):
         """Create a test rate limiter."""
-        rl = RateLimiter(
-            redis_client=Mock(spec=redis.Redis),
-            default_limit=10,
-            default_window=60
-        )
+        rl = RateLimiter(redis_client=Mock(spec=redis.Redis), default_limit=10, default_window=60)
         yield rl
 
     @pytest.fixture
     async def edge_cache(self):
         """Create a test edge cache."""
-        cache = EdgeCache(
-            redis_client=Mock(spec=redis.Redis),
-            cdn_provider="cloudflare"
-        )
+        cache = EdgeCache(redis_client=Mock(spec=redis.Redis), cdn_provider="cloudflare")
         yield cache
 
     @pytest.fixture
@@ -64,18 +55,11 @@ class TestLoadBalancingWithObservability:
     @pytest.fixture
     async def anomaly_detector(self):
         """Create a test anomaly detector."""
-        detector = AnomalyDetector(
-            sensitivity=2.0,
-            window_size=100
-        )
+        detector = AnomalyDetector(sensitivity=2.0, window_size=100)
         yield detector
 
     @pytest.mark.asyncio
-    async def test_circuit_breaker_with_metrics(
-        self,
-        circuit_breaker,
-        metrics_collector
-    ):
+    async def test_circuit_breaker_with_metrics(self, circuit_breaker, metrics_collector):
         """Test circuit breaker integration with metrics collection."""
 
         # Simulate failures to trip the circuit breaker
@@ -85,10 +69,7 @@ class TestLoadBalancingWithObservability:
                     await metrics_collector.record_request_start("test_service")
                     raise Exception("Service failure")
             except Exception:
-                await metrics_collector.record_request_end(
-                    "test_service",
-                    success=False
-                )
+                await metrics_collector.record_request_end("test_service", success=False)
 
         # Verify circuit is open
         assert circuit_breaker.state == "OPEN"
@@ -105,10 +86,7 @@ class TestLoadBalancingWithObservability:
             async with circuit_breaker:
                 await metrics_collector.record_request_start("test_service")
                 # Successful call
-                await metrics_collector.record_request_end(
-                    "test_service",
-                    success=True
-                )
+                await metrics_collector.record_request_end("test_service", success=True)
         except CircuitBreakerError:
             pytest.fail("Circuit breaker should allow test call in HALF_OPEN state")
 
@@ -116,11 +94,7 @@ class TestLoadBalancingWithObservability:
         assert circuit_breaker.state == "CLOSED"
 
     @pytest.mark.asyncio
-    async def test_rate_limiter_with_metrics(
-        self,
-        rate_limiter,
-        metrics_collector
-    ):
+    async def test_rate_limiter_with_metrics(self, rate_limiter, metrics_collector):
         """Test rate limiter integration with metrics collection."""
 
         # Mock Redis operations
@@ -129,31 +103,19 @@ class TestLoadBalancingWithObservability:
 
         # Simulate requests up to the limit
         for i in range(10):
-            allowed = await rate_limiter.allow_request(
-                key="test_user",
-                limit=10,
-                window=60
-            )
+            allowed = await rate_limiter.allow_request(key="test_user", limit=10, window=60)
             assert allowed
             await metrics_collector.record_request_start("rate_limited_endpoint")
-            await metrics_collector.record_request_end(
-                "rate_limited_endpoint",
-                success=True
-            )
+            await metrics_collector.record_request_end("rate_limited_endpoint", success=True)
 
         # Next request should be rate limited
         rate_limiter.redis.incr.return_value = 11
-        allowed = await rate_limiter.allow_request(
-            key="test_user",
-            limit=10,
-            window=60
-        )
+        allowed = await rate_limiter.allow_request(key="test_user", limit=10, window=60)
         assert not allowed
 
         # Record rate limit hit in metrics
         await metrics_collector.increment_counter(
-            "rate_limit_exceeded",
-            labels={"user": "test_user"}
+            "rate_limit_exceeded", labels={"user": "test_user"}
         )
 
         # Verify metrics
@@ -161,23 +123,17 @@ class TestLoadBalancingWithObservability:
         assert stats["throttled_percentage"] > 0
 
     @pytest.mark.asyncio
-    async def test_database_replica_routing_with_metrics(
-        self,
-        metrics_collector
-    ):
+    async def test_database_replica_routing_with_metrics(self, metrics_collector):
         """Test database replica routing with metrics collection."""
 
         # Create mock replica router
         router = ReplicaRouter(
             master_url="postgresql://master/db",
-            replica_urls=[
-                "postgresql://replica1/db",
-                "postgresql://replica2/db"
-            ]
+            replica_urls=["postgresql://replica1/db", "postgresql://replica2/db"],
         )
 
         # Mock health checks
-        with patch.object(router, 'check_replica_health', new_callable=AsyncMock) as mock_health:
+        with patch.object(router, "check_replica_health", new_callable=AsyncMock) as mock_health:
             mock_health.return_value = True
 
             # Test read routing to replicas
@@ -190,9 +146,7 @@ class TestLoadBalancingWithObservability:
 
                 duration = (time.time() - start_time) * 1000
                 await metrics_collector.record_histogram(
-                    "db_connection_time",
-                    duration,
-                    labels={"operation": "read", "replica": replica}
+                    "db_connection_time", duration, labels={"operation": "read", "replica": replica}
                 )
 
             # Test write routing to master
@@ -204,15 +158,11 @@ class TestLoadBalancingWithObservability:
             assert len(replicas) == 2
 
     @pytest.mark.asyncio
-    async def test_edge_cache_with_metrics(
-        self,
-        edge_cache,
-        metrics_collector
-    ):
+    async def test_edge_cache_with_metrics(self, edge_cache, metrics_collector):
         """Test edge cache integration with metrics collection."""
 
         # Mock cache operations
-        edge_cache.redis.get = Mock(side_effect=[None, b'cached_value'])
+        edge_cache.redis.get = Mock(side_effect=[None, b"cached_value"])
         edge_cache.redis.setex = Mock()
 
         # First request - cache miss
@@ -221,14 +171,9 @@ class TestLoadBalancingWithObservability:
         duration = (time.time() - start_time) * 1000
 
         assert result is None
-        await metrics_collector.increment_counter(
-            "cache_miss",
-            labels={"tier": "edge"}
-        )
+        await metrics_collector.increment_counter("cache_miss", labels={"tier": "edge"})
         await metrics_collector.record_histogram(
-            "cache_operation_duration",
-            duration,
-            labels={"operation": "get", "result": "miss"}
+            "cache_operation_duration", duration, labels={"operation": "get", "result": "miss"}
         )
 
         # Set cache value
@@ -240,14 +185,9 @@ class TestLoadBalancingWithObservability:
         duration = (time.time() - start_time) * 1000
 
         assert result == "cached_value"
-        await metrics_collector.increment_counter(
-            "cache_hit",
-            labels={"tier": "edge"}
-        )
+        await metrics_collector.increment_counter("cache_hit", labels={"tier": "edge"})
         await metrics_collector.record_histogram(
-            "cache_operation_duration",
-            duration,
-            labels={"operation": "get", "result": "hit"}
+            "cache_operation_duration", duration, labels={"operation": "get", "result": "hit"}
         )
 
         # Calculate hit rate
@@ -255,11 +195,7 @@ class TestLoadBalancingWithObservability:
         assert stats["hit_rate"] > 0
 
     @pytest.mark.asyncio
-    async def test_anomaly_detection_integration(
-        self,
-        anomaly_detector,
-        metrics_collector
-    ):
+    async def test_anomaly_detection_integration(self, anomaly_detector, metrics_collector):
         """Test anomaly detection with metrics collection."""
 
         # Generate normal traffic pattern
@@ -267,15 +203,12 @@ class TestLoadBalancingWithObservability:
 
         for latency in normal_latencies:
             await metrics_collector.record_histogram(
-                "request_latency",
-                latency,
-                labels={"endpoint": "/api/test"}
+                "request_latency", latency, labels={"endpoint": "/api/test"}
             )
 
             # Feed to anomaly detector
             is_anomaly = await anomaly_detector.detect_point_anomaly(
-                value=latency,
-                metric_name="request_latency"
+                value=latency, metric_name="request_latency"
             )
             assert not is_anomaly
 
@@ -284,25 +217,18 @@ class TestLoadBalancingWithObservability:
 
         for latency in anomalous_latencies:
             await metrics_collector.record_histogram(
-                "request_latency",
-                latency,
-                labels={"endpoint": "/api/test", "anomaly": "true"}
+                "request_latency", latency, labels={"endpoint": "/api/test", "anomaly": "true"}
             )
 
             # Detect anomaly
             is_anomaly = await anomaly_detector.detect_point_anomaly(
-                value=latency,
-                metric_name="request_latency"
+                value=latency, metric_name="request_latency"
             )
             assert is_anomaly
 
             # Record anomaly
             await metrics_collector.increment_counter(
-                "anomaly_detected",
-                labels={
-                    "metric": "request_latency",
-                    "severity": "high"
-                }
+                "anomaly_detected", labels={"metric": "request_latency", "severity": "high"}
             )
 
         # Verify anomalies were detected
@@ -311,12 +237,7 @@ class TestLoadBalancingWithObservability:
 
     @pytest.mark.asyncio
     async def test_full_system_integration(
-        self,
-        circuit_breaker,
-        rate_limiter,
-        edge_cache,
-        metrics_collector,
-        anomaly_detector
+        self, circuit_breaker, rate_limiter, edge_cache, metrics_collector, anomaly_detector
     ):
         """Test complete load balancing system with observability."""
 
@@ -329,11 +250,7 @@ class TestLoadBalancingWithObservability:
         rate_limiter.redis.incr = Mock(return_value=5)
         rate_limiter.redis.expire = Mock()
 
-        allowed = await rate_limiter.allow_request(
-            key=f"user:{user_id}",
-            limit=100,
-            window=60
-        )
+        allowed = await rate_limiter.allow_request(key=f"user:{user_id}", limit=100, window=60)
         assert allowed
 
         # 2. Check cache
@@ -356,38 +273,25 @@ class TestLoadBalancingWithObservability:
                 await metrics_collector.record_histogram(
                     "request_duration",
                     duration,
-                    labels={
-                        "endpoint": endpoint,
-                        "method": "GET",
-                        "status": "200"
-                    }
+                    labels={"endpoint": endpoint, "method": "GET", "status": "200"},
                 )
 
                 # Check for anomalies
                 is_anomaly = await anomaly_detector.detect_point_anomaly(
-                    value=duration,
-                    metric_name="request_duration"
+                    value=duration, metric_name="request_duration"
                 )
 
                 if is_anomaly:
                     await metrics_collector.increment_counter(
-                        "anomaly_detected",
-                        labels={"type": "latency_spike"}
+                        "anomaly_detected", labels={"type": "latency_spike"}
                     )
 
             # 4. Cache the result
             edge_cache.redis.setex = Mock()
-            await edge_cache.set(
-                f"{endpoint}:{user_id}",
-                "response_data",
-                ttl=300
-            )
+            await edge_cache.set(f"{endpoint}:{user_id}", "response_data", ttl=300)
 
         # 5. Collect final metrics
-        await metrics_collector.record_request_end(
-            endpoint,
-            success=True
-        )
+        await metrics_collector.record_request_end(endpoint, success=True)
 
         # Verify system health
         metrics = {
@@ -395,7 +299,7 @@ class TestLoadBalancingWithObservability:
             "error_rate": await metrics_collector.get_error_rate(),
             "p95_latency": await metrics_collector.get_percentile_latency(95),
             "circuit_breaker_state": circuit_breaker.state,
-            "cache_hit_rate": (await edge_cache.get_stats())["hit_rate"]
+            "cache_hit_rate": (await edge_cache.get_stats())["hit_rate"],
         }
 
         # System should be healthy
@@ -404,10 +308,7 @@ class TestLoadBalancingWithObservability:
         assert metrics["circuit_breaker_state"] == "CLOSED"
 
     @pytest.mark.asyncio
-    async def test_observability_data_correlation(
-        self,
-        metrics_collector
-    ):
+    async def test_observability_data_correlation(self, metrics_collector):
         """Test correlation of observability data across components."""
 
         trace_id = "trace_789"
@@ -418,26 +319,16 @@ class TestLoadBalancingWithObservability:
                 "service": "api_gateway",
                 "operation": "handle_request",
                 "duration": 10,
-                "trace_id": trace_id
+                "trace_id": trace_id,
             },
             {
                 "service": "rate_limiter",
                 "operation": "check_limit",
                 "duration": 2,
-                "trace_id": trace_id
+                "trace_id": trace_id,
             },
-            {
-                "service": "cache",
-                "operation": "get",
-                "duration": 5,
-                "trace_id": trace_id
-            },
-            {
-                "service": "database",
-                "operation": "query",
-                "duration": 30,
-                "trace_id": trace_id
-            }
+            {"service": "cache", "operation": "get", "duration": 5, "trace_id": trace_id},
+            {"service": "database", "operation": "query", "duration": 30, "trace_id": trace_id},
         ]
 
         total_duration = 0
@@ -445,10 +336,7 @@ class TestLoadBalancingWithObservability:
             await metrics_collector.record_histogram(
                 f"span_duration_{span['service']}",
                 span["duration"],
-                labels={
-                    "operation": span["operation"],
-                    "trace_id": trace_id
-                }
+                labels={"operation": span["operation"], "trace_id": trace_id},
             )
             total_duration += span["duration"]
 
@@ -464,10 +352,7 @@ class TestLoadBalancingWithObservability:
                 violations.append(span["service"])
                 await metrics_collector.increment_counter(
                     "slo_violation",
-                    labels={
-                        "service": span["service"],
-                        "operation": span["operation"]
-                    }
+                    labels={"service": span["service"], "operation": span["operation"]},
                 )
 
         assert "database" in violations  # Database query exceeded SLO
@@ -480,7 +365,7 @@ class TestObservabilityEndpoints:
     @pytest.fixture
     def mock_pusher(self):
         """Mock Pusher service."""
-        with patch('apps.backend.services.pusher.trigger_event') as mock:
+        with patch("apps.backend.services.pusher.trigger_event") as mock:
             yield mock
 
     async def test_metrics_streaming_via_pusher(self, mock_pusher):
@@ -489,7 +374,7 @@ class TestObservabilityEndpoints:
         from apps.backend.api.v1.endpoints.observability import stream_metrics_to_pusher
 
         # Run streaming task for one iteration
-        with patch('asyncio.sleep', new_callable=AsyncMock) as mock_sleep:
+        with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
             mock_sleep.side_effect = asyncio.CancelledError()  # Stop after first iteration
 
             try:

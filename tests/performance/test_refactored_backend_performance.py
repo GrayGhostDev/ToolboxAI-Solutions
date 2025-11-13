@@ -17,14 +17,13 @@ Test Categories:
 import asyncio
 import gc
 import os
-import psutil
-import time
 import threading
+import time
 from contextlib import contextmanager
-from typing import List, Dict, Any
-from unittest.mock import patch
+from typing import Any
 
 import httpx
+import psutil
 import pytest
 from fastapi.testclient import TestClient
 
@@ -56,36 +55,38 @@ class PerformanceMetrics:
             end_time = time.perf_counter()
             end_memory = self._get_memory_usage()
 
-            self.metrics.append({
-                'operation': operation_name,
-                'duration': end_time - start_time,
-                'memory_start': start_memory,
-                'memory_end': end_memory,
-                'memory_delta': end_memory - start_memory
-            })
+            self.metrics.append(
+                {
+                    "operation": operation_name,
+                    "duration": end_time - start_time,
+                    "memory_start": start_memory,
+                    "memory_end": end_memory,
+                    "memory_delta": end_memory - start_memory,
+                }
+            )
 
     def _get_memory_usage(self) -> float:
         """Get current memory usage in MB"""
         process = psutil.Process(os.getpid())
         return process.memory_info().rss / 1024 / 1024
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get performance summary"""
         if not self.metrics:
             return {}
 
-        durations = [m['duration'] for m in self.metrics]
-        memory_deltas = [m['memory_delta'] for m in self.metrics]
+        durations = [m["duration"] for m in self.metrics]
+        memory_deltas = [m["memory_delta"] for m in self.metrics]
 
         return {
-            'total_operations': len(self.metrics),
-            'total_duration': sum(durations),
-            'avg_duration': sum(durations) / len(durations),
-            'min_duration': min(durations),
-            'max_duration': max(durations),
-            'avg_memory_delta': sum(memory_deltas) / len(memory_deltas),
-            'max_memory_delta': max(memory_deltas),
-            'operations': self.metrics
+            "total_operations": len(self.metrics),
+            "total_duration": sum(durations),
+            "avg_duration": sum(durations) / len(durations),
+            "min_duration": min(durations),
+            "max_duration": max(durations),
+            "avg_memory_delta": sum(memory_deltas) / len(memory_deltas),
+            "max_memory_delta": max(memory_deltas),
+            "operations": self.metrics,
         }
 
 
@@ -101,7 +102,7 @@ class TestApplicationStartupPerformance:
             assert app is not None
 
         summary = metrics.get_summary()
-        startup_time = summary['avg_duration']
+        startup_time = summary["avg_duration"]
 
         assert startup_time < 1.0, f"App creation took {startup_time:.3f}s, should be < 1s"
 
@@ -113,7 +114,7 @@ class TestApplicationStartupPerformance:
         assert main_app is not None
 
         # Verify the app is properly configured
-        assert hasattr(main_app, 'state')
+        assert hasattr(main_app, "state")
         assert main_app.title is not None
         assert main_app.version is not None
 
@@ -132,10 +133,14 @@ class TestApplicationStartupPerformance:
         summary = metrics.get_summary()
 
         # Average creation time should be reasonable
-        assert summary['avg_duration'] < 0.5, f"Average app creation took {summary['avg_duration']:.3f}s"
+        assert (
+            summary["avg_duration"] < 0.5
+        ), f"Average app creation took {summary['avg_duration']:.3f}s"
 
         # Memory usage shouldn't grow excessively
-        assert summary['max_memory_delta'] < 10.0, f"Memory delta too high: {summary['max_memory_delta']:.1f}MB"
+        assert (
+            summary["max_memory_delta"] < 10.0
+        ), f"Memory delta too high: {summary['max_memory_delta']:.1f}MB"
 
     def test_app_configuration_overhead(self):
         """Test configuration overhead in app creation"""
@@ -152,8 +157,8 @@ class TestApplicationStartupPerformance:
         summary = metrics.get_summary()
 
         # Both should be fast
-        for metric in summary['operations']:
-            assert metric['duration'] < 2.0, f"Configuration took {metric['duration']:.3f}s"
+        for metric in summary["operations"]:
+            assert metric["duration"] < 2.0, f"Configuration took {metric['duration']:.3f}s"
 
 
 class TestEndpointPerformance:
@@ -176,10 +181,10 @@ class TestEndpointPerformance:
         summary = self.metrics.get_summary()
 
         # Average response time should be fast
-        assert summary['avg_duration'] < 0.1, f"Health endpoint avg: {summary['avg_duration']:.3f}s"
+        assert summary["avg_duration"] < 0.1, f"Health endpoint avg: {summary['avg_duration']:.3f}s"
 
         # Maximum response time should be reasonable
-        assert summary['max_duration'] < 0.5, f"Health endpoint max: {summary['max_duration']:.3f}s"
+        assert summary["max_duration"] < 0.5, f"Health endpoint max: {summary['max_duration']:.3f}s"
 
     def test_info_endpoint_performance(self):
         """Test info endpoint response time"""
@@ -191,7 +196,7 @@ class TestEndpointPerformance:
                 assert response.status_code == 200
 
         summary = self.metrics.get_summary()
-        assert summary['avg_duration'] < 0.1, f"Info endpoint avg: {summary['avg_duration']:.3f}s"
+        assert summary["avg_duration"] < 0.1, f"Info endpoint avg: {summary['avg_duration']:.3f}s"
 
     def test_migration_status_performance(self):
         """Test migration status endpoint performance"""
@@ -201,7 +206,9 @@ class TestEndpointPerformance:
                 assert response.status_code == 200
 
         summary = self.metrics.get_summary()
-        assert summary['avg_duration'] < 0.2, f"Migration status avg: {summary['avg_duration']:.3f}s"
+        assert (
+            summary["avg_duration"] < 0.2
+        ), f"Migration status avg: {summary['avg_duration']:.3f}s"
 
     def test_openapi_generation_performance(self):
         """Test OpenAPI schema generation performance"""
@@ -210,7 +217,7 @@ class TestEndpointPerformance:
             assert response.status_code == 200
 
         summary = self.metrics.get_summary()
-        assert summary['avg_duration'] < 1.0, f"OpenAPI generation: {summary['avg_duration']:.3f}s"
+        assert summary["avg_duration"] < 1.0, f"OpenAPI generation: {summary['avg_duration']:.3f}s"
 
     def test_error_endpoint_performance(self):
         """Test error endpoint response time"""
@@ -219,7 +226,7 @@ class TestEndpointPerformance:
             assert response.status_code == 500
 
         summary = self.metrics.get_summary()
-        assert summary['avg_duration'] < 0.1, f"Error endpoint: {summary['avg_duration']:.3f}s"
+        assert summary["avg_duration"] < 0.1, f"Error endpoint: {summary['avg_duration']:.3f}s"
 
 
 class TestConcurrentRequestPerformance:
@@ -289,7 +296,9 @@ class TestConcurrentRequestPerformance:
             avg_response_time = sum(results) / len(results)
             max_response_time = max(results)
 
-            assert avg_response_time < 0.5, f"Average response time too high: {avg_response_time:.3f}s"
+            assert (
+                avg_response_time < 0.5
+            ), f"Average response time too high: {avg_response_time:.3f}s"
             assert max_response_time < 2.0, f"Max response time too high: {max_response_time:.3f}s"
 
     def test_mixed_endpoint_concurrent_access(self):
@@ -367,7 +376,9 @@ class TestMemoryPerformance:
                 memory_increase = current_memory - initial_memory
 
                 # Memory increase should be reasonable
-                assert memory_increase < 50.0, f"Memory increased by {memory_increase:.1f}MB at request {i}"
+                assert (
+                    memory_increase < 50.0
+                ), f"Memory increased by {memory_increase:.1f}MB at request {i}"
 
         # Final memory check
         gc.collect()
@@ -443,11 +454,7 @@ class TestFactoryPatternPerformance:
 
         for i in range(5):
             with metrics.measure(f"direct_creation_{i}"):
-                app = FastAPI(
-                    title="Direct App",
-                    version="1.0.0",
-                    lifespan=None
-                )
+                app = FastAPI(title="Direct App", version="1.0.0", lifespan=None)
                 assert app is not None
 
         direct_summary = metrics.get_summary()
@@ -455,11 +462,15 @@ class TestFactoryPatternPerformance:
         print(f"\nFactory vs Direct Performance:")
         print(f"Factory avg: {factory_summary['avg_duration']:.3f}s")
         print(f"Direct avg: {direct_summary['avg_duration']:.3f}s")
-        print(f"Overhead: {(factory_summary['avg_duration'] / direct_summary['avg_duration'] - 1) * 100:.1f}%")
+        print(
+            f"Overhead: {(factory_summary['avg_duration'] / direct_summary['avg_duration'] - 1) * 100:.1f}%"
+        )
 
         # Factory should not add significant overhead
-        overhead_ratio = factory_summary['avg_duration'] / direct_summary['avg_duration']
-        assert overhead_ratio < 3.0, f"Factory pattern adds too much overhead: {overhead_ratio:.1f}x"
+        overhead_ratio = factory_summary["avg_duration"] / direct_summary["avg_duration"]
+        assert (
+            overhead_ratio < 3.0
+        ), f"Factory pattern adds too much overhead: {overhead_ratio:.1f}x"
 
     def test_configuration_impact_on_performance(self):
         """Test performance impact of different configuration options"""
@@ -467,24 +478,18 @@ class TestFactoryPatternPerformance:
 
         # Test minimal configuration
         with metrics.measure("minimal_config"):
-            app = create_app(
-                skip_lifespan=True,
-                skip_sentry=True,
-                testing_mode=True
-            )
+            app = create_app(skip_lifespan=True, skip_sentry=True, testing_mode=True)
 
         # Test with components enabled
         with metrics.measure("full_config"):
-            app = create_app(
-                skip_lifespan=False,
-                skip_sentry=False,
-                testing_mode=False
-            )
+            app = create_app(skip_lifespan=False, skip_sentry=False, testing_mode=False)
 
         summary = metrics.get_summary()
 
-        for operation in summary['operations']:
-            assert operation['duration'] < 2.0, f"Configuration took too long: {operation['duration']:.3f}s"
+        for operation in summary["operations"]:
+            assert (
+                operation["duration"] < 2.0
+            ), f"Configuration took too long: {operation['duration']:.3f}s"
 
 
 @pytest.mark.asyncio
@@ -511,7 +516,7 @@ class TestAsyncPerformance:
             tasks = [
                 client.get("/health"),
                 client.get("/info"),
-                client.get("/migration/status")
+                client.get("/migration/status"),
             ] * 10  # 30 total requests
 
             responses = await asyncio.gather(*tasks)
@@ -587,7 +592,9 @@ class TestLoadTestScenarios:
             print(f"Max response time: {max_response_time:.3f}s")
 
             # Performance assertions
-            assert avg_response_time < 0.1, f"Average response time too high: {avg_response_time:.3f}s"
+            assert (
+                avg_response_time < 0.1
+            ), f"Average response time too high: {avg_response_time:.3f}s"
             assert max_response_time < 1.0, f"Max response time too high: {max_response_time:.3f}s"
 
         # Error rate should be low
@@ -613,11 +620,11 @@ def benchmark_operation(func, num_iterations=10):
         times.append(end_time - start_time)
 
     return {
-        'avg_time': sum(times) / len(times),
-        'min_time': min(times),
-        'max_time': max(times),
-        'total_time': sum(times),
-        'iterations': num_iterations
+        "avg_time": sum(times) / len(times),
+        "min_time": min(times),
+        "max_time": max(times),
+        "total_time": sum(times),
+        "iterations": num_iterations,
     }
 
 

@@ -20,29 +20,23 @@ Standards: Python 3.12, FastAPI async, Pydantic v2
 
 import logging
 from datetime import datetime, timedelta
-from typing import Annotated, Optional
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    Query,
-    Response,
-    status,
-)
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import RedirectResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.api.auth.auth import get_current_user
 from apps.backend.core.deps import get_async_db
-from apps.backend.middleware.tenant import get_tenant_context, TenantContext
+from apps.backend.middleware.tenant import TenantContext, get_tenant_context
 from apps.backend.models.schemas import User
 from apps.backend.services.storage.storage_service import (
-    StorageService,
-    DownloadOptions,
     AccessDeniedError,
+    StorageService,
+)
+from apps.backend.services.storage.storage_service import (
     FileNotFoundError as StorageFileNotFoundError,
 )
 
@@ -57,6 +51,7 @@ router = APIRouter(
 
 # === Pydantic v2 Models ===
 
+
 class FileMetadataResponse(BaseModel):
     """Response model for file metadata with Pydantic v2"""
 
@@ -67,11 +62,11 @@ class FileMetadataResponse(BaseModel):
     original_filename: str
     file_size: int
     mime_type: str
-    cdn_url: Optional[str] = None
-    thumbnail_url: Optional[str] = None
-    width: Optional[int] = None
-    height: Optional[int] = None
-    duration: Optional[float] = None  # For video/audio
+    cdn_url: str | None = None
+    thumbnail_url: str | None = None
+    width: int | None = None
+    height: int | None = None
+    duration: float | None = None  # For video/audio
     created_at: datetime
     updated_at: datetime
     metadata: dict[str, str | int | float | bool] = Field(default_factory=dict)
@@ -95,13 +90,9 @@ class ProcessingRequest(BaseModel):
 
     operation: str = Field(..., description="Processing operation type")
     parameters: dict[str, str | int | float | bool] = Field(
-        default_factory=dict,
-        description="Operation parameters"
+        default_factory=dict, description="Operation parameters"
     )
-    async_processing: bool = Field(
-        default=True,
-        description="Process asynchronously"
-    )
+    async_processing: bool = Field(default=True, description="Process asynchronously")
 
     @field_validator("operation")
     @classmethod
@@ -131,7 +122,7 @@ class ProcessingResponse(BaseModel):
     job_id: str
     status: str
     message: str
-    estimated_completion: Optional[datetime] = None
+    estimated_completion: datetime | None = None
 
 
 class ImageTransformParams(BaseModel):
@@ -139,15 +130,16 @@ class ImageTransformParams(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    width: Optional[int] = Field(None, ge=1, le=4000)
-    height: Optional[int] = Field(None, ge=1, le=4000)
-    quality: Optional[int] = Field(None, ge=1, le=100)
-    format: Optional[str] = Field(None, pattern="^(jpeg|png|webp|avif)$")
-    crop: Optional[str] = Field(None, pattern="^(center|top|bottom|left|right)$")
-    fit: Optional[str] = Field(None, pattern="^(cover|contain|fill|inside|outside)$")
+    width: int | None = Field(None, ge=1, le=4000)
+    height: int | None = Field(None, ge=1, le=4000)
+    quality: int | None = Field(None, ge=1, le=100)
+    format: str | None = Field(None, pattern="^(jpeg|png|webp|avif)$")
+    crop: str | None = Field(None, pattern="^(center|top|bottom|left|right)$")
+    fit: str | None = Field(None, pattern="^(cover|contain|fill|inside|outside)$")
 
 
 # === Dependency Injection ===
+
 
 async def get_storage_service(
     session: Annotated[AsyncSession, Depends(get_async_db)],
@@ -176,6 +168,7 @@ async def get_storage_service(
 
 
 # === API Endpoints ===
+
 
 @router.get(
     "/{file_id}",
@@ -224,23 +217,18 @@ async def serve_media_file(
 
         return RedirectResponse(url=signed_url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
 
-    except StorageFileNotFoundError as e:
+    except StorageFileNotFoundError:
         logger.warning(f"File not found: {file_id}")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Media file not found"
-        )
-    except AccessDeniedError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Media file not found")
+    except AccessDeniedError:
         logger.warning(f"Access denied to file {file_id}")
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied to this media file"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied to this media file"
         )
     except Exception as e:
         logger.error(f"Failed to serve media: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to serve media file"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to serve media file"
         )
 
 
@@ -253,7 +241,7 @@ async def serve_media_file(
 async def stream_media_file(
     file_id: UUID,
     storage: Annotated[StorageService, Depends(get_storage_service)],
-    range_header: Optional[str] = None,
+    range_header: str | None = None,
 ) -> StreamingResponse:
     """
     Stream a media file for playback.
@@ -282,8 +270,7 @@ async def stream_media_file(
 
         if not file_info:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Media file not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Media file not found"
             )
 
         # Create streaming response
@@ -293,7 +280,7 @@ async def stream_media_file(
             headers={
                 "Accept-Ranges": "bytes",
                 "Content-Length": str(file_info.file_size),
-            }
+            },
         )
 
         # TODO: Implement range request support for seeking
@@ -304,21 +291,16 @@ async def stream_media_file(
 
     except StorageFileNotFoundError:
         logger.warning(f"File not found: {file_id}")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Media file not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Media file not found")
     except AccessDeniedError:
         logger.warning(f"Access denied to file {file_id}")
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied to this media file"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied to this media file"
         )
     except Exception as e:
         logger.error(f"Failed to stream media: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to stream media file"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to stream media file"
         )
 
 
@@ -355,32 +337,27 @@ async def get_media_thumbnail(
         HTTPException: If file not found or not an image
     """
     try:
-        logger.info(
-            f"Getting thumbnail for {file_id}: "
-            f"{width}x{height}, quality: {quality}"
-        )
+        logger.info(f"Getting thumbnail for {file_id}: " f"{width}x{height}, quality: {quality}")
 
         # Get file info
         file_info = await storage.get_file_info(file_id)
 
         if not file_info:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Media file not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Media file not found"
             )
 
         # Check if file is an image
         if not file_info.mime_type.startswith("image/"):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Thumbnails only supported for images"
+                detail="Thumbnails only supported for images",
             )
 
         # Return thumbnail URL if available
         if file_info.thumbnail_url:
             return RedirectResponse(
-                url=file_info.thumbnail_url,
-                status_code=status.HTTP_307_TEMPORARY_REDIRECT
+                url=file_info.thumbnail_url, status_code=status.HTTP_307_TEMPORARY_REDIRECT
             )
 
         # TODO: Generate thumbnail asynchronously
@@ -390,18 +367,14 @@ async def get_media_thumbnail(
             expires_in=3600,
         )
 
-        return RedirectResponse(
-            url=signed_url,
-            status_code=status.HTTP_307_TEMPORARY_REDIRECT
-        )
+        return RedirectResponse(url=signed_url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to get thumbnail: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get thumbnail"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get thumbnail"
         )
 
 
@@ -438,8 +411,7 @@ async def get_file_metadata(
 
         if not file_info:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Media file not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Media file not found"
             )
 
         return FileMetadataResponse(
@@ -464,8 +436,7 @@ async def get_file_metadata(
     except Exception as e:
         logger.error(f"Failed to get metadata: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get file metadata"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get file metadata"
         )
 
 
@@ -508,8 +479,7 @@ async def process_media_file(
     """
     try:
         logger.info(
-            f"Processing file {file_id}: {request.operation}, "
-            f"async: {request.async_processing}"
+            f"Processing file {file_id}: {request.operation}, " f"async: {request.async_processing}"
         )
 
         # Verify file exists
@@ -517,8 +487,7 @@ async def process_media_file(
 
         if not file_info:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Media file not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Media file not found"
             )
 
         # TODO: Implement actual processing
@@ -540,8 +509,7 @@ async def process_media_file(
     except Exception as e:
         logger.error(f"Failed to process media: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to process media file"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to process media file"
         )
 
 
@@ -554,12 +522,7 @@ async def process_media_file(
 async def generate_media_signed_url(
     file_id: UUID,
     storage: Annotated[StorageService, Depends(get_storage_service)],
-    expires_in: int = Query(
-        3600,
-        ge=60,
-        le=86400,
-        description="URL expiration in seconds"
-    ),
+    expires_in: int = Query(3600, ge=60, le=86400, description="URL expiration in seconds"),
     permission: str = Query("read", pattern="^(read|write)$"),
 ) -> SignedUrlResponse:
     """
@@ -600,13 +563,10 @@ async def generate_media_signed_url(
 
     except StorageFileNotFoundError:
         logger.warning(f"File not found: {file_id}")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Media file not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Media file not found")
     except Exception as e:
         logger.error(f"Failed to generate signed URL: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to generate signed URL"
+            detail="Failed to generate signed URL",
         )

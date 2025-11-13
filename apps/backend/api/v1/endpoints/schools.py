@@ -5,7 +5,6 @@ Provides CRUD operations for schools management.
 """
 
 from fastapi import APIRouter, Depends, HTTPException
-from typing import List, Optional
 from pydantic import BaseModel
 
 from apps.backend.api.auth.auth import get_current_user
@@ -16,30 +15,30 @@ router = APIRouter()
 
 # Request/Response Models
 class School(BaseModel):
-    id: Optional[str] = None
+    id: str | None = None
     name: str
-    address: Optional[str] = None
-    city: Optional[str] = None
-    state: Optional[str] = None
-    zip_code: Optional[str] = None
-    country: Optional[str] = None
-    phone: Optional[str] = None
-    email: Optional[str] = None
-    website: Optional[str] = None
+    address: str | None = None
+    city: str | None = None
+    state: str | None = None
+    zip_code: str | None = None
+    country: str | None = None
+    phone: str | None = None
+    email: str | None = None
+    website: str | None = None
     is_active: bool = True
 
 
 class SchoolResponse(BaseModel):
     success: bool
-    data: Optional[School] = None
-    message: Optional[str] = None
+    data: School | None = None
+    message: str | None = None
 
 
 class SchoolListResponse(BaseModel):
     success: bool
-    data: List[School] = []
+    data: list[School] = []
     total: int = 0
-    message: Optional[str] = None
+    message: str | None = None
 
 
 # Mock data for now

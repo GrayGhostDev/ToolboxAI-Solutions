@@ -12,14 +12,13 @@ Comprehensive security features including:
 
 import asyncio
 import hashlib
-import json
 import logging
 import time
-from collections import defaultdict, deque
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import Any
 from uuid import uuid4
 
 import redis
@@ -27,7 +26,8 @@ from fastapi import HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
-from .rate_limit_manager import get_rate_limit_manager, RateLimitConfig, RateLimitMode
+
+from .rate_limit_manager import RateLimitConfig, get_rate_limit_manager
 
 logger = logging.getLogger(__name__)
 
@@ -66,8 +66,8 @@ class RateLimitConfig:
     requests_per_minute: int = DEFAULT_RATE_LIMIT
     burst_limit: int = BURST_RATE_LIMIT
     window_seconds: int = SLIDING_WINDOW_SECONDS
-    exclude_paths: Set[str] = field(default_factory=lambda: {"/health", "/metrics"})
-    by_endpoint: Dict[str, int] = field(default_factory=dict)
+    exclude_paths: set[str] = field(default_factory=lambda: {"/health", "/metrics"})
+    by_endpoint: dict[str, int] = field(default_factory=dict)
 
 
 @dataclass
@@ -76,20 +76,20 @@ class CircuitBreakerConfig:
 
     failure_threshold: int = CIRCUIT_BREAKER_THRESHOLD
     timeout_seconds: int = CIRCUIT_BREAKER_TIMEOUT
-    excluded_services: Set[str] = field(default_factory=set)
+    excluded_services: set[str] = field(default_factory=set)
 
 
 class RateLimiter:
     """Rate limiter that uses the centralized rate limit manager"""
 
-    def __init__(self, config: RateLimitConfig, redis_client: Optional[redis.Redis] = None):
+    def __init__(self, config: RateLimitConfig, redis_client: redis.Redis | None = None):
         self.config = config
         self.redis_client = redis_client
         # Use centralized manager
         self.manager = get_rate_limit_manager()
-        self.cleanup_task: Optional[asyncio.Task] = None
+        self.cleanup_task: asyncio.Task | None = None
 
-    async def check_rate_limit(self, identifier: str, endpoint: str = "") -> Tuple[bool, int]:
+    async def check_rate_limit(self, identifier: str, endpoint: str = "") -> tuple[bool, int]:
         """
         Check if request is within rate limit
         Returns: (allowed, retry_after_seconds)
@@ -117,9 +117,9 @@ class CircuitBreaker:
 
     def __init__(self, config: CircuitBreakerConfig):
         self.config = config
-        self.circuits: Dict[str, Dict[str, Any]] = {}
+        self.circuits: dict[str, dict[str, Any]] = {}
 
-    def _get_circuit(self, service_name: str) -> Dict[str, Any]:
+    def _get_circuit(self, service_name: str) -> dict[str, Any]:
         """Get or create circuit for service"""
         if service_name not in self.circuits:
             self.circuits[service_name] = {
@@ -173,7 +173,7 @@ class CircuitBreaker:
 
             raise e
 
-    def _should_attempt_reset(self, circuit: Dict[str, Any]) -> bool:
+    def _should_attempt_reset(self, circuit: dict[str, Any]) -> bool:
         """Check if we should attempt to reset the circuit"""
         if not circuit["last_failure"]:
             return True
@@ -181,7 +181,7 @@ class CircuitBreaker:
         time_since_failure = (datetime.now() - circuit["last_failure"]).total_seconds()
         return time_since_failure >= self.config.timeout_seconds
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get circuit breaker status for all services"""
         return {
             service: {
@@ -213,7 +213,7 @@ class SecretRedactor:
     ]
 
     @staticmethod
-    def redact_dict(data: Dict[str, Any], depth: int = 0) -> Dict[str, Any]:
+    def redact_dict(data: dict[str, Any], depth: int = 0) -> dict[str, Any]:
         """Recursively redact sensitive values from dictionary"""
         if depth > 10:  # Prevent infinite recursion
             return data
@@ -243,7 +243,7 @@ class SecretRedactor:
         return redacted
 
     @staticmethod
-    def redact_list(data: List[Any], depth: int = 0) -> List[Any]:
+    def redact_list(data: list[Any], depth: int = 0) -> list[Any]:
         """Recursively redact sensitive values from list"""
         if depth > 10:
             return data
@@ -271,7 +271,7 @@ class SecretRedactor:
         return any(value.lower().startswith(prefix) for prefix in secret_prefixes)
 
     @staticmethod
-    def redact_headers(headers: Dict[str, str]) -> Dict[str, str]:
+    def redact_headers(headers: dict[str, str]) -> dict[str, str]:
         """Redact sensitive headers"""
         sensitive_headers = {
             "authorization",
@@ -298,9 +298,9 @@ class SecurityMiddleware(BaseHTTPMiddleware):
     def __init__(
         self,
         app: ASGIApp,
-        rate_limit_config: Optional[RateLimitConfig] = None,
-        circuit_breaker_config: Optional[CircuitBreakerConfig] = None,
-        redis_client: Optional[redis.Redis] = None,
+        rate_limit_config: RateLimitConfig | None = None,
+        circuit_breaker_config: CircuitBreakerConfig | None = None,
+        redis_client: redis.Redis | None = None,
         enable_request_id: bool = True,
         max_request_size: int = MAX_REQUEST_SIZE,
     ):
@@ -423,7 +423,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
 
 
 # Convenience function to create middleware with default config
-def create_security_middleware(app: ASGIApp, redis_url: Optional[str] = None) -> SecurityMiddleware:
+def create_security_middleware(app: ASGIApp, redis_url: str | None = None) -> SecurityMiddleware:
     """Create security middleware with default configuration"""
     redis_client = None
     if redis_url:

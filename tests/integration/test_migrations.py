@@ -1,4 +1,5 @@
 import pytest_asyncio
+
 #!/usr/bin/env python3
 """
 Database Migration Tests
@@ -10,27 +11,25 @@ Tests for Alembic database migrations including:
 - Data integrity during migrations
 """
 
-import pytest
 import asyncio
+import json
 import os
+import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List
-import subprocess
-import json
-from datetime import datetime
+
+import pytest
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from database import (
-    db_manager,
-    Base,
-    User, Course, Lesson, Content, Quiz
-)
+import asyncpg
 from sqlalchemy import inspect, text
 from sqlalchemy.ext.asyncio import AsyncEngine
-import asyncpg
+
+from database import Base, Content, Course, Lesson, Quiz, User, db_manager
 
 
 class TestDatabaseMigrations:

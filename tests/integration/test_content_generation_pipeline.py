@@ -1,4 +1,5 @@
 import pytest_asyncio
+
 #!/usr/bin/env python3
 """
 Content Generation Pipeline Integration Tests
@@ -16,7 +17,7 @@ import json
 import os
 import time
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 from unittest.mock import AsyncMock, Mock, patch
 
 import httpx
@@ -48,8 +49,9 @@ async def content_client():
 def auth_headers():
     """Authentication headers for API requests"""
     # Create a test JWT token
-    import jwt
     from datetime import timedelta
+
+    import jwt
 
     payload = {
         "sub": "test_teacher_user",

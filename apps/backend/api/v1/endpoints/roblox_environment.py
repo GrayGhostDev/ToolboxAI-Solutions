@@ -10,17 +10,17 @@ Multi-Tenant Security:
 """
 
 import logging
-from typing import Dict, Any, Optional
-from uuid import UUID
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
-from pydantic import BaseModel, Field
 from datetime import datetime
+from typing import Any
+from uuid import UUID
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from pydantic import BaseModel, Field
 
 from apps.backend.api.auth.auth import get_current_user
-from apps.backend.models.schemas import User
-from apps.backend.services.roblox.rojo_api import rojo_api_service, RojoAPIError
-from apps.backend.core.config import settings
 from apps.backend.core.deps import get_current_organization_id  # Multi-tenant filtering
+from apps.backend.models.schemas import User
+from apps.backend.services.roblox.rojo_api import RojoAPIError, rojo_api_service
 
 logger = logging.getLogger(__name__)
 
@@ -32,12 +32,10 @@ class EnvironmentCreationRequest(BaseModel):
 
     name: str = Field(..., description="Name of the environment")
     description: str = Field(..., description="Natural language description of the environment")
-    grade_level: Optional[str] = Field(None, description="Target grade level")
-    subject: Optional[str] = Field(None, description="Subject area")
+    grade_level: str | None = Field(None, description="Target grade level")
+    subject: str | None = Field(None, description="Subject area")
     max_players: int = Field(default=20, description="Maximum number of players")
-    settings: Optional[Dict[str, Any]] = Field(
-        default_factory=dict, description="Additional settings"
-    )
+    settings: dict[str, Any] | None = Field(default_factory=dict, description="Additional settings")
 
 
 class EnvironmentCreationResponse(BaseModel):
@@ -45,10 +43,10 @@ class EnvironmentCreationResponse(BaseModel):
 
     success: bool
     environment_name: str
-    project_path: Optional[str] = None
-    rojo_url: Optional[str] = None
-    components: Optional[Dict[str, Any]] = None
-    error: Optional[str] = None
+    project_path: str | None = None
+    rojo_url: str | None = None
+    components: dict[str, Any] | None = None
+    error: str | None = None
     created_at: datetime
 
 
@@ -60,10 +58,10 @@ class EnvironmentStatusResponse(BaseModel):
     players: int
     last_updated: str
     rojo_connected: bool
-    error: Optional[str] = None
+    error: str | None = None
 
 
-@router.post("/preview", response_model=Dict[str, Any])
+@router.post("/preview", response_model=dict[str, Any])
 async def preview_environment(
     request: EnvironmentCreationRequest,
     org_id: UUID = Depends(get_current_organization_id),  # Multi-tenant isolation
@@ -343,12 +341,12 @@ async def store_environment_info(
     organization_id: UUID,  # Multi-tenant: organization_id parameter
     environment_name: str,
     description: str,
-    creation_result: Dict[str, Any],
-    grade_level: Optional[str] = None,
-    subject: Optional[str] = None,
+    creation_result: dict[str, Any],
+    grade_level: str | None = None,
+    subject: str | None = None,
     max_players: int = 20,
-    settings: Optional[Dict[str, Any]] = None,
-    visualization_data: Optional[Dict[str, Any]] = None,
+    settings: dict[str, Any] | None = None,
+    visualization_data: dict[str, Any] | None = None,
 ):
     """
     Store environment information in database (background task).
@@ -357,12 +355,16 @@ async def store_environment_info(
     - Stores organization_id for multi-tenant isolation
     """
     try:
-        from apps.backend.core.database import SessionLocal
-        from database.models.roblox_models import RobloxEnvironment, EnvironmentStatus
         from datetime import timezone
+
         from sqlalchemy import text
 
-        logger.info(f"Storing environment info for user {user_id}, org {organization_id}: {environment_name}")
+        from apps.backend.core.database import SessionLocal
+        from database.models.roblox_models import EnvironmentStatus, RobloxEnvironment
+
+        logger.info(
+            f"Storing environment info for user {user_id}, org {organization_id}: {environment_name}"
+        )
 
         # Create database session
         db = SessionLocal()
@@ -382,7 +384,11 @@ async def store_environment_info(
                 grade_level=grade_level,
                 subject=subject,
                 max_players=max_players,
-                status=EnvironmentStatus.ACTIVE if creation_result.get("success") else EnvironmentStatus.FAILED,
+                status=(
+                    EnvironmentStatus.ACTIVE
+                    if creation_result.get("success")
+                    else EnvironmentStatus.FAILED
+                ),
                 components=creation_result.get("components"),
                 structure=creation_result.get("structure"),
                 visualization_data=visualization_data,
@@ -390,7 +396,7 @@ async def store_environment_info(
                 metadata={
                     "creation_method": "api",
                     "created_via": "rojo",
-                    "initial_status": creation_result.get("success")
+                    "initial_status": creation_result.get("success"),
                 },
                 created_at=datetime.now(timezone.utc),
                 created_by_id=user_id,  # Audit trail
@@ -422,9 +428,10 @@ async def list_user_environments(
     - Only returns environments for user's organization
     """
     try:
-        from apps.backend.core.database import SessionLocal
-        from database.models.roblox_models import RobloxEnvironment, EnvironmentStatus
         from sqlalchemy import desc, text
+
+        from apps.backend.core.database import SessionLocal
+        from database.models.roblox_models import RobloxEnvironment
 
         # Create database session
         db = SessionLocal()
@@ -434,10 +441,15 @@ async def list_user_environments(
             db.execute(text(f"SET app.current_organization_id = '{org_id}'"))
 
             # Query organization's environments with organization filter
-            environments = db.query(RobloxEnvironment).filter(
-                RobloxEnvironment.organization_id == org_id,  # Organization filter
-                RobloxEnvironment.deleted_at.is_(None)
-            ).order_by(desc(RobloxEnvironment.created_at)).all()
+            environments = (
+                db.query(RobloxEnvironment)
+                .filter(
+                    RobloxEnvironment.organization_id == org_id,  # Organization filter
+                    RobloxEnvironment.deleted_at.is_(None),
+                )
+                .order_by(desc(RobloxEnvironment.created_at))
+                .all()
+            )
 
             # Convert to dict
             environment_list = [env.to_dict() for env in environments]
@@ -469,12 +481,16 @@ async def delete_environment(
     - Can only delete environments from user's organization
     """
     try:
-        from apps.backend.core.database import SessionLocal
-        from database.models.roblox_models import RobloxEnvironment, EnvironmentStatus
         from datetime import timezone
+
         from sqlalchemy import text
 
-        logger.info(f"Deleting environment '{environment_name}' for user {current_user.id}, org {org_id}")
+        from apps.backend.core.database import SessionLocal
+        from database.models.roblox_models import EnvironmentStatus, RobloxEnvironment
+
+        logger.info(
+            f"Deleting environment '{environment_name}' for user {current_user.id}, org {org_id}"
+        )
 
         # Create database session
         db = SessionLocal()
@@ -484,16 +500,20 @@ async def delete_environment(
             db.execute(text(f"SET app.current_organization_id = '{org_id}'"))
 
             # Find the environment with organization filter
-            environment = db.query(RobloxEnvironment).filter(
-                RobloxEnvironment.name == environment_name,
-                RobloxEnvironment.organization_id == org_id,  # Organization filter
-                RobloxEnvironment.deleted_at.is_(None)
-            ).first()
+            environment = (
+                db.query(RobloxEnvironment)
+                .filter(
+                    RobloxEnvironment.name == environment_name,
+                    RobloxEnvironment.organization_id == org_id,  # Organization filter
+                    RobloxEnvironment.deleted_at.is_(None),
+                )
+                .first()
+            )
 
             if not environment:
                 raise HTTPException(
                     status_code=404,
-                    detail=f"Environment '{environment_name}' not found or you don't have access"
+                    detail=f"Environment '{environment_name}' not found or you don't have access",
                 )
 
             # Soft delete - mark as deleted
@@ -512,7 +532,7 @@ async def delete_environment(
             return {
                 "success": True,
                 "message": f"Environment '{environment_name}' deleted successfully",
-                "environment_id": environment.id
+                "environment_id": environment.id,
             }
 
         finally:

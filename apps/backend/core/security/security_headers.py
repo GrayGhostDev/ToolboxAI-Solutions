@@ -13,11 +13,11 @@ Implements comprehensive security headers following OWASP guidelines:
 """
 
 import logging
-from typing import Dict, Optional, List
+from datetime import datetime
+
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -41,11 +41,11 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         self,
         app: ASGIApp,
         environment: str = "production",
-        allowed_origins: List[str] = None,
+        allowed_origins: list[str] = None,
         enable_hsts: bool = True,
         enable_csp: bool = True,
         enable_audit_logging: bool = True,
-        custom_headers: Dict[str, str] = None,
+        custom_headers: dict[str, str] = None,
     ):
         super().__init__(app)
         self.environment = environment
@@ -408,10 +408,10 @@ class DDoSProtectionMiddleware(BaseHTTPMiddleware):
 
 def create_security_middleware(
     environment: str = "production",
-    allowed_origins: List[str] = None,
+    allowed_origins: list[str] = None,
     enable_ddos_protection: bool = True,
     **kwargs,
-) -> List[BaseHTTPMiddleware]:
+) -> list[BaseHTTPMiddleware]:
     """
     Create security middleware stack
 

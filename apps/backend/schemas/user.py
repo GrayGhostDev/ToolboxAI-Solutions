@@ -2,7 +2,7 @@
 User schema definitions
 """
 
-from ..models.schemas import User, Session
+from ..models.schemas import Session, User
 
 # User-related schemas
 UserCreate = User

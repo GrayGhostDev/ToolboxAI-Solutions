@@ -5,23 +5,22 @@ This test suite verifies that the LangChain configuration is working correctly,
 including API connectivity, tracing, and agent integration.
 """
 
+import asyncio
 import os
 import sys
-import asyncio
+
 import pytest
-from datetime import datetime
-from typing import Dict, Any
 
 # Add project root to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
-from langsmith import Client
 from langchain.callbacks.tracers import LangChainTracer
-from langchain_openai import ChatOpenAI
+from langsmith import Client
+
+from core.agents.base_agent import AgentConfig, BaseAgent
 
 # Import our configuration
-from core.agents.config import langchain_config, get_agent_config, AgentType
-from core.agents.base_agent import BaseAgent, AgentConfig
+from core.agents.config import AgentType, get_agent_config, langchain_config
 
 
 class TestLangChainIntegration:
@@ -58,10 +57,7 @@ class TestLangChainIntegration:
             if not api_key:
                 pytest.skip("LANGCHAIN_API_KEY not configured")
 
-            client = Client(
-                api_key=api_key,
-                api_url="https://api.smith.langchain.com"
-            )
+            client = Client(api_key=api_key, api_url="https://api.smith.langchain.com")
 
             # Try to read project info (this will fail if API key is invalid)
             # Note: This might fail if the project doesn't exist yet
@@ -79,8 +75,8 @@ class TestLangChainIntegration:
                 project_name="ToolboxAI-Test",
                 client=Client(
                     api_key=os.getenv("LANGCHAIN_API_KEY"),
-                    api_url="https://api.smith.langchain.com"
-                )
+                    api_url="https://api.smith.langchain.com",
+                ),
             )
 
             assert tracer is not None
@@ -117,18 +113,14 @@ class TestLangChainIntegration:
         try:
             # Create a simple test agent
             config = AgentConfig(
-                name="TestAgent",
-                model="gpt-3.5-turbo",
-                temperature=0.5,
-                max_tokens=100
+                name="TestAgent", model="gpt-3.5-turbo", temperature=0.5, max_tokens=100
             )
 
             agent = BaseAgent(config=config)
 
             # Execute a simple task with tracing
             result = await agent.execute(
-                task="Say 'Hello, LangChain!' in exactly 3 words",
-                context={"test": True}
+                task="Say 'Hello, LangChain!' in exactly 3 words", context={"test": True}
             )
 
             assert result is not None
@@ -176,9 +168,9 @@ class TestLangChainIntegration:
 
 def run_tests():
     """Run all LangChain integration tests."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("🧪 Running LangChain Integration Tests")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     # Create test instance
     test_suite = TestLangChainIntegration()
@@ -206,9 +198,9 @@ def run_tests():
     print("\n7. Testing coordinator service...")
     asyncio.run(test_suite.test_coordinator_service_langchain())
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("✅ All LangChain integration tests completed!")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     project_id = os.getenv("LANGCHAIN_PROJECT_ID")
     print("📊 LangSmith Dashboard:")

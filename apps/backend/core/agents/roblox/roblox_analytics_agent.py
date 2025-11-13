@@ -1,4 +1,5 @@
 """Roblox Analytics Agent - Placeholder"""
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -17,4 +18,4 @@ class RobloxAnalyticsAgent:
         return {"status": "analytics_complete", "data": data}
 
 
-__all__ = ['RobloxAnalyticsAgent']
+__all__ = ["RobloxAnalyticsAgent"]

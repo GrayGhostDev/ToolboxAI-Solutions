@@ -4,27 +4,22 @@ Pusher-based endpoints to replace WebSocket endpoints
 These endpoints use Pusher for real-time communication instead of direct WebSocket connections.
 """
 
-import json
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from apps.backend.api.auth.auth import get_current_user, require_role
-from apps.backend.core.config import settings
 from apps.backend.models.schemas import User
+from apps.backend.services.pusher import PusherUnavailable
+from apps.backend.services.pusher import trigger_event as pusher_trigger_event
 from apps.backend.services.pusher_handler import (
-    pusher_handler,
-    handle_pusher_message,
     broadcast_message,
-)
-from apps.backend.services.pusher import (
-    trigger_event as pusher_trigger_event,
-    authenticate_channel as pusher_authenticate,
-    PusherUnavailable,
+    handle_pusher_message,
+    pusher_handler,
 )
 
 logger = logging.getLogger(__name__)
@@ -36,16 +31,16 @@ class PusherMessageRequest(BaseModel):
     """Request model for sending messages through Pusher"""
 
     message_type: str = Field(..., description="Type of message to send")
-    payload: Dict[str, Any] = Field(default={}, description="Message payload")
-    channel: Optional[str] = Field(None, description="Specific channel to use")
+    payload: dict[str, Any] = Field(default={}, description="Message payload")
+    channel: str | None = Field(None, description="Specific channel to use")
 
 
 class EnvironmentCreateRequest(BaseModel):
     """Request model for environment creation"""
 
     environment_type: str = Field(..., description="Type of environment to create")
-    config: Dict[str, Any] = Field(default={}, description="Environment configuration")
-    spec: Optional[Dict[str, Any]] = Field(None, description="Environment specification")
+    config: dict[str, Any] = Field(default={}, description="Environment configuration")
+    spec: dict[str, Any] | None = Field(None, description="Environment specification")
 
 
 class AnalyticsRequest(BaseModel):
@@ -59,7 +54,7 @@ class RobloxSyncRequest(BaseModel):
     """Request model for Roblox synchronization"""
 
     action: str = Field(..., description="Synchronization action")
-    data: Dict[str, Any] = Field(default={}, description="Synchronization data")
+    data: dict[str, Any] = Field(default={}, description="Synchronization data")
 
 
 @router.post("/message")
@@ -348,7 +343,7 @@ async def get_user_channels(
 async def broadcast_to_channel(
     channel: str,
     event: str,
-    data: Dict[str, Any],
+    data: dict[str, Any],
     current_user: User = Depends(require_role("admin")),
 ):
     """

@@ -17,12 +17,11 @@ Version: 1.0.0
 """
 
 import asyncio
-import json
 import logging
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 # Import agent classes
 from apps.backend.agents.agent_classes import (
@@ -124,7 +123,7 @@ class AgentInfo:
         self.agent_type = agent_type
         self.agent_instance = agent_instance
         self.status = AgentStatus.INITIALIZING
-        self.current_task_id: Optional[str] = None
+        self.current_task_id: str | None = None
         self.total_tasks_completed = 0
         self.total_tasks_failed = 0
         self.average_execution_time = 0.0
@@ -142,18 +141,18 @@ class AgentInfo:
 class TaskInfo:
     """Task information container"""
 
-    def __init__(self, task_id: str, agent_type: str, task_type: str, task_data: Dict[str, Any]):
+    def __init__(self, task_id: str, agent_type: str, task_type: str, task_data: dict[str, Any]):
         self.task_id = task_id
         self.agent_type = agent_type
         self.task_type = task_type
         self.task_data = task_data
         self.status = TaskStatus.PENDING
-        self.result: Optional[Dict[str, Any]] = None
-        self.error_message: Optional[str] = None
+        self.result: dict[str, Any] | None = None
+        self.error_message: str | None = None
         self.created_at = datetime.now(timezone.utc)
-        self.started_at: Optional[datetime] = None
-        self.completed_at: Optional[datetime] = None
-        self.execution_time_seconds: Optional[float] = None
+        self.started_at: datetime | None = None
+        self.completed_at: datetime | None = None
+        self.execution_time_seconds: float | None = None
         self.retry_count = 0
         self.max_retries = 3
 
@@ -171,10 +170,10 @@ class AgentService:
     """
 
     def __init__(self):
-        self.agents: Dict[str, AgentInfo] = {}
-        self.tasks: Dict[str, TaskInfo] = {}
-        self.task_queue: List[str] = []
-        self.supabase_service: Optional[SupabaseService] = None
+        self.agents: dict[str, AgentInfo] = {}
+        self.tasks: dict[str, TaskInfo] = {}
+        self.task_queue: list[str] = []
+        self.supabase_service: SupabaseService | None = None
         self._initialize_agents()
         self._setup_database()
 
@@ -265,7 +264,7 @@ class AgentService:
             logger.warning(f"Failed to persist agent {agent_info.agent_id} to Supabase: {e}")
 
     async def _persist_task_to_supabase(
-        self, task_info: TaskInfo, agent_id: str, user_id: Optional[str] = None
+        self, task_info: TaskInfo, agent_id: str, user_id: str | None = None
     ):
         """Persist task execution to Supabase"""
         if not self.supabase_service or not self.supabase_service.is_available():
@@ -299,7 +298,7 @@ class AgentService:
             logger.warning(f"Failed to persist task {task_info.task_id} to Supabase: {e}")
             return None
 
-    async def _update_task_in_supabase(self, task_id: str, updates: Dict[str, Any]):
+    async def _update_task_in_supabase(self, task_id: str, updates: dict[str, Any]):
         """Update task execution status in Supabase"""
         if not self.supabase_service or not self.supabase_service.is_available():
             return
@@ -311,7 +310,7 @@ class AgentService:
         except Exception as e:
             logger.warning(f"Failed to update task {task_id} in Supabase: {e}")
 
-    async def _store_agent_metrics_to_supabase(self, agent_id: str, metrics: Dict[str, Any]):
+    async def _store_agent_metrics_to_supabase(self, agent_id: str, metrics: dict[str, Any]):
         """Store agent performance metrics to Supabase"""
         if not self.supabase_service or not self.supabase_service.is_available():
             return
@@ -353,7 +352,7 @@ class AgentService:
         except Exception as e:
             logger.warning(f"Failed to store metrics for agent {agent_id} to Supabase: {e}")
 
-    async def list_agents(self) -> List[Dict[str, Any]]:
+    async def list_agents(self) -> list[dict[str, Any]]:
         """
         List all available agents with their current status.
 
@@ -362,21 +361,23 @@ class AgentService:
         """
         agents_list = []
         for agent_id, agent_info in self.agents.items():
-            agents_list.append({
-                "id": agent_id,
-                "name": agent_info.agent_type.replace("_", " ").title(),
-                "status": "active" if agent_info.status == AgentStatus.IDLE else "inactive",
-                "type": agent_info.agent_type.upper(),
-            })
+            agents_list.append(
+                {
+                    "id": agent_id,
+                    "name": agent_info.agent_type.replace("_", " ").title(),
+                    "status": "active" if agent_info.status == AgentStatus.IDLE else "inactive",
+                    "type": agent_info.agent_type.upper(),
+                }
+            )
         return agents_list
 
     async def execute_task(
         self,
         agent_type: str,
         task_type: str,
-        task_data: Dict[str, Any],
-        user_id: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        task_data: dict[str, Any],
+        user_id: str | None = None,
+    ) -> dict[str, Any]:
         """
         Execute a task on a specific agent type.
 
@@ -446,7 +447,7 @@ class AgentService:
             logger.error(f"Error executing task: {e}")
             return {"success": False, "error": str(e), "message": "Task execution failed"}
 
-    def _find_available_agent(self, agent_type: str) -> Optional[str]:
+    def _find_available_agent(self, agent_type: str) -> str | None:
         """Find an available agent of the specified type"""
         for agent_id, agent_info in self.agents.items():
             if agent_info.agent_type == agent_type and agent_info.status == AgentStatus.IDLE:
@@ -454,8 +455,8 @@ class AgentService:
         return None
 
     async def _execute_task_on_agent(
-        self, task_id: str, agent_id: str, user_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, task_id: str, agent_id: str, user_id: str | None = None
+    ) -> dict[str, Any]:
         """Execute a specific task on a specific agent"""
         task = self.tasks.get(task_id)
         agent = self.agents.get(agent_id)
@@ -557,7 +558,7 @@ class AgentService:
 
             return {"success": False, "task_id": task_id, "error": str(e), "agent_id": agent_id}
 
-    async def _route_task_to_agent_method(self, agent: AgentInfo, task: TaskInfo) -> Dict[str, Any]:
+    async def _route_task_to_agent_method(self, agent: AgentInfo, task: TaskInfo) -> dict[str, Any]:
         """Route task to appropriate agent method based on agent type"""
         agent_instance = agent.agent_instance
         task_data = task.task_data
@@ -654,7 +655,7 @@ class AgentService:
                 agent.performance_metrics["throughput"] = total_tasks / uptime_minutes
 
     async def _store_execution_record(
-        self, task: TaskInfo, agent_id: str, user_id: Optional[str], success: bool
+        self, task: TaskInfo, agent_id: str, user_id: str | None, success: bool
     ):
         """Store task execution record in Supabase"""
         if not self.supabase_service or not self.supabase_service.is_available():
@@ -691,7 +692,7 @@ class AgentService:
         except Exception as e:
             logger.warning(f"Could not store execution record in Supabase: {e}")
 
-    async def _notify_status_update(self, agent_id: str, event_type: str, data: Dict[str, Any]):
+    async def _notify_status_update(self, agent_id: str, event_type: str, data: dict[str, Any]):
         """Send real-time status updates via Pusher (legacy method - use trigger_agent_event instead)"""
         try:
             await trigger_agent_event(event_type, agent_id, data, data.get("user_id"))
@@ -703,7 +704,7 @@ class AgentService:
         agent_id: str,
         old_status: str,
         new_status: str,
-        additional_data: Optional[Dict[str, Any]] = None,
+        additional_data: dict[str, Any] | None = None,
     ):
         """Notify about agent status changes via Pusher"""
         try:
@@ -728,7 +729,7 @@ class AgentService:
 
     # Public API methods
 
-    def get_agent_status(self, agent_id: str) -> Optional[Dict[str, Any]]:
+    def get_agent_status(self, agent_id: str) -> dict[str, Any] | None:
         """Get status of specific agent"""
         agent = self.agents.get(agent_id)
         if not agent:
@@ -748,11 +749,11 @@ class AgentService:
             "resource_usage": agent.resource_usage,
         }
 
-    def get_all_agents_status(self) -> List[Dict[str, Any]]:
+    def get_all_agents_status(self) -> list[dict[str, Any]]:
         """Get status of all agents"""
         return [self.get_agent_status(agent_id) for agent_id in self.agents.keys()]
 
-    def get_task_status(self, task_id: str) -> Optional[Dict[str, Any]]:
+    def get_task_status(self, task_id: str) -> dict[str, Any] | None:
         """Get status of specific task"""
         task = self.tasks.get(task_id)
         if not task:
@@ -772,7 +773,7 @@ class AgentService:
             "retry_count": task.retry_count,
         }
 
-    def get_system_metrics(self) -> Dict[str, Any]:
+    def get_system_metrics(self) -> dict[str, Any]:
         """Get overall system metrics"""
         total_agents = len(self.agents)
         idle_agents = len([a for a in self.agents.values() if a.status == AgentStatus.IDLE])
@@ -831,7 +832,7 @@ class AgentService:
 
 
 # Global agent service instance
-_agent_service: Optional[AgentService] = None
+_agent_service: AgentService | None = None
 
 
 def get_agent_service() -> AgentService:

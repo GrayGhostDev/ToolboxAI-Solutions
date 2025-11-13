@@ -15,30 +15,28 @@ Backend URL: http://127.0.0.1:8009
 Client ID: 2214511122270781418
 """
 
+import asyncio
+import logging
+import os
+import uuid
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any
+
+import httpx
 from fastapi import (
     APIRouter,
+    BackgroundTasks,
     Depends,
+    Header,
     HTTPException,
     Query,
-    Header,
-    BackgroundTasks,
     WebSocket,
     WebSocketDisconnect,
     status,
 )
 from fastapi.security import OAuth2PasswordBearer
-from typing import Dict, Any, List, Optional, Union
-from datetime import datetime, timedelta
-import logging
-import httpx
-import os
-import json
-import base64
-import asyncio
 from pydantic import BaseModel, Field, field_validator
-from enum import Enum
-import uuid
-from contextlib import asynccontextmanager
 
 # Handle imports safely
 try:
@@ -54,22 +52,22 @@ except ImportError:
             class MockUser(BaseModel):
                 email: str = "test@example.com"
                 role: str = "teacher"
-                id: Optional[str] = "test_user_id"
+                id: str | None = "test_user_id"
 
             return MockUser()
 
 
 try:
-    from apps.backend.models.schemas import User, BaseResponse
+    from apps.backend.models.schemas import BaseResponse, User
 except ImportError:
     try:
-        from apps.backend.models.schemas import User, BaseResponse
+        from apps.backend.models.schemas import BaseResponse, User
     except ImportError:
         # Fallback models for development
         class User(BaseModel):
             email: str
             role: str
-            id: Optional[str] = None
+            id: str | None = None
 
         class BaseResponse(BaseModel):
             success: bool = True
@@ -151,12 +149,12 @@ class CreateGameRequest(BaseModel):
     """Create new educational game instance"""
 
     title: str = Field(..., min_length=3, max_length=100, description="Game title")
-    description: Optional[str] = Field(None, max_length=500, description="Game description")
+    description: str | None = Field(None, max_length=500, description="Game description")
     subject: str = Field(..., description="Educational subject")
     grade_level: int = Field(..., ge=1, le=12, description="Target grade level")
     max_players: int = Field(default=30, ge=1, le=50, description="Maximum players")
-    template_id: Optional[str] = Field(None, description="Template to use")
-    settings: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Game settings")
+    template_id: str | None = Field(None, description="Template to use")
+    settings: dict[str, Any] | None = Field(default_factory=dict, description="Game settings")
 
     class Config:
         json_schema_extra = {
@@ -175,11 +173,11 @@ class CreateGameRequest(BaseModel):
 class UpdateGameSettingsRequest(BaseModel):
     """Update game settings"""
 
-    title: Optional[str] = Field(None, min_length=3, max_length=100)
-    description: Optional[str] = Field(None, max_length=500)
-    max_players: Optional[int] = Field(None, ge=1, le=50)
-    settings: Optional[Dict[str, Any]] = None
-    status: Optional[GameStatus] = None
+    title: str | None = Field(None, min_length=3, max_length=100)
+    description: str | None = Field(None, max_length=500)
+    max_players: int | None = Field(None, ge=1, le=50)
+    settings: dict[str, Any] | None = None
+    status: GameStatus | None = None
 
 
 class ContentGenerationRequest(BaseModel):
@@ -188,14 +186,14 @@ class ContentGenerationRequest(BaseModel):
     content_type: ContentType = Field(..., description="Type of content to generate")
     subject: str = Field(..., description="Educational subject")
     grade_level: int = Field(..., ge=1, le=12, description="Target grade level")
-    learning_objectives: List[str] = Field(
+    learning_objectives: list[str] = Field(
         ..., min_items=1, max_items=10, description="Learning objectives"
     )
     environment_type: str = Field(..., description="Roblox environment type")
     difficulty: str = Field(default="medium", description="Content difficulty")
     duration_minutes: int = Field(default=30, ge=5, le=120, description="Expected duration")
     include_quiz: bool = Field(default=True, description="Include assessment quiz")
-    custom_requirements: Optional[str] = Field(
+    custom_requirements: str | None = Field(
         None, max_length=1000, description="Custom requirements"
     )
 
@@ -212,7 +210,7 @@ class ContentDeploymentRequest(BaseModel):
 
     content_id: str = Field(..., description="Generated content ID")
     game_id: str = Field(..., description="Target game instance ID")
-    deploy_options: Optional[Dict[str, Any]] = Field(
+    deploy_options: dict[str, Any] | None = Field(
         default_factory=dict, description="Deployment options"
     )
     notify_students: bool = Field(default=True, description="Notify students of update")
@@ -224,11 +222,11 @@ class StudentProgressUpdate(BaseModel):
     student_id: str = Field(..., description="Student identifier")
     game_id: str = Field(..., description="Game instance ID")
     session_id: str = Field(..., description="Current session ID")
-    progress_data: Dict[str, Any] = Field(..., description="Progress information")
-    completed_objectives: List[str] = Field(
+    progress_data: dict[str, Any] = Field(..., description="Progress information")
+    completed_objectives: list[str] = Field(
         default_factory=list, description="Completed learning objectives"
     )
-    score: Optional[float] = Field(None, ge=0, le=100, description="Current score")
+    score: float | None = Field(None, ge=0, le=100, description="Current score")
     time_spent_minutes: int = Field(default=0, ge=0, description="Time spent in minutes")
 
 
@@ -237,8 +235,8 @@ class CheckpointSaveRequest(BaseModel):
 
     student_id: str = Field(..., description="Student identifier")
     game_id: str = Field(..., description="Game instance ID")
-    checkpoint_data: Dict[str, Any] = Field(..., description="Checkpoint state data")
-    checkpoint_name: Optional[str] = Field(None, description="Checkpoint identifier")
+    checkpoint_data: dict[str, Any] = Field(..., description="Checkpoint state data")
+    checkpoint_name: str | None = Field(None, description="Checkpoint identifier")
     auto_save: bool = Field(default=False, description="Was this an automatic save")
 
 
@@ -246,13 +244,13 @@ class AnalyticsEventRequest(BaseModel):
     """Track custom analytics event"""
 
     event_type: AnalyticsEventType = Field(..., description="Type of event")
-    game_id: Optional[str] = Field(None, description="Game instance ID")
-    student_id: Optional[str] = Field(None, description="Student ID")
-    session_id: Optional[str] = Field(None, description="Session ID")
-    event_data: Optional[Dict[str, Any]] = Field(
+    game_id: str | None = Field(None, description="Game instance ID")
+    student_id: str | None = Field(None, description="Student ID")
+    session_id: str | None = Field(None, description="Session ID")
+    event_data: dict[str, Any] | None = Field(
         default_factory=dict, description="Event-specific data"
     )
-    timestamp: Optional[datetime] = Field(
+    timestamp: datetime | None = Field(
         default_factory=datetime.utcnow, description="Event timestamp"
     )
 
@@ -262,10 +260,10 @@ class WebhookRequest(BaseModel):
 
     event_type: str = Field(..., description="Webhook event type")
     universe_id: str = Field(..., description="Roblox universe ID")
-    place_id: Optional[str] = Field(None, description="Roblox place ID")
-    user_id: Optional[str] = Field(None, description="Roblox user ID")
-    data: Dict[str, Any] = Field(default_factory=dict, description="Event payload")
-    signature: Optional[str] = Field(None, description="Webhook signature")
+    place_id: str | None = Field(None, description="Roblox place ID")
+    user_id: str | None = Field(None, description="Roblox user ID")
+    data: dict[str, Any] = Field(default_factory=dict, description="Event payload")
+    signature: str | None = Field(None, description="Webhook signature")
 
 
 # Response Models
@@ -274,19 +272,19 @@ class GameInstanceResponse(BaseModel):
 
     game_id: str = Field(..., description="Unique game identifier")
     title: str = Field(..., description="Game title")
-    description: Optional[str] = Field(None, description="Game description")
+    description: str | None = Field(None, description="Game description")
     subject: str = Field(..., description="Educational subject")
     grade_level: int = Field(..., description="Target grade level")
     status: GameStatus = Field(..., description="Current game status")
-    roblox_place_id: Optional[str] = Field(None, description="Roblox place ID")
-    roblox_universe_id: Optional[str] = Field(None, description="Roblox universe ID")
+    roblox_place_id: str | None = Field(None, description="Roblox place ID")
+    roblox_universe_id: str | None = Field(None, description="Roblox universe ID")
     max_players: int = Field(..., description="Maximum players")
     current_players: int = Field(default=0, description="Currently active players")
     created_by: str = Field(..., description="Creator user ID")
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
-    settings: Dict[str, Any] = Field(default_factory=dict, description="Game configuration")
-    join_url: Optional[str] = Field(None, description="Game join URL")
+    settings: dict[str, Any] = Field(default_factory=dict, description="Game configuration")
+    join_url: str | None = Field(None, description="Game join URL")
 
 
 class ContentGenerationResponse(BaseModel):
@@ -298,11 +296,11 @@ class ContentGenerationResponse(BaseModel):
     generated_at: datetime = Field(
         default_factory=datetime.utcnow, description="Generation timestamp"
     )
-    lesson_content: Optional[Dict[str, Any]] = Field(None, description="Generated lesson content")
-    quiz_content: Optional[Dict[str, Any]] = Field(None, description="Generated quiz content")
-    terrain_config: Optional[Dict[str, Any]] = Field(None, description="Terrain configuration")
-    script_content: Optional[Dict[str, Any]] = Field(None, description="Generated scripts")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Generation metadata")
+    lesson_content: dict[str, Any] | None = Field(None, description="Generated lesson content")
+    quiz_content: dict[str, Any] | None = Field(None, description="Generated quiz content")
+    terrain_config: dict[str, Any] | None = Field(None, description="Terrain configuration")
+    script_content: dict[str, Any] | None = Field(None, description="Generated scripts")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Generation metadata")
 
 
 class TemplateResponse(BaseModel):
@@ -313,10 +311,10 @@ class TemplateResponse(BaseModel):
     description: str = Field(..., description="Template description")
     category: str = Field(..., description="Template category")
     subject: str = Field(..., description="Educational subject")
-    grade_levels: List[int] = Field(..., description="Supported grade levels")
-    features: List[str] = Field(..., description="Template features")
+    grade_levels: list[int] = Field(..., description="Supported grade levels")
+    features: list[str] = Field(..., description="Template features")
     difficulty: str = Field(..., description="Template difficulty")
-    thumbnail_url: Optional[str] = Field(None, description="Template thumbnail")
+    thumbnail_url: str | None = Field(None, description="Template thumbnail")
     created_at: datetime = Field(..., description="Creation timestamp")
     usage_count: int = Field(default=0, description="Number of times used")
 
@@ -330,9 +328,9 @@ class DeploymentStatusResponse(BaseModel):
     status: DeploymentStatus = Field(..., description="Current deployment status")
     progress: float = Field(default=0, ge=0, le=100, description="Deployment progress percentage")
     started_at: datetime = Field(..., description="Deployment start time")
-    completed_at: Optional[datetime] = Field(None, description="Deployment completion time")
-    error_message: Optional[str] = Field(None, description="Error message if failed")
-    deployed_assets: List[str] = Field(
+    completed_at: datetime | None = Field(None, description="Deployment completion time")
+    error_message: str | None = Field(None, description="Error message if failed")
+    deployed_assets: list[str] = Field(
         default_factory=list, description="Successfully deployed assets"
     )
 
@@ -343,13 +341,13 @@ class StudentProgressResponse(BaseModel):
     student_id: str = Field(..., description="Student identifier")
     game_id: str = Field(..., description="Game instance ID")
     overall_progress: float = Field(..., ge=0, le=100, description="Overall progress percentage")
-    completed_objectives: List[str] = Field(..., description="Completed learning objectives")
+    completed_objectives: list[str] = Field(..., description="Completed learning objectives")
     current_score: float = Field(..., ge=0, le=100, description="Current score")
     time_spent_minutes: int = Field(..., ge=0, description="Total time spent")
     last_active: datetime = Field(..., description="Last activity timestamp")
-    achievements: List[str] = Field(default_factory=list, description="Unlocked achievements")
-    checkpoints: List[Dict[str, Any]] = Field(default_factory=list, description="Saved checkpoints")
-    performance_metrics: Dict[str, Any] = Field(
+    achievements: list[str] = Field(default_factory=list, description="Unlocked achievements")
+    checkpoints: list[dict[str, Any]] = Field(default_factory=list, description="Saved checkpoints")
+    performance_metrics: dict[str, Any] = Field(
         default_factory=dict, description="Performance data"
     )
 
@@ -362,7 +360,7 @@ class LeaderboardResponse(BaseModel):
     generated_at: datetime = Field(
         default_factory=datetime.utcnow, description="Generation timestamp"
     )
-    entries: List[Dict[str, Any]] = Field(..., description="Leaderboard entries")
+    entries: list[dict[str, Any]] = Field(..., description="Leaderboard entries")
     total_students: int = Field(..., description="Total number of students")
     class_average: float = Field(..., description="Class average score/progress")
 
@@ -376,9 +374,9 @@ class SessionAnalyticsResponse(BaseModel):
     duration_minutes: int = Field(..., description="Session duration")
     engagement_score: float = Field(..., ge=0, le=10, description="Session engagement score")
     completion_rate: float = Field(..., ge=0, le=100, description="Average completion rate")
-    learning_outcomes: Dict[str, Any] = Field(..., description="Learning outcome metrics")
-    activity_heatmap: List[Dict[str, Any]] = Field(..., description="Student activity timeline")
-    performance_metrics: Dict[str, Any] = Field(..., description="Performance statistics")
+    learning_outcomes: dict[str, Any] = Field(..., description="Learning outcome metrics")
+    activity_heatmap: list[dict[str, Any]] = Field(..., description="Student activity timeline")
+    performance_metrics: dict[str, Any] = Field(..., description="Performance statistics")
 
 
 class PerformanceMetricsResponse(BaseModel):
@@ -404,9 +402,9 @@ class WebSocketManager:
 
     def __init__(self):
         # Room-based connections: room_id -> set of websockets
-        self.connections: Dict[str, set] = {}
+        self.connections: dict[str, set] = {}
         # Connection metadata: websocket -> dict
-        self.connection_metadata: Dict[WebSocket, Dict[str, Any]] = {}
+        self.connection_metadata: dict[WebSocket, dict[str, Any]] = {}
 
     async def connect(self, websocket: WebSocket, room_id: str, user_id: str = None):
         """Connect websocket to a room"""
@@ -475,22 +473,22 @@ ws_manager = WebSocketManager()
 # =============================================================================
 
 # Game instances storage
-game_instances: Dict[str, Dict[str, Any]] = {}
+game_instances: dict[str, dict[str, Any]] = {}
 
 # Content generation storage
-generated_content: Dict[str, Dict[str, Any]] = {}
+generated_content: dict[str, dict[str, Any]] = {}
 
 # Student progress storage
-student_progress: Dict[str, Dict[str, Any]] = {}
+student_progress: dict[str, dict[str, Any]] = {}
 
 # Analytics events storage
-analytics_events: List[Dict[str, Any]] = []
+analytics_events: list[dict[str, Any]] = []
 
 # Deployment tracking
-deployments: Dict[str, Dict[str, Any]] = {}
+deployments: dict[str, dict[str, Any]] = {}
 
 # Active sessions
-active_sessions: Dict[str, Dict[str, Any]] = {}
+active_sessions: dict[str, dict[str, Any]] = {}
 
 # =============================================================================
 # ROUTER SETUP
@@ -807,13 +805,13 @@ async def generate_educational_content(
     )
 
 
-@roblox_router.get("/content/templates", response_model=List[TemplateResponse])
+@roblox_router.get("/content/templates", response_model=list[TemplateResponse])
 async def get_content_templates(
-    category: Optional[str] = Query(None, description="Filter by category"),
-    subject: Optional[str] = Query(None, description="Filter by subject"),
-    grade_level: Optional[int] = Query(None, ge=1, le=12, description="Filter by grade level"),
+    category: str | None = Query(None, description="Filter by category"),
+    subject: str | None = Query(None, description="Filter by subject"),
+    grade_level: int | None = Query(None, ge=1, le=12, description="Filter by grade level"),
     current_user: User = Depends(get_current_user),
-) -> List[TemplateResponse]:
+) -> list[TemplateResponse]:
     """
     Get available content templates.
 
@@ -951,7 +949,7 @@ async def deploy_content_to_game(
 @roblox_router.get("/content/{content_id}/status")
 async def get_content_deployment_status(
     content_id: str, current_user: User = Depends(get_current_user)
-) -> Union[ContentGenerationResponse, List[DeploymentStatusResponse]]:
+) -> ContentGenerationResponse | list[DeploymentStatusResponse]:
     """
     Get content generation or deployment status.
 
@@ -985,7 +983,7 @@ async def get_content_deployment_status(
 @roblox_router.post("/progress/update", status_code=status.HTTP_200_OK)
 async def update_student_progress(
     request: StudentProgressUpdate, current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Update student progress in a game instance.
 
@@ -1041,7 +1039,7 @@ async def update_student_progress(
 @roblox_router.get("/progress/{student_id}", response_model=StudentProgressResponse)
 async def get_student_progress(
     student_id: str,
-    game_id: Optional[str] = Query(None, description="Specific game ID"),
+    game_id: str | None = Query(None, description="Specific game ID"),
     current_user: User = Depends(get_current_user),
 ) -> StudentProgressResponse:
     """
@@ -1118,7 +1116,7 @@ async def get_student_progress(
 @roblox_router.post("/progress/checkpoint", status_code=status.HTTP_201_CREATED)
 async def save_student_checkpoint(
     request: CheckpointSaveRequest, current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Save student progress checkpoint.
 
@@ -1325,8 +1323,8 @@ async def websocket_content_generation(websocket: WebSocket):
 
 @roblox_router.post("/webhook", status_code=status.HTTP_200_OK)
 async def handle_roblox_webhook(
-    request: WebhookRequest, x_roblox_signature: Optional[str] = Header(None)
-) -> Dict[str, Any]:
+    request: WebhookRequest, x_roblox_signature: str | None = Header(None)
+) -> dict[str, Any]:
     """
     Handle incoming webhooks from Roblox.
 
@@ -1493,8 +1491,8 @@ async def get_system_performance_metrics(
         )
 
     # Calculate metrics (in production, use actual system monitoring)
+
     import psutil
-    import os
 
     # Get system stats
     cpu_percent = psutil.cpu_percent(interval=1)
@@ -1523,7 +1521,7 @@ async def get_system_performance_metrics(
 @roblox_router.post("/analytics/event", status_code=status.HTTP_201_CREATED)
 async def track_analytics_event(
     request: AnalyticsEventRequest, current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Track custom analytics event.
 
@@ -1576,7 +1574,7 @@ async def track_analytics_event(
 # =============================================================================
 
 
-async def setup_game_instance(game_id: str, template_id: Optional[str]):
+async def setup_game_instance(game_id: str, template_id: str | None):
     """Background task to set up a new game instance"""
     try:
         # Simulate game setup process
@@ -1775,7 +1773,7 @@ def estimate_generation_time(request: ContentGenerationRequest) -> int:
 
 
 @roblox_router.get("/auth/login")
-async def roblox_oauth_login(current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+async def roblox_oauth_login(current_user: User = Depends(get_current_user)) -> dict[str, Any]:
     """Initiate Roblox OAuth login flow (Legacy endpoint)"""
     state = str(uuid.uuid4())
 
@@ -1797,7 +1795,7 @@ async def roblox_oauth_login(current_user: User = Depends(get_current_user)) -> 
 
 
 @roblox_router.get("/plugin/status")
-async def check_plugin_status() -> Dict[str, Any]:
+async def check_plugin_status() -> dict[str, Any]:
     """Check Roblox Studio Plugin connection status"""
     try:
         async with httpx.AsyncClient() as client:

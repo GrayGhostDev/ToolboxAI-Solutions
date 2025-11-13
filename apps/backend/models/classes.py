@@ -3,9 +3,9 @@ Pydantic models for Classes API endpoints
 """
 
 from datetime import datetime
-from typing import Optional, List
-from pydantic import BaseModel, Field, validator
 from uuid import UUID
+
+from pydantic import BaseModel, Field, validator
 
 
 class ClassBase(BaseModel):
@@ -14,11 +14,11 @@ class ClassBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
     subject: str = Field(..., min_length=1, max_length=100)
     grade_level: int = Field(..., ge=1, le=12)
-    room: Optional[str] = Field(None, max_length=100)
-    schedule: Optional[str] = Field(None, max_length=200)
-    description: Optional[str] = None
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
+    room: str | None = Field(None, max_length=100)
+    schedule: str | None = Field(None, max_length=200)
+    description: str | None = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
     max_students: int = Field(30, gt=0)
     is_active: bool = Field(True)
 
@@ -26,22 +26,22 @@ class ClassBase(BaseModel):
 class ClassCreate(ClassBase):
     """Model for creating a new class"""
 
-    teacher_id: Optional[UUID] = None  # Will be set from current user if not provided
+    teacher_id: UUID | None = None  # Will be set from current user if not provided
 
 
 class ClassUpdate(BaseModel):
     """Model for updating a class"""
 
-    name: Optional[str] = Field(None, min_length=1, max_length=200)
-    subject: Optional[str] = Field(None, min_length=1, max_length=100)
-    grade_level: Optional[int] = Field(None, ge=1, le=12)
-    room: Optional[str] = Field(None, max_length=100)
-    schedule: Optional[str] = Field(None, max_length=200)
-    description: Optional[str] = None
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
-    max_students: Optional[int] = Field(None, gt=0)
-    is_active: Optional[bool] = None
+    name: str | None = Field(None, min_length=1, max_length=200)
+    subject: str | None = Field(None, min_length=1, max_length=100)
+    grade_level: int | None = Field(None, ge=1, le=12)
+    room: str | None = Field(None, max_length=100)
+    schedule: str | None = Field(None, max_length=200)
+    description: str | None = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
+    max_students: int | None = Field(None, gt=0)
+    is_active: bool | None = None
 
 
 class ClassSummary(ClassBase):
@@ -52,7 +52,7 @@ class ClassSummary(ClassBase):
     student_count: int = 0
     average_xp: int = 0  # Placeholder for XP system
     created_at: datetime
-    updated_at: Optional[datetime] = None
+    updated_at: datetime | None = None
 
     @validator("id", "teacher_id", pre=True)
     def convert_uuid_to_string(cls, v):
@@ -69,8 +69,8 @@ class ClassSummary(ClassBase):
 class ClassDetails(ClassSummary):
     """Detailed class model with relationships"""
 
-    teacher_name: Optional[str] = None
-    students: List[dict] = []  # Will be populated with student data
+    teacher_name: str | None = None
+    students: list[dict] = []  # Will be populated with student data
     total_lessons: int = 0
     completed_lessons: int = 0
 
@@ -94,9 +94,9 @@ class EnrollmentCreate(EnrollmentBase):
 class EnrollmentUpdate(EnrollmentBase):
     """Model for updating enrollment"""
 
-    status: Optional[str] = Field(None, pattern="^(active|dropped|completed)$")
-    final_grade: Optional[float] = Field(None, ge=0, le=100)
-    attendance_percentage: Optional[float] = Field(None, ge=0, le=100)
+    status: str | None = Field(None, pattern="^(active|dropped|completed)$")
+    final_grade: float | None = Field(None, ge=0, le=100)
+    attendance_percentage: float | None = Field(None, ge=0, le=100)
 
 
 class EnrollmentResponse(EnrollmentBase):
@@ -106,11 +106,11 @@ class EnrollmentResponse(EnrollmentBase):
     class_id: str
     student_id: str
     enrolled_at: datetime
-    dropped_at: Optional[datetime] = None
-    final_grade: Optional[float] = None
-    attendance_percentage: Optional[float] = None
+    dropped_at: datetime | None = None
+    final_grade: float | None = None
+    attendance_percentage: float | None = None
     created_at: datetime
-    updated_at: Optional[datetime] = None
+    updated_at: datetime | None = None
 
     @validator("id", "class_id", "student_id", pre=True)
     def convert_uuid_to_string(cls, v):
@@ -136,7 +136,7 @@ class ClassListResponse(BaseModel):
     """Standard API response wrapper for class lists"""
 
     status: str = "success"
-    data: List[ClassSummary]
+    data: list[ClassSummary]
     total: int
     page: int = 1
     per_page: int = 20

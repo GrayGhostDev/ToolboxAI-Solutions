@@ -6,43 +6,35 @@ This module transforms AI-generated content from the enhanced pipeline
 into Roblox-compatible formats including Luau scripts, models, and assets.
 """
 
-import asyncio
 import json
 import logging
 import re
 import uuid
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
-from dataclasses import dataclass, field
+from typing import Any
 
-import httpx
-from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
 
-# Import our Week 2 components
-from core.agents.enhanced_content_pipeline import (
-    EnhancedContentPipeline,
-    PipelineState,
-    PipelineStage,
-    ContentRequest,
+from apps.backend.services.websocket_pipeline_manager import websocket_pipeline_manager
+from core.agents.adaptive_learning_engine import (
+    AdaptiveLearningEngine,
+    LearningProfile,
 )
 from core.agents.content_quality_validator import (
     ContentQualityValidator,
     ValidationReport,
-    QualityDimension,
 )
-from core.agents.adaptive_learning_engine import (
-    AdaptiveLearningEngine,
-    LearningProfile,
-    DifficultyLevel,
+
+# Import our Week 2 components
+from core.agents.enhanced_content_pipeline import (
+    ContentRequest,
+    EnhancedContentPipeline,
+    PipelineStage,
 )
-from core.agents.multi_modal_generator import MultiModalGenerator, ContentModality, GeneratedContent
-from apps.backend.services.websocket_pipeline_manager import websocket_pipeline_manager
-from database.models import EnhancedContentGeneration, ContentQualityMetrics, LearningProfiles
-from database.connection import get_async_session
+from core.agents.multi_modal_generator import GeneratedContent, MultiModalGenerator
+from database.models import EnhancedContentGeneration
 
 logger = logging.getLogger(__name__)
 
@@ -84,10 +76,10 @@ class RobloxAsset:
     name: str = ""
     type: RobloxAssetType = RobloxAssetType.SCRIPT
     content: str = ""
-    properties: Dict[str, Any] = field(default_factory=dict)
+    properties: dict[str, Any] = field(default_factory=dict)
     parent_path: str = "game.Workspace"
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    dependencies: List[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
+    dependencies: list[str] = field(default_factory=list)
 
 
 class LuauScriptGenerator:
@@ -97,7 +89,7 @@ class LuauScriptGenerator:
         self.templates = self._load_templates()
         self.validators = self._setup_validators()
 
-    def _load_templates(self) -> Dict[str, str]:
+    def _load_templates(self) -> dict[str, str]:
         """Load Luau script templates"""
         return {
             "server_script": """--!strict
@@ -163,7 +155,7 @@ return {module_name}
 """,
         }
 
-    def _setup_validators(self) -> Dict[str, Any]:
+    def _setup_validators(self) -> dict[str, Any]:
         """Set up Luau syntax validators"""
         return {
             "keywords": [
@@ -204,7 +196,7 @@ return {module_name}
         }
 
     async def generate_script(
-        self, content: Dict[str, Any], script_type: RobloxAssetType
+        self, content: dict[str, Any], script_type: RobloxAssetType
     ) -> RobloxAsset:
         """Generate a Luau script from AI content"""
 
@@ -313,7 +305,7 @@ return {module_name}
 
         return "\n".join(processed_lines)
 
-    async def _validate_luau_syntax(self, script: str) -> Tuple[bool, List[str]]:
+    async def _validate_luau_syntax(self, script: str) -> tuple[bool, list[str]]:
         """Validate Luau syntax"""
         errors = []
 
@@ -346,7 +338,7 @@ return {module_name}
 
         return len(errors) == 0, errors
 
-    async def _fix_syntax_errors(self, script: str, errors: List[str]) -> str:
+    async def _fix_syntax_errors(self, script: str, errors: list[str]) -> str:
         """Attempt to fix common syntax errors"""
         # This is a simple implementation - in production, use more sophisticated fixing
         for error in errors:
@@ -365,7 +357,7 @@ return {module_name}
         words = re.findall(r"\w+", title)
         return "".join(word.capitalize() for word in words)
 
-    async def _generate_imports(self, content: Dict[str, Any]) -> str:
+    async def _generate_imports(self, content: dict[str, Any]) -> str:
         """Generate import statements"""
         imports = []
         if content.get("uses_datastore"):
@@ -376,7 +368,7 @@ return {module_name}
             imports.append("local MessagingService = game:GetService('MessagingService')")
         return "\n".join(imports)
 
-    async def _generate_properties(self, content: Dict[str, Any]) -> str:
+    async def _generate_properties(self, content: dict[str, Any]) -> str:
         """Generate class properties"""
         properties = content.get("properties", {})
         if not properties:
@@ -393,19 +385,19 @@ return {module_name}
 
         return "\n".join(prop_lines)
 
-    async def _generate_parameters(self, content: Dict[str, Any]) -> str:
+    async def _generate_parameters(self, content: dict[str, Any]) -> str:
         """Generate constructor parameters"""
         params = content.get("constructor_params", [])
         return ", ".join(params) if params else ""
 
-    async def _generate_initialization(self, content: Dict[str, Any]) -> str:
+    async def _generate_initialization(self, content: dict[str, Any]) -> str:
         """Generate initialization code"""
         init_code = content.get("initialization", [])
         if not init_code:
             return "-- No initialization required"
         return "\n    ".join(init_code)
 
-    async def _generate_methods(self, content: Dict[str, Any]) -> str:
+    async def _generate_methods(self, content: dict[str, Any]) -> str:
         """Generate class methods"""
         methods = content.get("methods", [])
         if not methods:
@@ -430,7 +422,7 @@ class RobloxAssetConverter:
         self.script_generator = LuauScriptGenerator()
         self.asset_templates = self._load_asset_templates()
 
-    def _load_asset_templates(self) -> Dict[str, Any]:
+    def _load_asset_templates(self) -> dict[str, Any]:
         """Load asset generation templates"""
         return {
             "part": {
@@ -507,7 +499,7 @@ class RobloxAssetConverter:
             metadata={"component_count": len(model_data["Children"])},
         )
 
-    async def _create_part_from_spec(self, spec: Dict[str, Any]) -> Dict[str, Any]:
+    async def _create_part_from_spec(self, spec: dict[str, Any]) -> dict[str, Any]:
         """Create a part from specification"""
         part = self.asset_templates["part"].copy()
 
@@ -543,7 +535,7 @@ class RobloxAssetConverter:
             metadata={"element_count": len(gui_data["Children"])},
         )
 
-    async def _create_gui_element(self, element: Dict[str, Any]) -> Dict[str, Any]:
+    async def _create_gui_element(self, element: dict[str, Any]) -> dict[str, Any]:
         """Create a GUI element"""
         element_type = element.get("type", "TextLabel")
 
@@ -620,7 +612,7 @@ class RobloxContentBridge:
         content_type: RobloxContentType,
         user_id: str,
         session: AsyncSession,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate Roblox content using enhanced pipeline"""
 
         # Create pipeline ID
@@ -741,7 +733,7 @@ class RobloxContentBridge:
 
         return request
 
-    async def _validate_for_roblox(self, content: Dict[str, Any]) -> ValidationReport:
+    async def _validate_for_roblox(self, content: dict[str, Any]) -> ValidationReport:
         """Validate content for Roblox compatibility"""
 
         # Run standard validation
@@ -793,7 +785,7 @@ class RobloxContentBridge:
 
         return report
 
-    async def _contains_inappropriate_content(self, content: Dict[str, Any]) -> bool:
+    async def _contains_inappropriate_content(self, content: dict[str, Any]) -> bool:
         """Check for content that violates Roblox standards"""
         # Simplified check - in production, use more sophisticated filtering
         inappropriate_terms = ["violence", "adult", "gambling", "dating"]
@@ -801,13 +793,13 @@ class RobloxContentBridge:
         content_text = json.dumps(content).lower()
         return any(term in content_text for term in inappropriate_terms)
 
-    async def _is_too_complex(self, content: Dict[str, Any]) -> bool:
+    async def _is_too_complex(self, content: dict[str, Any]) -> bool:
         """Check if content is too complex for Roblox"""
         # Check script length
         script_content = content.get("script_content", "")
         return len(script_content) > 10000  # Lines of code limit
 
-    async def _exceeds_asset_limits(self, content: Dict[str, Any]) -> bool:
+    async def _exceeds_asset_limits(self, content: dict[str, Any]) -> bool:
         """Check if content exceeds Roblox asset limits"""
         # Check number of parts
         part_count = content.get("part_count", 0)
@@ -822,8 +814,8 @@ class RobloxContentBridge:
         return False
 
     async def _improve_content(
-        self, content: Dict[str, Any], validation_report: ValidationReport
-    ) -> Dict[str, Any]:
+        self, content: dict[str, Any], validation_report: ValidationReport
+    ) -> dict[str, Any]:
         """Improve content based on validation report"""
 
         for issue in validation_report.issues:
@@ -838,27 +830,27 @@ class RobloxContentBridge:
 
         return content
 
-    async def _sanitize_content(self, content: Dict[str, Any]) -> Dict[str, Any]:
+    async def _sanitize_content(self, content: dict[str, Any]) -> dict[str, Any]:
         """Sanitize content for Roblox standards"""
         # Remove inappropriate content
         # This is a simplified implementation
         return content
 
-    async def _optimize_content(self, content: Dict[str, Any]) -> Dict[str, Any]:
+    async def _optimize_content(self, content: dict[str, Any]) -> dict[str, Any]:
         """Optimize content for performance"""
         # Reduce complexity
         # This is a simplified implementation
         return content
 
-    async def _enhance_educational_value(self, content: Dict[str, Any]) -> Dict[str, Any]:
+    async def _enhance_educational_value(self, content: dict[str, Any]) -> dict[str, Any]:
         """Enhance educational value of content"""
         # Add educational elements
         # This is a simplified implementation
         return content
 
     async def _convert_to_roblox_assets(
-        self, content: Dict[str, Any], content_type: RobloxContentType
-    ) -> List[RobloxAsset]:
+        self, content: dict[str, Any], content_type: RobloxContentType
+    ) -> list[RobloxAsset]:
         """Convert content to Roblox assets"""
 
         assets = []
@@ -894,7 +886,7 @@ class RobloxContentBridge:
 
         return assets
 
-    async def _package_assets(self, assets: List[RobloxAsset]) -> Dict[str, Any]:
+    async def _package_assets(self, assets: list[RobloxAsset]) -> dict[str, Any]:
         """Package assets for delivery to Roblox Studio"""
 
         package_id = str(uuid.uuid4())
@@ -931,7 +923,7 @@ class RobloxContentBridge:
         return package
 
     async def _save_generation(
-        self, pipeline_id: str, user_id: str, content: Dict[str, Any], session: AsyncSession
+        self, pipeline_id: str, user_id: str, content: dict[str, Any], session: AsyncSession
     ) -> None:
         """Save generation to database"""
 
@@ -952,7 +944,7 @@ class RobloxContentBridge:
         session.add(generation)
         await session.commit()
 
-    async def deploy_to_studio(self, package_id: str, studio_session_id: str) -> Dict[str, Any]:
+    async def deploy_to_studio(self, package_id: str, studio_session_id: str) -> dict[str, Any]:
         """Deploy package directly to Roblox Studio"""
 
         # This would integrate with Roblox Studio plugin

@@ -9,21 +9,22 @@ Created: 2025-01-27
 Version: 1.0.0
 """
 
-import asyncio
 import hashlib
 import logging
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any
 from uuid import UUID, uuid4
 
 try:
+    import base64
+
     from cryptography.fernet import Fernet
     from cryptography.hazmat.primitives import hashes
     from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-    import base64
+
     CRYPTO_AVAILABLE = True
 except ImportError:
     CRYPTO_AVAILABLE = False
@@ -36,22 +37,24 @@ logger = logging.getLogger(__name__)
 
 class ComplianceLevel(str, Enum):
     """Compliance requirement levels"""
+
     NONE = "none"
     STANDARD = "standard"
-    COPPA = "coppa"          # Children's Online Privacy Protection Act
-    FERPA = "ferpa"          # Family Educational Rights and Privacy Act
-    HIPAA = "hipaa"          # Health Insurance Portability and Accountability Act
-    GDPR = "gdpr"            # General Data Protection Regulation
+    COPPA = "coppa"  # Children's Online Privacy Protection Act
+    FERPA = "ferpa"  # Family Educational Rights and Privacy Act
+    HIPAA = "hipaa"  # Health Insurance Portability and Accountability Act
+    GDPR = "gdpr"  # General Data Protection Regulation
 
 
 class PIIType(str, Enum):
     """Types of Personally Identifiable Information"""
+
     NONE = "none"
-    SSN = "ssn"              # Social Security Number
+    SSN = "ssn"  # Social Security Number
     EMAIL = "email"
     PHONE = "phone"
     ADDRESS = "address"
-    DOB = "date_of_birth"    # Date of Birth
+    DOB = "date_of_birth"  # Date of Birth
     STUDENT_ID = "student_id"
     CREDIT_CARD = "credit_card"
     BIOMETRIC = "biometric"
@@ -61,6 +64,7 @@ class PIIType(str, Enum):
 
 class SecurityRisk(str, Enum):
     """Security risk levels"""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -70,14 +74,15 @@ class SecurityRisk(str, Enum):
 @dataclass
 class PIIDetectionResult:
     """Result of PII detection analysis"""
-    has_pii: bool = False
-    pii_types: List[PIIType] = field(default_factory=list)
-    confidence_scores: Dict[PIIType, float] = field(default_factory=dict)
-    locations: Dict[PIIType, List[str]] = field(default_factory=dict)
-    risk_level: SecurityRisk = SecurityRisk.LOW
-    recommendations: List[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    has_pii: bool = False
+    pii_types: list[PIIType] = field(default_factory=list)
+    confidence_scores: dict[PIIType, float] = field(default_factory=dict)
+    locations: dict[PIIType, list[str]] = field(default_factory=dict)
+    risk_level: SecurityRisk = SecurityRisk.LOW
+    recommendations: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization"""
         return {
             "has_pii": self.has_pii,
@@ -85,25 +90,26 @@ class PIIDetectionResult:
             "confidence_scores": {k.value: v for k, v in self.confidence_scores.items()},
             "locations": {k.value: v for k, v in self.locations.items()},
             "risk_level": self.risk_level.value,
-            "recommendations": self.recommendations
+            "recommendations": self.recommendations,
         }
 
 
 @dataclass
 class ComplianceCheck:
     """Result of compliance verification"""
+
     is_compliant: bool = True
     required_level: ComplianceLevel = ComplianceLevel.STANDARD
     current_level: ComplianceLevel = ComplianceLevel.STANDARD
-    issues: List[str] = field(default_factory=list)
-    requirements: List[str] = field(default_factory=list)
-    recommendations: List[str] = field(default_factory=list)
-    pii_detection: Optional[PIIDetectionResult] = None
+    issues: list[str] = field(default_factory=list)
+    requirements: list[str] = field(default_factory=list)
+    recommendations: list[str] = field(default_factory=list)
+    pii_detection: PIIDetectionResult | None = None
     encryption_required: bool = False
     retention_required: bool = False
     audit_required: bool = True
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization"""
         return {
             "is_compliant": self.is_compliant,
@@ -115,20 +121,21 @@ class ComplianceCheck:
             "pii_detection": self.pii_detection.to_dict() if self.pii_detection else None,
             "encryption_required": self.encryption_required,
             "retention_required": self.retention_required,
-            "audit_required": self.audit_required
+            "audit_required": self.audit_required,
         }
 
 
 @dataclass
 class AccessControlRule:
     """Access control rule definition"""
+
     rule_id: str
     organization_id: str
     resource_pattern: str
-    allowed_roles: List[str]
-    allowed_users: List[str] = field(default_factory=list)
-    conditions: Dict[str, Any] = field(default_factory=dict)
-    expires_at: Optional[datetime] = None
+    allowed_roles: list[str]
+    allowed_users: list[str] = field(default_factory=list)
+    conditions: dict[str, Any] = field(default_factory=dict)
+    expires_at: datetime | None = None
     created_at: datetime = field(default_factory=datetime.utcnow)
 
 
@@ -145,7 +152,7 @@ class SecurityManager:
     - Privacy protection measures
     """
 
-    def __init__(self, encryption_key: Optional[str] = None):
+    def __init__(self, encryption_key: str | None = None):
         """
         Initialize security manager.
 
@@ -174,7 +181,7 @@ class SecurityManager:
             "media_resource": ComplianceLevel.STANDARD,
             "avatar": ComplianceLevel.COPPA,
             "temporary": ComplianceLevel.STANDARD,
-            "report": ComplianceLevel.FERPA
+            "report": ComplianceLevel.FERPA,
         }
 
         logger.info("SecurityManager initialized")
@@ -184,7 +191,7 @@ class SecurityManager:
         file_data: bytes,
         filename: str,
         options: UploadOptions,
-        organization_context: Optional[Dict[str, Any]] = None
+        organization_context: dict[str, Any] | None = None,
     ) -> ComplianceCheck:
         """
         Perform comprehensive compliance check.
@@ -201,14 +208,12 @@ class SecurityManager:
         try:
             # Determine required compliance level
             required_level = self.compliance_requirements.get(
-                options.file_category,
-                ComplianceLevel.STANDARD
+                options.file_category, ComplianceLevel.STANDARD
             )
 
             # Initialize compliance check
             compliance = ComplianceCheck(
-                required_level=required_level,
-                current_level=ComplianceLevel.STANDARD
+                required_level=required_level, current_level=ComplianceLevel.STANDARD
             )
 
             # Detect PII in content
@@ -221,14 +226,16 @@ class SecurityManager:
             await self._check_general_privacy_compliance(compliance, pii_result)
 
             # Determine if encryption is required
-            compliance.encryption_required = (
-                pii_result.has_pii or
-                required_level in [ComplianceLevel.FERPA, ComplianceLevel.COPPA, ComplianceLevel.HIPAA]
-            )
+            compliance.encryption_required = pii_result.has_pii or required_level in [
+                ComplianceLevel.FERPA,
+                ComplianceLevel.COPPA,
+                ComplianceLevel.HIPAA,
+            ]
 
             # Set retention requirements
             compliance.retention_required = required_level in [
-                ComplianceLevel.FERPA, ComplianceLevel.COPPA
+                ComplianceLevel.FERPA,
+                ComplianceLevel.COPPA,
             ]
 
             # Generate recommendations
@@ -244,16 +251,9 @@ class SecurityManager:
 
         except Exception as e:
             logger.error(f"Compliance check failed: {e}")
-            return ComplianceCheck(
-                is_compliant=False,
-                issues=[f"Compliance check error: {str(e)}"]
-            )
+            return ComplianceCheck(is_compliant=False, issues=[f"Compliance check error: {str(e)}"])
 
-    async def detect_pii(
-        self,
-        file_data: bytes,
-        filename: str
-    ) -> PIIDetectionResult:
+    async def detect_pii(self, file_data: bytes, filename: str) -> PIIDetectionResult:
         """
         Detect personally identifiable information in file content.
 
@@ -300,7 +300,9 @@ class SecurityManager:
             if result.has_pii:
                 result.recommendations = await self._generate_pii_recommendations(result)
 
-            logger.debug(f"PII detection completed for {filename}: {len(result.pii_types)} types found")
+            logger.debug(
+                f"PII detection completed for {filename}: {len(result.pii_types)} types found"
+            )
             return result
 
         except Exception as e:
@@ -309,11 +311,8 @@ class SecurityManager:
             return result
 
     async def encrypt_sensitive_file(
-        self,
-        file_data: bytes,
-        organization_id: str,
-        additional_context: Optional[str] = None
-    ) -> Tuple[bytes, Dict[str, Any]]:
+        self, file_data: bytes, organization_id: str, additional_context: str | None = None
+    ) -> tuple[bytes, dict[str, Any]]:
         """
         Encrypt sensitive file data.
 
@@ -333,7 +332,7 @@ class SecurityManager:
                     "encrypted": False,
                     "algorithm": "mock",
                     "key_id": "mock_key",
-                    "context": additional_context
+                    "context": additional_context,
                 }
 
             # Generate organization-specific salt
@@ -347,9 +346,9 @@ class SecurityManager:
                 "encrypted": True,
                 "algorithm": "Fernet",
                 "key_id": self._get_key_id(),
-                "salt": base64.b64encode(salt).decode('utf-8'),
+                "salt": base64.b64encode(salt).decode("utf-8"),
                 "context": additional_context,
-                "encrypted_at": datetime.utcnow().isoformat()
+                "encrypted_at": datetime.utcnow().isoformat(),
             }
 
             logger.info(f"File encrypted for organization {organization_id}")
@@ -360,10 +359,7 @@ class SecurityManager:
             raise ValueError(f"Encryption failed: {str(e)}")
 
     async def decrypt_sensitive_file(
-        self,
-        encrypted_data: bytes,
-        metadata: Dict[str, Any],
-        organization_id: str
+        self, encrypted_data: bytes, metadata: dict[str, Any], organization_id: str
     ) -> bytes:
         """
         Decrypt sensitive file data.
@@ -400,8 +396,8 @@ class SecurityManager:
         user_id: str,
         organization_id: str,
         action: str = "read",
-        context: Optional[Dict[str, Any]] = None
-    ) -> Tuple[bool, List[str]]:
+        context: dict[str, Any] | None = None,
+    ) -> tuple[bool, list[str]]:
         """
         Validate access control for file operations.
 
@@ -459,10 +455,10 @@ class SecurityManager:
         self,
         event_type: str,
         organization_id: str,
-        user_id: Optional[str] = None,
-        resource_id: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
-        severity: str = "info"
+        user_id: str | None = None,
+        resource_id: str | None = None,
+        details: dict[str, Any] | None = None,
+        severity: str = "info",
     ) -> None:
         """
         Log security-related events for audit trails.
@@ -486,7 +482,7 @@ class SecurityManager:
                 "timestamp": datetime.utcnow().isoformat(),
                 "details": details or {},
                 "ip_address": details.get("ip_address") if details else None,
-                "user_agent": details.get("user_agent") if details else None
+                "user_agent": details.get("user_agent") if details else None,
             }
 
             # Store in audit log (would integrate with logging system)
@@ -507,7 +503,7 @@ class SecurityManager:
             kdf = PBKDF2HMAC(
                 algorithm=hashes.SHA256(),
                 length=32,
-                salt=b'stable_salt_for_toolbox_ai',  # In production, use random salt per org
+                salt=b"stable_salt_for_toolbox_ai",  # In production, use random salt per org
                 iterations=100000,
             )
             key = base64.urlsafe_b64encode(kdf.derive(key_bytes))
@@ -521,51 +517,51 @@ class SecurityManager:
         """Compile regular expressions for PII detection"""
         self.pii_patterns = {
             PIIType.SSN: [
-                (r'\b\d{3}-\d{2}-\d{4}\b', 0.9),  # XXX-XX-XXXX
-                (r'\b\d{3}\s\d{2}\s\d{4}\b', 0.8),  # XXX XX XXXX
-                (r'\b\d{9}\b', 0.6),  # XXXXXXXXX
+                (r"\b\d{3}-\d{2}-\d{4}\b", 0.9),  # XXX-XX-XXXX
+                (r"\b\d{3}\s\d{2}\s\d{4}\b", 0.8),  # XXX XX XXXX
+                (r"\b\d{9}\b", 0.6),  # XXXXXXXXX
             ],
             PIIType.EMAIL: [
-                (r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', 0.95),
+                (r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", 0.95),
             ],
             PIIType.PHONE: [
-                (r'\b\(\d{3}\)\s?\d{3}-\d{4}\b', 0.9),  # (XXX) XXX-XXXX
-                (r'\b\d{3}-\d{3}-\d{4}\b', 0.85),  # XXX-XXX-XXXX
-                (r'\b\d{10}\b', 0.6),  # XXXXXXXXXX
+                (r"\b\(\d{3}\)\s?\d{3}-\d{4}\b", 0.9),  # (XXX) XXX-XXXX
+                (r"\b\d{3}-\d{3}-\d{4}\b", 0.85),  # XXX-XXX-XXXX
+                (r"\b\d{10}\b", 0.6),  # XXXXXXXXXX
             ],
             PIIType.CREDIT_CARD: [
-                (r'\b4[0-9]{12}(?:[0-9]{3})?\b', 0.9),  # Visa
-                (r'\b5[1-5][0-9]{14}\b', 0.9),  # MasterCard
-                (r'\b3[47][0-9]{13}\b', 0.9),  # American Express
+                (r"\b4[0-9]{12}(?:[0-9]{3})?\b", 0.9),  # Visa
+                (r"\b5[1-5][0-9]{14}\b", 0.9),  # MasterCard
+                (r"\b3[47][0-9]{13}\b", 0.9),  # American Express
             ],
             PIIType.STUDENT_ID: [
-                (r'\bstudent\s?id[\s:]*([A-Z0-9]{6,12})\b', 0.8),
-                (r'\bstudent\s?number[\s:]*([A-Z0-9]{6,12})\b', 0.8),
+                (r"\bstudent\s?id[\s:]*([A-Z0-9]{6,12})\b", 0.8),
+                (r"\bstudent\s?number[\s:]*([A-Z0-9]{6,12})\b", 0.8),
             ],
             PIIType.DOB: [
-                (r'\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b', 0.7),
-                (r'\b\d{4}[/-]\d{1,2}[/-]\d{1,2}\b', 0.7),
-            ]
+                (r"\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b", 0.7),
+                (r"\b\d{4}[/-]\d{1,2}[/-]\d{1,2}\b", 0.7),
+            ],
         }
 
     async def _extract_text_content(self, file_data: bytes, filename: str) -> str:
         """Extract text content from file for analysis"""
         try:
             # Try to decode as text first
-            for encoding in ['utf-8', 'latin1', 'cp1252']:
+            for encoding in ["utf-8", "latin1", "cp1252"]:
                 try:
                     return file_data.decode(encoding)
                 except UnicodeDecodeError:
                     continue
 
             # For binary files, try to extract text based on type
-            file_ext = filename.lower().split('.')[-1] if '.' in filename else ''
+            file_ext = filename.lower().split(".")[-1] if "." in filename else ""
 
-            if file_ext == 'pdf':
+            if file_ext == "pdf":
                 return await self._extract_pdf_text(file_data)
-            elif file_ext in ['doc', 'docx']:
+            elif file_ext in ["doc", "docx"]:
                 return await self._extract_doc_text(file_data)
-            elif file_ext in ['jpg', 'jpeg', 'png']:
+            elif file_ext in ["jpg", "jpeg", "png"]:
                 return await self._extract_image_text(file_data)
 
             return ""
@@ -605,7 +601,7 @@ class SecurityManager:
 
         return SecurityRisk.LOW
 
-    async def _generate_pii_recommendations(self, pii_result: PIIDetectionResult) -> List[str]:
+    async def _generate_pii_recommendations(self, pii_result: PIIDetectionResult) -> list[str]:
         """Generate recommendations based on PII detection"""
         recommendations = []
 
@@ -624,10 +620,7 @@ class SecurityManager:
         return recommendations
 
     async def _check_coppa_compliance(
-        self,
-        compliance: ComplianceCheck,
-        options: UploadOptions,
-        context: Optional[Dict[str, Any]]
+        self, compliance: ComplianceCheck, options: UploadOptions, context: dict[str, Any] | None
     ) -> None:
         """Check COPPA compliance requirements"""
         if compliance.required_level == ComplianceLevel.COPPA:
@@ -642,10 +635,7 @@ class SecurityManager:
                 compliance.encryption_required = True
 
     async def _check_ferpa_compliance(
-        self,
-        compliance: ComplianceCheck,
-        options: UploadOptions,
-        context: Optional[Dict[str, Any]]
+        self, compliance: ComplianceCheck, options: UploadOptions, context: dict[str, Any] | None
     ) -> None:
         """Check FERPA compliance requirements"""
         if compliance.required_level == ComplianceLevel.FERPA:
@@ -658,9 +648,7 @@ class SecurityManager:
                 compliance.issues.append("FERPA: Student opted out of directory information")
 
     async def _check_general_privacy_compliance(
-        self,
-        compliance: ComplianceCheck,
-        pii_result: PIIDetectionResult
+        self, compliance: ComplianceCheck, pii_result: PIIDetectionResult
     ) -> None:
         """Check general privacy compliance requirements"""
         if pii_result.has_pii:
@@ -669,9 +657,7 @@ class SecurityManager:
                 compliance.requirements.append("Encryption required for high-risk PII")
 
     async def _generate_security_recommendations(
-        self,
-        compliance: ComplianceCheck,
-        pii_result: PIIDetectionResult
+        self, compliance: ComplianceCheck, pii_result: PIIDetectionResult
     ) -> None:
         """Generate security recommendations"""
         if compliance.encryption_required:
@@ -691,32 +677,25 @@ class SecurityManager:
         """Get encryption key identifier"""
         return "toolbox_ai_main_key_v1"
 
-    async def _get_file_metadata(self, file_id: UUID) -> Optional[Dict[str, Any]]:
+    async def _get_file_metadata(self, file_id: UUID) -> dict[str, Any] | None:
         """Get file metadata from database"""
         # Would query your File model
         return {
             "id": str(file_id),
             "organization_id": "test_org",
             "category": "student_submission",
-            "requires_consent": False
+            "requires_consent": False,
         }
 
     async def _check_user_permissions(
-        self,
-        user_id: str,
-        file_metadata: Dict[str, Any],
-        action: str
+        self, user_id: str, file_metadata: dict[str, Any], action: str
     ) -> bool:
         """Check user permissions for file action"""
         # Would check user roles and permissions
         return True
 
     async def _check_file_access_rules(
-        self,
-        file_id: UUID,
-        user_id: str,
-        action: str,
-        context: Optional[Dict[str, Any]]
+        self, file_id: UUID, user_id: str, action: str, context: dict[str, Any] | None
     ) -> bool:
         """Check file-specific access rules"""
         # Would check custom access rules
@@ -724,11 +703,11 @@ class SecurityManager:
 
     async def _check_compliance_access(
         self,
-        file_metadata: Dict[str, Any],
+        file_metadata: dict[str, Any],
         user_id: str,
         action: str,
-        context: Optional[Dict[str, Any]]
-    ) -> List[str]:
+        context: dict[str, Any] | None,
+    ) -> list[str]:
         """Check compliance-based access restrictions"""
         violations = []
 
@@ -739,7 +718,7 @@ class SecurityManager:
 
         return violations
 
-    async def _store_audit_event(self, event_record: Dict[str, Any]) -> None:
+    async def _store_audit_event(self, event_record: dict[str, Any]) -> None:
         """Store audit event in logging system"""
         # Would store in audit log database or external SIEM
         logger.info(f"Audit event: {event_record['event_type']}")

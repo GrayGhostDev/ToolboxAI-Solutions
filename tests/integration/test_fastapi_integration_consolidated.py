@@ -1,14 +1,17 @@
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest_asyncio
+
 """
 Consolidated FastAPI Integration Tests
 Combines functionality from minimal, comprehensive, and integration test files
 """
 import pytest
 from httpx import AsyncClient
+
 from apps.backend.main import app
 
 # All test functions from the original files would be merged here

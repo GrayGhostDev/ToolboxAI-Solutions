@@ -6,44 +6,43 @@ and health checks to ensure the complete environment works correctly.
 """
 
 import asyncio
-import json
-import os
 import time
-from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Any
-import pytest
+
 import aiohttp
 import asyncpg
-import redis.asyncio as redis
 import docker
-from docker.models.containers import Container
+import pytest
+import redis.asyncio as redis
 import yaml
-import psutil
-import tempfile
 
 from tests.fixtures.docker_test_helper import DockerTestHelper
+
 
 # Mock missing helpers since they weren't created
 class ServiceMonitor:
     """Simple service monitor for tests."""
+
     def __init__(self):
         self.services = {}
 
     def check_service(self, name, port):
         """Check if a service is running on a port."""
         import socket
+
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(1)
-            result = sock.connect_ex(('localhost', port))
+            result = sock.connect_ex(("localhost", port))
             sock.close()
             return result == 0
         except:
             return False
 
+
 class IntegrationHealthChecker:
     """Simple health checker for integration tests."""
+
     def __init__(self):
         self.checks = []
 
@@ -81,13 +80,17 @@ class TestDockerServicesIntegration:
             "prometheus": {"host": "localhost", "port": 9090, "timeout": 30},
             "grafana": {"host": "localhost", "port": 3000, "timeout": 30},
             "loki": {"host": "localhost", "port": 3100, "timeout": 30},
-            "jaeger": {"host": "localhost", "port": 16686, "timeout": 30}
+            "jaeger": {"host": "localhost", "port": 16686, "timeout": 30},
         }
 
         # Expected environment variables
         self.required_env_vars = [
-            "POSTGRES_DB", "POSTGRES_USER", "POSTGRES_PASSWORD",
-            "JWT_SECRET_KEY", "PUSHER_KEY", "PUSHER_SECRET"
+            "POSTGRES_DB",
+            "POSTGRES_USER",
+            "POSTGRES_PASSWORD",
+            "JWT_SECRET_KEY",
+            "PUSHER_KEY",
+            "PUSHER_SECRET",
         ]
 
     def teardown_method(self):
@@ -105,10 +108,14 @@ class TestDockerServicesIntegration:
 
         # Check each expected service
         expected_services = [
-            "toolboxai-postgres", "toolboxai-redis", "toolboxai-fastapi",
-            "toolboxai-mcp-server", "toolboxai-agent-coordinator",
-            "toolboxai-flask-bridge", "toolboxai-dashboard-frontend",
-            "toolboxai-ghost"
+            "toolboxai-postgres",
+            "toolboxai-redis",
+            "toolboxai-fastapi",
+            "toolboxai-mcp-server",
+            "toolboxai-agent-coordinator",
+            "toolboxai-flask-bridge",
+            "toolboxai-dashboard-frontend",
+            "toolboxai-ghost",
         ]
 
         running_services = []
@@ -118,7 +125,9 @@ class TestDockerServicesIntegration:
                 assert container.status == "running", f"Service {service} is not running"
                 running_services.append(service)
 
-        assert len(running_services) >= 6, f"Expected at least 6 services, got {len(running_services)}"
+        assert (
+            len(running_services) >= 6
+        ), f"Expected at least 6 services, got {len(running_services)}"
 
     @pytest.mark.asyncio
     async def test_database_connection_and_operations(self):
@@ -128,7 +137,7 @@ class TestDockerServicesIntegration:
             "port": 5434,
             "database": "educational_platform_dev",
             "user": "eduplatform",
-            "password": "eduplatform2024"
+            "password": "eduplatform2024",
         }
 
         # Test connection
@@ -142,8 +151,7 @@ class TestDockerServicesIntegration:
 
             # Test database exists
             db_exists = await conn.fetchval(
-                "SELECT 1 FROM pg_database WHERE datname = $1",
-                "educational_platform_dev"
+                "SELECT 1 FROM pg_database WHERE datname = $1", "educational_platform_dev"
             )
             assert db_exists == 1
 
@@ -180,9 +188,7 @@ class TestDockerServicesIntegration:
         redis_client = None
         try:
             redis_client = await redis.from_url(
-                "redis://localhost:6381/0",
-                decode_responses=True,
-                socket_connect_timeout=10
+                "redis://localhost:6381/0", decode_responses=True, socket_connect_timeout=10
             )
 
             # Test ping
@@ -259,16 +265,24 @@ class TestDockerServicesIntegration:
                 "/api/v1/classes",
                 "/api/v1/lessons",
                 "/api/v1/assessments",
-                "/api/v1/agents/status"
+                "/api/v1/agents/status",
             ]
 
             for endpoint in endpoints_to_test:
                 try:
                     async with session.get(f"{base_url}{endpoint}") as response:
                         # Should not be 500 (server error) or 404 (not found)
-                        assert response.status not in [500, 404], f"Endpoint {endpoint} returned {response.status}"
+                        assert response.status not in [
+                            500,
+                            404,
+                        ], f"Endpoint {endpoint} returned {response.status}"
                         # 401/403 is acceptable for auth-protected endpoints
-                        assert response.status in [200, 401, 403, 422], f"Unexpected status {response.status} for {endpoint}"
+                        assert response.status in [
+                            200,
+                            401,
+                            403,
+                            422,
+                        ], f"Unexpected status {response.status} for {endpoint}"
                 except Exception as e:
                     pytest.fail(f"Failed to reach endpoint {endpoint}: {e}")
 
@@ -393,15 +407,11 @@ class TestDockerServicesIntegration:
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
 
             # Test Pusher auth endpoint
-            auth_data = {
-                "socket_id": "123456.789",
-                "channel_name": "private-test-channel"
-            }
+            auth_data = {"socket_id": "123456.789", "channel_name": "private-test-channel"}
 
             try:
                 async with session.post(
-                    f"{base_url}/api/v1/pusher/auth",
-                    json=auth_data
+                    f"{base_url}/api/v1/pusher/auth", json=auth_data
                 ) as response:
                     # Should require authentication
                     assert response.status in [200, 401, 403, 422]
@@ -425,7 +435,7 @@ class TestDockerServicesIntegration:
         assert compose_file.exists(), "Docker Compose file not found"
 
         # Parse compose file
-        with open(compose_file, 'r') as f:
+        with open(compose_file) as f:
             compose_config = yaml.safe_load(f)
 
         services = compose_config.get("services", {})
@@ -465,11 +475,9 @@ class TestDockerServicesIntegration:
                 # Get container creation time
                 inspect_data = self.docker_client.api.inspect_container(container.id)
                 created_time = inspect_data["Created"]
-                container_info.append({
-                    "name": container.name,
-                    "created": created_time,
-                    "status": container.status
-                })
+                container_info.append(
+                    {"name": container.name, "created": created_time, "status": container.status}
+                )
 
         # Sort by creation time
         container_info.sort(key=lambda x: x["created"])
@@ -478,8 +486,12 @@ class TestDockerServicesIntegration:
         early_services = ["postgres", "redis"]
         later_services = ["fastapi", "dashboard", "mcp-server", "agent-coordinator"]
 
-        early_containers = [c for c in container_info if any(svc in c["name"] for svc in early_services)]
-        later_containers = [c for c in container_info if any(svc in c["name"] for svc in later_services)]
+        early_containers = [
+            c for c in container_info if any(svc in c["name"] for svc in early_services)
+        ]
+        later_containers = [
+            c for c in container_info if any(svc in c["name"] for svc in later_services)
+        ]
 
         if early_containers and later_containers:
             # Basic sanity check - database should exist
@@ -506,7 +518,9 @@ class TestDockerServicesIntegration:
                 containers = network.attrs.get("Containers", {})
 
                 # Should have multiple containers connected
-                assert len(containers) >= 2, f"Network {network_name} should have multiple containers"
+                assert (
+                    len(containers) >= 2
+                ), f"Network {network_name} should have multiple containers"
 
         except Exception as e:
             pytest.skip(f"Docker network test skipped: {e}")
@@ -527,7 +541,9 @@ class TestDockerServicesIntegration:
                 memory_usage = stats["memory_stats"]
                 if "usage" in memory_usage and "limit" in memory_usage:
                     usage_percent = (memory_usage["usage"] / memory_usage["limit"]) * 100
-                    assert usage_percent < 90, f"Container {container.name} using {usage_percent:.1f}% memory"
+                    assert (
+                        usage_percent < 90
+                    ), f"Container {container.name} using {usage_percent:.1f}% memory"
 
                 # Check CPU usage is reasonable
                 cpu_stats = stats["cpu_stats"]
@@ -559,7 +575,10 @@ class TestDockerServicesIntegration:
                     health_results[container.name] = status
 
                     # Should be healthy or starting
-                    assert status in ["healthy", "starting"], f"Container {container.name} health: {status}"
+                    assert status in [
+                        "healthy",
+                        "starting",
+                    ], f"Container {container.name} health: {status}"
                 else:
                     # No health check defined
                     health_results[container.name] = "no_healthcheck"
@@ -569,7 +588,9 @@ class TestDockerServicesIntegration:
 
         # At least some containers should have health checks
         healthy_containers = [k for k, v in health_results.items() if v == "healthy"]
-        assert len(healthy_containers) >= 1, f"At least 1 container should be healthy. Results: {health_results}"
+        assert (
+            len(healthy_containers) >= 1
+        ), f"At least 1 container should be healthy. Results: {health_results}"
 
     @pytest.mark.asyncio
     async def test_data_persistence(self):
@@ -581,7 +602,7 @@ class TestDockerServicesIntegration:
             "port": 5434,
             "database": "educational_platform_dev",
             "user": "eduplatform",
-            "password": "eduplatform2024"
+            "password": "eduplatform2024",
         }
 
         test_data = f"persistence_test_{int(time.time())}"
@@ -593,15 +614,11 @@ class TestDockerServicesIntegration:
             await conn.execute(
                 "CREATE TABLE IF NOT EXISTS test_persistence (id SERIAL PRIMARY KEY, data TEXT, created_at TIMESTAMP DEFAULT NOW());"
             )
-            await conn.execute(
-                "INSERT INTO test_persistence (data) VALUES ($1);",
-                test_data
-            )
+            await conn.execute("INSERT INTO test_persistence (data) VALUES ($1);", test_data)
 
             # Verify data exists
             result = await conn.fetchval(
-                "SELECT data FROM test_persistence WHERE data = $1;",
-                test_data
+                "SELECT data FROM test_persistence WHERE data = $1;", test_data
             )
             assert result == test_data
 
@@ -626,7 +643,9 @@ class TestDockerServicesIntegration:
         async def make_request(session, url, semaphore):
             async with semaphore:
                 try:
-                    async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as response:
+                    async with session.get(
+                        url, timeout=aiohttp.ClientTimeout(total=10)
+                    ) as response:
                         return response.status
                 except Exception:
                     return 500
@@ -666,8 +685,10 @@ class TestDockerServicesIntegration:
             assert container.status == "running", f"Celery worker {container.name} is not running"
 
             # Check worker logs for successful startup
-            logs = container.logs(tail=50).decode('utf-8')
-            assert "ready" in logs.lower() or "started" in logs.lower(), "Celery worker should be ready"
+            logs = container.logs(tail=50).decode("utf-8")
+            assert (
+                "ready" in logs.lower() or "started" in logs.lower()
+            ), "Celery worker should be ready"
 
         # Test Flower monitoring interface
         flower_url = "http://localhost:5555"
@@ -697,8 +718,10 @@ class TestDockerServicesIntegration:
             assert container.status == "running", f"Celery beat {container.name} is not running"
 
             # Check beat logs for scheduled tasks
-            logs = container.logs(tail=50).decode('utf-8')
-            assert "beat" in logs.lower() or "scheduler" in logs.lower(), "Celery beat should be scheduling"
+            logs = container.logs(tail=50).decode("utf-8")
+            assert (
+                "beat" in logs.lower() or "scheduler" in logs.lower()
+            ), "Celery beat should be scheduling"
 
     @pytest.mark.asyncio
     async def test_roblox_sync_service(self):
@@ -858,11 +881,11 @@ class TestDockerServicesIntegration:
         for container in toolboxai_containers:
             try:
                 # Get recent logs
-                logs = container.logs(tail=10, timestamps=True).decode('utf-8')
+                logs = container.logs(tail=10, timestamps=True).decode("utf-8")
                 log_results[container.name] = {
                     "has_logs": len(logs) > 0,
                     "log_length": len(logs),
-                    "recent_logs": logs[-500:] if logs else ""  # Last 500 chars
+                    "recent_logs": logs[-500:] if logs else "",  # Last 500 chars
                 }
 
                 # Should have some log output
@@ -872,8 +895,9 @@ class TestDockerServicesIntegration:
                 log_results[container.name] = {"error": str(e)}
 
         # At least one container should have logs
-        containers_with_logs = sum(1 for r in log_results.values()
-                                 if isinstance(r, dict) and r.get("has_logs"))
+        containers_with_logs = sum(
+            1 for r in log_results.values() if isinstance(r, dict) and r.get("has_logs")
+        )
         assert containers_with_logs >= 1, "At least one container should have logs"
 
 
@@ -900,17 +924,22 @@ class TestDockerPerformanceIntegration:
 
                     if created and started:
                         from datetime import datetime
-                        created_time = datetime.fromisoformat(created.replace('Z', '+00:00'))
-                        started_time = datetime.fromisoformat(started.replace('Z', '+00:00'))
+
+                        created_time = datetime.fromisoformat(created.replace("Z", "+00:00"))
+                        started_time = datetime.fromisoformat(started.replace("Z", "+00:00"))
 
                         startup_duration = (started_time - created_time).total_seconds()
                         startup_times[container.name] = startup_duration
 
                         # Reasonable startup time limits
                         if "postgres" in container.name or "redis" in container.name:
-                            assert startup_duration < 30, f"{container.name} took {startup_duration}s to start"
+                            assert (
+                                startup_duration < 30
+                            ), f"{container.name} took {startup_duration}s to start"
                         else:
-                            assert startup_duration < 120, f"{container.name} took {startup_duration}s to start"
+                            assert (
+                                startup_duration < 120
+                            ), f"{container.name} took {startup_duration}s to start"
 
                 except Exception as e:
                     print(f"Could not get startup time for {container.name}: {e}")
@@ -921,9 +950,9 @@ class TestDockerPerformanceIntegration:
 
         services_to_test = [
             ("http://localhost:8009/health", 2.0),  # FastAPI health
-            ("http://localhost:5179/", 5.0),         # Dashboard
-            ("http://localhost:9877/health", 3.0),   # MCP Server
-            ("http://localhost:8888/health", 3.0),   # Agent Coordinator
+            ("http://localhost:5179/", 5.0),  # Dashboard
+            ("http://localhost:9877/health", 3.0),  # MCP Server
+            ("http://localhost:8888/health", 3.0),  # Agent Coordinator
         ]
 
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
@@ -936,7 +965,9 @@ class TestDockerPerformanceIntegration:
                         response_time = end_time - start_time
 
                         assert response.status == 200, f"Service {url} not healthy"
-                        assert response_time < max_time, f"Service {url} took {response_time:.2f}s (max: {max_time}s)"
+                        assert (
+                            response_time < max_time
+                        ), f"Service {url} took {response_time:.2f}s (max: {max_time}s)"
 
                 except Exception as e:
                     pytest.skip(f"Could not test {url}: {e}")

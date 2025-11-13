@@ -4,15 +4,15 @@ Exposes the intelligent agent swarm functionality through REST APIs,
 enabling natural, interactive conversations for educational content creation.
 """
 
-from typing import Dict, List, Any, Optional
-from datetime import datetime
-import logging
-
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
-from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
 import asyncio
 import json
+import logging
+from datetime import datetime
+from typing import Any
+
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field
 
 # Import the actual orchestration controller with real agents
 from core.swarm.orchestration_controller import OrchestrationController
@@ -23,8 +23,8 @@ class ChatMessage(BaseModel):
     """User chat message."""
 
     message: str
-    session_id: Optional[str] = None
-    context: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    session_id: str | None = None
+    context: dict[str, Any] | None = Field(default_factory=dict)
 
 
 class ChatResponse(BaseModel):
@@ -33,9 +33,9 @@ class ChatResponse(BaseModel):
     success: bool
     session_id: str
     message: str
-    data: Optional[Dict[str, Any]] = None
-    suggestions: Optional[List[str]] = None
-    context: Optional[Dict[str, Any]] = None
+    data: dict[str, Any] | None = None
+    suggestions: list[str] | None = None
+    context: dict[str, Any] | None = None
 
 
 class AgentTaskRequest(BaseModel):
@@ -43,8 +43,8 @@ class AgentTaskRequest(BaseModel):
 
     agent_type: str
     task_type: str
-    data: Dict[str, Any]
-    session_id: Optional[str] = None
+    data: dict[str, Any]
+    session_id: str | None = None
 
 
 class AgentTaskResponse(BaseModel):
@@ -52,7 +52,7 @@ class AgentTaskResponse(BaseModel):
 
     success: bool
     agent: str
-    result: Dict[str, Any]
+    result: dict[str, Any]
     execution_time: float
 
 
@@ -62,8 +62,8 @@ class SessionInfo(BaseModel):
     session_id: str
     started_at: datetime
     state: str
-    accumulated_context: Dict[str, Any]
-    completed_tasks: List[str]
+    accumulated_context: dict[str, Any]
+    completed_tasks: list[str]
 
 
 class SwarmStatus(BaseModel):
@@ -73,7 +73,7 @@ class SwarmStatus(BaseModel):
     active_sessions: int
     total_interactions: int
     success_rate: float
-    agents_available: List[str]
+    agents_available: list[str]
 
 
 # Create router
@@ -273,7 +273,7 @@ async def get_session_info(
 @router.delete("/session/{session_id}")
 async def clear_session(
     session_id: str, controller: OrchestrationController = Depends(get_orchestration_controller)
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """
     Clear a specific session.
 
@@ -313,7 +313,7 @@ async def get_swarm_status(
 @router.post("/reset")
 async def reset_swarm(
     controller: OrchestrationController = Depends(get_orchestration_controller),
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """
     Reset the agent swarm system.
 
@@ -336,8 +336,8 @@ async def create_lesson(
     grade_level: str,
     subject: str,
     topic: str,
-    objectives: Optional[List[str]] = None,
-    session_id: Optional[str] = None,
+    objectives: list[str] | None = None,
+    session_id: str | None = None,
     controller: OrchestrationController = Depends(get_orchestration_controller),
 ) -> ChatResponse:
     """
@@ -380,9 +380,9 @@ async def create_assessment(
     assessment_type: str,
     grade_level: str,
     subject: str,
-    topics: List[str],
+    topics: list[str],
     num_questions: int = 10,
-    session_id: Optional[str] = None,
+    session_id: str | None = None,
     controller: OrchestrationController = Depends(get_orchestration_controller),
 ) -> ChatResponse:
     """
@@ -424,8 +424,8 @@ async def create_assessment(
 @router.post("/analyze/progress")
 async def analyze_student_progress(
     student_id: str,
-    performance_data: Dict[str, Any],
-    session_id: Optional[str] = None,
+    performance_data: dict[str, Any],
+    session_id: str | None = None,
     controller: OrchestrationController = Depends(get_orchestration_controller),
 ) -> ChatResponse:
     """
@@ -460,9 +460,9 @@ async def analyze_student_progress(
 
 @router.post("/personalize")
 async def personalize_content(
-    content: Dict[str, Any],
-    student_profile: Dict[str, Any],
-    session_id: Optional[str] = None,
+    content: dict[str, Any],
+    student_profile: dict[str, Any],
+    session_id: str | None = None,
     controller: OrchestrationController = Depends(get_orchestration_controller),
 ) -> ChatResponse:
     """

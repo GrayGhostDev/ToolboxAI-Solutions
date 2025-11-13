@@ -15,28 +15,26 @@ Features:
 - Pusher event tracking
 """
 
-import time
-from typing import Dict, Any, Optional, List
-from collections import defaultdict
-from functools import wraps
 import asyncio
 import logging
+import time
 from contextlib import asynccontextmanager
+from functools import wraps
+from typing import Any
 
-from prometheus_client import (
-    Counter,
-    Histogram,
-    Gauge,
-    Info,
-    Enum,
-    CollectorRegistry,
-    generate_latest,
-    CONTENT_TYPE_LATEST,
-    start_http_server,
-    REGISTRY,
-)
 from fastapi import FastAPI, Response
 from fastapi.responses import PlainTextResponse
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    REGISTRY,
+    CollectorRegistry,
+    Counter,
+    Enum,
+    Gauge,
+    Histogram,
+    Info,
+    generate_latest,
+)
 
 # Import settings
 from apps.backend.core.config import settings
@@ -56,7 +54,7 @@ class ToolBoxAIMetrics:
     - Database performance
     """
 
-    def __init__(self, registry: Optional[CollectorRegistry] = None):
+    def __init__(self, registry: CollectorRegistry | None = None):
         self.registry = registry or REGISTRY
         self._init_metrics()
         self._init_business_metrics()
@@ -410,9 +408,9 @@ class ToolBoxAIMetrics:
         status_code: int,
         duration: float,
         handler: str = "unknown",
-        request_size: Optional[int] = None,
-        response_size: Optional[int] = None,
-        error_type: Optional[str] = None,
+        request_size: int | None = None,
+        response_size: int | None = None,
+        error_type: str | None = None,
     ):
         """Record a completed HTTP request with all metrics"""
 
@@ -605,7 +603,7 @@ metrics = ToolBoxAIMetrics()
 
 
 # Decorator for timing functions
-def time_function(metric_name: str = None, labels: Dict[str, str] = None):
+def time_function(metric_name: str = None, labels: dict[str, str] = None):
     """Decorator to time function execution"""
 
     def decorator(func):
@@ -625,7 +623,7 @@ def time_function(metric_name: str = None, labels: Dict[str, str] = None):
                         metric.observe(duration)
 
                 return result
-            except Exception as e:
+            except Exception:
                 duration = time.time() - start_time
 
                 # Record error
@@ -654,7 +652,7 @@ def time_function(metric_name: str = None, labels: Dict[str, str] = None):
                         metric.observe(duration)
 
                 return result
-            except Exception as e:
+            except Exception:
                 duration = time.time() - start_time
 
                 # Record error
@@ -693,7 +691,7 @@ def setup_metrics_endpoint(app: FastAPI, path: str = "/metrics"):
 
 
 # Health check function for metrics
-def check_metrics_health() -> Dict[str, Any]:
+def check_metrics_health() -> dict[str, Any]:
     """Check metrics system health"""
     try:
         # Test metric generation

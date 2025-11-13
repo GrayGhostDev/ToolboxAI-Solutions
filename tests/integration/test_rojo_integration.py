@@ -5,16 +5,18 @@ Test script to verify Rojo integration setup
 
 import json
 import os
-import pytest
 import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 # Skip all tests in this module as they require external services
 pytestmark = pytest.mark.skipif(
-    not os.environ.get('RUN_INTEGRATION_TESTS'),
-    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
+    not os.environ.get("RUN_INTEGRATION_TESTS"),
+    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable",
 )
+
 
 def test_file_exists(file_path, description):
     """Test if a file exists"""
@@ -25,10 +27,11 @@ def test_file_exists(file_path, description):
         print(f"❌ {description}: {file_path} - NOT FOUND")
         return False
 
+
 def test_json_valid(file_path, description):
     """Test if a JSON file is valid"""
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path) as f:
             json.load(f)
         print(f"✅ {description}: Valid JSON")
         return True
@@ -39,11 +42,12 @@ def test_json_valid(file_path, description):
         print(f"❌ {description}: File not found")
         return False
 
+
 def test_command_exists(command):
     """Test if a command exists in PATH or Aftman bin"""
     # First try the command directly
     try:
-        subprocess.run([command, '--version'], capture_output=True, check=True)
+        subprocess.run([command, "--version"], capture_output=True, check=True)
         print(f"✅ {command}: Available")
         return True
     except (subprocess.CalledProcessError, FileNotFoundError):
@@ -53,7 +57,7 @@ def test_command_exists(command):
     if command == "rojo":
         aftman_rojo = os.path.expanduser("~/.aftman/bin/rojo")
         try:
-            subprocess.run([aftman_rojo, '--version'], capture_output=True, check=True)
+            subprocess.run([aftman_rojo, "--version"], capture_output=True, check=True)
             print(f"✅ {command}: Available (via Aftman)")
             return True
         except (subprocess.CalledProcessError, FileNotFoundError):
@@ -61,6 +65,7 @@ def test_command_exists(command):
 
     print(f"❌ {command}: Not available")
     return False
+
 
 def main():
     """Main test function"""
@@ -135,7 +140,7 @@ def main():
     # Test 12: Validate project structure
     total_tests += 1
     try:
-        with open("default.project.json", 'r') as f:
+        with open("default.project.json") as f:
             project_config = json.load(f)
 
         required_keys = ["name", "tree"]
@@ -166,6 +171,7 @@ def main():
         print("2. Install missing tools: aftman install")
         print("3. Check file permissions")
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -1,23 +1,33 @@
 import pytest_asyncio
+
 """
 Unit tests for the Validation Engine
 
 Tests the comprehensive validation system for Roblox Lua scripts.
 """
 
-import pytest
 import asyncio
-from unittest.mock import Mock, patch, AsyncMock
 from datetime import datetime
+from unittest.mock import AsyncMock, Mock, patch
 
-from core.validation.validation_engine import (
-    ValidationEngine, ValidationRequest, ComprehensiveReport, ValidationStatus
+import pytest
+
+from core.validation.educational_validator import GradeLevel, LearningObjective, Subject
+from core.validation.lua_validator import ValidationIssue, ValidationResult, ValidationSeverity
+from core.validation.quality_checker import QualityLevel, QualityMetrics, QualityReport
+from core.validation.roblox_compliance import ComplianceLevel, ComplianceReport
+from core.validation.security_analyzer import (
+    ExploitType,
+    SecurityFinding,
+    SecurityReport,
+    SecurityThreat,
 )
-from core.validation.educational_validator import GradeLevel, Subject, LearningObjective
-from core.validation.lua_validator import ValidationResult, ValidationIssue, ValidationSeverity
-from core.validation.security_analyzer import SecurityReport, SecurityThreat, SecurityFinding, ExploitType
-from core.validation.quality_checker import QualityReport, QualityLevel, QualityMetrics
-from core.validation.roblox_compliance import ComplianceReport, ComplianceLevel
+from core.validation.validation_engine import (
+    ComprehensiveReport,
+    ValidationEngine,
+    ValidationRequest,
+    ValidationStatus,
+)
 
 
 class TestValidationEngine:

@@ -20,23 +20,17 @@ Standards: Python 3.12, FastAPI async, Pydantic v2
 
 import logging
 from datetime import datetime
-from typing import Annotated, Optional, Any
+from typing import Annotated, Any
 from uuid import UUID
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    status,
-)
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from apps.backend.api.auth.auth import get_current_user, require_org_admin
+from apps.backend.api.auth.auth import require_org_admin
 from apps.backend.core.deps import get_async_db
-from apps.backend.middleware.tenant import get_tenant_context, TenantContext
-from apps.backend.models.schemas import User
+from apps.backend.middleware.tenant import TenantContext, get_tenant_context
 from database.models.tenant import Organization
 
 logger = logging.getLogger(__name__)
@@ -50,6 +44,7 @@ router = APIRouter(
 
 # === Pydantic v2 Models ===
 
+
 class TenantSettingsResponse(BaseModel):
     """Response model for tenant settings with Pydantic v2"""
 
@@ -62,14 +57,14 @@ class TenantSettingsResponse(BaseModel):
     # General settings
     timezone: str
     locale: str
-    display_name: Optional[str] = None
-    description: Optional[str] = None
+    display_name: str | None = None
+    description: str | None = None
 
     # Branding
-    logo_url: Optional[str] = None
-    primary_color: Optional[str] = None
-    secondary_color: Optional[str] = None
-    custom_domain: Optional[str] = None
+    logo_url: str | None = None
+    primary_color: str | None = None
+    secondary_color: str | None = None
+    custom_domain: str | None = None
 
     # Feature flags
     features: list[str] = Field(default_factory=list)
@@ -92,14 +87,14 @@ class TenantSettingsUpdateRequest(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    timezone: Optional[str] = Field(None, max_length=100)
-    locale: Optional[str] = Field(None, max_length=10)
-    display_name: Optional[str] = Field(None, max_length=250)
-    description: Optional[str] = None
-    logo_url: Optional[str] = Field(None, max_length=500)
-    primary_color: Optional[str] = Field(None, pattern="^#[0-9A-Fa-f]{6}$")
-    secondary_color: Optional[str] = Field(None, pattern="^#[0-9A-Fa-f]{6}$")
-    custom_domain: Optional[str] = Field(None, max_length=255)
+    timezone: str | None = Field(None, max_length=100)
+    locale: str | None = Field(None, max_length=10)
+    display_name: str | None = Field(None, max_length=250)
+    description: str | None = None
+    logo_url: str | None = Field(None, max_length=500)
+    primary_color: str | None = Field(None, pattern="^#[0-9A-Fa-f]{6}$")
+    secondary_color: str | None = Field(None, pattern="^#[0-9A-Fa-f]{6}$")
+    custom_domain: str | None = Field(None, max_length=255)
 
 
 class TenantFeaturesResponse(BaseModel):
@@ -204,6 +199,7 @@ class TenantIntegrationsResponse(BaseModel):
 
 # === Dependency Injection ===
 
+
 async def get_current_tenant(
     tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     session: Annotated[AsyncSession, Depends(get_async_db)],
@@ -223,8 +219,7 @@ async def get_current_tenant(
     """
     if not tenant_context.effective_tenant_id:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No tenant context available"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="No tenant context available"
         )
 
     result = await session.execute(
@@ -233,15 +228,13 @@ async def get_current_tenant(
     organization = result.scalar_one_or_none()
 
     if not organization:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Tenant not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
 
     return organization
 
 
 # === API Endpoints ===
+
 
 @router.get(
     "/settings",
@@ -291,7 +284,7 @@ async def get_tenant_settings(
         logger.error(f"Failed to get tenant settings: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get tenant settings"
+            detail="Failed to get tenant settings",
         )
 
 
@@ -364,7 +357,7 @@ async def update_tenant_settings(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update tenant settings"
+            detail="Failed to update tenant settings",
         )
 
 
@@ -392,28 +385,60 @@ async def get_tenant_features(
         # Define available features per tier
         tier_features = {
             "free": ["ai_chat", "gamification", "assessment_builder"],
-            "basic": ["ai_chat", "roblox_integration", "gamification", "assessment_builder", "parent_portal"],
+            "basic": [
+                "ai_chat",
+                "roblox_integration",
+                "gamification",
+                "assessment_builder",
+                "parent_portal",
+            ],
             "professional": [
-                "ai_chat", "roblox_integration", "advanced_analytics", "custom_branding",
-                "api_access", "webhooks", "gamification", "assessment_builder",
-                "content_versioning", "parent_portal", "mobile_app"
+                "ai_chat",
+                "roblox_integration",
+                "advanced_analytics",
+                "custom_branding",
+                "api_access",
+                "webhooks",
+                "gamification",
+                "assessment_builder",
+                "content_versioning",
+                "parent_portal",
+                "mobile_app",
             ],
             "enterprise": [
-                "ai_chat", "roblox_integration", "advanced_analytics", "custom_branding",
-                "sso", "api_access", "webhooks", "advanced_security", "parent_portal",
-                "mobile_app", "gamification", "assessment_builder", "content_versioning",
-                "live_classes", "video_conferencing"
+                "ai_chat",
+                "roblox_integration",
+                "advanced_analytics",
+                "custom_branding",
+                "sso",
+                "api_access",
+                "webhooks",
+                "advanced_security",
+                "parent_portal",
+                "mobile_app",
+                "gamification",
+                "assessment_builder",
+                "content_versioning",
+                "live_classes",
+                "video_conferencing",
             ],
             "education": [
-                "ai_chat", "roblox_integration", "advanced_analytics", "custom_branding",
-                "api_access", "gamification", "assessment_builder", "content_versioning",
-                "parent_portal", "mobile_app", "live_classes"
+                "ai_chat",
+                "roblox_integration",
+                "advanced_analytics",
+                "custom_branding",
+                "api_access",
+                "gamification",
+                "assessment_builder",
+                "content_versioning",
+                "parent_portal",
+                "mobile_app",
+                "live_classes",
             ],
         }
 
         available_features = tier_features.get(
-            tenant.subscription_tier.value,
-            tier_features["free"]
+            tenant.subscription_tier.value, tier_features["free"]
         )
 
         enabled_features = tenant.features if isinstance(tenant.features, list) else []
@@ -428,7 +453,7 @@ async def get_tenant_features(
         logger.error(f"Failed to get tenant features: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get tenant features"
+            detail="Failed to get tenant features",
         )
 
 
@@ -486,28 +511,60 @@ async def toggle_tenant_feature(
         # Get available features for response
         tier_features = {
             "free": ["ai_chat", "gamification", "assessment_builder"],
-            "basic": ["ai_chat", "roblox_integration", "gamification", "assessment_builder", "parent_portal"],
+            "basic": [
+                "ai_chat",
+                "roblox_integration",
+                "gamification",
+                "assessment_builder",
+                "parent_portal",
+            ],
             "professional": [
-                "ai_chat", "roblox_integration", "advanced_analytics", "custom_branding",
-                "api_access", "webhooks", "gamification", "assessment_builder",
-                "content_versioning", "parent_portal", "mobile_app"
+                "ai_chat",
+                "roblox_integration",
+                "advanced_analytics",
+                "custom_branding",
+                "api_access",
+                "webhooks",
+                "gamification",
+                "assessment_builder",
+                "content_versioning",
+                "parent_portal",
+                "mobile_app",
             ],
             "enterprise": [
-                "ai_chat", "roblox_integration", "advanced_analytics", "custom_branding",
-                "sso", "api_access", "webhooks", "advanced_security", "parent_portal",
-                "mobile_app", "gamification", "assessment_builder", "content_versioning",
-                "live_classes", "video_conferencing"
+                "ai_chat",
+                "roblox_integration",
+                "advanced_analytics",
+                "custom_branding",
+                "sso",
+                "api_access",
+                "webhooks",
+                "advanced_security",
+                "parent_portal",
+                "mobile_app",
+                "gamification",
+                "assessment_builder",
+                "content_versioning",
+                "live_classes",
+                "video_conferencing",
             ],
             "education": [
-                "ai_chat", "roblox_integration", "advanced_analytics", "custom_branding",
-                "api_access", "gamification", "assessment_builder", "content_versioning",
-                "parent_portal", "mobile_app", "live_classes"
+                "ai_chat",
+                "roblox_integration",
+                "advanced_analytics",
+                "custom_branding",
+                "api_access",
+                "gamification",
+                "assessment_builder",
+                "content_versioning",
+                "parent_portal",
+                "mobile_app",
+                "live_classes",
             ],
         }
 
         available_features = tier_features.get(
-            tenant.subscription_tier.value,
-            tier_features["free"]
+            tenant.subscription_tier.value, tier_features["free"]
         )
 
         return TenantFeaturesResponse(
@@ -520,8 +577,7 @@ async def toggle_tenant_feature(
         logger.error(f"Failed to toggle feature: {str(e)}", exc_info=True)
         await session.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to toggle feature"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to toggle feature"
         )
 
 
@@ -561,15 +617,18 @@ async def get_tenant_limits(
             users_remaining=max(0, tenant.max_users - tenant.current_users),
             classes_remaining=max(0, tenant.max_classes - tenant.current_classes),
             storage_remaining_gb=max(0.0, tenant.max_storage_gb - tenant.current_storage_gb),
-            api_calls_remaining=max(0, tenant.max_api_calls_per_month - tenant.current_api_calls_this_month),
-            roblox_sessions_remaining=max(0, tenant.max_roblox_sessions - tenant.current_roblox_sessions),
+            api_calls_remaining=max(
+                0, tenant.max_api_calls_per_month - tenant.current_api_calls_this_month
+            ),
+            roblox_sessions_remaining=max(
+                0, tenant.max_roblox_sessions - tenant.current_roblox_sessions
+            ),
         )
 
     except Exception as e:
         logger.error(f"Failed to get tenant limits: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get tenant limits"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get tenant limits"
         )
 
 
@@ -642,7 +701,7 @@ async def update_custom_settings(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update custom settings"
+            detail="Failed to update custom settings",
         )
 
 
@@ -673,7 +732,7 @@ async def get_tenant_integrations(
             name: TenantIntegrationConfig(
                 integration_name=name,
                 enabled=config.get("enabled", False),
-                config=config.get("config", {})
+                config=config.get("config", {}),
             )
             for name, config in integrations_data.items()
         }
@@ -687,5 +746,5 @@ async def get_tenant_integrations(
         logger.error(f"Failed to get tenant integrations: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get tenant integrations"
+            detail="Failed to get tenant integrations",
         )

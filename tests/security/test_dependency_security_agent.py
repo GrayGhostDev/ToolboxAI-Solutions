@@ -1,4 +1,4 @@
-import pytest_asyncio
+
 #!/usr/bin/env python3
 """
 Test script for DependencySecurityAgent
@@ -33,10 +33,7 @@ async def test_dependency_security_agent():
     # Test analysis on current repository
     print("\n🔎 Running dependency security analysis...")
     result = await agent.analyze(
-        scan_python=True,
-        scan_nodejs=True,
-        check_licenses=True,
-        repo_path=str(project_root)
+        scan_python=True, scan_nodejs=True, check_licenses=True, repo_path=str(project_root)
     )
 
     if result["success"]:
@@ -78,10 +75,7 @@ async def test_dependency_security_agent():
     # Test action execution
     print("\n🔧 Testing action execution...")
     action_result = await agent.execute_action(
-        "update_package",
-        package="requests",
-        version="2.31.0",
-        package_manager="pip"
+        "update_package", package="requests", version="2.31.0", package_manager="pip"
     )
 
     if action_result["success"]:

@@ -16,9 +16,9 @@ Author: ToolboxAI Solutions
 Version: 1.0.0
 """
 
+import logging
 import os
 import sys
-import logging
 from pathlib import Path
 
 # Add project root to path for imports
@@ -46,9 +46,10 @@ __version__ = "1.0.0"
 __author__ = "ToolboxAI Solutions"
 __description__ = "AI-Powered Educational Roblox Environment Server"
 
+from .core.config import settings
+
 # Export main components
 from .main import app as fastapi_app
-from .core.config import settings
 
 # Handle imports that might not exist yet but are needed by other components
 try:

@@ -9,18 +9,15 @@ Tests role-based access control including:
 - Permission inheritance
 """
 
-import pytest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 from uuid import uuid4
 
+import pytest
+
 from apps.backend.core.security.rbac_manager import (
-    RBACManager,
-    Role,
     Permission,
-    RoleDefinition,
-    ResourceType,
-    Action,
-    rbac_manager
+    Role,
+    rbac_manager,
 )
 from database.models import User
 
@@ -73,15 +70,15 @@ class TestPermissionManagement:
         admin_perms = rbac.get_role_permissions(Role.ADMIN)
         teacher_perms = rbac.get_role_permissions(Role.TEACHER)
         student_perms = rbac.get_role_permissions(Role.STUDENT)
-        
+
         # Assert
         assert len(admin_perms) > 0
         assert "system:manage" in admin_perms
         assert "user:create:all" in admin_perms
-        
+
         assert len(teacher_perms) > 0
         assert "content:create:organization" in teacher_perms
-        
+
         assert len(student_perms) > 0
         assert "content:read:organization" in student_perms
 
@@ -89,7 +86,7 @@ class TestPermissionManagement:
         """Test getting all permissions for a user."""
         # Act
         permissions = rbac.get_user_permissions(teacher_user)
-        
+
         # Assert
         assert len(permissions) > 0
         assert "content:create:organization" in permissions
@@ -100,10 +97,10 @@ class TestPermissionManagement:
         """Test permission inheritance if implemented."""
         # Note: Current implementation doesn't show explicit inheritance
         # but this test ensures future inheritance works
-        
+
         # Act
         permissions = rbac.get_role_permissions(Role.TEACHER)
-        
+
         # Assert - teacher has their own permissions
         assert "content:create:organization" in permissions
 
@@ -111,16 +108,16 @@ class TestPermissionManagement:
         """Test that permissions are cached for performance."""
         # Arrange
         rbac._permission_cache.clear()
-        
+
         # Act - First call
         perms1 = rbac.get_role_permissions(Role.ADMIN)
-        
+
         # Assert - Should be cached
         assert Role.ADMIN in rbac._permission_cache
-        
+
         # Act - Second call (from cache)
         perms2 = rbac.get_role_permissions(Role.ADMIN)
-        
+
         # Assert - Should be the same object (cached)
         assert perms1 is perms2
 
@@ -129,12 +126,12 @@ class TestPermissionManagement:
         # Arrange & Act
         perm1 = Permission.from_string("content:create:organization")
         perm2 = Permission.from_string("agent:read")
-        
+
         # Assert
         assert perm1.resource == "content"
         assert perm1.action == "create"
         assert perm1.scope == "organization"
-        
+
         assert perm2.resource == "agent"
         assert perm2.action == "read"
         assert perm2.scope == "own"  # Default scope
@@ -153,7 +150,7 @@ class TestRoleHierarchy:
         """Test checking for exact role match."""
         # Act
         result = rbac.has_role(teacher_user, Role.TEACHER)
-        
+
         # Assert
         assert result is True
 
@@ -162,7 +159,7 @@ class TestRoleHierarchy:
         # Act - Admin has teacher-level access
         has_teacher = rbac.has_role(admin_user, Role.TEACHER)
         has_student = rbac.has_role(admin_user, Role.STUDENT)
-        
+
         # Assert - Admin is higher than teacher and student
         assert has_teacher is True
         assert has_student is True
@@ -171,7 +168,7 @@ class TestRoleHierarchy:
         """Test insufficient role is denied."""
         # Act - Student trying to access teacher role
         result = rbac.has_role(student_user, Role.TEACHER)
-        
+
         # Assert
         assert result is False
 
@@ -190,7 +187,7 @@ class TestPermissionChecking:
         """Test permission check with exact match."""
         # Act
         result = rbac.has_permission(teacher_user, "content:create:organization")
-        
+
         # Assert
         assert result is True
 
@@ -199,7 +196,7 @@ class TestPermissionChecking:
         # Act - Admin has "all" scope, should grant organization and own
         has_org = rbac.has_permission(admin_user, "content:create:organization")
         has_own = rbac.has_permission(admin_user, "content:create:own")
-        
+
         # Assert
         assert has_org is True
         assert has_own is True
@@ -208,11 +205,9 @@ class TestPermissionChecking:
         """Test permission check with resource ownership."""
         # Act
         result = rbac.has_permission(
-            student_user,
-            "user:read:own",
-            resource_owner_id=student_user.id
+            student_user, "user:read:own", resource_owner_id=student_user.id
         )
-        
+
         # Assert
         assert result is True
 
@@ -220,11 +215,9 @@ class TestPermissionChecking:
         """Test permission check with organization scope."""
         # Act
         result = rbac.has_permission(
-            teacher_user,
-            "content:read:organization",
-            organization_id=teacher_user.organization_id
+            teacher_user, "content:read:organization", organization_id=teacher_user.organization_id
         )
-        
+
         # Assert
         assert result is True
 
@@ -232,7 +225,7 @@ class TestPermissionChecking:
         """Test admin can access any resource."""
         # Act
         result = rbac.has_permission(admin_user, "content:delete:all")
-        
+
         # Assert
         assert result is True
 
@@ -240,7 +233,7 @@ class TestPermissionChecking:
         """Test permission denied for insufficient privileges."""
         # Act - Student trying to create content (only teachers can)
         result = rbac.has_permission(student_user, "content:create:organization")
-        
+
         # Assert
         assert result is False
 
@@ -256,9 +249,9 @@ class TestResourceAccess:
             resource_type="content",
             action="update",
             resource_owner_id=teacher_user.id,
-            resource_org_id=teacher_user.organization_id
+            resource_org_id=teacher_user.organization_id,
         )
-        
+
         # Assert
         assert result is True
 
@@ -266,16 +259,16 @@ class TestResourceAccess:
         """Test resource access within same organization."""
         # Arrange
         different_owner_id = 999
-        
+
         # Act
         result = rbac.check_resource_access(
             user=teacher_user,
             resource_type="content",
             action="read",
             resource_owner_id=different_owner_id,
-            resource_org_id=teacher_user.organization_id
+            resource_org_id=teacher_user.organization_id,
         )
-        
+
         # Assert
         assert result is True  # Teacher can read org content
 
@@ -283,16 +276,16 @@ class TestResourceAccess:
         """Test admin can access any resource."""
         # Arrange
         different_org_id = uuid4()
-        
+
         # Act
         result = rbac.check_resource_access(
             user=admin_user,
             resource_type="content",
             action="delete",
             resource_owner_id=999,
-            resource_org_id=different_org_id
+            resource_org_id=different_org_id,
         )
-        
+
         # Assert
         assert result is True  # Admin has "all" scope
 
@@ -302,13 +295,13 @@ class TestResourceAccess:
         admin_scope = rbac.get_accessible_resources(admin_user, "content", "read")
         teacher_scope = rbac.get_accessible_resources(teacher_user, "content", "read")
         student_scope = rbac.get_accessible_resources(student_user, "content", "read")
-        
+
         # Assert
         assert admin_scope["scope"] == "all"
-        
+
         assert teacher_scope["scope"] == "organization"
         assert teacher_scope["organization_id"] == teacher_user.organization_id
-        
+
         assert student_scope["scope"] == "organization"  # Students can read org content
         assert student_scope["organization_id"] == student_user.organization_id
 

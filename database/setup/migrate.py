@@ -5,9 +5,8 @@ Database Migration Manager for ToolboxAI Roblox Environment
 Provides commands for managing database migrations using Alembic.
 """
 
-import os
-import sys
 import subprocess
+import sys
 from pathlib import Path
 from typing import List, Optional
 
@@ -15,7 +14,7 @@ from typing import List, Optional
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from database.connection_manager import db_manager, health_check
+from database.connection_manager import health_check
 
 
 class MigrationManager:

@@ -3,25 +3,24 @@ Secure Credential Manager for Roblox API Integration
 Manages encrypted credentials with audit logging and access control
 """
 
-import os
-import json
-import logging
-import hashlib
-import traceback
-from typing import Optional, Dict, Any, List
-from datetime import datetime, timedelta, timezone
-from functools import lru_cache, wraps
-from dataclasses import dataclass, asdict
 import asyncio
+import logging
+import os
+import traceback
+from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
 from enum import Enum
+from functools import lru_cache
+from typing import Any
 
-from apps.backend.services.encryption import CredentialEncryption, get_encryption_manager
+from apps.backend.services.encryption import get_encryption_manager
 
 logger = logging.getLogger(__name__)
 
 
 class CredentialType(str, Enum):
     """Types of credentials managed by the system"""
+
     ROBLOX_API_KEY = "ROBLOX_API_KEY"
     ROBLOX_CLIENT_SECRET = "ROBLOX_CLIENT_SECRET"
     ROBLOX_CLIENT_ID = "ROBLOX_CLIENT_ID"
@@ -32,19 +31,21 @@ class CredentialType(str, Enum):
 @dataclass
 class CredentialAccess:
     """Record of credential access for audit logging"""
+
     credential_type: str
     accessed_at: datetime
-    accessed_by: Optional[str]
-    ip_address: Optional[str]
-    user_agent: Optional[str]
+    accessed_by: str | None
+    ip_address: str | None
+    user_agent: str | None
     success: bool
-    error_message: Optional[str] = None
-    stack_trace: Optional[str] = None
+    error_message: str | None = None
+    stack_trace: str | None = None
 
 
 @dataclass
 class CachedCredential:
     """Cached credential with TTL"""
+
     value: str
     cached_at: datetime
     ttl_seconds: int = 300  # 5 minutes default
@@ -71,20 +72,20 @@ class SecureCredentialManager:
         """
         self.encryption_manager = get_encryption_manager()
         self.cipher = self.encryption_manager.get_current_cipher()
-        self._credentials_cache: Dict[str, CachedCredential] = {}
+        self._credentials_cache: dict[str, CachedCredential] = {}
         self._cache_ttl = cache_ttl
         self._enable_audit = enable_audit
-        self._access_log: List[CredentialAccess] = []
+        self._access_log: list[CredentialAccess] = []
         self._access_lock = asyncio.Lock() if asyncio.get_event_loop().is_running() else None
 
     def _log_access(
         self,
         credential_type: str,
         success: bool = True,
-        error_message: Optional[str] = None,
-        accessed_by: Optional[str] = None,
-        ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None
+        error_message: str | None = None,
+        accessed_by: str | None = None,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
     ) -> None:
         """
         Log credential access for audit trail
@@ -108,7 +109,7 @@ class SecureCredentialManager:
             user_agent=user_agent,
             success=success,
             error_message=error_message,
-            stack_trace=traceback.format_exc() if error_message else None
+            stack_trace=traceback.format_exc() if error_message else None,
         )
 
         self._access_log.append(access_record)
@@ -118,7 +119,7 @@ class SecureCredentialManager:
         logger.log(
             log_level,
             f"Credential access: {credential_type} by {access_record.accessed_by} - "
-            f"{'SUCCESS' if success else 'FAILED'}"
+            f"{'SUCCESS' if success else 'FAILED'}",
         )
 
         # Persist to database (async if available)
@@ -127,6 +128,7 @@ class SecureCredentialManager:
     def _get_caller_info(self) -> str:
         """Get information about the calling function for audit"""
         import inspect
+
         frame = inspect.currentframe()
         if frame and frame.f_back and frame.f_back.f_back:
             caller = frame.f_back.f_back
@@ -144,7 +146,7 @@ class SecureCredentialManager:
         # This would typically write to credential_audit_log table
         pass
 
-    def _get_from_cache(self, credential_type: str) -> Optional[str]:
+    def _get_from_cache(self, credential_type: str) -> str | None:
         """
         Get credential from cache if not expired
 
@@ -173,13 +175,11 @@ class SecureCredentialManager:
             value: Credential value
         """
         self._credentials_cache[credential_type] = CachedCredential(
-            value=value,
-            cached_at=datetime.now(timezone.utc),
-            ttl_seconds=self._cache_ttl
+            value=value, cached_at=datetime.now(timezone.utc), ttl_seconds=self._cache_ttl
         )
         logger.debug(f"Cached {credential_type} for {self._cache_ttl} seconds")
 
-    def _get_encrypted_from_env(self, env_var: str) -> Optional[str]:
+    def _get_encrypted_from_env(self, env_var: str) -> str | None:
         """
         Get encrypted credential from environment variable
 
@@ -193,10 +193,8 @@ class SecureCredentialManager:
 
     @lru_cache(maxsize=1)
     def get_roblox_api_key(
-        self,
-        accessed_by: Optional[str] = None,
-        ip_address: Optional[str] = None
-    ) -> Optional[str]:
+        self, accessed_by: str | None = None, ip_address: str | None = None
+    ) -> str | None:
         """
         Get decrypted Roblox API key with security checks
 
@@ -213,7 +211,9 @@ class SecureCredentialManager:
             # Check cache first
             cached_value = self._get_from_cache(credential_type)
             if cached_value:
-                self._log_access(credential_type, True, accessed_by=accessed_by, ip_address=ip_address)
+                self._log_access(
+                    credential_type, True, accessed_by=accessed_by, ip_address=ip_address
+                )
                 return cached_value
 
             # Get encrypted value from environment
@@ -224,7 +224,9 @@ class SecureCredentialManager:
                 if plain:
                     logger.warning("⚠️  Using unencrypted ROBLOX_API_KEY - encrypt in production!")
                     self._cache_credential(credential_type, plain)
-                    self._log_access(credential_type, True, accessed_by=accessed_by, ip_address=ip_address)
+                    self._log_access(
+                        credential_type, True, accessed_by=accessed_by, ip_address=ip_address
+                    )
                     return plain
 
                 error_msg = "ROBLOX_API_KEY_ENCRYPTED not found in environment"
@@ -251,10 +253,8 @@ class SecureCredentialManager:
 
     @lru_cache(maxsize=1)
     def get_roblox_client_secret(
-        self,
-        accessed_by: Optional[str] = None,
-        ip_address: Optional[str] = None
-    ) -> Optional[str]:
+        self, accessed_by: str | None = None, ip_address: str | None = None
+    ) -> str | None:
         """
         Get decrypted Roblox client secret with security checks
 
@@ -271,7 +271,9 @@ class SecureCredentialManager:
             # Check cache first
             cached_value = self._get_from_cache(credential_type)
             if cached_value:
-                self._log_access(credential_type, True, accessed_by=accessed_by, ip_address=ip_address)
+                self._log_access(
+                    credential_type, True, accessed_by=accessed_by, ip_address=ip_address
+                )
                 return cached_value
 
             # Get encrypted value from environment
@@ -280,9 +282,13 @@ class SecureCredentialManager:
                 # Try plain text as fallback (log security warning)
                 plain = os.getenv("ROBLOX_CLIENT_SECRET")
                 if plain:
-                    logger.warning("⚠️  Using unencrypted ROBLOX_CLIENT_SECRET - encrypt in production!")
+                    logger.warning(
+                        "⚠️  Using unencrypted ROBLOX_CLIENT_SECRET - encrypt in production!"
+                    )
                     self._cache_credential(credential_type, plain)
-                    self._log_access(credential_type, True, accessed_by=accessed_by, ip_address=ip_address)
+                    self._log_access(
+                        credential_type, True, accessed_by=accessed_by, ip_address=ip_address
+                    )
                     return plain
 
                 error_msg = "ROBLOX_CLIENT_SECRET_ENCRYPTED not found in environment"
@@ -366,10 +372,8 @@ class SecureCredentialManager:
             return False
 
     def get_audit_log(
-        self,
-        credential_type: Optional[str] = None,
-        limit: int = 100
-    ) -> List[Dict[str, Any]]:
+        self, credential_type: str | None = None, limit: int = 100
+    ) -> list[dict[str, Any]]:
         """
         Get audit log entries
 
@@ -390,7 +394,7 @@ class SecureCredentialManager:
         # Convert to dict and limit
         return [asdict(log) for log in logs[:limit]]
 
-    def check_suspicious_activity(self) -> List[str]:
+    def check_suspicious_activity(self) -> list[str]:
         """
         Check for suspicious credential access patterns
 
@@ -401,20 +405,26 @@ class SecureCredentialManager:
 
         # Check for repeated failed attempts
         recent_failures = [
-            log for log in self._access_log
-            if not log.success and
-            (datetime.now(timezone.utc) - log.accessed_at).total_seconds() < 300
+            log
+            for log in self._access_log
+            if not log.success
+            and (datetime.now(timezone.utc) - log.accessed_at).total_seconds() < 300
         ]
         if len(recent_failures) > 5:
-            warnings.append(f"Multiple failed credential access attempts: {len(recent_failures)} in last 5 minutes")
+            warnings.append(
+                f"Multiple failed credential access attempts: {len(recent_failures)} in last 5 minutes"
+            )
 
         # Check for unusual access frequency
         recent_accesses = [
-            log for log in self._access_log
+            log
+            for log in self._access_log
             if (datetime.now(timezone.utc) - log.accessed_at).total_seconds() < 60
         ]
         if len(recent_accesses) > 10:
-            warnings.append(f"High credential access frequency: {len(recent_accesses)} in last minute")
+            warnings.append(
+                f"High credential access frequency: {len(recent_accesses)} in last minute"
+            )
 
         return warnings
 
@@ -422,12 +432,13 @@ class SecureCredentialManager:
 # Singleton instance
 _credential_manager = None
 
+
 def get_credential_manager() -> SecureCredentialManager:
     """Get singleton credential manager instance"""
     global _credential_manager
     if _credential_manager is None:
         _credential_manager = SecureCredentialManager(
             cache_ttl=int(os.getenv("CREDENTIAL_CACHE_TTL", "300")),
-            enable_audit=os.getenv("ENABLE_CREDENTIAL_AUDIT", "true").lower() == "true"
+            enable_audit=os.getenv("ENABLE_CREDENTIAL_AUDIT", "true").lower() == "true",
         )
     return _credential_manager

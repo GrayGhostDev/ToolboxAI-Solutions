@@ -1,0 +1,15 @@
+# Ruff configuration for ToolBoxAI-Solutions
+
+[lint]
+select = [
+    "F",     # Pyflakes
+    "I",     # isort
+    "UP",    # pyupgrade
+]
+
+fixable = ["F401", "F841", "I", "UP"]
+
+ignore = ["E501"]
+
+[lint.per-file-ignores]
+"__init__.py" = ["F401"]

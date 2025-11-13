@@ -3,9 +3,8 @@ Email Service Factory
 Automatically selects the appropriate email service based on configuration
 """
 
-import os
 import logging
-from typing import Optional
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -23,33 +22,37 @@ def get_email_service(force_mock: bool = False):
     # Check if we should use mock
     use_mock = (
         force_mock
-        or os.getenv('EMAIL_USE_MOCK', 'false').lower() == 'true'
-        or os.getenv('ENVIRONMENT', 'development').lower() in ['test', 'testing']
+        or os.getenv("EMAIL_USE_MOCK", "false").lower() == "true"
+        or os.getenv("ENVIRONMENT", "development").lower() in ["test", "testing"]
     )
 
     if use_mock:
         logger.info("📧 Using MockEmailService (emails will be logged, not sent)")
         from apps.backend.services.email.mock import MockEmailService
+
         return MockEmailService()
 
     # Try to use SendGrid
-    api_key = os.getenv('SENDGRID_API_KEY')
+    api_key = os.getenv("SENDGRID_API_KEY")
 
     if not api_key:
         logger.warning("⚠️  No SENDGRID_API_KEY found, using MockEmailService")
         from apps.backend.services.email.mock import MockEmailService
+
         return MockEmailService()
 
     # Validate API key format
-    if not api_key.startswith('SG.'):
+    if not api_key.startswith("SG."):
         logger.warning("⚠️  Invalid SENDGRID_API_KEY format, using MockEmailService")
         from apps.backend.services.email.mock import MockEmailService
+
         return MockEmailService()
 
     # Try to initialize SendGrid
     try:
-        from apps.backend.services.email.sendgrid import SendGridEmailService
         from sendgrid import SendGridAPIClient
+
+        from apps.backend.services.email.sendgrid import SendGridEmailService
 
         # Test if the API key is valid by trying a simple API call
         try:
@@ -66,11 +69,13 @@ def get_email_service(force_mock: bool = False):
                 logger.warning("⚠️  SendGrid API key is invalid (401 Unauthorized)")
                 logger.info("   Using MockEmailService as fallback")
                 from apps.backend.services.email_service_mock import MockEmailService
+
                 return MockEmailService()
             elif "Maximum credits exceeded" in error_str:
                 logger.warning("⚠️  SendGrid daily limit exceeded")
                 logger.info("   Using MockEmailService as fallback")
                 from apps.backend.services.email_service_mock import MockEmailService
+
                 return MockEmailService()
             else:
                 # Try to use it anyway, might be a network issue
@@ -83,17 +88,19 @@ def get_email_service(force_mock: bool = False):
         logger.info("   Install with: pip install sendgrid")
         logger.info("   Using MockEmailService as fallback")
         from apps.backend.services.email_service_mock import MockEmailService
+
         return MockEmailService()
 
     except Exception as e:
         logger.error(f"❌ Error initializing SendGrid: {e}")
         logger.info("   Using MockEmailService as fallback")
         from apps.backend.services.email_service_mock import MockEmailService
+
         return MockEmailService()
 
 
 # Create a singleton instance
-_email_service: Optional[object] = None
+_email_service: object | None = None
 
 
 def get_email_service_singleton(force_mock: bool = False):

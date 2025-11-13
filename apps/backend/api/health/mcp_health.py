@@ -17,11 +17,11 @@ Version: 1.0.0
 """
 
 import logging
-import asyncio
 import time
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Any
+
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -35,17 +35,17 @@ class MCPHealthResponse(BaseModel):
 
     status: str = Field(description="MCP server status (healthy/unhealthy/degraded)")
     server_url: str = Field(description="MCP server URL")
-    response_time_ms: Optional[float] = Field(description="Response time in milliseconds")
+    response_time_ms: float | None = Field(description="Response time in milliseconds")
     active_connections: int = Field(description="Number of active connections", default=0)
-    context_stores: Dict[str, Any] = Field(
+    context_stores: dict[str, Any] = Field(
         description="Context store statuses", default_factory=dict
     )
-    last_sync: Optional[str] = Field(description="Last successful synchronization timestamp")
-    error_details: Optional[str] = Field(description="Error details if unhealthy")
+    last_sync: str | None = Field(description="Last successful synchronization timestamp")
+    error_details: str | None = Field(description="Error details if unhealthy")
     timestamp: str = Field(description="Health check timestamp")
 
 
-async def check_mcp_server_health() -> Dict[str, Any]:
+async def check_mcp_server_health() -> dict[str, Any]:
     """Check MCP server health with comprehensive diagnostics"""
     start_time = time.time()
 
@@ -78,7 +78,6 @@ async def check_mcp_server_health() -> Dict[str, Any]:
                 # actually connect to the WebSocket server
 
                 # Check if server is running by attempting to connect
-                import websockets
                 import socket
 
                 # Test if port is open

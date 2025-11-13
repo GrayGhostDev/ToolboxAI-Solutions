@@ -4,24 +4,24 @@ Implements secure secret storage, rotation, and dynamic credentials
 Using hvac library with AppRole authentication
 """
 
-import os
-import json
-import logging
-from typing import Dict, Any, Optional, List
-from datetime import datetime, timedelta
-from dataclasses import dataclass
-from enum import Enum
-import hvac
-from hvac.exceptions import InvalidPath, Forbidden, InvalidRequest
-from functools import lru_cache
 import asyncio
+import logging
+import os
 from contextlib import contextmanager
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any
+
+import hvac
+from hvac.exceptions import InvalidPath
 
 logger = logging.getLogger(__name__)
 
 
 class SecretType(str, Enum):
     """Types of secrets managed by Vault"""
+
     DATABASE = "database"
     API_KEY = "api_key"
     ENCRYPTION_KEY = "encryption"
@@ -34,15 +34,16 @@ class SecretType(str, Enum):
 @dataclass
 class SecretMetadata:
     """Metadata for secret management"""
+
     name: str
     path: str
     type: SecretType
     version: int
     created_at: datetime
-    rotated_at: Optional[datetime]
+    rotated_at: datetime | None
     rotation_period_days: int = 30
     description: str = ""
-    tags: List[str] = None
+    tags: list[str] = None
 
 
 class VaultManager:
@@ -60,24 +61,24 @@ class VaultManager:
 
     def __init__(self):
         """Initialize Vault client with configuration"""
-        self.vault_addr = os.getenv('VAULT_ADDR', 'http://127.0.0.1:8200')
-        self.vault_token = os.getenv('VAULT_TOKEN')
-        self.role_id = os.getenv('VAULT_ROLE_ID')
-        self.secret_id = os.getenv('VAULT_SECRET_ID')
+        self.vault_addr = os.getenv("VAULT_ADDR", "http://127.0.0.1:8200")
+        self.vault_token = os.getenv("VAULT_TOKEN")
+        self.role_id = os.getenv("VAULT_ROLE_ID")
+        self.secret_id = os.getenv("VAULT_SECRET_ID")
         # Namespace is Enterprise-only feature, default to empty for OSS
-        self.namespace = os.getenv('VAULT_NAMESPACE', '')
+        self.namespace = os.getenv("VAULT_NAMESPACE", "")
         # TLS verification (disable only for development with self-signed certs)
-        self.skip_verify = os.getenv('VAULT_SKIP_VERIFY', 'false').lower() in ('true', '1', 'yes')
+        self.skip_verify = os.getenv("VAULT_SKIP_VERIFY", "false").lower() in ("true", "1", "yes")
 
         # Initialize client
         self.client = self._initialize_client()
 
         # Cache for frequently accessed secrets
-        self._secret_cache: Dict[str, Any] = {}
+        self._secret_cache: dict[str, Any] = {}
         self._cache_ttl = 300  # 5 minutes
 
         # Rotation tracking
-        self._rotation_schedule: Dict[str, datetime] = {}
+        self._rotation_schedule: dict[str, datetime] = {}
 
     def _initialize_client(self) -> hvac.Client:
         """Initialize and authenticate Vault client"""
@@ -87,9 +88,7 @@ class VaultManager:
             logger.warning("TLS verification disabled - DO NOT use in production!")
 
         client = hvac.Client(
-            url=self.vault_addr,
-            namespace=self.namespace if self.namespace else None,
-            verify=verify
+            url=self.vault_addr, namespace=self.namespace if self.namespace else None, verify=verify
         )
 
         # Authenticate using AppRole or token
@@ -109,11 +108,8 @@ class VaultManager:
     def _authenticate_approle(self, client: hvac.Client):
         """Authenticate using AppRole method"""
         try:
-            response = client.auth.approle.login(
-                role_id=self.role_id,
-                secret_id=self.secret_id
-            )
-            client.token = response['auth']['client_token']
+            response = client.auth.approle.login(role_id=self.role_id, secret_id=self.secret_id)
+            client.token = response["auth"]["client_token"]
             logger.info("Successfully authenticated with AppRole")
         except Exception as e:
             logger.error(f"AppRole authentication failed: {e}")
@@ -126,7 +122,7 @@ class VaultManager:
             self.client = self._initialize_client()
         yield self.client
 
-    def get_secret(self, path: str, key: Optional[str] = None) -> Any:
+    def get_secret(self, path: str, key: str | None = None) -> Any:
         """
         Retrieve secret from Vault
 
@@ -142,22 +138,19 @@ class VaultManager:
         # Check cache first
         if cache_key in self._secret_cache:
             cached = self._secret_cache[cache_key]
-            if cached['expires'] > datetime.now():
-                return cached['value']
+            if cached["expires"] > datetime.now():
+                return cached["value"]
 
         try:
             with self._ensure_authenticated() as client:
-                response = client.secrets.kv.v2.read_secret_version(
-                    mount_point='secret',
-                    path=path
-                )
+                response = client.secrets.kv.v2.read_secret_version(mount_point="secret", path=path)
 
-                data = response['data']['data']
+                data = response["data"]["data"]
 
                 # Cache the result
                 self._secret_cache[cache_key] = {
-                    'value': data.get(key) if key else data,
-                    'expires': datetime.now() + timedelta(seconds=self._cache_ttl)
+                    "value": data.get(key) if key else data,
+                    "expires": datetime.now() + timedelta(seconds=self._cache_ttl),
                 }
 
                 return data.get(key) if key else data
@@ -169,8 +162,9 @@ class VaultManager:
             logger.error(f"Error retrieving secret: {e}")
             raise
 
-    def set_secret(self, path: str, data: Dict[str, Any],
-                   metadata: Optional[SecretMetadata] = None) -> bool:
+    def set_secret(
+        self, path: str, data: dict[str, Any], metadata: SecretMetadata | None = None
+    ) -> bool:
         """
         Store secret in Vault
 
@@ -186,18 +180,16 @@ class VaultManager:
             with self._ensure_authenticated() as client:
                 # Add metadata to secret if provided
                 if metadata:
-                    data['_metadata'] = {
-                        'type': metadata.type,
-                        'created_at': metadata.created_at.isoformat(),
-                        'rotation_period_days': metadata.rotation_period_days,
-                        'description': metadata.description,
-                        'tags': metadata.tags or []
+                    data["_metadata"] = {
+                        "type": metadata.type,
+                        "created_at": metadata.created_at.isoformat(),
+                        "rotation_period_days": metadata.rotation_period_days,
+                        "description": metadata.description,
+                        "tags": metadata.tags or [],
                     }
 
                 client.secrets.kv.v2.create_or_update_secret(
-                    mount_point='secret',
-                    path=path,
-                    secret=data
+                    mount_point="secret", path=path, secret=data
                 )
 
                 # Invalidate cache
@@ -214,7 +206,7 @@ class VaultManager:
             logger.error(f"Error storing secret: {e}")
             raise
 
-    def delete_secret(self, path: str, versions: Optional[List[int]] = None) -> bool:
+    def delete_secret(self, path: str, versions: list[int] | None = None) -> bool:
         """
         Delete secret from Vault
 
@@ -229,14 +221,11 @@ class VaultManager:
             with self._ensure_authenticated() as client:
                 if versions:
                     client.secrets.kv.v2.delete_secret_versions(
-                        mount_point='secret',
-                        path=path,
-                        versions=versions
+                        mount_point="secret", path=path, versions=versions
                     )
                 else:
                     client.secrets.kv.v2.delete_metadata_and_all_versions(
-                        mount_point='secret',
-                        path=path
+                        mount_point="secret", path=path
                     )
 
                 self._invalidate_cache(path)
@@ -279,8 +268,7 @@ class VaultManager:
             logger.error(f"Error rotating secret: {e}")
             raise
 
-    def get_dynamic_database_credentials(self, database: str,
-                                        ttl: str = "1h") -> Dict[str, str]:
+    def get_dynamic_database_credentials(self, database: str, ttl: str = "1h") -> dict[str, str]:
         """
         Get dynamic database credentials from Vault
 
@@ -294,15 +282,13 @@ class VaultManager:
         try:
             with self._ensure_authenticated() as client:
                 response = client.secrets.database.generate_credentials(
-                    name=database,
-                    mount_point='database',
-                    ttl=ttl
+                    name=database, mount_point="database", ttl=ttl
                 )
 
                 return {
-                    'username': response['data']['username'],
-                    'password': response['data']['password'],
-                    'expires_at': datetime.now() + timedelta(hours=1)
+                    "username": response["data"]["username"],
+                    "password": response["data"]["password"],
+                    "expires_at": datetime.now() + timedelta(hours=1),
                 }
 
         except Exception as e:
@@ -323,11 +309,9 @@ class VaultManager:
         try:
             with self._ensure_authenticated() as client:
                 response = client.secrets.transit.encrypt_data(
-                    mount_point='transit',
-                    name=key_name,
-                    plaintext=plaintext
+                    mount_point="transit", name=key_name, plaintext=plaintext
                 )
-                return response['data']['ciphertext']
+                return response["data"]["ciphertext"]
 
         except Exception as e:
             logger.error(f"Error encrypting data: {e}")
@@ -347,17 +331,15 @@ class VaultManager:
         try:
             with self._ensure_authenticated() as client:
                 response = client.secrets.transit.decrypt_data(
-                    mount_point='transit',
-                    name=key_name,
-                    ciphertext=ciphertext
+                    mount_point="transit", name=key_name, ciphertext=ciphertext
                 )
-                return response['data']['plaintext']
+                return response["data"]["plaintext"]
 
         except Exception as e:
             logger.error(f"Error decrypting data: {e}")
             raise
 
-    def list_secrets(self, path: str = "") -> List[str]:
+    def list_secrets(self, path: str = "") -> list[str]:
         """
         List secrets at a given path
 
@@ -369,11 +351,8 @@ class VaultManager:
         """
         try:
             with self._ensure_authenticated() as client:
-                response = client.secrets.kv.v2.list_secrets(
-                    mount_point='secret',
-                    path=path
-                )
-                return response.get('data', {}).get('keys', [])
+                response = client.secrets.kv.v2.list_secrets(mount_point="secret", path=path)
+                return response.get("data", {}).get("keys", [])
 
         except InvalidPath:
             return []
@@ -394,31 +373,29 @@ class VaultManager:
         try:
             with self._ensure_authenticated() as client:
                 response = client.secrets.kv.v2.read_secret_metadata(
-                    mount_point='secret',
-                    path=path
+                    mount_point="secret", path=path
                 )
 
-                data = response['data']
-                custom_metadata = data.get('custom_metadata', {})
+                data = response["data"]
+                custom_metadata = data.get("custom_metadata", {})
 
                 return SecretMetadata(
-                    name=path.split('/')[-1],
+                    name=path.split("/")[-1],
                     path=path,
-                    type=SecretType(custom_metadata.get('type', 'api_key')),
-                    version=data['current_version'],
-                    created_at=datetime.fromisoformat(data['created_time']),
-                    rotated_at=datetime.fromisoformat(data['updated_time']),
-                    rotation_period_days=int(custom_metadata.get('rotation_period_days', 30)),
-                    description=custom_metadata.get('description', ''),
-                    tags=custom_metadata.get('tags', [])
+                    type=SecretType(custom_metadata.get("type", "api_key")),
+                    version=data["current_version"],
+                    created_at=datetime.fromisoformat(data["created_time"]),
+                    rotated_at=datetime.fromisoformat(data["updated_time"]),
+                    rotation_period_days=int(custom_metadata.get("rotation_period_days", 30)),
+                    description=custom_metadata.get("description", ""),
+                    tags=custom_metadata.get("tags", []),
                 )
 
         except Exception as e:
             logger.error(f"Error getting secret metadata: {e}")
             raise
 
-    def enable_audit_logging(self, path: str = "file",
-                           options: Optional[Dict] = None) -> bool:
+    def enable_audit_logging(self, path: str = "file", options: dict | None = None) -> bool:
         """
         Enable audit logging for Vault operations
 
@@ -432,9 +409,9 @@ class VaultManager:
         try:
             with self._ensure_authenticated() as client:
                 client.sys.enable_audit_device(
-                    device_type='file',
+                    device_type="file",
                     path=path,
-                    options=options or {'file_path': '/var/log/vault/audit.log'}
+                    options=options or {"file_path": "/var/log/vault/audit.log"},
                 )
                 logger.info(f"Audit logging enabled at {path}")
                 return True
@@ -443,7 +420,7 @@ class VaultManager:
             logger.error(f"Error enabling audit logging: {e}")
             return False
 
-    def check_rotation_schedule(self) -> List[str]:
+    def check_rotation_schedule(self) -> list[str]:
         """
         Check which secrets need rotation
 
@@ -489,16 +466,15 @@ class VaultManager:
             # Generate random string of same length
             length = len(current) if current else 32
             chars = string.ascii_letters + string.digits + string.punctuation
-            return ''.join(secrets.choice(chars) for _ in range(length))
+            return "".join(secrets.choice(chars) for _ in range(length))
         elif isinstance(current, dict):
             # Rotate each value in the dictionary
-            return {k: self._generate_secret_value(f"{path}/{k}", v)
-                   for k, v in current.items()}
+            return {k: self._generate_secret_value(f"{path}/{k}", v) for k, v in current.items()}
         else:
             # Default to random hex string
             return secrets.token_hex(32)
 
-    async def rotate_all_secrets(self) -> Dict[str, bool]:
+    async def rotate_all_secrets(self) -> dict[str, bool]:
         """
         Rotate all secrets that are due for rotation
 
@@ -521,7 +497,7 @@ class VaultManager:
 
 
 # Singleton instance
-_vault_manager: Optional[VaultManager] = None
+_vault_manager: VaultManager | None = None
 
 
 def get_vault_manager() -> VaultManager:
@@ -533,12 +509,12 @@ def get_vault_manager() -> VaultManager:
 
 
 # Convenience functions
-def get_secret(path: str, key: Optional[str] = None) -> Any:
+def get_secret(path: str, key: str | None = None) -> Any:
     """Get secret from Vault"""
     return get_vault_manager().get_secret(path, key)
 
 
-def set_secret(path: str, data: Dict[str, Any]) -> bool:
+def set_secret(path: str, data: dict[str, Any]) -> bool:
     """Store secret in Vault"""
     return get_vault_manager().set_secret(path, data)
 

@@ -16,10 +16,11 @@ Version: 1.0.0
 Standards: pytest-asyncio, Python 3.12, 2025 Implementation Standards
 """
 
+from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
 from httpx import AsyncClient
-from unittest.mock import Mock, patch, AsyncMock
-from datetime import datetime, timedelta
 
 
 class TestAuthenticationLogin:
@@ -31,10 +32,7 @@ class TestAuthenticationLogin:
         async_client: AsyncClient,
     ):
         """Test successful login with email and password"""
-        login_data = {
-            "username": "testuser@example.com",
-            "password": "TestPassword123!"
-        }
+        login_data = {"username": "testuser@example.com", "password": "TestPassword123!"}
 
         response = await async_client.post(
             "/api/v1/auth/login",
@@ -54,10 +52,7 @@ class TestAuthenticationLogin:
         async_client: AsyncClient,
     ):
         """Test successful login with username and password"""
-        login_data = {
-            "username": "testuser",
-            "password": "TestPassword123!"
-        }
+        login_data = {"username": "testuser", "password": "TestPassword123!"}
 
         response = await async_client.post(
             "/api/v1/auth/login",
@@ -72,10 +67,7 @@ class TestAuthenticationLogin:
         async_client: AsyncClient,
     ):
         """Test login fails with incorrect password"""
-        login_data = {
-            "username": "testuser@example.com",
-            "password": "WrongPassword123!"
-        }
+        login_data = {"username": "testuser@example.com", "password": "WrongPassword123!"}
 
         response = await async_client.post(
             "/api/v1/auth/login",
@@ -90,10 +82,7 @@ class TestAuthenticationLogin:
         async_client: AsyncClient,
     ):
         """Test login fails for non-existent user"""
-        login_data = {
-            "username": "nonexistent@example.com",
-            "password": "AnyPassword123!"
-        }
+        login_data = {"username": "nonexistent@example.com", "password": "AnyPassword123!"}
 
         response = await async_client.post(
             "/api/v1/auth/login",
@@ -108,9 +97,7 @@ class TestAuthenticationLogin:
         async_client: AsyncClient,
     ):
         """Test login fails with missing username"""
-        login_data = {
-            "password": "TestPassword123!"
-        }
+        login_data = {"password": "TestPassword123!"}
 
         response = await async_client.post(
             "/api/v1/auth/login",
@@ -125,10 +112,7 @@ class TestAuthenticationLogin:
         async_client: AsyncClient,
     ):
         """Test login fails with empty password"""
-        login_data = {
-            "username": "testuser@example.com",
-            "password": ""
-        }
+        login_data = {"username": "testuser@example.com", "password": ""}
 
         response = await async_client.post(
             "/api/v1/auth/login",
@@ -143,10 +127,7 @@ class TestAuthenticationLogin:
         async_client: AsyncClient,
     ):
         """Test login returns both access and refresh tokens"""
-        login_data = {
-            "username": "testuser@example.com",
-            "password": "TestPassword123!"
-        }
+        login_data = {"username": "testuser@example.com", "password": "TestPassword123!"}
 
         response = await async_client.post(
             "/api/v1/auth/login",
@@ -156,8 +137,7 @@ class TestAuthenticationLogin:
         if response.status_code == 200:
             data = response.json()
             # Check for either JWT pattern or explicit refresh token
-            assert ("refresh_token" in data or
-                    "access_token" in data and "refresh_token" in data)
+            assert "refresh_token" in data or "access_token" in data and "refresh_token" in data
 
     @pytest.mark.asyncio
     async def test_login_with_remember_me(
@@ -168,7 +148,7 @@ class TestAuthenticationLogin:
         login_data = {
             "username": "testuser@example.com",
             "password": "TestPassword123!",
-            "remember_me": True
+            "remember_me": True,
         }
 
         response = await async_client.post(
@@ -241,9 +221,7 @@ class TestTokenRefresh:
         async_client: AsyncClient,
     ):
         """Test successful token refresh"""
-        refresh_data = {
-            "refresh_token": "valid_refresh_token_12345"
-        }
+        refresh_data = {"refresh_token": "valid_refresh_token_12345"}
 
         response = await async_client.post(
             "/api/v1/auth/refresh",
@@ -262,9 +240,7 @@ class TestTokenRefresh:
         async_client: AsyncClient,
     ):
         """Test refresh fails with invalid token"""
-        refresh_data = {
-            "refresh_token": "invalid_token_12345"
-        }
+        refresh_data = {"refresh_token": "invalid_token_12345"}
 
         response = await async_client.post(
             "/api/v1/auth/refresh",
@@ -279,9 +255,7 @@ class TestTokenRefresh:
         async_client: AsyncClient,
     ):
         """Test refresh fails with expired token"""
-        refresh_data = {
-            "refresh_token": "expired_token_12345"
-        }
+        refresh_data = {"refresh_token": "expired_token_12345"}
 
         response = await async_client.post(
             "/api/v1/auth/refresh",
@@ -361,9 +335,7 @@ class TestPasswordReset:
         async_client: AsyncClient,
     ):
         """Test requesting password reset email"""
-        reset_data = {
-            "email": "testuser@example.com"
-        }
+        reset_data = {"email": "testuser@example.com"}
 
         response = await async_client.post(
             "/api/v1/auth/password/reset/request",
@@ -382,7 +354,7 @@ class TestPasswordReset:
         reset_data = {
             "token": "valid_reset_token_12345",
             "new_password": "NewSecurePassword123!",
-            "confirm_password": "NewSecurePassword123!"
+            "confirm_password": "NewSecurePassword123!",
         }
 
         response = await async_client.post(
@@ -401,7 +373,7 @@ class TestPasswordReset:
         reset_data = {
             "token": "expired_token_12345",
             "new_password": "NewSecurePassword123!",
-            "confirm_password": "NewSecurePassword123!"
+            "confirm_password": "NewSecurePassword123!",
         }
 
         response = await async_client.post(
@@ -420,7 +392,7 @@ class TestPasswordReset:
         reset_data = {
             "token": "valid_token_12345",
             "new_password": "NewPassword123!",
-            "confirm_password": "DifferentPassword456!"
+            "confirm_password": "DifferentPassword456!",
         }
 
         response = await async_client.post(
@@ -440,10 +412,7 @@ class TestRateLimiting:
         async_client: AsyncClient,
     ):
         """Test rate limiting after multiple failed login attempts"""
-        login_data = {
-            "username": "testuser@example.com",
-            "password": "WrongPassword!"
-        }
+        login_data = {"username": "testuser@example.com", "password": "WrongPassword!"}
 
         # Attempt multiple logins
         responses = []
@@ -463,9 +432,7 @@ class TestRateLimiting:
         async_client: AsyncClient,
     ):
         """Test rate limiting on password reset requests"""
-        reset_data = {
-            "email": "testuser@example.com"
-        }
+        reset_data = {"email": "testuser@example.com"}
 
         # Attempt multiple resets
         responses = []

@@ -10,39 +10,30 @@ Tests the complete GPT-4.1 migration monitoring pipeline including:
 - API endpoints
 """
 
+from datetime import datetime, timedelta, timezone
+
 import pytest
-import asyncio
-import json
-from datetime import datetime, timezone, timedelta
-from unittest.mock import Mock, patch, AsyncMock
+
+from core.agents.base_agent import AgentConfig
+from core.agents.monitoring.alert_manager import (
+    AlertCategory,
+    AlertManager,
+    AlertSeverity,
+)
+from core.agents.monitoring.cost_tracker import CostCategory, CostEntry, CostTracker
 
 # Test imports
 from core.agents.monitoring.gpt4_migration_monitor import (
     GPT4MigrationMonitor,
-    MigrationPhase,
     MigrationMetrics,
-    AlertLevel
-)
-from core.agents.monitoring.cost_tracker import (
-    CostTracker,
-    CostCategory,
-    CostEntry
-)
-from core.agents.monitoring.performance_analyzer import (
-    PerformanceAnalyzer,
-    PerformanceMetric,
-    PerformanceDataPoint
-)
-from core.agents.monitoring.alert_manager import (
-    AlertManager,
-    AlertSeverity,
-    AlertCategory,
-    Alert
+    MigrationPhase,
 )
 from core.agents.monitoring.migration_dashboard import MigrationDashboard
 from core.agents.monitoring.migration_integration import GPT4MigrationSystem
-
-from core.agents.base_agent import AgentConfig
+from core.agents.monitoring.performance_analyzer import (
+    PerformanceAnalyzer,
+    PerformanceMetric,
+)
 
 
 class TestGPT4MigrationMonitor:
@@ -51,11 +42,7 @@ class TestGPT4MigrationMonitor:
     @pytest.fixture
     def migration_monitor(self):
         """Create a migration monitor instance for testing"""
-        config = AgentConfig(
-            name="TestMigrationMonitor",
-            model="gpt-4o-mini",
-            temperature=0.1
-        )
+        config = AgentConfig(name="TestMigrationMonitor", model="gpt-4o-mini", temperature=0.1)
         return GPT4MigrationMonitor(config)
 
     @pytest.mark.asyncio
@@ -124,7 +111,10 @@ class TestCostTracker:
         assert len(cost_tracker.cost_entries) == 0
         assert "daily" in cost_tracker.budget_limits
         assert "monthly" in cost_tracker.budget_limits
-        assert cost_tracker.MODEL_PRICING["gpt-4o-mini"]["input"] < cost_tracker.MODEL_PRICING["gpt-4"]["input"]
+        assert (
+            cost_tracker.MODEL_PRICING["gpt-4o-mini"]["input"]
+            < cost_tracker.MODEL_PRICING["gpt-4"]["input"]
+        )
 
     def test_track_request_cost(self, cost_tracker):
         """Test API request cost tracking"""
@@ -133,7 +123,7 @@ class TestCostTracker:
             input_tokens=100,
             output_tokens=50,
             category=CostCategory.CONTENT_GENERATION,
-            success=True
+            success=True,
         )
 
         assert cost > 0
@@ -154,7 +144,7 @@ class TestCostTracker:
                 input_tokens=100 + i * 10,
                 output_tokens=50 + i * 5,
                 category=CostCategory.CONTENT_GENERATION,
-                success=i % 10 != 0  # 10% failure rate
+                success=i % 10 != 0,  # 10% failure rate
             )
 
         analysis = cost_tracker.get_cost_analysis()
@@ -177,7 +167,7 @@ class TestCostTracker:
                 input_tokens=1000,
                 output_tokens=500,
                 category=CostCategory.CONTENT_GENERATION,
-                success=True
+                success=True,
             )
 
         alerts = cost_tracker._check_budget_alerts()
@@ -193,7 +183,7 @@ class TestCostTracker:
                 input_tokens=1000,
                 output_tokens=500,
                 category=CostCategory.CONTENT_GENERATION,
-                success=True
+                success=True,
             )
 
         recommendations = cost_tracker.get_optimization_recommendations()
@@ -218,10 +208,7 @@ class TestPerformanceAnalyzer:
     def test_record_performance_data(self, performance_analyzer):
         """Test recording performance data"""
         performance_analyzer.record_performance_data(
-            PerformanceMetric.LATENCY,
-            2.5,
-            "gpt-4o",
-            "/v1/chat/completions"
+            PerformanceMetric.LATENCY, 2.5, "gpt-4o", "/v1/chat/completions"
         )
 
         assert len(performance_analyzer.data_points) == 1
@@ -235,9 +222,7 @@ class TestPerformanceAnalyzer:
         # Add some data points
         for i in range(10):
             performance_analyzer.record_performance_data(
-                PerformanceMetric.LATENCY,
-                2.0 + i * 0.1,
-                "gpt-4o"
+                PerformanceMetric.LATENCY, 2.0 + i * 0.1, "gpt-4o"
             )
 
         baseline = performance_analyzer.establish_baseline("gpt-4o")
@@ -250,18 +235,14 @@ class TestPerformanceAnalyzer:
         # Establish baseline
         for i in range(20):
             performance_analyzer.record_performance_data(
-                PerformanceMetric.LATENCY,
-                2.0 + (i % 5) * 0.1,
-                "gpt-4o"
+                PerformanceMetric.LATENCY, 2.0 + (i % 5) * 0.1, "gpt-4o"
             )
 
         performance_analyzer.establish_baseline("gpt-4o")
 
         # Add anomalous data point
         performance_analyzer.record_performance_data(
-            PerformanceMetric.LATENCY,
-            10.0,  # Very high latency
-            "gpt-4o"
+            PerformanceMetric.LATENCY, 10.0, "gpt-4o"  # Very high latency
         )
 
         anomalies = performance_analyzer.detect_anomalies("gpt-4o")
@@ -275,9 +256,7 @@ class TestPerformanceAnalyzer:
         # Add trending data
         for i in range(20):
             performance_analyzer.record_performance_data(
-                PerformanceMetric.LATENCY,
-                1.0 + i * 0.1,  # Increasing latency trend
-                "gpt-4o"
+                PerformanceMetric.LATENCY, 1.0 + i * 0.1, "gpt-4o"  # Increasing latency trend
             )
 
         trends = performance_analyzer.analyze_performance_trends("gpt-4o")
@@ -292,7 +271,7 @@ class TestPerformanceAnalyzer:
         metrics = [
             (PerformanceMetric.LATENCY, 2.0),
             (PerformanceMetric.SUCCESS_RATE, 0.95),
-            (PerformanceMetric.ERROR_RATE, 0.05)
+            (PerformanceMetric.ERROR_RATE, 0.05),
         ]
 
         for metric, value in metrics:
@@ -325,10 +304,7 @@ class TestAlertManager:
     async def test_trigger_alert(self, alert_manager):
         """Test alert triggering"""
         alert = await alert_manager.trigger_alert(
-            "error_rate_high",
-            "Error rate is elevated",
-            0.08,  # 8% error rate
-            {"model": "gpt-4"}
+            "error_rate_high", "Error rate is elevated", 0.08, {"model": "gpt-4"}  # 8% error rate
         )
 
         assert alert is not None
@@ -341,10 +317,7 @@ class TestAlertManager:
         """Test alert acknowledgment"""
         # Trigger an alert
         alert = await alert_manager.trigger_alert(
-            "error_rate_critical",
-            "Critical error rate",
-            0.15,
-            {}
+            "error_rate_critical", "Critical error rate", 0.15, {}
         )
 
         # Acknowledge the alert
@@ -358,12 +331,7 @@ class TestAlertManager:
     async def test_alert_resolution(self, alert_manager):
         """Test alert resolution"""
         # Trigger an alert
-        alert = await alert_manager.trigger_alert(
-            "latency_high",
-            "High latency detected",
-            7.0,
-            {}
-        )
+        alert = await alert_manager.trigger_alert("latency_high", "High latency detected", 7.0, {})
 
         # Resolve the alert
         success = await alert_manager.resolve_alert(alert.id, "test_user")
@@ -385,9 +353,7 @@ class TestAlertManager:
     def test_alert_filtering(self, alert_manager):
         """Test alert filtering functionality"""
         # Get alerts with severity filter
-        critical_alerts = alert_manager.get_active_alerts(
-            severity_filter=[AlertSeverity.CRITICAL]
-        )
+        critical_alerts = alert_manager.get_active_alerts(severity_filter=[AlertSeverity.CRITICAL])
 
         # All returned alerts should be critical
         for alert in critical_alerts:
@@ -406,10 +372,7 @@ class TestMigrationDashboard:
         alert_manager = AlertManager()
 
         return MigrationDashboard(
-            migration_monitor,
-            cost_tracker,
-            performance_analyzer,
-            alert_manager
+            migration_monitor, cost_tracker, performance_analyzer, alert_manager
         )
 
     def test_initialization(self, dashboard):
@@ -481,7 +444,7 @@ class TestGPT4MigrationSystem:
             output_tokens=50,
             latency=2.0,
             success=True,
-            category=CostCategory.CONTENT_GENERATION
+            category=CostCategory.CONTENT_GENERATION,
         )
 
         assert result["status"] == "tracked"
@@ -500,7 +463,7 @@ class TestGPT4MigrationSystem:
                 input_tokens=100,
                 output_tokens=50,
                 latency=2.0 + i * 0.5,
-                success=i % 4 != 0  # 25% failure rate
+                success=i % 4 != 0,  # 25% failure rate
             )
 
         result = await migration_system.run_monitoring_cycle()
@@ -578,7 +541,7 @@ class TestPerformanceBenchmarks:
                     input_tokens=100,
                     output_tokens=50,
                     category=CostCategory.CONTENT_GENERATION,
-                    success=True
+                    success=True,
                 )
 
         result = benchmark(track_requests)
@@ -591,9 +554,7 @@ class TestPerformanceBenchmarks:
         def record_data():
             for i in range(1000):
                 analyzer.record_performance_data(
-                    PerformanceMetric.LATENCY,
-                    2.0 + i * 0.001,
-                    "gpt-4o"
+                    PerformanceMetric.LATENCY, 2.0 + i * 0.001, "gpt-4o"
                 )
 
         result = benchmark(record_data)
@@ -615,7 +576,7 @@ def create_test_metrics() -> MigrationMetrics:
         tokens_per_request=500,
         daily_cost=15.0,
         weekly_cost=105.0,
-        monthly_projected_cost=450.0
+        monthly_projected_cost=450.0,
     )
 
 
@@ -630,7 +591,7 @@ def create_test_cost_entries(count: int = 10) -> list:
             cost=0.01 + i * 0.001,
             category=CostCategory.CONTENT_GENERATION,
             request_id=f"req_{i}",
-            success=i % 10 != 0  # 10% failure rate
+            success=i % 10 != 0,  # 10% failure rate
         )
         entries.append(entry)
     return entries

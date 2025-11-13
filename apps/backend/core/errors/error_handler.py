@@ -9,20 +9,19 @@ References:
 - OWASP Error Handling: https://cheatsheetseries.owasp.org/cheatsheets/Error_Handling_Cheat_Sheet.html
 """
 
-import logging
 import traceback
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 from fastapi import HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, field_serializer, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from apps.backend.core.logging import logging_manager, log_error, log_audit
+from apps.backend.core.logging import logging_manager
 
 logger = logging_manager.get_logger(__name__)
 
@@ -56,10 +55,10 @@ class ErrorCategory(str, Enum):
 class ErrorDetail(BaseModel):
     """Detailed error information for debugging"""
 
-    field: Optional[str] = None
+    field: str | None = None
     message: str
-    code: Optional[str] = None
-    context: Optional[Dict[str, Any]] = None
+    code: str | None = None
+    context: dict[str, Any] | None = None
 
 
 class ErrorResponse(BaseModel):
@@ -71,10 +70,10 @@ class ErrorResponse(BaseModel):
     status_code: int
     category: ErrorCategory
     message: str
-    details: Optional[List[ErrorDetail]] = None
-    path: Optional[str] = None
-    method: Optional[str] = None
-    correlation_id: Optional[str] = None
+    details: list[ErrorDetail] | None = None
+    path: str | None = None
+    method: str | None = None
+    correlation_id: str | None = None
 
     @field_serializer("timestamp")
     def serialize_timestamp(self, timestamp: datetime, _info) -> str:
@@ -98,8 +97,8 @@ class ApplicationError(Exception):
         status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
         category: ErrorCategory = ErrorCategory.INTERNAL,
         severity: ErrorSeverity = ErrorSeverity.MEDIUM,
-        details: Optional[List[ErrorDetail]] = None,
-        error_code: Optional[str] = None,
+        details: list[ErrorDetail] | None = None,
+        error_code: str | None = None,
         log_error: bool = True,
     ):
         self.message = message
@@ -115,7 +114,7 @@ class ApplicationError(Exception):
 class ValidationError(ApplicationError):
     """Validation error for input data"""
 
-    def __init__(self, message: str, details: Optional[List[ErrorDetail]] = None):
+    def __init__(self, message: str, details: list[ErrorDetail] | None = None):
         super().__init__(
             message=message,
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -153,7 +152,7 @@ class AuthorizationError(ApplicationError):
 class NotFoundError(ApplicationError):
     """Resource not found"""
 
-    def __init__(self, resource: str, identifier: Optional[str] = None):
+    def __init__(self, resource: str, identifier: str | None = None):
         message = f"{resource} not found"
         if identifier:
             message += f": {identifier}"
@@ -181,7 +180,7 @@ class ConflictError(ApplicationError):
 class RateLimitError(ApplicationError):
     """Rate limit exceeded"""
 
-    def __init__(self, message: str = "Rate limit exceeded", retry_after: Optional[int] = None):
+    def __init__(self, message: str = "Rate limit exceeded", retry_after: int | None = None):
         super().__init__(
             message=message,
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -207,7 +206,7 @@ class ExternalServiceError(ApplicationError):
 class DatabaseError(ApplicationError):
     """Database operation failure"""
 
-    def __init__(self, message: str, operation: Optional[str] = None):
+    def __init__(self, message: str, operation: str | None = None):
         details = []
         if operation:
             details.append(ErrorDetail(message=f"Operation: {operation}"))
@@ -326,7 +325,7 @@ class ErrorHandler:
     async def _handle_http_exception(
         self,
         request: Request,
-        exc: Union[HTTPException, StarletteHTTPException],
+        exc: HTTPException | StarletteHTTPException,
         correlation_id: str,
     ) -> ErrorResponse:
         """Handle HTTP exceptions"""
@@ -480,7 +479,7 @@ class ErrorHandler:
 
 
 # Global error handler instance
-_error_handler: Optional[ErrorHandler] = None
+_error_handler: ErrorHandler | None = None
 
 
 def get_error_handler(debug: bool = False) -> ErrorHandler:

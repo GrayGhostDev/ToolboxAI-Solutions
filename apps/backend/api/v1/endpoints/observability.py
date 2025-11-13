@@ -2,25 +2,25 @@
 Observability API endpoints for metrics, traces, and system monitoring.
 """
 
-from datetime import datetime, timedelta
-from typing import Optional, List, Dict, Any
-from fastapi import APIRouter, HTTPException, Query, Depends, BackgroundTasks
-from fastapi.responses import PlainTextResponse
-import json
 import asyncio
-from prometheus_client import generate_latest, REGISTRY
-import structlog
+from datetime import datetime, timedelta
+from typing import Any
 
-from apps.backend.core.observability.telemetry import metrics_collector
-from apps.backend.core.observability.correlation import TraceCorrelator
-from apps.backend.core.observability.anomaly_detection import AnomalyDetector
-from apps.backend.core.circuit_breaker import circuit_breaker_manager
-from apps.backend.core.rate_limiter import rate_limiter
-from apps.backend.core.edge_cache import edge_cache_manager
-from apps.backend.core.websocket_cluster import websocket_cluster
+import structlog
 from apps.backend.api.deps import get_current_user
-from apps.backend.services.pusher import trigger_event
+from apps.backend.core.websocket_cluster import websocket_cluster
 from database.replica_router import replica_router
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from fastapi.responses import PlainTextResponse
+from prometheus_client import REGISTRY, generate_latest
+
+from apps.backend.core.circuit_breaker import circuit_breaker_manager
+from apps.backend.core.edge_cache import edge_cache_manager
+from apps.backend.core.observability.anomaly_detection import AnomalyDetector
+from apps.backend.core.observability.correlation import TraceCorrelator
+from apps.backend.core.observability.telemetry import metrics_collector
+from apps.backend.core.rate_limiter import rate_limiter
+from apps.backend.services.pusher import trigger_event
 
 logger = structlog.get_logger(__name__)
 
@@ -36,7 +36,7 @@ async def get_metrics(
     time_range: str = Query("1h", description="Time range: 5m, 1h, 6h, 24h, 7d"),
     resolution: int = Query(60, description="Resolution in seconds"),
     current_user: dict = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get aggregated metrics for the specified time range.
     """
@@ -85,10 +85,10 @@ async def get_metrics(
 @router.get("/traces")
 async def get_traces(
     limit: int = Query(100, le=1000),
-    service: Optional[str] = None,
-    min_duration_ms: Optional[int] = None,
+    service: str | None = None,
+    min_duration_ms: int | None = None,
     current_user: dict = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get distributed traces with optional filtering.
     """
@@ -105,12 +105,12 @@ async def get_traces(
 
 @router.get("/anomalies")
 async def get_anomalies(
-    severity: Optional[str] = Query(
+    severity: str | None = Query(
         None, description="Filter by severity: low, medium, high, critical"
     ),
     limit: int = Query(50, le=200),
     current_user: dict = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get detected anomalies.
     """
@@ -124,7 +124,7 @@ async def get_anomalies(
 
 
 @router.get("/health/components")
-async def get_component_health(current_user: dict = Depends(get_current_user)) -> Dict[str, Any]:
+async def get_component_health(current_user: dict = Depends(get_current_user)) -> dict[str, Any]:
     """
     Get health status of all load balancing components.
     """
@@ -159,7 +159,7 @@ async def get_component_health(current_user: dict = Depends(get_current_user)) -
 @router.post("/start-metrics-stream")
 async def start_metrics_stream(
     background_tasks: BackgroundTasks, current_user: dict = Depends(get_current_user)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Start real-time metrics streaming via Pusher channel.
     """
@@ -178,7 +178,7 @@ async def start_metrics_stream(
 
 
 @router.post("/stop-metrics-stream")
-async def stop_metrics_stream(current_user: dict = Depends(get_current_user)) -> Dict[str, Any]:
+async def stop_metrics_stream(current_user: dict = Depends(get_current_user)) -> dict[str, Any]:
     """
     Stop real-time metrics streaming.
     """
@@ -207,7 +207,7 @@ async def get_prometheus_metrics() -> str:
 @router.post("/anomalies/acknowledge/{anomaly_id}")
 async def acknowledge_anomaly(
     anomaly_id: str, current_user: dict = Depends(get_current_user)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Acknowledge an anomaly to mark it as reviewed.
     """
@@ -228,7 +228,7 @@ async def acknowledge_anomaly(
 @router.get("/trace/{trace_id}")
 async def get_trace_details(
     trace_id: str, current_user: dict = Depends(get_current_user)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get detailed information about a specific trace.
     """
@@ -258,7 +258,7 @@ async def get_trace_details(
 # Helper functions
 
 
-async def get_system_status() -> Dict[str, Any]:
+async def get_system_status() -> dict[str, Any]:
     """Get current system status."""
     return {
         "uptime": await metrics_collector.get_uptime(),
@@ -269,7 +269,7 @@ async def get_system_status() -> Dict[str, Any]:
     }
 
 
-async def get_circuit_breaker_status() -> Dict[str, Any]:
+async def get_circuit_breaker_status() -> dict[str, Any]:
     """Get circuit breaker status."""
     breakers = await circuit_breaker_manager.get_all_status()
 
@@ -283,7 +283,7 @@ async def get_circuit_breaker_status() -> Dict[str, Any]:
     }
 
 
-async def get_rate_limiter_status() -> Dict[str, Any]:
+async def get_rate_limiter_status() -> dict[str, Any]:
     """Get rate limiter status."""
     stats = await rate_limiter.get_stats()
 
@@ -295,7 +295,7 @@ async def get_rate_limiter_status() -> Dict[str, Any]:
     }
 
 
-async def get_replica_status() -> Dict[str, Any]:
+async def get_replica_status() -> dict[str, Any]:
     """Get database replica status."""
     replicas = await replica_router.get_replica_health()
 
@@ -309,7 +309,7 @@ async def get_replica_status() -> Dict[str, Any]:
     }
 
 
-async def get_cache_status() -> Dict[str, Any]:
+async def get_cache_status() -> dict[str, Any]:
     """Get edge cache status."""
     stats = await edge_cache_manager.get_stats()
 
@@ -321,7 +321,7 @@ async def get_cache_status() -> Dict[str, Any]:
     }
 
 
-async def get_websocket_status() -> Dict[str, Any]:
+async def get_websocket_status() -> dict[str, Any]:
     """Get WebSocket cluster status."""
     stats = await websocket_cluster.get_stats()
 
@@ -333,7 +333,7 @@ async def get_websocket_status() -> Dict[str, Any]:
     }
 
 
-async def get_real_time_metrics() -> Dict[str, Any]:
+async def get_real_time_metrics() -> dict[str, Any]:
     """Get real-time metrics for streaming."""
     return {
         "timestamp": datetime.utcnow().isoformat(),

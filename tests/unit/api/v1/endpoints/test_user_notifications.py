@@ -6,40 +6,38 @@ Tests notification list, creation, reading, archiving, and statistics endpoints.
 Phase 1 Week 1: Authentication & user management endpoint tests
 """
 
-import pytest
 from datetime import datetime
-from uuid import uuid4, UUID
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
+from uuid import uuid4
 
+import pytest
 from fastapi import HTTPException, status
 
 # Import endpoint functions and models
 from apps.backend.api.v1.endpoints.user_notifications import (
-    list_notifications,
-    get_notification,
-    create_notification,
+    BulkNotificationRequest,
+    CreateNotificationRequest,
+    MarkAsReadRequest,
+    Notification,
+    NotificationChannel,
+    NotificationListResponse,
+    NotificationPriority,
+    NotificationStats,
+    NotificationStatus,
+    NotificationType,
+    archive_notifications,
+    clear_old_notifications,
     create_bulk_notifications,
+    create_notification,
+    delete_notification,
+    get_notification,
+    get_notification_stats,
+    list_notifications,
+    mark_all_as_read,
     mark_as_read,
     mark_multiple_as_read,
-    mark_all_as_read,
-    delete_notification,
-    archive_notifications,
-    get_notification_stats,
-    clear_old_notifications,
-    Notification,
-    NotificationListResponse,
-    CreateNotificationRequest,
-    BulkNotificationRequest,
-    MarkAsReadRequest,
-    NotificationStats,
-    NotificationType,
-    NotificationPriority,
-    NotificationChannel,
-    NotificationStatus,
 )
-
 from apps.backend.models.schemas import User
-
 
 # ============================================================================
 # Fixtures
@@ -108,8 +106,13 @@ class TestListNotifications:
     async def test_list_notifications_success(self, mock_session, mock_user):
         """Test successful notification retrieval."""
         result = await list_notifications(
-            session=mock_session, current_user=mock_user, status_filter=None,
-            type_filter=None, priority_filter=None, limit=50, offset=0
+            session=mock_session,
+            current_user=mock_user,
+            status_filter=None,
+            type_filter=None,
+            priority_filter=None,
+            limit=50,
+            offset=0,
         )
 
         assert isinstance(result, NotificationListResponse)
@@ -136,8 +139,13 @@ class TestListNotifications:
     async def test_list_notifications_with_pagination(self, mock_session, mock_user):
         """Test notification listing with pagination."""
         result = await list_notifications(
-            session=mock_session, current_user=mock_user, status_filter=None,
-            type_filter=None, priority_filter=None, limit=10, offset=20
+            session=mock_session,
+            current_user=mock_user,
+            status_filter=None,
+            type_filter=None,
+            priority_filter=None,
+            limit=10,
+            offset=20,
         )
 
         assert isinstance(result, NotificationListResponse)
@@ -147,8 +155,13 @@ class TestListNotifications:
         """Test that limit parameter respects maximum."""
         # This would normally be validated by FastAPI Query
         result = await list_notifications(
-            session=mock_session, current_user=mock_user, status_filter=None,
-            type_filter=None, priority_filter=None, limit=100, offset=0
+            session=mock_session,
+            current_user=mock_user,
+            status_filter=None,
+            type_filter=None,
+            priority_filter=None,
+            limit=100,
+            offset=0,
         )
 
         assert isinstance(result, NotificationListResponse)
@@ -417,9 +430,7 @@ class TestGetNotificationStats:
     @pytest.mark.asyncio
     async def test_get_notification_stats_success(self, mock_session, mock_user):
         """Test successful stats retrieval."""
-        result = await get_notification_stats(
-            session=mock_session, current_user=mock_user
-        )
+        result = await get_notification_stats(session=mock_session, current_user=mock_user)
 
         assert isinstance(result, NotificationStats)
         assert result.total_count == 0
@@ -432,9 +443,7 @@ class TestGetNotificationStats:
     @pytest.mark.asyncio
     async def test_get_notification_stats_structure(self, mock_session, mock_user):
         """Test notification stats response structure."""
-        result = await get_notification_stats(
-            session=mock_session, current_user=mock_user
-        )
+        result = await get_notification_stats(session=mock_session, current_user=mock_user)
 
         # Verify all required fields
         assert hasattr(result, "total_count")

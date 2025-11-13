@@ -9,10 +9,10 @@ Integrates with Clerk authentication and supports the following roles:
 - parent: Access to child's data only
 """
 
-from typing import Optional
-from fastapi import HTTPException, status, Request
-from functools import wraps
 import logging
+from functools import wraps
+
+from fastapi import HTTPException, Request, status
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ ROLE_PERMISSIONS = {
 class RoleRequiredError(HTTPException):
     """Exception raised when user doesn't have required role"""
 
-    def __init__(self, required_role: str, user_role: Optional[str] = None):
+    def __init__(self, required_role: str, user_role: str | None = None):
         detail = f"Access denied. Required role: {required_role}"
         if user_role:
             detail += f". Your role: {user_role}"
@@ -94,7 +94,7 @@ class RoleRequiredError(HTTPException):
 class PermissionDeniedError(HTTPException):
     """Exception raised when user doesn't have required permission"""
 
-    def __init__(self, permission: str, user_role: Optional[str] = None):
+    def __init__(self, permission: str, user_role: str | None = None):
         detail = f"Access denied. Required permission: {permission}"
         if user_role:
             detail += f". Your role: {user_role}"
@@ -104,7 +104,7 @@ class PermissionDeniedError(HTTPException):
         )
 
 
-def get_user_role(request: Request) -> Optional[str]:
+def get_user_role(request: Request) -> str | None:
     """
     Extract user role from request.
     First checks Clerk JWT token, then falls back to legacy session.
@@ -295,9 +295,7 @@ def require_any_permission(*permissions: str):
                     detail="Authentication required",
                 )
 
-            user_has_permission = any(
-                has_permission(user_role, perm) for perm in permissions
-            )
+            user_has_permission = any(has_permission(user_role, perm) for perm in permissions)
 
             if not user_has_permission:
                 logger.warning(
@@ -333,4 +331,3 @@ ROLE_RATE_LIMITS = {
 def get_rate_limit_for_role(role: str) -> dict:
     """Get rate limit configuration for a specific role"""
     return ROLE_RATE_LIMITS.get(role, {"calls": 60, "period": 60})
-

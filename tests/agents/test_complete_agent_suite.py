@@ -13,7 +13,7 @@ import asyncio
 import logging
 import uuid
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 # Test Supabase integration
 try:
     from apps.backend.services.supabase_service import get_supabase_service
+
     SUPABASE_INTEGRATION_AVAILABLE = True
 except ImportError:
     SUPABASE_INTEGRATION_AVAILABLE = False
@@ -76,8 +77,8 @@ class TestCompleteAgentSuite:
     async def test_content_agent_initialization(self, content_agent):
         """Test content agent can be initialized properly"""
         assert content_agent is not None
-        assert hasattr(content_agent, 'llm')
-        assert hasattr(content_agent, 'content_templates')
+        assert hasattr(content_agent, "llm")
+        assert hasattr(content_agent, "content_templates")
 
     @pytest.mark.asyncio
     async def test_content_agent_generation(self, content_agent):
@@ -86,7 +87,7 @@ class TestCompleteAgentSuite:
             subject="Mathematics",
             grade_level=5,
             objectives=["Learn fractions", "Understand decimals"],
-            include_assessment=True
+            include_assessment=True,
         )
 
         assert result is not None
@@ -105,9 +106,7 @@ class TestCompleteAgentSuite:
     async def test_content_agent_roblox_integration(self, content_agent):
         """Test Roblox integration suggestions"""
         result = await content_agent.generate_content(
-            subject="Science",
-            grade_level=7,
-            objectives=["Understand photosynthesis"]
+            subject="Science", grade_level=7, objectives=["Understand photosynthesis"]
         )
 
         assert "roblox_integration" in result
@@ -121,9 +120,9 @@ class TestCompleteAgentSuite:
     async def test_quiz_agent_initialization(self, quiz_agent):
         """Test quiz agent initialization"""
         assert quiz_agent is not None
-        assert hasattr(quiz_agent, 'llm')
-        assert hasattr(quiz_agent, 'question_templates')
-        assert hasattr(quiz_agent, 'difficulty_levels')
+        assert hasattr(quiz_agent, "llm")
+        assert hasattr(quiz_agent, "question_templates")
+        assert hasattr(quiz_agent, "difficulty_levels")
 
         # Check difficulty levels
         assert "easy" in quiz_agent.difficulty_levels
@@ -137,7 +136,7 @@ class TestCompleteAgentSuite:
             subject="History",
             objectives=["Learn about Ancient Rome"],
             num_questions=5,
-            difficulty="medium"
+            difficulty="medium",
         )
 
         assert result is not None
@@ -156,7 +155,7 @@ class TestCompleteAgentSuite:
             subject="Mathematics",
             objectives=["Solve equations"],
             num_questions=3,
-            difficulty="hard"
+            difficulty="hard",
         )
 
         assert "adaptive_rules" in result
@@ -173,18 +172,14 @@ class TestCompleteAgentSuite:
             "text": "What is the capital of France?",
             "explanation": "Paris is the capital and largest city of France",
             "type": "multiple_choice",
-            "options": ["Paris", "London", "Berlin", "Madrid"]
+            "options": ["Paris", "London", "Berlin", "Madrid"],
         }
 
         quality_score = quiz_agent._assess_question_quality(good_question)
         assert quality_score >= 0.85  # Should meet quality threshold
 
         # Test with poor question data
-        poor_question = {
-            "text": "What?",
-            "type": "multiple_choice",
-            "options": ["A", "B"]
-        }
+        poor_question = {"text": "What?", "type": "multiple_choice", "options": ["A", "B"]}
 
         quality_score = quiz_agent._assess_question_quality(poor_question)
         assert quality_score < 0.85  # Should not meet quality threshold
@@ -194,9 +189,9 @@ class TestCompleteAgentSuite:
     async def test_terrain_agent_initialization(self, terrain_agent):
         """Test terrain agent initialization"""
         assert terrain_agent is not None
-        assert hasattr(terrain_agent, 'llm')
-        assert hasattr(terrain_agent, 'terrain_templates')
-        assert hasattr(terrain_agent, 'terrain_api')
+        assert hasattr(terrain_agent, "llm")
+        assert hasattr(terrain_agent, "terrain_templates")
+        assert hasattr(terrain_agent, "terrain_api")
 
         # Check terrain templates
         assert "ocean" in terrain_agent.terrain_templates
@@ -210,7 +205,7 @@ class TestCompleteAgentSuite:
             environment_type="forest",
             subject="Biology",
             size="medium",
-            features=["trees", "streams"]
+            features=["trees", "streams"],
         )
 
         assert result is not None
@@ -237,10 +232,7 @@ class TestCompleteAgentSuite:
     @pytest.mark.asyncio
     async def test_terrain_lua_code_quality(self, terrain_agent):
         """Test generated Lua code quality"""
-        result = await terrain_agent.generate_terrain(
-            environment_type="ocean",
-            size="large"
-        )
+        result = await terrain_agent.generate_terrain(environment_type="ocean", size="large")
 
         lua_code = result.get("lua_code", "")
         assert len(lua_code) > 100  # Should generate substantial code
@@ -252,8 +244,8 @@ class TestCompleteAgentSuite:
     async def test_script_agent_initialization(self, script_agent):
         """Test script agent initialization"""
         assert script_agent is not None
-        assert hasattr(script_agent, 'llm')
-        assert hasattr(script_agent, 'security_rules')
+        assert hasattr(script_agent, "llm")
+        assert hasattr(script_agent, "security_rules")
 
         # Check security rules
         assert len(script_agent.security_rules) >= 5
@@ -265,7 +257,7 @@ class TestCompleteAgentSuite:
         result = await script_agent.generate_script(
             script_type="game_mechanics",
             functionality="collection",
-            params={"item_type": "coin", "points": 10}
+            params={"item_type": "coin", "points": 10},
         )
 
         assert result is not None
@@ -306,9 +298,9 @@ class TestCompleteAgentSuite:
     async def test_review_agent_initialization(self, review_agent):
         """Test code review agent initialization"""
         assert review_agent is not None
-        assert hasattr(review_agent, 'llm')
-        assert hasattr(review_agent, 'security_checks')
-        assert hasattr(review_agent, 'performance_checks')
+        assert hasattr(review_agent, "llm")
+        assert hasattr(review_agent, "security_checks")
+        assert hasattr(review_agent, "performance_checks")
 
         # Check security checks
         assert len(review_agent.security_checks) >= 5
@@ -413,18 +405,14 @@ class TestCompleteAgentSuite:
         """Test collaboration between agents"""
         # Generate content first
         content_result = await content_agent.generate_content(
-            subject="Science",
-            grade_level=6,
-            objectives=["Understand ecosystems"]
+            subject="Science", grade_level=6, objectives=["Understand ecosystems"]
         )
 
         assert content_result is not None
 
         # Generate quiz based on content
         quiz_result = await quiz_agent.generate_quiz(
-            subject="Science",
-            objectives=["Understand ecosystems"],
-            num_questions=3
+            subject="Science", objectives=["Understand ecosystems"], num_questions=3
         )
 
         assert quiz_result is not None
@@ -432,36 +420,36 @@ class TestCompleteAgentSuite:
 
         # Both should meet quality thresholds
         content_quality = (
-            content_result.get("success", False) and
-            len(content_result.get("content", "")) > 10  # Reduced threshold for mock content
+            content_result.get("success", False)
+            and len(content_result.get("content", "")) > 10  # Reduced threshold for mock content
         )
         quiz_quality = quiz_result.get("quality_score", 0) >= 0.85
 
         # Debug information
         if not content_quality:
-            print(f"Content quality failed: success={content_result.get('success')}, content_length={len(content_result.get('content', ''))}")
+            print(
+                f"Content quality failed: success={content_result.get('success')}, content_length={len(content_result.get('content', ''))}"
+            )
         if not quiz_quality:
             print(f"Quiz quality failed: quality_score={quiz_result.get('quality_score', 0)}")
 
-        assert content_quality and (quiz_quality or "error" not in quiz_result), f"Content quality: {content_quality}, Quiz quality: {quiz_quality}"
+        assert content_quality and (
+            quiz_quality or "error" not in quiz_result
+        ), f"Content quality: {content_quality}, Quiz quality: {quiz_quality}"
 
     @pytest.mark.asyncio
     async def test_terrain_script_integration(self, terrain_agent, script_agent):
         """Test integration between terrain and script agents"""
         # Generate terrain
         terrain_result = await terrain_agent.generate_terrain(
-            environment_type="classroom",
-            subject="Mathematics",
-            size="small"
+            environment_type="classroom", subject="Mathematics", size="small"
         )
 
         assert terrain_result is not None
 
         # Generate script for the terrain
         script_result = await script_agent.generate_script(
-            script_type="game_mechanics",
-            functionality="quiz",
-            params={"environment": "classroom"}
+            script_type="game_mechanics", functionality="quiz", params={"environment": "classroom"}
         )
 
         assert script_result is not None
@@ -470,16 +458,16 @@ class TestCompleteAgentSuite:
         terrain_quality = terrain_result.get("quality_score", 0) >= 0.85
         script_quality = script_result.get("quality_score", 0) >= 0.85
 
-        assert (terrain_quality or "error" not in terrain_result) and (script_quality or "error" not in script_result)
+        assert (terrain_quality or "error" not in terrain_result) and (
+            script_quality or "error" not in script_result
+        )
 
     @pytest.mark.asyncio
     async def test_script_review_workflow(self, script_agent, review_agent):
         """Test script generation and review workflow"""
         # Generate script
         script_result = await script_agent.generate_script(
-            script_type="ui_interaction",
-            functionality="button",
-            params={"action": "start_quiz"}
+            script_type="ui_interaction", functionality="button", params={"action": "start_quiz"}
         )
 
         assert script_result is not None
@@ -497,7 +485,11 @@ class TestCompleteAgentSuite:
         review_score = review_result.get("score", 0)
 
         # At least one should meet the 85% threshold
-        assert script_quality >= 0.85 or review_score >= 85 or ("error" in script_result or "error" in review_result)
+        assert (
+            script_quality >= 0.85
+            or review_score >= 85
+            or ("error" in script_result or "error" in review_result)
+        )
 
     # Performance Tests
     @pytest.mark.asyncio
@@ -507,9 +499,7 @@ class TestCompleteAgentSuite:
         start_time = datetime.now(timezone.utc)
 
         content_result = await content_agent.generate_content(
-            subject="Mathematics",
-            grade_level=4,
-            objectives=["Basic addition"]
+            subject="Mathematics", grade_level=4, objectives=["Basic addition"]
         )
 
         content_time = (datetime.now(timezone.utc) - start_time).total_seconds()
@@ -518,9 +508,7 @@ class TestCompleteAgentSuite:
         start_time = datetime.now(timezone.utc)
 
         quiz_result = await quiz_agent.generate_quiz(
-            subject="Mathematics",
-            objectives=["Basic addition"],
-            num_questions=5
+            subject="Mathematics", objectives=["Basic addition"], num_questions=5
         )
 
         quiz_time = (datetime.now(timezone.utc) - start_time).total_seconds()
@@ -541,20 +529,14 @@ class TestCompleteAgentSuite:
 
         tasks = [
             content_agent.generate_content(
-                subject="Science",
-                grade_level=5,
-                objectives=["Learn about plants"]
+                subject="Science", grade_level=5, objectives=["Learn about plants"]
             ),
             quiz_agent.generate_quiz(
-                subject="Science",
-                objectives=["Learn about plants"],
-                num_questions=3
+                subject="Science", objectives=["Learn about plants"], num_questions=3
             ),
             terrain_agent.generate_terrain(
-                environment_type="forest",
-                subject="Science",
-                size="small"
-            )
+                environment_type="forest", subject="Science", size="small"
+            ),
         ]
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -585,7 +567,7 @@ class TestCompleteAgentSuite:
         result = await quiz_agent.generate_quiz(
             subject="",  # Empty subject
             objectives=[],  # Empty objectives
-            num_questions=0  # Invalid question count
+            num_questions=0,  # Invalid question count
         )
 
         # Should handle errors gracefully
@@ -606,9 +588,7 @@ class TestCompleteAgentSuite:
         tasks = []
         for i in range(10):
             task = content_agent.generate_content(
-                subject=f"Subject{i}",
-                grade_level=5,
-                objectives=[f"Objective{i}"]
+                subject=f"Subject{i}", grade_level=5, objectives=[f"Objective{i}"]
             )
             tasks.append(task)
 
@@ -622,14 +602,16 @@ class TestCompleteAgentSuite:
 
     # Quality Assurance Tests
     @pytest.mark.asyncio
-    async def test_overall_quality_metrics(self, content_agent, quiz_agent, terrain_agent, script_agent, review_agent):
+    async def test_overall_quality_metrics(
+        self, content_agent, quiz_agent, terrain_agent, script_agent, review_agent
+    ):
         """Test that all agents meet overall quality metrics"""
         agents = [
             ("content", content_agent),
             ("quiz", quiz_agent),
             ("terrain", terrain_agent),
             ("script", script_agent),
-            ("review", review_agent)
+            ("review", review_agent),
         ]
 
         quality_scores = {}
@@ -638,25 +620,19 @@ class TestCompleteAgentSuite:
             # Test agent with standard parameters
             if agent_name == "content":
                 result = await agent.generate_content(
-                    subject="Mathematics",
-                    grade_level=5,
-                    objectives=["Learn basic math"]
+                    subject="Mathematics", grade_level=5, objectives=["Learn basic math"]
                 )
             elif agent_name == "quiz":
                 result = await agent.generate_quiz(
-                    subject="Mathematics",
-                    objectives=["Learn basic math"],
-                    num_questions=5
+                    subject="Mathematics", objectives=["Learn basic math"], num_questions=5
                 )
             elif agent_name == "terrain":
                 result = await agent.generate_terrain(
-                    environment_type="classroom",
-                    subject="Mathematics"
+                    environment_type="classroom", subject="Mathematics"
                 )
             elif agent_name == "script":
                 result = await agent.generate_script(
-                    script_type="game_mechanics",
-                    functionality="quiz"
+                    script_type="game_mechanics", functionality="quiz"
                 )
             elif agent_name == "review":
                 test_code = "local x = 1"
@@ -688,7 +664,7 @@ class TestCompleteAgentSuite:
             "apps.backend.agents.agent_classes",
             "apps.backend.agents.implementations",
             "core.agents.orchestrator",
-            "core.agents.base_agent"
+            "core.agents.base_agent",
         ]
 
         for integration_point in integration_points:
@@ -698,10 +674,13 @@ class TestCompleteAgentSuite:
                 logger.info("Integration point %s is accessible", integration_point)
             except ImportError as e:
                 # Some integration points may not be fully implemented yet
-                logger.warning("Integration point %s not fully available: %s", integration_point, str(e))
+                logger.warning(
+                    "Integration point %s not fully available: %s", integration_point, str(e)
+                )
 
         # At least the main agent classes should be importable
         from apps.backend.agents.agent_classes import ContentGenerationAgent
+
         assert ContentGenerationAgent is not None
 
     # Load Testing
@@ -715,9 +694,7 @@ class TestCompleteAgentSuite:
 
         tasks = [
             quiz_agent.generate_quiz(
-                subject=f"Subject{i % 5}",
-                objectives=[f"Objective{i}"],
-                num_questions=3
+                subject=f"Subject{i % 5}", objectives=[f"Objective{i}"], num_questions=3
             )
             for i in range(concurrent_requests)
         ]
@@ -764,9 +741,7 @@ class TestCompleteAgentSuite:
     async def test_agent_output_validation(self, quiz_agent):
         """Test agent output validation"""
         result = await quiz_agent.generate_quiz(
-            subject="Mathematics",
-            objectives=["Basic arithmetic"],
-            num_questions=5
+            subject="Mathematics", objectives=["Basic arithmetic"], num_questions=5
         )
 
         # Validate output structure
@@ -790,20 +765,22 @@ class TestCompleteAgentSuite:
 
     # Final Integration Test
     @pytest.mark.asyncio
-    async def test_complete_workflow_integration(self, content_agent, quiz_agent, terrain_agent, script_agent, review_agent):
+    async def test_complete_workflow_integration(
+        self, content_agent, quiz_agent, terrain_agent, script_agent, review_agent
+    ):
         """Test complete workflow integration across all agents"""
         workflow_context = {
             "subject": "Science",
             "grade_level": 7,
             "topic": "Solar System",
-            "duration_minutes": 45
+            "duration_minutes": 45,
         }
 
         # Step 1: Generate content
         content_result = await content_agent.generate_content(
             subject=workflow_context["subject"],
             grade_level=workflow_context["grade_level"],
-            objectives=["Understand planetary motion", "Learn about solar system structure"]
+            objectives=["Understand planetary motion", "Learn about solar system structure"],
         )
 
         assert content_result is not None
@@ -813,7 +790,7 @@ class TestCompleteAgentSuite:
             subject=workflow_context["subject"],
             objectives=["Understand planetary motion", "Learn about solar system structure"],
             num_questions=5,
-            difficulty="medium"
+            difficulty="medium",
         )
 
         assert quiz_result is not None
@@ -822,7 +799,7 @@ class TestCompleteAgentSuite:
         terrain_result = await terrain_agent.generate_terrain(
             environment_type="classroom",  # Space classroom
             subject=workflow_context["subject"],
-            size="medium"
+            size="medium",
         )
 
         assert terrain_result is not None
@@ -831,7 +808,7 @@ class TestCompleteAgentSuite:
         script_result = await script_agent.generate_script(
             script_type="game_mechanics",
             functionality="quiz",
-            params={"subject": workflow_context["subject"]}
+            params={"subject": workflow_context["subject"]},
         )
 
         assert script_result is not None
@@ -859,10 +836,20 @@ class TestCompleteAgentSuite:
         # Overall workflow should meet quality threshold
         if workflow_quality_scores:
             avg_quality = sum(workflow_quality_scores) / len(workflow_quality_scores)
-            assert avg_quality >= 0.85, f"Workflow average quality {avg_quality:.2f} below 85% threshold"
+            assert (
+                avg_quality >= 0.85
+            ), f"Workflow average quality {avg_quality:.2f} below 85% threshold"
 
-        logger.info("Complete workflow integration test passed with %d components",
-                   len([r for r in [content_result, quiz_result, terrain_result, script_result] if r is not None]))
+        logger.info(
+            "Complete workflow integration test passed with %d components",
+            len(
+                [
+                    r
+                    for r in [content_result, quiz_result, terrain_result, script_result]
+                    if r is not None
+                ]
+            ),
+        )
 
 
 class TestAgentErrorRecovery:
@@ -879,9 +866,7 @@ class TestAgentErrorRecovery:
 
         # Should handle LLM failure gracefully
         result = await content_agent.generate_content(
-            subject="Mathematics",
-            grade_level=5,
-            objectives=["Test objective"]
+            subject="Mathematics", grade_level=5, objectives=["Test objective"]
         )
 
         # Should return error information instead of crashing
@@ -907,11 +892,9 @@ class TestAgentErrorRecovery:
         try:
             result = await asyncio.wait_for(
                 quiz_agent.generate_quiz(
-                    subject="Mathematics",
-                    objectives=["Test"],
-                    num_questions=1
+                    subject="Mathematics", objectives=["Test"], num_questions=1
                 ),
-                timeout=1.0  # 1 second timeout
+                timeout=1.0,  # 1 second timeout
             )
 
             # If it completes within timeout, should be valid
@@ -936,18 +919,14 @@ class TestAgentQualityMetrics:
             "text": "What is the process by which plants make their own food using sunlight?",
             "explanation": "Photosynthesis is the process where plants convert sunlight, water, and carbon dioxide into glucose and oxygen",
             "type": "multiple_choice",
-            "options": ["Photosynthesis", "Respiration", "Transpiration", "Germination"]
+            "options": ["Photosynthesis", "Respiration", "Transpiration", "Germination"],
         }
 
         high_score = quiz_agent._assess_question_quality(high_quality_question)
         assert high_score >= 0.85
 
         # Test low-quality question
-        low_quality_question = {
-            "text": "What?",
-            "type": "multiple_choice",
-            "options": ["A"]
-        }
+        low_quality_question = {"text": "What?", "type": "multiple_choice", "options": ["A"]}
 
         low_score = quiz_agent._assess_question_quality(low_quality_question)
         assert low_score < 0.85
@@ -1020,47 +999,53 @@ class TestAgentQualityMetrics:
         """Test agent integration with Supabase persistence"""
         if not SUPABASE_INTEGRATION_AVAILABLE:
             pytest.skip("Supabase integration not available")
-        
+
         from apps.backend.services.agent_service import AgentService
-        
+
         try:
             # Initialize agent service with Supabase integration
             agent_service = AgentService()
-            
+
             # Test that Supabase service is available (or gracefully unavailable)
             has_supabase = agent_service.supabase_service is not None
             if has_supabase:
                 supabase_available = agent_service.supabase_service.is_available()
-                logger.info(f"Supabase integration: {'available' if supabase_available else 'configured but not connected'}")
+                logger.info(
+                    f"Supabase integration: {'available' if supabase_available else 'configured but not connected'}"
+                )
             else:
                 logger.info("Supabase integration: not configured")
-            
+
             # Test task execution with Supabase persistence
             task_data = {
                 "subject": "Mathematics",
                 "grade_level": 5,
-                "objectives": ["Basic algebra"]
+                "objectives": ["Basic algebra"],
             }
-            
+
             result = await agent_service.execute_task(
                 agent_type="content_generator",
-                task_type="generate_content", 
+                task_type="generate_content",
                 task_data=task_data,
-                user_id=str(uuid.uuid4())
+                user_id=str(uuid.uuid4()),
             )
-            
+
             # Task should execute successfully regardless of Supabase availability
             assert isinstance(result, dict), "Task result should be dictionary"
-            assert 'success' in result, "Result should include success field"
-            
+            assert "success" in result, "Result should include success field"
+
             # If the task succeeded and Supabase is available, persistence should work
-            if result.get('success') and has_supabase and agent_service.supabase_service.is_available():
+            if (
+                result.get("success")
+                and has_supabase
+                and agent_service.supabase_service.is_available()
+            ):
                 logger.info("Task executed with Supabase persistence")
             else:
                 logger.info("Task executed without Supabase persistence (test environment)")
-            
+
             logger.info("Supabase agent integration test passed")
-            
+
         except Exception as e:
             logger.warning(f"Supabase integration test failed: {e}")
             # Don't fail the test if Supabase is not configured

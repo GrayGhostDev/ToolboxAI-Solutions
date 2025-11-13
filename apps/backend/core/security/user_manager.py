@@ -10,25 +10,21 @@ Provides comprehensive user authentication and management with:
 - Audit logging
 """
 
+import logging
 import re
 import secrets
-import string
-import hashlib
-import hmac
-import base64
-from datetime import datetime, timedelta, timezone
-from typing import Optional, Dict, Any, List, Tuple
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 from enum import Enum
-import logging
+from typing import Any
 
-import bcrypt
+import redis
+from fastapi import HTTPException, status
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
-from fastapi import HTTPException, status
-import redis
 
-from database.models import User, Session as UserSession
+from database.models import Session as UserSession
+from database.models import User
 from toolboxai_settings import settings
 
 logger = logging.getLogger(__name__)
@@ -115,9 +111,9 @@ class SecureUserManager:
     def __init__(
         self,
         db_session: Session,
-        redis_client: Optional[redis.Redis] = None,
-        password_policy: Optional[PasswordPolicy] = None,
-        lockout_policy: Optional[LockoutPolicy] = None,
+        redis_client: redis.Redis | None = None,
+        password_policy: PasswordPolicy | None = None,
+        lockout_policy: LockoutPolicy | None = None,
     ):
         self.db = db_session
         self.redis = redis_client
@@ -141,7 +137,7 @@ class SecureUserManager:
         email: str,
         password: str,
         role: UserRole,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> User:
         """
         Create a new user with secure password hashing
@@ -200,9 +196,9 @@ class SecureUserManager:
         self,
         username_or_email: str,
         password: str,
-        ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None,
-    ) -> Tuple[User, str]:
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+    ) -> tuple[User, str]:
         """
         Authenticate user with comprehensive security checks
 
@@ -347,7 +343,7 @@ class SecureUserManager:
         logger.info(f"Password reset for user: {user.username}")
         return True
 
-    async def enable_mfa(self, user_id: int, mfa_secret: Optional[str] = None) -> str:
+    async def enable_mfa(self, user_id: int, mfa_secret: str | None = None) -> str:
         """
         Enable multi-factor authentication for user
 
@@ -477,7 +473,7 @@ class SecureUserManager:
             is not None
         )
 
-    def _get_user_by_username_or_email(self, identifier: str) -> Optional[User]:
+    def _get_user_by_username_or_email(self, identifier: str) -> User | None:
         """Get user by username or email"""
         return (
             self.db.query(User)
@@ -494,9 +490,7 @@ class SecureUserManager:
         )
         return datetime.now(timezone.utc) > expiry_date
 
-    def _create_session(
-        self, user: User, ip_address: Optional[str], user_agent: Optional[str]
-    ) -> str:
+    def _create_session(self, user: User, ip_address: str | None, user_agent: str | None) -> str:
         """Create user session"""
         session_token = secrets.token_urlsafe(32)
 
@@ -527,7 +521,7 @@ class SecureUserManager:
         return self.redis.exists(lockout_key) > 0
 
     async def _record_failed_attempt(
-        self, identifier: str, ip_address: Optional[str], user_id: Optional[int] = None
+        self, identifier: str, ip_address: str | None, user_id: int | None = None
     ) -> None:
         """Record failed login attempt"""
         if user_id:
@@ -585,7 +579,7 @@ class SecureUserManager:
 
         self.db.commit()
 
-    async def _validate_reset_token(self, token: str) -> Optional[int]:
+    async def _validate_reset_token(self, token: str) -> int | None:
         """Validate password reset token"""
         if not self.redis:
             return None
@@ -615,8 +609,9 @@ class SecureUserManager:
         Returns:
             Base64-encoded encrypted data
         """
-        from cryptography.fernet import Fernet
         import os
+
+        from cryptography.fernet import Fernet
 
         # Get encryption key from environment or generate one
         encryption_key = os.getenv("DATA_ENCRYPTION_KEY")
@@ -651,8 +646,9 @@ class SecureUserManager:
         Raises:
             ValueError: If decryption fails (wrong key or corrupted data)
         """
-        from cryptography.fernet import Fernet, InvalidToken
         import os
+
+        from cryptography.fernet import Fernet, InvalidToken
 
         # Get encryption key from environment
         encryption_key = os.getenv("DATA_ENCRYPTION_KEY")
@@ -676,9 +672,7 @@ class SecureUserManager:
             logger.error("Failed to decrypt data - invalid key or corrupted data")
             raise ValueError("Failed to decrypt sensitive data")
 
-    async def _audit_log(
-        self, action: str, user_id: Optional[int], details: Dict[str, Any]
-    ) -> None:
+    async def _audit_log(self, action: str, user_id: int | None, details: dict[str, Any]) -> None:
         """Create audit log entry"""
         try:
             # Create a simple audit log dict instead of model

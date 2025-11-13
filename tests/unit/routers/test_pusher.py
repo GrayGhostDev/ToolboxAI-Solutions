@@ -5,31 +5,25 @@ Tests cover Pusher channel authentication, webhook handling, event triggering,
 statistics retrieval, and permission validation with comprehensive mocking.
 """
 
-import pytest
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from fastapi.testclient import TestClient
-from fastapi import status
-from uuid import uuid4
 import json
+from unittest.mock import Mock, patch
+from uuid import uuid4
+
+import pytest
+from fastapi import status
 
 
 # Sample test data
 @pytest.fixture
 def sample_pusher_auth_request_form():
     """Sample Pusher auth request (form-urlencoded)"""
-    return {
-        "channel_name": "private-user-abc123",
-        "socket_id": "123456.789012"
-    }
+    return {"channel_name": "private-user-abc123", "socket_id": "123456.789012"}
 
 
 @pytest.fixture
 def sample_pusher_auth_request_json():
     """Sample Pusher auth request (JSON)"""
-    return {
-        "channel_name": "presence-classroom-101",
-        "socket_id": "654321.210987"
-    }
+    return {"channel_name": "presence-classroom-101", "socket_id": "654321.210987"}
 
 
 @pytest.fixture
@@ -38,17 +32,13 @@ def sample_webhook_payload():
     return {
         "time_ms": 1234567890,
         "events": [
-            {
-                "name": "channel_occupied",
-                "channel": "private-classroom-101",
-                "data": {}
-            },
+            {"name": "channel_occupied", "channel": "private-classroom-101", "data": {}},
             {
                 "name": "member_added",
                 "channel": "presence-classroom-101",
-                "data": {"user_id": "user_123"}
-            }
-        ]
+                "data": {"user_id": "user_123"},
+            },
+        ],
     }
 
 
@@ -58,10 +48,7 @@ def sample_trigger_event_request():
     return {
         "channel": "private-teacher",
         "event": "content-updated",
-        "data": {
-            "content_id": "content_123",
-            "status": "completed"
-        }
+        "data": {"content_id": "content_123", "status": "completed"},
     }
 
 
@@ -106,19 +93,30 @@ class TestPusherAuthentication:
         """Test successful channel authentication with JSON request"""
         mock_auth_response = {
             "auth": "test_auth_signature:abc123",
-            "channel_data": json.dumps({
-                "user_id": mock_current_user.id,
-                "user_info": {"id": mock_current_user.id, "name": "Test User", "role": "teacher"}
-            })
+            "channel_data": json.dumps(
+                {
+                    "user_id": mock_current_user.id,
+                    "user_info": {
+                        "id": mock_current_user.id,
+                        "name": "Test User",
+                        "role": "teacher",
+                    },
+                }
+            ),
         }
 
-        with patch('apps.backend.api.routers.pusher.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.pusher._can_access_channel', return_value=True):
-                with patch('apps.backend.api.routers.pusher.pusher_authenticate', return_value=mock_auth_response):
+        with patch(
+            "apps.backend.api.routers.pusher.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.pusher._can_access_channel", return_value=True):
+                with patch(
+                    "apps.backend.api.routers.pusher.pusher_authenticate",
+                    return_value=mock_auth_response,
+                ):
                     response = test_client.post(
                         "/pusher/auth",
                         json=sample_pusher_auth_request_json,
-                        headers={"content-type": "application/json"}
+                        headers={"content-type": "application/json"},
                     )
 
         assert response.status_code == status.HTTP_200_OK
@@ -126,38 +124,32 @@ class TestPusherAuthentication:
         assert "auth" in data
         assert data["auth"] == "test_auth_signature:abc123"
 
-    def test_authenticate_channel_missing_channel_name(
-        self, test_client, mock_current_user
-    ):
+    def test_authenticate_channel_missing_channel_name(self, test_client, mock_current_user):
         """Test authentication with missing channel_name"""
         invalid_request = {
             "socket_id": "123456.789012"
             # Missing channel_name
         }
 
-        with patch('apps.backend.api.routers.pusher.get_current_user', return_value=mock_current_user):
-            response = test_client.post(
-                "/pusher/auth",
-                json=invalid_request
-            )
+        with patch(
+            "apps.backend.api.routers.pusher.get_current_user", return_value=mock_current_user
+        ):
+            response = test_client.post("/pusher/auth", json=invalid_request)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "channel_name" in response.json()["detail"].lower()
 
-    def test_authenticate_channel_missing_socket_id(
-        self, test_client, mock_current_user
-    ):
+    def test_authenticate_channel_missing_socket_id(self, test_client, mock_current_user):
         """Test authentication with missing socket_id"""
         invalid_request = {
             "channel_name": "private-test"
             # Missing socket_id
         }
 
-        with patch('apps.backend.api.routers.pusher.get_current_user', return_value=mock_current_user):
-            response = test_client.post(
-                "/pusher/auth",
-                json=invalid_request
-            )
+        with patch(
+            "apps.backend.api.routers.pusher.get_current_user", return_value=mock_current_user
+        ):
+            response = test_client.post("/pusher/auth", json=invalid_request)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "socket_id" in response.json()["detail"].lower()
@@ -166,12 +158,11 @@ class TestPusherAuthentication:
         self, test_client, sample_pusher_auth_request_json, mock_current_user
     ):
         """Test authentication when user lacks channel permissions"""
-        with patch('apps.backend.api.routers.pusher.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.pusher._can_access_channel', return_value=False):
-                response = test_client.post(
-                    "/pusher/auth",
-                    json=sample_pusher_auth_request_json
-                )
+        with patch(
+            "apps.backend.api.routers.pusher.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.pusher._can_access_channel", return_value=False):
+                response = test_client.post("/pusher/auth", json=sample_pusher_auth_request_json)
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
         assert "insufficient permissions" in response.json()["detail"].lower()
@@ -180,12 +171,16 @@ class TestPusherAuthentication:
         self, test_client, sample_pusher_auth_request_json, mock_current_user
     ):
         """Test authentication when Pusher service fails"""
-        with patch('apps.backend.api.routers.pusher.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.pusher._can_access_channel', return_value=True):
-                with patch('apps.backend.api.routers.pusher.pusher_authenticate', side_effect=Exception("Pusher unavailable")):
+        with patch(
+            "apps.backend.api.routers.pusher.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.pusher._can_access_channel", return_value=True):
+                with patch(
+                    "apps.backend.api.routers.pusher.pusher_authenticate",
+                    side_effect=Exception("Pusher unavailable"),
+                ):
                     response = test_client.post(
-                        "/pusher/auth",
-                        json=sample_pusher_auth_request_json
+                        "/pusher/auth", json=sample_pusher_auth_request_json
                     )
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -196,18 +191,13 @@ class TestPusherWebhook:
     """Tests for Pusher webhook handling endpoint"""
 
     @pytest.mark.asyncio
-    async def test_handle_webhook_success(
-        self, test_client, sample_webhook_payload
-    ):
+    async def test_handle_webhook_success(self, test_client, sample_webhook_payload):
         """Test successful webhook processing"""
-        with patch('apps.backend.api.routers.pusher.pusher_verify_webhook', return_value=True):
+        with patch("apps.backend.api.routers.pusher.pusher_verify_webhook", return_value=True):
             response = test_client.post(
                 "/pusher/webhook",
                 json=sample_webhook_payload,
-                headers={
-                    "X-Pusher-Key": "test_key",
-                    "X-Pusher-Signature": "test_signature"
-                }
+                headers={"X-Pusher-Key": "test_key", "X-Pusher-Signature": "test_signature"},
             )
 
         assert response.status_code == status.HTTP_200_OK
@@ -216,18 +206,13 @@ class TestPusherWebhook:
         assert data["data"]["events_processed"] == 2
 
     @pytest.mark.asyncio
-    async def test_handle_webhook_invalid_signature(
-        self, test_client, sample_webhook_payload
-    ):
+    async def test_handle_webhook_invalid_signature(self, test_client, sample_webhook_payload):
         """Test webhook with invalid signature"""
-        with patch('apps.backend.api.routers.pusher.pusher_verify_webhook', return_value=False):
+        with patch("apps.backend.api.routers.pusher.pusher_verify_webhook", return_value=False):
             response = test_client.post(
                 "/pusher/webhook",
                 json=sample_webhook_payload,
-                headers={
-                    "X-Pusher-Key": "test_key",
-                    "X-Pusher-Signature": "invalid_signature"
-                }
+                headers={"X-Pusher-Key": "test_key", "X-Pusher-Signature": "invalid_signature"},
             )
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -236,19 +221,13 @@ class TestPusherWebhook:
     @pytest.mark.asyncio
     async def test_handle_webhook_empty_events(self, test_client):
         """Test webhook with no events"""
-        empty_payload = {
-            "time_ms": 1234567890,
-            "events": []
-        }
+        empty_payload = {"time_ms": 1234567890, "events": []}
 
-        with patch('apps.backend.api.routers.pusher.pusher_verify_webhook', return_value=True):
+        with patch("apps.backend.api.routers.pusher.pusher_verify_webhook", return_value=True):
             response = test_client.post(
                 "/pusher/webhook",
                 json=empty_payload,
-                headers={
-                    "X-Pusher-Key": "test_key",
-                    "X-Pusher-Signature": "test_signature"
-                }
+                headers={"X-Pusher-Key": "test_key", "X-Pusher-Signature": "test_signature"},
             )
 
         assert response.status_code == status.HTTP_200_OK
@@ -262,22 +241,19 @@ class TestPusherWebhook:
             "time_ms": 1234567890,
             "events": [
                 {"name": "channel_occupied", "channel": "test-channel", "data": {}},
-                {"name": "invalid_event", "channel": "test-channel", "data": {}}
-            ]
+                {"name": "invalid_event", "channel": "test-channel", "data": {}},
+            ],
         }
 
-        with patch('apps.backend.api.routers.pusher.pusher_verify_webhook', return_value=True):
-            with patch('apps.backend.api.routers.pusher._process_webhook_event', side_effect=[
-                {"action": "success"},
-                Exception("Processing error")
-            ]):
+        with patch("apps.backend.api.routers.pusher.pusher_verify_webhook", return_value=True):
+            with patch(
+                "apps.backend.api.routers.pusher._process_webhook_event",
+                side_effect=[{"action": "success"}, Exception("Processing error")],
+            ):
                 response = test_client.post(
                     "/pusher/webhook",
                     json=payload,
-                    headers={
-                        "X-Pusher-Key": "test_key",
-                        "X-Pusher-Signature": "test_signature"
-                    }
+                    headers={"X-Pusher-Key": "test_key", "X-Pusher-Signature": "test_signature"},
                 )
 
         assert response.status_code == status.HTTP_200_OK
@@ -299,12 +275,15 @@ class TestRealtimeEventTriggering:
         """Test successful event triggering"""
         mock_result = {"channels": {"private-teacher": {}}}
 
-        with patch('apps.backend.api.routers.pusher.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.pusher._can_trigger_event', return_value=True):
-                with patch('apps.backend.api.routers.pusher.pusher_trigger_event', return_value=mock_result):
+        with patch(
+            "apps.backend.api.routers.pusher.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.pusher._can_trigger_event", return_value=True):
+                with patch(
+                    "apps.backend.api.routers.pusher.pusher_trigger_event", return_value=mock_result
+                ):
                     response = test_client.post(
-                        "/realtime/trigger",
-                        json=sample_trigger_event_request
+                        "/realtime/trigger", json=sample_trigger_event_request
                     )
 
         assert response.status_code == status.HTTP_200_OK
@@ -314,40 +293,34 @@ class TestRealtimeEventTriggering:
         assert data["data"]["channel"] == "private-teacher"
         assert data["data"]["event"] == "content-updated"
 
-    def test_trigger_event_missing_channel(
-        self, test_client, mock_current_user
-    ):
+    def test_trigger_event_missing_channel(self, test_client, mock_current_user):
         """Test event triggering with missing channel"""
         invalid_request = {
             "event": "test-event",
-            "data": {}
+            "data": {},
             # Missing channel
         }
 
-        with patch('apps.backend.api.routers.pusher.get_current_user', return_value=mock_current_user):
-            response = test_client.post(
-                "/realtime/trigger",
-                json=invalid_request
-            )
+        with patch(
+            "apps.backend.api.routers.pusher.get_current_user", return_value=mock_current_user
+        ):
+            response = test_client.post("/realtime/trigger", json=invalid_request)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "channel" in response.json()["detail"].lower()
 
-    def test_trigger_event_missing_event_name(
-        self, test_client, mock_current_user
-    ):
+    def test_trigger_event_missing_event_name(self, test_client, mock_current_user):
         """Test event triggering with missing event name"""
         invalid_request = {
             "channel": "test-channel",
-            "data": {}
+            "data": {},
             # Missing event
         }
 
-        with patch('apps.backend.api.routers.pusher.get_current_user', return_value=mock_current_user):
-            response = test_client.post(
-                "/realtime/trigger",
-                json=invalid_request
-            )
+        with patch(
+            "apps.backend.api.routers.pusher.get_current_user", return_value=mock_current_user
+        ):
+            response = test_client.post("/realtime/trigger", json=invalid_request)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "event" in response.json()["detail"].lower()
@@ -356,12 +329,11 @@ class TestRealtimeEventTriggering:
         self, test_client, sample_trigger_event_request, mock_current_user
     ):
         """Test event triggering without permissions"""
-        with patch('apps.backend.api.routers.pusher.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.pusher._can_trigger_event', return_value=False):
-                response = test_client.post(
-                    "/realtime/trigger",
-                    json=sample_trigger_event_request
-                )
+        with patch(
+            "apps.backend.api.routers.pusher.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.pusher._can_trigger_event", return_value=False):
+                response = test_client.post("/realtime/trigger", json=sample_trigger_event_request)
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
@@ -369,12 +341,16 @@ class TestRealtimeEventTriggering:
         self, test_client, sample_trigger_event_request, mock_current_user
     ):
         """Test event triggering when Pusher service fails"""
-        with patch('apps.backend.api.routers.pusher.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.pusher._can_trigger_event', return_value=True):
-                with patch('apps.backend.api.routers.pusher.pusher_trigger_event', side_effect=Exception("Pusher API error")):
+        with patch(
+            "apps.backend.api.routers.pusher.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.pusher._can_trigger_event", return_value=True):
+                with patch(
+                    "apps.backend.api.routers.pusher.pusher_trigger_event",
+                    side_effect=Exception("Pusher API error"),
+                ):
                     response = test_client.post(
-                        "/realtime/trigger",
-                        json=sample_trigger_event_request
+                        "/realtime/trigger", json=sample_trigger_event_request
                     )
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -390,12 +366,16 @@ class TestPusherStatistics:
             "connected_clients": 42,
             "channels": 15,
             "uptime": 3600,
-            "messages_sent": 1000
+            "messages_sent": 1000,
         }
 
-        with patch('apps.backend.api.routers.pusher.get_current_user', return_value=mock_admin_user):
-            with patch('apps.backend.api.routers.pusher._user_has_role', return_value=True):
-                with patch('apps.backend.api.routers.pusher.get_pusher_status', return_value=mock_stats):
+        with patch(
+            "apps.backend.api.routers.pusher.get_current_user", return_value=mock_admin_user
+        ):
+            with patch("apps.backend.api.routers.pusher._user_has_role", return_value=True):
+                with patch(
+                    "apps.backend.api.routers.pusher.get_pusher_status", return_value=mock_stats
+                ):
                     response = test_client.get("/pusher/stats")
 
         assert response.status_code == status.HTTP_200_OK
@@ -405,8 +385,10 @@ class TestPusherStatistics:
 
     def test_get_stats_forbidden_non_admin(self, test_client, mock_current_user):
         """Test stats retrieval forbidden for non-admin"""
-        with patch('apps.backend.api.routers.pusher.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.pusher._user_has_role', return_value=False):
+        with patch(
+            "apps.backend.api.routers.pusher.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.pusher._user_has_role", return_value=False):
                 response = test_client.get("/pusher/stats")
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -414,9 +396,14 @@ class TestPusherStatistics:
 
     def test_get_stats_service_failure(self, test_client, mock_admin_user):
         """Test stats retrieval when service fails"""
-        with patch('apps.backend.api.routers.pusher.get_current_user', return_value=mock_admin_user):
-            with patch('apps.backend.api.routers.pusher._user_has_role', return_value=True):
-                with patch('apps.backend.api.routers.pusher.get_pusher_status', side_effect=Exception("Stats unavailable")):
+        with patch(
+            "apps.backend.api.routers.pusher.get_current_user", return_value=mock_admin_user
+        ):
+            with patch("apps.backend.api.routers.pusher._user_has_role", return_value=True):
+                with patch(
+                    "apps.backend.api.routers.pusher.get_pusher_status",
+                    side_effect=Exception("Stats unavailable"),
+                ):
                     response = test_client.get("/pusher/stats")
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -530,11 +517,7 @@ class TestWebhookEventProcessing:
         """Test processing channel_occupied event"""
         from apps.backend.api.routers.pusher import _process_webhook_event
 
-        event = {
-            "name": "channel_occupied",
-            "channel": "test-channel",
-            "data": {}
-        }
+        event = {"name": "channel_occupied", "channel": "test-channel", "data": {}}
 
         result = await _process_webhook_event(event)
         assert result["action"] == "channel_occupied"
@@ -545,11 +528,7 @@ class TestWebhookEventProcessing:
         """Test processing channel_vacated event"""
         from apps.backend.api.routers.pusher import _process_webhook_event
 
-        event = {
-            "name": "channel_vacated",
-            "channel": "test-channel",
-            "data": {}
-        }
+        event = {"name": "channel_vacated", "channel": "test-channel", "data": {}}
 
         result = await _process_webhook_event(event)
         assert result["action"] == "channel_vacated"
@@ -562,7 +541,7 @@ class TestWebhookEventProcessing:
         event = {
             "name": "member_added",
             "channel": "presence-classroom",
-            "data": {"user_id": "user_123"}
+            "data": {"user_id": "user_123"},
         }
 
         result = await _process_webhook_event(event)
@@ -577,7 +556,7 @@ class TestWebhookEventProcessing:
         event = {
             "name": "member_removed",
             "channel": "presence-classroom",
-            "data": {"user_id": "user_456"}
+            "data": {"user_id": "user_456"},
         }
 
         result = await _process_webhook_event(event)
@@ -588,11 +567,7 @@ class TestWebhookEventProcessing:
         """Test processing unknown event type"""
         from apps.backend.api.routers.pusher import _process_webhook_event
 
-        event = {
-            "name": "custom_event",
-            "channel": "test-channel",
-            "data": {}
-        }
+        event = {"name": "custom_event", "channel": "test-channel", "data": {}}
 
         result = await _process_webhook_event(event)
         assert result["action"] == "unknown_event"

@@ -30,16 +30,19 @@ def test_list_operations():
     assert sum(test_list) == 15
 
 
-@pytest.mark.parametrize("input,expected", [
-    (0, 0),
-    (1, 1),
-    (2, 4),
-    (3, 9),
-    (4, 16),
-])
+@pytest.mark.parametrize(
+    "input,expected",
+    [
+        (0, 0),
+        (1, 1),
+        (2, 4),
+        (3, 9),
+        (4, 16),
+    ],
+)
 def test_square_numbers(input, expected):
     """Test squaring numbers with parametrize."""
-    assert input ** 2 == expected
+    assert input**2 == expected
 
 
 class TestBasicClass:
@@ -59,5 +62,6 @@ class TestBasicClass:
 async def test_async_function():
     """Test async function support."""
     import asyncio
+
     await asyncio.sleep(0.001)
     assert True

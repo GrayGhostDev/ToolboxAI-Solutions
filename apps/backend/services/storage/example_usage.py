@@ -11,17 +11,17 @@ Version: 1.0.0
 
 import asyncio
 import logging
-from pathlib import Path
-from typing import Dict, Any
 
+from .cdn import CacheLevel, CDNConfiguration, CDNManager, ImageTransformation
+from .security import SecurityManager
+from .storage_service import (
+    DownloadOptions,
+    DownloadPermission,
+    ListOptions,
+    UploadOptions,
+)
 from .supabase_provider import SupabaseStorageProvider
-from .storage_service import UploadOptions, DownloadOptions, ListOptions, DownloadPermission
-from .file_validator import ValidationResult
-from .virus_scanner import ScanResult, ScanConfiguration
-from .image_processor import ImageProcessor, ProcessingOptions
 from .tenant_storage import TenantStorageManager
-from .security import SecurityManager, ComplianceLevel
-from .cdn import CDNManager, CDNConfiguration, ImageTransformation, CacheLevel
 
 logger = logging.getLogger(__name__)
 
@@ -31,10 +31,7 @@ async def basic_file_upload_example():
     print("\n=== Basic File Upload Example ===")
 
     # Initialize storage provider
-    storage = SupabaseStorageProvider(
-        organization_id="org_123",
-        user_id="user_456"
-    )
+    storage = SupabaseStorageProvider(organization_id="org_123", user_id="user_456")
 
     # Prepare file data
     file_data = b"Hello, this is a test file for ToolBoxAI!"
@@ -49,7 +46,7 @@ async def basic_file_upload_example():
         virus_scan=True,
         content_validation=True,
         generate_thumbnails=False,  # Not applicable for text files
-        optimize_images=False
+        optimize_images=False,
     )
 
     try:
@@ -79,22 +76,73 @@ async def image_upload_with_processing_example():
     print("\n=== Image Upload with Processing Example ===")
 
     # Initialize storage provider
-    storage = SupabaseStorageProvider(
-        organization_id="org_123",
-        user_id="user_456"
-    )
+    storage = SupabaseStorageProvider(organization_id="org_123", user_id="user_456")
 
     # Create a simple test image (1x1 pixel PNG)
-    test_image_data = bytes([
-        0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,  # PNG signature
-        0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,  # IHDR chunk
-        0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,  # 1x1 pixel
-        0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4,  # RGBA, etc.
-        0x89, 0x00, 0x00, 0x00, 0x0A, 0x49, 0x44, 0x41,  # IDAT chunk
-        0x54, 0x08, 0x1D, 0x01, 0x02, 0x00, 0x01, 0x00,  # Image data
-        0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44,  # IEND chunk
-        0xAE, 0x42, 0x60, 0x82
-    ])
+    test_image_data = bytes(
+        [
+            0x89,
+            0x50,
+            0x4E,
+            0x47,
+            0x0D,
+            0x0A,
+            0x1A,
+            0x0A,  # PNG signature
+            0x00,
+            0x00,
+            0x00,
+            0x0D,
+            0x49,
+            0x48,
+            0x44,
+            0x52,  # IHDR chunk
+            0x00,
+            0x00,
+            0x00,
+            0x01,
+            0x00,
+            0x00,
+            0x00,
+            0x01,  # 1x1 pixel
+            0x08,
+            0x06,
+            0x00,
+            0x00,
+            0x00,
+            0x1F,
+            0x15,
+            0xC4,  # RGBA, etc.
+            0x89,
+            0x00,
+            0x00,
+            0x00,
+            0x0A,
+            0x49,
+            0x44,
+            0x41,  # IDAT chunk
+            0x54,
+            0x08,
+            0x1D,
+            0x01,
+            0x02,
+            0x00,
+            0x01,
+            0x00,  # Image data
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x49,
+            0x45,
+            0x4E,
+            0x44,  # IEND chunk
+            0xAE,
+            0x42,
+            0x60,
+            0x82,
+        ]
+    )
 
     filename = "test_avatar.png"
 
@@ -108,7 +156,7 @@ async def image_upload_with_processing_example():
         content_validation=True,
         generate_thumbnails=True,
         optimize_images=True,
-        download_permission=DownloadPermission.ORGANIZATION
+        download_permission=DownloadPermission.ORGANIZATION,
     )
 
     try:
@@ -134,10 +182,7 @@ async def multipart_upload_example():
     print("\n=== Multipart Upload Example ===")
 
     # Initialize storage provider
-    storage = SupabaseStorageProvider(
-        organization_id="org_123",
-        user_id="user_456"
-    )
+    storage = SupabaseStorageProvider(organization_id="org_123", user_id="user_456")
 
     # Create a larger test file (simulate chunks)
     async def generate_file_chunks():
@@ -157,25 +202,24 @@ async def multipart_upload_example():
         title="Large Educational Document",
         description="A larger document for multipart upload demonstration",
         virus_scan=True,
-        content_validation=True
+        content_validation=True,
     )
 
     try:
         # Start multipart upload
         upload_generator = storage.upload_file_multipart(
-            generate_file_chunks(),
-            filename,
-            total_size,
-            options
+            generate_file_chunks(), filename, total_size, options
         )
 
         print("📤 Starting multipart upload...")
 
         # Track progress
         async for progress in upload_generator:
-            if hasattr(progress, 'progress_percentage'):
-                print(f"   Progress: {progress.progress_percentage:.1f}% "
-                      f"({progress.bytes_uploaded}/{progress.total_bytes} bytes)")
+            if hasattr(progress, "progress_percentage"):
+                print(
+                    f"   Progress: {progress.progress_percentage:.1f}% "
+                    f"({progress.bytes_uploaded}/{progress.total_bytes} bytes)"
+                )
             else:
                 # Final result
                 result = progress
@@ -216,14 +260,14 @@ async def compliance_and_security_example():
         description="Student homework submission",
         require_consent=True,
         virus_scan=True,
-        content_validation=True
+        content_validation=True,
     )
 
     # Organization context (simulate COPPA-applicable student)
     org_context = {
         "student_age": 12,  # Under 13, COPPA applies
         "parental_consent": True,
-        "legitimate_educational_interest": True
+        "legitimate_educational_interest": True,
     }
 
     try:
@@ -281,10 +325,7 @@ async def storage_analytics_example():
     from toolboxai_settings.settings import settings
 
     if settings.supabase.is_configured():
-        supabase_client = create_client(
-            settings.supabase.url,
-            settings.supabase.service_role_key
-        )
+        supabase_client = create_client(settings.supabase.url, settings.supabase.service_role_key)
         tenant_manager = TenantStorageManager(supabase_client)
     else:
         print("⚠️  Supabase not configured, using mock data")
@@ -319,7 +360,9 @@ async def storage_analytics_example():
             print("   Total Files: 150")
             print("   Total Size: 2.5 GB")
             print("   Quota Used: 25.0%")
-            print("   Files by Category: {'educational_content': 80, 'student_submission': 50, 'media_resource': 20}")
+            print(
+                "   Files by Category: {'educational_content': 80, 'student_submission': 50, 'media_resource': 20}"
+            )
 
     except Exception as e:
         print(f"❌ Analytics failed: {e}")
@@ -334,7 +377,7 @@ async def cdn_optimization_example():
         base_url="https://cdn.toolboxai.com",
         signing_key="demo_signing_key",
         enable_webp_conversion=True,
-        enable_compression=True
+        enable_compression=True,
     )
 
     cdn = CDNManager(cdn_config)
@@ -346,9 +389,7 @@ async def cdn_optimization_example():
         print(f"🌐 CDN URL Examples for: {storage_path}")
 
         # Avatar preset
-        avatar_url = await cdn.get_preset_url(
-            storage_path, "avatar", CacheLevel.LONG, "org_123"
-        )
+        avatar_url = await cdn.get_preset_url(storage_path, "avatar", CacheLevel.LONG, "org_123")
         print(f"   Avatar (150x150): {avatar_url}")
 
         # Thumbnail preset
@@ -359,11 +400,7 @@ async def cdn_optimization_example():
 
         # Custom transformation
         custom_transform = ImageTransformation(
-            width=500,
-            height=300,
-            quality=85,
-            resize_mode="crop",
-            crop_gravity="face"
+            width=500, height=300, quality=85, resize_mode="crop", crop_gravity="face"
         )
 
         custom_url = await cdn.get_optimized_url(
@@ -380,15 +417,9 @@ async def cdn_optimization_example():
             print(f"     {breakpoint}: {url}")
 
         # Optimized delivery based on user context
-        mobile_context = {
-            "device_type": "mobile",
-            "connection_speed": "slow",
-            "country": "US"
-        }
+        mobile_context = {"device_type": "mobile", "connection_speed": "slow", "country": "US"}
 
-        optimized_url = await cdn.optimize_delivery(
-            storage_path, mobile_context, "org_123"
-        )
+        optimized_url = await cdn.optimize_delivery(storage_path, mobile_context, "org_123")
         print(f"   Mobile Optimized: {optimized_url}")
 
         # Get CDN statistics
@@ -412,17 +443,12 @@ async def file_download_and_streaming_example(file_id):
     print(f"\n=== File Download Example ===")
 
     # Initialize storage provider
-    storage = SupabaseStorageProvider(
-        organization_id="org_123",
-        user_id="user_456"
-    )
+    storage = SupabaseStorageProvider(organization_id="org_123", user_id="user_456")
 
     try:
         # Configure download options
         download_options = DownloadOptions(
-            include_metadata=True,
-            track_access=True,
-            signed_url_expires_in=3600
+            include_metadata=True, track_access=True, signed_url_expires_in=3600
         )
 
         # Download file information
@@ -446,7 +472,7 @@ async def file_download_and_streaming_example(file_id):
             chunk_count += 1
             total_bytes += len(chunk)
             if chunk_count <= 3:  # Show first 3 chunks
-                preview = chunk[:50].decode('utf-8', errors='ignore')
+                preview = chunk[:50].decode("utf-8", errors="ignore")
                 print(f"   Chunk {chunk_count}: {len(chunk)} bytes - {preview}...")
 
         print(f"   Total: {chunk_count} chunks, {total_bytes} bytes")
@@ -460,10 +486,7 @@ async def file_management_example():
     print("\n=== File Management Example ===")
 
     # Initialize storage provider
-    storage = SupabaseStorageProvider(
-        organization_id="org_123",
-        user_id="user_456"
-    )
+    storage = SupabaseStorageProvider(organization_id="org_123", user_id="user_456")
 
     try:
         # List files with filtering
@@ -474,7 +497,7 @@ async def file_management_example():
             categories=["educational_content", "avatar"],
             include_metadata=True,
             sort_by="created_at",
-            sort_order="desc"
+            sort_order="desc",
         )
 
         files = await storage.list_files(list_options)
@@ -529,8 +552,7 @@ async def main():
 if __name__ == "__main__":
     # Configure logging
     logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
     # Run examples

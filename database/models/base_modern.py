@@ -9,19 +9,12 @@ Reference: https://docs.sqlalchemy.org/en/20/
 
 import uuid
 from datetime import datetime
-from typing import Optional, Any, TypeVar, Generic
+from typing import Any, Optional, TypeVar
 from uuid import UUID
 
-from sqlalchemy import func, String, DateTime, Boolean
-from sqlalchemy.orm import (
-    DeclarativeBase,
-    Mapped,
-    mapped_column,
-    declared_attr,
-    relationship,
-)
+from sqlalchemy import DateTime, func
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-
+from sqlalchemy.orm import DeclarativeBase, Mapped, declared_attr, mapped_column
 
 # Type variable for generic base models
 T = TypeVar("T")
@@ -34,6 +27,7 @@ class Base(DeclarativeBase):
     All models inherit from this class to get proper type mapping
     and async support.
     """
+
     pass
 
 
@@ -153,6 +147,7 @@ class BaseModel(Base, TimestampMixin):
     Provides UUID primary key and automatic timestamp tracking.
     Use this for simple models without soft delete or audit needs.
     """
+
     __abstract__ = True
 
     id: Mapped[UUID] = mapped_column(
@@ -172,10 +167,7 @@ class BaseModel(Base, TimestampMixin):
         Returns:
             Dictionary with all column values
         """
-        return {
-            column.name: getattr(self, column.name)
-            for column in self.__table__.columns
-        }
+        return {column.name: getattr(self, column.name) for column in self.__table__.columns}
 
 
 class FullBaseModel(Base, TimestampMixin, AuditMixin, SoftDeleteMixin):
@@ -190,6 +182,7 @@ class FullBaseModel(Base, TimestampMixin, AuditMixin, SoftDeleteMixin):
 
     Use this for models requiring complete audit trail and soft delete.
     """
+
     __abstract__ = True
 
     id: Mapped[UUID] = mapped_column(
@@ -212,10 +205,7 @@ class FullBaseModel(Base, TimestampMixin, AuditMixin, SoftDeleteMixin):
         Returns:
             Dictionary with all column values
         """
-        result = {
-            column.name: getattr(self, column.name)
-            for column in self.__table__.columns
-        }
+        result = {column.name: getattr(self, column.name) for column in self.__table__.columns}
 
         if include_deleted:
             result["is_deleted"] = self.is_deleted
@@ -235,6 +225,7 @@ class TenantBaseModel(Base, TenantMixin, TimestampMixin, AuditMixin, SoftDeleteM
 
     All tenant-scoped models should inherit from this.
     """
+
     __abstract__ = True
 
     id: Mapped[UUID] = mapped_column(
@@ -262,10 +253,7 @@ class TenantBaseModel(Base, TenantMixin, TimestampMixin, AuditMixin, SoftDeleteM
         Returns:
             Dictionary with all column values
         """
-        result = {
-            column.name: getattr(self, column.name)
-            for column in self.__table__.columns
-        }
+        result = {column.name: getattr(self, column.name) for column in self.__table__.columns}
 
         result["is_deleted"] = self.is_deleted
 
@@ -284,6 +272,7 @@ class GlobalBaseModel(Base, TimestampMixin, AuditMixin, SoftDeleteMixin):
 
     Includes everything except tenant isolation.
     """
+
     __abstract__ = True
 
     id: Mapped[UUID] = mapped_column(
@@ -303,10 +292,7 @@ class GlobalBaseModel(Base, TimestampMixin, AuditMixin, SoftDeleteMixin):
         Returns:
             Dictionary with all column values
         """
-        return {
-            column.name: getattr(self, column.name)
-            for column in self.__table__.columns
-        }
+        return {column.name: getattr(self, column.name) for column in self.__table__.columns}
 
 
 # Export all base classes and mixins

@@ -15,16 +15,10 @@ Test Categories:
 8. Performance Tests
 """
 
-import asyncio
-import json
 import os
 import time
-import uuid
-from datetime import datetime, timezone
-from typing import Dict, Any, List
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
-import httpx
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -59,11 +53,7 @@ class TestApplicationFactory:
 
     def test_app_with_custom_settings(self):
         """Test app creation with custom settings"""
-        app = create_app(
-            title="Custom Test App",
-            version="1.0.0-test",
-            testing_mode=True
-        )
+        app = create_app(title="Custom Test App", version="1.0.0-test", testing_mode=True)
         assert app.title == "Custom Test App"
         assert app.version == "1.0.0-test"
 
@@ -88,7 +78,7 @@ class TestApplicationFactory:
             app = create_app()
             # Check that the app was created properly with testing environment
             assert app is not None
-            assert hasattr(app.state, 'testing_mode')
+            assert hasattr(app.state, "testing_mode")
 
 
 class TestApplicationStartup:
@@ -120,7 +110,7 @@ class TestApplicationStartup:
             "/info",
             "/api/v1/content/generate",
             "/migration/status",
-            "/endpoint/that/errors"
+            "/endpoint/that/errors",
         ]
 
         for route in expected_routes:
@@ -194,11 +184,7 @@ class TestEndpointMigration:
     def test_pusher_auth_endpoint(self):
         """Test Pusher authentication endpoint"""
         response = self.client.post(
-            "/pusher/auth",
-            params={
-                "socket_id": "test_socket_123",
-                "channel_name": "test_channel"
-            }
+            "/pusher/auth", params={"socket_id": "test_socket_123", "channel_name": "test_channel"}
         )
         # Should either succeed or return 503 if Pusher unavailable
         assert response.status_code in [200, 503]
@@ -210,7 +196,7 @@ class TestEndpointMigration:
             "channel": "test_channel",
             "event": "test_event",
             "type": "test",
-            "payload": {"message": "test"}
+            "payload": {"message": "test"},
         }
 
         response = self.client.post("/realtime/trigger", json=payload)
@@ -229,18 +215,13 @@ class TestAuthenticationIntegration:
 
     def test_unauthenticated_content_generation(self):
         """Test content generation without authentication"""
-        response = self.client.post(
-            "/api/v1/content/generate",
-            params={"topic": "test topic"}
-        )
+        response = self.client.post("/api/v1/content/generate", params={"topic": "test topic"})
         # Should require authentication
         assert response.status_code == 401
 
     def test_protected_endpoints_require_auth(self):
         """Test that protected endpoints require authentication"""
-        protected_endpoints = [
-            ("/api/v1/content/generate", "post")
-        ]
+        protected_endpoints = [("/api/v1/content/generate", "post")]
 
         for endpoint, method in protected_endpoints:
             if method == "post":
@@ -269,10 +250,7 @@ class TestContentGeneration:
     def test_content_generation_service_availability(self):
         """Test that content generation service dependency is handled"""
         # Test that the endpoint exists and handles missing dependencies gracefully
-        response = self.client.post(
-            "/api/v1/content/generate",
-            params={"topic": "test"}
-        )
+        response = self.client.post("/api/v1/content/generate", params={"topic": "test"})
         # Should fail with auth error, not import error
         assert response.status_code != 500 or "import" not in response.text.lower()
 
@@ -293,7 +271,7 @@ class TestBackwardCompatibility:
             "/realtime/trigger",
             "/pusher/webhook",
             "/api/v1/content/generate",
-            "/migration/status"
+            "/migration/status",
         ]
 
         for endpoint in legacy_endpoints:
@@ -370,17 +348,13 @@ class TestErrorHandling:
         """Test handling of unavailable services"""
         # Test Pusher unavailable scenario
         response = self.client.post(
-            "/pusher/auth",
-            params={"socket_id": "test", "channel_name": "test"}
+            "/pusher/auth", params={"socket_id": "test", "channel_name": "test"}
         )
         # Should handle gracefully (either 200, 503, or 401 for auth)
         assert response.status_code in [200, 401, 503]
 
         # Test agents unavailable scenario
-        response = self.client.post(
-            "/api/v1/content/generate",
-            params={"topic": "test"}
-        )
+        response = self.client.post("/api/v1/content/generate", params={"topic": "test"})
         # Should handle gracefully (auth error, not import error)
         assert response.status_code in [401, 503]
 
@@ -529,8 +503,7 @@ class TestServiceMocking:
         """Test Pusher service availability detection"""
         # The app should handle Pusher being unavailable gracefully
         response = self.client.post(
-            "/realtime/trigger",
-            json={"channel": "test", "event": "test", "payload": {}}
+            "/realtime/trigger", json={"channel": "test", "event": "test", "payload": {}}
         )
 
         # Should return success even if Pusher unavailable (fallback behavior)
@@ -543,10 +516,7 @@ class TestServiceMocking:
     def test_agents_service_mocking(self):
         """Test agents service availability detection"""
         # Test that missing agents service is handled gracefully
-        response = self.client.post(
-            "/api/v1/content/generate",
-            params={"topic": "test"}
-        )
+        response = self.client.post("/api/v1/content/generate", params={"topic": "test"})
 
         # Should fail with auth, not import error
         assert response.status_code in [401, 503]
@@ -556,13 +526,13 @@ class TestServiceMocking:
 def verify_app_factory_pattern(app: FastAPI) -> bool:
     """Verify app follows factory pattern"""
     return (
-        hasattr(app.state, 'testing_mode') and
-        hasattr(app.state, 'skip_sentry') and
-        hasattr(app.state, 'skip_lifespan')
+        hasattr(app.state, "testing_mode")
+        and hasattr(app.state, "skip_sentry")
+        and hasattr(app.state, "skip_lifespan")
     )
 
 
-def get_app_routes(app: FastAPI) -> List[str]:
+def get_app_routes(app: FastAPI) -> list[str]:
     """Get list of registered routes"""
     return [route.path for route in app.routes]
 

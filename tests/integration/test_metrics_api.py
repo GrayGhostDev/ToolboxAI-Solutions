@@ -9,21 +9,18 @@ Tests all metrics endpoints with:
 - Error handling
 """
 
-import pytest
 import asyncio
 from datetime import datetime, timezone
-from typing import Dict, Any
-from httpx import AsyncClient
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-from fastapi import FastAPI
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+import pytest
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
 from apps.backend.core.app_factory import create_app
 from apps.backend.models.schemas import User
 from database.models import Base
-
 
 # ============================================================================
 # Test Configuration
@@ -128,7 +125,7 @@ class TestDashboardMetricsAPI:
         self,
         async_client: AsyncClient,
         mock_current_user: User,
-        auth_headers: Dict[str, str],
+        auth_headers: dict[str, str],
     ):
         """Test successful dashboard metrics retrieval."""
         with patch(
@@ -169,7 +166,7 @@ class TestDashboardMetricsAPI:
         self,
         async_client: AsyncClient,
         mock_current_user: User,
-        auth_headers: Dict[str, str],
+        auth_headers: dict[str, str],
     ):
         """Test force refresh parameter."""
         with patch(
@@ -206,7 +203,7 @@ class TestDashboardMetricsAPI:
         self,
         async_client: AsyncClient,
         mock_current_user: User,
-        auth_headers: Dict[str, str],
+        auth_headers: dict[str, str],
     ):
         """Test rate limiting is enforced."""
         with patch(
@@ -257,7 +254,7 @@ class TestActivityMetricsAPI:
         self,
         async_client: AsyncClient,
         mock_current_user: User,
-        auth_headers: Dict[str, str],
+        auth_headers: dict[str, str],
     ):
         """Test successful activity metrics retrieval."""
         with patch(
@@ -300,7 +297,7 @@ class TestStatisticsAPI:
         self,
         async_client: AsyncClient,
         mock_current_user: User,
-        auth_headers: Dict[str, str],
+        auth_headers: dict[str, str],
     ):
         """Test statistics with valid period."""
         with patch(
@@ -323,7 +320,7 @@ class TestStatisticsAPI:
         self,
         async_client: AsyncClient,
         mock_current_user: User,
-        auth_headers: Dict[str, str],
+        auth_headers: dict[str, str],
     ):
         """Test statistics with invalid period."""
         with patch(
@@ -353,7 +350,7 @@ class TestMetricsExportAPI:
         self,
         async_client: AsyncClient,
         mock_current_user: User,
-        auth_headers: Dict[str, str],
+        auth_headers: dict[str, str],
     ):
         """Test metrics export in JSON format."""
         with patch(
@@ -383,7 +380,7 @@ class TestMetricsExportAPI:
         self,
         async_client: AsyncClient,
         mock_current_user: User,
-        auth_headers: Dict[str, str],
+        auth_headers: dict[str, str],
     ):
         """Test export with invalid format."""
         with patch(
@@ -420,7 +417,7 @@ class TestCacheInvalidationAPI:
         self,
         async_client: AsyncClient,
         admin_user: User,
-        auth_headers: Dict[str, str],
+        auth_headers: dict[str, str],
     ):
         """Test cache invalidation by admin."""
         with patch(
@@ -441,7 +438,7 @@ class TestCacheInvalidationAPI:
         self,
         async_client: AsyncClient,
         mock_current_user: User,
-        auth_headers: Dict[str, str],
+        auth_headers: dict[str, str],
     ):
         """Test cache invalidation by non-admin (should fail)."""
         with patch(

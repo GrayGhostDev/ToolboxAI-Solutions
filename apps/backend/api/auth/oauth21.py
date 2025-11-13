@@ -4,26 +4,29 @@ Phase 3 - Complete OAuth 2.1 with PKCE
 Compliant with RFC 6749, RFC 7636, and OAuth 2.1 draft
 """
 
-import hashlib
-import secrets
 import base64
+import hashlib
 import json
-import jwt
-import time
-import os
-from datetime import datetime, timedelta
-from typing import Optional, Dict, List, Any, Tuple
-from dataclasses import dataclass, field
-from enum import Enum
-import redis
 import logging
+import os
+import secrets
+import time
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
+
+import jwt
+import redis
 
 logger = logging.getLogger(__name__)
+
 
 # Request/Response Models
 @dataclass
 class AuthorizationRequest:
     """OAuth 2.1 Authorization Request"""
+
     client_id: str
     redirect_uri: str
     scope: str
@@ -34,9 +37,11 @@ class AuthorizationRequest:
     user_id: Optional[str] = None
     nonce: Optional[str] = None
 
+
 @dataclass
 class TokenRequest:
     """OAuth 2.1 Token Request"""
+
     grant_type: str
     code: Optional[str] = None
     redirect_uri: Optional[str] = None
@@ -46,27 +51,37 @@ class TokenRequest:
     refresh_token: Optional[str] = None
     scope: Optional[str] = None
 
+
 class ResponseType(Enum):
     """OAuth 2.1 supported response types"""
+
     CODE = "code"  # Only authorization code flow in OAuth 2.1
+
 
 class GrantType(Enum):
     """OAuth 2.1 supported grant types"""
+
     AUTHORIZATION_CODE = "authorization_code"
     REFRESH_TOKEN = "refresh_token"
     CLIENT_CREDENTIALS = "client_credentials"
 
+
 class TokenType(Enum):
     """Token types"""
+
     BEARER = "Bearer"
+
 
 class PKCEMethod(Enum):
     """PKCE challenge methods"""
+
     S256 = "S256"  # SHA256 - Only supported method in OAuth 2.1
+
 
 @dataclass
 class OAuth21Config:
     """OAuth 2.1 Server Configuration"""
+
     issuer: str = "https://auth.toolboxai.com"
     authorization_endpoint: str = "/oauth/authorize"
     token_endpoint: str = "/oauth/token"
@@ -86,19 +101,19 @@ class OAuth21Config:
     refresh_token_rotation: bool = True  # OAuth 2.1 recommendation
 
     # Client authentication
-    supported_client_auth_methods: List[str] = field(default_factory=lambda: [
-        "client_secret_basic",
-        "client_secret_post",
-        "private_key_jwt"
-    ])
+    supported_client_auth_methods: List[str] = field(
+        default_factory=lambda: ["client_secret_basic", "client_secret_post", "private_key_jwt"]
+    )
 
     # PKCE settings
     pkce_code_challenge_methods: List[str] = field(default_factory=lambda: ["S256"])
     pkce_required_for_public_clients: bool = True
 
+
 @dataclass
 class Client:
     """OAuth client representation"""
+
     client_id: str
     client_secret: Optional[str]
     client_name: str
@@ -115,19 +130,18 @@ class Client:
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
 
+
 class OAuth21Server:
     """OAuth 2.1 compliant authorization server"""
 
     def __init__(
-        self,
-        redis_client: Optional[redis.Redis] = None,
-        config: Optional[OAuth21Config] = None
+        self, redis_client: Optional[redis.Redis] = None, config: Optional[OAuth21Config] = None
     ):
         self.redis = redis_client or self._create_redis_client()
         self.config = config or OAuth21Config()
 
         # Require JWT secret from environment for security
-        self.jwt_secret = os.getenv('OAUTH_JWT_SECRET')
+        self.jwt_secret = os.getenv("OAUTH_JWT_SECRET")
         if not self.jwt_secret:
             raise RuntimeError("OAUTH_JWT_SECRET must be set in environment variables")
 
@@ -136,10 +150,10 @@ class OAuth21Server:
     def _create_redis_client(self) -> redis.Redis:
         """Create Redis client"""
         return redis.Redis(
-            host=os.getenv('REDIS_HOST', 'localhost'),
-            port=int(os.getenv('REDIS_PORT', '6379')),
-            db=int(os.getenv('REDIS_DB', '0')),
-            decode_responses=True
+            host=os.getenv("REDIS_HOST", "localhost"),
+            port=int(os.getenv("REDIS_PORT", "6379")),
+            db=int(os.getenv("REDIS_DB", "0")),
+            decode_responses=True,
         )
 
     # ===== PKCE Implementation =====
@@ -147,19 +161,14 @@ class OAuth21Server:
     def generate_code_verifier(self) -> str:
         """Generate PKCE code verifier"""
         # RFC 7636: 43-128 characters
-        return base64.urlsafe_b64encode(secrets.token_bytes(32)).decode('utf-8').rstrip('=')
+        return base64.urlsafe_b64encode(secrets.token_bytes(32)).decode("utf-8").rstrip("=")
 
     def generate_code_challenge(self, verifier: str) -> str:
         """Generate PKCE code challenge from verifier"""
         challenge = hashlib.sha256(verifier.encode()).digest()
-        return base64.urlsafe_b64encode(challenge).decode('utf-8').rstrip('=')
+        return base64.urlsafe_b64encode(challenge).decode("utf-8").rstrip("=")
 
-    def verify_pkce(
-        self,
-        verifier: str,
-        challenge: str,
-        method: str = "S256"
-    ) -> bool:
+    def verify_pkce(self, verifier: str, challenge: str, method: str = "S256") -> bool:
         """Verify PKCE challenge"""
         if method != "S256":
             logger.error(f"Unsupported PKCE method: {method}")
@@ -170,56 +179,60 @@ class OAuth21Server:
 
     # ===== Client Management =====
 
-    async def register_client(
-        self,
-        client_data: Dict[str, Any]
-    ) -> Client:
+    async def register_client(self, client_data: Dict[str, Any]) -> Client:
         """Register new OAuth client (Dynamic Client Registration)"""
 
         # Generate client credentials
-        client_id = base64.urlsafe_b64encode(secrets.token_bytes(16)).decode('utf-8').rstrip('=')
+        client_id = base64.urlsafe_b64encode(secrets.token_bytes(16)).decode("utf-8").rstrip("=")
 
         # Only confidential clients get a secret
         client_secret = None
-        if client_data.get('client_type') == 'confidential':
-            client_secret = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode('utf-8').rstrip('=')
+        if client_data.get("client_type") == "confidential":
+            client_secret = (
+                base64.urlsafe_b64encode(secrets.token_bytes(32)).decode("utf-8").rstrip("=")
+            )
 
         # Create client object
         client = Client(
             client_id=client_id,
             client_secret=client_secret,
-            client_name=client_data['client_name'],
-            client_type=client_data.get('client_type', 'public'),
-            redirect_uris=client_data['redirect_uris'],
-            grant_types=client_data.get('grant_types', ['authorization_code']),
-            response_types=client_data.get('response_types', ['code']),
-            scope=client_data.get('scope', 'read'),
-            contacts=client_data.get('contacts', []),
-            logo_uri=client_data.get('logo_uri'),
-            client_uri=client_data.get('client_uri'),
-            policy_uri=client_data.get('policy_uri'),
-            tos_uri=client_data.get('tos_uri')
+            client_name=client_data["client_name"],
+            client_type=client_data.get("client_type", "public"),
+            redirect_uris=client_data["redirect_uris"],
+            grant_types=client_data.get("grant_types", ["authorization_code"]),
+            response_types=client_data.get("response_types", ["code"]),
+            scope=client_data.get("scope", "read"),
+            contacts=client_data.get("contacts", []),
+            logo_uri=client_data.get("logo_uri"),
+            client_uri=client_data.get("client_uri"),
+            policy_uri=client_data.get("policy_uri"),
+            tos_uri=client_data.get("tos_uri"),
         )
 
         # Store client
         key = f"oauth:client:{client_id}"
-        self.redis.set(key, json.dumps({
-            'client_id': client.client_id,
-            'client_secret': client.client_secret,
-            'client_name': client.client_name,
-            'client_type': client.client_type,
-            'redirect_uris': client.redirect_uris,
-            'grant_types': client.grant_types,
-            'response_types': client.response_types,
-            'scope': client.scope,
-            'contacts': client.contacts,
-            'logo_uri': client.logo_uri,
-            'client_uri': client.client_uri,
-            'policy_uri': client.policy_uri,
-            'tos_uri': client.tos_uri,
-            'created_at': client.created_at.isoformat(),
-            'updated_at': client.updated_at.isoformat()
-        }))
+        self.redis.set(
+            key,
+            json.dumps(
+                {
+                    "client_id": client.client_id,
+                    "client_secret": client.client_secret,
+                    "client_name": client.client_name,
+                    "client_type": client.client_type,
+                    "redirect_uris": client.redirect_uris,
+                    "grant_types": client.grant_types,
+                    "response_types": client.response_types,
+                    "scope": client.scope,
+                    "contacts": client.contacts,
+                    "logo_uri": client.logo_uri,
+                    "client_uri": client.client_uri,
+                    "policy_uri": client.policy_uri,
+                    "tos_uri": client.tos_uri,
+                    "created_at": client.created_at.isoformat(),
+                    "updated_at": client.updated_at.isoformat(),
+                }
+            ),
+        )
 
         logger.info(f"Client registered: {client_id}")
         return client
@@ -234,11 +247,7 @@ class OAuth21Server:
 
         return json.loads(client_json)
 
-    async def verify_client(
-        self,
-        client_id: str,
-        client_secret: Optional[str] = None
-    ) -> bool:
+    async def verify_client(self, client_id: str, client_secret: Optional[str] = None) -> bool:
         """Verify client credentials"""
         client = await self.get_client(client_id)
 
@@ -246,11 +255,11 @@ class OAuth21Server:
             return False
 
         # Public clients don't have secrets
-        if client.get('client_type') == 'public':
+        if client.get("client_type") == "public":
             return client_secret is None
 
         # Confidential clients must provide secret
-        stored_secret = client.get('client_secret')
+        stored_secret = client.get("client_secret")
         if not client_secret or not stored_secret:
             return False
 
@@ -260,7 +269,7 @@ class OAuth21Server:
 
     async def store_client(self, client_data: Dict[str, Any]) -> None:
         """Store client data"""
-        client_id = client_data['client_id']
+        client_id = client_data["client_id"]
         key = f"oauth:client:{client_id}"
         self.redis.set(key, json.dumps(client_data))
         logger.info(f"Client stored: {client_id}")
@@ -273,7 +282,7 @@ class OAuth21Server:
             client_json = self.redis.get(key)
             if client_json:
                 client = json.loads(client_json)
-                if client.get('owner_id') == user_id:
+                if client.get("owner_id") == user_id:
                     clients.append(client)
         return clients
 
@@ -292,9 +301,7 @@ class OAuth21Server:
     # ===== Authorization Flow =====
 
     async def create_authorization_request(
-        self,
-        request: AuthorizationRequest,
-        user_id: str
+        self, request: AuthorizationRequest, user_id: str
     ) -> str:
         """Create authorization request (Step 1 of auth code flow)"""
 
@@ -304,7 +311,7 @@ class OAuth21Server:
             raise ValueError(f"Invalid client_id: {request.client_id}")
 
         # Validate redirect URI (exact match required in OAuth 2.1)
-        redirect_uris = client.get('redirect_uris', [])
+        redirect_uris = client.get("redirect_uris", [])
         if request.redirect_uri not in redirect_uris:
             raise ValueError(f"Invalid redirect_uri: {request.redirect_uri}")
 
@@ -317,37 +324,30 @@ class OAuth21Server:
             raise ValueError("Only S256 PKCE method supported in OAuth 2.1")
 
         # Generate authorization code
-        auth_code = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode('utf-8').rstrip('=')
+        auth_code = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode("utf-8").rstrip("=")
 
         # Store authorization data
         auth_data = {
-            'code': auth_code,
-            'client_id': request.client_id,
-            'redirect_uri': request.redirect_uri,
-            'scope': request.scope,
-            'state': request.state,
-            'code_challenge': request.code_challenge,
-            'code_challenge_method': request.code_challenge_method,
-            'user_id': user_id,
-            'nonce': request.nonce,
-            'created_at': datetime.utcnow().isoformat()
+            "code": auth_code,
+            "client_id": request.client_id,
+            "redirect_uri": request.redirect_uri,
+            "scope": request.scope,
+            "state": request.state,
+            "code_challenge": request.code_challenge,
+            "code_challenge_method": request.code_challenge_method,
+            "user_id": user_id,
+            "nonce": request.nonce,
+            "created_at": datetime.utcnow().isoformat(),
         }
 
         key = f"oauth:auth_code:{auth_code}"
-        self.redis.setex(
-            key,
-            self.config.authorization_code_lifetime,
-            json.dumps(auth_data)
-        )
+        self.redis.setex(key, self.config.authorization_code_lifetime, json.dumps(auth_data))
 
         logger.info(f"Authorization code created for client {request.client_id}")
 
         return auth_code
 
-    async def exchange_authorization_code(
-        self,
-        request: TokenRequest
-    ) -> Dict[str, Any]:
+    async def exchange_authorization_code(self, request: TokenRequest) -> Dict[str, Any]:
         """Exchange authorization code for tokens (Step 2 of auth code flow)"""
 
         if not request.code:
@@ -363,14 +363,14 @@ class OAuth21Server:
         auth_data = json.loads(auth_json)
 
         # Validate client
-        if auth_data['client_id'] != request.client_id:
+        if auth_data["client_id"] != request.client_id:
             raise ValueError("Client mismatch")
 
         if not await self.verify_client(request.client_id, request.client_secret):
             raise ValueError("Client authentication failed")
 
         # Validate redirect URI (exact match)
-        if auth_data['redirect_uri'] != request.redirect_uri:
+        if auth_data["redirect_uri"] != request.redirect_uri:
             raise ValueError("Redirect URI mismatch")
 
         # Validate PKCE
@@ -378,9 +378,7 @@ class OAuth21Server:
             raise ValueError("PKCE code_verifier required")
 
         if not self.verify_pkce(
-            request.code_verifier,
-            auth_data['code_challenge'],
-            auth_data['code_challenge_method']
+            request.code_verifier, auth_data["code_challenge"], auth_data["code_challenge_method"]
         ):
             raise ValueError("Invalid PKCE verifier")
 
@@ -389,44 +387,36 @@ class OAuth21Server:
 
         # Generate tokens
         access_token = await self._generate_access_token(
-            user_id=auth_data['user_id'],
+            user_id=auth_data["user_id"],
             client_id=client_id,
-            scope=auth_data['scope'],
-            nonce=auth_data.get('nonce')
+            scope=auth_data["scope"],
+            nonce=auth_data.get("nonce"),
         )
 
         refresh_token = await self._generate_refresh_token(
-            user_id=auth_data['user_id'],
-            client_id=client_id,
-            scope=auth_data['scope']
+            user_id=auth_data["user_id"], client_id=client_id, scope=auth_data["scope"]
         )
 
         # ID token for OpenID Connect
         id_token = None
-        if 'openid' in auth_data['scope']:
+        if "openid" in auth_data["scope"]:
             id_token = await self._generate_id_token(
-                user_id=auth_data['user_id'],
-                client_id=client_id,
-                nonce=auth_data.get('nonce')
+                user_id=auth_data["user_id"], client_id=client_id, nonce=auth_data.get("nonce")
             )
 
         return {
-            'access_token': access_token,
-            'token_type': 'Bearer',
-            'expires_in': self.config.access_token_lifetime,
-            'refresh_token': refresh_token,
-            'scope': auth_data['scope'],
-            'id_token': id_token
+            "access_token": access_token,
+            "token_type": "Bearer",
+            "expires_in": self.config.access_token_lifetime,
+            "refresh_token": refresh_token,
+            "scope": auth_data["scope"],
+            "id_token": id_token,
         }
 
     # ===== Token Management =====
 
     async def _generate_access_token(
-        self,
-        user_id: str,
-        client_id: str,
-        scope: str,
-        nonce: Optional[str] = None
+        self, user_id: str, client_id: str, scope: str, nonce: Optional[str] = None
     ) -> str:
         """Generate JWT access token"""
 
@@ -434,19 +424,19 @@ class OAuth21Server:
         now = datetime.utcnow()
 
         payload = {
-            'iss': self.config.issuer,
-            'sub': user_id,
-            'aud': client_id,
-            'exp': (now + timedelta(seconds=self.config.access_token_lifetime)).timestamp(),
-            'iat': now.timestamp(),
-            'nbf': now.timestamp(),
-            'jti': jti,
-            'scope': scope,
-            'token_type': 'access_token'
+            "iss": self.config.issuer,
+            "sub": user_id,
+            "aud": client_id,
+            "exp": (now + timedelta(seconds=self.config.access_token_lifetime)).timestamp(),
+            "iat": now.timestamp(),
+            "nbf": now.timestamp(),
+            "jti": jti,
+            "scope": scope,
+            "token_type": "access_token",
         }
 
         if nonce:
-            payload['nonce'] = nonce
+            payload["nonce"] = nonce
 
         token = jwt.encode(payload, self.jwt_secret, algorithm=self.jwt_algorithm)
 
@@ -455,68 +445,61 @@ class OAuth21Server:
         self.redis.setex(
             key,
             self.config.access_token_lifetime,
-            json.dumps({
-                'user_id': user_id,
-                'client_id': client_id,
-                'scope': scope,
-                'created_at': now.isoformat()
-            })
+            json.dumps(
+                {
+                    "user_id": user_id,
+                    "client_id": client_id,
+                    "scope": scope,
+                    "created_at": now.isoformat(),
+                }
+            ),
         )
 
         return token
 
-    async def _generate_refresh_token(
-        self,
-        user_id: str,
-        client_id: str,
-        scope: str
-    ) -> str:
+    async def _generate_refresh_token(self, user_id: str, client_id: str, scope: str) -> str:
         """Generate refresh token"""
 
-        token = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode('utf-8').rstrip('=')
+        token = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode("utf-8").rstrip("=")
 
         # Store refresh token
         key = f"oauth:refresh_token:{token}"
         self.redis.setex(
             key,
             self.config.refresh_token_lifetime,
-            json.dumps({
-                'user_id': user_id,
-                'client_id': client_id,
-                'scope': scope,
-                'created_at': datetime.utcnow().isoformat()
-            })
+            json.dumps(
+                {
+                    "user_id": user_id,
+                    "client_id": client_id,
+                    "scope": scope,
+                    "created_at": datetime.utcnow().isoformat(),
+                }
+            ),
         )
 
         return token
 
     async def _generate_id_token(
-        self,
-        user_id: str,
-        client_id: str,
-        nonce: Optional[str] = None
+        self, user_id: str, client_id: str, nonce: Optional[str] = None
     ) -> str:
         """Generate OpenID Connect ID token"""
 
         now = datetime.utcnow()
 
         payload = {
-            'iss': self.config.issuer,
-            'sub': user_id,
-            'aud': client_id,
-            'exp': (now + timedelta(seconds=self.config.access_token_lifetime)).timestamp(),
-            'iat': now.timestamp(),
-            'auth_time': now.timestamp()
+            "iss": self.config.issuer,
+            "sub": user_id,
+            "aud": client_id,
+            "exp": (now + timedelta(seconds=self.config.access_token_lifetime)).timestamp(),
+            "iat": now.timestamp(),
+            "auth_time": now.timestamp(),
         }
 
         if nonce:
-            payload['nonce'] = nonce
+            payload["nonce"] = nonce
 
         # Add user claims (simplified)
-        payload.update({
-            'email': f"{user_id}@toolboxai.com",
-            'email_verified': True
-        })
+        payload.update({"email": f"{user_id}@toolboxai.com", "email_verified": True})
 
         return jwt.encode(payload, self.jwt_secret, algorithm=self.jwt_algorithm)
 
@@ -525,7 +508,7 @@ class OAuth21Server:
         refresh_token: str,
         client_id: str,
         client_secret: Optional[str] = None,
-        scope: Optional[str] = None
+        scope: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Refresh access token using refresh token"""
 
@@ -543,12 +526,12 @@ class OAuth21Server:
         token_data = json.loads(token_json)
 
         # Validate client match
-        if token_data['client_id'] != client_id:
+        if token_data["client_id"] != client_id:
             raise ValueError("Client mismatch")
 
         # Validate scope (can't increase scope)
-        requested_scope = scope or token_data['scope']
-        if not self._is_scope_subset(requested_scope, token_data['scope']):
+        requested_scope = scope or token_data["scope"]
+        if not self._is_scope_subset(requested_scope, token_data["scope"]):
             raise ValueError("Invalid scope")
 
         # Rotate refresh token if configured
@@ -558,69 +541,59 @@ class OAuth21Server:
 
             # Generate new refresh token
             new_refresh_token = await self._generate_refresh_token(
-                user_id=token_data['user_id'],
-                client_id=client_id,
-                scope=requested_scope
+                user_id=token_data["user_id"], client_id=client_id, scope=requested_scope
             )
         else:
             new_refresh_token = refresh_token
 
         # Generate new access token
         access_token = await self._generate_access_token(
-            user_id=token_data['user_id'],
-            client_id=client_id,
-            scope=requested_scope
+            user_id=token_data["user_id"], client_id=client_id, scope=requested_scope
         )
 
         return {
-            'access_token': access_token,
-            'token_type': 'Bearer',
-            'expires_in': self.config.access_token_lifetime,
-            'refresh_token': new_refresh_token,
-            'scope': requested_scope
+            "access_token": access_token,
+            "token_type": "Bearer",
+            "expires_in": self.config.access_token_lifetime,
+            "refresh_token": new_refresh_token,
+            "scope": requested_scope,
         }
 
     # ===== Token Introspection & Revocation =====
 
     async def introspect_token(
-        self,
-        token: str,
-        token_type_hint: Optional[str] = None
+        self, token: str, token_type_hint: Optional[str] = None
     ) -> Dict[str, Any]:
         """Token introspection (RFC 7662)"""
 
         try:
             # Try as JWT access token
-            payload = jwt.decode(
-                token,
-                self.jwt_secret,
-                algorithms=[self.jwt_algorithm]
-            )
+            payload = jwt.decode(token, self.jwt_secret, algorithms=[self.jwt_algorithm])
 
             # Check if token is revoked
-            jti = payload.get('jti')
+            jti = payload.get("jti")
             if jti:
                 key = f"oauth:revoked:{jti}"
                 if self.redis.get(key):
-                    return {'active': False}
+                    return {"active": False}
 
             # Token is active
             return {
-                'active': True,
-                'scope': payload.get('scope'),
-                'client_id': payload.get('aud'),
-                'username': payload.get('sub'),
-                'exp': payload.get('exp'),
-                'iat': payload.get('iat'),
-                'nbf': payload.get('nbf'),
-                'sub': payload.get('sub'),
-                'aud': payload.get('aud'),
-                'iss': payload.get('iss'),
-                'jti': payload.get('jti')
+                "active": True,
+                "scope": payload.get("scope"),
+                "client_id": payload.get("aud"),
+                "username": payload.get("sub"),
+                "exp": payload.get("exp"),
+                "iat": payload.get("iat"),
+                "nbf": payload.get("nbf"),
+                "sub": payload.get("sub"),
+                "aud": payload.get("aud"),
+                "iss": payload.get("iss"),
+                "jti": payload.get("jti"),
             }
 
         except jwt.ExpiredSignatureError:
-            return {'active': False}
+            return {"active": False}
         except jwt.InvalidTokenError:
             # Try as refresh token
             key = f"oauth:refresh_token:{token}"
@@ -629,21 +602,21 @@ class OAuth21Server:
             if token_data:
                 data = json.loads(token_data)
                 return {
-                    'active': True,
-                    'scope': data.get('scope'),
-                    'client_id': data.get('client_id'),
-                    'username': data.get('user_id'),
-                    'token_type': 'refresh_token'
+                    "active": True,
+                    "scope": data.get("scope"),
+                    "client_id": data.get("client_id"),
+                    "username": data.get("user_id"),
+                    "token_type": "refresh_token",
                 }
 
-            return {'active': False}
+            return {"active": False}
 
     async def revoke_token(
         self,
         token: str,
         token_type_hint: Optional[str] = None,
         client_id: Optional[str] = None,
-        client_secret: Optional[str] = None
+        client_secret: Optional[str] = None,
     ) -> bool:
         """Token revocation (RFC 7009)"""
 
@@ -660,16 +633,12 @@ class OAuth21Server:
 
         # Try to revoke as access token
         try:
-            payload = jwt.decode(
-                token,
-                self.jwt_secret,
-                algorithms=[self.jwt_algorithm]
-            )
+            payload = jwt.decode(token, self.jwt_secret, algorithms=[self.jwt_algorithm])
 
             # Add to revocation list
-            jti = payload.get('jti')
+            jti = payload.get("jti")
             if jti:
-                exp = payload.get('exp', 0)
+                exp = payload.get("exp", 0)
                 ttl = int(exp - time.time())
 
                 if ttl > 0:
@@ -694,20 +663,13 @@ class OAuth21Server:
     async def get_jwks(self) -> Dict[str, Any]:
         """Get JSON Web Key Set (for token verification)"""
         # In production, use proper key management
-        return {
-            'keys': [
-                {
-                    'kty': 'oct',
-                    'kid': 'default',
-                    'use': 'sig',
-                    'alg': self.jwt_algorithm
-                }
-            ]
-        }
+        return {"keys": [{"kty": "oct", "kid": "default", "use": "sig", "alg": self.jwt_algorithm}]}
+
 
 # ===== Singleton =====
 
 _oauth_server: Optional[OAuth21Server] = None
+
 
 def get_oauth_server() -> OAuth21Server:
     """Get or create OAuth server singleton"""

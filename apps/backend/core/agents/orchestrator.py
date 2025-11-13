@@ -6,11 +6,13 @@ Based on LangGraph state management patterns.
 Official Documentation:
 - https://langchain-ai.github.io/langgraph/
 """
-from typing import Any, Dict, List, Optional
+
+from typing import Any
 
 try:
-    from langgraph.graph import StateGraph, END
     from langchain_core.messages import BaseMessage
+    from langgraph.graph import END, StateGraph
+
     LANGGRAPH_AVAILABLE = True
 except ImportError:
     LANGGRAPH_AVAILABLE = False
@@ -28,7 +30,7 @@ class Orchestrator:
     Manages agent lifecycle, task routing, and result aggregation.
     """
 
-    def __init__(self, agents: Optional[Dict[str, Any]] = None):
+    def __init__(self, agents: dict[str, Any] | None = None):
         """
         Initialize orchestrator with agent registry
 
@@ -53,7 +55,7 @@ class Orchestrator:
         self.graph = StateGraph(dict)
         # Graph nodes and edges will be added based on workflow configuration
 
-    async def execute_workflow(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute_workflow(self, task: dict[str, Any]) -> dict[str, Any]:
         """
         Execute a multi-agent workflow
 
@@ -66,7 +68,7 @@ class Orchestrator:
         logger.info(f"Executing workflow for task: {task.get('name', 'unnamed')}")
 
         # Route to appropriate agent
-        agent_type = task.get('agent_type', 'content')
+        agent_type = task.get("agent_type", "content")
         if agent_type in self.agents:
             agent = self.agents[agent_type]
             # Execute agent task
@@ -76,22 +78,20 @@ class Orchestrator:
             logger.warning(f"Agent type '{agent_type}' not found in registry")
             return {"error": f"Agent type '{agent_type}' not available"}
 
-    async def _execute_agent_task(self, agent: Any, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_agent_task(self, agent: Any, task: dict[str, Any]) -> dict[str, Any]:
         """Execute task with specific agent"""
         try:
             # Call agent's execution method
-            if hasattr(agent, 'execute'):
+            if hasattr(agent, "execute"):
                 result = await agent.execute(task)
-            elif hasattr(agent, 'generate_content'):
-                result = await agent.generate_content(**task.get('params', {}))
+            elif hasattr(agent, "generate_content"):
+                result = await agent.generate_content(**task.get("params", {}))
             else:
                 result = {"error": "Agent has no execute method"}
 
-            self.execution_history.append({
-                'agent': agent.__class__.__name__,
-                'task': task,
-                'result': result
-            })
+            self.execution_history.append(
+                {"agent": agent.__class__.__name__, "task": task, "result": result}
+            )
 
             return result
         except Exception as e:
@@ -103,9 +103,9 @@ class Orchestrator:
         self.agents[name] = agent
         logger.info(f"Registered agent: {name}")
 
-    def get_execution_history(self) -> List[Dict]:
+    def get_execution_history(self) -> list[dict]:
         """Get workflow execution history"""
         return self.execution_history
 
 
-__all__ = ['Orchestrator']
+__all__ = ["Orchestrator"]

@@ -1,4 +1,3 @@
-import pytest_asyncio
 import sys
 from pathlib import Path
 
@@ -9,6 +8,7 @@ if str(project_root) not in sys.path:
 
 
 import pytest
+
 from apps.backend.main import websocket_status
 
 
@@ -20,4 +20,3 @@ async def test_ws_status_endpoint_runs():
     assert result.get("status") == "ok"
     assert "stats" in result
     assert "channels" in result
-

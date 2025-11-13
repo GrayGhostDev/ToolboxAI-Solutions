@@ -3,15 +3,15 @@ GraphQL Mutation resolvers
 """
 
 import uuid
-from typing import Dict, Any
 from datetime import datetime, timezone
+from typing import Any
 
 from ariadne import MutationType
-from sqlalchemy import select
 from passlib.context import CryptContext
+from sqlalchemy import select
 
-from database.models import User, Course, Enrollment
 from apps.backend.api.auth.auth import create_access_token
+from database.models import Course, Enrollment, User
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -22,7 +22,7 @@ mutation = MutationType()
 
 # Authentication mutations
 @mutation.field("login")
-async def resolve_login(obj, info, input: Dict[str, Any]) -> Dict[str, Any]:
+async def resolve_login(obj, info, input: dict[str, Any]) -> dict[str, Any]:
     """User login mutation"""
 
     db = info.context["db"]
@@ -68,7 +68,7 @@ async def resolve_login(obj, info, input: Dict[str, Any]) -> Dict[str, Any]:
 
 
 @mutation.field("signup")
-async def resolve_signup(obj, info, input: Dict[str, Any]) -> Dict[str, Any]:
+async def resolve_signup(obj, info, input: dict[str, Any]) -> dict[str, Any]:
     """User signup mutation"""
 
     db = info.context["db"]
@@ -108,7 +108,7 @@ async def resolve_signup(obj, info, input: Dict[str, Any]) -> Dict[str, Any]:
 
 
 @mutation.field("logout")
-async def resolve_logout(obj, info) -> Dict[str, Any]:
+async def resolve_logout(obj, info) -> dict[str, Any]:
     """User logout mutation"""
 
     user = info.context.get("user")
@@ -127,7 +127,7 @@ async def resolve_logout(obj, info) -> Dict[str, Any]:
 
 # Course mutations
 @mutation.field("createCourse")
-async def resolve_create_course(obj, info, input: Dict[str, Any]) -> Dict[str, Any]:
+async def resolve_create_course(obj, info, input: dict[str, Any]) -> dict[str, Any]:
     """Create a new course"""
 
     db = info.context["db"]
@@ -163,7 +163,7 @@ async def resolve_create_course(obj, info, input: Dict[str, Any]) -> Dict[str, A
 @mutation.field("enrollInCourse")
 async def resolve_enroll_in_course(
     obj, info, courseId: str, enrollmentCode: str = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Enroll in a course"""
 
     db = info.context["db"]
@@ -221,7 +221,7 @@ async def resolve_enroll_in_course(
 
 
 @mutation.field("updateProfile")
-async def resolve_update_profile(obj, info, input: Dict[str, Any]) -> Dict[str, Any]:
+async def resolve_update_profile(obj, info, input: dict[str, Any]) -> dict[str, Any]:
     """Update user profile"""
 
     db = info.context["db"]

@@ -3,40 +3,47 @@ Roblox OAuth2 Authentication Service
 Implements 2025 Roblox OAuth2 standards with PKCE flow
 """
 
-import hashlib
-import secrets
 import base64
-from typing import Dict, Optional, Any
+import hashlib
+import logging
+import secrets
 from datetime import datetime, timedelta
-import aiohttp
+from typing import Any, Dict, Optional
 from urllib.parse import urlencode
+
+import aiohttp
 from pydantic import BaseModel, Field
 
 from apps.backend.core.config import settings
-import logging
 
 logger = logging.getLogger(__name__)
 
+
 class OAuth2Config(BaseModel):
     """Roblox OAuth2 configuration for 2025 standards"""
+
     client_id: str = Field(default="", description="Roblox OAuth2 client ID")
     client_secret: str = Field(default="", description="Roblox OAuth2 client secret")
     redirect_uri: str = Field(default="http://localhost:8008/api/v1/roblox/oauth/callback")
     authorization_endpoint: str = Field(default="https://authorize.roblox.com/v1/authorize")
     token_endpoint: str = Field(default="https://apis.roblox.com/oauth/v1/token")
     userinfo_endpoint: str = Field(default="https://apis.roblox.com/oauth/v1/userinfo")
-    scopes: list[str] = Field(default_factory=lambda: [
-        "openid",
-        "profile",
-        "asset:read",
-        "asset:write",
-        "universe-messaging-service:publish",
-        "data-store:read",
-        "data-store:write"
-    ])
+    scopes: list[str] = Field(
+        default_factory=lambda: [
+            "openid",
+            "profile",
+            "asset:read",
+            "asset:write",
+            "universe-messaging-service:publish",
+            "data-store:read",
+            "data-store:write",
+        ]
+    )
+
 
 class TokenResponse(BaseModel):
     """OAuth2 token response model"""
+
     access_token: str
     token_type: str
     expires_in: int
@@ -44,8 +51,10 @@ class TokenResponse(BaseModel):
     id_token: Optional[str] = None
     scope: Optional[str] = None
 
+
 class UserInfo(BaseModel):
     """Roblox user information from OAuth2"""
+
     sub: str  # User ID
     name: Optional[str] = None
     nickname: Optional[str] = None
@@ -53,6 +62,7 @@ class UserInfo(BaseModel):
     created_at: Optional[int] = None
     profile: Optional[str] = None
     picture: Optional[str] = None
+
 
 class RobloxOAuth2Service:
     """
@@ -62,8 +72,8 @@ class RobloxOAuth2Service:
 
     def __init__(self):
         self.config = OAuth2Config(
-            client_id=getattr(settings, 'ROBLOX_CLIENT_ID', ''),
-            client_secret=getattr(settings, 'ROBLOX_CLIENT_SECRET', '')
+            client_id=getattr(settings, "ROBLOX_CLIENT_ID", ""),
+            client_secret=getattr(settings, "ROBLOX_CLIENT_SECRET", ""),
         )
         self.session: Optional[aiohttp.ClientSession] = None
         self._state_storage: Dict[str, Dict[str, Any]] = {}  # In production, use Redis
@@ -87,18 +97,22 @@ class RobloxOAuth2Service:
             tuple: (code_verifier, code_challenge)
         """
         # Generate code verifier (43-128 characters)
-        code_verifier = base64.urlsafe_b64encode(
-            secrets.token_bytes(32)
-        ).decode('utf-8').rstrip('=')
+        code_verifier = (
+            base64.urlsafe_b64encode(secrets.token_bytes(32)).decode("utf-8").rstrip("=")
+        )
 
         # Generate code challenge using SHA256
-        code_challenge = base64.urlsafe_b64encode(
-            hashlib.sha256(code_verifier.encode()).digest()
-        ).decode('utf-8').rstrip('=')
+        code_challenge = (
+            base64.urlsafe_b64encode(hashlib.sha256(code_verifier.encode()).digest())
+            .decode("utf-8")
+            .rstrip("=")
+        )
 
         return code_verifier, code_challenge
 
-    def generate_authorization_url(self, user_id: str, additional_scopes: Optional[list[str]] = None) -> Dict[str, str]:
+    def generate_authorization_url(
+        self, user_id: str, additional_scopes: Optional[list[str]] = None
+    ) -> Dict[str, str]:
         """
         Generate OAuth2 authorization URL with PKCE
 
@@ -122,23 +136,23 @@ class RobloxOAuth2Service:
 
         # Store state and PKCE verifier for later verification
         self._state_storage[state] = {
-            'user_id': user_id,
-            'code_verifier': code_verifier,
-            'created_at': datetime.utcnow().isoformat(),
-            'scopes': scopes
+            "user_id": user_id,
+            "code_verifier": code_verifier,
+            "created_at": datetime.utcnow().isoformat(),
+            "scopes": scopes,
         }
 
         # Build authorization URL
         params = {
-            'response_type': 'code',
-            'client_id': self.config.client_id,
-            'redirect_uri': self.config.redirect_uri,
-            'scope': ' '.join(scopes),
-            'state': state,
-            'code_challenge': code_challenge,
-            'code_challenge_method': 'S256',
-            'prompt': 'consent',  # Always show consent screen
-            'access_type': 'offline'  # Request refresh token
+            "response_type": "code",
+            "client_id": self.config.client_id,
+            "redirect_uri": self.config.redirect_uri,
+            "scope": " ".join(scopes),
+            "state": state,
+            "code_challenge": code_challenge,
+            "code_challenge_method": "S256",
+            "prompt": "consent",  # Always show consent screen
+            "access_type": "offline",  # Request refresh token
         }
 
         auth_url = f"{self.config.authorization_endpoint}?{urlencode(params)}"
@@ -146,9 +160,9 @@ class RobloxOAuth2Service:
         logger.info(f"Generated authorization URL for user {user_id}")
 
         return {
-            'authorization_url': auth_url,
-            'state': state,
-            'expires_at': (datetime.utcnow() + timedelta(minutes=10)).isoformat()
+            "authorization_url": auth_url,
+            "state": state,
+            "expires_at": (datetime.utcnow() + timedelta(minutes=10)).isoformat(),
         }
 
     async def exchange_code_for_token(self, code: str, state: str) -> TokenResponse:
@@ -169,18 +183,18 @@ class RobloxOAuth2Service:
         state_data = self._state_storage.pop(state)
 
         # Check state expiration (10 minutes)
-        created_at = datetime.fromisoformat(state_data['created_at'])
+        created_at = datetime.fromisoformat(state_data["created_at"])
         if (datetime.utcnow() - created_at) > timedelta(minutes=10):
             raise ValueError("State expired - authorization took too long")
 
         # Prepare token exchange request
         token_data = {
-            'grant_type': 'authorization_code',
-            'code': code,
-            'redirect_uri': self.config.redirect_uri,
-            'client_id': self.config.client_id,
-            'client_secret': self.config.client_secret,
-            'code_verifier': state_data['code_verifier']  # PKCE verifier
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": self.config.redirect_uri,
+            "client_id": self.config.client_id,
+            "client_secret": self.config.client_secret,
+            "code_verifier": state_data["code_verifier"],  # PKCE verifier
         }
 
         if not self.session:
@@ -190,7 +204,7 @@ class RobloxOAuth2Service:
             async with self.session.post(
                 self.config.token_endpoint,
                 data=token_data,
-                headers={'Content-Type': 'application/x-www-form-urlencoded'}
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
             ) as response:
                 if response.status != 200:
                     error_data = await response.text()
@@ -201,7 +215,7 @@ class RobloxOAuth2Service:
                 token_response = TokenResponse(**token_json)
 
                 # Store token securely (encrypted in production)
-                user_id = state_data['user_id']
+                user_id = state_data["user_id"]
                 self._token_storage[user_id] = token_response
 
                 logger.info(f"Successfully exchanged code for token for user {user_id}")
@@ -231,10 +245,10 @@ class RobloxOAuth2Service:
             raise ValueError("No refresh token available")
 
         refresh_data = {
-            'grant_type': 'refresh_token',
-            'refresh_token': current_token.refresh_token,
-            'client_id': self.config.client_id,
-            'client_secret': self.config.client_secret
+            "grant_type": "refresh_token",
+            "refresh_token": current_token.refresh_token,
+            "client_id": self.config.client_id,
+            "client_secret": self.config.client_secret,
         }
 
         if not self.session:
@@ -244,7 +258,7 @@ class RobloxOAuth2Service:
             async with self.session.post(
                 self.config.token_endpoint,
                 data=refresh_data,
-                headers={'Content-Type': 'application/x-www-form-urlencoded'}
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
             ) as response:
                 if response.status != 200:
                     error_data = await response.text()
@@ -280,8 +294,7 @@ class RobloxOAuth2Service:
 
         try:
             async with self.session.get(
-                self.config.userinfo_endpoint,
-                headers={'Authorization': f'Bearer {access_token}'}
+                self.config.userinfo_endpoint, headers={"Authorization": f"Bearer {access_token}"}
             ) as response:
                 if response.status != 200:
                     error_data = await response.text()
@@ -316,10 +329,10 @@ class RobloxOAuth2Service:
 
         # Revoke access token
         revoke_data = {
-            'token': token.access_token,
-            'token_type_hint': 'access_token',
-            'client_id': self.config.client_id,
-            'client_secret': self.config.client_secret
+            "token": token.access_token,
+            "token_type_hint": "access_token",
+            "client_id": self.config.client_id,
+            "client_secret": self.config.client_secret,
         }
 
         if not self.session:
@@ -330,20 +343,20 @@ class RobloxOAuth2Service:
             async with self.session.post(
                 f"{self.config.token_endpoint}/revoke",
                 data=revoke_data,
-                headers={'Content-Type': 'application/x-www-form-urlencoded'}
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
             ) as response:
                 if response.status != 200:
                     logger.warning(f"Access token revocation returned {response.status}")
 
             # Revoke refresh token if present
             if token.refresh_token:
-                revoke_data['token'] = token.refresh_token
-                revoke_data['token_type_hint'] = 'refresh_token'
+                revoke_data["token"] = token.refresh_token
+                revoke_data["token_type_hint"] = "refresh_token"
 
                 async with self.session.post(
                     f"{self.config.token_endpoint}/revoke",
                     data=revoke_data,
-                    headers={'Content-Type': 'application/x-www-form-urlencoded'}
+                    headers={"Content-Type": "application/x-www-form-urlencoded"},
                 ) as response:
                     if response.status != 200:
                         logger.warning(f"Refresh token revocation returned {response.status}")
@@ -386,6 +399,7 @@ class RobloxOAuth2Service:
             return True
         except:
             return False
+
 
 # Global instance
 roblox_auth_service = RobloxOAuth2Service()

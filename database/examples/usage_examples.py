@@ -10,20 +10,18 @@ Run with:
 import asyncio
 import uuid
 from datetime import datetime, timedelta
-from typing import List
 
-from database.session_modern import db_manager, get_async_session
-from database.models.user_modern import User, UserProfile, UserSession, UserRole, UserStatus
+from database.cache_modern import cache_result, redis_cache
 from database.models.content_modern import (
-    EducationalContent,
     ContentStatus,
-    DifficultyLevel,
     ContentType,
+    DifficultyLevel,
+    EducationalContent,
 )
-from database.repositories.user_repository import UserRepository
+from database.models.user_modern import User, UserRole, UserStatus
 from database.repositories.base_repository import BaseRepository
-from database.cache_modern import redis_cache, cache_result
-
+from database.repositories.user_repository import UserRepository
+from database.session_modern import db_manager
 
 # Example organization ID for testing
 ORG_ID = uuid.uuid4()
@@ -464,6 +462,7 @@ async def run_all_examples():
     except Exception as e:
         print(f"\n❌ Error: {e}")
         import traceback
+
         traceback.print_exc()
 
     finally:

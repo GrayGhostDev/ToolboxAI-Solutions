@@ -17,11 +17,11 @@ Version: 1.0.0
 """
 
 import logging
-import asyncio
 import time
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Any
+
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -35,23 +35,23 @@ class QueueHealthResponse(BaseModel):
 
     status: str = Field(description="Queue system status (healthy/unhealthy/degraded)")
     queue_length: int = Field(description="Current number of tasks in queue", default=0)
-    memory_usage_bytes: Optional[int] = Field(description="Redis memory usage in bytes")
-    redis_version: Optional[str] = Field(description="Redis server version")
+    memory_usage_bytes: int | None = Field(description="Redis memory usage in bytes")
+    redis_version: str | None = Field(description="Redis server version")
     connection_pool_size: int = Field(description="Connection pool size", default=0)
-    performance_metrics: Dict[str, Any] = Field(
+    performance_metrics: dict[str, Any] = Field(
         description="Performance metrics", default_factory=dict
     )
-    queue_stats: Dict[str, Any] = Field(description="Queue statistics", default_factory=dict)
+    queue_stats: dict[str, Any] = Field(description="Queue statistics", default_factory=dict)
     timestamp: str = Field(description="Health check timestamp")
 
 
 async def get_redis_client():
     """Get Redis client with error handling for Docker environment"""
     try:
-        import redis.asyncio as redis
-
         # Try to get Redis URL from environment, with Docker defaults
         import os
+
+        import redis.asyncio as redis
 
         redis_url = os.getenv("REDIS_URL", "redis://localhost:6381")  # Docker mapped port
 
@@ -73,7 +73,7 @@ async def get_redis_client():
         return None
 
 
-async def check_redis_health() -> Dict[str, Any]:
+async def check_redis_health() -> dict[str, Any]:
     """Comprehensive Redis health check"""
     health_status = {
         "connected": False,

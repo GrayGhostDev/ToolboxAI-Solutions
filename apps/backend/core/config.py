@@ -3,12 +3,12 @@ Configuration wrapper for backend app using centralized config
 Enhanced with HashiCorp Vault integration for secure secret management
 """
 
-import sys
-import os
 import logging
-from pathlib import Path
+import os
+import sys
 from functools import lru_cache
-from typing import Any, Optional
+from pathlib import Path
+from typing import Any
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -42,6 +42,7 @@ VAULT_ENABLED = os.getenv("VAULT_ENABLED", "false").lower() in ("true", "1", "ye
 if VAULT_ENABLED:
     try:
         from apps.backend.services.vault_manager import get_vault_manager
+
         _vault_manager = get_vault_manager()
         logger.info("HashiCorp Vault integration enabled")
     except Exception as e:
@@ -58,7 +59,7 @@ class Settings:
         self._secret_cache = {}  # Cache secrets to reduce Vault calls
 
     @lru_cache(maxsize=128)
-    def _get_secret(self, key: str, vault_path: Optional[str] = None, fallback: Any = None) -> Any:
+    def _get_secret(self, key: str, vault_path: str | None = None, fallback: Any = None) -> Any:
         """
         Get secret from Vault if available, otherwise from environment
 
@@ -277,7 +278,8 @@ class Settings:
             "server_name": os.getenv("SENTRY_SERVER_NAME"),  # Optional, uses hostname if None
             "traces_sample_rate": float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.1")),
             "profiles_sample_rate": float(os.getenv("SENTRY_PROFILES_SAMPLE_RATE", "0.1")),
-            "send_default_pii": os.getenv("SENTRY_SEND_PII", "false").lower() in ("true", "1", "yes"),
+            "send_default_pii": os.getenv("SENTRY_SEND_PII", "false").lower()
+            in ("true", "1", "yes"),
         }
 
     # LMS Integration
@@ -288,8 +290,7 @@ class Settings:
     @property
     def SCHOOLOGY_SECRET(self):
         return self._get_secret(
-            "SCHOOLOGY_SECRET",
-            vault_path="apps/backend/integrations/schoology/secret"
+            "SCHOOLOGY_SECRET", vault_path="apps/backend/integrations/schoology/secret"
         )
 
     @property

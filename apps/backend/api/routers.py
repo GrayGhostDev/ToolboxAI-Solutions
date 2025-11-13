@@ -10,8 +10,9 @@ Priority-based registration system:
 - Tier 5 (40-50): Analytics & Management
 """
 
-from fastapi import FastAPI
 import logging
+
+from fastapi import FastAPI
 
 logger = logging.getLogger(__name__)
 
@@ -27,12 +28,7 @@ def register_routers(app: FastAPI) -> None:
     logger.info("ROUTER REGISTRATION - Priority-Based System")
     logger.info("=" * 60)
 
-    registration_stats = {
-        "total": 0,
-        "successful": 0,
-        "failed": 0,
-        "tiers": {}
-    }
+    registration_stats = {"total": 0, "successful": 0, "failed": 0, "tiers": {}}
 
     # =========================================================================
     # TIER 1: AUTHENTICATION & USER MANAGEMENT (Priority 90-100)
@@ -44,7 +40,12 @@ def register_routers(app: FastAPI) -> None:
     tier1_routers = [
         ("auth", "/api/v1/auth", "apps.backend.api.v1.endpoints.auth", ["authentication"]),
         ("users", "/api/v1/users", "apps.backend.api.v1.endpoints.users", ["users"]),
-        ("user_management_enhanced", "/api/v1/user-management", "apps.backend.api.v1.endpoints.user_management_enhanced", ["user-management"]),
+        (
+            "user_management_enhanced",
+            "/api/v1/user-management",
+            "apps.backend.api.v1.endpoints.user_management_enhanced",
+            ["user-management"],
+        ),
     ]
 
     tier1_stats = _register_tier_routers(app, tier1_routers, tier_name)
@@ -58,9 +59,19 @@ def register_routers(app: FastAPI) -> None:
     logger.info("-" * 60)
 
     tier2_routers = [
-        ("educational_content", "/api/v1/educational-content", "apps.backend.api.v1.endpoints.educational_content", ["educational-content"]),
+        (
+            "educational_content",
+            "/api/v1/educational-content",
+            "apps.backend.api.v1.endpoints.educational_content",
+            ["educational-content"],
+        ),
         ("lessons", "/api/v1/lessons", "apps.backend.api.v1.endpoints.lessons", ["lessons"]),
-        ("assessments", "/api/v1/assessments", "apps.backend.api.v1.endpoints.assessments", ["assessments"]),
+        (
+            "assessments",
+            "/api/v1/assessments",
+            "apps.backend.api.v1.endpoints.assessments",
+            ["assessments"],
+        ),
     ]
 
     tier2_stats = _register_tier_routers(app, tier2_routers, tier_name)
@@ -74,11 +85,26 @@ def register_routers(app: FastAPI) -> None:
     logger.info("-" * 60)
 
     tier3_routers = [
-        ("roblox_integration_enhanced", "/api/v1/roblox/enhanced", "apps.backend.api.v1.endpoints.roblox_integration_enhanced", ["roblox"]),
+        (
+            "roblox_integration_enhanced",
+            "/api/v1/roblox/enhanced",
+            "apps.backend.api.v1.endpoints.roblox_integration_enhanced",
+            ["roblox"],
+        ),
         ("roblox_ai", "/api/v1/roblox/ai", "apps.backend.api.v1.endpoints.roblox_ai", ["roblox"]),
         ("roblox", "/api/v1/roblox", "apps.backend.api.v1.endpoints.roblox", ["roblox"]),
-        ("roblox_agents", "/api/v1/roblox/agents", "apps.backend.api.v1.endpoints.roblox_agents", ["roblox"]),
-        ("roblox_environment", "/api/v1/roblox/environment", "apps.backend.api.v1.endpoints.roblox_environment", ["roblox"]),
+        (
+            "roblox_agents",
+            "/api/v1/roblox/agents",
+            "apps.backend.api.v1.endpoints.roblox_agents",
+            ["roblox"],
+        ),
+        (
+            "roblox_environment",
+            "/api/v1/roblox/environment",
+            "apps.backend.api.v1.endpoints.roblox_environment",
+            ["roblox"],
+        ),
     ]
 
     tier3_stats = _register_tier_routers(app, tier3_routers, tier_name)
@@ -92,10 +118,20 @@ def register_routers(app: FastAPI) -> None:
     logger.info("-" * 60)
 
     tier4_routers = [
-        ("ai_agent_orchestration", "/api/v1/ai/orchestration", "apps.backend.api.v1.endpoints.ai_agent_orchestration", ["ai"]),
+        (
+            "ai_agent_orchestration",
+            "/api/v1/ai/orchestration",
+            "apps.backend.api.v1.endpoints.ai_agent_orchestration",
+            ["ai"],
+        ),
         ("ai_chat", "/api/v1/ai/chat", "apps.backend.api.v1.endpoints.ai_chat", ["ai"]),
         ("agents", "/api/v1/agents", "apps.backend.api.v1.endpoints.agents", ["agents"]),
-        ("pusher_auth", "/api/v1/pusher/auth", "apps.backend.api.v1.endpoints.pusher_auth", ["pusher"]),
+        (
+            "pusher_auth",
+            "/api/v1/pusher/auth",
+            "apps.backend.api.v1.endpoints.pusher_auth",
+            ["pusher"],
+        ),
         ("messages", "/api/v1/messages", "apps.backend.api.v1.endpoints.messages", ["messages"]),
     ]
 
@@ -110,8 +146,18 @@ def register_routers(app: FastAPI) -> None:
     logger.info("-" * 60)
 
     tier5_routers = [
-        ("analytics_reporting", "/api/v1/analytics/reporting", "apps.backend.api.v1.endpoints.analytics_reporting", ["analytics"]),
-        ("analytics", "/api/v1/analytics", "apps.backend.api.v1.endpoints.analytics", ["analytics"]),
+        (
+            "analytics_reporting",
+            "/api/v1/analytics/reporting",
+            "apps.backend.api.v1.endpoints.analytics_reporting",
+            ["analytics"],
+        ),
+        (
+            "analytics",
+            "/api/v1/analytics",
+            "apps.backend.api.v1.endpoints.analytics",
+            ["analytics"],
+        ),
         ("classes", "/api/v1/classes", "apps.backend.api.v1.endpoints.classes", ["classes"]),
         ("schools", "/api/v1/schools", "apps.backend.api.v1.endpoints.schools", ["schools"]),
         ("progress", "/api/v1/progress", "apps.backend.api.v1.endpoints.progress", ["progress"]),
@@ -129,6 +175,7 @@ def register_routers(app: FastAPI) -> None:
 
     try:
         from apps.backend.api.routers.courses import router as courses_router
+
         app.include_router(courses_router, tags=["courses"])
         logger.info("✓ Registered courses router at /api/v1/courses")
         registration_stats["successful"] += 1
@@ -146,15 +193,25 @@ def register_routers(app: FastAPI) -> None:
     logger.info("ROUTER REGISTRATION SUMMARY")
     logger.info("=" * 60)
 
-    total_successful = sum(tier["successful"] for tier in registration_stats["tiers"].values()) + registration_stats["successful"]
-    total_failed = sum(tier["failed"] for tier in registration_stats["tiers"].values()) + registration_stats["failed"]
+    total_successful = (
+        sum(tier["successful"] for tier in registration_stats["tiers"].values())
+        + registration_stats["successful"]
+    )
+    total_failed = (
+        sum(tier["failed"] for tier in registration_stats["tiers"].values())
+        + registration_stats["failed"]
+    )
     total_attempted = total_successful + total_failed
 
     for tier_name, tier_stats in registration_stats["tiers"].items():
         logger.info(f"{tier_name}: {tier_stats['successful']}/{tier_stats['total']} routers")
 
-    logger.info(f"\nLegacy Routes: {registration_stats['successful']}/{registration_stats['successful'] + registration_stats['failed']} routers")
-    logger.info(f"\n{'✅' if total_failed == 0 else '⚠️'} Total: {total_successful}/{total_attempted} routers registered")
+    logger.info(
+        f"\nLegacy Routes: {registration_stats['successful']}/{registration_stats['successful'] + registration_stats['failed']} routers"
+    )
+    logger.info(
+        f"\n{'✅' if total_failed == 0 else '⚠️'} Total: {total_successful}/{total_attempted} routers registered"
+    )
 
     if total_failed > 0:
         logger.warning(f"⚠️  {total_failed} router(s) failed to register - check logs above")
@@ -176,11 +233,7 @@ def _register_tier_routers(app: FastAPI, routers: list, tier_name: str) -> dict:
     Returns:
         Statistics dictionary with success/failure counts
     """
-    stats = {
-        "total": len(routers),
-        "successful": 0,
-        "failed": 0
-    }
+    stats = {"total": len(routers), "successful": 0, "failed": 0}
 
     for router_name, prefix, module_path, tags in routers:
         try:
@@ -197,7 +250,7 @@ def _register_tier_routers(app: FastAPI, routers: list, tier_name: str) -> dict:
         except ImportError as e:
             logger.warning(f"⚠ {router_name:<30} → Import failed: {str(e)[:50]}")
             stats["failed"] += 1
-        except AttributeError as e:
+        except AttributeError:
             logger.warning(f"⚠ {router_name:<30} → No 'router' object found")
             stats["failed"] += 1
         except Exception as e:

@@ -5,33 +5,34 @@ Comprehensive audit logging for security events, user actions, and system activi
 Supports multiple output targets (file, database, SIEM) and provides tamper detection.
 """
 
-import json
+import asyncio
+import gzip
 import hashlib
 import hmac
+import json
 import logging
 import os
-import asyncio
-from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional, Callable
-from dataclasses import dataclass, asdict
+import shutil
+import threading
+from collections.abc import Callable
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from pathlib import Path
-import threading
-from queue import Queue, Empty
-import gzip
-import shutil
+from queue import Empty, Queue
+from typing import Any
 
-from sqlalchemy.orm import Session
-from sqlalchemy import Column, String, Integer, DateTime, JSON, Boolean, Text
-from sqlalchemy.ext.declarative import declarative_base
 import redis
+from sqlalchemy import JSON, Boolean, Column, DateTime, Integer, String
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import Session
 
 from toolboxai_settings import settings
 
 logger = logging.getLogger(__name__)
 
 
-def _serialize_audit_event(event: "AuditEvent") -> Dict[str, Any]:
+def _serialize_audit_event(event: "AuditEvent") -> dict[str, Any]:
     """Convert AuditEvent to JSON-serializable dict"""
     event_dict = asdict(event)
     # Convert enums to their values
@@ -78,21 +79,21 @@ class AuditEvent:
     event_id: str
     category: AuditCategory
     severity: AuditSeverity
-    user_id: Optional[str]
-    username: Optional[str]
-    ip_address: Optional[str]
-    user_agent: Optional[str]
+    user_id: str | None
+    username: str | None
+    ip_address: str | None
+    user_agent: str | None
     action: str
-    resource: Optional[str]
+    resource: str | None
     result: str  # success, failure, error
-    details: Dict[str, Any]
-    session_id: Optional[str]
-    request_id: Optional[str]
-    correlation_id: Optional[str]
+    details: dict[str, Any]
+    session_id: str | None
+    request_id: str | None
+    correlation_id: str | None
     environment: str
     service_name: str
     host: str
-    integrity_hash: Optional[str] = None
+    integrity_hash: str | None = None
 
 
 class AuditLogEntry(Base):
@@ -129,13 +130,13 @@ class SecurityAuditLogger:
         self,
         service_name: str = "toolboxai",
         environment: str = None,
-        db_session: Optional[Session] = None,
-        redis_client: Optional[redis.Redis] = None,
-        log_file_path: Optional[str] = None,
+        db_session: Session | None = None,
+        redis_client: redis.Redis | None = None,
+        log_file_path: str | None = None,
         enable_file_logging: bool = True,
         enable_db_logging: bool = True,
         enable_siem_export: bool = False,
-        integrity_key: Optional[str] = None,
+        integrity_key: str | None = None,
         async_mode: bool = True,
         buffer_size: int = 1000,
     ):
@@ -188,7 +189,7 @@ class SecurityAuditLogger:
         }
 
         # Alert callbacks
-        self.alert_callbacks: List[Callable] = []
+        self.alert_callbacks: list[Callable] = []
 
         logger.info(f"Security Audit Logger initialized for {service_name} in {self.environment}")
 
@@ -211,15 +212,15 @@ class SecurityAuditLogger:
         severity: AuditSeverity,
         action: str,
         result: str,
-        details: Dict[str, Any],
-        user_id: Optional[str] = None,
-        username: Optional[str] = None,
-        ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None,
-        resource: Optional[str] = None,
-        session_id: Optional[str] = None,
-        request_id: Optional[str] = None,
-        correlation_id: Optional[str] = None,
+        details: dict[str, Any],
+        user_id: str | None = None,
+        username: str | None = None,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+        resource: str | None = None,
+        session_id: str | None = None,
+        request_id: str | None = None,
+        correlation_id: str | None = None,
     ) -> str:
         """
         Log a security audit event
@@ -474,7 +475,7 @@ class SecurityAuditLogger:
 
         return str(uuid.uuid4())
 
-    def _reconstruct_event(self, event_data: Dict[str, Any]) -> AuditEvent:
+    def _reconstruct_event(self, event_data: dict[str, Any]) -> AuditEvent:
         """Reconstruct AuditEvent from dictionary"""
         event_data["category"] = AuditCategory(event_data["category"])
         event_data["severity"] = AuditSeverity(event_data["severity"])
@@ -527,11 +528,11 @@ class SecurityAuditLogger:
         self,
         start_time: datetime,
         end_time: datetime,
-        category: Optional[AuditCategory] = None,
-        severity: Optional[AuditSeverity] = None,
-        user_id: Optional[str] = None,
+        category: AuditCategory | None = None,
+        severity: AuditSeverity | None = None,
+        user_id: str | None = None,
         limit: int = 100,
-    ) -> List[AuditEvent]:
+    ) -> list[AuditEvent]:
         """Query audit events from database"""
         if not self.db:
             return []
@@ -577,7 +578,7 @@ class SecurityAuditLogger:
 
         return results
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get audit logging statistics"""
         return self.stats.copy()
 

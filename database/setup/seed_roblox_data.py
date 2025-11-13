@@ -5,21 +5,29 @@ Creates sample data for testing and development
 """
 
 import asyncio
-import uuid
-from datetime import datetime, timedelta
 import json
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import text
 import os
 import sys
+import uuid
+from datetime import datetime, timedelta
+
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from database.models import (
-    RobloxTemplate, RobloxSession, RobloxContent, RobloxPlayerProgress,
-    RobloxQuizResult, RobloxAchievement, User, Lesson, Course
+    Course,
+    Lesson,
+    RobloxAchievement,
+    RobloxContent,
+    RobloxPlayerProgress,
+    RobloxQuizResult,
+    RobloxSession,
+    RobloxTemplate,
+    User,
 )
 
 

@@ -6,13 +6,12 @@ Executes comprehensive API endpoint tests and generates coverage reports.
 Provides summary of test results and identifies gaps in testing.
 """
 
-import sys
+import argparse
+import json
 import os
 import subprocess
-import json
+import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
-import argparse
 
 
 class APITestRunner:
@@ -48,7 +47,7 @@ class APITestRunner:
         print("✓ All test dependencies installed")
         return True
 
-    def run_tests(self, test_pattern: str = None) -> Tuple[bool, Dict]:
+    def run_tests(self, test_pattern: str = None) -> tuple[bool, dict]:
         """Run API tests and return results."""
         cmd = [
             "pytest",
@@ -57,7 +56,8 @@ class APITestRunner:
             "--tb=short",
             "--json-report",
             "--json-report-file=test_report.json",
-            "-W", "ignore::DeprecationWarning"
+            "-W",
+            "ignore::DeprecationWarning",
         ]
 
         if test_pattern:
@@ -74,7 +74,7 @@ class APITestRunner:
 
         return success, report
 
-    def _parse_test_report(self) -> Dict:
+    def _parse_test_report(self) -> dict:
         """Parse JSON test report if available."""
         report_file = self.project_root / "test_report.json"
 
@@ -89,7 +89,7 @@ class APITestRunner:
                     "passed": data.get("summary", {}).get("passed", 0),
                     "failed": data.get("summary", {}).get("failed", 0),
                     "skipped": data.get("summary", {}).get("skipped", 0),
-                    "duration": data.get("duration", 0)
+                    "duration": data.get("duration", 0),
                 }
         except Exception as e:
             print(f"Warning: Could not parse test report: {e}")
@@ -105,13 +105,13 @@ class APITestRunner:
             "--cov=apps.backend",
             "--cov-report=html",
             "--cov-report=term-missing",
-            "-q"
+            "-q",
         ]
 
         subprocess.run(cmd)
         print(f"\n✓ Coverage report generated in htmlcov/index.html")
 
-    def analyze_endpoint_coverage(self) -> Dict:
+    def analyze_endpoint_coverage(self) -> dict:
         """Analyze which endpoints have tests."""
         # Get all endpoints from the API
         endpoints_file = self.project_root / "API_REFERENCE.md"
@@ -135,6 +135,7 @@ class APITestRunner:
                 content = f.read()
                 # Look for API calls in tests
                 import re
+
                 patterns = re.findall(r'(get|post|put|patch|delete)\s*\(\s*["\']([^"\']+)', content)
                 for _, endpoint in patterns:
                     tested_endpoints.add(endpoint)
@@ -147,10 +148,10 @@ class APITestRunner:
             "tested_endpoints": len(tested_endpoints),
             "untested_endpoints": len(untested),
             "coverage_percentage": coverage_pct,
-            "untested_list": sorted(list(untested))[:10]  # Show first 10
+            "untested_list": sorted(list(untested))[:10],  # Show first 10
         }
 
-    def generate_report(self, test_results: Dict, coverage_data: Dict) -> None:
+    def generate_report(self, test_results: dict, coverage_data: dict) -> None:
         """Generate comprehensive test report."""
         print("\n" + "=" * 60)
         print("📋 API TEST REPORT")
@@ -162,7 +163,7 @@ class APITestRunner:
             print(f"   Passed:       {test_results.get('passed', 'N/A')} ✅")
             print(f"   Failed:       {test_results.get('failed', 'N/A')} ❌")
             print(f"   Skipped:      {test_results.get('skipped', 'N/A')} ⏭️")
-            if test_results.get('duration'):
+            if test_results.get("duration"):
                 print(f"   Duration:     {test_results['duration']:.2f}s")
 
         print("\n📊 Endpoint Coverage:")
@@ -171,9 +172,9 @@ class APITestRunner:
         print(f"   Untested Endpoints: {coverage_data['untested_endpoints']}")
         print(f"   Coverage:           {coverage_data['coverage_percentage']:.1f}%")
 
-        if coverage_data['untested_list']:
+        if coverage_data["untested_list"]:
             print("\n⚠️  Sample Untested Endpoints:")
-            for endpoint in coverage_data['untested_list']:
+            for endpoint in coverage_data["untested_list"]:
                 print(f"   - {endpoint}")
 
         print("\n" + "=" * 60)
@@ -185,7 +186,7 @@ class APITestRunner:
             "User Management": "test_user",
             "Content Generation": "test_content",
             "Classes": "test_class",
-            "Real-time": "test_realtime"
+            "Real-time": "test_realtime",
         }
 
         print("\n🔄 Running individual test suites:")
@@ -195,7 +196,7 @@ class APITestRunner:
             status = "✅" if result.returncode == 0 else "❌"
             print(f"   {status} {name}")
 
-    def check_test_health(self) -> List[str]:
+    def check_test_health(self) -> list[str]:
         """Check for common test issues."""
         issues = []
 

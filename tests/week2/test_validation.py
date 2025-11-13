@@ -4,15 +4,14 @@ Week 2 Implementation Validation Script
 Validates that all Week 2 services are properly implemented without importing them.
 """
 
-import os
 import ast
-import json
 from pathlib import Path
+
 
 def validate_file_structure(file_path, required_classes, required_methods):
     """Validate that a Python file has required classes and methods."""
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path) as f:
             tree = ast.parse(f.read())
 
         found_classes = {}
@@ -22,7 +21,9 @@ def validate_file_structure(file_path, required_classes, required_methods):
                 if class_name in required_classes:
                     found_classes[class_name] = []
                     for item in node.body:
-                        if isinstance(item, ast.FunctionDef) or isinstance(item, ast.AsyncFunctionDef):
+                        if isinstance(item, ast.FunctionDef) or isinstance(
+                            item, ast.AsyncFunctionDef
+                        ):
                             found_classes[class_name].append(item.name)
 
         # Check all required classes exist
@@ -45,9 +46,9 @@ def validate_file_structure(file_path, required_classes, required_methods):
 
 def main():
     """Validate Week 2 implementations."""
-    print("="*60)
+    print("=" * 60)
     print("📋 Week 2 Implementation Validation")
-    print("="*60)
+    print("=" * 60)
 
     base_path = Path(".")
     results = {}
@@ -59,14 +60,7 @@ def main():
         valid, msg = validate_file_structure(
             file_path,
             ["RateLimitManager", "RateLimitConfig"],
-            {
-                "RateLimitManager": [
-                    "__init__",
-                    "check_rate_limit",
-                    "reset_limits",
-                    "connect_redis"
-                ]
-            }
+            {"RateLimitManager": ["__init__", "check_rate_limit", "reset_limits", "connect_redis"]},
         )
         if valid:
             results["RateLimitManager"] = "✅ Structure validated"
@@ -85,14 +79,7 @@ def main():
         valid, msg = validate_file_structure(
             file_path,
             ["SemanticCacheService"],
-            {
-                "SemanticCacheService": [
-                    "__init__",
-                    "get",
-                    "set",
-                    "clear_cache"
-                ]
-            }
+            {"SemanticCacheService": ["__init__", "get", "set", "clear_cache"]},
         )
         if valid:
             results["SemanticCacheService"] = "✅ Structure validated"
@@ -111,13 +98,7 @@ def main():
         valid, msg = validate_file_structure(
             file_path,
             ["CachedAIService"],
-            {
-                "CachedAIService": [
-                    "__init__",
-                    "generate_completion",
-                    "batch_generate"
-                ]
-            }
+            {"CachedAIService": ["__init__", "generate_completion", "batch_generate"]},
         )
         if valid:
             results["CachedAIService"] = "✅ Structure validated"
@@ -141,9 +122,9 @@ def main():
                     "__init__",
                     "generate_api_key",
                     "validate_api_key",
-                    "create_api_key"
+                    "create_api_key",
                 ]
-            }
+            },
         )
         if valid:
             results["APIKeyManager"] = "✅ Structure validated"
@@ -168,13 +149,13 @@ def main():
                     "migrate",
                     "rollback",
                     "get_status",
-                    "create_backup"
+                    "create_backup",
                 ]
-            }
+            },
         )
         if valid:
             # Check that the singleton line is commented out
-            with open(file_path, 'r') as f:
+            with open(file_path) as f:
                 content = f.read()
                 if "# migration_manager = get_migration_manager()" in content:
                     results["SupabaseMigrationManager"] = "✅ Structure validated (singleton fixed)"
@@ -202,9 +183,9 @@ def main():
                     "deploy_asset_bundle",
                     "create_asset_bundle",
                     "validate_asset_deployment",
-                    "rollback_asset_deployment"
+                    "rollback_asset_deployment",
                 ]
-            }
+            },
         )
         if valid:
             results["RobloxDeploymentService"] = "✅ Structure validated"
@@ -220,7 +201,7 @@ def main():
     print("\n7. Validating Backup functionality...")
     file_path = base_path / "apps/backend/services/supabase_migration_manager.py"
     if file_path.exists():
-        with open(file_path, 'r') as f:
+        with open(file_path) as f:
             content = f.read()
             if "create_backup" in content and "BackupType" in content:
                 results["Backup Functionality"] = "✅ Backup integrated in migration manager"
@@ -236,13 +217,9 @@ def main():
     print("\n8. Validating Docker Configuration...")
     docker_file = base_path / "infrastructure/docker/compose/docker-compose.yml"
     if docker_file.exists():
-        with open(docker_file, 'r') as f:
+        with open(docker_file) as f:
             content = f.read()
-            week2_services = [
-                "redis-cloud-connector",
-                "backup-coordinator",
-                "migration-runner"
-            ]
+            week2_services = ["redis-cloud-connector", "backup-coordinator", "migration-runner"]
             missing = [s for s in week2_services if s not in content]
             if not missing:
                 results["Docker Configuration"] = "✅ Week 2 services configured"
@@ -258,14 +235,14 @@ def main():
     print("\n9. Validating Environment Configuration...")
     env_file = base_path / ".env.example"
     if env_file.exists():
-        with open(env_file, 'r') as f:
+        with open(env_file) as f:
             content = f.read()
             week2_vars = [
                 "REDIS_CLOUD_ENABLED",
                 "LANGCACHE_ENABLED",
                 "API_KEY_MANAGER_ENABLED",
                 "BACKUP_ENABLED",
-                "MIGRATION_AUTO_RUN"
+                "MIGRATION_AUTO_RUN",
             ]
             missing = [v for v in week2_vars if v not in content]
             if not missing:
@@ -282,7 +259,7 @@ def main():
     print("\n10. Validating API Documentation...")
     api_doc = base_path / "docs/04-api/README.md"
     if api_doc.exists():
-        with open(api_doc, 'r') as f:
+        with open(api_doc) as f:
             content = f.read()
             if "350" in content and "Week 2" in content:
                 results["API Documentation"] = "✅ Updated with Week 2 endpoints"
@@ -294,7 +271,7 @@ def main():
         # Try alternate path
         api_doc = base_path / "docs/03-api/README.md"
         if api_doc.exists():
-            with open(api_doc, 'r') as f:
+            with open(api_doc) as f:
                 content = f.read()
                 if "350" in content and "Week 2" in content:
                     results["API Documentation"] = "✅ Updated with Week 2 endpoints"
@@ -310,7 +287,7 @@ def main():
     print("\n11. Validating TODO.md Updates...")
     todo_file = base_path / "TODO.md"
     if todo_file.exists():
-        with open(todo_file, 'r') as f:
+        with open(todo_file) as f:
             content = f.read()
             week2_completed = [
                 "Redis Cloud Configuration",
@@ -318,9 +295,11 @@ def main():
                 "API Key Management",
                 "Supabase Migration Manager",
                 "Roblox Deployment Service",
-                "Backup & Disaster Recovery"
+                "Backup & Disaster Recovery",
             ]
-            completed_count = sum(1 for item in week2_completed if "✅" in content and item in content)
+            completed_count = sum(
+                1 for item in week2_completed if "✅" in content and item in content
+            )
             if completed_count >= 4:
                 results["TODO.md"] = f"✅ {completed_count}/6 Week 2 tasks marked complete"
                 print(f"   ✅ {completed_count}/6 Week 2 tasks marked as complete")
@@ -332,9 +311,9 @@ def main():
         print("   ❌ TODO.md not found")
 
     # Print Summary
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("VALIDATION SUMMARY")
-    print("="*60)
+    print("=" * 60)
 
     passed = 0
     failed = 0
@@ -349,7 +328,7 @@ def main():
         else:
             failed += 1
 
-    print("="*60)
+    print("=" * 60)
     print(f"Total: {passed}/{len(results)} passed, {warned} warnings, {failed} failed")
 
     if failed == 0:
@@ -363,4 +342,5 @@ def main():
 if __name__ == "__main__":
     exit_code = main()
     import sys
+
     sys.exit(exit_code)

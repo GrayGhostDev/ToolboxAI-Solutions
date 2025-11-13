@@ -3,18 +3,14 @@ OpenAI GPT-5 Service Implementation
 Handles migration from GPT-4 to GPT-5 with fallback support
 """
 
-import os
 import logging
-import asyncio
-from typing import Dict, List, Optional, Any, AsyncGenerator
-from datetime import datetime
-import json
+import os
+from collections.abc import AsyncGenerator
+from typing import Any
 
 from openai import AsyncOpenAI, OpenAI
-from openai.types.chat import ChatCompletionMessage
-from openai.types.chat.chat_completion import Choice
 
-from apps.backend.core.feature_flags import get_feature_flags, FeatureFlag
+from apps.backend.core.feature_flags import FeatureFlag, get_feature_flags
 
 logger = logging.getLogger(__name__)
 
@@ -104,13 +100,13 @@ class GPT5Service:
 
     async def chat_completion(
         self,
-        messages: List[Dict[str, str]],
-        model: Optional[str] = None,
+        messages: list[dict[str, str]],
+        model: str | None = None,
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
+        max_tokens: int | None = None,
         stream: bool = False,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Enhanced chat completion with GPT-5 features and fallback support
 
@@ -178,9 +174,9 @@ class GPT5Service:
     async def _stream_completion(
         self,
         model: str,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         temperature: float,
-        max_tokens: Optional[int],
+        max_tokens: int | None,
         **kwargs,
     ) -> AsyncGenerator[str, None]:
         """Handle streaming completions"""
@@ -216,7 +212,7 @@ class GPT5Service:
                     if chunk.choices and chunk.choices[0].delta.content:
                         yield chunk.choices[0].delta.content
 
-    def _get_gpt5_model(self, requested_model: Optional[str]) -> str:
+    def _get_gpt5_model(self, requested_model: str | None) -> str:
         """
         Get appropriate GPT-5 model based on request
 
@@ -239,7 +235,7 @@ class GPT5Service:
         # Default to GPT-5
         return os.getenv("GPT5_DEFAULT_MODEL", "gpt-5")
 
-    def _add_gpt5_parameters(self, kwargs: Dict, messages: List[Dict]) -> Dict:
+    def _add_gpt5_parameters(self, kwargs: dict, messages: list[dict]) -> dict:
         """
         Add GPT-5 specific parameters based on context
 
@@ -287,12 +283,12 @@ class GPT5Service:
 
     async def _fallback_completion(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
+        max_tokens: int | None = None,
         stream: bool = False,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Fallback to GPT-4 models when GPT-5 fails
 
@@ -363,7 +359,7 @@ class GPT5Service:
 
             logger.debug(f"Usage: {input_tokens} input, {output_tokens} output, ${total_cost:.4f}")
 
-    def _extract_gpt5_features(self, response: Any) -> Dict[str, Any]:
+    def _extract_gpt5_features(self, response: Any) -> dict[str, Any]:
         """Extract GPT-5 specific features from response"""
         features = {}
 
@@ -377,7 +373,7 @@ class GPT5Service:
 
         return features if features else None
 
-    def get_usage_stats(self) -> Dict[str, Any]:
+    def get_usage_stats(self) -> dict[str, Any]:
         """Get usage statistics"""
         return {
             **self.usage_stats,
@@ -404,7 +400,7 @@ class GPT5Service:
             "total_cost": 0.0,
         }
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Check service health"""
         health = {
             "service": "GPT5Service",

@@ -11,16 +11,16 @@ Reference: https://docs.sqlalchemy.org/en/20/
 """
 
 from datetime import datetime, timedelta
-from typing import Optional, List
+from typing import List, Optional
 from uuid import UUID
 
-from sqlalchemy import select, func, and_, or_
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from database.models.user_modern import User, UserProfile, UserSession, UserStatus, UserRole
-from database.repositories.base_repository import BaseRepository
 from database.cache_modern import cache_result, invalidate_cache
+from database.models.user_modern import User, UserProfile, UserRole, UserSession, UserStatus
+from database.repositories.base_repository import BaseRepository
 
 
 class UserRepository(BaseRepository[User]):
@@ -364,13 +364,10 @@ class UserRepository(BaseRepository[User]):
         if before_date is None:
             before_date = datetime.utcnow()
 
-        stmt = (
-            select(UserSession)
-            .where(
-                and_(
-                    UserSession.expires_at < before_date,
-                    UserSession.deleted_at.is_(None),
-                )
+        stmt = select(UserSession).where(
+            and_(
+                UserSession.expires_at < before_date,
+                UserSession.deleted_at.is_(None),
             )
         )
 

@@ -1,15 +1,16 @@
-import pytest_asyncio
-import pytest
 import os
+
 import aiohttp
+import pytest
 
 FASTAPI_BASE = "http://127.0.0.1:8008"
 
 # Skip all tests in this module as they require external services
 pytestmark = pytest.mark.skipif(
-    not os.environ.get('RUN_INTEGRATION_TESTS'),
-    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
+    not os.environ.get("RUN_INTEGRATION_TESTS"),
+    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable",
 )
+
 
 @pytest.mark.asyncio(loop_scope="function")
 @pytest.mark.asyncio
@@ -23,4 +24,3 @@ async def test_socketio_status_endpoint_acks_and_path():
             assert data.get("status") == "ok"
             assert data.get("path") == "/socket.io"
             assert data.get("acks_enabled") is True
-

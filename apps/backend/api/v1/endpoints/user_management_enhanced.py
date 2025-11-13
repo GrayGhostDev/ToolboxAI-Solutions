@@ -11,24 +11,25 @@ Provides comprehensive user management features:
 
 import logging
 import uuid
-import hashlib
-from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, List, Optional, Union
+from datetime import datetime, timedelta, timezone
 from enum import Enum
+from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, status, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel, Field, field_validator, EmailStr, ConfigDict
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
+from fastapi.security import HTTPBearer
 from passlib.context import CryptContext
-import jwt
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 # Import authentication and dependencies
 try:
-    from apps.backend.api.auth.auth import get_current_user, require_role, require_any_role
+    from apps.backend.api.auth.auth import (
+        get_current_user,
+        require_any_role,
+        require_role,
+    )
     from apps.backend.core.deps import get_db
-    from apps.backend.core.security.rate_limit_manager import rate_limit
     from apps.backend.core.security.jwt_handler import create_access_token, verify_token
+    from apps.backend.core.security.rate_limit_manager import rate_limit
 except ImportError:
     # Fallback for development
     def get_current_user():
@@ -58,7 +59,7 @@ except ImportError:
 
 # Import models and services
 try:
-    from apps.backend.models.schemas import User, BaseResponse
+    from apps.backend.models.schemas import BaseResponse, User
     from apps.backend.services.pusher import trigger_event
 except ImportError:
 
@@ -154,12 +155,12 @@ class LearningPreferences(BaseModel):
     """User learning preferences"""
 
     learning_style: LearningStyle
-    preferred_subjects: List[str] = Field(default_factory=list)
+    preferred_subjects: list[str] = Field(default_factory=list)
     difficulty_preference: str = Field("adaptive", description="adaptive, easy, medium, hard")
     session_duration_preference: int = Field(
         30, ge=5, le=120, description="Preferred session length in minutes"
     )
-    accessibility_needs: List[AccessibilityNeed] = Field(default_factory=list)
+    accessibility_needs: list[AccessibilityNeed] = Field(default_factory=list)
     language_preference: str = Field("en")
     timezone: str = Field("UTC")
 
@@ -188,11 +189,11 @@ class CreateUserRequest(BaseModel):
     role: UserRole
     first_name: str = Field(..., min_length=1, max_length=50)
     last_name: str = Field(..., min_length=1, max_length=50)
-    grade_level: Optional[int] = Field(None, ge=1, le=12)
-    school_id: Optional[str] = None
-    parent_email: Optional[EmailStr] = None
-    learning_preferences: Optional[LearningPreferences] = None
-    notification_settings: Optional[NotificationSettings] = None
+    grade_level: int | None = Field(None, ge=1, le=12)
+    school_id: str | None = None
+    parent_email: EmailStr | None = None
+    learning_preferences: LearningPreferences | None = None
+    notification_settings: NotificationSettings | None = None
 
     @field_validator("password")
     @classmethod
@@ -224,14 +225,14 @@ class CreateUserRequest(BaseModel):
 class UpdateUserRequest(BaseModel):
     """Request to update user information"""
 
-    first_name: Optional[str] = Field(None, min_length=1, max_length=50)
-    last_name: Optional[str] = Field(None, min_length=1, max_length=50)
-    display_name: Optional[str] = Field(None, max_length=100)
-    avatar_url: Optional[str] = None
-    grade_level: Optional[int] = Field(None, ge=1, le=12)
-    school_id: Optional[str] = None
-    learning_preferences: Optional[LearningPreferences] = None
-    notification_settings: Optional[NotificationSettings] = None
+    first_name: str | None = Field(None, min_length=1, max_length=50)
+    last_name: str | None = Field(None, min_length=1, max_length=50)
+    display_name: str | None = Field(None, max_length=100)
+    avatar_url: str | None = None
+    grade_level: int | None = Field(None, ge=1, le=12)
+    school_id: str | None = None
+    learning_preferences: LearningPreferences | None = None
+    notification_settings: NotificationSettings | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -277,8 +278,8 @@ class AchievementRequest(BaseModel):
     title: str = Field(..., min_length=1, max_length=100)
     description: str = Field(..., max_length=500)
     points: int = Field(0, ge=0)
-    badge_url: Optional[str] = None
-    criteria_met: Dict[str, Any] = Field(default_factory=dict)
+    badge_url: str | None = None
+    criteria_met: dict[str, Any] = Field(default_factory=dict)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -293,15 +294,15 @@ class UserProfile(BaseModel):
     role: UserRole
     first_name: str
     last_name: str
-    display_name: Optional[str] = None
-    avatar_url: Optional[str] = None
-    grade_level: Optional[int] = None
-    school_id: Optional[str] = None
+    display_name: str | None = None
+    avatar_url: str | None = None
+    grade_level: int | None = None
+    school_id: str | None = None
     account_status: AccountStatus
-    learning_preferences: Optional[LearningPreferences] = None
-    notification_settings: Optional[NotificationSettings] = None
+    learning_preferences: LearningPreferences | None = None
+    notification_settings: NotificationSettings | None = None
     created_at: datetime
-    last_login: Optional[datetime] = None
+    last_login: datetime | None = None
     email_verified: bool = False
     profile_completion: int = Field(0, ge=0, le=100)
 
@@ -317,11 +318,11 @@ class UserSummary(BaseModel):
     role: UserRole
     first_name: str
     last_name: str
-    display_name: Optional[str] = None
-    avatar_url: Optional[str] = None
-    grade_level: Optional[int] = None
+    display_name: str | None = None
+    avatar_url: str | None = None
+    grade_level: int | None = None
     account_status: AccountStatus
-    last_login: Optional[datetime] = None
+    last_login: datetime | None = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -330,13 +331,13 @@ class UserSummary(BaseModel):
 class UserListResponse(BaseModel):
     """Paginated user list response"""
 
-    users: List[UserSummary]
+    users: list[UserSummary]
     total: int
     page: int
     page_size: int
     has_next: bool
     has_previous: bool
-    filters_applied: Dict[str, Any]
+    filters_applied: dict[str, Any]
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -349,9 +350,9 @@ class Achievement(BaseModel):
     title: str
     description: str
     points: int
-    badge_url: Optional[str] = None
+    badge_url: str | None = None
     earned_at: datetime
-    criteria_met: Dict[str, Any]
+    criteria_met: dict[str, Any]
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -366,10 +367,10 @@ class UserProgress(BaseModel):
     longest_streak: int
     total_points: int
     level: int
-    subject_progress: Dict[str, Any]
-    recent_achievements: List[Achievement]
-    weekly_activity: List[Dict[str, Any]]
-    competency_levels: Dict[str, str]
+    subject_progress: dict[str, Any]
+    recent_achievements: list[Achievement]
+    weekly_activity: list[dict[str, Any]]
+    competency_levels: dict[str, str]
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -378,12 +379,12 @@ class ParentDashboard(BaseModel):
     """Parent dashboard data"""
 
     parent_id: str
-    children: List[UserSummary]
-    combined_progress: Dict[str, Any]
-    recent_activities: List[Dict[str, Any]]
-    upcoming_assignments: List[Dict[str, Any]]
-    achievement_summary: Dict[str, Any]
-    recommended_actions: List[str]
+    children: list[UserSummary]
+    combined_progress: dict[str, Any]
+    recent_activities: list[dict[str, Any]]
+    upcoming_assignments: list[dict[str, Any]]
+    achievement_summary: dict[str, Any]
+    recommended_actions: list[str]
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -393,9 +394,9 @@ class SessionInfo(BaseModel):
 
     session_id: str
     user_id: str
-    device_info: Dict[str, Any]
+    device_info: dict[str, Any]
     ip_address: str
-    location: Optional[str] = None
+    location: str | None = None
     started_at: datetime
     last_activity: datetime
     is_current: bool
@@ -404,15 +405,15 @@ class SessionInfo(BaseModel):
 
 
 # Mock data stores
-_mock_users_db: Dict[str, UserProfile] = {}
-_mock_achievements_db: Dict[str, List[Achievement]] = {}
-_mock_progress_db: Dict[str, UserProgress] = {}
-_mock_sessions_db: Dict[str, List[SessionInfo]] = {}
-_mock_parent_links: Dict[str, List[str]] = {}  # parent_id -> [student_ids]
+_mock_users_db: dict[str, UserProfile] = {}
+_mock_achievements_db: dict[str, list[Achievement]] = {}
+_mock_progress_db: dict[str, UserProgress] = {}
+_mock_sessions_db: dict[str, list[SessionInfo]] = {}
+_mock_parent_links: dict[str, list[str]] = {}  # parent_id -> [student_ids]
 
 
 # Utility functions
-async def notify_user_update(user_id: str, event_type: str, data: Dict[str, Any]):
+async def notify_user_update(user_id: str, event_type: str, data: dict[str, Any]):
     """Notify about user updates"""
     try:
         await trigger_event(
@@ -467,7 +468,7 @@ def calculate_profile_completion(user: UserProfile) -> int:
 async def create_user(
     request: CreateUserRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["admin", "school_admin", "district_admin"])),
 ):
     """
@@ -572,12 +573,12 @@ async def create_user(
 async def list_users(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
-    role: Optional[UserRole] = Query(None, description="Filter by role"),
-    account_status: Optional[AccountStatus] = Query(None, description="Filter by account status"),
-    school_id: Optional[str] = Query(None, description="Filter by school"),
-    grade_level: Optional[int] = Query(None, ge=1, le=12, description="Filter by grade level"),
-    search: Optional[str] = Query(None, min_length=2, description="Search in name/email/username"),
-    current_user: Dict = Depends(get_current_user),
+    role: UserRole | None = Query(None, description="Filter by role"),
+    account_status: AccountStatus | None = Query(None, description="Filter by account status"),
+    school_id: str | None = Query(None, description="Filter by school"),
+    grade_level: int | None = Query(None, ge=1, le=12, description="Filter by grade level"),
+    search: str | None = Query(None, min_length=2, description="Search in name/email/username"),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["admin", "school_admin", "district_admin", "teacher"])),
 ):
     """
@@ -675,7 +676,7 @@ async def list_users(
 
 
 @router.get("/users/{user_id}", response_model=UserProfile)
-async def get_user(user_id: str, current_user: Dict = Depends(get_current_user)):
+async def get_user(user_id: str, current_user: dict = Depends(get_current_user)):
     """
     Get specific user profile.
 
@@ -730,7 +731,7 @@ async def update_user(
     user_id: str,
     request: UpdateUserRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Update user profile.
@@ -786,7 +787,7 @@ async def update_user(
 
 
 @router.get("/users/{user_id}/progress", response_model=UserProgress)
-async def get_user_progress(user_id: str, current_user: Dict = Depends(get_current_user)):
+async def get_user_progress(user_id: str, current_user: dict = Depends(get_current_user)):
     """
     Get user learning progress and achievements.
     """
@@ -854,7 +855,7 @@ async def award_achievement(
     user_id: str,
     request: AchievementRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["admin", "school_admin", "teacher"])),
 ):
     """
@@ -923,7 +924,7 @@ async def award_achievement(
 
 @router.get("/parent-dashboard", response_model=ParentDashboard)
 async def get_parent_dashboard(
-    current_user: Dict = Depends(get_current_user), _: None = Depends(require_role("parent"))
+    current_user: dict = Depends(get_current_user), _: None = Depends(require_role("parent"))
 ):
     """
     Get parent dashboard with children's progress and activities.
@@ -1080,7 +1081,7 @@ async def get_parent_dashboard(
 async def link_parent_to_student(
     request: ParentLinkRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["admin", "school_admin"])),
 ):
     """
@@ -1151,10 +1152,10 @@ async def link_parent_to_student(
         )
 
 
-@router.get("/users/{user_id}/sessions", response_model=List[SessionInfo])
+@router.get("/users/{user_id}/sessions", response_model=list[SessionInfo])
 async def get_user_sessions(
     user_id: str,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["admin", "school_admin"])),
 ):
     """

@@ -11,17 +11,18 @@ for Pusher real-time functionality including:
 - Broadcast functionality
 """
 
-import pytest
 import asyncio
-import json
 import time
-from unittest.mock import Mock, patch, AsyncMock
-from fastapi.testclient import TestClient
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 # Import the Pusher backend handler
 try:
     from apps.backend.core.pusher_handler import PusherHandler
+
     from apps.backend.main import app
 except ImportError:
     # Fallback for test environment
@@ -50,23 +51,13 @@ class TestPusherIntegration:
     @pytest.fixture
     def auth_headers(self):
         """Authentication headers for requests"""
-        return {
-            "Authorization": "Bearer test-jwt-token",
-            "Content-Type": "application/json"
-        }
+        return {"Authorization": "Bearer test-jwt-token", "Content-Type": "application/json"}
 
     def test_pusher_auth_endpoint(self, client, auth_headers):
         """Test Pusher authentication endpoint"""
-        auth_data = {
-            "socket_id": "123.456",
-            "channel_name": "private-user-123"
-        }
+        auth_data = {"socket_id": "123.456", "channel_name": "private-user-123"}
 
-        response = client.post(
-            "/api/v1/pusher/auth",
-            json=auth_data,
-            headers=auth_headers
-        )
+        response = client.post("/api/v1/pusher/auth", json=auth_data, headers=auth_headers)
 
         # Should return auth signature for private channels
         if response.status_code == 200:
@@ -85,29 +76,25 @@ class TestPusherIntegration:
                 {
                     "name": "channel_occupied",
                     "channel": "test-channel",
-                    "timestamp": int(time.time())
+                    "timestamp": int(time.time()),
                 },
                 {
                     "name": "member_added",
                     "channel": "presence-classroom",
                     "user_id": "user-123",
-                    "timestamp": int(time.time())
-                }
-            ]
+                    "timestamp": int(time.time()),
+                },
+            ],
         }
 
         # Mock webhook signature verification
         headers = {
             "X-Pusher-Key": "test-key",
             "X-Pusher-Signature": "test-signature",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
 
-        response = client.post(
-            "/api/v1/pusher/webhook",
-            json=webhook_data,
-            headers=headers
-        )
+        response = client.post("/api/v1/pusher/webhook", json=webhook_data, headers=headers)
 
         # Should process webhook successfully or return 404 if not implemented
         assert response.status_code in [200, 404]
@@ -118,18 +105,10 @@ class TestPusherIntegration:
             "channel": "dashboard-updates",
             "event": "message",
             "type": "content_progress",
-            "payload": {
-                "requestId": "req-123",
-                "stage": "generating",
-                "percentage": 45
-            }
+            "payload": {"requestId": "req-123", "stage": "generating", "percentage": 45},
         }
 
-        response = client.post(
-            "/api/v1/realtime/trigger",
-            json=trigger_data,
-            headers=auth_headers
-        )
+        response = client.post("/api/v1/realtime/trigger", json=trigger_data, headers=auth_headers)
 
         # Should trigger event successfully or return 404 if not implemented
         assert response.status_code in [200, 201, 404]
@@ -147,7 +126,7 @@ class TestPusherIntegration:
             {"stage": "analyzing", "percentage": 25},
             {"stage": "generating", "percentage": 50},
             {"stage": "optimizing", "percentage": 75},
-            {"stage": "finalizing", "percentage": 100}
+            {"stage": "finalizing", "percentage": 100},
         ]
 
         # Trigger progress updates
@@ -155,10 +134,7 @@ class TestPusherIntegration:
             await pusher_handler.trigger_event(
                 channel=channel,
                 event="content-progress",
-                data={
-                    "requestId": request_id,
-                    **stage_data
-                }
+                data={"requestId": request_id, **stage_data},
             )
 
         # Verify all events were triggered
@@ -175,9 +151,9 @@ class TestPusherIntegration:
                     "scripts": ["script1.lua", "script2.lua"],
                     "terrain": {"type": "hills"},
                     "assets": ["tree", "rock"],
-                    "quiz": {"questions": []}
-                }
-            }
+                    "quiz": {"questions": []},
+                },
+            },
         )
 
         assert pusher_handler.trigger_event.call_count == len(stages) + 1
@@ -188,44 +164,24 @@ class TestPusherIntegration:
         channel = "presence-classroom-123"
         user1 = {
             "id": "user-1",
-            "info": {
-                "name": "Teacher One",
-                "role": "teacher",
-                "avatar": "avatar1.png"
-            }
+            "info": {"name": "Teacher One", "role": "teacher", "avatar": "avatar1.png"},
         }
         user2 = {
             "id": "user-2",
-            "info": {
-                "name": "Student One",
-                "role": "student",
-                "avatar": "avatar2.png"
-            }
+            "info": {"name": "Student One", "role": "student", "avatar": "avatar2.png"},
         }
 
         # Authenticate users for presence channel
         await pusher_handler.authenticate_channel(
-            channel=channel,
-            socket_id="socket-1",
-            user_data=user1
+            channel=channel, socket_id="socket-1", user_data=user1
         )
         await pusher_handler.authenticate_channel(
-            channel=channel,
-            socket_id="socket-2",
-            user_data=user2
+            channel=channel, socket_id="socket-2", user_data=user2
         )
 
         # Simulate member events
-        await pusher_handler.trigger_event(
-            channel=channel,
-            event="pusher:member_added",
-            data=user1
-        )
-        await pusher_handler.trigger_event(
-            channel=channel,
-            event="pusher:member_added",
-            data=user2
-        )
+        await pusher_handler.trigger_event(channel=channel, event="pusher:member_added", data=user1)
+        await pusher_handler.trigger_event(channel=channel, event="pusher:member_added", data=user2)
 
         # Get channel info
         await pusher_handler.get_channel_info(channel)
@@ -248,9 +204,7 @@ class TestPusherIntegration:
         }
 
         result = await pusher_handler.authenticate_channel(
-            channel=channel,
-            socket_id=socket_id,
-            user_id=user_id
+            channel=channel, socket_id=socket_id, user_id=user_id
         )
 
         assert "auth" in result
@@ -269,8 +223,8 @@ class TestPusherIntegration:
                 "message": "System will be down for maintenance at 2 AM UTC",
                 "severity": "warning",
                 "duration": "2 hours",
-                "scheduledTime": "2024-01-01T02:00:00Z"
-            }
+                "scheduledTime": "2024-01-01T02:00:00Z",
+            },
         )
 
         # Global user achievement
@@ -284,9 +238,9 @@ class TestPusherIntegration:
                     "title": "First Lesson Complete!",
                     "description": "Completed your first lesson",
                     "xp": 100,
-                    "badge": "beginner"
-                }
-            }
+                    "badge": "beginner",
+                },
+            },
         )
 
         assert pusher_handler.trigger_event.call_count == 2
@@ -300,29 +254,27 @@ class TestPusherIntegration:
                 "status": "active",
                 "currentTask": "Generating terrain data",
                 "progress": 30,
-                "estimatedCompletion": "2 minutes"
+                "estimatedCompletion": "2 minutes",
             },
             {
                 "agentId": "content-agent-1",
                 "status": "active",
                 "currentTask": "Creating NPCs",
                 "progress": 60,
-                "estimatedCompletion": "1 minute"
+                "estimatedCompletion": "1 minute",
             },
             {
                 "agentId": "content-agent-1",
                 "status": "completed",
                 "currentTask": "Content generation complete",
                 "progress": 100,
-                "estimatedCompletion": "0 minutes"
-            }
+                "estimatedCompletion": "0 minutes",
+            },
         ]
 
         for update in agent_updates:
             await pusher_handler.trigger_event(
-                channel="agent-status",
-                event="agent-status-update",
-                data=update
+                channel="agent-status", event="agent-status-update", data=update
             )
 
         assert pusher_handler.trigger_event.call_count == len(agent_updates)
@@ -333,12 +285,9 @@ class TestPusherIntegration:
 
         # Capture messages in order
         async def capture_message(channel, event, data):
-            messages.append({
-                "timestamp": time.time(),
-                "channel": channel,
-                "event": event,
-                "data": data
-            })
+            messages.append(
+                {"timestamp": time.time(), "channel": channel, "event": event, "data": data}
+            )
 
         pusher_handler.trigger_event.side_effect = capture_message
 
@@ -346,15 +295,15 @@ class TestPusherIntegration:
         test_messages = [
             {"sequence": 1, "content": "First message"},
             {"sequence": 2, "content": "Second message"},
-            {"sequence": 3, "content": "Third message"}
+            {"sequence": 3, "content": "Third message"},
         ]
 
         for msg in test_messages:
-            asyncio.run(pusher_handler.trigger_event(
-                channel="test-channel",
-                event="ordered-message",
-                data=msg
-            ))
+            asyncio.run(
+                pusher_handler.trigger_event(
+                    channel="test-channel", event="ordered-message", data=msg
+                )
+            )
 
         # Verify message order
         assert len(messages) == len(test_messages)
@@ -369,23 +318,19 @@ class TestPusherIntegration:
 
         with pytest.raises(Exception, match="Auth service unavailable"):
             await pusher_handler.authenticate_channel(
-                channel="private-test",
-                socket_id="socket-123",
-                user_id="user-123"
+                channel="private-test", socket_id="socket-123", user_id="user-123"
             )
 
         # Simulate trigger failure with retry
         pusher_handler.trigger_event.side_effect = [
             Exception("Network error"),  # First attempt fails
-            {"status": "success"}        # Second attempt succeeds
+            {"status": "success"},  # Second attempt succeeds
         ]
 
         # Should retry and succeed
         with pytest.raises(Exception, match="Network error"):
             await pusher_handler.trigger_event(
-                channel="test-channel",
-                event="test-event",
-                data={"test": "data"}
+                channel="test-channel", event="test-event", data={"test": "data"}
             )
 
         # Reset side effect for successful retry
@@ -393,9 +338,7 @@ class TestPusherIntegration:
         pusher_handler.trigger_event.return_value = {"status": "success"}
 
         result = await pusher_handler.trigger_event(
-            channel="test-channel",
-            event="test-event",
-            data={"test": "data"}
+            channel="test-channel", event="test-event", data={"test": "data"}
         )
 
         assert result["status"] == "success"
@@ -408,9 +351,7 @@ class TestPusherIntegration:
 
         for i in range(10):
             auth_task = pusher_handler.authenticate_channel(
-                channel=f"private-user-{i}",
-                socket_id=f"socket-{i}",
-                user_id=f"user-{i}"
+                channel=f"private-user-{i}", socket_id=f"socket-{i}", user_id=f"user-{i}"
             )
             concurrent_auths.append(auth_task)
 
@@ -431,7 +372,7 @@ class TestPusherIntegration:
             message_task = pusher_handler.trigger_event(
                 channel="high-traffic-channel",
                 event="rapid-message",
-                data={"messageId": i, "timestamp": time.time()}
+                data={"messageId": i, "timestamp": time.time()},
             )
             rapid_messages.append(message_task)
 
@@ -445,25 +386,18 @@ class TestPusherIntegration:
         """Test webhook signature validation"""
         webhook_payload = {
             "time_ms": int(time.time() * 1000),
-            "events": [
-                {
-                    "name": "channel_occupied",
-                    "channel": "test-channel"
-                }
-            ]
+            "events": [{"name": "channel_occupied", "channel": "test-channel"}],
         }
 
         # Test with invalid signature
         invalid_headers = {
             "X-Pusher-Key": "test-key",
             "X-Pusher-Signature": "invalid-signature",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
 
         response = client.post(
-            "/api/v1/pusher/webhook",
-            json=webhook_payload,
-            headers=invalid_headers
+            "/api/v1/pusher/webhook", json=webhook_payload, headers=invalid_headers
         )
 
         # Should reject invalid signature or return 404 if not implemented
@@ -479,13 +413,7 @@ class TestPusherIntegration:
             await pusher_handler.authenticate_channel(
                 channel=channel,
                 socket_id=f"socket-{i}",
-                user_data={
-                    "id": f"user-{i}",
-                    "info": {
-                        "name": f"User {i}",
-                        "role": "student"
-                    }
-                }
+                user_data={"id": f"user-{i}", "info": {"name": f"User {i}", "role": "student"}},
             )
 
         # Get channel info to check member count
@@ -510,9 +438,7 @@ class TestPusherPerformance:
         tasks = []
         for i in range(1000):
             task = handler.trigger_event(
-                channel="performance-test",
-                event="throughput-test",
-                data={"messageId": i}
+                channel="performance-test", event="throughput-test", data={"messageId": i}
             )
             tasks.append(task)
 
@@ -537,9 +463,7 @@ class TestPusherPerformance:
         tasks = []
         for i in range(500):
             task = handler.authenticate_channel(
-                channel=f"private-user-{i}",
-                socket_id=f"socket-{i}",
-                user_id=f"user-{i}"
+                channel=f"private-user-{i}", socket_id=f"socket-{i}", user_id=f"user-{i}"
             )
             tasks.append(task)
 
@@ -562,9 +486,7 @@ class TestPusherSecurity:
         # Attempt to authenticate for channel without permission
         with pytest.raises(Exception):
             await pusher_handler.authenticate_channel(
-                channel="private-admin-only",
-                socket_id="socket-123",
-                user_id="regular-user-123"
+                channel="private-admin-only", socket_id="socket-123", user_id="regular-user-123"
             )
 
     @pytest.mark.asyncio
@@ -574,14 +496,12 @@ class TestPusherSecurity:
         malicious_data = {
             "script": "<script>alert('xss')</script>",
             "sql": "'; DROP TABLE users; --",
-            "oversized": "x" * 10000  # Very large payload
+            "oversized": "x" * 10000,  # Very large payload
         }
 
         # Should handle malicious content safely
         await pusher_handler.trigger_event(
-            channel="test-channel",
-            event="security-test",
-            data=malicious_data
+            channel="test-channel", event="security-test", data=malicious_data
         )
 
         # Verify the handler was called (content should be sanitized internally)
@@ -598,9 +518,9 @@ class TestPusherSecurity:
                 json={
                     "channel": "test-channel",
                     "event": "rate-limit-test",
-                    "data": {"requestId": i}
+                    "data": {"requestId": i},
                 },
-                headers=auth_headers
+                headers=auth_headers,
             )
             responses.append(response.status_code)
 
@@ -612,14 +532,12 @@ class TestPusherSecurity:
     async def test_token_validation(self, pusher_handler):
         """Test JWT token validation for authentication"""
         # Test with expired token
-        with patch('jwt.decode') as mock_jwt:
+        with patch("jwt.decode") as mock_jwt:
             mock_jwt.side_effect = Exception("Token expired")
 
             with pytest.raises(Exception, match="Token expired"):
                 await pusher_handler.authenticate_channel(
-                    channel="private-test",
-                    socket_id="socket-123",
-                    user_id="user-123"
+                    channel="private-test", socket_id="socket-123", user_id="user-123"
                 )
 
 

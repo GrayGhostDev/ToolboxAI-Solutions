@@ -1,7 +1,7 @@
 """JWT compatibility layer for handling both PyJWT and python-jose."""
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ def get_jwt_library():
         raise ImportError("No JWT implementation available")
 
 
-def encode_jwt(payload: Dict[str, Any], secret: str, algorithm: str = "HS256") -> str:
+def encode_jwt(payload: dict[str, Any], secret: str, algorithm: str = "HS256") -> str:
     """Encode JWT token with compatibility layer."""
     try:
         if jwt_available:
@@ -58,7 +58,7 @@ def encode_jwt(payload: Dict[str, Any], secret: str, algorithm: str = "HS256") -
         raise
 
 
-def decode_jwt(token: str, secret: str, algorithms: list = None) -> Dict[str, Any]:
+def decode_jwt(token: str, secret: str, algorithms: list = None) -> dict[str, Any]:
     """Decode JWT token with compatibility layer."""
     if algorithms is None:
         algorithms = ["HS256"]

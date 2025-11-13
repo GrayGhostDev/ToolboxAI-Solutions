@@ -19,34 +19,19 @@ Version: 1.0.0
 
 import logging
 from datetime import datetime, timedelta
-from typing import List, Optional, Dict, Any
+from typing import Any
 from uuid import UUID
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    status,
-    BackgroundTasks,
-    Query
-)
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field, validator
 
-from apps.backend.api.auth.auth import get_current_user
-from apps.backend.dependencies.tenant import (
-    require_tenant_admin,
-    get_current_tenant,
-    TenantContext
-)
+from apps.backend.dependencies.tenant import TenantContext, require_tenant_admin
 from apps.backend.models.schemas import User
-from apps.backend.services.storage.storage_service import StorageService, StorageError
+from apps.backend.services.storage.storage_service import StorageService
 from apps.backend.workers.tasks.storage_tasks import (
-    virus_scan_file,
-    cleanup_expired_files,
     calculate_storage_usage,
-    send_quota_alerts,
-    optimize_storage,
-    generate_storage_report
+    cleanup_expired_files,
+    virus_scan_file,
 )
 
 logger = logging.getLogger(__name__)
@@ -56,8 +41,10 @@ router = APIRouter()
 
 # === REQUEST/RESPONSE MODELS ===
 
+
 class OrganizationUsageStats(BaseModel):
     """Organization storage usage statistics"""
+
     organization_id: UUID
     organization_name: str
     total_quota_bytes: int
@@ -69,13 +56,13 @@ class OrganizationUsageStats(BaseModel):
     deleted_file_count: int
     shared_file_count: int
     user_count: int
-    last_activity_at: Optional[datetime] = None
+    last_activity_at: datetime | None = None
 
     # Category breakdown
-    category_breakdown: Dict[str, int] = Field(default_factory=dict)
+    category_breakdown: dict[str, int] = Field(default_factory=dict)
 
     # File type breakdown
-    file_type_breakdown: Dict[str, int] = Field(default_factory=dict)
+    file_type_breakdown: dict[str, int] = Field(default_factory=dict)
 
     # Usage trends
     daily_upload_bytes: int = 0
@@ -94,38 +81,41 @@ class OrganizationUsageStats(BaseModel):
 
 class StorageUsageResponse(BaseModel):
     """Response for storage usage endpoint"""
-    organizations: List[OrganizationUsageStats]
+
+    organizations: list[OrganizationUsageStats]
     total_organizations: int
-    global_stats: Dict[str, Any]
+    global_stats: dict[str, Any]
     generated_at: datetime
 
 
 class VirusScanRequest(BaseModel):
     """Request for virus scan operation"""
+
     target_type: str = Field(..., regex="^(organization|file|all_files)$")
-    organization_id: Optional[UUID] = None
-    file_id: Optional[UUID] = None
+    organization_id: UUID | None = None
+    file_id: UUID | None = None
     force_rescan: bool = False
     scan_priority: str = Field(default="normal", regex="^(low|normal|high|urgent)$")
 
-    @validator('organization_id')
+    @validator("organization_id")
     def validate_organization_required(cls, v, values):
-        if values.get('target_type') == 'organization' and not v:
+        if values.get("target_type") == "organization" and not v:
             raise ValueError("organization_id required when target_type is 'organization'")
         return v
 
-    @validator('file_id')
+    @validator("file_id")
     def validate_file_required(cls, v, values):
-        if values.get('target_type') == 'file' and not v:
+        if values.get("target_type") == "file" and not v:
             raise ValueError("file_id required when target_type is 'file'")
         return v
 
 
 class VirusScanResponse(BaseModel):
     """Response for virus scan operation"""
+
     scan_id: str
     target_type: str
-    target_id: Optional[str] = None
+    target_id: str | None = None
     status: str  # "queued", "in_progress", "completed", "failed"
     files_to_scan: int
     files_scanned: int = 0
@@ -133,32 +123,36 @@ class VirusScanResponse(BaseModel):
     quarantined_files: int = 0
     scan_priority: str
     started_at: datetime
-    estimated_completion: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    error_message: Optional[str] = None
+    estimated_completion: datetime | None = None
+    completed_at: datetime | None = None
+    error_message: str | None = None
 
 
 class CleanupRequest(BaseModel):
     """Request for cleanup operation"""
-    cleanup_type: str = Field(..., regex="^(expired_files|deleted_files|orphaned_shares|temp_files|all)$")
-    organization_id: Optional[UUID] = None
+
+    cleanup_type: str = Field(
+        ..., regex="^(expired_files|deleted_files|orphaned_shares|temp_files|all)$"
+    )
+    organization_id: UUID | None = None
     older_than_days: int = Field(default=30, ge=1, le=365)
     dry_run: bool = False
     force_cleanup: bool = False
 
-    @validator('older_than_days')
+    @validator("older_than_days")
     def validate_retention_period(cls, v, values):
-        cleanup_type = values.get('cleanup_type')
-        if cleanup_type == 'deleted_files' and v < 7:
+        cleanup_type = values.get("cleanup_type")
+        if cleanup_type == "deleted_files" and v < 7:
             raise ValueError("Deleted files must be older than 7 days for cleanup")
         return v
 
 
 class CleanupResponse(BaseModel):
     """Response for cleanup operation"""
+
     cleanup_id: str
     cleanup_type: str
-    target_organization: Optional[str] = None
+    target_organization: str | None = None
     status: str  # "queued", "in_progress", "completed", "failed"
     dry_run: bool
     older_than_days: int
@@ -167,26 +161,27 @@ class CleanupResponse(BaseModel):
     space_freed_bytes: int = 0
     errors_encountered: int = 0
     started_at: datetime
-    completed_at: Optional[datetime] = None
-    error_summary: Optional[str] = None
+    completed_at: datetime | None = None
+    error_summary: str | None = None
 
 
 class QuotaUpdateRequest(BaseModel):
     """Request for quota update"""
+
     organization_id: UUID
-    total_quota_bytes: Optional[int] = Field(None, ge=1024*1024)  # Min 1MB
-    max_files: Optional[int] = Field(None, ge=1)
-    max_file_size_mb: Optional[int] = Field(None, ge=1, le=5000)  # Max 5GB
-    max_video_size_mb: Optional[int] = Field(None, ge=1, le=10000)  # Max 10GB
-    max_image_size_mb: Optional[int] = Field(None, ge=1, le=100)  # Max 100MB
-    max_document_size_mb: Optional[int] = Field(None, ge=1, le=500)  # Max 500MB
-    warning_threshold_percent: Optional[int] = Field(None, ge=50, le=95)
-    critical_threshold_percent: Optional[int] = Field(None, ge=80, le=99)
+    total_quota_bytes: int | None = Field(None, ge=1024 * 1024)  # Min 1MB
+    max_files: int | None = Field(None, ge=1)
+    max_file_size_mb: int | None = Field(None, ge=1, le=5000)  # Max 5GB
+    max_video_size_mb: int | None = Field(None, ge=1, le=10000)  # Max 10GB
+    max_image_size_mb: int | None = Field(None, ge=1, le=100)  # Max 100MB
+    max_document_size_mb: int | None = Field(None, ge=1, le=500)  # Max 500MB
+    warning_threshold_percent: int | None = Field(None, ge=50, le=95)
+    critical_threshold_percent: int | None = Field(None, ge=80, le=99)
     reason: str = Field(..., min_length=10, max_length=500)
 
-    @validator('critical_threshold_percent')
+    @validator("critical_threshold_percent")
     def validate_thresholds(cls, v, values):
-        warning = values.get('warning_threshold_percent')
+        warning = values.get("warning_threshold_percent")
         if warning and v and v <= warning:
             raise ValueError("Critical threshold must be higher than warning threshold")
         return v
@@ -194,9 +189,10 @@ class QuotaUpdateRequest(BaseModel):
 
 class QuotaUpdateResponse(BaseModel):
     """Response for quota update"""
+
     organization_id: UUID
-    previous_quota: Dict[str, Any]
-    new_quota: Dict[str, Any]
+    previous_quota: dict[str, Any]
+    new_quota: dict[str, Any]
     updated_by: UUID
     updated_at: datetime
     reason: str
@@ -205,8 +201,9 @@ class QuotaUpdateResponse(BaseModel):
 
 # === DEPENDENCIES ===
 
+
 async def get_storage_service(
-    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_admin)
+    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_admin),
 ) -> StorageService:
     """Get storage service with admin context"""
     user, tenant_context = user_tenant
@@ -214,8 +211,7 @@ async def get_storage_service(
     from apps.backend.services.storage.supabase_provider import SupabaseStorageProvider
 
     service = SupabaseStorageProvider(
-        organization_id=tenant_context.effective_tenant_id,
-        user_id=str(user.id)
+        organization_id=tenant_context.effective_tenant_id, user_id=str(user.id)
     )
 
     return service
@@ -223,14 +219,15 @@ async def get_storage_service(
 
 # === USAGE MONITORING ENDPOINTS ===
 
+
 @router.get("/usage", response_model=StorageUsageResponse)
 async def get_organization_usage_stats(
-    organization_ids: Optional[str] = Query(None, description="Comma-separated organization IDs"),
+    organization_ids: str | None = Query(None, description="Comma-separated organization IDs"),
     include_trends: bool = Query(True, description="Include usage trends"),
     include_breakdown: bool = Query(True, description="Include category/type breakdown"),
     limit: int = Query(100, ge=1, le=1000, description="Maximum organizations to return"),
     offset: int = Query(0, ge=0, description="Number of organizations to skip"),
-    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_admin)
+    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_admin),
 ):
     """
     Get comprehensive storage usage statistics for organizations.
@@ -270,14 +267,14 @@ async def get_organization_usage_stats(
                 "student_submission": 400,
                 "assessment": 120,
                 "media_resource": 50,
-                "administrative": 30
+                "administrative": 30,
             },
             file_type_breakdown={
                 "application/pdf": 500,
                 "image/jpeg": 300,
                 "image/png": 200,
                 "video/mp4": 150,
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document": 100
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document": 100,
             },
             daily_upload_bytes=104857600,  # 100MB
             weekly_upload_bytes=734003200,  # 700MB
@@ -286,7 +283,7 @@ async def get_organization_usage_stats(
             quarantined_file_count=2,
             public_share_count=45,
             private_share_count=275,
-            expired_share_count=18
+            expired_share_count=18,
         )
 
         global_stats = {
@@ -297,31 +294,31 @@ async def get_organization_usage_stats(
             "average_usage_percentage": 42.5,
             "most_used_file_type": "application/pdf",
             "security_scans_today": 450,
-            "threats_detected_today": 0
+            "threats_detected_today": 0,
         }
 
         return StorageUsageResponse(
             organizations=[mock_org_stats],
             total_organizations=1,
             global_stats=global_stats,
-            generated_at=datetime.utcnow()
+            generated_at=datetime.utcnow(),
         )
 
     except Exception as e:
         logger.error(f"Error getting usage statistics: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve usage statistics"
+            detail="Failed to retrieve usage statistics",
         )
 
 
 @router.get("/usage/{organization_id}/detailed")
 async def get_detailed_organization_usage(
     organization_id: UUID,
-    date_from: Optional[datetime] = Query(None, description="Start date for trends"),
-    date_to: Optional[datetime] = Query(None, description="End date for trends"),
+    date_from: datetime | None = Query(None, description="Start date for trends"),
+    date_to: datetime | None = Query(None, description="End date for trends"),
     include_user_breakdown: bool = Query(False, description="Include per-user breakdown"),
-    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_admin)
+    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_admin),
 ):
     """Get detailed usage statistics for a specific organization"""
     user, tenant_context = user_tenant
@@ -336,7 +333,7 @@ async def get_detailed_organization_usage(
                 "quota_bytes": 5368709120,
                 "usage_percentage": 40.0,
                 "files_count": 1250,
-                "users_count": 85
+                "users_count": 85,
             },
             "daily_trends": [
                 {
@@ -344,33 +341,37 @@ async def get_detailed_organization_usage(
                     "uploads_bytes": 50000000 + (i * 1000000),
                     "downloads_count": 150 + (i * 5),
                     "files_added": 25 + i,
-                    "files_deleted": 2 + (i // 2)
+                    "files_deleted": 2 + (i // 2),
                 }
                 for i in range(30)
             ],
-            "user_breakdown": [
-                {
-                    "user_id": f"user-{i}",
-                    "user_name": f"User {i}",
-                    "files_count": 15 + i,
-                    "storage_used_bytes": 25000000 + (i * 1000000),
-                    "last_upload": datetime.utcnow() - timedelta(days=i % 7)
-                }
-                for i in range(10)
-            ] if include_user_breakdown else [],
+            "user_breakdown": (
+                [
+                    {
+                        "user_id": f"user-{i}",
+                        "user_name": f"User {i}",
+                        "files_count": 15 + i,
+                        "storage_used_bytes": 25000000 + (i * 1000000),
+                        "last_upload": datetime.utcnow() - timedelta(days=i % 7),
+                    }
+                    for i in range(10)
+                ]
+                if include_user_breakdown
+                else []
+            ),
             "category_trends": {
                 "educational_content": {"files": 650, "bytes": 1000000000},
                 "student_submission": {"files": 400, "bytes": 800000000},
                 "assessment": {"files": 120, "bytes": 200000000},
                 "media_resource": {"files": 50, "bytes": 100000000},
-                "administrative": {"files": 30, "bytes": 47483648}
+                "administrative": {"files": 30, "bytes": 47483648},
             },
             "security_summary": {
                 "total_scans": 1250,
                 "threats_found": 2,
                 "quarantined_files": 2,
-                "last_scan": datetime.utcnow() - timedelta(hours=1)
-            }
+                "last_scan": datetime.utcnow() - timedelta(hours=1),
+            },
         }
 
         return detailed_stats
@@ -379,17 +380,18 @@ async def get_detailed_organization_usage(
         logger.error(f"Error getting detailed usage for {organization_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve detailed usage statistics"
+            detail="Failed to retrieve detailed usage statistics",
         )
 
 
 # === SECURITY SCANNING ENDPOINTS ===
 
+
 @router.post("/scan", response_model=VirusScanResponse)
 async def trigger_virus_scan(
     scan_request: VirusScanRequest,
     background_tasks: BackgroundTasks,
-    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_admin)
+    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_admin),
 ):
     """
     Trigger virus scanning operation.
@@ -411,7 +413,7 @@ async def trigger_virus_scan(
         if scan_request.target_type == "all_files" and not tenant_context.is_super_admin:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Super admin privileges required for global scan"
+                detail="Super admin privileges required for global scan",
             )
 
         # Estimate scan scope
@@ -431,7 +433,7 @@ async def trigger_virus_scan(
                 virus_scan_file.delay,
                 str(scan_request.file_id),
                 tenant_context.effective_tenant_id,
-                scan_request.force_rescan
+                scan_request.force_rescan,
             )
         else:
             # Schedule bulk scan (would be implemented as a separate task)
@@ -450,21 +452,19 @@ async def trigger_virus_scan(
             files_to_scan=files_to_scan,
             scan_priority=scan_request.scan_priority,
             started_at=started_at,
-            estimated_completion=estimated_completion
+            estimated_completion=estimated_completion,
         )
 
     except Exception as e:
         logger.error(f"Error triggering virus scan: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to trigger virus scan"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to trigger virus scan"
         )
 
 
 @router.get("/scan/{scan_id}/status")
 async def get_virus_scan_status(
-    scan_id: str,
-    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_admin)
+    scan_id: str, user_tenant: tuple[User, TenantContext] = Depends(require_tenant_admin)
 ):
     """Get status of a virus scan operation"""
     user, tenant_context = user_tenant
@@ -483,17 +483,18 @@ async def get_virus_scan_status(
         "scan_priority": "normal",
         "started_at": datetime.utcnow() - timedelta(minutes=45),
         "estimated_completion": datetime.utcnow() + timedelta(minutes=25),
-        "current_file": "document_analysis_report.pdf"
+        "current_file": "document_analysis_report.pdf",
     }
 
 
 # === CLEANUP OPERATIONS ===
 
+
 @router.post("/cleanup", response_model=CleanupResponse)
 async def trigger_cleanup_operation(
     cleanup_request: CleanupRequest,
     background_tasks: BackgroundTasks,
-    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_admin)
+    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_admin),
 ):
     """
     Trigger storage cleanup operation.
@@ -516,11 +517,14 @@ async def trigger_cleanup_operation(
         # Validate organization access
         target_org_id = cleanup_request.organization_id or tenant_context.effective_tenant_id
 
-        if cleanup_request.cleanup_type in ["deleted_files", "all"] and not cleanup_request.force_cleanup:
+        if (
+            cleanup_request.cleanup_type in ["deleted_files", "all"]
+            and not cleanup_request.force_cleanup
+        ):
             if cleanup_request.older_than_days < 30:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Permanent deletion requires files to be older than 30 days or force_cleanup=true"
+                    detail="Permanent deletion requires files to be older than 30 days or force_cleanup=true",
                 )
 
         # Schedule cleanup task
@@ -529,7 +533,7 @@ async def trigger_cleanup_operation(
             target_org_id,
             cleanup_request.cleanup_type,
             cleanup_request.older_than_days,
-            cleanup_request.dry_run
+            cleanup_request.dry_run,
         )
 
         logger.info(
@@ -547,21 +551,20 @@ async def trigger_cleanup_operation(
             status="queued",
             dry_run=cleanup_request.dry_run,
             older_than_days=cleanup_request.older_than_days,
-            started_at=started_at
+            started_at=started_at,
         )
 
     except Exception as e:
         logger.error(f"Error triggering cleanup: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to trigger cleanup operation"
+            detail="Failed to trigger cleanup operation",
         )
 
 
 @router.get("/cleanup/{cleanup_id}/status")
 async def get_cleanup_status(
-    cleanup_id: str,
-    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_admin)
+    cleanup_id: str, user_tenant: tuple[User, TenantContext] = Depends(require_tenant_admin)
 ):
     """Get status of a cleanup operation"""
     user, tenant_context = user_tenant
@@ -580,17 +583,18 @@ async def get_cleanup_status(
         "errors_encountered": 2,
         "started_at": datetime.utcnow() - timedelta(minutes=15),
         "completed_at": datetime.utcnow() - timedelta(minutes=2),
-        "summary": "Cleanup completed successfully. 45 expired files removed, 500MB freed."
+        "summary": "Cleanup completed successfully. 45 expired files removed, 500MB freed.",
     }
 
 
 # === QUOTA MANAGEMENT ===
 
+
 @router.patch("/quota", response_model=QuotaUpdateResponse)
 async def update_organization_quota(
     quota_request: QuotaUpdateRequest,
     background_tasks: BackgroundTasks,
-    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_admin)
+    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_admin),
 ):
     """
     Update storage quota for an organization.
@@ -610,7 +614,7 @@ async def update_organization_quota(
             if str(quota_request.organization_id) != tenant_context.effective_tenant_id:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Cannot modify quota for other organizations"
+                    detail="Cannot modify quota for other organizations",
                 )
 
         # In production, this would query and update the StorageQuota table
@@ -623,7 +627,7 @@ async def update_organization_quota(
             "max_image_size_mb": 50,
             "max_document_size_mb": 100,
             "warning_threshold_percent": 80,
-            "critical_threshold_percent": 95
+            "critical_threshold_percent": 95,
         }
 
         # Apply updates
@@ -653,10 +657,7 @@ async def update_organization_quota(
         )
 
         # Recalculate usage and send alerts if necessary
-        background_tasks.add_task(
-            calculate_storage_usage.delay,
-            str(quota_request.organization_id)
-        )
+        background_tasks.add_task(calculate_storage_usage.delay, str(quota_request.organization_id))
 
         return QuotaUpdateResponse(
             organization_id=quota_request.organization_id,
@@ -664,14 +665,14 @@ async def update_organization_quota(
             new_quota=new_quota,
             updated_by=user.id,
             updated_at=datetime.utcnow(),
-            reason=quota_request.reason
+            reason=quota_request.reason,
         )
 
     except Exception as e:
         logger.error(f"Error updating quota: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update organization quota"
+            detail="Failed to update organization quota",
         )
 
 
@@ -679,7 +680,7 @@ async def update_organization_quota(
 async def get_organization_quota_details(
     organization_id: UUID,
     include_history: bool = Query(False, description="Include quota change history"),
-    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_admin)
+    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_admin),
 ):
     """Get detailed quota information for an organization"""
     user, tenant_context = user_tenant
@@ -690,7 +691,7 @@ async def get_organization_quota_details(
             if str(organization_id) != tenant_context.effective_tenant_id:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Cannot access quota for other organizations"
+                    detail="Cannot access quota for other organizations",
                 )
 
         # In production, this would query the StorageQuota table
@@ -709,30 +710,34 @@ async def get_organization_quota_details(
                 "max_document_size_mb": 100,
                 "warning_threshold_percent": 80,
                 "critical_threshold_percent": 95,
-                "last_calculated_at": datetime.utcnow()
+                "last_calculated_at": datetime.utcnow(),
             },
             "alerts": {
                 "is_warning_reached": False,
                 "is_critical_reached": False,
                 "last_warning_sent": None,
-                "next_alert_check": datetime.utcnow() + timedelta(hours=1)
+                "next_alert_check": datetime.utcnow() + timedelta(hours=1),
             },
-            "quota_history": [
-                {
-                    "change_date": datetime.utcnow() - timedelta(days=30),
-                    "changed_by": "admin-user-id",
-                    "previous_quota": 1073741824,  # 1GB
-                    "new_quota": 5368709120,  # 5GB
-                    "reason": "Organization growth - increased user count"
-                },
-                {
-                    "change_date": datetime.utcnow() - timedelta(days=60),
-                    "changed_by": "system",
-                    "previous_quota": 536870912,  # 512MB
-                    "new_quota": 1073741824,  # 1GB
-                    "reason": "Automatic upgrade based on usage patterns"
-                }
-            ] if include_history else []
+            "quota_history": (
+                [
+                    {
+                        "change_date": datetime.utcnow() - timedelta(days=30),
+                        "changed_by": "admin-user-id",
+                        "previous_quota": 1073741824,  # 1GB
+                        "new_quota": 5368709120,  # 5GB
+                        "reason": "Organization growth - increased user count",
+                    },
+                    {
+                        "change_date": datetime.utcnow() - timedelta(days=60),
+                        "changed_by": "system",
+                        "previous_quota": 536870912,  # 512MB
+                        "new_quota": 1073741824,  # 1GB
+                        "reason": "Automatic upgrade based on usage patterns",
+                    },
+                ]
+                if include_history
+                else []
+            ),
         }
 
         return quota_details
@@ -741,5 +746,5 @@ async def get_organization_quota_details(
         logger.error(f"Error getting quota details for {organization_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve quota details"
+            detail="Failed to retrieve quota details",
         )

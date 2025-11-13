@@ -3,23 +3,20 @@ Unit tests for Sync Coordinator - Distributed state synchronization system
 Tests state management, event bus, conflict resolution, and real-time updates
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch, Mock
-from datetime import datetime, timedelta
-from typing import Dict, Any
 import asyncio
-import json
+from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from core.coordinators.sync_coordinator import (
-    SyncCoordinator,
     Event,
-    StateSnapshot,
-    ConflictResolution,
     EventPriority,
+    StateSnapshot,
+    SyncCoordinator,
     SyncState,
     create_sync_coordinator,
 )
-
 
 # ============================================================================
 # Test Fixtures
@@ -164,9 +161,7 @@ class TestEventSystem:
         sync_coordinator.event_queue = asyncio.Queue(maxsize=1)
 
         # Fill the queue
-        await sync_coordinator.event_queue.put(
-            Event("e1", "test", "src", None, {})
-        )
+        await sync_coordinator.event_queue.put(Event("e1", "test", "src", None, {}))
 
         # Try to add another event
         with pytest.raises(RuntimeError) as exc_info:
@@ -176,6 +171,7 @@ class TestEventSystem:
 
     def test_register_event_handler(self, sync_coordinator):
         """Test registering event handler"""
+
         async def test_handler(event):
             pass
 
@@ -185,6 +181,7 @@ class TestEventSystem:
 
     def test_unregister_event_handler(self, sync_coordinator):
         """Test unregistering event handler"""
+
         async def test_handler(event):
             pass
 
@@ -210,10 +207,9 @@ class TestEventSystem:
         assert handler_called is True
 
     @pytest.mark.asyncio
-    async def test_process_event_handles_handler_exceptions(
-        self, sync_coordinator
-    ):
+    async def test_process_event_handles_handler_exceptions(self, sync_coordinator):
         """Test event processing handles handler exceptions gracefully"""
+
         async def failing_handler(event):
             raise Exception("Handler failed")
 
@@ -276,9 +272,7 @@ class TestStateManagement:
         assert sync_coordinator.component_sync_status["test_component"] == SyncState.SYNCED
 
     @pytest.mark.asyncio
-    async def test_update_component_state_increments_version(
-        self, sync_coordinator
-    ):
+    async def test_update_component_state_increments_version(self, sync_coordinator):
         """Test state update increments version"""
         await sync_coordinator.update_component_state("comp", {"data": "v1"})
         snapshot2 = await sync_coordinator.update_component_state("comp", {"data": "v2"})
@@ -296,9 +290,7 @@ class TestStateManagement:
         assert len(history) == 3
 
     @pytest.mark.asyncio
-    async def test_update_component_state_publishes_event(
-        self, sync_coordinator
-    ):
+    async def test_update_component_state_publishes_event(self, sync_coordinator):
         """Test state update publishes state_changed event"""
         with patch.object(
             sync_coordinator, "publish_event", new_callable=AsyncMock
@@ -391,9 +383,7 @@ class TestConflictResolution:
         current = StateSnapshot("comp", {"key1": "value", "key2": 123}, 1)
         new = StateSnapshot("comp", {"key1": "new_value"}, 2)  # key2 deleted
 
-        with patch.object(
-            sync_coordinator, "_has_incompatible_changes", return_value=True
-        ):
+        with patch.object(sync_coordinator, "_has_incompatible_changes", return_value=True):
             conflict = await sync_coordinator._detect_conflict(current, new)
 
             assert conflict == "data_conflict"
@@ -444,9 +434,7 @@ class TestConflictResolution:
         lower_version = StateSnapshot("comp", {"data": "v1"}, 1)
         higher_version = StateSnapshot("comp", {"data": "v2"}, 5)
 
-        resolved = await sync_coordinator._resolve_by_version(
-            lower_version, higher_version
-        )
+        resolved = await sync_coordinator._resolve_by_version(lower_version, higher_version)
 
         assert resolved == higher_version
 
@@ -485,12 +473,8 @@ class TestConflictResolution:
         current = StateSnapshot("comp", {"data": "old"}, 1)
         new = StateSnapshot("comp", {"data": "new"}, 2)
 
-        with patch.object(
-            sync_coordinator, "publish_event", new_callable=AsyncMock
-        ):
-            resolved = await sync_coordinator._handle_conflict(
-                "version_conflict", current, new
-            )
+        with patch.object(sync_coordinator, "publish_event", new_callable=AsyncMock):
+            resolved = await sync_coordinator._handle_conflict("version_conflict", current, new)
 
         # Check resolution was recorded
         assert len(sync_coordinator.active_conflicts) == 1
@@ -511,9 +495,7 @@ class TestComponentRegistration:
     @pytest.mark.asyncio
     async def test_register_component_success(self, sync_coordinator):
         """Test successful component registration"""
-        with patch.object(
-            sync_coordinator, "publish_event", new_callable=AsyncMock
-        ):
+        with patch.object(sync_coordinator, "publish_event", new_callable=AsyncMock):
             success = await sync_coordinator.register_component(
                 "test_comp", initial_state={"status": "active"}
             )
@@ -539,9 +521,7 @@ class TestComponentRegistration:
         """Test successful component unregistration"""
         await sync_coordinator.register_component("comp")
 
-        with patch.object(
-            sync_coordinator, "publish_event", new_callable=AsyncMock
-        ):
+        with patch.object(sync_coordinator, "publish_event", new_callable=AsyncMock):
             success = await sync_coordinator.unregister_component("comp")
 
         assert success is True
@@ -579,9 +559,7 @@ class TestStateRollback:
         await sync_coordinator.update_component_state("comp", {"data": "v2"})
         await sync_coordinator.update_component_state("comp", {"data": "v3"})
 
-        with patch.object(
-            sync_coordinator, "publish_event", new_callable=AsyncMock
-        ):
+        with patch.object(sync_coordinator, "publish_event", new_callable=AsyncMock):
             success = await sync_coordinator.rollback_component_state("comp", 2)
 
         assert success is True
@@ -592,9 +570,7 @@ class TestStateRollback:
         assert current_state.version == 4  # New version created
 
     @pytest.mark.asyncio
-    async def test_rollback_component_state_version_not_found(
-        self, sync_coordinator
-    ):
+    async def test_rollback_component_state_version_not_found(self, sync_coordinator):
         """Test rollback fails for non-existent version"""
         await sync_coordinator.update_component_state("comp", {"data": "v1"})
 
@@ -772,9 +748,7 @@ class TestEventHandlers:
     """Test built-in event handlers"""
 
     @pytest.mark.asyncio
-    async def test_handle_state_change_updates_sync_time(
-        self, sync_coordinator
-    ):
+    async def test_handle_state_change_updates_sync_time(self, sync_coordinator):
         """Test state_changed handler updates last sync time"""
         event = Event(
             "e1",
@@ -789,9 +763,7 @@ class TestEventHandlers:
         assert "test_comp" in sync_coordinator.last_sync_times
 
     @pytest.mark.asyncio
-    async def test_handle_component_connect_updates_status(
-        self, sync_coordinator
-    ):
+    async def test_handle_component_connect_updates_status(self, sync_coordinator):
         """Test component_connected handler updates sync status"""
         event = Event(
             "e1",
@@ -806,9 +778,7 @@ class TestEventHandlers:
         assert sync_coordinator.component_sync_status["new_comp"] == SyncState.SYNCED
 
     @pytest.mark.asyncio
-    async def test_handle_component_disconnect_updates_status(
-        self, sync_coordinator
-    ):
+    async def test_handle_component_disconnect_updates_status(self, sync_coordinator):
         """Test component_disconnected handler updates sync status"""
         event = Event(
             "e1",
@@ -820,15 +790,10 @@ class TestEventHandlers:
 
         await sync_coordinator._handle_component_disconnect(event)
 
-        assert (
-            sync_coordinator.component_sync_status["disconnected_comp"]
-            == SyncState.DISCONNECTED
-        )
+        assert sync_coordinator.component_sync_status["disconnected_comp"] == SyncState.DISCONNECTED
 
     @pytest.mark.asyncio
-    async def test_handle_workflow_event_publishes_sync(
-        self, sync_coordinator
-    ):
+    async def test_handle_workflow_event_publishes_sync(self, sync_coordinator):
         """Test workflow event handler publishes sync event"""
         event = Event(
             "e1",
@@ -988,9 +953,7 @@ class TestConvenienceFunctions:
     async def test_create_sync_coordinator(self):
         """Test create_sync_coordinator factory function"""
         with patch.object(SyncCoordinator, "initialize", new_callable=AsyncMock):
-            coordinator = await create_sync_coordinator(
-                config={"sync_interval": 10}
-            )
+            coordinator = await create_sync_coordinator(config={"sync_interval": 10})
 
             assert isinstance(coordinator, SyncCoordinator)
             assert coordinator.sync_interval == 10

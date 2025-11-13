@@ -1,12 +1,13 @@
 """User-related test data factories."""
 
+import hashlib
+from datetime import datetime, timedelta, timezone
+
 import factory
 from factory import fuzzy
 from faker import Faker
-from datetime import datetime, timezone, timedelta
-import hashlib
-from typing import Optional
-from .base_factory import BaseFactory, DictFactory, AsyncMixin
+
+from .base_factory import AsyncMixin, DictFactory
 
 fake = Faker()
 
@@ -59,7 +60,7 @@ class UserFactory(DictFactory, AsyncMixin):
     )
 
     @classmethod
-    def with_password(cls, password: Optional[str] = None, **kwargs):
+    def with_password(cls, password: str | None = None, **kwargs):
         """Create user with hashed password."""
         if password is None:
             password = fake.password(length=12, special_chars=True, digits=True)
@@ -73,9 +74,7 @@ class UserFactory(DictFactory, AsyncMixin):
         user = cls.create(**kwargs)
         user["access_token"] = fake.sha256()
         user["refresh_token"] = fake.sha256()
-        user["token_expires_at"] = (
-            datetime.now(timezone.utc) + timedelta(hours=24)
-        ).isoformat()
+        user["token_expires_at"] = (datetime.now(timezone.utc) + timedelta(hours=24)).isoformat()
         return user
 
 
@@ -87,9 +86,17 @@ class TeacherFactory(UserFactory):
     # Teacher-specific fields
     subjects = factory.LazyFunction(
         lambda: fake.random_elements(
-            ["Mathematics", "Science", "English", "History", "Art", "Music",
-             "Physical Education", "Computer Science"],
-            length=fake.random_int(1, 3)
+            [
+                "Mathematics",
+                "Science",
+                "English",
+                "History",
+                "Art",
+                "Music",
+                "Physical Education",
+                "Computer Science",
+            ],
+            length=fake.random_int(1, 3),
         )
     )
 
@@ -148,9 +155,14 @@ class StudentFactory(UserFactory):
             "attendance_rate": fake.random_int(85, 100),
             "behavior_score": fake.random_int(70, 100),
             "awards": fake.random_elements(
-                ["Honor Roll", "Perfect Attendance", "Math Olympiad",
-                 "Science Fair Winner", "Student of the Month"],
-                length=fake.random_int(0, 3)
+                [
+                    "Honor Roll",
+                    "Perfect Attendance",
+                    "Math Olympiad",
+                    "Science Fair Winner",
+                    "Student of the Month",
+                ],
+                length=fake.random_int(0, 3),
             ),
         }
     )
@@ -161,8 +173,16 @@ class StudentFactory(UserFactory):
             {
                 "id": fake.uuid4(),
                 "name": fake.random_element(
-                    ["Algebra I", "Biology", "English Literature", "World History",
-                     "Chemistry", "Physics", "Art Fundamentals", "Computer Science"]
+                    [
+                        "Algebra I",
+                        "Biology",
+                        "English Literature",
+                        "World History",
+                        "Chemistry",
+                        "Physics",
+                        "Art Fundamentals",
+                        "Computer Science",
+                    ]
                 ),
                 "progress": fake.random_int(0, 100),
                 "current_grade": fake.random_element(["A", "B", "C", "D", "F"]),
@@ -180,10 +200,20 @@ class AdminFactory(UserFactory):
     # Admin-specific fields
     permissions = factory.LazyFunction(
         lambda: [
-            "user.create", "user.read", "user.update", "user.delete",
-            "content.create", "content.read", "content.update", "content.delete",
-            "system.config", "system.monitor", "system.backup",
-            "reports.view", "reports.generate", "reports.export",
+            "user.create",
+            "user.read",
+            "user.update",
+            "user.delete",
+            "content.create",
+            "content.read",
+            "content.update",
+            "content.delete",
+            "system.config",
+            "system.monitor",
+            "system.backup",
+            "reports.view",
+            "reports.generate",
+            "reports.export",
         ]
     )
 
@@ -199,8 +229,9 @@ class AdminFactory(UserFactory):
     last_actions = factory.LazyFunction(
         lambda: [
             {
-                "action": fake.random_element(["created_user", "updated_content",
-                                              "deleted_post", "modified_settings"]),
+                "action": fake.random_element(
+                    ["created_user", "updated_content", "deleted_post", "modified_settings"]
+                ),
                 "timestamp": fake.date_time_this_week().isoformat(),
                 "target": fake.uuid4(),
                 "details": fake.sentence(),

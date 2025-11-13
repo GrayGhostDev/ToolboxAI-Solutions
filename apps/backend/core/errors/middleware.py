@@ -6,15 +6,14 @@ error handling utilities. Core error types have been moved to error_handler.py
 """
 
 import asyncio
-import json
 import logging
-import sys
 import traceback
 import uuid
 from collections import defaultdict
+from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Union
+from typing import Any
 
 # Import Sentry for error tracking
 try:
@@ -24,7 +23,7 @@ try:
 except ImportError:
     SENTRY_AVAILABLE = False
 
-from fastapi import HTTPException, Request, Response, status
+from fastapi import HTTPException, Request, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -35,13 +34,10 @@ from starlette.middleware.base import BaseHTTPMiddleware
 # Import core error types from error_handler module
 from .error_handler import (
     ApplicationError,
-    AuthenticationError,
-    AuthorizationError,
-    ConflictError,
-    ExternalServiceError,
     ErrorCategory,
     ErrorDetail,
     ErrorResponse,
+    ExternalServiceError,
 )
 
 logger = logging.getLogger(__name__)
@@ -64,16 +60,16 @@ class ErrorContext(BaseModel):
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     path: str
     method: str
-    user_id: Optional[str] = None
-    client_ip: Optional[str] = None
-    user_agent: Optional[str] = None
-    correlation_id: Optional[str] = None
+    user_id: str | None = None
+    client_ip: str | None = None
+    user_agent: str | None = None
+    correlation_id: str | None = None
 
 
 class AppValidationError(ApplicationError):
     """Legacy validation error (for backward compatibility)"""
 
-    def __init__(self, message: str, details: Optional[List[ErrorDetail]] = None):
+    def __init__(self, message: str, details: list[ErrorDetail] | None = None):
         super().__init__(
             message=message,
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -85,7 +81,7 @@ class AppValidationError(ApplicationError):
 class ResourceNotFoundError(ApplicationError):
     """Legacy resource not found error (for backward compatibility)"""
 
-    def __init__(self, resource: str, identifier: Optional[str] = None):
+    def __init__(self, resource: str, identifier: str | None = None):
         message = f"{resource} not found"
         if identifier:
             message += f": {identifier}"
@@ -146,11 +142,11 @@ class ErrorMetrics:
     """Collect and track error metrics"""
 
     def __init__(self):
-        self.error_counts: Dict[str, int] = defaultdict(int)
-        self.error_rates: Dict[str, List[datetime]] = defaultdict(list)
-        self.last_errors: Dict[str, Dict[str, Any]] = {}
+        self.error_counts: dict[str, int] = defaultdict(int)
+        self.error_rates: dict[str, list[datetime]] = defaultdict(list)
+        self.last_errors: dict[str, dict[str, Any]] = {}
 
-    def record_error(self, error: Dict[str, Any], category: str):
+    def record_error(self, error: dict[str, Any], category: str):
         """Record an error occurrence"""
         self.error_counts[category] += 1
         self.error_rates[category].append(datetime.now(timezone.utc))
@@ -166,7 +162,7 @@ class ErrorMetrics:
         recent_errors = [dt for dt in self.error_rates[category] if dt > cutoff]
         return len(recent_errors) / window_minutes if window_minutes > 0 else 0
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Get error metrics summary"""
         return {
             "total_errors": sum(self.error_counts.values()),
@@ -188,7 +184,7 @@ class LegacyErrorHandler:
     def __init__(self, debug: bool = False):
         self.debug = debug
         self.metrics = ErrorMetrics()
-        self.error_mappers: Dict[type, Callable] = {}
+        self.error_mappers: dict[type, Callable] = {}
         self._setup_default_mappers()
 
     def _setup_default_mappers(self):
@@ -202,7 +198,7 @@ class LegacyErrorHandler:
         """Register custom error mapper"""
         self.error_mappers[error_type] = mapper
 
-    async def handle_error(self, request: Request, exc: Exception) -> Dict[str, Any]:
+    async def handle_error(self, request: Request, exc: Exception) -> dict[str, Any]:
         """Handle an error and return standardized response (as dict)"""
         # Create error context
         context = ErrorContext(
@@ -282,7 +278,7 @@ class LegacyErrorHandler:
 
     async def _handle_validation_error(
         self, exc: AppValidationError, context: ErrorContext
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Handle validation errors"""
         return {
             "status_code": exc.status_code,
@@ -294,9 +290,9 @@ class LegacyErrorHandler:
 
     async def _handle_request_validation_error(
         self, exc: RequestValidationError, context: ErrorContext
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Handle FastAPI request validation errors"""
-        details: List[Dict[str, Any]] = []
+        details: list[dict[str, Any]] = []
         for error in exc.errors():
             field_path = ".".join(str(loc) for loc in error.get("loc", []))
             details.append(
@@ -317,8 +313,8 @@ class LegacyErrorHandler:
         }
 
     async def _handle_http_exception(
-        self, exc: Union[HTTPException, StarletteHTTPException], context: ErrorContext
-    ) -> Dict[str, Any]:
+        self, exc: HTTPException | StarletteHTTPException, context: ErrorContext
+    ) -> dict[str, Any]:
         """Handle HTTP exceptions"""
         # Map status code to category
         category = self._map_status_to_category(exc.status_code)
@@ -332,7 +328,7 @@ class LegacyErrorHandler:
 
     async def _handle_application_error(
         self, exc: ApplicationError, context: ErrorContext
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Handle application errors"""
         return {
             "status_code": exc.status_code,
@@ -342,7 +338,7 @@ class LegacyErrorHandler:
             "path": context.path,
         }
 
-    async def _handle_unknown_error(self, exc: Exception, context: ErrorContext) -> Dict[str, Any]:
+    async def _handle_unknown_error(self, exc: Exception, context: ErrorContext) -> dict[str, Any]:
         """Handle unknown errors"""
         # Log full exception for unknown errors
         logger.exception(f"Unknown error occurred: {exc}")
@@ -376,7 +372,7 @@ class LegacyErrorHandler:
         else:
             return ErrorCategory.BUSINESS_LOGIC
 
-    def _log_error(self, error_dict: Dict[str, Any], exc: Exception):
+    def _log_error(self, error_dict: dict[str, Any], exc: Exception):
         """Log error with appropriate level"""
         status_code = int(error_dict.get("status_code", 500))
         msg = str(error_dict.get("message", ""))
@@ -437,8 +433,8 @@ class ErrorAggregator:
 
     def __init__(self, window_size: int = 100):
         self.window_size = window_size
-        self.recent_errors: List[ErrorResponse] = []
-        self.patterns: Dict[str, int] = defaultdict(int)
+        self.recent_errors: list[ErrorResponse] = []
+        self.patterns: dict[str, int] = defaultdict(int)
 
     def add_error(self, error: ErrorResponse):
         """Add error to aggregator"""
@@ -466,7 +462,7 @@ class ErrorAggregator:
             if error.path:
                 self.patterns[f"path_{error.path}"] += 1
 
-    def get_insights(self) -> Dict[str, Any]:
+    def get_insights(self) -> dict[str, Any]:
         """Get error insights"""
         if not self.recent_errors:
             return {"message": "No recent errors"}

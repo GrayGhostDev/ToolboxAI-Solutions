@@ -5,12 +5,11 @@ Tests cover content generation, retrieval, streaming, deletion, user content lis
 and Celery background task integration with comprehensive mocking.
 """
 
-import pytest
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from fastapi.testclient import TestClient
-from fastapi import status
-from datetime import datetime, timezone
+from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
+
+import pytest
+from fastapi import status
 
 
 # Sample test data
@@ -21,7 +20,7 @@ def sample_content_request():
         "topic": "Pythagorean Theorem",
         "subject": "Mathematics",
         "grade_level": "8-10",
-        "content_type": "lesson"
+        "content_type": "lesson",
     }
 
 
@@ -33,11 +32,8 @@ def sample_lesson_request():
         "subject": "Mathematics",
         "topic": "Fractions",
         "grade_level": "5-7",
-        "learning_objectives": [
-            "Understand fraction basics",
-            "Add and subtract fractions"
-        ],
-        "duration": 45
+        "learning_objectives": ["Understand fraction basics", "Add and subtract fractions"],
+        "duration": 45,
     }
 
 
@@ -52,7 +48,7 @@ def sample_quiz_request():
         "num_questions": 10,
         "difficulty": "medium",
         "question_types": ["multiple_choice", "true_false"],
-        "learning_objectives": ["Understand photosynthesis process"]
+        "learning_objectives": ["Understand photosynthesis process"],
     }
 
 
@@ -65,7 +61,7 @@ def sample_script_optimize_request():
         "script_name": "TestScript",
         "optimization_level": "balanced",
         "preserve_comments": True,
-        "generate_report": True
+        "generate_report": True,
     }
 
 
@@ -101,15 +97,17 @@ class TestContentGeneration:
         mock_result = {
             "title": "Pythagorean Theorem Lesson",
             "content": "Detailed lesson content here...",
-            "exercises": ["Exercise 1", "Exercise 2"]
+            "exercises": ["Exercise 1", "Exercise 2"],
         }
 
-        with patch('apps.backend.api.routers.content.generate_educational_content', AsyncMock(return_value=mock_result)):
-            with patch('apps.backend.api.routers.content.get_current_user', return_value=mock_current_user):
-                response = test_client.post(
-                    "/api/v1/content/generate",
-                    json=sample_content_request
-                )
+        with patch(
+            "apps.backend.api.routers.content.generate_educational_content",
+            AsyncMock(return_value=mock_result),
+        ):
+            with patch(
+                "apps.backend.api.routers.content.get_current_user", return_value=mock_current_user
+            ):
+                response = test_client.post("/api/v1/content/generate", json=sample_content_request)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -120,20 +118,17 @@ class TestContentGeneration:
         assert "generation_time" in data["metadata"]
 
     @pytest.mark.asyncio
-    async def test_generate_content_missing_topic(
-        self, test_client, mock_current_user
-    ):
+    async def test_generate_content_missing_topic(self, test_client, mock_current_user):
         """Test content generation without required topic"""
         invalid_request = {
             "subject": "Mathematics",
             # Missing topic field
         }
 
-        with patch('apps.backend.api.routers.content.get_current_user', return_value=mock_current_user):
-            response = test_client.post(
-                "/api/v1/content/generate",
-                json=invalid_request
-            )
+        with patch(
+            "apps.backend.api.routers.content.get_current_user", return_value=mock_current_user
+        ):
+            response = test_client.post("/api/v1/content/generate", json=invalid_request)
 
         # FastAPI validation should catch this
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
@@ -143,12 +138,14 @@ class TestContentGeneration:
         self, test_client, sample_content_request, mock_current_user
     ):
         """Test content generation when agent fails"""
-        with patch('apps.backend.api.routers.content.generate_educational_content', AsyncMock(side_effect=Exception("Agent service unavailable"))):
-            with patch('apps.backend.api.routers.content.get_current_user', return_value=mock_current_user):
-                response = test_client.post(
-                    "/api/v1/content/generate",
-                    json=sample_content_request
-                )
+        with patch(
+            "apps.backend.api.routers.content.generate_educational_content",
+            AsyncMock(side_effect=Exception("Agent service unavailable")),
+        ):
+            with patch(
+                "apps.backend.api.routers.content.get_current_user", return_value=mock_current_user
+            ):
+                response = test_client.post("/api/v1/content/generate", json=sample_content_request)
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         assert "generation failed" in response.json()["detail"].lower()
@@ -161,12 +158,18 @@ class TestContentGeneration:
         mock_result = {"content": "test content"}
         mock_broadcast = AsyncMock()
 
-        with patch('apps.backend.api.routers.content.generate_educational_content', AsyncMock(return_value=mock_result)):
-            with patch('apps.backend.api.routers.content.get_current_user', return_value=mock_current_user):
-                with patch('apps.backend.api.routers.content._broadcast_content_update', mock_broadcast):
+        with patch(
+            "apps.backend.api.routers.content.generate_educational_content",
+            AsyncMock(return_value=mock_result),
+        ):
+            with patch(
+                "apps.backend.api.routers.content.get_current_user", return_value=mock_current_user
+            ):
+                with patch(
+                    "apps.backend.api.routers.content._broadcast_content_update", mock_broadcast
+                ):
                     response = test_client.post(
-                        "/api/v1/content/generate",
-                        json=sample_content_request
+                        "/api/v1/content/generate", json=sample_content_request
                     )
 
         assert response.status_code == status.HTTP_200_OK
@@ -181,7 +184,9 @@ class TestContentRetrieval:
         """Test retrieving content by ID"""
         content_id = "content_test_123"
 
-        with patch('apps.backend.api.routers.content.get_current_user', return_value=mock_current_user):
+        with patch(
+            "apps.backend.api.routers.content.get_current_user", return_value=mock_current_user
+        ):
             response = test_client.get(f"/content/{content_id}")
 
         assert response.status_code == status.HTTP_200_OK
@@ -195,8 +200,13 @@ class TestContentRetrieval:
         content_id = "nonexistent_content"
 
         # Mock an exception during retrieval
-        with patch('apps.backend.api.routers.content.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.content.log_audit', side_effect=Exception("Database error")):
+        with patch(
+            "apps.backend.api.routers.content.get_current_user", return_value=mock_current_user
+        ):
+            with patch(
+                "apps.backend.api.routers.content.log_audit",
+                side_effect=Exception("Database error"),
+            ):
                 response = test_client.get(f"/content/{content_id}")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -211,10 +221,11 @@ class TestContentStreaming:
         """Test streaming content generation progress"""
         content_id = "content_stream_123"
 
-        with patch('apps.backend.api.routers.content.get_current_user', return_value=mock_current_user):
+        with patch(
+            "apps.backend.api.routers.content.get_current_user", return_value=mock_current_user
+        ):
             response = test_client.get(
-                f"/content/{content_id}/stream",
-                headers={"Accept": "text/plain"}
+                f"/content/{content_id}/stream", headers={"Accept": "text/plain"}
             )
 
         assert response.status_code == status.HTTP_200_OK
@@ -226,8 +237,13 @@ class TestContentStreaming:
         content_id = "content_error"
 
         # Mock an error in stream generation
-        with patch('apps.backend.api.routers.content.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.content.asyncio.sleep', AsyncMock(side_effect=Exception("Stream error"))):
+        with patch(
+            "apps.backend.api.routers.content.get_current_user", return_value=mock_current_user
+        ):
+            with patch(
+                "apps.backend.api.routers.content.asyncio.sleep",
+                AsyncMock(side_effect=Exception("Stream error")),
+            ):
                 response = test_client.get(f"/content/{content_id}/stream")
 
         # The endpoint catches exceptions and returns 500
@@ -242,7 +258,9 @@ class TestContentDeletion:
         """Test deleting content as admin"""
         content_id = "content_delete_123"
 
-        with patch('apps.backend.api.routers.content.require_any_role', return_value=mock_admin_user):
+        with patch(
+            "apps.backend.api.routers.content.require_any_role", return_value=mock_admin_user
+        ):
             response = test_client.delete(f"/content/{content_id}")
 
         assert response.status_code == status.HTTP_200_OK
@@ -255,7 +273,9 @@ class TestContentDeletion:
         """Test deleting content as teacher"""
         content_id = "content_teacher_delete"
 
-        with patch('apps.backend.api.routers.content.require_any_role', return_value=mock_current_user):
+        with patch(
+            "apps.backend.api.routers.content.require_any_role", return_value=mock_current_user
+        ):
             response = test_client.delete(f"/content/{content_id}")
 
         assert response.status_code == status.HTTP_200_OK
@@ -264,8 +284,12 @@ class TestContentDeletion:
         """Test content deletion with error"""
         content_id = "content_error"
 
-        with patch('apps.backend.api.routers.content.require_any_role', return_value=mock_admin_user):
-            with patch('apps.backend.api.routers.content.log_audit', side_effect=Exception("Delete failed")):
+        with patch(
+            "apps.backend.api.routers.content.require_any_role", return_value=mock_admin_user
+        ):
+            with patch(
+                "apps.backend.api.routers.content.log_audit", side_effect=Exception("Delete failed")
+            ):
                 response = test_client.delete(f"/content/{content_id}")
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -279,7 +303,9 @@ class TestUserContent:
         """Test user retrieving their own content"""
         user_id = mock_current_user.id
 
-        with patch('apps.backend.api.routers.content.get_current_user', return_value=mock_current_user):
+        with patch(
+            "apps.backend.api.routers.content.get_current_user", return_value=mock_current_user
+        ):
             response = test_client.get(f"/content/user/{user_id}")
 
         assert response.status_code == status.HTTP_200_OK
@@ -292,10 +318,11 @@ class TestUserContent:
         """Test user content with pagination parameters"""
         user_id = mock_current_user.id
 
-        with patch('apps.backend.api.routers.content.get_current_user', return_value=mock_current_user):
+        with patch(
+            "apps.backend.api.routers.content.get_current_user", return_value=mock_current_user
+        ):
             response = test_client.get(
-                f"/content/user/{user_id}",
-                params={"limit": 5, "offset": 10}
+                f"/content/user/{user_id}", params={"limit": 5, "offset": 10}
             )
 
         assert response.status_code == status.HTTP_200_OK
@@ -307,8 +334,10 @@ class TestUserContent:
         """Test admin accessing other user's content"""
         other_user_id = str(uuid4())
 
-        with patch('apps.backend.api.routers.content.get_current_user', return_value=mock_admin_user):
-            with patch('apps.backend.api.routers.content._user_has_role', return_value=True):
+        with patch(
+            "apps.backend.api.routers.content.get_current_user", return_value=mock_admin_user
+        ):
+            with patch("apps.backend.api.routers.content._user_has_role", return_value=True):
                 response = test_client.get(f"/content/user/{other_user_id}")
 
         assert response.status_code == status.HTTP_200_OK
@@ -317,8 +346,10 @@ class TestUserContent:
         """Test non-admin user accessing other user's content"""
         other_user_id = str(uuid4())
 
-        with patch('apps.backend.api.routers.content.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.content._user_has_role', return_value=False):
+        with patch(
+            "apps.backend.api.routers.content.get_current_user", return_value=mock_current_user
+        ):
+            with patch("apps.backend.api.routers.content._user_has_role", return_value=False):
                 response = test_client.get(f"/content/user/{other_user_id}")
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -327,8 +358,13 @@ class TestUserContent:
         """Test user content retrieval with error"""
         user_id = mock_current_user.id
 
-        with patch('apps.backend.api.routers.content.get_current_user', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.content.JSONResponse', side_effect=Exception("Database error")):
+        with patch(
+            "apps.backend.api.routers.content.get_current_user", return_value=mock_current_user
+        ):
+            with patch(
+                "apps.backend.api.routers.content.JSONResponse",
+                side_effect=Exception("Database error"),
+            ):
                 response = test_client.get(f"/content/user/{user_id}")
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -348,11 +384,14 @@ class TestCeleryLessonGeneration:
         mock_celery_task = Mock()
         mock_celery_task.delay.return_value = mock_task
 
-        with patch('apps.backend.api.routers.content.require_any_role', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.content.generate_lesson_content_sync', mock_celery_task):
+        with patch(
+            "apps.backend.api.routers.content.require_any_role", return_value=mock_current_user
+        ):
+            with patch(
+                "apps.backend.api.routers.content.generate_lesson_content_sync", mock_celery_task
+            ):
                 response = test_client.post(
-                    "/api/v1/content/lessons/generate",
-                    json=sample_lesson_request
+                    "/api/v1/content/lessons/generate", json=sample_lesson_request
                 )
 
         assert response.status_code == status.HTTP_202_ACCEPTED
@@ -373,11 +412,14 @@ class TestCeleryLessonGeneration:
         mock_celery_task = Mock()
         mock_celery_task.delay.return_value = mock_task
 
-        with patch('apps.backend.api.routers.content.require_any_role', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.content.generate_lesson_content_sync', mock_celery_task):
+        with patch(
+            "apps.backend.api.routers.content.require_any_role", return_value=mock_current_user
+        ):
+            with patch(
+                "apps.backend.api.routers.content.generate_lesson_content_sync", mock_celery_task
+            ):
                 response = test_client.post(
-                    "/api/v1/content/lessons/generate",
-                    json=sample_lesson_request
+                    "/api/v1/content/lessons/generate", json=sample_lesson_request
                 )
 
         assert response.status_code == status.HTTP_202_ACCEPTED
@@ -386,11 +428,15 @@ class TestCeleryLessonGeneration:
         self, test_client, sample_lesson_request, mock_current_user
     ):
         """Test lesson generation when task queuing fails"""
-        with patch('apps.backend.api.routers.content.require_any_role', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.content.generate_lesson_content_sync', side_effect=Exception("Celery unavailable")):
+        with patch(
+            "apps.backend.api.routers.content.require_any_role", return_value=mock_current_user
+        ):
+            with patch(
+                "apps.backend.api.routers.content.generate_lesson_content_sync",
+                side_effect=Exception("Celery unavailable"),
+            ):
                 response = test_client.post(
-                    "/api/v1/content/lessons/generate",
-                    json=sample_lesson_request
+                    "/api/v1/content/lessons/generate", json=sample_lesson_request
                 )
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -400,9 +446,7 @@ class TestCeleryLessonGeneration:
 class TestCeleryQuizGeneration:
     """Tests for Celery quiz generation endpoint"""
 
-    def test_generate_quiz_success(
-        self, test_client, sample_quiz_request, mock_current_user
-    ):
+    def test_generate_quiz_success(self, test_client, sample_quiz_request, mock_current_user):
         """Test successful quiz generation task queuing"""
         mock_task = Mock()
         mock_task.id = "quiz_task_123"
@@ -410,11 +454,14 @@ class TestCeleryQuizGeneration:
         mock_celery_task = Mock()
         mock_celery_task.delay.return_value = mock_task
 
-        with patch('apps.backend.api.routers.content.require_any_role', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.content.generate_quiz_questions_sync', mock_celery_task):
+        with patch(
+            "apps.backend.api.routers.content.require_any_role", return_value=mock_current_user
+        ):
+            with patch(
+                "apps.backend.api.routers.content.generate_quiz_questions_sync", mock_celery_task
+            ):
                 response = test_client.post(
-                    "/api/v1/content/assessments/generate",
-                    json=sample_quiz_request
+                    "/api/v1/content/assessments/generate", json=sample_quiz_request
                 )
 
         assert response.status_code == status.HTTP_202_ACCEPTED
@@ -422,9 +469,7 @@ class TestCeleryQuizGeneration:
         assert data["data"]["task_id"] == "quiz_task_123"
         assert data["data"]["assessment_id"] == sample_quiz_request["assessment_id"]
 
-    def test_generate_quiz_with_optional_params(
-        self, test_client, mock_current_user
-    ):
+    def test_generate_quiz_with_optional_params(self, test_client, mock_current_user):
         """Test quiz generation with optional parameters"""
         quiz_request = {
             "assessment_id": "quiz_opt_123",
@@ -435,7 +480,7 @@ class TestCeleryQuizGeneration:
             "difficulty": "hard",
             "question_types": ["multiple_choice"],
             "learning_objectives": ["Understand WWII causes"],
-            "lesson_id": "lesson_history_001"
+            "lesson_id": "lesson_history_001",
         }
 
         mock_task = Mock()
@@ -444,24 +489,29 @@ class TestCeleryQuizGeneration:
         mock_celery_task = Mock()
         mock_celery_task.delay.return_value = mock_task
 
-        with patch('apps.backend.api.routers.content.require_any_role', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.content.generate_quiz_questions_sync', mock_celery_task):
+        with patch(
+            "apps.backend.api.routers.content.require_any_role", return_value=mock_current_user
+        ):
+            with patch(
+                "apps.backend.api.routers.content.generate_quiz_questions_sync", mock_celery_task
+            ):
                 response = test_client.post(
-                    "/api/v1/content/assessments/generate",
-                    json=quiz_request
+                    "/api/v1/content/assessments/generate", json=quiz_request
                 )
 
         assert response.status_code == status.HTTP_202_ACCEPTED
 
-    def test_generate_quiz_task_failure(
-        self, test_client, sample_quiz_request, mock_current_user
-    ):
+    def test_generate_quiz_task_failure(self, test_client, sample_quiz_request, mock_current_user):
         """Test quiz generation when task queuing fails"""
-        with patch('apps.backend.api.routers.content.require_any_role', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.content.generate_quiz_questions_sync', side_effect=Exception("Task queue error")):
+        with patch(
+            "apps.backend.api.routers.content.require_any_role", return_value=mock_current_user
+        ):
+            with patch(
+                "apps.backend.api.routers.content.generate_quiz_questions_sync",
+                side_effect=Exception("Task queue error"),
+            ):
                 response = test_client.post(
-                    "/api/v1/content/assessments/generate",
-                    json=sample_quiz_request
+                    "/api/v1/content/assessments/generate", json=sample_quiz_request
                 )
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -481,11 +531,14 @@ class TestScriptOptimization:
         mock_celery_task = Mock()
         mock_celery_task.delay.return_value = mock_task
 
-        with patch('apps.backend.api.routers.content.require_any_role', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.content.optimize_roblox_script_sync', mock_celery_task):
+        with patch(
+            "apps.backend.api.routers.content.require_any_role", return_value=mock_current_user
+        ):
+            with patch(
+                "apps.backend.api.routers.content.optimize_roblox_script_sync", mock_celery_task
+            ):
                 response = test_client.post(
-                    "/api/v1/roblox/optimize-script",
-                    json=sample_script_optimize_request
+                    "/api/v1/roblox/optimize-script", json=sample_script_optimize_request
                 )
 
         assert response.status_code == status.HTTP_202_ACCEPTED
@@ -499,18 +552,17 @@ class TestScriptOptimization:
         """Test script optimization with invalid optimization level"""
         sample_script_optimize_request["optimization_level"] = "invalid_level"
 
-        with patch('apps.backend.api.routers.content.require_any_role', return_value=mock_current_user):
+        with patch(
+            "apps.backend.api.routers.content.require_any_role", return_value=mock_current_user
+        ):
             response = test_client.post(
-                "/api/v1/roblox/optimize-script",
-                json=sample_script_optimize_request
+                "/api/v1/roblox/optimize-script", json=sample_script_optimize_request
             )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "invalid optimization level" in response.json()["detail"].lower()
 
-    def test_optimize_script_conservative_level(
-        self, test_client, mock_current_user
-    ):
+    def test_optimize_script_conservative_level(self, test_client, mock_current_user):
         """Test script optimization with conservative level"""
         request = {
             "script_id": "script_conservative",
@@ -518,7 +570,7 @@ class TestScriptOptimization:
             "script_name": "SimpleScript",
             "optimization_level": "conservative",
             "preserve_comments": True,
-            "generate_report": False
+            "generate_report": False,
         }
 
         mock_task = Mock()
@@ -527,18 +579,17 @@ class TestScriptOptimization:
         mock_celery_task = Mock()
         mock_celery_task.delay.return_value = mock_task
 
-        with patch('apps.backend.api.routers.content.require_any_role', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.content.optimize_roblox_script_sync', mock_celery_task):
-                response = test_client.post(
-                    "/api/v1/roblox/optimize-script",
-                    json=request
-                )
+        with patch(
+            "apps.backend.api.routers.content.require_any_role", return_value=mock_current_user
+        ):
+            with patch(
+                "apps.backend.api.routers.content.optimize_roblox_script_sync", mock_celery_task
+            ):
+                response = test_client.post("/api/v1/roblox/optimize-script", json=request)
 
         assert response.status_code == status.HTTP_202_ACCEPTED
 
-    def test_optimize_script_aggressive_level(
-        self, test_client, mock_current_user
-    ):
+    def test_optimize_script_aggressive_level(self, test_client, mock_current_user):
         """Test script optimization with aggressive level"""
         request = {
             "script_id": "script_aggressive",
@@ -546,7 +597,7 @@ class TestScriptOptimization:
             "script_name": "ComplexScript",
             "optimization_level": "aggressive",
             "preserve_comments": False,
-            "generate_report": True
+            "generate_report": True,
         }
 
         mock_task = Mock()
@@ -555,12 +606,13 @@ class TestScriptOptimization:
         mock_celery_task = Mock()
         mock_celery_task.delay.return_value = mock_task
 
-        with patch('apps.backend.api.routers.content.require_any_role', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.content.optimize_roblox_script_sync', mock_celery_task):
-                response = test_client.post(
-                    "/api/v1/roblox/optimize-script",
-                    json=request
-                )
+        with patch(
+            "apps.backend.api.routers.content.require_any_role", return_value=mock_current_user
+        ):
+            with patch(
+                "apps.backend.api.routers.content.optimize_roblox_script_sync", mock_celery_task
+            ):
+                response = test_client.post("/api/v1/roblox/optimize-script", json=request)
 
         assert response.status_code == status.HTTP_202_ACCEPTED
 
@@ -568,11 +620,15 @@ class TestScriptOptimization:
         self, test_client, sample_script_optimize_request, mock_current_user
     ):
         """Test script optimization when task queuing fails"""
-        with patch('apps.backend.api.routers.content.require_any_role', return_value=mock_current_user):
-            with patch('apps.backend.api.routers.content.optimize_roblox_script_sync', side_effect=Exception("Optimization service down")):
+        with patch(
+            "apps.backend.api.routers.content.require_any_role", return_value=mock_current_user
+        ):
+            with patch(
+                "apps.backend.api.routers.content.optimize_roblox_script_sync",
+                side_effect=Exception("Optimization service down"),
+            ):
                 response = test_client.post(
-                    "/api/v1/roblox/optimize-script",
-                    json=sample_script_optimize_request
+                    "/api/v1/roblox/optimize-script", json=sample_script_optimize_request
                 )
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -619,12 +675,12 @@ class TestHelperFunctions:
 
         mock_broadcast = AsyncMock()
 
-        with patch('apps.backend.api.routers.content.broadcast_content_update', mock_broadcast):
+        with patch("apps.backend.api.routers.content.broadcast_content_update", mock_broadcast):
             await _broadcast_content_update(
                 user_id="user_123",
                 content_id="content_456",
                 status="completed",
-                result="Generated content"
+                result="Generated content",
             )
 
         mock_broadcast.assert_called_once()
@@ -634,11 +690,11 @@ class TestHelperFunctions:
         """Test Pusher broadcast with error (should not raise)"""
         from apps.backend.api.routers.content import _broadcast_content_update
 
-        with patch('apps.backend.api.routers.content.broadcast_content_update', AsyncMock(side_effect=Exception("Pusher error"))):
+        with patch(
+            "apps.backend.api.routers.content.broadcast_content_update",
+            AsyncMock(side_effect=Exception("Pusher error")),
+        ):
             # Should not raise exception, just log warning
             await _broadcast_content_update(
-                user_id="user_123",
-                content_id="content_456",
-                status="failed",
-                error="Test error"
+                user_id="user_123", content_id="content_456", status="failed", error="Test error"
             )

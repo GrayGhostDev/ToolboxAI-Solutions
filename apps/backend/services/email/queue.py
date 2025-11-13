@@ -9,33 +9,32 @@ import json
 import logging
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 from uuid import uuid4
 
 import redis.asyncio as redis
 from pydantic import BaseModel, EmailStr, Field
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from apps.backend.core.config import settings
 from apps.backend.core.cache import CacheService
+from apps.backend.core.config import settings
 from apps.backend.services.email import email_service
-from database.db import get_async_db
 
 logger = logging.getLogger(__name__)
 
 
 class EmailPriority(str, Enum):
     """Email priority levels for queue processing"""
+
     CRITICAL = "critical"  # System critical emails (password reset, security)
-    HIGH = "high"          # Transactional emails (payments, confirmations)
-    NORMAL = "normal"      # Standard communications
-    LOW = "low"            # Newsletters, marketing
-    BULK = "bulk"          # Mass mailings
+    HIGH = "high"  # Transactional emails (payments, confirmations)
+    NORMAL = "normal"  # Standard communications
+    LOW = "low"  # Newsletters, marketing
+    BULK = "bulk"  # Mass mailings
 
 
 class EmailStatus(str, Enum):
     """Email processing status"""
+
     QUEUED = "queued"
     PROCESSING = "processing"
     SENT = "sent"
@@ -48,36 +47,35 @@ class EmailStatus(str, Enum):
 
 class EmailJob(BaseModel):
     """Email job model for queue processing"""
+
     id: str = Field(default_factory=lambda: str(uuid4()))
-    to_email: Union[EmailStr, List[EmailStr]]
+    to_email: EmailStr | list[EmailStr]
     subject: str
-    template_name: Optional[str] = None
-    template_data: Optional[Dict[str, Any]] = None
-    html_content: Optional[str] = None
-    text_content: Optional[str] = None
-    from_email: Optional[EmailStr] = None
-    from_name: Optional[str] = None
-    reply_to: Optional[EmailStr] = None
-    cc: Optional[List[EmailStr]] = None
-    bcc: Optional[List[EmailStr]] = None
-    attachments: Optional[List[Dict[str, Any]]] = None
+    template_name: str | None = None
+    template_data: dict[str, Any] | None = None
+    html_content: str | None = None
+    text_content: str | None = None
+    from_email: EmailStr | None = None
+    from_name: str | None = None
+    reply_to: EmailStr | None = None
+    cc: list[EmailStr] | None = None
+    bcc: list[EmailStr] | None = None
+    attachments: list[dict[str, Any]] | None = None
     priority: EmailPriority = EmailPriority.NORMAL
     status: EmailStatus = EmailStatus.QUEUED
     attempts: int = 0
     max_retries: int = 3
     retry_delay: int = 60  # Base delay in seconds
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    scheduled_for: Optional[datetime] = None
-    sent_at: Optional[datetime] = None
-    last_attempt_at: Optional[datetime] = None
-    error_message: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
-    correlation_id: Optional[str] = None
+    scheduled_for: datetime | None = None
+    sent_at: datetime | None = None
+    last_attempt_at: datetime | None = None
+    error_message: str | None = None
+    metadata: dict[str, Any] | None = None
+    correlation_id: str | None = None
 
     class Config:
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+        json_encoders = {datetime: lambda v: v.isoformat()}
 
 
 class EmailQueueService:
@@ -94,7 +92,7 @@ class EmailQueueService:
     """
 
     def __init__(self):
-        self.redis_client: Optional[redis.Redis] = None
+        self.redis_client: redis.Redis | None = None
         self.cache_service = CacheService()
         self.processing = False
         self._initialize_queues()
@@ -120,9 +118,7 @@ class EmailQueueService:
             try:
                 redis_url = settings.REDIS_URL or "redis://localhost:6379/0"
                 self.redis_client = await redis.from_url(
-                    redis_url,
-                    encoding="utf-8",
-                    decode_responses=True
+                    redis_url, encoding="utf-8", decode_responses=True
                 )
                 await self.redis_client.ping()
                 logger.info("Email queue service connected to Redis")
@@ -139,17 +135,17 @@ class EmailQueueService:
 
     async def enqueue(
         self,
-        to_email: Union[str, List[str]],
+        to_email: str | list[str],
         subject: str,
-        template_name: Optional[str] = None,
-        template_data: Optional[Dict[str, Any]] = None,
-        html_content: Optional[str] = None,
-        text_content: Optional[str] = None,
+        template_name: str | None = None,
+        template_data: dict[str, Any] | None = None,
+        html_content: str | None = None,
+        text_content: str | None = None,
         priority: EmailPriority = EmailPriority.NORMAL,
-        scheduled_for: Optional[datetime] = None,
+        scheduled_for: datetime | None = None,
         max_retries: int = 3,
-        metadata: Optional[Dict[str, Any]] = None,
-        **kwargs
+        metadata: dict[str, Any] | None = None,
+        **kwargs,
     ) -> str:
         """
         Add email to queue for processing
@@ -184,7 +180,7 @@ class EmailQueueService:
             scheduled_for=scheduled_for,
             max_retries=max_retries,
             metadata=metadata,
-            **kwargs
+            **kwargs,
         )
 
         # Add to appropriate queue
@@ -194,8 +190,7 @@ class EmailQueueService:
                 if scheduled_for and scheduled_for > datetime.utcnow():
                     score = scheduled_for.timestamp()
                     await self.redis_client.zadd(
-                        f"{self.queue_prefix}:scheduled",
-                        {job.json(): score}
+                        f"{self.queue_prefix}:scheduled", {job.json(): score}
                     )
                     logger.info(f"Email {job.id} scheduled for {scheduled_for}")
                 else:
@@ -234,7 +229,7 @@ class EmailQueueService:
                         template_name=job.template_name,
                         template_data=job.template_data or {},
                         from_email=job.from_email,
-                        from_name=job.from_name
+                        from_name=job.from_name,
                     )
                 else:
                     await email_service.send_email(
@@ -243,7 +238,7 @@ class EmailQueueService:
                         html_content=job.html_content,
                         text_content=job.text_content,
                         from_email=job.from_email,
-                        from_name=job.from_name
+                        from_name=job.from_name,
                     )
 
             logger.info(f"Email {job.id} sent directly (no queue)")
@@ -317,7 +312,7 @@ class EmailQueueService:
             EmailPriority.HIGH: 5,
             EmailPriority.NORMAL: 3,
             EmailPriority.LOW: 2,
-            EmailPriority.BULK: 1
+            EmailPriority.BULK: 1,
         }
         return batch_sizes.get(priority, 1)
 
@@ -342,7 +337,7 @@ class EmailQueueService:
                         template_name=job.template_name,
                         template_data=job.template_data or {},
                         from_email=job.from_email,
-                        from_name=job.from_name
+                        from_name=job.from_name,
                     )
                 else:
                     await email_service.send_email(
@@ -352,7 +347,7 @@ class EmailQueueService:
                         text_content=job.text_content,
                         from_email=job.from_email,
                         from_name=job.from_name,
-                        attachments=job.attachments
+                        attachments=job.attachments,
                     )
 
             # Mark as sent
@@ -387,10 +382,7 @@ class EmailQueueService:
         retry_time = datetime.utcnow() + timedelta(seconds=delay)
 
         # Add to retry queue with score as timestamp
-        await self.redis_client.zadd(
-            self.retry_queue,
-            {job.json(): retry_time.timestamp()}
-        )
+        await self.redis_client.zadd(self.retry_queue, {job.json(): retry_time.timestamp()})
 
         # Update metrics
         await self._increment_metric("retries")
@@ -405,13 +397,7 @@ class EmailQueueService:
         now = datetime.utcnow().timestamp()
 
         # Get emails ready for retry
-        ready = await self.redis_client.zrangebyscore(
-            self.retry_queue,
-            0,
-            now,
-            start=0,
-            num=10
-        )
+        ready = await self.redis_client.zrangebyscore(self.retry_queue, 0, now, start=0, num=10)
 
         for job_data in ready:
             try:
@@ -434,20 +420,13 @@ class EmailQueueService:
 
         # Get emails ready to send
         ready = await self.redis_client.zrangebyscore(
-            f"{self.queue_prefix}:scheduled",
-            0,
-            now,
-            start=0,
-            num=10
+            f"{self.queue_prefix}:scheduled", 0, now, start=0, num=10
         )
 
         for job_data in ready:
             try:
                 # Remove from scheduled queue
-                await self.redis_client.zrem(
-                    f"{self.queue_prefix}:scheduled",
-                    job_data
-                )
+                await self.redis_client.zrem(f"{self.queue_prefix}:scheduled", job_data)
 
                 # Add to priority queue
                 job = EmailJob.parse_raw(job_data)
@@ -500,12 +479,12 @@ class EmailQueueService:
                 </ul>
                 <p>The email has been moved to the dead letter queue for manual review.</p>
                 """,
-                priority=EmailPriority.HIGH
+                priority=EmailPriority.HIGH,
             )
         except Exception as e:
             logger.error(f"Failed to notify admin: {e}")
 
-    async def handle_bounce(self, email_address: str, bounce_type: str, details: Dict[str, Any]):
+    async def handle_bounce(self, email_address: str, bounce_type: str, details: dict[str, Any]):
         """
         Handle email bounce
 
@@ -526,11 +505,13 @@ class EmailQueueService:
             await self.redis_client.hset(
                 bounce_key,
                 "last_bounce",
-                json.dumps({
-                    "type": bounce_type,
-                    "timestamp": datetime.utcnow().isoformat(),
-                    "details": details
-                })
+                json.dumps(
+                    {
+                        "type": bounce_type,
+                        "timestamp": datetime.utcnow().isoformat(),
+                        "details": details,
+                    }
+                ),
             )
             await self.redis_client.expire(bounce_key, 86400 * 30)  # 30 days
 
@@ -538,7 +519,9 @@ class EmailQueueService:
         if bounce_type == "hard":
             await self._add_to_suppression_list(email_address, "bounce")
 
-    async def handle_complaint(self, email_address: str, complaint_type: str, details: Dict[str, Any]):
+    async def handle_complaint(
+        self, email_address: str, complaint_type: str, details: dict[str, Any]
+    ):
         """
         Handle email complaint
 
@@ -559,11 +542,13 @@ class EmailQueueService:
             await self.redis_client.hset(
                 complaint_key,
                 "last_complaint",
-                json.dumps({
-                    "type": complaint_type,
-                    "timestamp": datetime.utcnow().isoformat(),
-                    "details": details
-                })
+                json.dumps(
+                    {
+                        "type": complaint_type,
+                        "timestamp": datetime.utcnow().isoformat(),
+                        "details": details,
+                    }
+                ),
             )
             await self.redis_client.expire(complaint_key, 86400 * 90)  # 90 days
 
@@ -577,10 +562,7 @@ class EmailQueueService:
             await self.redis_client.hset(
                 suppression_key,
                 email_address,
-                json.dumps({
-                    "reason": reason,
-                    "timestamp": datetime.utcnow().isoformat()
-                })
+                json.dumps({"reason": reason, "timestamp": datetime.utcnow().isoformat()}),
             )
             logger.info(f"Email {email_address} added to suppression list ({reason})")
 
@@ -592,7 +574,7 @@ class EmailQueueService:
         suppression_key = f"{self.queue_prefix}:suppression_list"
         return await self.redis_client.hexists(suppression_key, email_address)
 
-    async def get_metrics(self) -> Dict[str, Any]:
+    async def get_metrics(self) -> dict[str, Any]:
         """Get queue metrics"""
         if not self.redis_client:
             return {}

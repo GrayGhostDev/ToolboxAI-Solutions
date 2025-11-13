@@ -1,28 +1,38 @@
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest_asyncio
+
 """
 End-to-End Test for Roblox Integration
 Tests the complete flow from conversation to Roblox environment generation
 """
 
-import pytest
 import asyncio
-from unittest.mock import Mock, patch, AsyncMock
 from datetime import datetime
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
+
+from apps.backend.core.prompts.enhanced_conversation_flow import (
+    ConversationContext,
+    ConversationStage,
+    EnhancedConversationFlowManager,
+)
+from apps.backend.services.pusher_realtime import PusherRealtimeService
 
 # Import all the services we'll test
 from apps.backend.services.roblox.auth import RobloxOAuth2Service
-from apps.backend.services.roblox.open_cloud import OpenCloudAPIClient, AssetDescription, CreationContext, AssetType
-from apps.backend.services.roblox.rojo_manager import EnhancedRojoManager, RojoProjectConfig
-from apps.backend.core.prompts.enhanced_conversation_flow import (
-    EnhancedConversationFlowManager,
-    ConversationStage,
-    ConversationContext
+from apps.backend.services.roblox.open_cloud import (
+    AssetDescription,
+    AssetType,
+    CreationContext,
+    OpenCloudAPIClient,
 )
-from apps.backend.services.pusher_realtime import PusherRealtimeService
+from apps.backend.services.roblox.rojo_manager import EnhancedRojoManager, RojoProjectConfig
+
 
 class TestRobloxIntegrationE2E:
     """Test complete Roblox integration flow"""

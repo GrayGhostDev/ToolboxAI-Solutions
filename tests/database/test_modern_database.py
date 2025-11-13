@@ -7,24 +7,23 @@ Run with:
     pytest tests/database/test_modern_database.py -v
 """
 
-import pytest
 import uuid
 from datetime import datetime, timedelta
 
+import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.session_modern import db_manager
-from database.models.user_modern import User, UserProfile, UserSession, UserRole, UserStatus
-from database.models.content_modern import (
-    EducationalContent,
-    ContentStatus,
-    DifficultyLevel,
-    ContentType,
-)
-from database.repositories.user_repository import UserRepository
-from database.repositories.base_repository import BaseRepository
 from database.cache_modern import redis_cache
-
+from database.models.content_modern import (
+    ContentStatus,
+    ContentType,
+    DifficultyLevel,
+    EducationalContent,
+)
+from database.models.user_modern import User, UserRole, UserStatus
+from database.repositories.base_repository import BaseRepository
+from database.repositories.user_repository import UserRepository
+from database.session_modern import db_manager
 
 # Test organization ID
 TEST_ORG_ID = uuid.uuid4()

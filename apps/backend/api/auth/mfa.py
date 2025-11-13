@@ -3,37 +3,42 @@ Multi-Factor Authentication (MFA) System
 Phase 3 Implementation - Complete MFA with TOTP, SMS, and Email support
 """
 
+import base64
+import hashlib
+import io
+import json
+import logging
+import os
+import secrets
+import smtplib
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
 import pyotp
 import qrcode
-import io
-import base64
-import secrets
-import hashlib
-import json
-import os
-from datetime import datetime, timedelta
-from typing import Optional, List, Dict, Any
-from dataclasses import dataclass
-from enum import Enum
 import redis
 from twilio.rest import Client
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-import logging
 
 logger = logging.getLogger(__name__)
 
+
 class MFAMethod(Enum):
     """Supported MFA methods"""
+
     TOTP = "totp"
     SMS = "sms"
     EMAIL = "email"
     BACKUP_CODE = "backup"
 
+
 @dataclass
 class MFAConfig:
     """MFA System Configuration"""
+
     issuer_name: str = "ToolBoxAI"
     totp_digits: int = 6
     totp_interval: int = 30
@@ -47,17 +52,18 @@ class MFAConfig:
     code_expiry_sms: int = 300  # 5 minutes
     code_expiry_email: int = 600  # 10 minutes
 
+
 class MFARateLimitError(Exception):
     """Raised when rate limit is exceeded"""
+
     pass
+
 
 class MFAService:
     """Complete Multi-Factor Authentication Service"""
 
     def __init__(
-        self,
-        redis_client: Optional[redis.Redis] = None,
-        config: Optional[MFAConfig] = None
+        self, redis_client: Optional[redis.Redis] = None, config: Optional[MFAConfig] = None
     ):
         self.redis = redis_client or self._create_redis_client()
         self.config = config or MFAConfig()
@@ -67,20 +73,19 @@ class MFAService:
     def _create_redis_client(self) -> redis.Redis:
         """Create Redis client with defaults"""
         return redis.Redis(
-            host=os.getenv('REDIS_HOST', 'localhost'),
-            port=int(os.getenv('REDIS_PORT', '6379')),
-            db=int(os.getenv('REDIS_DB', '0')),
-            decode_responses=True
+            host=os.getenv("REDIS_HOST", "localhost"),
+            port=int(os.getenv("REDIS_PORT", "6379")),
+            db=int(os.getenv("REDIS_DB", "0")),
+            decode_responses=True,
         )
 
     def _init_twilio(self):
         """Initialize Twilio client for SMS"""
         try:
             self.twilio_client = Client(
-                os.getenv('TWILIO_ACCOUNT_SID'),
-                os.getenv('TWILIO_AUTH_TOKEN')
+                os.getenv("TWILIO_ACCOUNT_SID"), os.getenv("TWILIO_AUTH_TOKEN")
             )
-            self.twilio_from = os.getenv('TWILIO_PHONE_NUMBER')
+            self.twilio_from = os.getenv("TWILIO_PHONE_NUMBER")
             self.sms_available = bool(self.twilio_client and self.twilio_from)
         except Exception as e:
             logger.warning(f"Twilio initialization failed: {e}")
@@ -88,10 +93,10 @@ class MFAService:
 
     def _init_email(self):
         """Initialize email configuration"""
-        self.smtp_host = os.getenv('SMTP_HOST', 'smtp.gmail.com')
-        self.smtp_port = int(os.getenv('SMTP_PORT', '587'))
-        self.smtp_user = os.getenv('SMTP_USER')
-        self.smtp_pass = os.getenv('SMTP_PASS')
+        self.smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
+        self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
+        self.smtp_user = os.getenv("SMTP_USER")
+        self.smtp_pass = os.getenv("SMTP_PASS")
         self.email_available = bool(self.smtp_user and self.smtp_pass)
 
     # ===== TOTP Implementation =====
@@ -109,8 +114,7 @@ class MFAService:
     def generate_qr_code(self, user_email: str, secret: str) -> str:
         """Generate QR code for TOTP setup"""
         totp_uri = pyotp.totp.TOTP(secret).provisioning_uri(
-            name=user_email,
-            issuer_name=self.config.issuer_name
+            name=user_email, issuer_name=self.config.issuer_name
         )
 
         # Generate QR code
@@ -126,16 +130,11 @@ class MFAService:
         # Convert to base64 image
         img = qr.make_image(fill_color="black", back_color="white")
         buffer = io.BytesIO()
-        img.save(buffer, format='PNG')
+        img.save(buffer, format="PNG")
 
         return base64.b64encode(buffer.getvalue()).decode()
 
-    def verify_totp(
-        self,
-        user_id: str,
-        token: str,
-        window: int = 1
-    ) -> bool:
+    def verify_totp(self, user_id: str, token: str, window: int = 1) -> bool:
         """Verify TOTP token"""
         # Check rate limiting
         if self._is_rate_limited(user_id):
@@ -160,11 +159,7 @@ class MFAService:
 
     # ===== SMS Implementation =====
 
-    async def send_sms_code(
-        self,
-        user_id: str,
-        phone_number: str
-    ) -> bool:
+    async def send_sms_code(self, user_id: str, phone_number: str) -> bool:
         """Send SMS verification code"""
         if not self.config.sms_enabled or not self.sms_available:
             logger.warning("SMS sending not available")
@@ -182,7 +177,7 @@ class MFAService:
             message = self.twilio_client.messages.create(
                 body=f"Your ToolBoxAI verification code: {code}\n\nThis code expires in 5 minutes.",
                 from_=self.twilio_from,
-                to=phone_number
+                to=phone_number,
             )
 
             logger.info(f"SMS sent to {phone_number[-4:]} for user {user_id}")
@@ -194,11 +189,7 @@ class MFAService:
 
     # ===== Email Implementation =====
 
-    async def send_email_code(
-        self,
-        user_id: str,
-        email: str
-    ) -> bool:
+    async def send_email_code(self, user_id: str, email: str) -> bool:
         """Send email verification code"""
         if not self.config.email_enabled or not self.email_available:
             logger.warning("Email sending not available")
@@ -214,9 +205,9 @@ class MFAService:
         # Send email
         try:
             msg = MIMEMultipart()
-            msg['From'] = self.smtp_user
-            msg['To'] = email
-            msg['Subject'] = 'ToolBoxAI Security Code'
+            msg["From"] = self.smtp_user
+            msg["To"] = email
+            msg["Subject"] = "ToolBoxAI Security Code"
 
             body = f"""
 <!DOCTYPE html>
@@ -241,7 +232,7 @@ class MFAService:
 </body>
 </html>
 """
-            msg.attach(MIMEText(body, 'html'))
+            msg.attach(MIMEText(body, "html"))
 
             with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
                 server.starttls()
@@ -255,12 +246,7 @@ class MFAService:
             logger.error(f"Email send failed: {e}")
             return False
 
-    def verify_code(
-        self,
-        user_id: str,
-        code: str,
-        method: MFAMethod
-    ) -> bool:
+    def verify_code(self, user_id: str, code: str, method: MFAMethod) -> bool:
         """Verify SMS/Email code"""
         # Check rate limiting
         if self._is_rate_limited(user_id):
@@ -295,10 +281,7 @@ class MFAService:
 
         for _ in range(self.config.backup_codes_count):
             # Generate 8-character alphanumeric code
-            code = ''.join(
-                secrets.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
-                for _ in range(8)
-            )
+            code = "".join(secrets.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for _ in range(8))
             codes.append(code)
 
             # Hash for storage
@@ -311,11 +294,7 @@ class MFAService:
 
         return codes
 
-    def verify_backup_code(
-        self,
-        user_id: str,
-        code: str
-    ) -> bool:
+    def verify_backup_code(self, user_id: str, code: str) -> bool:
         """Verify and consume backup code"""
         # Get stored codes
         key = f"mfa:backup_codes:{user_id}"
@@ -340,30 +319,19 @@ class MFAService:
 
     # ===== Device Trust =====
 
-    def trust_device(
-        self,
-        user_id: str,
-        device_id: str
-    ) -> str:
+    def trust_device(self, user_id: str, device_id: str) -> str:
         """Generate device trust token"""
         token = secrets.token_urlsafe(32)
 
         # Store trusted device
         key = f"mfa:trusted_device:{user_id}:{device_id}"
         self.redis.setex(
-            key,
-            timedelta(days=self.config.remember_device_days).total_seconds(),
-            token
+            key, timedelta(days=self.config.remember_device_days).total_seconds(), token
         )
 
         return token
 
-    def is_device_trusted(
-        self,
-        user_id: str,
-        device_id: str,
-        token: str
-    ) -> bool:
+    def is_device_trusted(self, user_id: str, device_id: str, token: str) -> bool:
         """Check if device is trusted"""
         key = f"mfa:trusted_device:{user_id}:{device_id}"
         stored_token = self.redis.get(key)
@@ -399,10 +367,7 @@ class MFAService:
     # ===== User Management =====
 
     def enable_mfa(
-        self,
-        user_id: str,
-        method: MFAMethod,
-        data: Optional[Dict[str, Any]] = None
+        self, user_id: str, method: MFAMethod, data: Optional[Dict[str, Any]] = None
     ) -> bool:
         """Enable MFA method for user"""
         key = f"mfa:enabled:{user_id}"
@@ -416,7 +381,7 @@ class MFAService:
         methods[method.value] = {
             "enabled": True,
             "enabled_at": datetime.utcnow().isoformat(),
-            "data": data or {}
+            "data": data or {},
         }
 
         self.redis.set(key, json.dumps(methods))
@@ -424,11 +389,7 @@ class MFAService:
         logger.info(f"MFA method {method.value} enabled for user {user_id}")
         return True
 
-    def disable_mfa(
-        self,
-        user_id: str,
-        method: Optional[MFAMethod] = None
-    ) -> bool:
+    def disable_mfa(self, user_id: str, method: Optional[MFAMethod] = None) -> bool:
         """Disable MFA method(s) for user"""
         if method:
             # Disable specific method
@@ -445,7 +406,7 @@ class MFAService:
             keys = [
                 f"mfa:enabled:{user_id}",
                 f"mfa:totp_secret:{user_id}",
-                f"mfa:backup_codes:{user_id}"
+                f"mfa:backup_codes:{user_id}",
             ]
             for key in keys:
                 self.redis.delete(key)
@@ -459,10 +420,7 @@ class MFAService:
         current = self.redis.get(key)
 
         if not current:
-            return {
-                "mfa_enabled": False,
-                "methods": {}
-            }
+            return {"mfa_enabled": False, "methods": {}}
 
         methods = json.loads(current)
 
@@ -471,28 +429,26 @@ class MFAService:
         backup_json = self.redis.get(backup_key)
         backup_count = len(json.loads(backup_json)) if backup_json else 0
 
-        return {
-            "mfa_enabled": True,
-            "methods": methods,
-            "backup_codes_remaining": backup_count
-        }
+        return {"mfa_enabled": True, "methods": methods, "backup_codes_remaining": backup_count}
 
     def require_mfa_setup(self, user_id: str) -> bool:
         """Check if user needs to set up MFA"""
         status = self.get_user_mfa_status(user_id)
         return not status["mfa_enabled"]
 
+
 # ===== Feature Flags =====
+
 
 class MFAFeatureFlags:
     """Feature flags for gradual MFA rollout"""
 
     def __init__(self, redis_client: Optional[redis.Redis] = None):
         self.redis = redis_client or redis.Redis(
-            host=os.getenv('REDIS_HOST', 'localhost'),
-            port=int(os.getenv('REDIS_PORT', '6379')),
-            db=int(os.getenv('REDIS_DB', '0')),
-            decode_responses=True
+            host=os.getenv("REDIS_HOST", "localhost"),
+            port=int(os.getenv("REDIS_PORT", "6379")),
+            db=int(os.getenv("REDIS_DB", "0")),
+            decode_responses=True,
         )
 
     def is_mfa_enabled_for_user(self, user_id: str) -> bool:
@@ -542,10 +498,12 @@ class MFAFeatureFlags:
         # In production, fetch from database
         return "student"
 
+
 # ===== Singleton Instances =====
 
 _mfa_service: Optional[MFAService] = None
 _feature_flags: Optional[MFAFeatureFlags] = None
+
 
 def get_mfa_service() -> MFAService:
     """Get or create MFA service singleton"""
@@ -553,6 +511,7 @@ def get_mfa_service() -> MFAService:
     if _mfa_service is None:
         _mfa_service = MFAService()
     return _mfa_service
+
 
 def get_mfa_feature_flags() -> MFAFeatureFlags:
     """Get or create feature flags singleton"""

@@ -1,4 +1,5 @@
 import pytest_asyncio
+
 #!/usr/bin/env python3
 """
 Test script to verify that the rate limiting fix works correctly.
@@ -11,11 +12,12 @@ import asyncio
 import json
 import logging
 import os
-import pytest
 import subprocess
 import sys
 import time
 from pathlib import Path
+
+import pytest
 
 # Skip all tests in this module as they require external services
 pytestmark = pytest.mark.skipif(
@@ -111,14 +113,14 @@ def test_rate_limit_manager_directly():
     
     try:
         from apps.backend.rate_limit_manager import (
-            RateLimitManager,
             RateLimitConfig,
+            RateLimitManager,
             RateLimitMode,
+            RateLimitTestContext,
             clear_all_rate_limits,
             set_testing_mode,
-            RateLimitTestContext
         )
-        
+
         # Test 1: Basic functionality
         logger.info("Test 1: Basic rate limit manager functionality")
         

@@ -4,9 +4,9 @@ Comprehensive Database Setup Script
 Handles both development and CI environments with proper migration support
 """
 import os
+import subprocess
 import sys
 import time
-import subprocess
 from pathlib import Path
 from typing import Optional
 
@@ -14,16 +14,12 @@ from typing import Optional
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
-def run_command(cmd: list, cwd: Optional[Path] = None, check: bool = True) -> subprocess.CompletedProcess:
+def run_command(
+    cmd: list, cwd: Optional[Path] = None, check: bool = True
+) -> subprocess.CompletedProcess:
     """Run a command and return the result."""
     try:
-        result = subprocess.run(
-            cmd,
-            cwd=cwd,
-            capture_output=True,
-            text=True,
-            check=check
-        )
+        result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, check=check)
         if result.stdout:
             print(result.stdout.strip())
         return result
@@ -39,8 +35,13 @@ def wait_for_db(max_retries: int = 30) -> bool:
     """Wait for database to be available."""
     import psycopg2
 
-    db_url = os.getenv("DATABASE_URL", "postgresql://eduplatform:eduplatform2024@localhost/educational_platform_dev")
-    print(f"🔍 Waiting for database connection: {db_url.split('@')[1] if '@' in db_url else db_url}")
+    db_url = os.getenv(
+        "DATABASE_URL",
+        "postgresql://eduplatform:eduplatform2024@localhost/educational_platform_dev",
+    )
+    print(
+        f"🔍 Waiting for database connection: {db_url.split('@')[1] if '@' in db_url else db_url}"
+    )
 
     for i in range(max_retries):
         try:
@@ -96,7 +97,7 @@ def init_alembic_if_needed(project_root: Path) -> bool:
         content = alembic_ini.read_text()
         content = content.replace(
             "sqlalchemy.url = driver://user:pass@localhost/dbname",
-            "sqlalchemy.url = postgresql://eduplatform:eduplatform2024@localhost:5432/educational_platform_dev"
+            "sqlalchemy.url = postgresql://eduplatform:eduplatform2024@localhost:5432/educational_platform_dev",
         )
         alembic_ini.write_text(content)
         print("✅ Updated alembic.ini with database URL")
@@ -135,13 +136,17 @@ def run_migrations(project_root: Path) -> bool:
         print(f"❌ Error running migrations: {e}")
         return False
 
+
 def create_essential_tables_fallback() -> bool:
     """Create essential tables if migrations fail (fallback for CI)."""
     import psycopg2
 
     print("🚑 Running fallback table creation for CI...")
 
-    db_url = os.getenv("DATABASE_URL", "postgresql://eduplatform:eduplatform2024@localhost/educational_platform_dev")
+    db_url = os.getenv(
+        "DATABASE_URL",
+        "postgresql://eduplatform:eduplatform2024@localhost/educational_platform_dev",
+    )
 
     try:
         conn = psycopg2.connect(db_url)
@@ -237,7 +242,7 @@ def create_essential_tables_fallback() -> bool:
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(student_id, lesson_id)
             )
-            """
+            """,
         ]
 
         for table_sql in essential_tables:
@@ -249,25 +254,27 @@ def create_essential_tables_fallback() -> bool:
             "ALTER TABLE classes ADD CONSTRAINT IF NOT EXISTS fk_classes_school FOREIGN KEY (school_id) REFERENCES schools(id)",
             "ALTER TABLE lessons ADD CONSTRAINT IF NOT EXISTS fk_lessons_course FOREIGN KEY (course_id) REFERENCES courses(id)",
             "ALTER TABLE student_progress ADD CONSTRAINT IF NOT EXISTS fk_student_progress_student FOREIGN KEY (student_id) REFERENCES users(id)",
-            "ALTER TABLE student_progress ADD CONSTRAINT IF NOT EXISTS fk_student_progress_lesson FOREIGN KEY (lesson_id) REFERENCES lessons(id)"
+            "ALTER TABLE student_progress ADD CONSTRAINT IF NOT EXISTS fk_student_progress_lesson FOREIGN KEY (lesson_id) REFERENCES lessons(id)",
         ]
 
         for constraint_sql in constraints:
             try:
                 cur.execute(constraint_sql)
-            except Exception as e:
+            except Exception:
                 # Ignore constraint errors (might already exist)
                 pass
 
         conn.commit()
 
         # Check what tables were created
-        cur.execute("""
+        cur.execute(
+            """
             SELECT table_name
             FROM information_schema.tables
             WHERE table_schema = 'public'
             ORDER BY table_name
-        """)
+        """
+        )
         tables = cur.fetchall()
         print(f"📊 Created {len(tables)} tables in public schema:")
         for table in tables:
@@ -288,20 +295,26 @@ def verify_database_setup() -> bool:
     """Verify that the database is properly set up."""
     import psycopg2
 
-    db_url = os.getenv("DATABASE_URL", "postgresql://eduplatform:eduplatform2024@localhost/educational_platform_dev")
+    db_url = os.getenv(
+        "DATABASE_URL",
+        "postgresql://eduplatform:eduplatform2024@localhost/educational_platform_dev",
+    )
 
     try:
         conn = psycopg2.connect(db_url)
         cur = conn.cursor()
 
         # Check for essential tables
-        essential_tables = ['users', 'lessons', 'classes', 'schools']
+        essential_tables = ["users", "lessons", "classes", "schools"]
 
-        cur.execute("""
+        cur.execute(
+            """
             SELECT table_name
             FROM information_schema.tables
             WHERE table_schema = 'public' AND table_name = ANY(%s)
-        """, (essential_tables,))
+        """,
+            (essential_tables,),
+        )
 
         existing_tables = [row[0] for row in cur.fetchall()]
         missing_tables = set(essential_tables) - set(existing_tables)
@@ -323,7 +336,6 @@ def verify_database_setup() -> bool:
         return False
 
 
-
 def main():
     """Main database setup routine."""
     print("🚀 Starting comprehensive database setup...")
@@ -338,7 +350,7 @@ def main():
         sys.exit(1)
 
     # Step 2: Check if we're in CI environment
-    is_ci = os.getenv('CI') == 'true' or os.getenv('GITHUB_ACTIONS') == 'true'
+    is_ci = os.getenv("CI") == "true" or os.getenv("GITHUB_ACTIONS") == "true"
     print(f"🏗️ Environment: {'CI' if is_ci else 'Development'}")
 
     # Step 3: Try to run proper migrations first
@@ -371,7 +383,7 @@ def main():
 
     # Step 6: Show final status
     try:
-        from database.ci_setup_database import main as ci_main
+
         print("🔍 Running final verification...")
         # Run the original CI script as a verification step
         # but don't fail if it has issues

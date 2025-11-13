@@ -8,17 +8,15 @@ import gzip
 import json
 import logging
 import time
-from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, List, Optional, Union
-from urllib.parse import urlparse
+from collections.abc import Callable
+from datetime import datetime
+from typing import Any
 
 from fastapi import HTTPException, Request, Response, status
-from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, StreamingResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
-from apps.backend.core.config import settings
 from apps.backend.core.metrics import metrics
 
 logger = logging.getLogger(__name__)
@@ -31,9 +29,9 @@ class ResponseFormat:
     def success(
         data: Any = None,
         message: str = "Success",
-        metadata: Optional[Dict[str, Any]] = None,
-        status_code: int = 200
-    ) -> Dict[str, Any]:
+        metadata: dict[str, Any] | None = None,
+        status_code: int = 200,
+    ) -> dict[str, Any]:
         """Format successful response"""
         response = {
             "status": "success",
@@ -50,10 +48,10 @@ class ResponseFormat:
     @staticmethod
     def error(
         error: str,
-        details: Optional[Any] = None,
+        details: Any | None = None,
         status_code: int = 400,
-        error_code: Optional[str] = None
-    ) -> Dict[str, Any]:
+        error_code: str | None = None,
+    ) -> dict[str, Any]:
         """Format error response"""
         response = {
             "status": "error",
@@ -71,12 +69,12 @@ class ResponseFormat:
 
     @staticmethod
     def paginated(
-        data: List[Any],
+        data: list[Any],
         page: int,
         limit: int,
         total: int,
-        metadata: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Format paginated response"""
         total_pages = (total + limit - 1) // limit if limit > 0 else 1
 
@@ -118,7 +116,7 @@ class CacheManager:
     }
 
     @classmethod
-    def get_cache_headers(cls, method: str, path: str) -> Dict[str, str]:
+    def get_cache_headers(cls, method: str, path: str) -> dict[str, str]:
         """Get appropriate cache headers for request"""
         headers = {}
 
@@ -143,6 +141,7 @@ class CacheManager:
     def _matches_pattern(path: str, pattern: str) -> bool:
         """Check if path matches pattern with wildcards"""
         import re
+
         regex_pattern = pattern.replace("*", ".*")
         return bool(re.match(regex_pattern, path))
 
@@ -150,6 +149,7 @@ class CacheManager:
     def generate_etag(content: bytes) -> str:
         """Generate ETag for content"""
         import hashlib
+
         return f'W/"{hashlib.md5(content).hexdigest()}"'
 
 
@@ -169,12 +169,7 @@ class CompressionHandler:
     }
 
     @classmethod
-    def should_compress(
-        cls,
-        content_type: str,
-        content_length: int,
-        accept_encoding: str
-    ) -> bool:
+    def should_compress(cls, content_type: str, content_length: int, accept_encoding: str) -> bool:
         """Check if response should be compressed"""
         # Check if client accepts gzip
         if "gzip" not in accept_encoding:
@@ -235,10 +230,7 @@ class VersionTransformer:
     def _to_snake_case(self, data: Any) -> Any:
         """Convert dict keys to snake_case"""
         if isinstance(data, dict):
-            return {
-                self._camel_to_snake(k): self._to_snake_case(v)
-                for k, v in data.items()
-            }
+            return {self._camel_to_snake(k): self._to_snake_case(v) for k, v in data.items()}
         elif isinstance(data, list):
             return [self._to_snake_case(item) for item in data]
         return data
@@ -246,10 +238,7 @@ class VersionTransformer:
     def _to_camel_case(self, data: Any) -> Any:
         """Convert dict keys to camelCase"""
         if isinstance(data, dict):
-            return {
-                self._snake_to_camel(k): self._to_camel_case(v)
-                for k, v in data.items()
-            }
+            return {self._snake_to_camel(k): self._to_camel_case(v) for k, v in data.items()}
         elif isinstance(data, list):
             return [self._to_camel_case(item) for item in data]
         return data
@@ -258,6 +247,7 @@ class VersionTransformer:
     def _camel_to_snake(name: str) -> str:
         """Convert camelCase to snake_case"""
         import re
+
         s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
         return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
 
@@ -287,7 +277,7 @@ class ResponseTransformerMiddleware(BaseHTTPMiddleware):
         self.cache_manager = CacheManager()
         self.compression_handler = CompressionHandler()
         self.version_transformer = VersionTransformer()
-        self.metrics_enabled = hasattr(metrics, 'response_size_histogram')
+        self.metrics_enabled = hasattr(metrics, "response_size_histogram")
 
         logger.info("Response Transformer Middleware initialized")
 
@@ -308,22 +298,16 @@ class ResponseTransformerMiddleware(BaseHTTPMiddleware):
 
             # Process response based on type
             if isinstance(response, JSONResponse):
-                response = await self._transform_json_response(
-                    request, response, api_version
-                )
+                response = await self._transform_json_response(request, response, api_version)
             elif isinstance(response, StreamingResponse):
                 # Don't transform streaming responses
                 pass
             else:
                 # Transform other response types
-                response = await self._transform_generic_response(
-                    request, response, api_version
-                )
+                response = await self._transform_generic_response(request, response, api_version)
 
             # Add cache headers
-            cache_headers = self.cache_manager.get_cache_headers(
-                request.method, request.url.path
-            )
+            cache_headers = self.cache_manager.get_cache_headers(request.method, request.url.path)
             for key, value in cache_headers.items():
                 response.headers[key] = value
 
@@ -343,13 +327,9 @@ class ResponseTransformerMiddleware(BaseHTTPMiddleware):
             return JSONResponse(
                 status_code=e.status_code,
                 content=self.formatter.error(
-                    error=e.detail,
-                    status_code=e.status_code,
-                    error_code=f"HTTP_{e.status_code}"
+                    error=e.detail, status_code=e.status_code, error_code=f"HTTP_{e.status_code}"
                 ),
-                headers={
-                    "X-Process-Time": f"{(time.time() - start_time) * 1000:.2f}ms"
-                }
+                headers={"X-Process-Time": f"{(time.time() - start_time) * 1000:.2f}ms"},
             )
 
         except Exception as e:
@@ -357,17 +337,12 @@ class ResponseTransformerMiddleware(BaseHTTPMiddleware):
             return JSONResponse(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content=self.formatter.error(
-                    error="Internal server error",
-                    status_code=500,
-                    error_code="INTERNAL_ERROR"
-                )
+                    error="Internal server error", status_code=500, error_code="INTERNAL_ERROR"
+                ),
             )
 
     async def _transform_json_response(
-        self,
-        request: Request,
-        response: JSONResponse,
-        api_version: str
+        self, request: Request, response: JSONResponse, api_version: str
     ) -> Response:
         """Transform JSON responses"""
         # Get response body
@@ -382,18 +357,13 @@ class ResponseTransformerMiddleware(BaseHTTPMiddleware):
 
             # Re-encode
             transformed_body = json.dumps(
-                transformed_data,
-                ensure_ascii=False,
-                indent=None,
-                separators=(",", ":")
+                transformed_data, ensure_ascii=False, indent=None, separators=(",", ":")
             ).encode("utf-8")
 
             # Check if compression is needed
             accept_encoding = request.headers.get("accept-encoding", "")
             if self.compression_handler.should_compress(
-                "application/json",
-                len(transformed_body),
-                accept_encoding
+                "application/json", len(transformed_body), accept_encoding
             ):
                 compressed_body = self.compression_handler.compress_content(transformed_body)
                 response.body = compressed_body
@@ -413,10 +383,7 @@ class ResponseTransformerMiddleware(BaseHTTPMiddleware):
         return response
 
     async def _transform_generic_response(
-        self,
-        request: Request,
-        response: Response,
-        api_version: str
+        self, request: Request, response: Response, api_version: str
     ) -> Response:
         """Transform generic responses"""
         # Add version header
@@ -460,25 +427,21 @@ class ResponseTransformerMiddleware(BaseHTTPMiddleware):
         try:
             # Response size
             content_length = response.headers.get("content-length", "0")
-            if hasattr(metrics, 'response_size_histogram'):
+            if hasattr(metrics, "response_size_histogram"):
                 metrics.response_size_histogram.labels(
-                    method=request.method,
-                    endpoint=request.url.path,
-                    status=response.status_code
+                    method=request.method, endpoint=request.url.path, status=response.status_code
                 ).observe(float(content_length))
 
             # Response time
-            if hasattr(metrics, 'response_time_histogram'):
+            if hasattr(metrics, "response_time_histogram"):
                 metrics.response_time_histogram.labels(
-                    method=request.method,
-                    endpoint=request.url.path,
-                    status=response.status_code
+                    method=request.method, endpoint=request.url.path, status=response.status_code
                 ).observe(process_time)
 
         except Exception as e:
             logger.debug(f"Failed to record metrics: {e}")
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get transformer statistics"""
         return {
             "compression_enabled": True,
@@ -493,5 +456,5 @@ __all__ = [
     "ResponseFormat",
     "CacheManager",
     "CompressionHandler",
-    "VersionTransformer"
+    "VersionTransformer",
 ]

@@ -20,14 +20,16 @@ class TestBasicSetup:
     async def test_async_works(self):
         """Test that async tests work."""
         import asyncio
+
         await asyncio.sleep(0.001)
         assert True
 
     def test_imports(self):
         """Test that key imports work."""
         import httpx
-        import sqlalchemy
         import jose
+        import sqlalchemy
+
         assert httpx
         assert sqlalchemy
         assert jose

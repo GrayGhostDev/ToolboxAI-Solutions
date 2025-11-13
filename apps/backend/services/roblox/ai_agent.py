@@ -7,23 +7,22 @@ users through the creation process with intelligent follow-up questions.
 """
 
 import asyncio
-import json
 import logging
 import re
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 
-from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.chat_history import InMemoryChatMessageHistory
+from langchain_core.messages import AIMessage, HumanMessage
 
 try:
     from langchain_openai import ChatOpenAI
 except ImportError:
     from langchain_community.chat_models import ChatOpenAI
 
+from apps.backend.agents.agent import agent_manager
 from apps.backend.core.config import settings
 from apps.backend.services.pusher import trigger_event as pusher_trigger_event
-from apps.backend.agents.agent import agent_manager
 
 logger = logging.getLogger(__name__)
 
@@ -42,8 +41,8 @@ class RobloxAIAgent:
             self.llm = None
             self.mock_mode = True
 
-        self.conversations: Dict[str, InMemoryChatMessageHistory] = {}
-        self.conversation_specs: Dict[str, Dict[str, Any]] = {}
+        self.conversations: dict[str, InMemoryChatMessageHistory] = {}
+        self.conversation_specs: dict[str, dict[str, Any]] = {}
 
         # Required fields for complete specification
         self.required_fields = {
@@ -112,7 +111,7 @@ class RobloxAIAgent:
         }
 
     async def handle_user_message(
-        self, conversation_id: str, message: str, context: Dict[str, Any] = None
+        self, conversation_id: str, message: str, context: dict[str, Any] = None
     ) -> None:
         """Process user message and respond with AI guidance"""
         try:
@@ -156,7 +155,7 @@ class RobloxAIAgent:
                 conversation_id, "I encountered an error processing your message. Please try again."
             )
 
-    def _extract_information(self, message: str) -> Dict[str, Any]:
+    def _extract_information(self, message: str) -> dict[str, Any]:
         """Extract structured information from user message"""
         extracted = {}
         message_lower = message.lower()
@@ -225,8 +224,8 @@ class RobloxAIAgent:
         self,
         conversation_id: str,
         message: str,
-        current_spec: Dict[str, Any],
-        context: Dict[str, Any] = None,
+        current_spec: dict[str, Any],
+        context: dict[str, Any] = None,
     ) -> str:
         """Generate AI response based on conversation context"""
 
@@ -276,7 +275,7 @@ Respond to the user's message in a helpful, conversational way."""
             return "I understand you want to create a Roblox environment. Could you tell me more about what you have in mind?"
 
     def _generate_mock_response(
-        self, message: str, current_spec: Dict[str, Any], missing_fields: list
+        self, message: str, current_spec: dict[str, Any], missing_fields: list
     ) -> str:
         """Generate a mock AI response for development"""
         message_lower = message.lower()
@@ -326,7 +325,7 @@ Respond to the user's message in a helpful, conversational way."""
             else:
                 return "Excellent! Your environment specification is complete! 🚀 Ready to create your Roblox world?"
 
-    def _format_spec_summary(self, spec: Dict[str, Any]) -> str:
+    def _format_spec_summary(self, spec: dict[str, Any]) -> str:
         """Format current specification as readable summary"""
         if not spec:
             return "No information collected yet."
@@ -342,7 +341,7 @@ Respond to the user's message in a helpful, conversational way."""
 
         return "\n".join(summary_parts) if summary_parts else "No information collected yet."
 
-    def _get_missing_required_fields(self, spec: Dict[str, Any]) -> List[str]:
+    def _get_missing_required_fields(self, spec: dict[str, Any]) -> list[str]:
         """Get list of missing required fields"""
         missing = []
         for field in self.required_fields:
@@ -406,7 +405,6 @@ Respond to the user's message in a helpful, conversational way."""
         """Send direct message when Pusher is unavailable"""
         try:
             # Send via the realtime trigger endpoint to simulate Pusher
-            from apps.backend.main import app
             import httpx
 
             message_data = {
@@ -439,7 +437,7 @@ Respond to the user's message in a helpful, conversational way."""
             logger.error(f"Error sending direct message: {e}")
 
     async def _send_followup_questions(
-        self, conversation_id: str, missing_fields: List[str], current_spec: Dict[str, Any]
+        self, conversation_id: str, missing_fields: list[str], current_spec: dict[str, Any]
     ) -> None:
         """Send follow-up questions for missing information"""
         try:
@@ -467,7 +465,7 @@ Respond to the user's message in a helpful, conversational way."""
             logger.error(f"Error sending followup questions: {e}")
 
     async def _notify_ready_for_generation(
-        self, conversation_id: str, spec: Dict[str, Any]
+        self, conversation_id: str, spec: dict[str, Any]
     ) -> None:
         """Notify that specification is complete and ready for generation"""
         try:
@@ -499,7 +497,7 @@ Respond to the user's message in a helpful, conversational way."""
         except Exception as e:
             logger.error(f"Error sending error message: {e}")
 
-    async def generate_environment(self, conversation_id: str, spec: Dict[str, Any]) -> str:
+    async def generate_environment(self, conversation_id: str, spec: dict[str, Any]) -> str:
         """Generate Roblox environment based on specification"""
         try:
             request_id = f"req_{datetime.now(timezone.utc).timestamp()}"
@@ -618,7 +616,7 @@ Respond to the user's message in a helpful, conversational way."""
         except:
             return 5
 
-    def get_conversation_spec(self, conversation_id: str) -> Dict[str, Any]:
+    def get_conversation_spec(self, conversation_id: str) -> dict[str, Any]:
         """Get current specification for a conversation"""
         return self.conversation_specs.get(conversation_id, {})
 

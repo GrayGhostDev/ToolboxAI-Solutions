@@ -6,18 +6,18 @@ Full compliance with draft-ietf-oauth-v2-1-13
 
 import base64
 import hashlib
-import secrets
 import json
-import os
-import time
-from datetime import datetime, timedelta, timezone
-from typing import Dict, Optional, Tuple, List, Any
-from dataclasses import dataclass
 import logging
+import os
+import secrets
+import time
+from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional, Tuple
 
+import redis
 from fastapi import HTTPException, status
 from pydantic import BaseModel, Field
-import redis
 from redis.exceptions import RedisError
 
 logger = logging.getLogger(__name__)
@@ -29,9 +29,11 @@ AUTHORIZATION_CODE_LIFETIME = 600  # 10 minutes
 ACCESS_TOKEN_LIFETIME = 900  # 15 minutes
 REFRESH_TOKEN_LIFETIME = 86400  # 24 hours
 
+
 @dataclass
 class OAuth21Config:
     """OAuth 2.1 configuration"""
+
     issuer: str = os.getenv("OAUTH_ISSUER", "https://api.toolboxai.com")
     authorization_endpoint: str = "/oauth/authorize"
     token_endpoint: str = "/oauth/token"
@@ -46,13 +48,17 @@ class OAuth21Config:
         if self.supported_scopes is None:
             self.supported_scopes = ["read", "write", "admin", "openid", "profile", "email"]
 
+
 class PKCEChallenge(BaseModel):
     """PKCE challenge data model"""
+
     code_challenge: str = Field(..., min_length=43, max_length=128)
     code_challenge_method: str = Field(default="S256", pattern="^S256$")
 
+
 class TokenRequest(BaseModel):
     """Token exchange request model"""
+
     grant_type: str
     code: Optional[str] = None
     redirect_uri: Optional[str] = None
@@ -61,6 +67,7 @@ class TokenRequest(BaseModel):
     client_secret: Optional[str] = None
     refresh_token: Optional[str] = None
     scope: Optional[str] = None
+
 
 class OAuth21Manager:
     """
@@ -79,7 +86,7 @@ class OAuth21Manager:
                 port=int(os.getenv("REDIS_PORT", 6379)),
                 password=os.getenv("REDIS_PASSWORD"),
                 decode_responses=True,
-                socket_connect_timeout=5
+                socket_connect_timeout=5,
             )
             self.redis_client.ping()
             self.redis_available = True
@@ -101,26 +108,26 @@ class OAuth21Manager:
                 "redirect_uris": [
                     "http://localhost:3000/callback",
                     "http://localhost:5179/callback",
-                    "https://dashboard.toolboxai.com/callback"
+                    "https://dashboard.toolboxai.com/callback",
                 ],
                 "allowed_scopes": ["read", "write", "profile"],
-                "client_type": "confidential"
+                "client_type": "confidential",
             },
             "roblox-plugin": {
                 "client_secret": None,  # Public client
                 "redirect_uris": [
                     "roblox://auth/callback",
-                    "http://localhost:3001/roblox/callback"
+                    "http://localhost:3001/roblox/callback",
                 ],
                 "allowed_scopes": ["read", "write"],
-                "client_type": "public"
+                "client_type": "public",
             },
             "test-client": {
                 "client_secret": "test-secret",
                 "redirect_uris": ["http://localhost:3000/callback"],
                 "allowed_scopes": ["read", "write", "admin"],
-                "client_type": "confidential"
-            }
+                "client_type": "confidential",
+            },
         }
 
     def generate_pkce_pair(self) -> Tuple[str, str]:
@@ -132,29 +139,26 @@ class OAuth21Manager:
         """
         # Generate code verifier (43-128 characters, base64url)
         verifier_bytes = secrets.token_bytes(32)
-        code_verifier = base64.urlsafe_b64encode(verifier_bytes).decode('utf-8').rstrip('=')
+        code_verifier = base64.urlsafe_b64encode(verifier_bytes).decode("utf-8").rstrip("=")
 
         # Ensure minimum length
         while len(code_verifier) < PKCE_CODE_VERIFIER_MIN_LENGTH:
             additional_bytes = secrets.token_bytes(8)
-            code_verifier += base64.urlsafe_b64encode(additional_bytes).decode('utf-8').rstrip('=')
+            code_verifier += base64.urlsafe_b64encode(additional_bytes).decode("utf-8").rstrip("=")
 
         # Truncate to maximum length
         code_verifier = code_verifier[:PKCE_CODE_VERIFIER_MAX_LENGTH]
 
         # Generate code challenge using SHA256 (S256)
-        challenge_bytes = hashlib.sha256(code_verifier.encode('utf-8')).digest()
-        code_challenge = base64.urlsafe_b64encode(challenge_bytes).decode('utf-8').rstrip('=')
+        challenge_bytes = hashlib.sha256(code_verifier.encode("utf-8")).digest()
+        code_challenge = base64.urlsafe_b64encode(challenge_bytes).decode("utf-8").rstrip("=")
 
-        logger.debug(f"Generated PKCE pair: verifier length={len(code_verifier)}, challenge length={len(code_challenge)}")
+        logger.debug(
+            f"Generated PKCE pair: verifier length={len(code_verifier)}, challenge length={len(code_challenge)}"
+        )
         return code_verifier, code_challenge
 
-    def verify_pkce(
-        self,
-        code_verifier: str,
-        code_challenge: str,
-        method: str = "S256"
-    ) -> bool:
+    def verify_pkce(self, code_verifier: str, code_challenge: str, method: str = "S256") -> bool:
         """
         Verify PKCE challenge against verifier
 
@@ -177,8 +181,10 @@ class OAuth21Manager:
 
         # Generate challenge from verifier
         try:
-            challenge_bytes = hashlib.sha256(code_verifier.encode('utf-8')).digest()
-            expected_challenge = base64.urlsafe_b64encode(challenge_bytes).decode('utf-8').rstrip('=')
+            challenge_bytes = hashlib.sha256(code_verifier.encode("utf-8")).digest()
+            expected_challenge = (
+                base64.urlsafe_b64encode(challenge_bytes).decode("utf-8").rstrip("=")
+            )
 
             # Constant-time comparison to prevent timing attacks
             result = secrets.compare_digest(expected_challenge, code_challenge)
@@ -197,7 +203,7 @@ class OAuth21Manager:
         scope: Optional[str] = None,
         user_id: Optional[str] = None,
         state: Optional[str] = None,
-        nonce: Optional[str] = None
+        nonce: Optional[str] = None,
     ) -> str:
         """
         Create authorization code with PKCE data
@@ -218,29 +224,25 @@ class OAuth21Manager:
         if not self.redis_available:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Authorization service temporarily unavailable"
+                detail="Authorization service temporarily unavailable",
             )
 
         # Validate client
         if client_id not in self.registered_clients:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid client_id"
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid client_id")
 
         # Validate redirect URI (exact match required by OAuth 2.1)
         client_config = self.registered_clients[client_id]
         if redirect_uri not in client_config["redirect_uris"]:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid redirect_uri"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid redirect_uri"
             )
 
         # Validate PKCE for OAuth 2.1 compliance
         if code_challenge_method != "S256":
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="OAuth 2.1 requires S256 challenge method"
+                detail="OAuth 2.1 requires S256 challenge method",
             )
 
         # Generate authorization code
@@ -260,16 +262,12 @@ class OAuth21Manager:
             "nonce": nonce,
             "created_at": created_at.isoformat(),
             "expires_at": expires_at.isoformat(),
-            "used": False
+            "used": False,
         }
 
         # Store in Redis with expiration
         code_key = f"oauth:auth_code:{auth_code}"
-        self.redis_client.setex(
-            code_key,
-            AUTHORIZATION_CODE_LIFETIME,
-            json.dumps(code_data)
-        )
+        self.redis_client.setex(code_key, AUTHORIZATION_CODE_LIFETIME, json.dumps(code_data))
 
         logger.info(f"Created authorization code for client {client_id}, user {user_id}")
         return auth_code
@@ -280,7 +278,7 @@ class OAuth21Manager:
         code_verifier: str,
         client_id: str,
         client_secret: Optional[str],
-        redirect_uri: str
+        redirect_uri: str,
     ) -> Dict[str, Any]:
         """
         Exchange authorization code for tokens
@@ -298,7 +296,7 @@ class OAuth21Manager:
         if not self.redis_available:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Token service temporarily unavailable"
+                detail="Token service temporarily unavailable",
             )
 
         # Retrieve authorization code data
@@ -308,7 +306,7 @@ class OAuth21Manager:
         if not code_data_str:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid or expired authorization code"
+                detail="Invalid or expired authorization code",
             )
 
         code_data = json.loads(code_data_str)
@@ -319,15 +317,13 @@ class OAuth21Manager:
             logger.warning(f"Authorization code reuse detected for {code}")
             self._revoke_tokens_for_code(code)
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Authorization code already used"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Authorization code already used"
             )
 
         # Validate client
         if code_data["client_id"] != client_id:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Client ID mismatch"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Client ID mismatch"
             )
 
         # Validate client credentials for confidential clients
@@ -335,43 +331,36 @@ class OAuth21Manager:
         if client_config and client_config["client_type"] == "confidential":
             if not client_secret or client_secret != client_config["client_secret"]:
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Invalid client credentials"
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid client credentials"
                 )
 
         # Validate redirect URI (must match exactly)
         if code_data["redirect_uri"] != redirect_uri:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Redirect URI mismatch"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Redirect URI mismatch"
             )
 
         # Verify PKCE
         if not self.verify_pkce(
-            code_verifier,
-            code_data["code_challenge"],
-            code_data["code_challenge_method"]
+            code_verifier, code_data["code_challenge"], code_data["code_challenge_method"]
         ):
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="PKCE verification failed"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="PKCE verification failed"
             )
 
         # Mark code as used
         code_data["used"] = True
-        self.redis_client.setex(code_key, 60, json.dumps(code_data))  # Keep for 1 minute for replay detection
+        self.redis_client.setex(
+            code_key, 60, json.dumps(code_data)
+        )  # Keep for 1 minute for replay detection
 
         # Generate tokens
         access_token = self._generate_access_token(
-            user_id=code_data.get("user_id"),
-            client_id=client_id,
-            scope=code_data.get("scope")
+            user_id=code_data.get("user_id"), client_id=client_id, scope=code_data.get("scope")
         )
 
         refresh_token = self._generate_refresh_token(
-            user_id=code_data.get("user_id"),
-            client_id=client_id,
-            scope=code_data.get("scope")
+            user_id=code_data.get("user_id"), client_id=client_id, scope=code_data.get("scope")
         )
 
         # Store token metadata for revocation
@@ -384,7 +373,7 @@ class OAuth21Manager:
             "refresh_token": refresh_token,
             "token_type": "Bearer",
             "expires_in": ACCESS_TOKEN_LIFETIME,
-            "scope": code_data.get("scope")
+            "scope": code_data.get("scope"),
         }
 
     def _generate_access_token(self, user_id: str, client_id: str, scope: Optional[str]) -> str:
@@ -397,7 +386,7 @@ class OAuth21Manager:
             "scope": scope,
             "iat": int(time.time()),
             "exp": int(time.time()) + ACCESS_TOKEN_LIFETIME,
-            "jti": secrets.token_urlsafe(16)  # JWT ID for revocation
+            "jti": secrets.token_urlsafe(16),  # JWT ID for revocation
         }
 
         # For now, use a simple token (replace with JWT in production)
@@ -406,11 +395,7 @@ class OAuth21Manager:
         if self.redis_available:
             # Store token data
             token_key = f"oauth:access_token:{token}"
-            self.redis_client.setex(
-                token_key,
-                ACCESS_TOKEN_LIFETIME,
-                json.dumps(token_data)
-            )
+            self.redis_client.setex(token_key, ACCESS_TOKEN_LIFETIME, json.dumps(token_data))
 
         return token
 
@@ -423,7 +408,7 @@ class OAuth21Manager:
             "scope": scope,
             "iat": int(time.time()),
             "exp": int(time.time()) + REFRESH_TOKEN_LIFETIME,
-            "rotation_count": 0
+            "rotation_count": 0,
         }
 
         token = secrets.token_urlsafe(32)
@@ -431,11 +416,7 @@ class OAuth21Manager:
         if self.redis_available:
             # Store refresh token
             token_key = f"oauth:refresh_token:{token}"
-            self.redis_client.setex(
-                token_key,
-                REFRESH_TOKEN_LIFETIME,
-                json.dumps(token_data)
-            )
+            self.redis_client.setex(token_key, REFRESH_TOKEN_LIFETIME, json.dumps(token_data))
 
         return token
 
@@ -481,7 +462,9 @@ class OAuth21Manager:
 
         # Additional security check for HTTPS in production
         if self.config.require_https and is_valid:
-            if not provided_uri.startswith("https://") and not provided_uri.startswith("http://localhost"):
+            if not provided_uri.startswith("https://") and not provided_uri.startswith(
+                "http://localhost"
+            ):
                 logger.warning(f"Non-HTTPS redirect URI in production: {provided_uri}")
                 return False
 
@@ -503,15 +486,11 @@ class OAuth21Manager:
             "token_endpoint_auth_methods_supported": [
                 "client_secret_basic",
                 "client_secret_post",
-                "private_key_jwt"
+                "private_key_jwt",
             ],
             "jwks_uri": f"{base_url}{self.config.jwks_uri}",
             "response_types_supported": ["code"],  # OAuth 2.1 only supports authorization code
-            "grant_types_supported": [
-                "authorization_code",
-                "refresh_token",
-                "client_credentials"
-            ],
+            "grant_types_supported": ["authorization_code", "refresh_token", "client_credentials"],
             "revocation_endpoint": f"{base_url}{self.config.revocation_endpoint}",
             "introspection_endpoint": f"{base_url}{self.config.introspection_endpoint}",
             "code_challenge_methods_supported": ["S256"],  # OAuth 2.1 requirement
@@ -523,7 +502,7 @@ class OAuth21Manager:
             "service_documentation": "https://docs.toolboxai.com/oauth",
             "ui_locales_supported": ["en-US"],
             "op_policy_uri": "https://toolboxai.com/privacy",
-            "op_tos_uri": "https://toolboxai.com/terms"
+            "op_tos_uri": "https://toolboxai.com/terms",
         }
 
     async def revoke_token(self, token: str, token_type_hint: Optional[str] = None) -> bool:
@@ -580,7 +559,7 @@ class OAuth21Manager:
                 "username": token_data.get("user_id"),
                 "token_type": "Bearer",
                 "exp": token_data.get("exp"),
-                "iat": token_data.get("iat")
+                "iat": token_data.get("iat"),
             }
 
         # Check refresh token
@@ -596,13 +575,15 @@ class OAuth21Manager:
                 "username": token_data.get("user_id"),
                 "token_type": "refresh_token",
                 "exp": token_data.get("exp"),
-                "iat": token_data.get("iat")
+                "iat": token_data.get("iat"),
             }
 
         return {"active": False}
 
+
 # Global instance
 oauth21_manager = OAuth21Manager()
+
 
 def get_oauth21_manager() -> OAuth21Manager:
     """Get OAuth 2.1 manager instance"""

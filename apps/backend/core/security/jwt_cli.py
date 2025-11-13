@@ -7,9 +7,9 @@ for the ToolboxAI authentication system.
 """
 
 import argparse
-import sys
-import os
 import logging
+import os
+import sys
 from pathlib import Path
 
 # Add project root to path
@@ -110,7 +110,10 @@ def validate_secret(args):
 def test_system(args):
     """Test JWT security system"""
     try:
-        from apps.backend.core.security.jwt import init_jwt_security, get_jwt_security_manager
+        from apps.backend.core.security.jwt import (
+            get_jwt_security_manager,
+            init_jwt_security,
+        )
         from toolboxai_settings.settings import validate_jwt_security
 
         print("🔒 Testing JWT Security System...")

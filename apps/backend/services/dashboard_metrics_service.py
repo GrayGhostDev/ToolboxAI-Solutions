@@ -13,24 +13,14 @@ Following 2025 standards:
 import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
-from decimal import Decimal
+from typing import Any
 
-from pydantic import BaseModel, Field, ConfigDict
-from sqlalchemy import select, func, and_, or_
+from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
-from apps.backend.core.cache import RedisCache, CacheConfig
-from apps.backend.core.config import settings
-from database.models import (
-    User,
-    EducationalContent,
-    Lesson,
-    Assessment,
-    Class,
-    Message,
-)
+from apps.backend.core.cache import CacheConfig, RedisCache
+from database.models import Assessment, EducationalContent, Lesson, Message, User
 
 logger = logging.getLogger(__name__)
 
@@ -94,13 +84,13 @@ class DashboardMetricsResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    organization_id: Optional[str] = Field(default=None, description="Organization ID")
+    organization_id: str | None = Field(default=None, description="Organization ID")
     user_metrics: UserMetrics
     content_metrics: ContentMetrics
     engagement_metrics: EngagementMetrics
     system_metrics: SystemMetrics
-    trends: Dict[str, List[float]] = Field(default_factory=dict, description="Time-series trends")
-    cache_metadata: Dict[str, Any] = Field(default_factory=dict, description="Cache info")
+    trends: dict[str, list[float]] = Field(default_factory=dict, description="Time-series trends")
+    cache_metadata: dict[str, Any] = Field(default_factory=dict, description="Cache info")
 
 
 class ActivityMetrics(BaseModel):
@@ -111,8 +101,8 @@ class ActivityMetrics(BaseModel):
     recent_lessons: int = Field(default=0, description="Lessons in last 24h")
     recent_assessments: int = Field(default=0, description="Assessments in last 24h")
     recent_messages: int = Field(default=0, description="Messages in last 24h")
-    top_performing_content: List[Dict[str, Any]] = Field(default_factory=list)
-    activity_trend: List[int] = Field(default_factory=list, description="24h hourly activity")
+    top_performing_content: list[dict[str, Any]] = Field(default_factory=list)
+    activity_trend: list[int] = Field(default_factory=list, description="24h hourly activity")
 
 
 # ============================================================================
@@ -141,7 +131,7 @@ class DashboardMetricsService:
         self,
         session: AsyncSession,
         user_id: str,
-        organization_id: Optional[str] = None,
+        organization_id: str | None = None,
         force_refresh: bool = False,
     ) -> DashboardMetricsResponse:
         """
@@ -177,13 +167,15 @@ class DashboardMetricsService:
             trends_task = self._get_trends(session, organization_id)
 
             # Wait for all metrics
-            user_metrics, content_metrics, engagement_metrics, system_metrics, trends = await asyncio.gather(
-                user_metrics_task,
-                content_metrics_task,
-                engagement_metrics_task,
-                system_metrics_task,
-                trends_task,
-                return_exceptions=True,
+            user_metrics, content_metrics, engagement_metrics, system_metrics, trends = (
+                await asyncio.gather(
+                    user_metrics_task,
+                    content_metrics_task,
+                    engagement_metrics_task,
+                    system_metrics_task,
+                    trends_task,
+                    return_exceptions=True,
+                )
             )
 
             # Handle exceptions
@@ -242,7 +234,7 @@ class DashboardMetricsService:
         self,
         session: AsyncSession,
         user_id: str,
-        organization_id: Optional[str] = None,
+        organization_id: str | None = None,
     ) -> ActivityMetrics:
         """Get recent activity metrics (frequently changing data)."""
         try:
@@ -345,7 +337,7 @@ class DashboardMetricsService:
     async def _get_user_metrics(
         self,
         session: AsyncSession,
-        organization_id: Optional[str] = None,
+        organization_id: str | None = None,
     ) -> UserMetrics:
         """Calculate user-related metrics."""
         try:
@@ -433,7 +425,7 @@ class DashboardMetricsService:
     async def _get_content_metrics(
         self,
         session: AsyncSession,
-        organization_id: Optional[str] = None,
+        organization_id: str | None = None,
     ) -> ContentMetrics:
         """Calculate content-related metrics."""
         try:
@@ -488,7 +480,7 @@ class DashboardMetricsService:
     async def _get_engagement_metrics(
         self,
         session: AsyncSession,
-        organization_id: Optional[str] = None,
+        organization_id: str | None = None,
     ) -> EngagementMetrics:
         """Calculate engagement metrics."""
         try:
@@ -551,8 +543,8 @@ class DashboardMetricsService:
     async def _get_trends(
         self,
         session: AsyncSession,
-        organization_id: Optional[str] = None,
-    ) -> Dict[str, List[float]]:
+        organization_id: str | None = None,
+    ) -> dict[str, list[float]]:
         """Get time-series trend data (last 7 days)."""
         try:
             # Placeholder trend data - would calculate from actual data
@@ -571,7 +563,7 @@ class DashboardMetricsService:
         """Generate cache key for metrics."""
         return f"{CacheConfig.PREFIX_DASHBOARD}:{metric_type}:{identifier}"
 
-    async def invalidate_cache(self, organization_id: Optional[str] = None):
+    async def invalidate_cache(self, organization_id: str | None = None):
         """Invalidate dashboard metrics cache."""
         try:
             if organization_id:

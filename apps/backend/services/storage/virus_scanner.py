@@ -11,16 +11,16 @@ Version: 1.0.0
 
 import asyncio
 import logging
-import tempfile
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 from uuid import UUID, uuid4
 
 try:
     import pyclamd
+
     CLAMAV_AVAILABLE = True
 except ImportError:
     CLAMAV_AVAILABLE = False
@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 class ScanStatus(str, Enum):
     """Virus scan status"""
+
     PENDING = "pending"
     SCANNING = "scanning"
     CLEAN = "clean"
@@ -41,6 +42,7 @@ class ScanStatus(str, Enum):
 
 class ThreatLevel(str, Enum):
     """Threat level classification"""
+
     NONE = "none"
     LOW = "low"
     MEDIUM = "medium"
@@ -51,18 +53,19 @@ class ThreatLevel(str, Enum):
 @dataclass
 class ScanResult:
     """Result of virus scan operation"""
+
     scan_id: str
     status: ScanStatus
     is_clean: bool
-    threat_name: Optional[str] = None
+    threat_name: str | None = None
     threat_level: ThreatLevel = ThreatLevel.NONE
     scan_duration: float = 0.0
-    engine_version: Optional[str] = None
-    signature_date: Optional[datetime] = None
-    details: Dict[str, Any] = field(default_factory=dict)
+    engine_version: str | None = None
+    signature_date: datetime | None = None
+    details: dict[str, Any] = field(default_factory=dict)
     scanned_at: datetime = field(default_factory=datetime.utcnow)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization"""
         return {
             "scan_id": self.scan_id,
@@ -74,12 +77,13 @@ class ScanResult:
             "engine_version": self.engine_version,
             "signature_date": self.signature_date.isoformat() if self.signature_date else None,
             "details": self.details,
-            "scanned_at": self.scanned_at.isoformat()
+            "scanned_at": self.scanned_at.isoformat(),
         }
 
 
 class QuarantineAction(str, Enum):
     """Actions to take for quarantined files"""
+
     QUARANTINE = "quarantine"
     DELETE = "delete"
     NOTIFY_ONLY = "notify_only"
@@ -89,6 +93,7 @@ class QuarantineAction(str, Enum):
 @dataclass
 class ScanConfiguration:
     """Configuration for virus scanning"""
+
     enabled: bool = True
     scan_timeout: int = 300  # 5 minutes
     max_file_size: int = 100 * 1024 * 1024  # 100MB
@@ -96,11 +101,11 @@ class ScanConfiguration:
     scan_archives: bool = True
     heuristic_scanning: bool = True
     async_scanning: bool = True
-    notification_webhook: Optional[str] = None
-    excluded_extensions: List[str] = field(default_factory=lambda: ['.txt', '.md'])
-    required_categories: List[str] = field(default_factory=lambda: [
-        'student_submission', 'educational_content', 'media_resource'
-    ])
+    notification_webhook: str | None = None
+    excluded_extensions: list[str] = field(default_factory=lambda: [".txt", ".md"])
+    required_categories: list[str] = field(
+        default_factory=lambda: ["student_submission", "educational_content", "media_resource"]
+    )
 
 
 class VirusScanner:
@@ -115,7 +120,7 @@ class VirusScanner:
     - Educational platform-specific policies
     """
 
-    def __init__(self, config: Optional[ScanConfiguration] = None):
+    def __init__(self, config: ScanConfiguration | None = None):
         """
         Initialize virus scanner.
 
@@ -124,7 +129,7 @@ class VirusScanner:
         """
         self.config = config or ScanConfiguration()
         self.clamd_client = None
-        self._scan_results: Dict[str, ScanResult] = {}
+        self._scan_results: dict[str, ScanResult] = {}
 
         # Initialize ClamAV if available
         if CLAMAV_AVAILABLE and self.config.enabled:
@@ -138,14 +143,14 @@ class VirusScanner:
         """Initialize ClamAV daemon connection"""
         try:
             # Try different connection methods
-            for connection_type in ['unix_socket', 'tcp']:
+            for connection_type in ["unix_socket", "tcp"]:
                 try:
-                    if connection_type == 'unix_socket':
+                    if connection_type == "unix_socket":
                         # Try common Unix socket paths
                         socket_paths = [
-                            '/var/run/clamav/clamd.ctl',
-                            '/var/run/clamd.scan/clamd.sock',
-                            '/tmp/clamd.socket'
+                            "/var/run/clamav/clamd.ctl",
+                            "/var/run/clamd.scan/clamd.sock",
+                            "/tmp/clamd.socket",
                         ]
 
                         for socket_path in socket_paths:
@@ -174,10 +179,7 @@ class VirusScanner:
             self.clamd_client = None
 
     async def scan_data(
-        self,
-        file_data: bytes,
-        filename: Optional[str] = None,
-        file_category: Optional[str] = None
+        self, file_data: bytes, filename: str | None = None, file_category: str | None = None
     ) -> ScanResult:
         """
         Scan file data for viruses.
@@ -200,7 +202,7 @@ class VirusScanner:
                     scan_id=scan_id,
                     status=ScanStatus.SKIPPED,
                     is_clean=True,
-                    details={"reason": "Category excluded from scanning"}
+                    details={"reason": "Category excluded from scanning"},
                 )
 
             # Size check
@@ -212,8 +214,8 @@ class VirusScanner:
                     details={
                         "error": "File too large for scanning",
                         "size": len(file_data),
-                        "max_size": self.config.max_file_size
-                    }
+                        "max_size": self.config.max_file_size,
+                    },
                 )
 
             # Perform scan
@@ -242,13 +244,11 @@ class VirusScanner:
                 status=ScanStatus.ERROR,
                 is_clean=False,
                 details={"error": str(e)},
-                scan_duration=(datetime.utcnow() - start_time).total_seconds()
+                scan_duration=(datetime.utcnow() - start_time).total_seconds(),
             )
 
     async def scan_file(
-        self,
-        file_path: Union[str, Path],
-        file_category: Optional[str] = None
+        self, file_path: str | Path, file_category: str | None = None
     ) -> ScanResult:
         """
         Scan a file from disk.
@@ -267,7 +267,7 @@ class VirusScanner:
                 raise FileNotFoundError(f"File not found: {file_path}")
 
             # Read file data
-            with open(file_path, 'rb') as f:
+            with open(file_path, "rb") as f:
                 file_data = f.read()
 
             return await self.scan_data(file_data, file_path.name, file_category)
@@ -278,15 +278,15 @@ class VirusScanner:
                 scan_id=str(uuid4()),
                 status=ScanStatus.ERROR,
                 is_clean=False,
-                details={"error": str(e)}
+                details={"error": str(e)},
             )
 
     async def scan_file_async(
         self,
         file_data: bytes,
-        filename: Optional[str] = None,
-        file_category: Optional[str] = None,
-        callback_url: Optional[str] = None
+        filename: str | None = None,
+        file_category: str | None = None,
+        callback_url: str | None = None,
     ) -> str:
         """
         Submit file for asynchronous scanning using Celery.
@@ -305,14 +305,14 @@ class VirusScanner:
         try:
             # Create placeholder result
             self._scan_results[scan_id] = ScanResult(
-                scan_id=scan_id,
-                status=ScanStatus.PENDING,
-                is_clean=False
+                scan_id=scan_id, status=ScanStatus.PENDING, is_clean=False
             )
 
             # Submit to Celery task (if available)
             if self._has_celery():
-                await self._submit_celery_scan(scan_id, file_data, filename, file_category, callback_url)
+                await self._submit_celery_scan(
+                    scan_id, file_data, filename, file_category, callback_url
+                )
             else:
                 # Fallback to immediate scan
                 result = await self.scan_data(file_data, filename, file_category)
@@ -326,14 +326,11 @@ class VirusScanner:
             logger.error(f"Async scan submission failed: {e}")
             # Update result with error
             self._scan_results[scan_id] = ScanResult(
-                scan_id=scan_id,
-                status=ScanStatus.ERROR,
-                is_clean=False,
-                details={"error": str(e)}
+                scan_id=scan_id, status=ScanStatus.ERROR, is_clean=False, details={"error": str(e)}
             )
             return scan_id
 
-    async def get_scan_result(self, scan_id: str) -> Optional[ScanResult]:
+    async def get_scan_result(self, scan_id: str) -> ScanResult | None:
         """
         Get scan result by ID.
 
@@ -346,10 +343,7 @@ class VirusScanner:
         return self._scan_results.get(scan_id)
 
     async def quarantine_file(
-        self,
-        file_id: UUID,
-        scan_result: ScanResult,
-        organization_id: Optional[str] = None
+        self, file_id: UUID, scan_result: ScanResult, organization_id: str | None = None
     ) -> bool:
         """
         Quarantine an infected file.
@@ -371,7 +365,7 @@ class VirusScanner:
                 "threat_level": scan_result.threat_level.value,
                 "quarantined_at": datetime.utcnow(),
                 "action": self.config.quarantine_action.value,
-                "details": scan_result.details
+                "details": scan_result.details,
             }
 
             # Store quarantine record (would integrate with database)
@@ -424,7 +418,7 @@ class VirusScanner:
             logger.error(f"Signature update failed: {e}")
             return False
 
-    async def get_scanner_status(self) -> Dict[str, Any]:
+    async def get_scanner_status(self) -> dict[str, Any]:
         """
         Get scanner status and statistics.
 
@@ -440,14 +434,22 @@ class VirusScanner:
                     "scan_timeout": self.config.scan_timeout,
                     "max_file_size": self.config.max_file_size,
                     "quarantine_action": self.config.quarantine_action.value,
-                    "async_scanning": self.config.async_scanning
+                    "async_scanning": self.config.async_scanning,
                 },
                 "statistics": {
                     "total_scans": len(self._scan_results),
                     "clean_files": len([r for r in self._scan_results.values() if r.is_clean]),
-                    "infected_files": len([r for r in self._scan_results.values() if not r.is_clean and r.status != ScanStatus.ERROR]),
-                    "scan_errors": len([r for r in self._scan_results.values() if r.status == ScanStatus.ERROR])
-                }
+                    "infected_files": len(
+                        [
+                            r
+                            for r in self._scan_results.values()
+                            if not r.is_clean and r.status != ScanStatus.ERROR
+                        ]
+                    ),
+                    "scan_errors": len(
+                        [r for r in self._scan_results.values() if r.status == ScanStatus.ERROR]
+                    ),
+                },
             }
 
             # Get engine version if available
@@ -466,10 +468,7 @@ class VirusScanner:
     # Private helper methods
 
     async def _scan_with_clamav(
-        self,
-        scan_id: str,
-        file_data: bytes,
-        filename: Optional[str]
+        self, scan_id: str, file_data: bytes, filename: str | None
     ) -> ScanResult:
         """Scan file data using ClamAV"""
         try:
@@ -488,7 +487,7 @@ class VirusScanner:
                     scan_id=scan_id,
                     status=ScanStatus.ERROR,
                     is_clean=False,
-                    details={"error": "Scan timeout"}
+                    details={"error": "Scan timeout"},
                 )
 
             # Parse ClamAV response
@@ -500,7 +499,7 @@ class VirusScanner:
                 # Infected file
                 result.status = ScanStatus.INFECTED
                 result.is_clean = False
-                result.threat_name = scan_response.get('stream', 'Unknown threat')
+                result.threat_name = scan_response.get("stream", "Unknown threat")
                 result.threat_level = self._classify_threat_level(result.threat_name)
 
             # Get engine version
@@ -509,37 +508,26 @@ class VirusScanner:
             except Exception:
                 pass
 
-            result.details = {
-                "scanner": "clamav",
-                "raw_response": scan_response
-            }
+            result.details = {"scanner": "clamav", "raw_response": scan_response}
 
             return result
 
         except Exception as e:
             logger.error(f"ClamAV scan failed: {e}")
             return ScanResult(
-                scan_id=scan_id,
-                status=ScanStatus.ERROR,
-                is_clean=False,
-                details={"error": str(e)}
+                scan_id=scan_id, status=ScanStatus.ERROR, is_clean=False, details={"error": str(e)}
             )
 
-    async def _mock_scan(
-        self,
-        scan_id: str,
-        file_data: bytes,
-        filename: Optional[str]
-    ) -> ScanResult:
+    async def _mock_scan(self, scan_id: str, file_data: bytes, filename: str | None) -> ScanResult:
         """Mock virus scan for testing/development"""
         # Simulate scan delay
         await asyncio.sleep(0.1)
 
         # Check for test virus patterns
         test_threats = [
-            (b'EICAR-STANDARD-ANTIVIRUS-TEST-FILE', 'EICAR-Test-File'),
-            (b'X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR', 'EICAR-Test-File'),
-            (b'virus_test_pattern', 'Test.Virus.Pattern')
+            (b"EICAR-STANDARD-ANTIVIRUS-TEST-FILE", "EICAR-Test-File"),
+            (b"X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR", "EICAR-Test-File"),
+            (b"virus_test_pattern", "Test.Virus.Pattern"),
         ]
 
         for pattern, threat_name in test_threats:
@@ -551,7 +539,10 @@ class VirusScanner:
                     threat_name=threat_name,
                     threat_level=ThreatLevel.HIGH,
                     engine_version="Mock Scanner 1.0",
-                    details={"scanner": "mock", "test_pattern": pattern.decode('utf-8', errors='ignore')}
+                    details={
+                        "scanner": "mock",
+                        "test_pattern": pattern.decode("utf-8", errors="ignore"),
+                    },
                 )
 
         # Clean file
@@ -560,10 +551,10 @@ class VirusScanner:
             status=ScanStatus.CLEAN,
             is_clean=True,
             engine_version="Mock Scanner 1.0",
-            details={"scanner": "mock", "file_size": len(file_data)}
+            details={"scanner": "mock", "file_size": len(file_data)},
         )
 
-    def _should_scan(self, filename: Optional[str], file_category: Optional[str]) -> bool:
+    def _should_scan(self, filename: str | None, file_category: str | None) -> bool:
         """Determine if file should be scanned"""
         if not self.config.enabled:
             return False
@@ -581,7 +572,7 @@ class VirusScanner:
 
         return True
 
-    def _classify_threat_level(self, threat_name: Optional[str]) -> ThreatLevel:
+    def _classify_threat_level(self, threat_name: str | None) -> ThreatLevel:
         """Classify threat level based on threat name"""
         if not threat_name:
             return ThreatLevel.NONE
@@ -589,19 +580,19 @@ class VirusScanner:
         threat_lower = threat_name.lower()
 
         # Critical threats
-        if any(keyword in threat_lower for keyword in ['trojan', 'ransomware', 'backdoor']):
+        if any(keyword in threat_lower for keyword in ["trojan", "ransomware", "backdoor"]):
             return ThreatLevel.CRITICAL
 
         # High threats
-        if any(keyword in threat_lower for keyword in ['virus', 'worm', 'rootkit']):
+        if any(keyword in threat_lower for keyword in ["virus", "worm", "rootkit"]):
             return ThreatLevel.HIGH
 
         # Medium threats
-        if any(keyword in threat_lower for keyword in ['adware', 'spyware', 'pup']):
+        if any(keyword in threat_lower for keyword in ["adware", "spyware", "pup"]):
             return ThreatLevel.MEDIUM
 
         # Low threats
-        if any(keyword in threat_lower for keyword in ['test', 'eicar', 'harmless']):
+        if any(keyword in threat_lower for keyword in ["test", "eicar", "harmless"]):
             return ThreatLevel.LOW
 
         # Default to medium for unknown threats
@@ -611,6 +602,7 @@ class VirusScanner:
         """Check if Celery is available"""
         try:
             import celery
+
             return True
         except ImportError:
             return False
@@ -619,9 +611,9 @@ class VirusScanner:
         self,
         scan_id: str,
         file_data: bytes,
-        filename: Optional[str],
-        file_category: Optional[str],
-        callback_url: Optional[str]
+        filename: str | None,
+        file_category: str | None,
+        callback_url: str | None,
     ) -> None:
         """Submit scan to Celery task queue"""
         try:
@@ -633,7 +625,7 @@ class VirusScanner:
                 file_data=file_data,
                 filename=filename,
                 file_category=file_category,
-                callback_url=callback_url
+                callback_url=callback_url,
             )
 
         except ImportError:
@@ -652,7 +644,7 @@ class VirusScanner:
         except Exception:
             return "unknown"
 
-    async def _store_quarantine_record(self, record: Dict[str, Any]) -> None:
+    async def _store_quarantine_record(self, record: dict[str, Any]) -> None:
         """Store quarantine record in database"""
         # This would integrate with your database models
         logger.info(f"Quarantine record stored: {record['file_id']}")
@@ -667,7 +659,7 @@ class VirusScanner:
         # This would move file to quarantine bucket/folder
         logger.warning(f"File moved to quarantine: {file_id}")
 
-    async def _send_quarantine_notification(self, record: Dict[str, Any]) -> None:
+    async def _send_quarantine_notification(self, record: dict[str, Any]) -> None:
         """Send notification about quarantined file"""
         try:
             import aiohttp
@@ -675,10 +667,7 @@ class VirusScanner:
             async with aiohttp.ClientSession() as session:
                 await session.post(
                     self.config.notification_webhook,
-                    json={
-                        "event": "file_quarantined",
-                        "data": record
-                    }
+                    json={"event": "file_quarantined", "data": record},
                 )
 
         except Exception as e:

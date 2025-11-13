@@ -6,26 +6,25 @@ Tests password change, reset, validation, and session management endpoints.
 Phase 1 Week 1: Authentication & user management endpoint tests
 """
 
-import pytest
 from datetime import datetime
+from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
 
-from fastapi import HTTPException, status, Request
+import pytest
+from fastapi import HTTPException, Request, status
 
 # Import endpoint functions and models directly
 from apps.backend.api.v1.endpoints.password import (
     change_password,
-    reset_user_password,
-    get_password_requirements,
-    validate_password_strength,
     get_active_sessions,
+    get_password_requirements,
     logout_all_sessions,
+    reset_user_password,
+    validate_password_strength,
 )
 
 # Import models
 from apps.backend.models.schemas import User
-
 
 # ============================================================================
 # Fixtures
@@ -509,9 +508,7 @@ class TestLogoutAllSessions:
 
     @pytest.mark.asyncio
     @patch("apps.backend.api.v1.endpoints.password.session_manager")
-    async def test_logout_all_sessions_none_active(
-        self, mock_session_manager, mock_current_user
-    ):
+    async def test_logout_all_sessions_none_active(self, mock_session_manager, mock_current_user):
         """Test logging out when no sessions are active."""
         mock_session_manager.invalidate_all_user_sessions.return_value = 0
 
@@ -522,13 +519,9 @@ class TestLogoutAllSessions:
 
     @pytest.mark.asyncio
     @patch("apps.backend.api.v1.endpoints.password.session_manager")
-    async def test_logout_all_sessions_service_error(
-        self, mock_session_manager, mock_current_user
-    ):
+    async def test_logout_all_sessions_service_error(self, mock_session_manager, mock_current_user):
         """Test handling of service errors during logout."""
-        mock_session_manager.invalidate_all_user_sessions.side_effect = Exception(
-            "Service error"
-        )
+        mock_session_manager.invalidate_all_user_sessions.side_effect = Exception("Service error")
 
         with pytest.raises(HTTPException) as exc_info:
             await logout_all_sessions(current_user=mock_current_user)

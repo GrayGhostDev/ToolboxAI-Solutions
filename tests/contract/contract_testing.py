@@ -5,23 +5,19 @@ This module implements consumer-driven contract testing to ensure API compatibil
 between services and prevent breaking changes.
 """
 
-import json
-import yaml
-from pathlib import Path
-from typing import Dict, List, Optional, Any, Union
-from datetime import datetime
-from dataclasses import dataclass, field
-import jsonschema
-from jsonschema import validate, ValidationError
-import requests
 import asyncio
-import aiohttp
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
-from rich.syntax import Syntax
 import hashlib
-import difflib
+import json
+from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+import aiohttp
+import yaml
+from jsonschema import ValidationError, validate
+from rich.console import Console
+from rich.panel import Panel
 
 console = Console()
 
@@ -35,12 +31,12 @@ class Contract:
     version: str
     consumer: str
     provider: str
-    endpoints: List[Dict[str, Any]]
-    schemas: Dict[str, Any]
+    endpoints: list[dict[str, Any]]
+    schemas: dict[str, Any]
     created_at: str
     updated_at: str
     status: str = "draft"
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -50,9 +46,9 @@ class ContractTest:
     contract_id: str
     endpoint: str
     method: str
-    request: Dict[str, Any]
-    expected_response: Dict[str, Any]
-    validation_rules: Dict[str, Any] = field(default_factory=dict)
+    request: dict[str, Any]
+    expected_response: dict[str, Any]
+    validation_rules: dict[str, Any] = field(default_factory=dict)
     description: str = ""
 
 
@@ -60,8 +56,8 @@ class ContractValidator:
     """Validates API responses against contracts."""
 
     def __init__(self):
-        self.contracts: Dict[str, Contract] = {}
-        self.test_results: List[Dict] = []
+        self.contracts: dict[str, Contract] = {}
+        self.test_results: list[dict] = []
 
     def load_contract(self, contract_path: Path) -> Contract:
         """Load a contract from file."""
@@ -88,12 +84,12 @@ class ContractValidator:
         self.contracts[contract.id] = contract
         return contract
 
-    def _generate_id(self, data: Dict) -> str:
+    def _generate_id(self, data: dict) -> str:
         """Generate contract ID from data."""
         content = f"{data['consumer']}_{data['provider']}_{data['version']}"
         return hashlib.sha256(content.encode()).hexdigest()[:12]
 
-    def validate_schema(self, data: Any, schema: Dict) -> Tuple[bool, Optional[str]]:
+    def validate_schema(self, data: Any, schema: dict) -> Tuple[bool, str | None]:
         """Validate data against JSON schema."""
         try:
             validate(instance=data, schema=schema)
@@ -102,11 +98,8 @@ class ContractValidator:
             return False, str(e)
 
     def validate_response(
-        self,
-        response: Dict[str, Any],
-        expected: Dict[str, Any],
-        rules: Optional[Dict] = None
-    ) -> Dict[str, Any]:
+        self, response: dict[str, Any], expected: dict[str, Any], rules: dict | None = None
+    ) -> dict[str, Any]:
         """Validate API response against expected contract."""
         result = {
             "valid": True,
@@ -128,19 +121,13 @@ class ContractValidator:
         # Check headers
         if "headers" in expected:
             self._validate_headers(
-                response.get("headers", {}),
-                expected["headers"],
-                result,
-                rules.get("headers", {})
+                response.get("headers", {}), expected["headers"], result, rules.get("headers", {})
             )
 
         # Check body
         if "body" in expected:
             self._validate_body(
-                response.get("body"),
-                expected["body"],
-                result,
-                rules.get("body", {})
+                response.get("body"), expected["body"], result, rules.get("body", {})
             )
 
         # Check schema if provided
@@ -152,13 +139,7 @@ class ContractValidator:
 
         return result
 
-    def _validate_headers(
-        self,
-        actual: Dict,
-        expected: Dict,
-        result: Dict,
-        rules: Dict
-    ):
+    def _validate_headers(self, actual: dict, expected: dict, result: dict, rules: dict):
         """Validate response headers."""
         for key, value in expected.items():
             if key not in actual:
@@ -171,26 +152,18 @@ class ContractValidator:
                 # Check if it's a pattern match
                 if isinstance(value, str) and value.startswith("regex:"):
                     import re
+
                     pattern = value[6:]  # Remove "regex:" prefix
                     if not re.match(pattern, actual[key]):
                         result["valid"] = False
-                        result["errors"].append(
-                            f"Header {key} doesn't match pattern: {pattern}"
-                        )
+                        result["errors"].append(f"Header {key} doesn't match pattern: {pattern}")
                 else:
                     result["valid"] = False
                     result["errors"].append(
-                        f"Header value mismatch for {key}: "
-                        f"expected {value}, got {actual[key]}"
+                        f"Header value mismatch for {key}: " f"expected {value}, got {actual[key]}"
                     )
 
-    def _validate_body(
-        self,
-        actual: Any,
-        expected: Any,
-        result: Dict,
-        rules: Dict
-    ):
+    def _validate_body(self, actual: Any, expected: Any, result: dict, rules: dict):
         """Validate response body."""
         if isinstance(expected, dict) and isinstance(actual, dict):
             # Validate object fields
@@ -204,12 +177,7 @@ class ContractValidator:
                 else:
                     # Recursive validation
                     if isinstance(value, dict):
-                        self._validate_body(
-                            actual[key],
-                            value,
-                            result,
-                            rules.get(key, {})
-                        )
+                        self._validate_body(actual[key], value, result, rules.get(key, {}))
                     elif isinstance(value, list) and value:
                         # Validate array items
                         if not isinstance(actual[key], list):
@@ -219,20 +187,14 @@ class ContractValidator:
                             )
                         elif rules.get("validate_array_items"):
                             # Validate each item
-                            for i, item in enumerate(actual[key][:len(value)]):
-                                self._validate_body(
-                                    item,
-                                    value[0] if value else {},
-                                    result,
-                                    rules
-                                )
+                            for i, item in enumerate(actual[key][: len(value)]):
+                                self._validate_body(item, value[0] if value else {}, result, rules)
                     else:
                         # Direct value comparison
                         if not self._values_match(actual[key], value, rules):
                             result["valid"] = False
                             result["errors"].append(
-                                f"Value mismatch for {key}: "
-                                f"expected {value}, got {actual[key]}"
+                                f"Value mismatch for {key}: " f"expected {value}, got {actual[key]}"
                             )
 
             # Check for unexpected fields
@@ -256,11 +218,9 @@ class ContractValidator:
             # Primitive value mismatch
             if not self._values_match(actual, expected, rules):
                 result["valid"] = False
-                result["errors"].append(
-                    f"Value mismatch: expected {expected}, got {actual}"
-                )
+                result["errors"].append(f"Value mismatch: expected {expected}, got {actual}")
 
-    def _values_match(self, actual: Any, expected: Any, rules: Dict) -> bool:
+    def _values_match(self, actual: Any, expected: Any, rules: dict) -> bool:
         """Check if values match according to rules."""
         if rules.get("ignore_values"):
             return True
@@ -279,17 +239,15 @@ class ContractValidator:
                 return actual_type == expected_type
             elif expected.startswith("regex:"):
                 import re
+
                 pattern = expected[6:]
                 return bool(re.match(pattern, str(actual)))
 
         return actual == expected
 
     async def test_contract(
-        self,
-        contract: Contract,
-        base_url: str,
-        auth: Optional[Dict] = None
-    ) -> Dict[str, Any]:
+        self, contract: Contract, base_url: str, auth: dict | None = None
+    ) -> dict[str, Any]:
         """Test all endpoints in a contract."""
         console.print(f"\n[cyan]Testing contract: {contract.name} v{contract.version}[/cyan]")
 
@@ -305,17 +263,12 @@ class ContractValidator:
                 "passed": 0,
                 "failed": 0,
                 "warnings": 0,
-            }
+            },
         }
 
         async with aiohttp.ClientSession() as session:
             for endpoint in contract.endpoints:
-                endpoint_result = await self._test_endpoint(
-                    session,
-                    endpoint,
-                    base_url,
-                    auth
-                )
+                endpoint_result = await self._test_endpoint(session, endpoint, base_url, auth)
 
                 results["endpoints"].append(endpoint_result)
 
@@ -338,12 +291,8 @@ class ContractValidator:
         return results
 
     async def _test_endpoint(
-        self,
-        session: aiohttp.ClientSession,
-        endpoint: Dict,
-        base_url: str,
-        auth: Optional[Dict]
-    ) -> Dict[str, Any]:
+        self, session: aiohttp.ClientSession, endpoint: dict, base_url: str, auth: dict | None
+    ) -> dict[str, Any]:
         """Test a single endpoint."""
         url = base_url + endpoint["path"]
         method = endpoint["method"]
@@ -364,7 +313,7 @@ class ContractValidator:
                 headers=headers,
                 json=body if body and method != "GET" else None,
                 params=params,
-                timeout=aiohttp.ClientTimeout(total=30)
+                timeout=aiohttp.ClientTimeout(total=30),
             ) as response:
 
                 # Parse response
@@ -382,7 +331,7 @@ class ContractValidator:
                 validation_result = self.validate_response(
                     response_data,
                     endpoint.get("response", {}),
-                    endpoint.get("validation_rules", {})
+                    endpoint.get("validation_rules", {}),
                 )
 
                 return {
@@ -404,15 +353,15 @@ class ContractValidator:
 
     def generate_contract_from_openapi(
         self,
-        openapi_spec: Union[str, Path, Dict],
+        openapi_spec: str | Path | dict,
         consumer: str = "consumer",
-        provider: str = "provider"
+        provider: str = "provider",
     ) -> Contract:
         """Generate contract from OpenAPI specification."""
         # Load OpenAPI spec
         if isinstance(openapi_spec, (str, Path)):
             with open(openapi_spec) as f:
-                spec = json.load(f) if str(openapi_spec).endswith('.json') else yaml.safe_load(f)
+                spec = json.load(f) if str(openapi_spec).endswith(".json") else yaml.safe_load(f)
         else:
             spec = openapi_spec
 
@@ -432,7 +381,7 @@ class ContractValidator:
                         "validation_rules": {
                             "strict": False,
                             "validate_array_items": True,
-                        }
+                        },
                     }
                     endpoints.append(endpoint)
 
@@ -453,7 +402,7 @@ class ContractValidator:
 
         return contract
 
-    def _extract_request(self, endpoint_spec: Dict) -> Dict:
+    def _extract_request(self, endpoint_spec: dict) -> dict:
         """Extract request specification from OpenAPI."""
         request = {}
 
@@ -480,7 +429,7 @@ class ContractValidator:
 
         return request
 
-    def _extract_response(self, endpoint_spec: Dict) -> Dict:
+    def _extract_response(self, endpoint_spec: dict) -> dict:
         """Extract response specification from OpenAPI."""
         response = {}
 
@@ -506,7 +455,7 @@ class ContractValidator:
 
         return response
 
-    def _schema_to_example(self, schema: Dict) -> Any:
+    def _schema_to_example(self, schema: dict) -> Any:
         """Convert JSON schema to example value."""
         if "example" in schema:
             return schema["example"]
@@ -551,11 +500,7 @@ class ContractValidator:
 
         return "ANY"
 
-    def compare_contracts(
-        self,
-        old_contract: Contract,
-        new_contract: Contract
-    ) -> Dict[str, Any]:
+    def compare_contracts(self, old_contract: Contract, new_contract: Contract) -> dict[str, Any]:
         """Compare two contract versions for breaking changes."""
         comparison = {
             "breaking_changes": [],
@@ -570,19 +515,23 @@ class ContractValidator:
         # Check for removed endpoints (breaking)
         for key in old_endpoints:
             if key not in new_endpoints:
-                comparison["breaking_changes"].append({
-                    "type": "endpoint_removed",
-                    "endpoint": key,
-                })
+                comparison["breaking_changes"].append(
+                    {
+                        "type": "endpoint_removed",
+                        "endpoint": key,
+                    }
+                )
                 comparison["removals"].append(key)
 
         # Check for added endpoints (non-breaking)
         for key in new_endpoints:
             if key not in old_endpoints:
-                comparison["non_breaking_changes"].append({
-                    "type": "endpoint_added",
-                    "endpoint": key,
-                })
+                comparison["non_breaking_changes"].append(
+                    {
+                        "type": "endpoint_added",
+                        "endpoint": key,
+                    }
+                )
                 comparison["additions"].append(key)
 
         # Check for changes in existing endpoints
@@ -593,47 +542,53 @@ class ContractValidator:
 
                 # Check request changes
                 request_changes = self._compare_requests(
-                    old_ep.get("request", {}),
-                    new_ep.get("request", {})
+                    old_ep.get("request", {}), new_ep.get("request", {})
                 )
 
                 for change in request_changes:
                     if change["breaking"]:
-                        comparison["breaking_changes"].append({
-                            "type": "request_change",
-                            "endpoint": key,
-                            "change": change,
-                        })
+                        comparison["breaking_changes"].append(
+                            {
+                                "type": "request_change",
+                                "endpoint": key,
+                                "change": change,
+                            }
+                        )
                     else:
-                        comparison["non_breaking_changes"].append({
-                            "type": "request_change",
-                            "endpoint": key,
-                            "change": change,
-                        })
+                        comparison["non_breaking_changes"].append(
+                            {
+                                "type": "request_change",
+                                "endpoint": key,
+                                "change": change,
+                            }
+                        )
 
                 # Check response changes
                 response_changes = self._compare_responses(
-                    old_ep.get("response", {}),
-                    new_ep.get("response", {})
+                    old_ep.get("response", {}), new_ep.get("response", {})
                 )
 
                 for change in response_changes:
                     if change["breaking"]:
-                        comparison["breaking_changes"].append({
-                            "type": "response_change",
-                            "endpoint": key,
-                            "change": change,
-                        })
+                        comparison["breaking_changes"].append(
+                            {
+                                "type": "response_change",
+                                "endpoint": key,
+                                "change": change,
+                            }
+                        )
                     else:
-                        comparison["non_breaking_changes"].append({
-                            "type": "response_change",
-                            "endpoint": key,
-                            "change": change,
-                        })
+                        comparison["non_breaking_changes"].append(
+                            {
+                                "type": "response_change",
+                                "endpoint": key,
+                                "change": change,
+                            }
+                        )
 
         return comparison
 
-    def _compare_requests(self, old_req: Dict, new_req: Dict) -> List[Dict]:
+    def _compare_requests(self, old_req: dict, new_req: dict) -> list[dict]:
         """Compare request specifications."""
         changes = []
 
@@ -643,30 +598,36 @@ class ContractValidator:
 
         for param in old_params:
             if param not in new_params:
-                changes.append({
-                    "breaking": True,
-                    "description": f"Required parameter '{param}' removed",
-                })
+                changes.append(
+                    {
+                        "breaking": True,
+                        "description": f"Required parameter '{param}' removed",
+                    }
+                )
 
         for param in new_params:
             if param not in old_params:
-                changes.append({
-                    "breaking": False,
-                    "description": f"Optional parameter '{param}' added",
-                })
+                changes.append(
+                    {
+                        "breaking": False,
+                        "description": f"Optional parameter '{param}' added",
+                    }
+                )
 
         return changes
 
-    def _compare_responses(self, old_res: Dict, new_res: Dict) -> List[Dict]:
+    def _compare_responses(self, old_res: dict, new_res: dict) -> list[dict]:
         """Compare response specifications."""
         changes = []
 
         # Check status code changes
         if old_res.get("status_code") != new_res.get("status_code"):
-            changes.append({
-                "breaking": True,
-                "description": f"Status code changed from {old_res.get('status_code')} to {new_res.get('status_code')}",
-            })
+            changes.append(
+                {
+                    "breaking": True,
+                    "description": f"Status code changed from {old_res.get('status_code')} to {new_res.get('status_code')}",
+                }
+            )
 
         # Check required fields in response body
         old_body = old_res.get("body", {})
@@ -676,18 +637,22 @@ class ContractValidator:
             # Check for removed fields (breaking for consumers)
             for field in old_body:
                 if field not in new_body:
-                    changes.append({
-                        "breaking": True,
-                        "description": f"Response field '{field}' removed",
-                    })
+                    changes.append(
+                        {
+                            "breaking": True,
+                            "description": f"Response field '{field}' removed",
+                        }
+                    )
 
             # Check for added fields (non-breaking)
             for field in new_body:
                 if field not in old_body:
-                    changes.append({
-                        "breaking": False,
-                        "description": f"Response field '{field}' added",
-                    })
+                    changes.append(
+                        {
+                            "breaking": False,
+                            "description": f"Response field '{field}' added",
+                        }
+                    )
 
         return changes
 
@@ -759,7 +724,7 @@ async def main():
                 },
                 "validation_rules": {
                     "validate_array_items": True,
-                }
+                },
             },
             {
                 "path": "/api/v1/users/{id}",
@@ -777,9 +742,9 @@ async def main():
                         "email": "TYPE:string",
                         "role": "TYPE:string",
                         "created_at": "TYPE:string",
-                    }
-                }
-            }
+                    },
+                },
+            },
         ],
     }
 
@@ -798,21 +763,21 @@ async def main():
 
     # Test contract
     results = await validator.test_contract(
-        contract,
-        base_url="http://localhost:8009",
-        auth={"Authorization": "Bearer test-token"}
+        contract, base_url="http://localhost:8009", auth={"Authorization": "Bearer test-token"}
     )
 
     # Display results
     console.print("\n")
-    console.print(Panel.fit(
-        f"[bold]Contract Test Results[/bold]\n\n"
-        f"Contract: {results['contract_name']}\n"
-        f"Version: {results['version']}\n"
-        f"Passed: {results['summary']['passed']}/{results['summary']['total']}\n"
-        f"Warnings: {results['summary']['warnings']}",
-        title="Summary"
-    ))
+    console.print(
+        Panel.fit(
+            f"[bold]Contract Test Results[/bold]\n\n"
+            f"Contract: {results['contract_name']}\n"
+            f"Version: {results['version']}\n"
+            f"Passed: {results['summary']['passed']}/{results['summary']['total']}\n"
+            f"Warnings: {results['summary']['warnings']}",
+            title="Summary",
+        )
+    )
 
     # Generate report
     report = validator.generate_report()

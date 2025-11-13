@@ -7,28 +7,27 @@ Covers CRUD operations, execution history, and metrics retrieval.
 Phase 2 Days 17-18: Agent endpoint test implementation
 """
 
-import pytest
 from datetime import datetime, timedelta
-from uuid import uuid4, UUID
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
+from uuid import uuid4
 
+import pytest
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.api.v1.endpoints.agent_instances import (
-    list_agent_instances,
-    create_agent_instance,
-    get_agent_instance,
-    update_agent_instance,
-    delete_agent_instance,
-    get_agent_executions,
-    get_agent_metrics,
     AgentInstanceCreate,
     AgentInstanceUpdate,
+    create_agent_instance,
+    delete_agent_instance,
+    get_agent_executions,
+    get_agent_instance,
+    get_agent_metrics,
+    list_agent_instances,
+    update_agent_instance,
 )
-from database.models.agent_models import AgentInstance, AgentExecution, AgentMetrics
 from database.models import User
-
+from database.models.agent_models import AgentExecution, AgentInstance, AgentMetrics
 
 # ============================================================================
 # Fixtures
@@ -277,7 +276,9 @@ class TestListAgentInstances:
 class TestCreateAgentInstance:
     """Test creating new agent instances."""
 
-    @pytest.mark.skip(reason="SQLAlchemy Organization relationship resolution issue in unit test context")
+    @pytest.mark.skip(
+        reason="SQLAlchemy Organization relationship resolution issue in unit test context"
+    )
     @pytest.mark.asyncio
     async def test_create_agent_success(
         self, mock_db_session, mock_organization_id, mock_current_user

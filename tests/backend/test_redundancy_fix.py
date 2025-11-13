@@ -1,16 +1,16 @@
-import pytest_asyncio
+
 #!/usr/bin/env python3
 """Test script to verify AI Assistant doesn't ask redundant questions"""
 
 import asyncio
-import httpx
 import json
-import time
-from typing import Dict, List
+
+import httpx
 
 # Configuration
 API_BASE_URL = "http://127.0.0.1:8009"
 AUTH_TOKEN = "dev-token"
+
 
 @pytest.mark.asyncio
 async def test_redundancy_fix():
@@ -26,7 +26,7 @@ async def test_redundancy_fix():
         response = await client.post(
             f"{API_BASE_URL}/api/v1/ai-chat/conversations",
             headers={"Authorization": f"Bearer {AUTH_TOKEN}"},
-            json={"title": "Redundancy Test"}
+            json={"title": "Redundancy Test"},
         )
 
         if response.status_code != 201:
@@ -46,25 +46,20 @@ async def test_redundancy_fix():
                     "grade": "4th grade",
                     "subject": "fractions",
                     "topic": "pizza shop",
-                    "style": "game"
+                    "style": "game",
                 },
-                "should_not_ask": ["What grade", "What subject", "grade level"]
+                "should_not_ask": ["What grade", "What subject", "grade level"],
             },
             {
                 "message": "I need it to be engaging and fun for about 25 students",
-                "expected_context": {
-                    "class_size": "25",
-                    "engagement": "fun"
-                },
-                "should_not_ask": ["How many students", "class size"]
+                "expected_context": {"class_size": "25", "engagement": "fun"},
+                "should_not_ask": ["How many students", "class size"],
             },
             {
                 "message": "Make it happen",
-                "expected_context": {
-                    "user_control": "delegated"
-                },
-                "should_trigger_completion": True
-            }
+                "expected_context": {"user_control": "delegated"},
+                "should_trigger_completion": True,
+            },
         ]
 
         conversation_history = []
@@ -78,13 +73,10 @@ async def test_redundancy_fix():
                 f"{API_BASE_URL}/api/v1/ai-chat/generate",
                 headers={
                     "Authorization": f"Bearer {AUTH_TOKEN}",
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 },
-                json={
-                    "conversation_id": conv_id,
-                    "message": test["message"]
-                },
-                timeout=60.0
+                json={"conversation_id": conv_id, "message": test["message"]},
+                timeout=60.0,
             ) as response:
                 if response.status_code != 200:
                     print(f"      ❌ Request failed: {response.status_code}")
@@ -107,20 +99,32 @@ async def test_redundancy_fix():
                                 response_lower = full_response.lower()
 
                                 # Check if "GOT IT" message appears
-                                if "got it" in response_lower or "i've got everything" in response_lower:
+                                if (
+                                    "got it" in response_lower
+                                    or "i've got everything" in response_lower
+                                ):
                                     got_it_found = True
 
                                 # Check for questions that shouldn't be asked
                                 if "should_not_ask" in test:
                                     for forbidden in test["should_not_ask"]:
-                                        if forbidden.lower() in response_lower and "?" in response_lower:
+                                        if (
+                                            forbidden.lower() in response_lower
+                                            and "?" in response_lower
+                                        ):
                                             redundant_questions.append(forbidden)
 
                                 # Store response
-                                conversation_history.append({
-                                    "user": test["message"],
-                                    "assistant": full_response[:200] + "..." if len(full_response) > 200 else full_response
-                                })
+                                conversation_history.append(
+                                    {
+                                        "user": test["message"],
+                                        "assistant": (
+                                            full_response[:200] + "..."
+                                            if len(full_response) > 200
+                                            else full_response
+                                        ),
+                                    }
+                                )
 
                         except json.JSONDecodeError:
                             pass
@@ -142,7 +146,7 @@ async def test_redundancy_fix():
         print("\n3. Checking conversation context...")
         response = await client.get(
             f"{API_BASE_URL}/api/v1/ai-chat/conversations/{conv_id}",
-            headers={"Authorization": f"Bearer {AUTH_TOKEN}"}
+            headers={"Authorization": f"Bearer {AUTH_TOKEN}"},
         )
 
         if response.status_code == 200:
@@ -176,6 +180,7 @@ async def test_redundancy_fix():
         else:
             print("⚠️  'GOT IT!' message not found - may need adjustment")
 
+
 async def main():
     """Run the redundancy test"""
     try:
@@ -183,7 +188,9 @@ async def main():
     except Exception as e:
         print(f"\n❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

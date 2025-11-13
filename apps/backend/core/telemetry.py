@@ -5,38 +5,67 @@ This module configures distributed tracing, metrics collection, and logging
 integration with OpenTelemetry for comprehensive observability.
 """
 
-import os
 import logging
-from typing import Optional, Dict, Any
+import os
+from typing import Any
 
-from opentelemetry import trace, metrics
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
-from opentelemetry.sdk.resources import Resource, SERVICE_NAME, SERVICE_VERSION
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
+from opentelemetry import metrics, trace
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
-from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
-from opentelemetry.instrumentation.redis import RedisInstrumentor
-from opentelemetry.instrumentation.psycopg2 import Psycopg2Instrumentor
 from opentelemetry.instrumentation.logging import LoggingInstrumentor
+from opentelemetry.instrumentation.psycopg2 import Psycopg2Instrumentor
+from opentelemetry.instrumentation.redis import RedisInstrumentor
+from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.b3 import B3MultiFormat
-from opentelemetry.trace import Status, StatusCode
-from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.sdk.resources import SERVICE_NAME, SERVICE_VERSION, Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 logger = logging.getLogger(__name__)
+
+_OTLP_SPAN_EXPORTER = None
+_OTLP_METRIC_EXPORTER = None
+
+
+def _load_otlp_span_exporter():
+    global _OTLP_SPAN_EXPORTER
+    if _OTLP_SPAN_EXPORTER is None:
+        try:
+            from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+                OTLPSpanExporter as _Exporter,
+            )
+
+            _OTLP_SPAN_EXPORTER = _Exporter
+        except Exception as exc:
+            logger.warning(f"OTLP span exporter unavailable: {exc}")
+            _OTLP_SPAN_EXPORTER = False
+    return _OTLP_SPAN_EXPORTER
+
+
+def _load_otlp_metric_exporter():
+    global _OTLP_METRIC_EXPORTER
+    if _OTLP_METRIC_EXPORTER is None:
+        try:
+            from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (
+                OTLPMetricExporter as _MetricExporter,
+            )
+
+            _OTLP_METRIC_EXPORTER = _MetricExporter
+        except Exception as exc:
+            logger.warning(f"OTLP metric exporter unavailable: {exc}")
+            _OTLP_METRIC_EXPORTER = False
+    return _OTLP_METRIC_EXPORTER
 
 
 class TelemetryManager:
     """Manages OpenTelemetry instrumentation for the application."""
 
     def __init__(self):
-        self.tracer_provider: Optional[TracerProvider] = None
-        self.meter_provider: Optional[MeterProvider] = None
+        self.tracer_provider: TracerProvider | None = None
+        self.meter_provider: MeterProvider | None = None
         self.tracer = None
         self.meter = None
         self.initialized = False
@@ -49,7 +78,7 @@ class TelemetryManager:
         enable_logging: bool = True,
         enable_metrics: bool = True,
         enable_tracing: bool = True,
-        additional_attributes: Dict[str, Any] = None
+        additional_attributes: dict[str, Any] = None,
     ):
         """
         Initialize OpenTelemetry instrumentation.
@@ -69,10 +98,12 @@ class TelemetryManager:
 
         # Use environment variable if endpoint not provided
         if not otel_endpoint:
-            otel_endpoint = os.getenv(
-                "OTEL_EXPORTER_OTLP_ENDPOINT",
-                "http://localhost:4317"  # Default to local OTEL collector
-            )
+            otel_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+
+        if not otel_endpoint:
+            logger.info("OTLP endpoint not configured – telemetry exporters disabled")
+            enable_tracing = False
+            enable_metrics = False
 
         # Create resource with service information
         resource_attributes = {
@@ -107,10 +138,7 @@ class TelemetryManager:
 
         # Enable logging instrumentation if requested
         if enable_logging:
-            LoggingInstrumentor().instrument(
-                set_logging_format=True,
-                log_level=logging.INFO
-            )
+            LoggingInstrumentor().instrument(set_logging_format=True, log_level=logging.INFO)
 
         self.initialized = True
         logger.info(
@@ -120,14 +148,19 @@ class TelemetryManager:
 
     def _initialize_tracing(self, resource: Resource, endpoint: str):
         """Initialize tracing with OTLP exporter."""
-        # Create OTLP exporter
-        otlp_exporter = OTLPSpanExporter(
+        exporter_cls = _load_otlp_span_exporter()
+        if not exporter_cls or not endpoint:
+            logger.info("Tracing exporter unavailable; skipping OTLP tracing initialization")
+            return
+
+        otlp_exporter = exporter_cls(
             endpoint=endpoint,
-            insecure=True,  # Use insecure connection for local development
+            insecure=True,
             headers=(
                 ("authorization", f"Bearer {os.getenv('OTEL_AUTH_TOKEN')}")
-                if os.getenv('OTEL_AUTH_TOKEN') else None
-            )
+                if os.getenv("OTEL_AUTH_TOKEN")
+                else None
+            ),
         )
 
         # Create tracer provider
@@ -150,14 +183,19 @@ class TelemetryManager:
 
     def _initialize_metrics(self, resource: Resource, endpoint: str):
         """Initialize metrics with OTLP exporter."""
-        # Create OTLP metrics exporter
-        otlp_exporter = OTLPMetricExporter(
+        exporter_cls = _load_otlp_metric_exporter()
+        if not exporter_cls or not endpoint:
+            logger.info("Metrics exporter unavailable; skipping OTLP metrics initialization")
+            return
+
+        otlp_exporter = exporter_cls(
             endpoint=endpoint,
             insecure=True,
             headers=(
                 ("authorization", f"Bearer {os.getenv('OTEL_AUTH_TOKEN')}")
-                if os.getenv('OTEL_AUTH_TOKEN') else None
-            )
+                if os.getenv("OTEL_AUTH_TOKEN")
+                else None
+            ),
         )
 
         # Create metrics reader with periodic export
@@ -167,10 +205,7 @@ class TelemetryManager:
         )
 
         # Create meter provider
-        self.meter_provider = MeterProvider(
-            resource=resource,
-            metric_readers=[reader]
-        )
+        self.meter_provider = MeterProvider(resource=resource, metric_readers=[reader])
 
         # Set as global meter provider
         metrics.set_meter_provider(self.meter_provider)
@@ -251,7 +286,7 @@ class TelemetryManager:
                 enable_commenter=True,
                 commenter_options={
                     "opentelemetry_values": True,
-                }
+                },
             )
             logger.info("SQLAlchemy engine instrumented for tracing")
         except Exception as e:
@@ -261,12 +296,15 @@ class TelemetryManager:
         """Hook to add custom attributes to server request spans."""
         if span and scope:
             # Add custom attributes
-            span.set_attribute("http.user_agent",
-                              scope.get("headers", {}).get(b"user-agent", [b""])[0].decode())
-            span.set_attribute("http.real_ip",
-                              scope.get("headers", {}).get(b"x-real-ip", [b""])[0].decode())
-            span.set_attribute("app.request_id",
-                              scope.get("headers", {}).get(b"x-request-id", [b""])[0].decode())
+            span.set_attribute(
+                "http.user_agent", scope.get("headers", {}).get(b"user-agent", [b""])[0].decode()
+            )
+            span.set_attribute(
+                "http.real_ip", scope.get("headers", {}).get(b"x-real-ip", [b""])[0].decode()
+            )
+            span.set_attribute(
+                "app.request_id", scope.get("headers", {}).get(b"x-request-id", [b""])[0].decode()
+            )
 
     def _client_request_hook(self, span, request):
         """Hook to add custom attributes to client request spans."""
@@ -288,30 +326,26 @@ class TelemetryManager:
         # Create custom metrics
         metrics_dict = {
             "request_counter": self.meter.create_counter(
-                name="toolboxai_requests_total",
-                description="Total number of requests",
-                unit="1"
+                name="toolboxai_requests_total", description="Total number of requests", unit="1"
             ),
             "request_duration": self.meter.create_histogram(
                 name="toolboxai_request_duration",
                 description="Request duration in seconds",
-                unit="s"
+                unit="s",
             ),
             "active_users": self.meter.create_up_down_counter(
-                name="toolboxai_active_users",
-                description="Number of active users",
-                unit="1"
+                name="toolboxai_active_users", description="Number of active users", unit="1"
             ),
             "agent_tasks": self.meter.create_counter(
                 name="toolboxai_agent_tasks_total",
                 description="Total number of agent tasks processed",
-                unit="1"
+                unit="1",
             ),
             "database_connections": self.meter.create_observable_gauge(
                 name="toolboxai_db_connections",
                 callbacks=[self._get_db_connections],
                 description="Number of active database connections",
-                unit="1"
+                unit="1",
             ),
         }
 

@@ -1,17 +1,18 @@
-import pytest_asyncio
+from unittest.mock import Mock, patch
 
 import pytest
-from unittest.mock import Mock, patch
+
 
 @pytest.fixture
 def mock_db_connection():
     """Mock database connection for tests"""
-    with patch('psycopg2.connect') as mock_connect:
+    with patch("psycopg2.connect") as mock_connect:
         mock_conn = Mock()
         mock_cursor = Mock()
         mock_conn.cursor.return_value = mock_cursor
         mock_connect.return_value = mock_conn
         yield mock_conn
+
 
 import sys
 from pathlib import Path
@@ -22,20 +23,22 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 
-import json
-import pytest
+import os
 from unittest.mock import AsyncMock
 
-import os
-os.environ['TESTING'] = 'true'
-os.environ['SKIP_AGENTS'] = 'true'
+import pytest
 
-from apps.backend.services.socketio import sio as sio_srv, connected_clients, content_request, ping
+os.environ["TESTING"] = "true"
+os.environ["SKIP_AGENTS"] = "true"
+
+from apps.backend.services.socketio import connected_clients, content_request, ping
+from apps.backend.services.socketio import sio as sio_srv
+
 from apps.backend.core.config import settings
 from apps.backend.core.security.rate_limit_manager import (
+    clear_all_rate_limits,
     get_rate_limit_manager,
     set_testing_mode,
-    clear_all_rate_limits
 )
 
 
@@ -88,7 +91,7 @@ async def test_socketio_rate_limit_enforced_for_ping(monkeypatch):
     rlm = get_rate_limit_manager()
     set_testing_mode(False)  # Disable testing mode to enforce limits
     clear_all_rate_limits()
-    
+
     try:
         sid = "sid-rate-1"
         connected_clients[sid] = {
@@ -119,4 +122,3 @@ async def test_socketio_rate_limit_enforced_for_ping(monkeypatch):
         # Clear rate limits using the already imported function
         clear_all_rate_limits()
         connected_clients.pop("sid-rate-1", None)
-

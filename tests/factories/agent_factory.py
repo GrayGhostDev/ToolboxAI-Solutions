@@ -1,11 +1,12 @@
 """AI Agent-related test data factories."""
 
+from datetime import datetime, timedelta, timezone
+
 import factory
 from factory import fuzzy
 from faker import Faker
-from datetime import datetime, timezone, timedelta
-import json
-from .base_factory import DictFactory, AsyncMixin
+
+from .base_factory import AsyncMixin, DictFactory
 
 fake = Faker()
 
@@ -14,10 +15,16 @@ class AgentTaskFactory(DictFactory, AsyncMixin):
     """Factory for AI agent tasks."""
 
     id = factory.LazyFunction(lambda: fake.uuid4())
-    task_type = fuzzy.FuzzyChoice([
-        "content_generation", "quiz_creation", "assessment_grading",
-        "code_optimization", "security_validation", "performance_analysis"
-    ])
+    task_type = fuzzy.FuzzyChoice(
+        [
+            "content_generation",
+            "quiz_creation",
+            "assessment_grading",
+            "code_optimization",
+            "security_validation",
+            "performance_analysis",
+        ]
+    )
 
     # Task details
     title = factory.LazyFunction(lambda: fake.catch_phrase())
@@ -42,7 +49,7 @@ class AgentTaskFactory(DictFactory, AsyncMixin):
                 "difficulty": fake.random_element(["easy", "medium", "hard"]),
                 "question_types": fake.random_elements(
                     ["multiple_choice", "true_false", "short_answer", "essay"],
-                    length=fake.random_int(1, 4)
+                    length=fake.random_int(1, 4),
                 ),
                 "topic": fake.sentence(),
             }
@@ -51,7 +58,7 @@ class AgentTaskFactory(DictFactory, AsyncMixin):
                 "language": "luau",
                 "optimization_goals": fake.random_elements(
                     ["performance", "memory", "readability", "security"],
-                    length=fake.random_int(1, 3)
+                    length=fake.random_int(1, 3),
                 ),
                 "script_type": fake.random_element(["ServerScript", "LocalScript", "ModuleScript"]),
             }
@@ -76,7 +83,9 @@ class AgentTaskFactory(DictFactory, AsyncMixin):
     assigned_agent = factory.LazyFunction(
         lambda: fake.random_element(["ContentAgent", "QuizAgent", "OptimizationAgent", None])
     )
-    agent_version = factory.LazyFunction(lambda: f"v{fake.random_int(1, 3)}.{fake.random_int(0, 9)}")
+    agent_version = factory.LazyFunction(
+        lambda: f"v{fake.random_int(1, 3)}.{fake.random_int(0, 9)}"
+    )
 
     # Execution metrics
     execution_time_ms = factory.LazyFunction(lambda: fake.random_int(100, 30000))
@@ -93,10 +102,15 @@ class AgentTaskFactory(DictFactory, AsyncMixin):
         """Generate error details if task failed."""
         if self.status == "failed":
             return {
-                "error_type": fake.random_element([
-                    "TimeoutError", "ValidationError", "APIError",
-                    "RateLimitError", "InsufficientContextError"
-                ]),
+                "error_type": fake.random_element(
+                    [
+                        "TimeoutError",
+                        "ValidationError",
+                        "APIError",
+                        "RateLimitError",
+                        "InsufficientContextError",
+                    ]
+                ),
                 "error_message": fake.sentence(),
                 "error_code": fake.random_element(["E001", "E002", "E003", "E004"]),
                 "stack_trace": fake.text(max_nb_chars=500) if fake.boolean() else None,
@@ -121,7 +135,7 @@ class AgentTaskFactory(DictFactory, AsyncMixin):
             cls.create(
                 task_type=task_type,
                 priority=fake.random_element(["low", "medium", "high"]),
-                **kwargs
+                **kwargs,
             )
             for _ in range(count)
         ]
@@ -132,10 +146,9 @@ class AgentResponseFactory(DictFactory):
 
     id = factory.LazyFunction(lambda: fake.uuid4())
     task_id = factory.LazyFunction(lambda: fake.uuid4())
-    agent_name = fuzzy.FuzzyChoice([
-        "ContentAgent", "QuizAgent", "OptimizationAgent",
-        "SecurityAgent", "AssessmentAgent"
-    ])
+    agent_name = fuzzy.FuzzyChoice(
+        ["ContentAgent", "QuizAgent", "OptimizationAgent", "SecurityAgent", "AssessmentAgent"]
+    )
 
     # Response content
     @factory.lazy_attribute
@@ -200,7 +213,9 @@ class AgentResponseFactory(DictFactory):
 
     # Quality metrics
     quality_score = factory.LazyFunction(lambda: round(fake.random.uniform(0.6, 1.0), 2))
-    human_review_status = fuzzy.FuzzyChoice(["pending", "approved", "needs_revision", "rejected", None])
+    human_review_status = fuzzy.FuzzyChoice(
+        ["pending", "approved", "needs_revision", "rejected", None]
+    )
     human_feedback = factory.LazyFunction(
         lambda: fake.paragraph() if fake.boolean(chance_of_getting_true=30) else None
     )
@@ -271,25 +286,27 @@ class AgentConversationFactory(DictFactory):
             role = "user" if i % 2 == 0 else "assistant"
 
             if role == "user":
-                content = fake.random_element([
-                    "Create a quiz about " + fake.word(),
-                    "Explain " + fake.catch_phrase(),
-                    "Generate content for " + fake.sentence(),
-                    "Help me understand " + fake.word(),
-                    fake.question(),
-                ])
+                content = fake.random_element(
+                    [
+                        "Create a quiz about " + fake.word(),
+                        "Explain " + fake.catch_phrase(),
+                        "Generate content for " + fake.sentence(),
+                        "Help me understand " + fake.word(),
+                        fake.question(),
+                    ]
+                )
             else:
                 content = fake.paragraph()
 
-            messages.append({
-                "id": fake.uuid4(),
-                "role": role,
-                "content": content,
-                "timestamp": (
-                    datetime.now(timezone.utc) + timedelta(minutes=i)
-                ).isoformat(),
-                "tokens": fake.random_int(10, 500),
-            })
+            messages.append(
+                {
+                    "id": fake.uuid4(),
+                    "role": role,
+                    "content": content,
+                    "timestamp": (datetime.now(timezone.utc) + timedelta(minutes=i)).isoformat(),
+                    "tokens": fake.random_int(10, 500),
+                }
+            )
 
         return messages
 
@@ -306,14 +323,13 @@ class AgentConversationFactory(DictFactory):
     # Metrics
     total_tokens = factory.LazyFunction(lambda: fake.random_int(500, 10000))
     total_cost = factory.LazyFunction(lambda: round(fake.random.uniform(0.01, 5.0), 4))
-    user_satisfaction = factory.LazyFunction(lambda: fake.random_int(1, 5) if fake.boolean() else None)
-
-    # Tags and categorization
-    tags = factory.LazyFunction(
-        lambda: fake.words(nb=fake.random_int(3, 8))
+    user_satisfaction = factory.LazyFunction(
+        lambda: fake.random_int(1, 5) if fake.boolean() else None
     )
 
-    category = fuzzy.FuzzyChoice([
-        "homework_help", "content_creation", "quiz_generation",
-        "code_review", "general_inquiry"
-    ])
+    # Tags and categorization
+    tags = factory.LazyFunction(lambda: fake.words(nb=fake.random_int(3, 8)))
+
+    category = fuzzy.FuzzyChoice(
+        ["homework_help", "content_creation", "quiz_generation", "code_review", "general_inquiry"]
+    )

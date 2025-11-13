@@ -1,4 +1,5 @@
 import pytest_asyncio
+
 """
 Test Database Query Optimization
 
@@ -21,20 +22,26 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from uuid import uuid4
 
 import pytest
-from tests.fixtures.agents import mock_llm
-from sqlalchemy import create_engine, event, select, Column, String, Integer, ForeignKey
+from sqlalchemy import Column, ForeignKey, Integer, String, create_engine, event, select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import selectinload, joinedload, relationship, declarative_base
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base, joinedload, relationship, selectinload
 
-from database.core.query_optimizer import (
-    QueryOptimizer, DataLoader, QueryAnalyzer, optimize_query
-)
-from database.core.repositories import (
-    UserRepository, CourseRepository, LessonRepository
-)
+from database.core.query_optimizer import DataLoader, QueryAnalyzer, QueryOptimizer, optimize_query
+from database.core.repositories import CourseRepository, LessonRepository, UserRepository
+
 # Import real models for repository tests
-from database.models.models import User, Course, Lesson, Content, Enrollment, UserProgress, Quiz, QuizAttempt
+from database.models.models import (
+    Content,
+    Course,
+    Enrollment,
+    Lesson,
+    Quiz,
+    QuizAttempt,
+    User,
+    UserProgress,
+)
+from tests.fixtures.agents import mock_llm
 
 # Create test models for SQLAlchemy testing
 Base = declarative_base()

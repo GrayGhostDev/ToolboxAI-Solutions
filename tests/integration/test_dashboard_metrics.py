@@ -5,13 +5,13 @@ Tests the new dashboard metrics endpoints with rate limiting,
 caching, and multi-tenant isolation.
 """
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
+from apps.backend.services.cache_service import cache_service
 from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.core.app_factory import create_test_app
-from apps.backend.services.cache_service import cache_service
 
 
 @pytest.fixture
@@ -26,10 +26,7 @@ def auth_headers(test_user):
     """Create authentication headers with JWT token"""
     # Mock JWT token for testing
     token = "mock_jwt_token_for_testing"
-    return {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
+    return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
 
 @pytest.fixture
@@ -39,7 +36,7 @@ def test_user():
         "id": "test_user_123",
         "organization_id": "org_456",
         "email": "test@example.com",
-        "role": "admin"
+        "role": "admin",
     }
 
 
@@ -48,10 +45,7 @@ class TestDashboardMetricsEndpoints:
 
     def test_get_dashboard_metrics_success(self, client, auth_headers):
         """Test successful retrieval of dashboard metrics"""
-        response = client.get(
-            "/api/v1/dashboard/metrics",
-            headers=auth_headers
-        )
+        response = client.get("/api/v1/dashboard/metrics", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -96,18 +90,12 @@ class TestDashboardMetricsEndpoints:
     def test_get_dashboard_metrics_cached(self, client, auth_headers):
         """Test that metrics are properly cached"""
         # First request - should cache the result
-        response1 = client.get(
-            "/api/v1/dashboard/metrics",
-            headers=auth_headers
-        )
+        response1 = client.get("/api/v1/dashboard/metrics", headers=auth_headers)
         assert response1.status_code == 200
         data1 = response1.json()
 
         # Second request - should return cached result
-        response2 = client.get(
-            "/api/v1/dashboard/metrics",
-            headers=auth_headers
-        )
+        response2 = client.get("/api/v1/dashboard/metrics", headers=auth_headers)
         assert response2.status_code == 200
         data2 = response2.json()
 
@@ -117,10 +105,7 @@ class TestDashboardMetricsEndpoints:
 
     def test_get_recent_activity_success(self, client, auth_headers):
         """Test successful retrieval of recent activity"""
-        response = client.get(
-            "/api/v1/dashboard/activity",
-            headers=auth_headers
-        )
+        response = client.get("/api/v1/dashboard/activity", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -144,10 +129,7 @@ class TestDashboardMetricsEndpoints:
     def test_get_recent_activity_with_limit(self, client, auth_headers):
         """Test activity endpoint with limit parameter"""
         limit = 5
-        response = client.get(
-            f"/api/v1/dashboard/activity?limit={limit}",
-            headers=auth_headers
-        )
+        response = client.get(f"/api/v1/dashboard/activity?limit={limit}", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -156,25 +138,16 @@ class TestDashboardMetricsEndpoints:
     def test_get_recent_activity_invalid_limit(self, client, auth_headers):
         """Test activity endpoint with invalid limit"""
         # Limit too high
-        response = client.get(
-            "/api/v1/dashboard/activity?limit=200",
-            headers=auth_headers
-        )
+        response = client.get("/api/v1/dashboard/activity?limit=200", headers=auth_headers)
         assert response.status_code == 422  # Validation error
 
         # Limit too low
-        response = client.get(
-            "/api/v1/dashboard/activity?limit=0",
-            headers=auth_headers
-        )
+        response = client.get("/api/v1/dashboard/activity?limit=0", headers=auth_headers)
         assert response.status_code == 422
 
     def test_get_detailed_statistics_success(self, client, auth_headers):
         """Test detailed statistics endpoint"""
-        response = client.get(
-            "/api/v1/dashboard/statistics",
-            headers=auth_headers
-        )
+        response = client.get("/api/v1/dashboard/statistics", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -196,7 +169,7 @@ class TestDashboardMetricsEndpoints:
 
         response = client.get(
             f"/api/v1/dashboard/statistics?start_date={start_date}&end_date={end_date}",
-            headers=auth_headers
+            headers=auth_headers,
         )
 
         assert response.status_code == 200
@@ -210,10 +183,7 @@ class TestDashboardMetricsEndpoints:
 
     def test_export_metrics_json(self, client, auth_headers):
         """Test metrics export in JSON format"""
-        response = client.post(
-            "/api/v1/dashboard/export?format=json",
-            headers=auth_headers
-        )
+        response = client.post("/api/v1/dashboard/export?format=json", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -230,10 +200,7 @@ class TestDashboardMetricsEndpoints:
 
     def test_export_metrics_csv(self, client, auth_headers):
         """Test metrics export in CSV format"""
-        response = client.post(
-            "/api/v1/dashboard/export?format=csv",
-            headers=auth_headers
-        )
+        response = client.post("/api/v1/dashboard/export?format=csv", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -241,10 +208,7 @@ class TestDashboardMetricsEndpoints:
 
     def test_export_metrics_xlsx(self, client, auth_headers):
         """Test metrics export in Excel format"""
-        response = client.post(
-            "/api/v1/dashboard/export?format=xlsx",
-            headers=auth_headers
-        )
+        response = client.post("/api/v1/dashboard/export?format=xlsx", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -252,10 +216,7 @@ class TestDashboardMetricsEndpoints:
 
     def test_export_metrics_invalid_format(self, client, auth_headers):
         """Test metrics export with invalid format"""
-        response = client.post(
-            "/api/v1/dashboard/export?format=pdf",
-            headers=auth_headers
-        )
+        response = client.post("/api/v1/dashboard/export?format=pdf", headers=auth_headers)
 
         assert response.status_code == 422  # Validation error
 
@@ -268,10 +229,7 @@ class TestRateLimiting:
         # Make multiple requests rapidly
         responses = []
         for i in range(15):  # Assuming limit is 10/minute
-            response = client.get(
-                "/api/v1/dashboard/metrics",
-                headers=auth_headers
-            )
+            response = client.get("/api/v1/dashboard/metrics", headers=auth_headers)
             responses.append(response)
 
         # First 10 should succeed
@@ -284,10 +242,7 @@ class TestRateLimiting:
 
     def test_rate_limit_headers_present(self, client, auth_headers):
         """Test that rate limit headers are included in response"""
-        response = client.get(
-            "/api/v1/dashboard/metrics",
-            headers=auth_headers
-        )
+        response = client.get("/api/v1/dashboard/metrics", headers=auth_headers)
 
         # Check for rate limit headers
         headers = response.headers
@@ -299,10 +254,7 @@ class TestRateLimiting:
         """Test that Retry-After header is present when rate limited"""
         # Make enough requests to trigger rate limit
         for _ in range(20):
-            response = client.get(
-                "/api/v1/dashboard/metrics",
-                headers=auth_headers
-            )
+            response = client.get("/api/v1/dashboard/metrics", headers=auth_headers)
             if response.status_code == 429:
                 # Check for Retry-After header
                 assert "Retry-After" in response.headers
@@ -321,33 +273,21 @@ class TestCaching:
 
         # Set value
         success = await cache_service.set(
-            key="test_key",
-            value={"data": "test_value"},
-            namespace="test",
-            ttl=60
+            key="test_key", value={"data": "test_value"}, namespace="test", ttl=60
         )
         assert success is True
 
         # Get value
-        value = await cache_service.get(
-            key="test_key",
-            namespace="test"
-        )
+        value = await cache_service.get(key="test_key", namespace="test")
         assert value is not None
         assert value["data"] == "test_value"
 
         # Delete value
-        deleted = await cache_service.delete(
-            key="test_key",
-            namespace="test"
-        )
+        deleted = await cache_service.delete(key="test_key", namespace="test")
         assert deleted is True
 
         # Verify deletion
-        value = await cache_service.get(
-            key="test_key",
-            namespace="test"
-        )
+        value = await cache_service.get(key="test_key", namespace="test")
         assert value is None
 
         await cache_service.close()
@@ -383,26 +323,14 @@ class TestMultiTenantIsolation:
     def test_metrics_filtered_by_organization(self, client):
         """Test that metrics are properly filtered by organization"""
         # Create auth headers for different organizations
-        org1_headers = {
-            "Authorization": "Bearer org1_token",
-            "Content-Type": "application/json"
-        }
-        org2_headers = {
-            "Authorization": "Bearer org2_token",
-            "Content-Type": "application/json"
-        }
+        org1_headers = {"Authorization": "Bearer org1_token", "Content-Type": "application/json"}
+        org2_headers = {"Authorization": "Bearer org2_token", "Content-Type": "application/json"}
 
         # Get metrics for org1
-        response1 = client.get(
-            "/api/v1/dashboard/metrics",
-            headers=org1_headers
-        )
+        response1 = client.get("/api/v1/dashboard/metrics", headers=org1_headers)
 
         # Get metrics for org2
-        response2 = client.get(
-            "/api/v1/dashboard/metrics",
-            headers=org2_headers
-        )
+        response2 = client.get("/api/v1/dashboard/metrics", headers=org2_headers)
 
         # Both should succeed but may have different data
         # This test would need actual test data to verify isolation

@@ -5,15 +5,14 @@ Background tasks for AI content generation and processing
 """
 
 import asyncio
-from typing import Dict, List, Any, Optional
 from datetime import datetime
+from typing import Any
+
 from celery import shared_task
 from celery.utils.log import get_task_logger
-from sqlalchemy import select, update
-from sqlalchemy.orm import Session
 
-from apps.backend.core.database import get_db
 from apps.backend.core.config import settings
+from apps.backend.core.database import get_db
 from apps.backend.services.cached_ai_service import cached_ai
 
 logger = get_task_logger(__name__)
@@ -27,7 +26,7 @@ logger = get_task_logger(__name__)
     queue="ai_generation",
     priority=7,
 )
-def process_generation_queue(self, batch_size: int = 10) -> Dict[str, Any]:
+def process_generation_queue(self, batch_size: int = 10) -> dict[str, Any]:
     """
     Process pending AI content generation requests
 
@@ -48,9 +47,12 @@ def process_generation_queue(self, batch_size: int = 10) -> Dict[str, Any]:
 
         try:
             # Query pending generation requests
-            pending_requests = db.query(EnhancedContentGeneration).filter(
-                EnhancedContentGeneration.status == "pending"
-            ).limit(batch_size).all()
+            pending_requests = (
+                db.query(EnhancedContentGeneration)
+                .filter(EnhancedContentGeneration.status == "pending")
+                .limit(batch_size)
+                .all()
+            )
 
             requests_processed = 0
             requests_completed = 0
@@ -64,16 +66,20 @@ def process_generation_queue(self, batch_size: int = 10) -> Dict[str, Any]:
 
                     # Build prompt from request data
                     original_request = request.original_request or {}
-                    prompt = original_request.get("prompt", f"Generate {request.content_type} content")
+                    prompt = original_request.get(
+                        "prompt", f"Generate {request.content_type} content"
+                    )
 
                     # Generate content via AI service
-                    result = asyncio.run(cached_ai.generate_completion(
-                        prompt=prompt,
-                        model=getattr(settings, 'OPENAI_MODEL', 'gpt-4'),
-                        temperature=0.7,
-                        max_tokens=2000,
-                        use_cache=True
-                    ))
+                    result = asyncio.run(
+                        cached_ai.generate_completion(
+                            prompt=prompt,
+                            model=getattr(settings, "OPENAI_MODEL", "gpt-4"),
+                            temperature=0.7,
+                            max_tokens=2000,
+                            use_cache=True,
+                        )
+                    )
 
                     # Save generated content to database
                     request.generated_content = {
@@ -82,7 +88,7 @@ def process_generation_queue(self, batch_size: int = 10) -> Dict[str, Any]:
                         "cost": result.get("cost", 0.0),
                         "model": result.get("model", "gpt-4"),
                         "cached": result.get("cached", False),
-                        "generated_at": datetime.utcnow().isoformat()
+                        "generated_at": datetime.utcnow().isoformat(),
                     }
 
                     # Update request status
@@ -109,7 +115,7 @@ def process_generation_queue(self, batch_size: int = 10) -> Dict[str, Any]:
                 "requests_processed": requests_processed,
                 "requests_completed": requests_completed,
                 "requests_failed": requests_failed,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
         finally:
@@ -132,9 +138,9 @@ def generate_content(
     self,
     content_type: str,
     prompt: str,
-    user_id: Optional[int] = None,
-    metadata: Optional[Dict] = None
-) -> Dict[str, Any]:
+    user_id: int | None = None,
+    metadata: dict | None = None,
+) -> dict[str, Any]:
     """
     Generate AI content from prompt
 
@@ -151,13 +157,15 @@ def generate_content(
         logger.info(f"Generating {content_type} content for user {user_id}")
 
         # Call AI service using asyncio bridge
-        result = asyncio.run(cached_ai.generate_completion(
-            prompt=prompt,
-            model=getattr(settings, 'OPENAI_MODEL', 'gpt-4'),
-            temperature=0.7,
-            max_tokens=2000,
-            use_cache=True
-        ))
+        result = asyncio.run(
+            cached_ai.generate_completion(
+                prompt=prompt,
+                model=getattr(settings, "OPENAI_MODEL", "gpt-4"),
+                temperature=0.7,
+                max_tokens=2000,
+                use_cache=True,
+            )
+        )
 
         # Extract token usage and cost from result
         tokens_used = result.get("tokens_used", 0)
@@ -172,7 +180,7 @@ def generate_content(
             "estimated_cost": estimated_cost,
             "cached": result.get("cached", False),
             "model": result.get("model", "gpt-4"),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     except Exception as e:
@@ -188,10 +196,7 @@ def generate_content(
     queue="ai_generation",
     priority=5,
 )
-def batch_content_generation(
-    self,
-    requests: List[Dict[str, Any]]
-) -> Dict[str, Any]:
+def batch_content_generation(self, requests: list[dict[str, Any]]) -> dict[str, Any]:
     """
     Process multiple content generation requests as a batch
 
@@ -205,15 +210,15 @@ def batch_content_generation(
     try:
         logger.info(f"Processing batch content generation: {len(requests)} requests")
 
-        async def generate_single(request_data: Dict) -> Dict:
+        async def generate_single(request_data: dict) -> dict:
             """Generate content for single request"""
             try:
                 result = await cached_ai.generate_completion(
                     prompt=request_data.get("prompt", ""),
-                    model=getattr(settings, 'OPENAI_MODEL', 'gpt-4'),
+                    model=getattr(settings, "OPENAI_MODEL", "gpt-4"),
                     temperature=request_data.get("temperature", 0.7),
                     max_tokens=request_data.get("max_tokens", 2000),
-                    use_cache=True
+                    use_cache=True,
                 )
                 return {
                     "status": "success",
@@ -221,14 +226,14 @@ def batch_content_generation(
                     "result": result,
                     "generated_content": result.get("completion", ""),
                     "tokens_used": result.get("tokens_used", 0),
-                    "cost": result.get("cost", 0.0)
+                    "cost": result.get("cost", 0.0),
                 }
             except Exception as e:
                 logger.error(f"Failed to generate content for request: {e}")
                 return {
                     "status": "failed",
                     "content_type": request_data.get("content_type"),
-                    "error": str(e)
+                    "error": str(e),
                 }
 
         async def process_batch():
@@ -241,7 +246,7 @@ def batch_content_generation(
             batch_size = 5
 
             for i in range(0, len(tasks), batch_size):
-                batch = tasks[i:i + batch_size]
+                batch = tasks[i : i + batch_size]
                 batch_results = await asyncio.gather(*batch, return_exceptions=True)
                 results.extend(batch_results)
 
@@ -266,7 +271,7 @@ def batch_content_generation(
             "total_tokens_used": total_tokens,
             "total_cost": total_cost,
             "results": results,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     except Exception as e:

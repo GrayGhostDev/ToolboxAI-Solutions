@@ -10,18 +10,18 @@ Tests cover:
 - Edge cases and error handling
 """
 
-import time
-from unittest.mock import Mock, patch, MagicMock, call
+from unittest.mock import Mock, patch
+
 import pytest
 
 # Import the module under test
 from core.coordinators import monitor
 from core.coordinators.task_registry import TaskState
 
-
 # ============================================================================
 # Test Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def mock_task_registry():
@@ -35,13 +35,14 @@ def mock_task_registry():
 @pytest.fixture
 def mock_monitor(mock_task_registry):
     """Create Monitor with mock TaskRegistry"""
-    with patch('core.coordinators.monitor.TaskRegistry', return_value=mock_task_registry):
+    with patch("core.coordinators.monitor.TaskRegistry", return_value=mock_task_registry):
         return monitor.Monitor()
 
 
 # ============================================================================
 # Test Environment Variables
 # ============================================================================
+
 
 class TestEnvironmentVariables:
     """Test environment variable configuration"""
@@ -75,12 +76,13 @@ class TestEnvironmentVariables:
 # Test Monitor Initialization
 # ============================================================================
 
+
 class TestMonitorInitialization:
     """Test Monitor initialization"""
 
     def test_initialization_creates_task_registry(self):
         """Test Monitor initialization creates TaskRegistry"""
-        with patch('core.coordinators.monitor.TaskRegistry') as mock_registry_class:
+        with patch("core.coordinators.monitor.TaskRegistry") as mock_registry_class:
             mock_registry_instance = Mock()
             mock_registry_class.return_value = mock_registry_instance
 
@@ -91,33 +93,34 @@ class TestMonitorInitialization:
 
     def test_initialization_without_args(self):
         """Test Monitor can be initialized without arguments"""
-        with patch('core.coordinators.monitor.TaskRegistry'):
+        with patch("core.coordinators.monitor.TaskRegistry"):
             mon = monitor.Monitor()
 
             assert mon is not None
 
     def test_reg_attribute_exists(self):
         """Test Monitor has reg attribute"""
-        with patch('core.coordinators.monitor.TaskRegistry'):
+        with patch("core.coordinators.monitor.TaskRegistry"):
             mon = monitor.Monitor()
 
-            assert hasattr(mon, 'reg')
+            assert hasattr(mon, "reg")
 
 
 # ============================================================================
 # Test Monitor Loop Method
 # ============================================================================
 
+
 class TestMonitorLoop:
     """Test Monitor loop method"""
 
     def test_loop_calls_check(self):
         """Test loop calls check method"""
-        with patch('core.coordinators.monitor.TaskRegistry'):
+        with patch("core.coordinators.monitor.TaskRegistry"):
             mon = monitor.Monitor()
 
-            with patch.object(mon, 'check') as mock_check:
-                with patch('time.sleep', side_effect=[None, KeyboardInterrupt()]):
+            with patch.object(mon, "check") as mock_check:
+                with patch("time.sleep", side_effect=[None, KeyboardInterrupt()]):
                     try:
                         mon.loop()
                     except KeyboardInterrupt:
@@ -128,11 +131,11 @@ class TestMonitorLoop:
 
     def test_loop_sleeps_between_checks(self):
         """Test loop sleeps between checks"""
-        with patch('core.coordinators.monitor.TaskRegistry'):
+        with patch("core.coordinators.monitor.TaskRegistry"):
             mon = monitor.Monitor()
 
-            with patch.object(mon, 'check'):
-                with patch('time.sleep', side_effect=[None, KeyboardInterrupt()]) as mock_sleep:
+            with patch.object(mon, "check"):
+                with patch("time.sleep", side_effect=[None, KeyboardInterrupt()]) as mock_sleep:
                     try:
                         mon.loop()
                     except KeyboardInterrupt:
@@ -143,11 +146,11 @@ class TestMonitorLoop:
 
     def test_loop_uses_check_interval(self):
         """Test loop uses CHECK_INTERVAL for sleep"""
-        with patch('core.coordinators.monitor.TaskRegistry'):
+        with patch("core.coordinators.monitor.TaskRegistry"):
             mon = monitor.Monitor()
 
-            with patch.object(mon, 'check'):
-                with patch('time.sleep', side_effect=[None, KeyboardInterrupt()]) as mock_sleep:
+            with patch.object(mon, "check"):
+                with patch("time.sleep", side_effect=[None, KeyboardInterrupt()]) as mock_sleep:
                     try:
                         mon.loop()
                     except KeyboardInterrupt:
@@ -158,11 +161,11 @@ class TestMonitorLoop:
 
     def test_loop_continuous_execution(self):
         """Test loop executes continuously"""
-        with patch('core.coordinators.monitor.TaskRegistry'):
+        with patch("core.coordinators.monitor.TaskRegistry"):
             mon = monitor.Monitor()
 
-            with patch.object(mon, 'check') as mock_check:
-                with patch('time.sleep', side_effect=[None, None, None, KeyboardInterrupt()]):
+            with patch.object(mon, "check") as mock_check:
+                with patch("time.sleep", side_effect=[None, None, None, KeyboardInterrupt()]):
                     try:
                         mon.loop()
                     except KeyboardInterrupt:
@@ -173,11 +176,11 @@ class TestMonitorLoop:
 
     def test_loop_infinite_without_interruption(self):
         """Test loop is infinite without interruption"""
-        with patch('core.coordinators.monitor.TaskRegistry'):
+        with patch("core.coordinators.monitor.TaskRegistry"):
             mon = monitor.Monitor()
 
-            with patch.object(mon, 'check'):
-                with patch('time.sleep', side_effect=KeyboardInterrupt()):
+            with patch.object(mon, "check"):
+                with patch("time.sleep", side_effect=KeyboardInterrupt()):
                     # Loop should only stop with interrupt
                     with pytest.raises(KeyboardInterrupt):
                         mon.loop()
@@ -186,6 +189,7 @@ class TestMonitorLoop:
 # ============================================================================
 # Test Monitor Check Method
 # ============================================================================
+
 
 class TestMonitorCheck:
     """Test Monitor check method"""
@@ -206,32 +210,31 @@ class TestMonitorCheck:
         """Test check with no stale workers"""
         mock_task_registry.list_workers.return_value = [
             {"worker_id": "w1", "age": 30},
-            {"worker_id": "w2", "age": 60}
+            {"worker_id": "w2", "age": 60},
         ]
 
         # Should not print anything (no stale workers)
-        with patch('builtins.print') as mock_print:
+        with patch("builtins.print") as mock_print:
             mock_monitor.check()
 
             # Should not print stale workers warning
-            stale_calls = [call for call in mock_print.call_args_list
-                          if 'stale' in str(call)]
+            stale_calls = [call for call in mock_print.call_args_list if "stale" in str(call)]
             assert len(stale_calls) == 0
 
     def test_check_with_stale_workers(self, mock_monitor, mock_task_registry):
         """Test check detects stale workers"""
         mock_task_registry.list_workers.return_value = [
             {"worker_id": "w1", "age": 100},  # Stale
-            {"worker_id": "w2", "age": 50}   # Not stale
+            {"worker_id": "w2", "age": 50},  # Not stale
         ]
 
-        with patch('builtins.print') as mock_print:
+        with patch("builtins.print") as mock_print:
             mock_monitor.check()
 
             # Should print stale workers warning
             mock_print.assert_called()
             call_str = str(mock_print.call_args_list)
-            assert 'stale' in call_str.lower()
+            assert "stale" in call_str.lower()
 
     def test_check_stale_threshold(self, mock_monitor, mock_task_registry):
         """Test check uses STALE_WORKER_SEC threshold"""
@@ -239,72 +242,64 @@ class TestMonitorCheck:
 
         mock_task_registry.list_workers.return_value = [
             {"worker_id": "w1", "age": stale_threshold + 1},  # Just stale
-            {"worker_id": "w2", "age": stale_threshold - 1}   # Just not stale
+            {"worker_id": "w2", "age": stale_threshold - 1},  # Just not stale
         ]
 
-        with patch('builtins.print') as mock_print:
+        with patch("builtins.print") as mock_print:
             mock_monitor.check()
 
             # Should only report w1 as stale
             if mock_print.called:
                 call_str = str(mock_print.call_args_list[0])
                 # Verify w1 in stale list
-                assert 'w1' in call_str or 'stale' in call_str.lower()
+                assert "w1" in call_str or "stale" in call_str.lower()
 
     def test_check_no_backlog(self, mock_monitor, mock_task_registry):
         """Test check with no queue backlog"""
         mock_task_registry.qstat.return_value = {
             TaskState.QUEUED.value: 50,
-            TaskState.IN_PROGRESS.value: 10
+            TaskState.IN_PROGRESS.value: 10,
         }
 
-        with patch('builtins.print') as mock_print:
+        with patch("builtins.print") as mock_print:
             mock_monitor.check()
 
             # Should not print backlog warning
-            backlog_calls = [call for call in mock_print.call_args_list
-                            if 'backlog' in str(call)]
+            backlog_calls = [call for call in mock_print.call_args_list if "backlog" in str(call)]
             assert len(backlog_calls) == 0
 
     def test_check_with_backlog(self, mock_monitor, mock_task_registry):
         """Test check detects high backlog"""
         mock_task_registry.qstat.return_value = {
             TaskState.QUEUED.value: 150,  # High backlog
-            TaskState.IN_PROGRESS.value: 10
+            TaskState.IN_PROGRESS.value: 10,
         }
 
-        with patch('builtins.print') as mock_print:
+        with patch("builtins.print") as mock_print:
             mock_monitor.check()
 
             # Should print backlog warning
             mock_print.assert_called()
             call_str = str(mock_print.call_args_list)
-            assert 'backlog' in call_str.lower()
+            assert "backlog" in call_str.lower()
 
     def test_check_backlog_threshold(self, mock_monitor, mock_task_registry):
         """Test check uses 100 task threshold for backlog"""
-        mock_task_registry.qstat.return_value = {
-            TaskState.QUEUED.value: 101  # Just over threshold
-        }
+        mock_task_registry.qstat.return_value = {TaskState.QUEUED.value: 101}  # Just over threshold
 
-        with patch('builtins.print') as mock_print:
+        with patch("builtins.print") as mock_print:
             mock_monitor.check()
 
             # Should print backlog warning
-            backlog_calls = [call for call in mock_print.call_args_list
-                            if 'backlog' in str(call)]
+            backlog_calls = [call for call in mock_print.call_args_list if "backlog" in str(call)]
             assert len(backlog_calls) > 0
 
     def test_check_with_both_issues(self, mock_monitor, mock_task_registry):
         """Test check with both stale workers and backlog"""
-        mock_task_registry.list_workers.return_value = [
-            {"worker_id": "w1", "age": 100}  # Stale
-        ]
-        mock_task_registry.qstat.return_value = {
-            TaskState.QUEUED.value: 150  # High backlog
-        }
+        mock_task_registry.list_workers.return_value = [{"worker_id": "w1", "age": 100}]  # Stale
+        mock_task_registry.qstat.return_value = {TaskState.QUEUED.value: 150}  # High backlog
 
-        with patch('builtins.print') as mock_print:
+        with patch("builtins.print") as mock_print:
             mock_monitor.check()
 
             # Should print both warnings
@@ -339,6 +334,7 @@ class TestMonitorCheck:
 # Test Integration
 # ============================================================================
 
+
 class TestIntegration:
     """Test Monitor integration with TaskRegistry"""
 
@@ -347,12 +343,12 @@ class TestIntegration:
         mon = monitor.Monitor()
 
         # Should have TaskRegistry instance
-        assert hasattr(mon, 'reg')
+        assert hasattr(mon, "reg")
         # Don't check exact type to avoid import issues
 
     def test_check_integration_with_registry(self):
         """Test check method integrates with TaskRegistry"""
-        with patch('core.coordinators.monitor.TaskRegistry') as mock_registry_class:
+        with patch("core.coordinators.monitor.TaskRegistry") as mock_registry_class:
             mock_registry = Mock()
             mock_registry.list_workers.return_value = []
             mock_registry.qstat.return_value = {}
@@ -369,6 +365,7 @@ class TestIntegration:
 # ============================================================================
 # Test Edge Cases
 # ============================================================================
+
 
 class TestEdgeCases:
     """Test edge cases and error handling"""
@@ -388,12 +385,12 @@ class TestEdgeCases:
         """Test check handles malformed worker data"""
         mock_task_registry.list_workers.return_value = [
             {"worker_id": "w1"},  # Missing 'age'
-            {"age": 100}  # Missing 'worker_id'
+            {"age": 100},  # Missing 'worker_id'
         ]
 
         # Should handle gracefully
         try:
-            with patch('builtins.print'):
+            with patch("builtins.print"):
                 mock_monitor.check()
         except KeyError:
             # Expected if code doesn't handle missing keys
@@ -401,11 +398,11 @@ class TestEdgeCases:
 
     def test_loop_handles_check_exception(self):
         """Test loop handles exceptions in check"""
-        with patch('core.coordinators.monitor.TaskRegistry'):
+        with patch("core.coordinators.monitor.TaskRegistry"):
             mon = monitor.Monitor()
 
-            with patch.object(mon, 'check', side_effect=Exception("Check failed")):
-                with patch('time.sleep', side_effect=[None, KeyboardInterrupt()]):
+            with patch.object(mon, "check", side_effect=Exception("Check failed")):
+                with patch("time.sleep", side_effect=[None, KeyboardInterrupt()]):
                     # Loop should handle check exception or crash
                     try:
                         mon.loop()
@@ -417,12 +414,13 @@ class TestEdgeCases:
 # Test Main Entry Point
 # ============================================================================
 
+
 class TestMainEntryPoint:
     """Test __main__ execution"""
 
     def test_main_creates_monitor(self):
         """Test main creates Monitor instance"""
-        with patch('core.coordinators.monitor.Monitor') as mock_monitor_class:
+        with patch("core.coordinators.monitor.Monitor") as mock_monitor_class:
             mock_monitor_instance = Mock()
             mock_monitor_class.return_value = mock_monitor_instance
 
@@ -433,7 +431,7 @@ class TestMainEntryPoint:
 
     def test_main_calls_loop(self):
         """Test main calls loop method"""
-        with patch('core.coordinators.monitor.Monitor') as mock_monitor_class:
+        with patch("core.coordinators.monitor.Monitor") as mock_monitor_class:
             mock_monitor_instance = Mock()
             mock_monitor_class.return_value = mock_monitor_instance
 
@@ -450,36 +448,33 @@ class TestMainEntryPoint:
 # Test Print Formatting
 # ============================================================================
 
+
 class TestPrintFormatting:
     """Test print output formatting"""
 
     def test_stale_workers_print_format(self, mock_monitor, mock_task_registry):
         """Test stale workers print includes monitor prefix"""
-        mock_task_registry.list_workers.return_value = [
-            {"worker_id": "w1", "age": 100}
-        ]
+        mock_task_registry.list_workers.return_value = [{"worker_id": "w1", "age": 100}]
 
-        with patch('builtins.print') as mock_print:
+        with patch("builtins.print") as mock_print:
             mock_monitor.check()
 
             # Check for [monitor] prefix
             if mock_print.called:
                 call_str = str(mock_print.call_args_list[0])
-                assert '[monitor]' in call_str or 'stale' in call_str.lower()
+                assert "[monitor]" in call_str or "stale" in call_str.lower()
 
     def test_backlog_print_format(self, mock_monitor, mock_task_registry):
         """Test backlog print includes monitor prefix"""
-        mock_task_registry.qstat.return_value = {
-            TaskState.QUEUED.value: 150
-        }
+        mock_task_registry.qstat.return_value = {TaskState.QUEUED.value: 150}
 
-        with patch('builtins.print') as mock_print:
+        with patch("builtins.print") as mock_print:
             mock_monitor.check()
 
             # Check for [monitor] prefix and backlog message
             if mock_print.called:
                 call_str = str(mock_print.call_args_list)
-                assert '[monitor]' in call_str or 'backlog' in call_str.lower()
+                assert "[monitor]" in call_str or "backlog" in call_str.lower()
 
 
 # ============================================================================

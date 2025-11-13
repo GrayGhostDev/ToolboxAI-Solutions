@@ -1,4 +1,5 @@
 import pytest_asyncio
+
 """
 Test Password Security and Session Invalidation
 
@@ -7,28 +8,26 @@ Ensures all sessions are properly invalidated when a user changes their password
 """
 
 import asyncio
-import time
-import pytest
-from typing import Dict, List
-from unittest.mock import Mock, patch, MagicMock
+import os
 
 # Add parent directory to path
 import sys
-import os
+import time
+from typing import Dict, List
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from apps.backend.core.security.session_manager import (
-    SessionManager,
-    SessionInfo,
-    SessionEvent
-)
 from apps.backend.api.auth.password_management import (
+    PasswordChangeRequest,
     PasswordChangeService,
-    PasswordValidator,
     PasswordHistoryManager,
     PasswordStrengthRequirements,
-    PasswordChangeRequest
+    PasswordValidator,
 )
+from apps.backend.core.security.session_manager import SessionEvent, SessionInfo, SessionManager
 from tests.test_logger import TestLogger
 
 # Initialize test logger
@@ -361,7 +360,7 @@ class TestPasswordHistory:
         max_history = self.history_manager.MAX_HISTORY
         
         from apps.backend.api.auth.auth import hash_password
-        
+
         # Add more passwords than the limit
         for i in range(max_history + 3):
             password = f"Password{i}!"

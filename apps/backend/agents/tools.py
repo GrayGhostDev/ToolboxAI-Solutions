@@ -5,16 +5,15 @@ Provides various tools and utilities for agents to use in content generation
 and educational tasks.
 """
 
-from typing import Dict, Any, List, Optional, Callable
-import json
-import asyncio
+from collections.abc import Callable
 from datetime import datetime
+from typing import Any
 
 
 class Tool:
     """Base class for agent tools."""
 
-    def __init__(self, name: str, description: str, func: Optional[Callable] = None):
+    def __init__(self, name: str, description: str, func: Callable | None = None):
         self.name = name
         self.description = description
         self.func = func or self.execute
@@ -23,7 +22,7 @@ class Tool:
         """Execute the tool with given parameters."""
         raise NotImplementedError("Tool must implement execute method")
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert tool to dictionary representation."""
         return {"name": self.name, "description": self.description}
 
@@ -34,7 +33,7 @@ class SearchTool(Tool):
     def __init__(self):
         super().__init__(name="search", description="Search for educational content and resources")
 
-    async def execute(self, query: str, **kwargs) -> List[Dict[str, Any]]:
+    async def execute(self, query: str, **kwargs) -> list[dict[str, Any]]:
         """Search for content based on query."""
         # Placeholder implementation
         return [
@@ -54,7 +53,7 @@ class GenerateTool(Tool):
             name="generate", description="Generate educational content based on parameters"
         )
 
-    async def execute(self, subject: str, grade_level: int, **kwargs) -> Dict[str, Any]:
+    async def execute(self, subject: str, grade_level: int, **kwargs) -> dict[str, Any]:
         """Generate content for specified subject and grade level."""
         return {
             "content": f"Generated content for {subject} at grade level {grade_level}",
@@ -75,7 +74,7 @@ class ValidateTool(Tool):
             description="Validate educational content for accuracy and appropriateness",
         )
 
-    async def execute(self, content: str, **kwargs) -> Dict[str, Any]:
+    async def execute(self, content: str, **kwargs) -> dict[str, Any]:
         """Validate the provided content."""
         return {"is_valid": True, "score": 0.92, "feedback": "Content meets educational standards"}
 
@@ -89,7 +88,7 @@ class TransformTool(Tool):
             description="Transform content between different formats (e.g., text to quiz)",
         )
 
-    async def execute(self, content: str, target_format: str, **kwargs) -> Dict[str, Any]:
+    async def execute(self, content: str, target_format: str, **kwargs) -> dict[str, Any]:
         """Transform content to target format."""
         return {
             "original_format": "text",
@@ -107,7 +106,7 @@ class AnalyzeTool(Tool):
             description="Analyze educational content for complexity, readability, etc.",
         )
 
-    async def execute(self, content: str, **kwargs) -> Dict[str, Any]:
+    async def execute(self, content: str, **kwargs) -> dict[str, Any]:
         """Analyze the provided content."""
         return {
             "complexity": "medium",
@@ -144,7 +143,7 @@ class AssessmentTool(Tool):
             name="assessment", description="Create assessments and quizzes from educational content"
         )
 
-    async def execute(self, content: str, question_count: int = 5, **kwargs) -> Dict[str, Any]:
+    async def execute(self, content: str, question_count: int = 5, **kwargs) -> dict[str, Any]:
         """Create assessment questions from content."""
         questions = []
         for i in range(question_count):
@@ -176,12 +175,12 @@ ALL_TOOLS = {
 }
 
 
-def get_tool(name: str) -> Optional[Tool]:
+def get_tool(name: str) -> Tool | None:
     """Get a tool by name."""
     return ALL_TOOLS.get(name)
 
 
-def list_tools() -> List[Dict[str, Any]]:
+def list_tools() -> list[dict[str, Any]]:
     """List all available tools."""
     return [tool.to_dict() for tool in ALL_TOOLS.values()]
 

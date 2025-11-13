@@ -16,17 +16,16 @@ Created: 2025-09-21
 Version: 1.0.0
 """
 
-import asyncio
-import json
 import logging
 import os
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional, Union
+from typing import Any
 from uuid import uuid4
 
 try:
-    from supabase import create_client, Client
     from gotrue.errors import AuthApiError
+
+    from supabase import Client, create_client
 
     SUPABASE_AVAILABLE = True
 except ImportError:
@@ -55,7 +54,7 @@ class SupabaseService:
     """
 
     def __init__(self):
-        self.client: Optional[Client] = None
+        self.client: Client | None = None
         self.url = os.getenv("SUPABASE_URL")
         self.anon_key = os.getenv("SUPABASE_ANON_KEY")
         self.service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
@@ -90,7 +89,7 @@ class SupabaseService:
 
     # Agent Instance Management
 
-    async def create_agent_instance(self, agent_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def create_agent_instance(self, agent_data: dict[str, Any]) -> dict[str, Any]:
         """
         Create a new agent instance record in Supabase.
 
@@ -132,7 +131,7 @@ class SupabaseService:
             logger.error(f"Error creating agent instance: {e}")
             raise
 
-    async def update_agent_instance(self, agent_id: str, updates: Dict[str, Any]) -> Dict[str, Any]:
+    async def update_agent_instance(self, agent_id: str, updates: dict[str, Any]) -> dict[str, Any]:
         """
         Update an agent instance record.
 
@@ -167,7 +166,7 @@ class SupabaseService:
             logger.error(f"Error updating agent instance {agent_id}: {e}")
             raise
 
-    async def get_agent_instance(self, agent_id: str) -> Optional[Dict[str, Any]]:
+    async def get_agent_instance(self, agent_id: str) -> dict[str, Any] | None:
         """
         Get agent instance by ID.
 
@@ -192,7 +191,7 @@ class SupabaseService:
             logger.error(f"Error getting agent instance {agent_id}: {e}")
             raise
 
-    async def get_all_agent_instances(self) -> List[Dict[str, Any]]:
+    async def get_all_agent_instances(self) -> list[dict[str, Any]]:
         """
         Get all agent instances.
 
@@ -216,7 +215,7 @@ class SupabaseService:
 
     # Task Execution Tracking
 
-    async def create_task_execution(self, task_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def create_task_execution(self, task_data: dict[str, Any]) -> dict[str, Any]:
         """
         Create a task execution record.
 
@@ -259,7 +258,7 @@ class SupabaseService:
             logger.error(f"Error creating task execution: {e}")
             raise
 
-    async def update_task_execution(self, task_id: str, updates: Dict[str, Any]) -> Dict[str, Any]:
+    async def update_task_execution(self, task_id: str, updates: dict[str, Any]) -> dict[str, Any]:
         """
         Update a task execution record.
 
@@ -291,7 +290,7 @@ class SupabaseService:
             logger.error(f"Error updating task execution {task_id}: {e}")
             raise
 
-    async def get_task_execution(self, task_id: str) -> Optional[Dict[str, Any]]:
+    async def get_task_execution(self, task_id: str) -> dict[str, Any] | None:
         """
         Get task execution by ID.
 
@@ -316,7 +315,7 @@ class SupabaseService:
             logger.error(f"Error getting task execution {task_id}: {e}")
             raise
 
-    async def get_agent_task_history(self, agent_id: str, limit: int = 100) -> List[Dict[str, Any]]:
+    async def get_agent_task_history(self, agent_id: str, limit: int = 100) -> list[dict[str, Any]]:
         """
         Get task execution history for an agent.
 
@@ -352,7 +351,7 @@ class SupabaseService:
 
     # Performance Metrics
 
-    async def store_agent_metrics(self, metrics_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def store_agent_metrics(self, metrics_data: dict[str, Any]) -> dict[str, Any]:
         """
         Store agent performance metrics.
 
@@ -400,7 +399,7 @@ class SupabaseService:
             logger.error(f"Error storing agent metrics: {e}")
             raise
 
-    async def get_agent_metrics(self, agent_id: str, hours: int = 24) -> List[Dict[str, Any]]:
+    async def get_agent_metrics(self, agent_id: str, hours: int = 24) -> list[dict[str, Any]]:
         """
         Get agent performance metrics for a time period.
 
@@ -441,7 +440,7 @@ class SupabaseService:
 
     # System Health
 
-    async def store_system_health(self, health_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def store_system_health(self, health_data: dict[str, Any]) -> dict[str, Any]:
         """
         Store system health snapshot.
 
@@ -488,7 +487,7 @@ class SupabaseService:
             logger.error(f"Error storing system health: {e}")
             raise
 
-    async def get_recent_system_health(self, hours: int = 24) -> List[Dict[str, Any]]:
+    async def get_recent_system_health(self, hours: int = 24) -> list[dict[str, Any]]:
         """
         Get recent system health snapshots.
 
@@ -556,7 +555,7 @@ class SupabaseService:
 
     # Utility Methods
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """
         Perform a health check on the Supabase connection.
 
@@ -626,7 +625,7 @@ class SupabaseService:
 
 
 # Global Supabase service instance
-_supabase_service: Optional[SupabaseService] = None
+_supabase_service: SupabaseService | None = None
 
 
 def get_supabase_service() -> SupabaseService:

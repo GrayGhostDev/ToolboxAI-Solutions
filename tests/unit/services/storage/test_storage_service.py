@@ -4,28 +4,25 @@ Unit Tests for Storage Service
 Tests abstract storage service functionality including upload, download, and file management.
 """
 
+from uuid import uuid4
+
 import pytest
-from datetime import datetime
-from unittest.mock import Mock, AsyncMock, MagicMock
-from uuid import uuid4, UUID
-from io import BytesIO
 
 from apps.backend.services.storage.storage_service import (
-    StorageService,
-    UploadProgress,
-    UploadStatus,
-    UploadOptions,
-    UploadResult,
+    AccessDeniedError,
     DownloadOptions,
     DownloadResult,
-    DownloadPermission,
-    ListOptions,
     FileInfo,
-    StorageError,
-    TenantIsolationError,
-    QuotaExceededError,
     FileNotFoundError,
-    AccessDeniedError,
+    ListOptions,
+    QuotaExceededError,
+    StorageError,
+    StorageService,
+    TenantIsolationError,
+    UploadOptions,
+    UploadProgress,
+    UploadResult,
+    UploadStatus,
 )
 
 
@@ -50,7 +47,7 @@ class MockStorageService(StorageService):
             storage_path=storage_path,
             file_size=len(file_data) if isinstance(file_data, bytes) else 0,
             checksum=checksum,
-            status=UploadStatus.COMPLETED
+            status=UploadStatus.COMPLETED,
         )
 
     async def upload_file_multipart(self, file_stream, filename, total_size, options=None):
@@ -70,7 +67,7 @@ class MockStorageService(StorageService):
             upload_id=upload_id,
             storage_path=self._generate_storage_path(filename),
             file_size=total_size,
-            status=UploadStatus.COMPLETED
+            status=UploadStatus.COMPLETED,
         )
 
     async def download_file(self, file_id, options=None):
@@ -78,7 +75,7 @@ class MockStorageService(StorageService):
             file_id=file_id,
             file_url=f"https://storage.example.com/{file_id}",
             content_type="application/octet-stream",
-            content_length=1024
+            content_length=1024,
         )
 
     async def get_file_stream(self, file_id, chunk_size=8192):
@@ -98,7 +95,7 @@ class MockStorageService(StorageService):
             original_filename="test.txt",
             file_size=1024,
             mime_type="text/plain",
-            storage_path="/path/to/test.txt"
+            storage_path="/path/to/test.txt",
         )
 
     async def generate_signed_url(self, file_id, expires_in=3600, permission="read"):
@@ -109,7 +106,7 @@ class MockStorageService(StorageService):
             file_id=uuid4(),
             upload_id=str(uuid4()),
             storage_path=destination_path,
-            status=UploadStatus.COMPLETED
+            status=UploadStatus.COMPLETED,
         )
 
     async def move_file(self, file_id, new_path):
@@ -119,10 +116,7 @@ class MockStorageService(StorageService):
 @pytest.fixture
 def storage_service():
     """Create mock storage service instance."""
-    return MockStorageService(
-        organization_id="org_123",
-        user_id="user_456"
-    )
+    return MockStorageService(organization_id="org_123", user_id="user_456")
 
 
 class TestStorageServiceInitialization:
@@ -130,10 +124,7 @@ class TestStorageServiceInitialization:
 
     def test_init_with_organization_and_user(self):
         """Test initialization with organization and user context."""
-        service = MockStorageService(
-            organization_id="org_123",
-            user_id="user_456"
-        )
+        service = MockStorageService(organization_id="org_123", user_id="user_456")
 
         assert service.organization_id == "org_123"
         assert service.user_id == "user_456"
@@ -147,10 +138,7 @@ class TestStorageServiceInitialization:
 
     def test_set_tenant_context(self, storage_service):
         """Test updating tenant context."""
-        storage_service.set_tenant_context(
-            organization_id="org_new",
-            user_id="user_new"
-        )
+        storage_service.set_tenant_context(organization_id="org_new", user_id="user_new")
 
         assert storage_service.organization_id == "org_new"
         assert storage_service.user_id == "user_new"
@@ -165,7 +153,7 @@ class TestUploadProgress:
             upload_id="test_upload",
             status=UploadStatus.UPLOADING,
             bytes_uploaded=50,
-            total_bytes=100
+            total_bytes=100,
         )
 
         assert progress.progress_percentage == 50.0
@@ -173,20 +161,14 @@ class TestUploadProgress:
     def test_upload_progress_zero_total(self):
         """Test progress with zero total bytes."""
         progress = UploadProgress(
-            upload_id="test_upload",
-            status=UploadStatus.UPLOADING,
-            bytes_uploaded=0,
-            total_bytes=0
+            upload_id="test_upload", status=UploadStatus.UPLOADING, bytes_uploaded=0, total_bytes=0
         )
 
         assert progress.progress_percentage == 0.0
 
     def test_upload_progress_complete(self):
         """Test complete status check."""
-        progress = UploadProgress(
-            upload_id="test_upload",
-            status=UploadStatus.COMPLETED
-        )
+        progress = UploadProgress(upload_id="test_upload", status=UploadStatus.COMPLETED)
 
         assert progress.is_complete is True
         assert progress.has_failed is False
@@ -194,9 +176,7 @@ class TestUploadProgress:
     def test_upload_progress_failed(self):
         """Test failed status check."""
         progress = UploadProgress(
-            upload_id="test_upload",
-            status=UploadStatus.FAILED,
-            error_message="Upload failed"
+            upload_id="test_upload", status=UploadStatus.FAILED, error_message="Upload failed"
         )
 
         assert progress.has_failed is True
@@ -224,16 +204,10 @@ class TestFileUpload:
         """Test uploading file with custom options."""
         file_data = b"test content"
         options = UploadOptions(
-            file_category="documents",
-            title="Test Document",
-            tags=["test", "document"]
+            file_category="documents", title="Test Document", tags=["test", "document"]
         )
 
-        result = await storage_service.upload_file(
-            file_data,
-            "document.pdf",
-            options=options
-        )
+        result = await storage_service.upload_file(file_data, "document.pdf", options=options)
 
         assert result.status == UploadStatus.COMPLETED
 
@@ -250,6 +224,7 @@ class TestFileUpload:
     @pytest.mark.asyncio
     async def test_upload_multipart_tracks_progress(self, storage_service):
         """Test multipart upload with progress tracking."""
+
         async def file_chunks():
             chunks = [b"chunk1", b"chunk2", b"chunk3"]
             for chunk in chunks:
@@ -290,10 +265,7 @@ class TestFileDownload:
     async def test_download_file_with_options(self, storage_service):
         """Test downloading with custom options."""
         file_id = uuid4()
-        options = DownloadOptions(
-            include_metadata=True,
-            signed_url_expires_in=7200
-        )
+        options = DownloadOptions(include_metadata=True, signed_url_expires_in=7200)
 
         result = await storage_service.download_file(file_id, options=options)
 
@@ -343,11 +315,7 @@ class TestFileManagement:
     @pytest.mark.asyncio
     async def test_list_files_with_options(self, storage_service):
         """Test listing files with filter options."""
-        options = ListOptions(
-            file_types=["image/png"],
-            limit=50,
-            sort_by="created_at"
-        )
+        options = ListOptions(file_types=["image/png"], limit=50, sort_by="created_at")
 
         result = await storage_service.list_files(options=options)
 
@@ -404,10 +372,7 @@ class TestSignedURLs:
         """Test signed URL with custom expiration."""
         file_id = uuid4()
 
-        url = await storage_service.generate_signed_url(
-            file_id,
-            expires_in=7200
-        )
+        url = await storage_service.generate_signed_url(file_id, expires_in=7200)
 
         assert isinstance(url, str)
 
@@ -416,10 +381,7 @@ class TestSignedURLs:
         """Test signed URL with write permission."""
         file_id = uuid4()
 
-        url = await storage_service.generate_signed_url(
-            file_id,
-            permission="write"
-        )
+        url = await storage_service.generate_signed_url(file_id, permission="write")
 
         assert isinstance(url, str)
 
@@ -441,10 +403,7 @@ class TestStoragePaths:
         """Test path generation without timestamp."""
         filename = "file.txt"
 
-        path = storage_service._generate_storage_path(
-            filename,
-            include_timestamp=False
-        )
+        path = storage_service._generate_storage_path(filename, include_timestamp=False)
 
         assert isinstance(path, str)
         assert "file" in path or ".txt" in path
@@ -454,10 +413,7 @@ class TestStoragePaths:
         filename = "image.png"
         category = "user_uploads"
 
-        path = storage_service._generate_storage_path(
-            filename,
-            file_category=category
-        )
+        path = storage_service._generate_storage_path(filename, file_category=category)
 
         assert category in path
 
@@ -530,10 +486,7 @@ class TestProgressTracking:
         upload_id = "test_upload_123"
 
         progress = storage_service._update_upload_progress(
-            upload_id,
-            UploadStatus.UPLOADING,
-            bytes_uploaded=500,
-            total_bytes=1000
+            upload_id, UploadStatus.UPLOADING, bytes_uploaded=500, total_bytes=1000
         )
 
         assert progress.upload_id == upload_id
@@ -547,10 +500,7 @@ class TestProgressTracking:
 
         # Create progress
         storage_service._update_upload_progress(
-            upload_id,
-            UploadStatus.UPLOADING,
-            bytes_uploaded=100,
-            total_bytes=200
+            upload_id, UploadStatus.UPLOADING, bytes_uploaded=100, total_bytes=200
         )
 
         # Retrieve progress
@@ -578,11 +528,7 @@ class TestStorageErrors:
 
     def test_storage_error_with_code(self):
         """Test storage error with code."""
-        error = StorageError(
-            "Test error",
-            error_code="ERR_001",
-            details={"file_id": "123"}
-        )
+        error = StorageError("Test error", error_code="ERR_001", details={"file_id": "123"})
 
         assert error.message == "Test error"
         assert error.error_code == "ERR_001"

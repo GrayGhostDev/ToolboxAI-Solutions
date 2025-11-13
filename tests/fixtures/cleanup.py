@@ -10,7 +10,6 @@ import os
 import shutil
 import tempfile
 from pathlib import Path
-from typing import List, Set
 
 import pytest
 
@@ -28,7 +27,7 @@ async def cleanup_database_pools():
 
     # Import here to avoid circular imports
     try:
-        from database.connection import engine, async_engine
+        from database.connection import async_engine, engine
 
         # Close sync engine connections
         if engine:
@@ -56,7 +55,7 @@ def cleanup_temp_files():
     This fixture tracks and cleans up any temporary files or directories
     created during test execution.
     """
-    temp_paths: Set[Path] = set()
+    temp_paths: set[Path] = set()
 
     def register_temp_path(path: Path):
         """Register a temporary path for cleanup."""
@@ -111,7 +110,7 @@ def temp_file():
     Returns a function that creates temporary files with optional content.
     """
 
-    temp_files: List[Path] = []
+    temp_files: list[Path] = []
 
     def _create_temp_file(
         suffix: str = ".txt",
@@ -265,9 +264,7 @@ def cleanup_test_artifacts(request):
             if dir_path.exists() and dir_path.is_dir():
                 try:
                     # Only remove if it contains test data
-                    if any(
-                        file.name.startswith("test_") for file in dir_path.rglob("*")
-                    ):
+                    if any(file.name.startswith("test_") for file in dir_path.rglob("*")):
                         shutil.rmtree(dir_path)
                         logger.info(f"Cleaned up test artifacts in {dir_path}")
                 except Exception as e:

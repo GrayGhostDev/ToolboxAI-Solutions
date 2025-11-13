@@ -21,23 +21,16 @@ Standards: Python 3.12, FastAPI async, Pydantic v2
 import logging
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Annotated, Optional, Any
+from typing import Annotated, Any
 from uuid import UUID, uuid4
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    Query,
-    BackgroundTasks,
-    status,
-)
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.api.auth.auth import get_current_user
 from apps.backend.core.deps import get_async_db
-from apps.backend.middleware.tenant import get_tenant_context, TenantContext
+from apps.backend.middleware.tenant import TenantContext, get_tenant_context
 from apps.backend.models.schemas import User
 
 logger = logging.getLogger(__name__)
@@ -51,8 +44,10 @@ router = APIRouter(
 
 # === Enums ===
 
+
 class ReportType(str, Enum):
     """Report type enumeration"""
+
     USER_ACTIVITY = "user_activity"
     CONTENT_ENGAGEMENT = "content_engagement"
     LEARNING_OUTCOMES = "learning_outcomes"
@@ -64,6 +59,7 @@ class ReportType(str, Enum):
 
 class ReportStatus(str, Enum):
     """Report generation status"""
+
     PENDING = "pending"
     GENERATING = "generating"
     COMPLETED = "completed"
@@ -73,6 +69,7 @@ class ReportStatus(str, Enum):
 
 class ReportFormat(str, Enum):
     """Report output format"""
+
     PDF = "pdf"
     CSV = "csv"
     EXCEL = "excel"
@@ -81,6 +78,7 @@ class ReportFormat(str, Enum):
 
 
 # === Pydantic v2 Models ===
+
 
 class ReportTemplate(BaseModel):
     """Report template model with Pydantic v2"""
@@ -93,7 +91,7 @@ class ReportTemplate(BaseModel):
     report_type: ReportType
     parameters: dict[str, Any] = Field(default_factory=dict)
     is_predefined: bool = True
-    created_by: Optional[UUID] = None
+    created_by: UUID | None = None
 
 
 class ReportListResponse(BaseModel):
@@ -111,7 +109,7 @@ class GenerateReportRequest(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     report_type: ReportType
-    template_id: Optional[UUID] = None
+    template_id: UUID | None = None
     start_date: datetime
     end_date: datetime
     filters: dict[str, Any] = Field(default_factory=dict)
@@ -135,7 +133,7 @@ class GenerateReportResponse(BaseModel):
     report_id: UUID
     status: ReportStatus
     message: str
-    estimated_completion_time: Optional[datetime] = None
+    estimated_completion_time: datetime | None = None
 
 
 class Report(BaseModel):
@@ -151,10 +149,10 @@ class Report(BaseModel):
     created_by: UUID
     created_by_name: str
     created_at: datetime
-    completed_at: Optional[datetime] = None
-    file_size: Optional[int] = None
-    download_url: Optional[str] = None
-    expires_at: Optional[datetime] = None
+    completed_at: datetime | None = None
+    file_size: int | None = None
+    download_url: str | None = None
+    expires_at: datetime | None = None
     parameters: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -189,7 +187,7 @@ class CustomReportRequest(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     name: str = Field(..., min_length=1, max_length=200)
-    description: Optional[str] = Field(None, max_length=1000)
+    description: str | None = Field(None, max_length=1000)
     metrics: list[str] = Field(..., min_length=1)
     dimensions: list[str] = Field(default_factory=list)
     filters: dict[str, Any] = Field(default_factory=dict)
@@ -205,16 +203,16 @@ class ReportSchedule(BaseModel):
 
     id: UUID
     report_type: ReportType
-    template_id: Optional[UUID] = None
+    template_id: UUID | None = None
     frequency: str  # "daily", "weekly", "monthly"
-    day_of_week: Optional[int] = None  # 0-6 for weekly
-    day_of_month: Optional[int] = None  # 1-31 for monthly
+    day_of_week: int | None = None  # 0-6 for weekly
+    day_of_month: int | None = None  # 1-31 for monthly
     time_of_day: str  # HH:MM format
     recipients: list[str] = Field(default_factory=list)
     format: ReportFormat
     is_active: bool = True
-    last_run: Optional[datetime] = None
-    next_run: Optional[datetime] = None
+    last_run: datetime | None = None
+    next_run: datetime | None = None
 
 
 class ScheduleReportRequest(BaseModel):
@@ -223,10 +221,10 @@ class ScheduleReportRequest(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     report_type: ReportType
-    template_id: Optional[UUID] = None
+    template_id: UUID | None = None
     frequency: str = Field(..., pattern="^(daily|weekly|monthly)$")
-    day_of_week: Optional[int] = Field(None, ge=0, le=6)
-    day_of_month: Optional[int] = Field(None, ge=1, le=31)
+    day_of_week: int | None = Field(None, ge=0, le=6)
+    day_of_month: int | None = Field(None, ge=1, le=31)
     time_of_day: str = Field(..., pattern="^([01]?[0-9]|2[0-3]):[0-5][0-9]$")
     recipients: list[str] = Field(default_factory=list)
     format: ReportFormat = ReportFormat.PDF
@@ -234,6 +232,7 @@ class ScheduleReportRequest(BaseModel):
 
 
 # === API Endpoints ===
+
 
 @router.get(
     "",
@@ -244,7 +243,7 @@ class ScheduleReportRequest(BaseModel):
 async def list_report_templates(
     session: Annotated[AsyncSession, Depends(get_async_db)],
     tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
-    report_type: Optional[ReportType] = None,
+    report_type: ReportType | None = None,
 ) -> ReportListResponse:
     """
     List available report templates.
@@ -294,7 +293,7 @@ async def list_report_templates(
         logger.error(f"Failed to list templates: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to list report templates"
+            detail="Failed to list report templates",
         )
 
 
@@ -328,9 +327,7 @@ async def generate_report(
         GenerateReportResponse: Generation status
     """
     try:
-        logger.info(
-            f"User {current_user.id} generating report: {request.report_type}"
-        )
+        logger.info(f"User {current_user.id} generating report: {request.report_type}")
 
         # TODO: Implement actual report generation
         # - Validate template exists if template_id provided
@@ -340,12 +337,7 @@ async def generate_report(
         new_report_id = uuid4()
 
         # Schedule background generation
-        background_tasks.add_task(
-            _generate_report_async,
-            new_report_id,
-            request,
-            current_user.id
-        )
+        background_tasks.add_task(_generate_report_async, new_report_id, request, current_user.id)
 
         estimated_time = datetime.utcnow() + timedelta(minutes=5)
 
@@ -359,8 +351,7 @@ async def generate_report(
     except Exception as e:
         logger.error(f"Failed to generate report: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to generate report"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate report"
         )
 
 
@@ -412,8 +403,7 @@ async def get_report_results(
     except Exception as e:
         logger.error(f"Failed to get report results: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get report results"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get report results"
         )
 
 
@@ -456,10 +446,7 @@ async def create_custom_report(
 
         # Schedule generation
         background_tasks.add_task(
-            _generate_custom_report_async,
-            report_id,
-            request,
-            current_user.id
+            _generate_custom_report_async, report_id, request, current_user.id
         )
 
         return GenerateReportResponse(
@@ -474,7 +461,7 @@ async def create_custom_report(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create custom report"
+            detail="Failed to create custom report",
         )
 
 
@@ -508,8 +495,7 @@ async def get_report_schedule(
 
         # TODO: Implement schedule retrieval
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Report schedule not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Report schedule not found"
         )
 
     except HTTPException:
@@ -518,7 +504,7 @@ async def get_report_schedule(
         logger.error(f"Failed to get schedule: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get report schedule"
+            detail="Failed to get report schedule",
         )
 
 
@@ -554,8 +540,7 @@ async def schedule_report(
     """
     try:
         logger.info(
-            f"User {current_user.id} scheduling report {report_id}: "
-            f"{request.frequency}"
+            f"User {current_user.id} scheduling report {report_id}: " f"{request.frequency}"
         )
 
         # TODO: Implement report scheduling
@@ -586,8 +571,7 @@ async def schedule_report(
         logger.error(f"Failed to schedule report: {str(e)}", exc_info=True)
         await session.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to schedule report"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to schedule report"
         )
 
 
@@ -603,8 +587,8 @@ async def get_report_history(
     tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    report_type: Optional[ReportType] = None,
-    status_filter: Optional[ReportStatus] = None,
+    report_type: ReportType | None = None,
+    status_filter: ReportStatus | None = None,
 ) -> ReportHistoryResponse:
     """
     Get report generation history.
@@ -637,8 +621,7 @@ async def get_report_history(
     except Exception as e:
         logger.error(f"Failed to get report history: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get report history"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get report history"
         )
 
 
@@ -676,12 +659,12 @@ async def delete_report(
         logger.error(f"Failed to delete report: {str(e)}", exc_info=True)
         await session.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete report"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete report"
         )
 
 
 # === Helper Functions ===
+
 
 def _calculate_next_run(request: ScheduleReportRequest) -> datetime:
     """Calculate next run time based on schedule"""
@@ -692,10 +675,9 @@ def _calculate_next_run(request: ScheduleReportRequest) -> datetime:
 
 # === Background Tasks ===
 
+
 async def _generate_report_async(
-    report_id: UUID,
-    request: GenerateReportRequest,
-    user_id: UUID
+    report_id: UUID, request: GenerateReportRequest, user_id: UUID
 ) -> None:
     """Generate report asynchronously"""
     logger.info(f"Starting async report generation: {report_id}")
@@ -703,9 +685,7 @@ async def _generate_report_async(
 
 
 async def _generate_custom_report_async(
-    report_id: UUID,
-    request: CustomReportRequest,
-    user_id: UUID
+    report_id: UUID, request: CustomReportRequest, user_id: UUID
 ) -> None:
     """Generate custom report asynchronously"""
     logger.info(f"Starting async custom report generation: {report_id}")

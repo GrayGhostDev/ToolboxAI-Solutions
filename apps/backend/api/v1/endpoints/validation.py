@@ -6,20 +6,19 @@ including syntax checking, security analysis, educational content validation,
 quality assessment, and platform compliance verification.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, status
-from fastapi.responses import JSONResponse
-from typing import Dict, List, Any, Optional, Union
-from pydantic import BaseModel, Field, field_validator
-from enum import Enum
-import logging
-import asyncio
 import json
+import logging
 from datetime import datetime
+from enum import Enum
+from typing import Any
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from pydantic import BaseModel, Field, field_validator
 
 # Import validation components
 from core.validation import ValidationEngine, ValidationRequest
-from core.validation.educational_validator import GradeLevel, Subject, LearningObjective
-from core.validation.validation_engine import ValidationStatus, ComprehensiveReport
+from core.validation.educational_validator import GradeLevel, LearningObjective, Subject
+from core.validation.validation_engine import ComprehensiveReport, ValidationStatus
 
 # Handle imports safely for user authentication
 try:
@@ -35,7 +34,7 @@ except ImportError:
             class MockUser(BaseModel):
                 email: str = "test@example.com"
                 role: str = "teacher"
-                id: Optional[str] = "test_user_id"
+                id: str | None = "test_user_id"
 
             return MockUser()
 
@@ -48,7 +47,7 @@ except ImportError:
     class User(BaseModel):
         email: str
         role: str
-        id: Optional[str] = None
+        id: str | None = None
 
 
 logger = logging.getLogger(__name__)
@@ -92,11 +91,11 @@ class ScriptValidationRequest(BaseModel):
     )
 
     # Educational context (optional)
-    grade_level: Optional[GradeLevel] = Field(
+    grade_level: GradeLevel | None = Field(
         None, description="Target grade level for educational validation"
     )
-    subject: Optional[Subject] = Field(None, description="Educational subject")
-    learning_objectives: Optional[List[str]] = Field(
+    subject: Subject | None = Field(None, description="Educational subject")
+    learning_objectives: list[str] | None = Field(
         None, description="Learning objectives to validate against"
     )
 
@@ -128,7 +127,7 @@ class ScriptValidationRequest(BaseModel):
 class BatchValidationRequest(BaseModel):
     """Request for batch validation of multiple scripts"""
 
-    scripts: List[ScriptValidationRequest] = Field(
+    scripts: list[ScriptValidationRequest] = Field(
         ..., min_items=1, max_items=10, description="Scripts to validate"
     )
     parallel_processing: bool = Field(default=True, description="Process scripts in parallel")
@@ -137,10 +136,10 @@ class BatchValidationRequest(BaseModel):
 class ValidationConfigRequest(BaseModel):
     """Request to update validation configuration"""
 
-    strict_mode_default: Optional[bool] = None
-    educational_context_default: Optional[bool] = None
-    max_script_size: Optional[int] = None
-    timeout_seconds: Optional[int] = None
+    strict_mode_default: bool | None = None
+    educational_context_default: bool | None = None
+    max_script_size: int | None = None
+    timeout_seconds: int | None = None
 
 
 # Response Models
@@ -164,8 +163,8 @@ class ValidationResponse(BaseModel):
     success: bool
     validation_id: str
     summary: ValidationSummary
-    report: Optional[Dict[str, Any]] = None
-    report_url: Optional[str] = None
+    report: dict[str, Any] | None = None
+    report_url: str | None = None
     timestamp: datetime
 
 
@@ -177,7 +176,7 @@ class BatchValidationResponse(BaseModel):
     total_scripts: int
     processed_scripts: int
     failed_scripts: int
-    results: List[ValidationSummary]
+    results: list[ValidationSummary]
     timestamp: datetime
 
 
@@ -188,7 +187,7 @@ class ValidationStatsResponse(BaseModel):
     passed_validations: int
     failed_validations: int
     average_score: float
-    common_issues: Dict[str, int]
+    common_issues: dict[str, int]
     last_updated: datetime
 
 
@@ -445,12 +444,12 @@ async def validate_scripts_batch(
         )
 
 
-@validation_router.get("/reports/{validation_id}", response_model=Dict[str, Any])
+@validation_router.get("/reports/{validation_id}", response_model=dict[str, Any])
 async def get_validation_report(
     validation_id: str,
     format: ReportFormat = ReportFormat.JSON,
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Retrieve a previously generated validation report.
 
@@ -499,10 +498,10 @@ async def get_validation_statistics(
         )
 
 
-@validation_router.post("/templates/secure", response_model=Dict[str, str])
+@validation_router.post("/templates/secure", response_model=dict[str, str])
 async def generate_secure_template(
     template_type: str, current_user: User = Depends(get_current_user)
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """
     Generate secure code templates for common Roblox patterns.
 
@@ -543,10 +542,10 @@ async def generate_secure_template(
         )
 
 
-@validation_router.get("/checklists/security", response_model=Dict[str, List[str]])
+@validation_router.get("/checklists/security", response_model=dict[str, list[str]])
 async def get_security_checklist(
     current_user: User = Depends(get_current_user),
-) -> Dict[str, List[str]]:
+) -> dict[str, list[str]]:
     """
     Get security checklist for developers.
 
@@ -569,10 +568,10 @@ async def get_security_checklist(
         )
 
 
-@validation_router.get("/checklists/compliance", response_model=Dict[str, List[str]])
+@validation_router.get("/checklists/compliance", response_model=dict[str, list[str]])
 async def get_compliance_checklist(
     current_user: User = Depends(get_current_user),
-) -> Dict[str, List[str]]:
+) -> dict[str, list[str]]:
     """
     Get Roblox compliance checklist.
 
@@ -622,7 +621,7 @@ async def _store_validation_report(
         logger.error(f"Failed to store validation report {validation_id}: {str(e)}")
 
 
-async def _store_batch_results(batch_id: str, reports: List[ComprehensiveReport], user_email: str):
+async def _store_batch_results(batch_id: str, reports: list[ComprehensiveReport], user_email: str):
     """Store batch validation results (background task)"""
     try:
         # This would typically save to database

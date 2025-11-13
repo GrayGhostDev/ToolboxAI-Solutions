@@ -1,4 +1,5 @@
 import pytest_asyncio
+
 #!/usr/bin/env python3
 """
 import pytest
@@ -16,6 +17,7 @@ This test validates:
 import asyncio
 import os
 
+
 def make_json_serializable(obj):
     """Convert non-serializable objects to serializable format."""
     if hasattr(obj, '__dict__'):
@@ -31,9 +33,10 @@ import json
 import logging
 import sys
 import time
-from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional
 import uuid
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
+
 import pytest
 
 # Skip all tests in this module as they require external services
@@ -47,19 +50,19 @@ sys.path.append('/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutio
 
 # Import agent system
 from core.agents.base_agent import BaseAgent, TaskResult
-from core.agents.supervisor import SupervisorAgent
 from core.agents.content_agent import ContentAgent
+from core.agents.plugin_communication import PluginCommunicationHub, PluginEventType, PluginRequest
 from core.agents.quiz_agent import QuizAgent
-from core.agents.terrain_agent import TerrainAgent
-from core.agents.script_agent import ScriptAgent
 from core.agents.review_agent import ReviewAgent
-from core.agents.plugin_communication import PluginCommunicationHub, PluginRequest, PluginEventType
+from core.agents.script_agent import ScriptAgent
+from core.agents.supervisor import SupervisorAgent
+from core.agents.terrain_agent import TerrainAgent
 
 # Import frameworks
 try:
-    from core.sparc import SPARCFramework, SPARCConfig, create_sparc_system
-    from core.swarm import SwarmController, create_swarm, get_default_config
     from core.mcp.context_manager import ContextManager
+    from core.sparc import SPARCConfig, SPARCFramework, create_sparc_system
+    from core.swarm import SwarmController, create_swarm, get_default_config
     FRAMEWORKS_AVAILABLE = True
 except ImportError as e:
     print(f"⚠️ Frameworks not available: {e}")

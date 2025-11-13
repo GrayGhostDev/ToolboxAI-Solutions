@@ -1,15 +1,16 @@
 """Master test orchestrator for comprehensive testing"""
+
 import asyncio
-import subprocess
 import json
-import time
-from datetime import datetime
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
-import sys
 import os
 import re
+import subprocess
+import sys
+import time
 from collections import defaultdict
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 
 class TestOrchestrator:
@@ -27,7 +28,7 @@ class TestOrchestrator:
             "failed": 0,
             "skipped": 0,
             "errors": 0,
-            "warnings": 0
+            "warnings": 0,
         }
 
         # Set up test environment
@@ -54,16 +55,14 @@ class TestOrchestrator:
         print(f"Coverage: {'Enabled' if self.coverage else 'Disabled'}")
         print("=" * 80 + "\n")
 
-    async def check_services(self) -> Dict[str, bool]:
+    async def check_services(self) -> dict[str, bool]:
         """Check if required services are running"""
         services = {}
 
         # Check PostgreSQL
         try:
             pg_check = subprocess.run(
-                ["pg_isready", "-h", "localhost", "-p", "5434"],
-                capture_output=True,
-                timeout=5
+                ["pg_isready", "-h", "localhost", "-p", "5434"], capture_output=True, timeout=5
             )
             services["PostgreSQL"] = pg_check.returncode == 0
         except (subprocess.TimeoutExpired, FileNotFoundError):
@@ -72,9 +71,7 @@ class TestOrchestrator:
         # Check Redis
         try:
             redis_check = subprocess.run(
-                ["redis-cli", "-p", "6381", "ping"],
-                capture_output=True,
-                timeout=5
+                ["redis-cli", "-p", "6381", "ping"], capture_output=True, timeout=5
             )
             services["Redis"] = redis_check.returncode == 0
         except (subprocess.TimeoutExpired, FileNotFoundError):
@@ -83,6 +80,7 @@ class TestOrchestrator:
         # Check FastAPI
         try:
             import httpx
+
             async with httpx.AsyncClient(timeout=5.0) as client:
                 response = await client.get("http://localhost:8009/health")
                 services["FastAPI"] = response.status_code == 200
@@ -92,6 +90,7 @@ class TestOrchestrator:
         # Check Node.js/Dashboard
         try:
             import httpx
+
             async with httpx.AsyncClient(timeout=5.0) as client:
                 response = await client.get("http://localhost:5179", follow_redirects=True)
                 services["Dashboard"] = response.status_code == 200
@@ -100,7 +99,7 @@ class TestOrchestrator:
 
         return services
 
-    def parse_pytest_output(self, output: str) -> Dict[str, Any]:
+    def parse_pytest_output(self, output: str) -> dict[str, Any]:
         """Parse pytest output to extract metrics"""
         metrics = {
             "passed": 0,
@@ -109,21 +108,21 @@ class TestOrchestrator:
             "skipped": 0,
             "warnings": 0,
             "duration": 0.0,
-            "coverage": None
+            "coverage": None,
         }
 
-        lines = output.split('\n')
+        lines = output.split("\n")
 
         # Look for test results summary
         for line in lines:
             # Pattern: "=== 5 passed, 2 failed, 1 skipped in 10.5s ==="
             if "passed" in line and "in " in line and "s" in line:
                 # Extract numbers using regex
-                passed_match = re.search(r'(\d+)\s+passed', line)
-                failed_match = re.search(r'(\d+)\s+failed', line)
-                error_match = re.search(r'(\d+)\s+error', line)
-                skipped_match = re.search(r'(\d+)\s+skipped', line)
-                duration_match = re.search(r'in\s+([\d.]+)s', line)
+                passed_match = re.search(r"(\d+)\s+passed", line)
+                failed_match = re.search(r"(\d+)\s+failed", line)
+                error_match = re.search(r"(\d+)\s+error", line)
+                skipped_match = re.search(r"(\d+)\s+skipped", line)
+                duration_match = re.search(r"in\s+([\d.]+)s", line)
 
                 if passed_match:
                     metrics["passed"] = int(passed_match.group(1))
@@ -142,13 +141,13 @@ class TestOrchestrator:
 
             # Look for coverage
             if "TOTAL" in line and "%" in line:
-                coverage_match = re.search(r'(\d+)%', line)
+                coverage_match = re.search(r"(\d+)%", line)
                 if coverage_match:
                     metrics["coverage"] = int(coverage_match.group(1))
 
         return metrics
 
-    def run_test_suite(self, suite: str, command: List[str], timeout: int = 300) -> Dict[str, Any]:
+    def run_test_suite(self, suite: str, command: list[str], timeout: int = 300) -> dict[str, Any]:
         """Run a test suite and capture results"""
         print(f"\n🧪 Running {suite}...")
         print("-" * 60)
@@ -157,11 +156,7 @@ class TestOrchestrator:
 
         try:
             result = subprocess.run(
-                command,
-                capture_output=True,
-                text=True,
-                timeout=timeout,
-                cwd=self.project_root
+                command, capture_output=True, text=True, timeout=timeout, cwd=self.project_root
             )
 
             duration = time.time() - start
@@ -198,7 +193,7 @@ class TestOrchestrator:
 
             if self.verbose and result.returncode != 0:
                 print("\nErrors:")
-                error_lines = result.stderr.split('\n')[:10]  # First 10 lines
+                error_lines = result.stderr.split("\n")[:10]  # First 10 lines
                 for line in error_lines:
                     if line.strip():
                         print(f"   {line}")
@@ -211,7 +206,7 @@ class TestOrchestrator:
                 "command": " ".join(command),
                 "metrics": parsed_metrics,
                 "stdout": result.stdout[-2000:] if result.stdout else "",  # Last 2000 chars
-                "stderr": result.stderr[-1000:] if result.stderr else ""   # Last 1000 chars
+                "stderr": result.stderr[-1000:] if result.stderr else "",  # Last 1000 chars
             }
 
         except subprocess.TimeoutExpired:
@@ -223,7 +218,7 @@ class TestOrchestrator:
                 "duration": duration,
                 "return_code": -1,
                 "command": " ".join(command),
-                "error": f"Test timed out after {timeout}s"
+                "error": f"Test timed out after {timeout}s",
             }
         except Exception as e:
             duration = time.time() - start
@@ -234,10 +229,10 @@ class TestOrchestrator:
                 "duration": duration,
                 "return_code": -2,
                 "command": " ".join(command),
-                "error": str(e)
+                "error": str(e),
             }
 
-    def get_test_suites(self) -> List[Tuple[str, List[str], int]]:
+    def get_test_suites(self) -> list[tuple[str, list[str], int]]:
         """Get list of test suites to run with timeouts"""
         base_cmd = ["python", "-m", "pytest", "-v", "--tb=short"]
         if self.coverage:
@@ -247,34 +242,87 @@ class TestOrchestrator:
         suites = [
             # Critical Infrastructure (Priority 1)
             ("Environment Validation", base_cmd + ["tests/config/", "-k", "not slow"], 60),
-            ("Security Scanning", base_cmd + ["tests/security/test_comprehensive_security.py"], 180),
-
+            (
+                "Security Scanning",
+                base_cmd + ["tests/security/test_comprehensive_security.py"],
+                180,
+            ),
             # Core Functionality (Priority 2)
             ("Unit Tests - Core", base_cmd + ["tests/unit/core/", "-k", "not slow"], 120),
             ("Authentication Tests", base_cmd + ["tests/security/", "-k", "auth"], 90),
-
             # Integration Tests (Priority 3)
             ("Database Integration", base_cmd + ["tests/integration/database/"], 120),
             ("API Integration", base_cmd + ["tests/integration/", "-k", "api"], 180),
-
             # Migration & Documentation (Priority 4)
-            ("Migration Validation", base_cmd + ["tests/migration/"] if (self.project_root / "tests/migration").exists() else ["echo", "No migration tests"], 60),
-            ("Documentation Validation", base_cmd + ["tests/documentation/"] if (self.project_root / "tests/documentation").exists() else ["echo", "No docs tests"], 30),
-
+            (
+                "Migration Validation",
+                (
+                    base_cmd + ["tests/migration/"]
+                    if (self.project_root / "tests/migration").exists()
+                    else ["echo", "No migration tests"]
+                ),
+                60,
+            ),
+            (
+                "Documentation Validation",
+                (
+                    base_cmd + ["tests/documentation/"]
+                    if (self.project_root / "tests/documentation").exists()
+                    else ["echo", "No docs tests"]
+                ),
+                30,
+            ),
             # Compliance (Priority 5)
             ("Security Compliance", base_cmd + ["tests/security/", "-k", "compliance"], 90),
-            ("Educational Compliance", base_cmd + ["tests/compliance/"] if (self.project_root / "tests/compliance").exists() else ["echo", "No compliance tests"], 60),
-
+            (
+                "Educational Compliance",
+                (
+                    base_cmd + ["tests/compliance/"]
+                    if (self.project_root / "tests/compliance").exists()
+                    else ["echo", "No compliance tests"]
+                ),
+                60,
+            ),
             # User Experience (Priority 6)
-            ("User Journey Tests", base_cmd + ["tests/flows/"] if (self.project_root / "tests/flows").exists() else ["echo", "No flow tests"], 180),
+            (
+                "User Journey Tests",
+                (
+                    base_cmd + ["tests/flows/"]
+                    if (self.project_root / "tests/flows").exists()
+                    else ["echo", "No flow tests"]
+                ),
+                180,
+            ),
             ("UI Component Tests", base_cmd + ["tests/", "-k", "ui or component"], 120),
-
             # Performance & Advanced (Priority 7 - Skip if fast mode)
-            ("Performance Tests", base_cmd + ["tests/performance/", "-m", "not slow"] if not self.fast else ["echo", "Skipped performance tests in fast mode"], 300),
-            ("End-to-End Tests", base_cmd + ["tests/e2e/", "-m", "not slow"] if not self.fast else ["echo", "Skipped E2E tests in fast mode"], 600),
-
+            (
+                "Performance Tests",
+                (
+                    base_cmd + ["tests/performance/", "-m", "not slow"]
+                    if not self.fast
+                    else ["echo", "Skipped performance tests in fast mode"]
+                ),
+                300,
+            ),
+            (
+                "End-to-End Tests",
+                (
+                    base_cmd + ["tests/e2e/", "-m", "not slow"]
+                    if not self.fast
+                    else ["echo", "Skipped E2E tests in fast mode"]
+                ),
+                600,
+            ),
             # CI/CD Alignment (Priority 8)
-            ("CI/CD Pipeline Tests", base_cmd + ["tests/ci_cd/"] if (self.project_root / "tests/ci_cd").exists() else ["echo", "No CI/CD tests"], 60),
+            (
+                "CI/CD Pipeline Tests",
+                (
+                    base_cmd + ["tests/ci_cd/"]
+                    if (self.project_root / "tests/ci_cd").exists()
+                    else ["echo", "No CI/CD tests"]
+                ),
+                60,
+            ),
         ]
 
         # Filter out non-existent test paths
@@ -290,7 +338,10 @@ class TestOrchestrator:
                     valid_paths = [p for p in test_paths if (self.project_root / p).exists()]
                     if valid_paths:
                         # Replace with valid paths
-                        new_cmd = [arg if not arg.startswith("tests/") or arg in valid_paths else "" for arg in cmd]
+                        new_cmd = [
+                            arg if not arg.startswith("tests/") or arg in valid_paths else ""
+                            for arg in cmd
+                        ]
                         new_cmd = [arg for arg in new_cmd if arg]  # Remove empty strings
                         filtered_suites.append((name, new_cmd, timeout))
                     else:
@@ -390,7 +441,7 @@ class TestOrchestrator:
         print(f"   ❌ Failed: {self.metrics['failed']}")
         print(f"   💥 Errors: {self.metrics['errors']}")
         print(f"   ⏭️  Skipped: {self.metrics['skipped']}")
-        if self.metrics['warnings'] > 0:
+        if self.metrics["warnings"] > 0:
             print(f"   ⚠️  Warnings: {self.metrics['warnings']}")
 
         # Suite details
@@ -421,7 +472,7 @@ class TestOrchestrator:
                     "failed": "❌",
                     "error": "💥",
                     "timeout": "⏰",
-                    "partial": "⚠️"
+                    "partial": "⚠️",
                 }.get(result["status"], "❓")
 
                 duration = result.get("duration", 0)
@@ -431,10 +482,14 @@ class TestOrchestrator:
                 if "metrics" in result:
                     metrics = result["metrics"]
                     if metrics["passed"] > 0 or metrics["failed"] > 0:
-                        print(f"     📊 {metrics['passed']}✓ {metrics['failed']}✗ {metrics['skipped']}⏭️")
+                        print(
+                            f"     📊 {metrics['passed']}✓ {metrics['failed']}✗ {metrics['skipped']}⏭️"
+                        )
 
         # Critical issues
-        failed_suites = [s for s, r in self.test_results.items() if r["status"] in ["failed", "error", "timeout"]]
+        failed_suites = [
+            s for s, r in self.test_results.items() if r["status"] in ["failed", "error", "timeout"]
+        ]
         if failed_suites:
             print(f"\n⚠️  FAILED SUITES:")
             for suite in failed_suites:
@@ -467,12 +522,12 @@ class TestOrchestrator:
                 "platform": sys.platform,
                 "project_root": str(self.project_root),
                 "fast_mode": self.fast,
-                "coverage_enabled": self.coverage
-            }
+                "coverage_enabled": self.coverage,
+            },
         }
 
         report_path = self.project_root / "test_execution_report.json"
-        with open(report_path, 'w') as f:
+        with open(report_path, "w") as f:
             json.dump(report_data, f, indent=2, default=str)
 
         print(f"\n📄 Detailed report saved to: {report_path}")
@@ -498,9 +553,7 @@ async def main():
     args = parser.parse_args()
 
     orchestrator = TestOrchestrator(
-        verbose=args.verbose,
-        fast=args.fast,
-        coverage=not args.no_coverage
+        verbose=args.verbose, fast=args.fast, coverage=not args.no_coverage
     )
 
     try:
@@ -515,6 +568,7 @@ async def main():
         print(f"\n\n💥 Fatal error: {e}")
         if orchestrator.verbose:
             import traceback
+
             traceback.print_exc()
         sys.exit(1)
 
@@ -522,4 +576,5 @@ async def main():
 if __name__ == "__main__":
     # Import re for parsing (needed for the parsing functions)
     import re
+
     asyncio.run(main())

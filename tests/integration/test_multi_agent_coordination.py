@@ -1,4 +1,5 @@
 import pytest_asyncio
+
 #!/usr/bin/env python3
 """
 Multi-Agent Coordination Integration Tests
@@ -16,9 +17,9 @@ import asyncio
 import json
 import os
 import time
-from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, List, Optional
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import httpx
 import pytest
@@ -59,8 +60,9 @@ async def agent_coordinator_client():
 @pytest.fixture
 def auth_headers():
     """Authentication headers for API requests"""
-    import jwt
     from datetime import timedelta
+
+    import jwt
 
     payload = {
         "sub": "agent_coordinator_test",

@@ -3,24 +3,24 @@ GraphQL Subscription resolvers for real-time updates
 """
 
 import asyncio
-import json
 import uuid
-from typing import AsyncGenerator, Dict, Any
+from collections.abc import AsyncGenerator
 from datetime import datetime
+from typing import Any
 
 from ariadne import SubscriptionType
 from sqlalchemy import select
 
-from database.models import User, Course
+from database.models import Course
 
 # Create Subscription type
 subscription = SubscriptionType()
 
 # In-memory event store (in production, use Redis pub/sub)
-event_channels: Dict[str, asyncio.Queue] = {}
+event_channels: dict[str, asyncio.Queue] = {}
 
 
-async def publish_event(channel: str, event: Dict[str, Any]):
+async def publish_event(channel: str, event: dict[str, Any]):
     """Publish event to a channel"""
     if channel not in event_channels:
         event_channels[channel] = asyncio.Queue()
@@ -31,7 +31,7 @@ async def publish_event(channel: str, event: Dict[str, Any]):
 @subscription.source("contentGeneration")
 async def generate_content_updates(
     obj, info, generationId: str
-) -> AsyncGenerator[Dict[str, Any], None]:
+) -> AsyncGenerator[dict[str, Any], None]:
     """Subscribe to content generation updates"""
 
     generation_id = uuid.UUID(generationId)
@@ -94,7 +94,7 @@ def resolve_content_generation(update, info):
 
 
 @subscription.source("courseUpdates")
-async def generate_course_updates(obj, info, courseId: str) -> AsyncGenerator[Dict[str, Any], None]:
+async def generate_course_updates(obj, info, courseId: str) -> AsyncGenerator[dict[str, Any], None]:
     """Subscribe to course updates"""
 
     course_id = uuid.UUID(courseId)
@@ -140,7 +140,7 @@ def resolve_course_updates(update, info):
 @subscription.source("lessonProgress")
 async def generate_lesson_progress(
     obj, info, courseId: str, studentId: str = None
-) -> AsyncGenerator[Dict[str, Any], None]:
+) -> AsyncGenerator[dict[str, Any], None]:
     """Subscribe to lesson progress updates"""
 
     course_id = uuid.UUID(courseId)

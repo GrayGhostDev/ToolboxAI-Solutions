@@ -20,7 +20,7 @@ Version: 2.0.0
 import asyncio
 import logging
 from datetime import datetime
-from typing import Dict, Any, List, Optional, Union
+from typing import Any
 from uuid import uuid4
 
 from fastapi import (
@@ -29,43 +29,27 @@ from fastapi import (
     Depends,
     HTTPException,
     Query,
-    Request,
     WebSocket,
     WebSocketDisconnect,
-    status,
 )
-from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.api.auth.auth import (
     get_current_user,
     rate_limit,
-    require_role,
-    RateLimitError,
-    AuthenticationError,
-    AuthorizationError,
 )
-from apps.backend.models.schemas import User, BaseResponse
+from apps.backend.models.schemas import User
 from apps.backend.services.pusher import trigger_event as pusher_trigger
 from apps.backend.services.websocket_pipeline_manager import websocket_pipeline_manager
-from apps.backend.services.websocket_handler import websocket_manager
-from core.agents.enhanced_content_pipeline import (
-    EnhancedContentPipeline,
-    PipelineState,
-    PipelineStage,
-    ContentType,
-)
 from core.agents.content_quality_validator import (
     ContentQualityValidator,
-    ValidationReport,
-    ValidationSeverity,
 )
-from database.content_pipeline_models import (
-    EnhancedContentGeneration,
-    ContentQualityMetrics,
-    LearningProfile,
-    ContentPersonalizationLog,
+from core.agents.enhanced_content_pipeline import (
+    ContentType,
+    EnhancedContentPipeline,
+    PipelineStage,
+    PipelineState,
 )
 
 logger = logging.getLogger(__name__)
@@ -79,8 +63,8 @@ quality_validator = None
 db_session = None
 
 # In-memory storage for demo purposes
-generation_sessions: Dict[str, Dict[str, Any]] = {}
-websocket_connections: Dict[str, WebSocket] = {}
+generation_sessions: dict[str, dict[str, Any]] = {}
+websocket_connections: dict[str, WebSocket] = {}
 
 # Pydantic Models for Request/Response Validation
 
@@ -96,18 +80,18 @@ class ContentGenerationRequest(BaseModel):
     )
     content_type: str = Field(..., description="Type of content to generate")
 
-    learning_objectives: List[str] = Field(
+    learning_objectives: list[str] = Field(
         default_factory=list,
         min_items=1,
         max_items=10,
         description="Specific learning objectives for the content",
     )
 
-    difficulty_level: Optional[str] = Field(
+    difficulty_level: str | None = Field(
         "medium", description="Difficulty level: 'easy', 'medium', 'hard'"
     )
 
-    duration_minutes: Optional[int] = Field(
+    duration_minutes: int | None = Field(
         30, ge=5, le=120, description="Expected duration in minutes"
     )
 
@@ -115,11 +99,11 @@ class ContentGenerationRequest(BaseModel):
         True, description="Whether to apply personalization based on user profile"
     )
 
-    roblox_requirements: Optional[Dict[str, Any]] = Field(
+    roblox_requirements: dict[str, Any] | None = Field(
         default_factory=dict, description="Specific Roblox environment requirements"
     )
 
-    custom_parameters: Optional[Dict[str, Any]] = Field(
+    custom_parameters: dict[str, Any] | None = Field(
         default_factory=dict, description="Additional custom parameters"
     )
 
@@ -155,16 +139,16 @@ class ContentGenerationResponse(BaseModel):
     status: str = Field(..., description="Current status of the generation")
     message: str = Field(..., description="Human-readable status message")
 
-    estimated_completion_time: Optional[datetime] = Field(
+    estimated_completion_time: datetime | None = Field(
         None, description="Estimated completion time"
     )
 
     current_stage: str = Field(..., description="Current pipeline stage")
     progress_percentage: float = Field(0.0, ge=0, le=100, description="Completion percentage")
 
-    websocket_url: Optional[str] = Field(None, description="WebSocket URL for real-time updates")
+    websocket_url: str | None = Field(None, description="WebSocket URL for real-time updates")
 
-    pusher_channel: Optional[str] = Field(None, description="Pusher channel for real-time updates")
+    pusher_channel: str | None = Field(None, description="Pusher channel for real-time updates")
 
 
 class ContentStatusResponse(BaseModel):
@@ -176,15 +160,15 @@ class ContentStatusResponse(BaseModel):
     progress_percentage: float
 
     started_at: datetime
-    estimated_completion: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    estimated_completion: datetime | None = None
+    completed_at: datetime | None = None
 
-    stage_details: Dict[str, Any] = Field(default_factory=dict)
-    errors: List[str] = Field(default_factory=list)
-    warnings: List[str] = Field(default_factory=list)
+    stage_details: dict[str, Any] = Field(default_factory=dict)
+    errors: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
 
-    generated_artifacts: Dict[str, Any] = Field(default_factory=dict)
-    quality_metrics: Optional[Dict[str, Any]] = None
+    generated_artifacts: dict[str, Any] = Field(default_factory=dict)
+    quality_metrics: dict[str, Any] | None = None
 
 
 class GeneratedContentResponse(BaseModel):
@@ -198,14 +182,14 @@ class GeneratedContentResponse(BaseModel):
     subject: str
     grade_level: str
 
-    enhanced_content: Dict[str, Any]
-    generated_scripts: List[Dict[str, Any]] = Field(default_factory=list)
-    generated_assets: List[Dict[str, Any]] = Field(default_factory=list)
+    enhanced_content: dict[str, Any]
+    generated_scripts: list[dict[str, Any]] = Field(default_factory=list)
+    generated_assets: list[dict[str, Any]] = Field(default_factory=list)
 
     quality_score: float = Field(ge=0, le=1)
     personalization_applied: bool
 
-    validation_report: Optional[Dict[str, Any]] = None
+    validation_report: dict[str, Any] | None = None
 
     created_at: datetime
     generation_time_seconds: float
@@ -214,11 +198,11 @@ class GeneratedContentResponse(BaseModel):
 class ContentValidationRequest(BaseModel):
     """Request model for content validation"""
 
-    content: Dict[str, Any] = Field(..., description="Content to validate")
+    content: dict[str, Any] = Field(..., description="Content to validate")
     content_type: str = Field(..., description="Type of content being validated")
     target_age: int = Field(10, ge=5, le=18, description="Target age for validation")
 
-    validation_categories: Optional[List[str]] = Field(
+    validation_categories: list[str] | None = Field(
         None, description="Specific validation categories to run"
     )
 
@@ -241,8 +225,8 @@ class ContentValidationResponse(BaseModel):
     issues_count: int
     warnings_count: int
 
-    detailed_report: Dict[str, Any]
-    recommendations: List[str]
+    detailed_report: dict[str, Any]
+    recommendations: list[str]
 
     validated_at: datetime
     validation_duration_seconds: float
@@ -252,19 +236,19 @@ class PersonalizationRequest(BaseModel):
     """Request model for content personalization"""
 
     content_id: str = Field(..., description="ID of content to personalize")
-    personalization_params: Dict[str, Any] = Field(
+    personalization_params: dict[str, Any] = Field(
         default_factory=dict, description="Specific personalization parameters"
     )
 
-    learning_style: Optional[str] = Field(None, description="Preferred learning style")
+    learning_style: str | None = Field(None, description="Preferred learning style")
 
-    difficulty_preference: Optional[str] = Field(None, description="Preferred difficulty level")
+    difficulty_preference: str | None = Field(None, description="Preferred difficulty level")
 
 
 class ContentHistoryResponse(BaseModel):
     """Response model for content generation history"""
 
-    items: List[Dict[str, Any]]
+    items: list[dict[str, Any]]
     total_count: int
     page: int
     page_size: int
@@ -290,7 +274,7 @@ async def get_quality_validator() -> ContentQualityValidator:
     return quality_validator
 
 
-async def get_db_session() -> Optional[AsyncSession]:
+async def get_db_session() -> AsyncSession | None:
     """Get database session (would be implemented with proper session management)"""
     # This would be implemented with proper database session management
     return None
@@ -545,8 +529,8 @@ async def get_content_history(
     current_user: User = Depends(get_current_user),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
-    content_type: Optional[str] = Query(None, description="Filter by content type"),
-    subject: Optional[str] = Query(None, description="Filter by subject"),
+    content_type: str | None = Query(None, description="Filter by content type"),
+    subject: str | None = Query(None, description="Filter by subject"),
 ) -> ContentHistoryResponse:
     """
     Get user's content generation history with filtering and pagination.
@@ -615,14 +599,14 @@ async def get_content_history(
         raise HTTPException(status_code=500, detail="Failed to retrieve content history")
 
 
-@router.post("/personalize", response_model=Dict[str, Any])
+@router.post("/personalize", response_model=dict[str, Any])
 async def apply_personalization(
     request: PersonalizationRequest,
     current_user: User = Depends(get_current_user),
     _: None = Depends(
         rate_limit(max_requests=15, window_seconds=60)
     ),  # 15 personalizations per minute
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Apply personalization to existing content based on user profile.
 
@@ -841,7 +825,7 @@ async def run_content_generation(
 
 
 async def send_pipeline_update(
-    pipeline_id: str, pusher_channel: str, event_type: str, data: Dict[str, Any]
+    pipeline_id: str, pusher_channel: str, event_type: str, data: dict[str, Any]
 ):
     """
     Enhanced pipeline update sender using WebSocketPipelineManager.

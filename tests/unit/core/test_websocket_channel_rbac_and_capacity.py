@@ -1,17 +1,18 @@
-import pytest_asyncio
+from unittest.mock import Mock, patch
 
 import pytest
-from unittest.mock import Mock, patch
+
 
 @pytest.fixture
 def mock_db_connection():
     """Mock database connection for tests"""
-    with patch('psycopg2.connect') as mock_connect:
+    with patch("psycopg2.connect") as mock_connect:
         mock_conn = Mock()
         mock_cursor = Mock()
         mock_conn.cursor.return_value = mock_cursor
         mock_connect.return_value = mock_conn
         yield mock_conn
+
 
 import sys
 from pathlib import Path
@@ -22,25 +23,25 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 
-
 def make_json_serializable(obj):
     """Convert non-serializable objects to serializable format."""
-    if hasattr(obj, '__dict__'):
+    if hasattr(obj, "__dict__"):
         return obj.__dict__
-    elif hasattr(obj, 'to_dict'):
+    elif hasattr(obj, "to_dict"):
         return obj.to_dict()
-    elif hasattr(obj, '_asdict'):
+    elif hasattr(obj, "_asdict"):
         return obj._asdict()
     else:
         return str(obj)
 
-import json
-import pytest
-from unittest.mock import AsyncMock
-from tests.fixtures.pusher_test_utils import WebSocketState
 
-from tests.fixtures.pusher_test_utils import WebSocketManager
+import json
+from unittest.mock import AsyncMock
+
+import pytest
+
 from apps.backend.core.config import settings
+from tests.fixtures.pusher_test_utils import WebSocketManager, WebSocketState
 
 
 @pytest.mark.asyncio(loop_scope="function")
@@ -59,7 +60,12 @@ async def test_websocket_channel_rbac_by_prefix():
         # Student
         c1 = await manager.connect(ws, client_id="c1", user_id="u1", user_role="student")
         # Try to subscribe to admin channel
-        await manager.handle_message(c1, json.dumps({"type": "subscribe", "channels": ["admin_updates"]}, default=make_json_serializable))
+        await manager.handle_message(
+            c1,
+            json.dumps(
+                {"type": "subscribe", "channels": ["admin_updates"]}, default=make_json_serializable
+            ),
+        )
         # Expect an error about role requirement
         assert ws.send_text.called
         last = json.loads(ws.send_text.call_args[0][0])
@@ -75,8 +81,16 @@ async def test_ws_capacity_enforcement(monkeypatch):
     # Enforce small capacity using monkeypatch
     monkeypatch.setattr(settings.__class__, "WS_MAX_CONNECTIONS", property(lambda self: 1))
     try:
-        ws1 = AsyncMock(); ws1.accept = AsyncMock(); ws1.send_text = AsyncMock(); ws1.close = AsyncMock(); ws1.client_state = WebSocketState.CONNECTED
-        ws2 = AsyncMock(); ws2.accept = AsyncMock(); ws2.send_text = AsyncMock(); ws2.close = AsyncMock(); ws2.client_state = WebSocketState.CONNECTED
+        ws1 = AsyncMock()
+        ws1.accept = AsyncMock()
+        ws1.send_text = AsyncMock()
+        ws1.close = AsyncMock()
+        ws1.client_state = WebSocketState.CONNECTED
+        ws2 = AsyncMock()
+        ws2.accept = AsyncMock()
+        ws2.send_text = AsyncMock()
+        ws2.close = AsyncMock()
+        ws2.client_state = WebSocketState.CONNECTED
 
         manager = WebSocketManager()
         c1 = await manager.connect(ws1, client_id="a", user_id="uA", user_role="student")
@@ -95,4 +109,3 @@ async def test_ws_capacity_enforcement(monkeypatch):
         assert "capacity" in sent["error"].lower()
     finally:
         pass  # monkeypatch will restore automatically
-

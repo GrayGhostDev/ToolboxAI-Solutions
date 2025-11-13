@@ -1,4 +1,4 @@
-import pytest_asyncio
+
 #!/usr/bin/env python3
 """
 Test script for verifying the Agent System functionality.
@@ -18,20 +18,20 @@ Version: 1.0.0
 import asyncio
 import json
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 # Add project root to path
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
 # Colors for output
-RED = '\033[0;31m'
-GREEN = '\033[0;32m'
-YELLOW = '\033[1;33m'
-BLUE = '\033[0;34m'
-CYAN = '\033[0;36m'
-NC = '\033[0m'  # No Color
+RED = "\033[0;31m"
+GREEN = "\033[0;32m"
+YELLOW = "\033[1;33m"
+BLUE = "\033[0;34m"
+CYAN = "\033[0;36m"
+NC = "\033[0m"  # No Color
 
 
 def print_success(message):
@@ -62,8 +62,7 @@ async def test_agent_registry():
     print_section("Testing Agent Registry and Factory")
 
     try:
-        from core.agents.agent_registry import get_registry, get_factory, AgentCategory
-        from core.agents.base_agent import AgentCapability
+        from core.agents.agent_registry import AgentCategory, get_factory, get_registry
 
         # Test registry
         print_info("Testing agent registry...")
@@ -115,17 +114,17 @@ async def test_master_orchestrator():
 
     try:
         from core.agents.master_orchestrator import (
-            get_orchestrator,
-            OrchestratorConfig,
             AgentSystemType,
-            TaskPriority
+            OrchestratorConfig,
+            TaskPriority,
+            get_orchestrator,
         )
 
         print_info("Initializing Master Orchestrator...")
         config = OrchestratorConfig(
             max_concurrent_tasks=5,
             enable_health_checks=False,  # Disable for quick test
-            enable_metrics=True
+            enable_metrics=True,
         )
 
         orchestrator = get_orchestrator(config)
@@ -145,7 +144,7 @@ async def test_master_orchestrator():
             task_id = await orchestrator.submit_task(
                 agent_type=AgentSystemType.MONITORING,
                 task_data={"action": "test"},
-                priority=TaskPriority.LOW
+                priority=TaskPriority.LOW,
             )
             print_success(f"Task submitted: {task_id}")
 
@@ -177,9 +176,9 @@ async def test_worktree_coordinator():
 
     try:
         from core.agents.worktree_coordinator import (
+            TaskPriority,
             WorktreeAgentCoordinator,
             WorktreeTaskType,
-            TaskPriority
         )
 
         print_info("Initializing Worktree Coordinator...")
@@ -191,7 +190,7 @@ async def test_worktree_coordinator():
             task_type=WorktreeTaskType.TESTING,
             description="Test task for agent system verification",
             requirements=["Test the agent system", "Verify functionality"],
-            priority=TaskPriority.LOW
+            priority=TaskPriority.LOW,
         )
         print_success(f"Task distributed: {task_id}")
 
@@ -217,7 +216,9 @@ async def test_resource_monitor():
     print_section("Testing Resource Monitor Agent")
 
     try:
-        from core.agents.github_agents.resource_monitor_agent import ResourceMonitorAgent
+        from core.agents.github_agents.resource_monitor_agent import (
+            ResourceMonitorAgent,
+        )
 
         print_info("Initializing Resource Monitor...")
         monitor = ResourceMonitorAgent()
@@ -282,19 +283,17 @@ async def test_agent_communication():
     try:
         from core.swarm.message_bus import MessageBus, MessageBusConfig
         from core.swarm.message_bus.agent_message import MessageBuilder
-        from core.swarm.message_bus.event_types import EventType, EventPriority
+        from core.swarm.message_bus.event_types import EventPriority, EventType
 
         print_info("Initializing Message Bus...")
-        config = MessageBusConfig(
-            max_queue_size=100,
-            enable_logging=True
-        )
+        config = MessageBusConfig(max_queue_size=100, enable_logging=True)
         bus = MessageBus(config)
         print_success("Message Bus initialized")
 
         # Create and send test message
         print_info("Testing message publishing...")
-        message = (MessageBuilder()
+        message = (
+            MessageBuilder()
             .with_event(EventType.TASK_CREATE)
             .from_agent("test_agent")
             .broadcast()
@@ -344,7 +343,7 @@ async def main():
         ("Master Orchestrator", test_master_orchestrator),
         ("Worktree Coordinator", test_worktree_coordinator),
         ("Resource Monitor", test_resource_monitor),
-        ("Agent Communication", test_agent_communication)
+        ("Agent Communication", test_agent_communication),
     ]
 
     results = []

@@ -119,7 +119,7 @@ export default function LoginMantine() {
         title: 'Welcome back!',
         message: 'You have successfully signed in.',
         color: 'green',
-        icon: <IconCheck size={rem(18)} />,
+        icon: <IconCheck size={18} />,
       });
 
       // Navigate to dashboard
@@ -133,7 +133,7 @@ export default function LoginMantine() {
         title: 'Login Failed',
         message: errorMessage,
         color: 'red',
-        icon: <IconAlertCircle size={rem(18)} />,
+        icon: <IconAlertCircle size={18} />,
       });
     } finally {
       setLoading(false);
@@ -199,7 +199,7 @@ export default function LoginMantine() {
                 <Alert
                   variant="light"
                   color="red"
-                  icon={<IconAlertCircle size={rem(16)} />}
+                  icon={<IconAlertCircle size={16} />}
                   radius="md"
                   data-testid="login-error-alert"
                 >
@@ -214,7 +214,7 @@ export default function LoginMantine() {
                 onChange={(event) => handleChange('email')(event.currentTarget.value)}
                 required
                 disabled={loading}
-                leftSection={<IconMail size={rem(16)} />}
+                leftSection={<IconMail size={16} />}
                 data-testid="email-input"
                 description="Enter your username or email address"
               />
@@ -225,7 +225,7 @@ export default function LoginMantine() {
                 onChange={(event) => handleChange('password')(event.currentTarget.value)}
                 required
                 disabled={loading}
-                leftSection={<IconLock size={rem(16)} />}
+                leftSection={<IconLock size={16} />}
                 data-testid="password-input"
               />
 

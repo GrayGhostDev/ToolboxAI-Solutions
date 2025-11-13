@@ -11,17 +11,20 @@ Provides comprehensive content management for the educational platform:
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional, Union
 from enum import Enum
+from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from fastapi.security import HTTPBearer
-from pydantic import BaseModel, Field, field_validator, ConfigDict
-from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # Import authentication and dependencies
 try:
-    from apps.backend.api.auth.auth import get_current_user, require_role, require_any_role
+    from apps.backend.api.auth.auth import (
+        get_current_user,
+        require_any_role,
+        require_role,
+    )
     from apps.backend.core.deps import get_db
     from apps.backend.core.security.rate_limit_manager import rate_limit
 except ImportError:
@@ -47,7 +50,7 @@ except ImportError:
 
 # Import models and services
 try:
-    from apps.backend.models.schemas import User, BaseResponse
+    from apps.backend.models.schemas import BaseResponse, User
     from apps.backend.services.pusher import trigger_event
 except ImportError:
 
@@ -122,10 +125,10 @@ class SubjectArea(str, Enum):
 class LearningObjective(BaseModel):
     """Individual learning objective"""
 
-    id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()))
+    id: str | None = Field(default_factory=lambda: str(uuid.uuid4()))
     description: str = Field(..., min_length=10, max_length=500)
     bloom_level: str = Field(..., description="Bloom's Taxonomy level")
-    assessment_criteria: Optional[str] = None
+    assessment_criteria: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -145,10 +148,10 @@ class ContentMetadata(BaseModel):
     """Content metadata and settings"""
 
     estimated_duration: int = Field(..., description="Estimated completion time in minutes")
-    prerequisites: List[str] = Field(default_factory=list)
-    tags: List[str] = Field(default_factory=list)
+    prerequisites: list[str] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
     language: str = Field(default="en")
-    accessibility_features: List[str] = Field(default_factory=list)
+    accessibility_features: list[str] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -162,11 +165,11 @@ class CreateContentRequest(BaseModel):
     subject_area: SubjectArea
     grade_level: int = Field(..., ge=1, le=12)
     difficulty_level: DifficultyLevel
-    learning_objectives: List[LearningObjective] = Field(..., min_items=1, max_items=10)
-    curriculum_standards: List[CurriculumStandard] = Field(default_factory=list)
-    content_data: Dict[str, Any] = Field(..., description="Actual content data")
+    learning_objectives: list[LearningObjective] = Field(..., min_items=1, max_items=10)
+    curriculum_standards: list[CurriculumStandard] = Field(default_factory=list)
+    content_data: dict[str, Any] = Field(..., description="Actual content data")
     metadata: ContentMetadata
-    roblox_environment_id: Optional[str] = None
+    roblox_environment_id: str | None = None
 
     @field_validator("content_data")
     @classmethod
@@ -193,14 +196,14 @@ class CreateContentRequest(BaseModel):
 class UpdateContentRequest(BaseModel):
     """Request to update existing content"""
 
-    title: Optional[str] = Field(None, min_length=3, max_length=200)
-    description: Optional[str] = Field(None, min_length=10, max_length=1000)
-    difficulty_level: Optional[DifficultyLevel] = None
-    learning_objectives: Optional[List[LearningObjective]] = None
-    curriculum_standards: Optional[List[CurriculumStandard]] = None
-    content_data: Optional[Dict[str, Any]] = None
-    metadata: Optional[ContentMetadata] = None
-    status: Optional[ContentStatus] = None
+    title: str | None = Field(None, min_length=3, max_length=200)
+    description: str | None = Field(None, min_length=10, max_length=1000)
+    difficulty_level: DifficultyLevel | None = None
+    learning_objectives: list[LearningObjective] | None = None
+    curriculum_standards: list[CurriculumStandard] | None = None
+    content_data: dict[str, Any] | None = None
+    metadata: ContentMetadata | None = None
+    status: ContentStatus | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -213,11 +216,11 @@ class ContentGenerationRequest(BaseModel):
     topic: str = Field(..., min_length=3, max_length=100)
     content_type: ContentType
     difficulty_level: DifficultyLevel
-    learning_objectives: List[str] = Field(..., min_items=1, max_items=5)
-    curriculum_standards: List[str] = Field(default_factory=list)
-    additional_requirements: Optional[str] = None
+    learning_objectives: list[str] = Field(..., min_items=1, max_items=5)
+    curriculum_standards: list[str] = Field(default_factory=list)
+    additional_requirements: str | None = None
     include_roblox_integration: bool = Field(default=False)
-    target_duration: Optional[int] = Field(None, description="Target duration in minutes")
+    target_duration: int | None = Field(None, description="Target duration in minutes")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -237,7 +240,7 @@ class ContentSummary(BaseModel):
     created_at: datetime
     updated_at: datetime
     usage_count: int = 0
-    average_rating: Optional[float] = None
+    average_rating: float | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -252,17 +255,17 @@ class ContentResponse(BaseModel):
     subject_area: SubjectArea
     grade_level: int
     difficulty_level: DifficultyLevel
-    learning_objectives: List[LearningObjective]
-    curriculum_standards: List[CurriculumStandard]
-    content_data: Dict[str, Any]
+    learning_objectives: list[LearningObjective]
+    curriculum_standards: list[CurriculumStandard]
+    content_data: dict[str, Any]
     metadata: ContentMetadata
     status: ContentStatus
     created_by: str
     created_at: datetime
     updated_at: datetime
     version: int = 1
-    usage_analytics: Dict[str, Any] = Field(default_factory=dict)
-    roblox_environment_id: Optional[str] = None
+    usage_analytics: dict[str, Any] = Field(default_factory=dict)
+    roblox_environment_id: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -270,13 +273,13 @@ class ContentResponse(BaseModel):
 class ContentListResponse(BaseModel):
     """Paginated content list response"""
 
-    items: List[ContentSummary]
+    items: list[ContentSummary]
     total: int
     page: int
     page_size: int
     has_next: bool
     has_previous: bool
-    filters_applied: Dict[str, Any]
+    filters_applied: dict[str, Any]
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -286,10 +289,10 @@ class ContentGenerationResponse(BaseModel):
 
     generation_id: str
     status: str = "processing"
-    estimated_completion_time: Optional[datetime] = None
+    estimated_completion_time: datetime | None = None
     progress_percentage: int = 0
-    generated_content: Optional[ContentResponse] = None
-    generation_metadata: Dict[str, Any] = Field(default_factory=dict)
+    generated_content: ContentResponse | None = None
+    generation_metadata: dict[str, Any] = Field(default_factory=dict)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -302,17 +305,17 @@ class ContentAnalytics(BaseModel):
     unique_users: int
     completion_rate: float
     average_time_spent: int  # in minutes
-    difficulty_feedback: Dict[str, int]
-    user_ratings: List[float]
+    difficulty_feedback: dict[str, int]
+    user_ratings: list[float]
     learning_effectiveness: float
-    engagement_metrics: Dict[str, Any]
+    engagement_metrics: dict[str, Any]
 
     model_config = ConfigDict(from_attributes=True)
 
 
 # Mock data for development
-_mock_content_db: Dict[str, ContentResponse] = {}
-_mock_analytics_db: Dict[str, ContentAnalytics] = {}
+_mock_content_db: dict[str, ContentResponse] = {}
+_mock_analytics_db: dict[str, ContentAnalytics] = {}
 
 
 # Utility functions
@@ -341,7 +344,7 @@ async def notify_content_update(content_id: str, action: str, user_id: str):
 async def create_content(
     request: CreateContentRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
 ):
     """
@@ -406,14 +409,14 @@ async def create_content(
 async def list_content(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
-    subject_area: Optional[SubjectArea] = Query(None, description="Filter by subject"),
-    grade_level: Optional[int] = Query(None, ge=1, le=12, description="Filter by grade"),
-    content_type: Optional[ContentType] = Query(None, description="Filter by content type"),
-    difficulty_level: Optional[DifficultyLevel] = Query(None, description="Filter by difficulty"),
-    status: Optional[ContentStatus] = Query(None, description="Filter by status"),
-    search: Optional[str] = Query(None, min_length=2, description="Search in title/description"),
-    created_by: Optional[str] = Query(None, description="Filter by creator"),
-    current_user: Dict = Depends(get_current_user),
+    subject_area: SubjectArea | None = Query(None, description="Filter by subject"),
+    grade_level: int | None = Query(None, ge=1, le=12, description="Filter by grade"),
+    content_type: ContentType | None = Query(None, description="Filter by content type"),
+    difficulty_level: DifficultyLevel | None = Query(None, description="Filter by difficulty"),
+    status: ContentStatus | None = Query(None, description="Filter by status"),
+    search: str | None = Query(None, min_length=2, description="Search in title/description"),
+    created_by: str | None = Query(None, description="Filter by creator"),
+    current_user: dict = Depends(get_current_user),
 ):
     """
     List educational content with filtering and pagination.
@@ -576,7 +579,7 @@ async def list_content(
 
 
 @router.get("/{content_id}", response_model=ContentResponse)
-async def get_content(content_id: str, current_user: Dict = Depends(get_current_user)):
+async def get_content(content_id: str, current_user: dict = Depends(get_current_user)):
     """
     Get specific educational content by ID.
 
@@ -617,7 +620,7 @@ async def update_content(
     content_id: str,
     request: UpdateContentRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
 ):
     """
@@ -664,7 +667,7 @@ async def update_content(
 async def delete_content(
     content_id: str,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
 ):
     """
@@ -710,7 +713,7 @@ async def delete_content(
 async def generate_content(
     request: ContentGenerationRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
 ):
     """
@@ -752,7 +755,7 @@ async def generate_content(
 @router.get("/{content_id}/analytics", response_model=ContentAnalytics)
 async def get_content_analytics(
     content_id: str,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
 ):
     """
@@ -796,7 +799,7 @@ async def get_content_analytics(
 async def publish_content(
     content_id: str,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
 ):
     """
@@ -836,13 +839,13 @@ async def publish_content(
         )
 
 
-@router.get("/standards/search", response_model=List[CurriculumStandard])
+@router.get("/standards/search", response_model=list[CurriculumStandard])
 async def search_curriculum_standards(
     query: str = Query(..., min_length=2, description="Search query"),
-    subject_area: Optional[SubjectArea] = Query(None, description="Filter by subject"),
-    grade_level: Optional[int] = Query(None, ge=1, le=12, description="Filter by grade"),
+    subject_area: SubjectArea | None = Query(None, description="Filter by subject"),
+    grade_level: int | None = Query(None, ge=1, le=12, description="Filter by grade"),
     limit: int = Query(20, ge=1, le=100, description="Maximum results"),
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Search curriculum standards for content alignment.

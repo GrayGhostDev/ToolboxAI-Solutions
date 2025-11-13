@@ -5,9 +5,9 @@ Tests all email endpoints including sending emails, welcome emails,
 password resets, verification, templates, and webhook handling.
 """
 
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, AsyncMock, patch
-from datetime import datetime, timezone
 from fastapi import status
 from fastapi.testclient import TestClient
 
@@ -130,12 +130,11 @@ class TestSendEmail:
         self, test_client, sample_send_email_request, mock_admin_user, mock_email_service
     ):
         """Test successful email sending as admin"""
-        with patch('apps.backend.api.routers.email.get_current_user', return_value=mock_admin_user):
-            with patch('apps.backend.api.routers.email.email_service', mock_email_service):
-                with patch('apps.backend.api.routers.email.log_audit'):
+        with patch("apps.backend.api.routers.email.get_current_user", return_value=mock_admin_user):
+            with patch("apps.backend.api.routers.email.email_service", mock_email_service):
+                with patch("apps.backend.api.routers.email.log_audit"):
                     response = test_client.post(
-                        "/api/v1/email/send",
-                        json=sample_send_email_request
+                        "/api/v1/email/send", json=sample_send_email_request
                     )
 
         assert response.status_code == status.HTTP_200_OK
@@ -152,12 +151,13 @@ class TestSendEmail:
         self, test_client, sample_send_email_request, mock_teacher_user, mock_email_service
     ):
         """Test successful email sending as teacher"""
-        with patch('apps.backend.api.routers.email.get_current_user', return_value=mock_teacher_user):
-            with patch('apps.backend.api.routers.email.email_service', mock_email_service):
-                with patch('apps.backend.api.routers.email.log_audit'):
+        with patch(
+            "apps.backend.api.routers.email.get_current_user", return_value=mock_teacher_user
+        ):
+            with patch("apps.backend.api.routers.email.email_service", mock_email_service):
+                with patch("apps.backend.api.routers.email.log_audit"):
                     response = test_client.post(
-                        "/api/v1/email/send",
-                        json=sample_send_email_request
+                        "/api/v1/email/send", json=sample_send_email_request
                     )
 
         assert response.status_code == status.HTTP_200_OK
@@ -166,19 +166,16 @@ class TestSendEmail:
         self, test_client, sample_send_email_request, mock_student_user
     ):
         """Test email sending forbidden for students"""
-        with patch('apps.backend.api.routers.email.get_current_user', return_value=mock_student_user):
-            response = test_client.post(
-                "/api/v1/email/send",
-                json=sample_send_email_request
-            )
+        with patch(
+            "apps.backend.api.routers.email.get_current_user", return_value=mock_student_user
+        ):
+            response = test_client.post("/api/v1/email/send", json=sample_send_email_request)
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
         data = response.json()
         assert "Only admins and teachers" in data["detail"]
 
-    def test_send_email_with_template(
-        self, test_client, mock_admin_user, mock_email_service
-    ):
+    def test_send_email_with_template(self, test_client, mock_admin_user, mock_email_service):
         """Test email sending with template ID"""
         request_data = {
             "to_email": "recipient@example.com",
@@ -187,19 +184,14 @@ class TestSendEmail:
             "template_data": {"name": "John", "code": "ABC123"},
         }
 
-        with patch('apps.backend.api.routers.email.get_current_user', return_value=mock_admin_user):
-            with patch('apps.backend.api.routers.email.email_service', mock_email_service):
-                with patch('apps.backend.api.routers.email.log_audit'):
-                    response = test_client.post(
-                        "/api/v1/email/send",
-                        json=request_data
-                    )
+        with patch("apps.backend.api.routers.email.get_current_user", return_value=mock_admin_user):
+            with patch("apps.backend.api.routers.email.email_service", mock_email_service):
+                with patch("apps.backend.api.routers.email.log_audit"):
+                    response = test_client.post("/api/v1/email/send", json=request_data)
 
         assert response.status_code == status.HTTP_200_OK
 
-    def test_send_email_with_attachments(
-        self, test_client, mock_admin_user, mock_email_service
-    ):
+    def test_send_email_with_attachments(self, test_client, mock_admin_user, mock_email_service):
         """Test email sending with attachments"""
         request_data = {
             "to_email": "recipient@example.com",
@@ -214,19 +206,14 @@ class TestSendEmail:
             ],
         }
 
-        with patch('apps.backend.api.routers.email.get_current_user', return_value=mock_admin_user):
-            with patch('apps.backend.api.routers.email.email_service', mock_email_service):
-                with patch('apps.backend.api.routers.email.log_audit'):
-                    response = test_client.post(
-                        "/api/v1/email/send",
-                        json=request_data
-                    )
+        with patch("apps.backend.api.routers.email.get_current_user", return_value=mock_admin_user):
+            with patch("apps.backend.api.routers.email.email_service", mock_email_service):
+                with patch("apps.backend.api.routers.email.log_audit"):
+                    response = test_client.post("/api/v1/email/send", json=request_data)
 
         assert response.status_code == status.HTTP_200_OK
 
-    def test_send_email_with_cc_bcc(
-        self, test_client, mock_admin_user, mock_email_service
-    ):
+    def test_send_email_with_cc_bcc(self, test_client, mock_admin_user, mock_email_service):
         """Test email sending with CC and BCC recipients"""
         request_data = {
             "to_email": "recipient@example.com",
@@ -237,13 +224,10 @@ class TestSendEmail:
             "reply_to": "replyto@example.com",
         }
 
-        with patch('apps.backend.api.routers.email.get_current_user', return_value=mock_admin_user):
-            with patch('apps.backend.api.routers.email.email_service', mock_email_service):
-                with patch('apps.backend.api.routers.email.log_audit'):
-                    response = test_client.post(
-                        "/api/v1/email/send",
-                        json=request_data
-                    )
+        with patch("apps.backend.api.routers.email.get_current_user", return_value=mock_admin_user):
+            with patch("apps.backend.api.routers.email.email_service", mock_email_service):
+                with patch("apps.backend.api.routers.email.log_audit"):
+                    response = test_client.post("/api/v1/email/send", json=request_data)
 
         assert response.status_code == status.HTTP_200_OK
 
@@ -253,12 +237,9 @@ class TestSendEmail:
         """Test email sending with service error"""
         mock_email_service.send_email.side_effect = Exception("SendGrid API error")
 
-        with patch('apps.backend.api.routers.email.get_current_user', return_value=mock_admin_user):
-            with patch('apps.backend.api.routers.email.email_service', mock_email_service):
-                response = test_client.post(
-                    "/api/v1/email/send",
-                    json=sample_send_email_request
-                )
+        with patch("apps.backend.api.routers.email.get_current_user", return_value=mock_admin_user):
+            with patch("apps.backend.api.routers.email.email_service", mock_email_service):
+                response = test_client.post("/api/v1/email/send", json=sample_send_email_request)
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         data = response.json()
@@ -279,13 +260,10 @@ class TestWelcomeEmail:
             "additional_data": {"trial_days": 14},
         }
 
-        with patch('apps.backend.api.routers.email.get_current_user', return_value=mock_admin_user):
-            with patch('apps.backend.api.routers.email.email_service', mock_email_service):
-                with patch('apps.backend.api.routers.email.log_audit'):
-                    response = test_client.post(
-                        "/api/v1/email/welcome",
-                        json=request_data
-                    )
+        with patch("apps.backend.api.routers.email.get_current_user", return_value=mock_admin_user):
+            with patch("apps.backend.api.routers.email.email_service", mock_email_service):
+                with patch("apps.backend.api.routers.email.log_audit"):
+                    response = test_client.post("/api/v1/email/welcome", json=request_data)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -297,23 +275,20 @@ class TestWelcomeEmail:
         mock_email_service.send_welcome_email.assert_called_once_with(
             user_email="newuser@example.com",
             user_name="New User",
-            additional_data={"trial_days": 14}
+            additional_data={"trial_days": 14},
         )
 
-    def test_send_welcome_email_as_teacher_forbidden(
-        self, test_client, mock_teacher_user
-    ):
+    def test_send_welcome_email_as_teacher_forbidden(self, test_client, mock_teacher_user):
         """Test welcome email forbidden for teachers"""
         request_data = {
             "user_email": "newuser@example.com",
             "user_name": "New User",
         }
 
-        with patch('apps.backend.api.routers.email.get_current_user', return_value=mock_teacher_user):
-            response = test_client.post(
-                "/api/v1/email/welcome",
-                json=request_data
-            )
+        with patch(
+            "apps.backend.api.routers.email.get_current_user", return_value=mock_teacher_user
+        ):
+            response = test_client.post("/api/v1/email/welcome", json=request_data)
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
         data = response.json()
@@ -328,13 +303,10 @@ class TestWelcomeEmail:
             "user_name": "New User",
         }
 
-        with patch('apps.backend.api.routers.email.get_current_user', return_value=mock_admin_user):
-            with patch('apps.backend.api.routers.email.email_service', mock_email_service):
-                with patch('apps.backend.api.routers.email.log_audit'):
-                    response = test_client.post(
-                        "/api/v1/email/welcome",
-                        json=request_data
-                    )
+        with patch("apps.backend.api.routers.email.get_current_user", return_value=mock_admin_user):
+            with patch("apps.backend.api.routers.email.email_service", mock_email_service):
+                with patch("apps.backend.api.routers.email.log_audit"):
+                    response = test_client.post("/api/v1/email/welcome", json=request_data)
 
         assert response.status_code == status.HTTP_200_OK
 
@@ -353,12 +325,9 @@ class TestWelcomeEmail:
 
         mock_email_service.send_welcome_email.side_effect = Exception("Email service down")
 
-        with patch('apps.backend.api.routers.email.get_current_user', return_value=mock_admin_user):
-            with patch('apps.backend.api.routers.email.email_service', mock_email_service):
-                response = test_client.post(
-                    "/api/v1/email/welcome",
-                    json=request_data
-                )
+        with patch("apps.backend.api.routers.email.get_current_user", return_value=mock_admin_user):
+            with patch("apps.backend.api.routers.email.email_service", mock_email_service):
+                response = test_client.post("/api/v1/email/welcome", json=request_data)
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         data = response.json()
@@ -369,9 +338,7 @@ class TestWelcomeEmail:
 class TestPasswordResetEmail:
     """Test password reset email endpoint"""
 
-    def test_send_password_reset_email_success(
-        self, test_client, mock_email_service
-    ):
+    def test_send_password_reset_email_success(self, test_client, mock_email_service):
         """Test successful password reset email (public endpoint)"""
         request_data = {
             "user_email": "user@example.com",
@@ -379,13 +346,10 @@ class TestPasswordResetEmail:
             "reset_token": "reset_token_abc123",
         }
 
-        with patch('apps.backend.api.routers.email.email_service', mock_email_service):
-            with patch('apps.backend.api.routers.email.settings') as mock_settings:
+        with patch("apps.backend.api.routers.email.email_service", mock_email_service):
+            with patch("apps.backend.api.routers.email.settings") as mock_settings:
                 mock_settings.FRONTEND_URL = "https://example.com"
-                response = test_client.post(
-                    "/api/v1/email/password-reset",
-                    json=request_data
-                )
+                response = test_client.post("/api/v1/email/password-reset", json=request_data)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -398,9 +362,7 @@ class TestPasswordResetEmail:
         assert "reset-password" in call_args.kwargs["reset_url"]
         assert "reset_token_abc123" in call_args.kwargs["reset_url"]
 
-    def test_send_password_reset_email_custom_url(
-        self, test_client, mock_email_service
-    ):
+    def test_send_password_reset_email_custom_url(self, test_client, mock_email_service):
         """Test password reset email with custom URL"""
         request_data = {
             "user_email": "user@example.com",
@@ -409,11 +371,8 @@ class TestPasswordResetEmail:
             "reset_url": "https://custom.com/reset?token=reset_token_abc123",
         }
 
-        with patch('apps.backend.api.routers.email.email_service', mock_email_service):
-            response = test_client.post(
-                "/api/v1/email/password-reset",
-                json=request_data
-            )
+        with patch("apps.backend.api.routers.email.email_service", mock_email_service):
+            response = test_client.post("/api/v1/email/password-reset", json=request_data)
 
         assert response.status_code == status.HTTP_200_OK
 
@@ -421,9 +380,7 @@ class TestPasswordResetEmail:
         call_args = mock_email_service.send_password_reset_email.call_args
         assert call_args.kwargs["reset_url"] == "https://custom.com/reset?token=reset_token_abc123"
 
-    def test_send_password_reset_email_service_error(
-        self, test_client, mock_email_service
-    ):
+    def test_send_password_reset_email_service_error(self, test_client, mock_email_service):
         """Test password reset email with service error"""
         request_data = {
             "user_email": "user@example.com",
@@ -433,13 +390,10 @@ class TestPasswordResetEmail:
 
         mock_email_service.send_password_reset_email.side_effect = Exception("Email service error")
 
-        with patch('apps.backend.api.routers.email.email_service', mock_email_service):
-            with patch('apps.backend.api.routers.email.settings') as mock_settings:
+        with patch("apps.backend.api.routers.email.email_service", mock_email_service):
+            with patch("apps.backend.api.routers.email.settings") as mock_settings:
                 mock_settings.FRONTEND_URL = "https://example.com"
-                response = test_client.post(
-                    "/api/v1/email/password-reset",
-                    json=request_data
-                )
+                response = test_client.post("/api/v1/email/password-reset", json=request_data)
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         data = response.json()
@@ -450,9 +404,7 @@ class TestPasswordResetEmail:
 class TestVerificationEmail:
     """Test email verification endpoint"""
 
-    def test_send_verification_email_success(
-        self, test_client, mock_email_service
-    ):
+    def test_send_verification_email_success(self, test_client, mock_email_service):
         """Test successful verification email (public endpoint)"""
         request_data = {
             "user_email": "user@example.com",
@@ -460,13 +412,10 @@ class TestVerificationEmail:
             "verification_token": "verify_token_xyz789",
         }
 
-        with patch('apps.backend.api.routers.email.email_service', mock_email_service):
-            with patch('apps.backend.api.routers.email.settings') as mock_settings:
+        with patch("apps.backend.api.routers.email.email_service", mock_email_service):
+            with patch("apps.backend.api.routers.email.settings") as mock_settings:
                 mock_settings.FRONTEND_URL = "https://example.com"
-                response = test_client.post(
-                    "/api/v1/email/verification",
-                    json=request_data
-                )
+                response = test_client.post("/api/v1/email/verification", json=request_data)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -479,9 +428,7 @@ class TestVerificationEmail:
         assert "verify-email" in call_args.kwargs["verification_url"]
         assert "verify_token_xyz789" in call_args.kwargs["verification_url"]
 
-    def test_send_verification_email_custom_url(
-        self, test_client, mock_email_service
-    ):
+    def test_send_verification_email_custom_url(self, test_client, mock_email_service):
         """Test verification email with custom URL"""
         request_data = {
             "user_email": "user@example.com",
@@ -490,21 +437,19 @@ class TestVerificationEmail:
             "verification_url": "https://custom.com/verify?token=verify_token_xyz789",
         }
 
-        with patch('apps.backend.api.routers.email.email_service', mock_email_service):
-            response = test_client.post(
-                "/api/v1/email/verification",
-                json=request_data
-            )
+        with patch("apps.backend.api.routers.email.email_service", mock_email_service):
+            response = test_client.post("/api/v1/email/verification", json=request_data)
 
         assert response.status_code == status.HTTP_200_OK
 
         # Verify custom URL was used
         call_args = mock_email_service.send_verification_email.call_args
-        assert call_args.kwargs["verification_url"] == "https://custom.com/verify?token=verify_token_xyz789"
+        assert (
+            call_args.kwargs["verification_url"]
+            == "https://custom.com/verify?token=verify_token_xyz789"
+        )
 
-    def test_send_verification_email_service_error(
-        self, test_client, mock_email_service
-    ):
+    def test_send_verification_email_service_error(self, test_client, mock_email_service):
         """Test verification email with service error"""
         request_data = {
             "user_email": "user@example.com",
@@ -514,13 +459,10 @@ class TestVerificationEmail:
 
         mock_email_service.send_verification_email.side_effect = Exception("Email service error")
 
-        with patch('apps.backend.api.routers.email.email_service', mock_email_service):
-            with patch('apps.backend.api.routers.email.settings') as mock_settings:
+        with patch("apps.backend.api.routers.email.email_service", mock_email_service):
+            with patch("apps.backend.api.routers.email.settings") as mock_settings:
                 mock_settings.FRONTEND_URL = "https://example.com"
-                response = test_client.post(
-                    "/api/v1/email/verification",
-                    json=request_data
-                )
+                response = test_client.post("/api/v1/email/verification", json=request_data)
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         data = response.json()
@@ -543,13 +485,10 @@ class TestEmailTemplates:
             "generation": "dynamic",
         }
 
-        with patch('apps.backend.api.routers.email.get_current_user', return_value=mock_admin_user):
-            with patch('apps.backend.api.routers.email.email_service', mock_email_service):
-                with patch('apps.backend.api.routers.email.log_audit'):
-                    response = test_client.post(
-                        "/api/v1/email/templates",
-                        json=request_data
-                    )
+        with patch("apps.backend.api.routers.email.get_current_user", return_value=mock_admin_user):
+            with patch("apps.backend.api.routers.email.email_service", mock_email_service):
+                with patch("apps.backend.api.routers.email.log_audit"):
+                    response = test_client.post("/api/v1/email/templates", json=request_data)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -560,14 +499,11 @@ class TestEmailTemplates:
 
         # Verify service calls
         mock_email_service.create_template.assert_called_once_with(
-            name="Welcome Email Template",
-            generation="dynamic"
+            name="Welcome Email Template", generation="dynamic"
         )
         mock_email_service.create_template_version.assert_called_once()
 
-    def test_create_template_as_teacher_forbidden(
-        self, test_client, mock_teacher_user
-    ):
+    def test_create_template_as_teacher_forbidden(self, test_client, mock_teacher_user):
         """Test template creation forbidden for teachers"""
         request_data = {
             "name": "Test Template",
@@ -575,11 +511,10 @@ class TestEmailTemplates:
             "html_content": "<p>Test</p>",
         }
 
-        with patch('apps.backend.api.routers.email.get_current_user', return_value=mock_teacher_user):
-            response = test_client.post(
-                "/api/v1/email/templates",
-                json=request_data
-            )
+        with patch(
+            "apps.backend.api.routers.email.get_current_user", return_value=mock_teacher_user
+        ):
+            response = test_client.post("/api/v1/email/templates", json=request_data)
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
         data = response.json()
@@ -595,13 +530,10 @@ class TestEmailTemplates:
             "html_content": "<p>Test</p>",
         }
 
-        with patch('apps.backend.api.routers.email.get_current_user', return_value=mock_admin_user):
-            with patch('apps.backend.api.routers.email.email_service', mock_email_service):
-                with patch('apps.backend.api.routers.email.log_audit'):
-                    response = test_client.post(
-                        "/api/v1/email/templates",
-                        json=request_data
-                    )
+        with patch("apps.backend.api.routers.email.get_current_user", return_value=mock_admin_user):
+            with patch("apps.backend.api.routers.email.email_service", mock_email_service):
+                with patch("apps.backend.api.routers.email.log_audit"):
+                    response = test_client.post("/api/v1/email/templates", json=request_data)
 
         assert response.status_code == status.HTTP_200_OK
 
@@ -609,9 +541,7 @@ class TestEmailTemplates:
         call_args = mock_email_service.create_template.call_args
         assert call_args.kwargs["generation"] == "legacy"
 
-    def test_create_template_service_error(
-        self, test_client, mock_admin_user, mock_email_service
-    ):
+    def test_create_template_service_error(self, test_client, mock_admin_user, mock_email_service):
         """Test template creation with service error"""
         request_data = {
             "name": "Test Template",
@@ -621,12 +551,9 @@ class TestEmailTemplates:
 
         mock_email_service.create_template.return_value = None
 
-        with patch('apps.backend.api.routers.email.get_current_user', return_value=mock_admin_user):
-            with patch('apps.backend.api.routers.email.email_service', mock_email_service):
-                response = test_client.post(
-                    "/api/v1/email/templates",
-                    json=request_data
-                )
+        with patch("apps.backend.api.routers.email.get_current_user", return_value=mock_admin_user):
+            with patch("apps.backend.api.routers.email.email_service", mock_email_service):
+                response = test_client.post("/api/v1/email/templates", json=request_data)
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         data = response.json()
@@ -638,9 +565,7 @@ class TestSendGridWebhook:
     """Test SendGrid webhook handling endpoint"""
 
     @pytest.mark.asyncio
-    async def test_handle_webhook_success(
-        self, test_client, mock_email_service
-    ):
+    async def test_handle_webhook_success(self, test_client, mock_email_service):
         """Test successful webhook processing"""
         webhook_events = [
             {
@@ -655,11 +580,8 @@ class TestSendGridWebhook:
             },
         ]
 
-        with patch('apps.backend.api.routers.email.email_service', mock_email_service):
-            response = test_client.post(
-                "/api/v1/email/webhook",
-                json=webhook_events
-            )
+        with patch("apps.backend.api.routers.email.email_service", mock_email_service):
+            response = test_client.post("/api/v1/email/webhook", json=webhook_events)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -670,39 +592,29 @@ class TestSendGridWebhook:
         mock_email_service.handle_webhook.assert_called_once_with(events=webhook_events)
 
     @pytest.mark.asyncio
-    async def test_handle_webhook_empty_events(
-        self, test_client, mock_email_service
-    ):
+    async def test_handle_webhook_empty_events(self, test_client, mock_email_service):
         """Test webhook with empty events array"""
         mock_email_service.handle_webhook.return_value = {
             "processed_count": 0,
             "events": [],
         }
 
-        with patch('apps.backend.api.routers.email.email_service', mock_email_service):
-            response = test_client.post(
-                "/api/v1/email/webhook",
-                json=[]
-            )
+        with patch("apps.backend.api.routers.email.email_service", mock_email_service):
+            response = test_client.post("/api/v1/email/webhook", json=[])
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["data"]["processed_count"] == 0
 
     @pytest.mark.asyncio
-    async def test_handle_webhook_processing_error(
-        self, test_client, mock_email_service
-    ):
+    async def test_handle_webhook_processing_error(self, test_client, mock_email_service):
         """Test webhook processing with error"""
         webhook_events = [{"event": "delivered"}]
 
         mock_email_service.handle_webhook.side_effect = Exception("Processing error")
 
-        with patch('apps.backend.api.routers.email.email_service', mock_email_service):
-            response = test_client.post(
-                "/api/v1/email/webhook",
-                json=webhook_events
-            )
+        with patch("apps.backend.api.routers.email.email_service", mock_email_service):
+            response = test_client.post("/api/v1/email/webhook", json=webhook_events)
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         data = response.json()
@@ -713,12 +625,10 @@ class TestSendGridWebhook:
 class TestEmailStatus:
     """Test email status retrieval endpoint"""
 
-    def test_get_email_status_success(
-        self, test_client, mock_admin_user, mock_email_service
-    ):
+    def test_get_email_status_success(self, test_client, mock_admin_user, mock_email_service):
         """Test successful email status retrieval"""
-        with patch('apps.backend.api.routers.email.get_current_user', return_value=mock_admin_user):
-            with patch('apps.backend.api.routers.email.email_service', mock_email_service):
+        with patch("apps.backend.api.routers.email.get_current_user", return_value=mock_admin_user):
+            with patch("apps.backend.api.routers.email.email_service", mock_email_service):
                 response = test_client.get("/api/v1/email/status/msg_123456")
 
         assert response.status_code == status.HTTP_200_OK
@@ -731,28 +641,24 @@ class TestEmailStatus:
         # Verify service was called
         mock_email_service.get_email_status.assert_called_once_with(message_id="msg_123456")
 
-    def test_get_email_status_not_found(
-        self, test_client, mock_admin_user, mock_email_service
-    ):
+    def test_get_email_status_not_found(self, test_client, mock_admin_user, mock_email_service):
         """Test email status not found"""
         mock_email_service.get_email_status.return_value = None
 
-        with patch('apps.backend.api.routers.email.get_current_user', return_value=mock_admin_user):
-            with patch('apps.backend.api.routers.email.email_service', mock_email_service):
+        with patch("apps.backend.api.routers.email.get_current_user", return_value=mock_admin_user):
+            with patch("apps.backend.api.routers.email.email_service", mock_email_service):
                 response = test_client.get("/api/v1/email/status/msg_nonexistent")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         data = response.json()
         assert "Email status not found" in data["detail"]
 
-    def test_get_email_status_service_error(
-        self, test_client, mock_admin_user, mock_email_service
-    ):
+    def test_get_email_status_service_error(self, test_client, mock_admin_user, mock_email_service):
         """Test email status retrieval with service error"""
         mock_email_service.get_email_status.side_effect = Exception("API error")
 
-        with patch('apps.backend.api.routers.email.get_current_user', return_value=mock_admin_user):
-            with patch('apps.backend.api.routers.email.email_service', mock_email_service):
+        with patch("apps.backend.api.routers.email.get_current_user", return_value=mock_admin_user):
+            with patch("apps.backend.api.routers.email.email_service", mock_email_service):
                 response = test_client.get("/api/v1/email/status/msg_123456")
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR

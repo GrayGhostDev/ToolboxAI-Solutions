@@ -1,16 +1,19 @@
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest_asyncio
+
 """
 Unit tests for Pusher service
 """
 
-import pytest
-from unittest.mock import Mock, MagicMock, patch
 import json
 from datetime import datetime
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 
 # Mock pusher module before importing our service
 mock_pusher = MagicMock()

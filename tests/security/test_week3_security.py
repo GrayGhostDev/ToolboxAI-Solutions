@@ -5,21 +5,21 @@ Tests Vault integration, JWT, RBAC, PII encryption, and GDPR compliance
 Python 3.12+ compatible with 2025 testing standards
 """
 
-import pytest
 import asyncio
 import json
-import base64
-from datetime import datetime, timedelta, timezone
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
 import os
 import sys
+from datetime import datetime, timedelta, timezone
+from unittest.mock import Mock, patch
+
+import pytest
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 # Test environment setup
-os.environ['TESTING'] = 'true'
-os.environ['VAULT_ENABLED'] = 'false'  # Use mock for testing
+os.environ["TESTING"] = "true"
+os.environ["VAULT_ENABLED"] = "false"  # Use mock for testing
 
 
 class TestVaultManager:
@@ -28,12 +28,13 @@ class TestVaultManager:
     @pytest.fixture
     def vault_manager(self):
         """Create vault manager with mocked backend"""
-        with patch('hvac.Client') as mock_client:
+        with patch("hvac.Client") as mock_client:
             mock_instance = Mock()
             mock_client.return_value = mock_instance
             mock_instance.is_authenticated.return_value = True
 
             from apps.backend.services.vault_manager import VaultManager
+
             return VaultManager()
 
     def test_vault_initialization(self, vault_manager):
@@ -43,35 +44,28 @@ class TestVaultManager:
 
     def test_secret_storage(self, vault_manager):
         """Test secret storage in Vault"""
-        with patch.object(vault_manager, 'vault') as mock_vault:
+        with patch.object(vault_manager, "vault") as mock_vault:
             mock_vault.secrets.kv.v2.create_or_update_secret.return_value = True
 
-            result = vault_manager.set_secret(
-                "test/path",
-                {"api_key": "test_key_123"}
-            )
+            result = vault_manager.set_secret("test/path", {"api_key": "test_key_123"})
 
             assert result is True
             mock_vault.secrets.kv.v2.create_or_update_secret.assert_called_once()
 
     def test_secret_retrieval(self, vault_manager):
         """Test secret retrieval from Vault"""
-        with patch.object(vault_manager, 'vault') as mock_vault:
-            mock_response = {
-                'data': {
-                    'data': {'api_key': 'test_key_123'}
-                }
-            }
+        with patch.object(vault_manager, "vault") as mock_vault:
+            mock_response = {"data": {"data": {"api_key": "test_key_123"}}}
             mock_vault.secrets.kv.v2.read_secret_version.return_value = mock_response
 
             secret = vault_manager.get_secret("test/path", "api_key")
 
-            assert secret == 'test_key_123'
+            assert secret == "test_key_123"
 
     def test_secret_rotation(self, vault_manager):
         """Test automatic secret rotation"""
-        with patch.object(vault_manager, 'get_secret') as mock_get:
-            with patch.object(vault_manager, 'set_secret') as mock_set:
+        with patch.object(vault_manager, "get_secret") as mock_get:
+            with patch.object(vault_manager, "set_secret") as mock_set:
                 mock_get.return_value = {"old_key": "value123"}
                 mock_set.return_value = True
 
@@ -83,19 +77,16 @@ class TestVaultManager:
     @pytest.mark.asyncio
     async def test_dynamic_database_credentials(self, vault_manager):
         """Test dynamic database credential generation"""
-        with patch.object(vault_manager, 'vault') as mock_vault:
+        with patch.object(vault_manager, "vault") as mock_vault:
             mock_vault.secrets.database.generate_credentials.return_value = {
-                'data': {
-                    'username': 'v-token-db-abc123',
-                    'password': 'temp_pass_xyz789'
-                }
+                "data": {"username": "v-token-db-abc123", "password": "temp_pass_xyz789"}
             }
 
             creds = vault_manager.get_dynamic_database_credentials("postgres", ttl="1h")
 
-            assert 'username' in creds
-            assert 'password' in creds
-            assert 'expires_at' in creds
+            assert "username" in creds
+            assert "password" in creds
+            assert "expires_at" in creds
 
 
 class TestJWTManager:
@@ -104,8 +95,9 @@ class TestJWTManager:
     @pytest.fixture
     def jwt_manager(self):
         """Create JWT manager"""
-        with patch('apps.backend.services.vault_manager.get_vault_manager'):
+        with patch("apps.backend.services.vault_manager.get_vault_manager"):
             from apps.backend.core.auth.jwt_manager import JWTManager
+
             manager = JWTManager()
             # Generate test keys
             manager._generate_new_keys()
@@ -115,9 +107,11 @@ class TestJWTManager:
         """Test RSA key pair generation"""
         assert jwt_manager.private_key is not None
         assert jwt_manager.public_key is not None
-        assert 'BEGIN RSA PRIVATE KEY' in jwt_manager.private_key or \
-               'BEGIN PRIVATE KEY' in jwt_manager.private_key
-        assert 'BEGIN PUBLIC KEY' in jwt_manager.public_key
+        assert (
+            "BEGIN RSA PRIVATE KEY" in jwt_manager.private_key
+            or "BEGIN PRIVATE KEY" in jwt_manager.private_key
+        )
+        assert "BEGIN PUBLIC KEY" in jwt_manager.public_key
 
     def test_access_token_creation(self, jwt_manager):
         """Test access token creation with claims"""
@@ -125,7 +119,7 @@ class TestJWTManager:
             user_id="user123",
             username="testuser",
             roles=["user", "admin"],
-            permissions=["read:all", "write:own"]
+            permissions=["read:all", "write:own"],
         )
 
         assert token is not None
@@ -137,16 +131,16 @@ class TestJWTManager:
             user_id="user123",
             username="testuser",
             roles=["admin"],
-            permissions=["read:all", "write:all"]
+            permissions=["read:all", "write:all"],
         )
 
         is_valid, claims = jwt_manager.verify_token(token, token_type="access")
 
         assert is_valid is True
-        assert claims['sub'] == "user123"
-        assert claims['username'] == "testuser"
-        assert "admin" in claims['roles']
-        assert "read:all" in claims['permissions']
+        assert claims["sub"] == "user123"
+        assert claims["username"] == "testuser"
+        assert "admin" in claims["roles"]
+        assert "read:all" in claims["permissions"]
 
     def test_token_permission_verification(self, jwt_manager):
         """Test permission-based token verification"""
@@ -154,35 +148,28 @@ class TestJWTManager:
             user_id="user123",
             username="testuser",
             roles=["user"],
-            permissions=["read:own", "write:own"]
+            permissions=["read:own", "write:own"],
         )
 
         # Should pass with granted permission
         is_valid, _ = jwt_manager.verify_token(
-            token,
-            token_type="access",
-            verify_permissions=["read:own"]
+            token, token_type="access", verify_permissions=["read:own"]
         )
         assert is_valid is True
 
         # Should fail with missing permission
         is_valid, _ = jwt_manager.verify_token(
-            token,
-            token_type="access",
-            verify_permissions=["delete:all"]
+            token, token_type="access", verify_permissions=["delete:all"]
         )
         assert is_valid is False
 
     def test_refresh_token_flow(self, jwt_manager):
         """Test refresh token creation and usage"""
         # Create initial tokens
-        refresh_token = jwt_manager.create_refresh_token(
-            user_id="user123",
-            username="testuser"
-        )
+        refresh_token = jwt_manager.create_refresh_token(user_id="user123", username="testuser")
 
         # Mock user permission lookup
-        with patch.object(jwt_manager, '_get_user_permissions') as mock_perms:
+        with patch.object(jwt_manager, "_get_user_permissions") as mock_perms:
             mock_perms.return_value = ["read:all", "write:own"]
 
             # Refresh tokens
@@ -196,13 +183,10 @@ class TestJWTManager:
     def test_token_revocation(self, jwt_manager):
         """Test token revocation/blacklisting"""
         token = jwt_manager.create_access_token(
-            user_id="user123",
-            username="testuser",
-            roles=["user"],
-            permissions=["read:own"]
+            user_id="user123", username="testuser", roles=["user"], permissions=["read:own"]
         )
 
-        with patch.object(jwt_manager, '_blacklist_token') as mock_blacklist:
+        with patch.object(jwt_manager, "_blacklist_token") as mock_blacklist:
             result = jwt_manager.revoke_token(token)
 
             assert result is True
@@ -216,6 +200,7 @@ class TestRBACManager:
     def rbac_manager(self):
         """Create RBAC manager"""
         from apps.backend.core.auth.rbac_manager import RBACManager
+
         return RBACManager()
 
     def test_default_roles_initialization(self, rbac_manager):
@@ -232,17 +217,11 @@ class TestRBACManager:
         from apps.backend.core.auth.rbac_manager import Role
 
         # Admin should have user management permissions
-        has_perm = rbac_manager.check_permission(
-            [Role.ADMIN],
-            "user:create:all"
-        )
+        has_perm = rbac_manager.check_permission([Role.ADMIN], "user:create:all")
         assert has_perm is True
 
         # Student should not have admin permissions
-        has_perm = rbac_manager.check_permission(
-            [Role.STUDENT],
-            "user:delete:all"
-        )
+        has_perm = rbac_manager.check_permission([Role.STUDENT], "user:delete:all")
         assert has_perm is False
 
     def test_permission_scope_hierarchy(self, rbac_manager):
@@ -251,15 +230,11 @@ class TestRBACManager:
 
         # User with 'all' scope should have 'team' and 'own' access
         has_perm = rbac_manager.check_permission(
-            [Role.ADMIN],  # Has content:read:all
-            "content:read:team"
+            [Role.ADMIN], "content:read:team"  # Has content:read:all
         )
         assert has_perm is True
 
-        has_perm = rbac_manager.check_permission(
-            [Role.ADMIN],
-            "content:read:own"
-        )
+        has_perm = rbac_manager.check_permission([Role.ADMIN], "content:read:own")
         assert has_perm is True
 
     def test_get_user_permissions(self, rbac_manager):
@@ -278,8 +253,7 @@ class TestRBACManager:
 
         # User with both Teacher and Content Creator roles
         has_perm = rbac_manager.check_permission(
-            [Role.TEACHER, Role.CONTENT_CREATOR],
-            "content:publish:team"
+            [Role.TEACHER, Role.CONTENT_CREATOR], "content:publish:team"
         )
         assert has_perm is True
 
@@ -290,8 +264,9 @@ class TestPIIEncryption:
     @pytest.fixture
     def pii_manager(self):
         """Create PII encryption manager"""
-        with patch('apps.backend.services.vault_manager.get_vault_manager'):
+        with patch("apps.backend.services.vault_manager.get_vault_manager"):
             from apps.backend.core.security.pii_encryption import PIIEncryptionManager
+
             return PIIEncryptionManager(vault_enabled=False)
 
     def test_field_encryption(self, pii_manager):
@@ -326,13 +301,13 @@ class TestPIIEncryption:
             "email": "user@example.com",
             "phone": "555-123-4567",
             "name": "John Doe",
-            "non_pii": "This stays plain"
+            "non_pii": "This stays plain",
         }
 
         field_mappings = {
             "email": PIIField.EMAIL,
             "phone": PIIField.PHONE,
-            "name": PIIField.FULL_NAME
+            "name": PIIField.FULL_NAME,
         }
 
         encrypted_doc = pii_manager.encrypt_document(document, field_mappings)
@@ -375,7 +350,7 @@ class TestPIIEncryption:
         version1 = encrypted1.key_version
 
         # Rotate key
-        with patch.object(pii_manager, 'vault', Mock()):
+        with patch.object(pii_manager, "vault", Mock()):
             result = pii_manager.rotate_encryption_key()
             assert result is True
 
@@ -393,6 +368,7 @@ class TestGDPRCompliance:
     def gdpr_manager(self):
         """Create GDPR compliance manager"""
         from apps.backend.core.compliance.gdpr_manager import GDPRComplianceManager
+
         return GDPRComplianceManager()
 
     @pytest.mark.asyncio
@@ -406,7 +382,7 @@ class TestGDPRCompliance:
             consent_type=ConsentType.ANALYTICS,
             granted=True,
             purpose="Analytics for service improvement",
-            ip_address="192.168.1.1"
+            ip_address="192.168.1.1",
         )
 
         assert consent is not None
@@ -414,29 +390,22 @@ class TestGDPRCompliance:
         assert consent.granted is True
 
         # Check consent
-        has_consent = await gdpr_manager.check_consent(
-            "user123",
-            ConsentType.ANALYTICS
-        )
+        has_consent = await gdpr_manager.check_consent("user123", ConsentType.ANALYTICS)
         assert has_consent is True
 
         # Check non-granted consent
-        has_consent = await gdpr_manager.check_consent(
-            "user123",
-            ConsentType.MARKETING
-        )
+        has_consent = await gdpr_manager.check_consent("user123", ConsentType.MARKETING)
         assert has_consent is False
 
     @pytest.mark.asyncio
     async def test_erasure_request(self, gdpr_manager):
         """Test right to erasure (right to be forgotten)"""
-        with patch.object(gdpr_manager, '_execute_erasure') as mock_erasure:
+        with patch.object(gdpr_manager, "_execute_erasure") as mock_erasure:
             mock_erasure.return_value = asyncio.Future()
             mock_erasure.return_value.set_result(True)
 
             request = await gdpr_manager.process_erasure_request(
-                user_id="user123",
-                verification_token="verify_token_xyz"
+                user_id="user123", verification_token="verify_token_xyz"
             )
 
             assert request is not None
@@ -447,22 +416,21 @@ class TestGDPRCompliance:
     @pytest.mark.asyncio
     async def test_data_portability(self, gdpr_manager):
         """Test data portability request"""
-        with patch.object(gdpr_manager, '_collect_user_data') as mock_collect:
+        with patch.object(gdpr_manager, "_collect_user_data") as mock_collect:
             mock_collect.return_value = {
                 "profile": {"user_id": "user123"},
                 "preferences": {},
-                "activity": []
+                "activity": [],
             }
 
             package = await gdpr_manager.process_portability_request(
-                user_id="user123",
-                format="json"
+                user_id="user123", format="json"
             )
 
             assert package is not None
-            assert 'filename' in package
-            assert 'gdpr_export' in package['filename']
-            assert package['mime_type'] == 'application/zip'
+            assert "filename" in package
+            assert "gdpr_export" in package["filename"]
+            assert package["mime_type"] == "application/zip"
 
     @pytest.mark.asyncio
     async def test_consent_expiry(self, gdpr_manager):
@@ -474,27 +442,22 @@ class TestGDPRCompliance:
 
         # Manually add expired consent
         from apps.backend.core.compliance.gdpr_manager import ConsentRecord
+
         expired_consent = ConsentRecord(
-            user_id="user456",
-            consent_type=ConsentType.MARKETING,
-            granted=True,
-            expiry=past_time
+            user_id="user456", consent_type=ConsentType.MARKETING, granted=True, expiry=past_time
         )
 
         gdpr_manager.consent_records["user456"] = [expired_consent]
 
         # Check expired consent
-        has_consent = await gdpr_manager.check_consent(
-            "user456",
-            ConsentType.MARKETING
-        )
+        has_consent = await gdpr_manager.check_consent("user456", ConsentType.MARKETING)
         assert has_consent is False
 
     @pytest.mark.asyncio
     async def test_retention_policies(self, gdpr_manager):
         """Test data retention policy processing"""
-        with patch.object(gdpr_manager, '_delete_old_data') as mock_delete:
-            with patch.object(gdpr_manager, '_anonymize_old_data') as mock_anon:
+        with patch.object(gdpr_manager, "_delete_old_data") as mock_delete:
+            with patch.object(gdpr_manager, "_anonymize_old_data") as mock_anon:
                 mock_delete.return_value = asyncio.Future()
                 mock_delete.return_value.set_result(10)
                 mock_anon.return_value = asyncio.Future()
@@ -516,10 +479,7 @@ class TestSecurityHeaders:
 
         app = Mock()
         return SecurityHeadersMiddleware(
-            app,
-            enable_hsts=True,
-            enable_csp=True,
-            frame_options="DENY"
+            app, enable_hsts=True, enable_csp=True, frame_options="DENY"
         )
 
     @pytest.mark.asyncio
@@ -595,23 +555,25 @@ class TestPreCommitIntegration:
         detector = SecretDetector()
 
         # Test detection of hardcoded secret
-        test_code = '''
+        test_code = """
 password = "supersecret123456"
 api_key = "sk_live_abcdef123456789"
-        '''
+        """
 
         # Create temp file
         import tempfile
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(test_code)
             f.flush()
 
             from pathlib import Path
+
             issues = detector.check_file(Path(f.name))
 
         assert len(issues) >= 2
-        assert any(i['type'] == 'Password' for i in issues)
-        assert any('API Key' in i['type'] for i in issues)
+        assert any(i["type"] == "Password" for i in issues)
+        assert any("API Key" in i["type"] for i in issues)
 
         # Cleanup
         os.unlink(f.name)
@@ -622,19 +584,21 @@ api_key = "sk_live_abcdef123456789"
 
         detector = SecretDetector()
 
-        safe_code = '''
+        safe_code = """
 password = os.getenv("DB_PASSWORD")
 api_key = settings.API_KEY
 secret = vault.get_secret("path/to/secret")
 test_password = "CHANGE_ME_IN_PRODUCTION"
-        '''
+        """
 
         import tempfile
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(safe_code)
             f.flush()
 
             from pathlib import Path
+
             issues = detector.check_file(Path(f.name))
 
         assert len(issues) == 0

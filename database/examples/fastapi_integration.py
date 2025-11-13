@@ -7,27 +7,25 @@ Run with:
     uvicorn database.examples.fastapi_integration:app --reload --port 8000
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
-from fastapi import FastAPI, Depends, HTTPException, Query, status
-from fastapi.responses import JSONResponse
+from fastapi import Depends, FastAPI, HTTPException, Query, status
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.session_modern import get_async_session, db_manager
-from database.models.user_modern import User, UserRole, UserStatus
-from database.models.content_modern import (
-    EducationalContent,
-    ContentStatus,
-    DifficultyLevel,
-    ContentType,
-)
-from database.repositories.user_repository import UserRepository
-from database.repositories.base_repository import BaseRepository
 from database.cache_modern import cache_result, invalidate_cache
-
+from database.models.content_modern import (
+    ContentStatus,
+    ContentType,
+    DifficultyLevel,
+    EducationalContent,
+)
+from database.models.user_modern import User, UserRole, UserStatus
+from database.repositories.base_repository import BaseRepository
+from database.repositories.user_repository import UserRepository
+from database.session_modern import db_manager, get_async_session
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -40,6 +38,7 @@ app = FastAPI(
 # ============================================================================
 # Pydantic Schemas (Request/Response Models)
 # ============================================================================
+
 
 class UserCreate(BaseModel):
     """Schema for creating a user."""
@@ -154,9 +153,11 @@ class PaginatedResponse(BaseModel):
 # Dependency Functions
 # ============================================================================
 
+
 def hash_password(password: str) -> str:
     """Hash password (placeholder - use bcrypt in production)."""
     import hashlib
+
     return hashlib.sha256(password.encode()).hexdigest()
 
 
@@ -169,12 +170,14 @@ async def get_current_org_id() -> UUID:
     """
     # TODO: Extract from JWT token
     from uuid import uuid4
+
     return uuid4()
 
 
 # ============================================================================
 # Health Check Endpoints
 # ============================================================================
+
 
 @app.get("/health", tags=["Health"])
 async def health_check():
@@ -191,6 +194,7 @@ async def health_check():
 # ============================================================================
 # User Endpoints
 # ============================================================================
+
 
 @app.post(
     "/users",
@@ -392,6 +396,7 @@ async def get_user_statistics(
 # Content Endpoints
 # ============================================================================
 
+
 @app.post(
     "/content",
     response_model=ContentResponse,
@@ -556,6 +561,7 @@ async def publish_content(
 # ============================================================================
 # Startup/Shutdown Events
 # ============================================================================
+
 
 @app.on_event("startup")
 async def startup_event():

@@ -5,6 +5,7 @@ Quick test script to verify Supabase database connection
 
 import os
 import sys
+
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -32,13 +33,14 @@ if not database_url:
 print("\n2. Testing Supabase Python Client...")
 try:
     from supabase import create_client
+
     supabase_anon = os.getenv("SUPABASE_ANON_KEY")
     supabase_service = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
     if supabase_url and supabase_service:
         client = create_client(supabase_url, supabase_service)
         # Try to query users table
-        result = client.table('users').select('*').limit(1).execute()
+        result = client.table("users").select("*").limit(1).execute()
         print(f"   ✅ Supabase client connected successfully")
         print(f"   ✅ Users table accessible (found {len(result.data)} rows)")
     else:
@@ -59,17 +61,21 @@ try:
         print(f"   ✅ PostgreSQL version: {version[:50]}")
 
         # Test if tables exist
-        result = conn.execute(text("""
+        result = conn.execute(
+            text(
+                """
             SELECT table_name 
             FROM information_schema.tables 
             WHERE table_schema = 'public' 
             AND table_name IN ('users', 'courses', 'lessons')
             ORDER BY table_name
-        """))
+        """
+            )
+        )
         tables = [row[0] for row in result.fetchall()]
         print(f"   ✅ Found tables: {', '.join(tables) if tables else 'NONE'}")
 
-        if 'courses' in tables:
+        if "courses" in tables:
             result = conn.execute(text("SELECT COUNT(*) FROM courses"))
             count = result.fetchone()[0]
             print(f"   ✅ Courses table has {count} rows")
@@ -99,4 +105,3 @@ print("- If SQLAlchemy works: Your courses API should work!")
 print("- If Supabase client works but SQLAlchemy doesn't: Use simplified router")
 print("- If neither works: Check network/firewall settings")
 print()
-

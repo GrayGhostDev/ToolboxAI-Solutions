@@ -3,24 +3,16 @@ API endpoints for the prompt template organization system
 """
 
 import logging
-from typing import Dict, List, Optional, Any
-from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from typing import Any
+
+from fastapi import APIRouter, BackgroundTasks, HTTPException, status
 from pydantic import BaseModel, Field
 
 from apps.backend.core.prompts.integration import PromptTemplateIntegration
 from apps.backend.core.prompts.models import (
-    UserProfile,
-    ContentRequirements,
-    PersonalizationData,
-    UniquenessEnhancement,
     ConversationStage,
-    ContentType,
-    GradeLevel,
-    SubjectArea,
-    LearningStyle,
-    EngagementLevel,
-    UniquenessFactor,
+    PersonalizationData,
+    UserProfile,
 )
 
 logger = logging.getLogger(__name__)
@@ -37,45 +29,45 @@ class StartConversationRequest(BaseModel):
     user_id: str
     role: str
     experience_level: str = "beginner"
-    interests: List[str] = Field(default_factory=list)
-    cultural_background: Optional[str] = None
-    initial_message: Optional[str] = None
+    interests: list[str] = Field(default_factory=list)
+    cultural_background: str | None = None
+    initial_message: str | None = None
 
 
 class ProcessInputRequest(BaseModel):
     conversation_id: str
     user_input: str
-    additional_context: Optional[Dict[str, Any]] = None
+    additional_context: dict[str, Any] | None = None
 
 
 class PersonalizationRequest(BaseModel):
     conversation_id: str
-    student_names: List[str] = Field(default_factory=list)
-    local_landmarks: List[str] = Field(default_factory=list)
-    cultural_elements: List[str] = Field(default_factory=list)
-    school_theme: Optional[str] = None
-    mascot: Optional[str] = None
-    colors: List[str] = Field(default_factory=list)
-    story_elements: List[str] = Field(default_factory=list)
+    student_names: list[str] = Field(default_factory=list)
+    local_landmarks: list[str] = Field(default_factory=list)
+    cultural_elements: list[str] = Field(default_factory=list)
+    school_theme: str | None = None
+    mascot: str | None = None
+    colors: list[str] = Field(default_factory=list)
+    story_elements: list[str] = Field(default_factory=list)
 
 
 class UniquenessRequest(BaseModel):
     conversation_id: str
-    factors: List[str] = Field(default_factory=list)
-    creative_twists: List[str] = Field(default_factory=list)
-    personal_touches: List[str] = Field(default_factory=list)
-    trending_elements: List[str] = Field(default_factory=list)
+    factors: list[str] = Field(default_factory=list)
+    creative_twists: list[str] = Field(default_factory=list)
+    personal_touches: list[str] = Field(default_factory=list)
+    trending_elements: list[str] = Field(default_factory=list)
 
 
 class ConversationResponse(BaseModel):
     conversation_id: str
     current_stage: str
-    prompt_response: Dict[str, Any]
+    prompt_response: dict[str, Any]
     flow_decision: str
-    guidance: Dict[str, Any]
-    validation: Dict[str, Any]
-    next_steps: List[str]
-    conversation_status: Dict[str, Any]
+    guidance: dict[str, Any]
+    validation: dict[str, Any]
+    next_steps: list[str]
+    conversation_status: dict[str, Any]
 
 
 class ValidationResponse(BaseModel):
@@ -84,17 +76,17 @@ class ValidationResponse(BaseModel):
     uniqueness_score: float
     educational_value_score: float
     engagement_score: float
-    errors: List[str]
-    warnings: List[str]
-    suggestions: List[str]
-    optimization_suggestions: List[str]
-    quality_metrics: Dict[str, float]
+    errors: list[str]
+    warnings: list[str]
+    suggestions: list[str]
+    optimization_suggestions: list[str]
+    quality_metrics: dict[str, float]
     readiness_score: float
 
 
 class WorkflowResponse(BaseModel):
-    workflow_plan: Dict[str, Any]
-    execution_results: Dict[str, Any]
+    workflow_plan: dict[str, Any]
+    execution_results: dict[str, Any]
     content_ready: bool
 
 
@@ -104,8 +96,8 @@ class AnalyticsResponse(BaseModel):
     stages_completed: int
     current_stage: str
     data_points_collected: int
-    quality_metrics: Dict[str, float]
-    validation_summary: Dict[str, Any]
+    quality_metrics: dict[str, float]
+    validation_summary: dict[str, Any]
     readiness_score: float
 
 

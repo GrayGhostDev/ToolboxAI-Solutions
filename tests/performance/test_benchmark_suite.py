@@ -8,19 +8,20 @@ Target: Validate P95 latency <150ms and throughput improvements.
 """
 
 import asyncio
-import pytest
-import time
-import statistics
-from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, AsyncMock
-from typing import Any, Dict, List, Tuple
-from dataclasses import dataclass
 import random
+import statistics
+import time
+from dataclasses import dataclass
+from typing import Any
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 
 @dataclass
 class BenchmarkResult:
     """Container for benchmark test results."""
+
     operation: str
     total_operations: int
     total_time: float
@@ -34,7 +35,7 @@ class BenchmarkResult:
     success_rate: float
     error_count: int
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for reporting."""
         return {
             "operation": self.operation,
@@ -48,7 +49,7 @@ class BenchmarkResult:
             "p99_latency_ms": round(self.p99_latency * 1000, 2),
             "throughput_ops_per_sec": round(self.throughput, 2),
             "success_rate": round(self.success_rate, 4),
-            "error_count": self.error_count
+            "error_count": self.error_count,
         }
 
 
@@ -61,7 +62,7 @@ class BenchmarkRunner:
         operation_func: callable,
         num_operations: int = 1000,
         concurrency: int = 10,
-        warmup_operations: int = 100
+        warmup_operations: int = 100,
     ) -> BenchmarkResult:
         """
         Run a benchmark test for an async operation.
@@ -144,7 +145,7 @@ class BenchmarkRunner:
             p99_latency=p99_latency,
             throughput=throughput,
             success_rate=success_rate,
-            error_count=errors
+            error_count=errors,
         )
 
 
@@ -155,6 +156,7 @@ class TestCacheBenchmarks:
     @pytest.fixture
     def mock_redis_client(self):
         """Mock Redis client with realistic performance characteristics."""
+
         class MockRedisClient:
             def __init__(self):
                 self._data = {}
@@ -185,12 +187,14 @@ class TestCacheBenchmarks:
     def cache_instance(self, mock_redis_client):
         """Create cache instance with mock Redis client."""
         from apps.backend.core.cache import RedisCache
+
         cache = RedisCache()
         cache.get_client = AsyncMock(return_value=mock_redis_client)
         return cache
 
     async def test_cache_get_performance(self, cache_instance):
         """Benchmark cache GET operations."""
+
         async def cache_get_operation():
             key = f"test_key_{random.randint(1, 10000)}"
             return await cache_instance.get(key)
@@ -200,7 +204,7 @@ class TestCacheBenchmarks:
             cache_get_operation,
             num_operations=1000,
             concurrency=20,
-            warmup_operations=50
+            warmup_operations=50,
         )
 
         print(f"\nCache GET Benchmark Results:")
@@ -216,6 +220,7 @@ class TestCacheBenchmarks:
 
     async def test_cache_set_performance(self, cache_instance):
         """Benchmark cache SET operations."""
+
         async def cache_set_operation():
             key = f"test_key_{random.randint(1, 10000)}"
             value = {"data": f"test_data_{random.randint(1, 1000)}"}
@@ -226,7 +231,7 @@ class TestCacheBenchmarks:
             cache_set_operation,
             num_operations=500,
             concurrency=15,
-            warmup_operations=25
+            warmup_operations=25,
         )
 
         print(f"\nCache SET Benchmark Results:")
@@ -240,6 +245,7 @@ class TestCacheBenchmarks:
 
     async def test_cache_mixed_operations(self, cache_instance):
         """Benchmark mixed cache operations (80% GET, 20% SET)."""
+
         async def mixed_cache_operation():
             if random.random() < 0.8:  # 80% GET operations
                 key = f"test_key_{random.randint(1, 1000)}"
@@ -250,10 +256,7 @@ class TestCacheBenchmarks:
                 return await cache_instance.set(key, value)
 
         result = await BenchmarkRunner.run_benchmark(
-            "cache_mixed",
-            mixed_cache_operation,
-            num_operations=1000,
-            concurrency=25
+            "cache_mixed", mixed_cache_operation, num_operations=1000, concurrency=25
         )
 
         print(f"\nCache Mixed Operations Benchmark Results:")
@@ -289,10 +292,7 @@ class TestCacheBenchmarks:
             return result
 
         await BenchmarkRunner.run_benchmark(
-            "cache_hit_rate",
-            cache_operation_with_tracking,
-            num_operations=1000,
-            concurrency=20
+            "cache_hit_rate", cache_operation_with_tracking, num_operations=1000, concurrency=20
         )
 
         hit_rate = hits / (hits + misses) if (hits + misses) > 0 else 0
@@ -311,6 +311,7 @@ class TestDatabaseBenchmarks:
     @pytest.fixture
     def mock_db_session(self):
         """Mock database session with realistic query performance."""
+
         class MockDBSession:
             async def execute(self, query, params=None):
                 # Simulate query execution time based on complexity
@@ -342,7 +343,9 @@ class TestDatabaseBenchmarks:
 
         # Mock the engine's get_session method
         optimizer.engine.get_session = AsyncMock()
-        optimizer.engine.get_session.return_value.__aenter__ = AsyncMock(return_value=mock_db_session)
+        optimizer.engine.get_session.return_value.__aenter__ = AsyncMock(
+            return_value=mock_db_session
+        )
         optimizer.engine.get_session.return_value.__aexit__ = AsyncMock(return_value=None)
 
         # Mock query cache to simulate cache misses for benchmarking
@@ -357,16 +360,12 @@ class TestDatabaseBenchmarks:
         queries = [
             "SELECT * FROM users WHERE id = :id",
             "SELECT COUNT(*) FROM users WHERE active = :active",
-            "SELECT name, email FROM users WHERE created_at > :date"
+            "SELECT name, email FROM users WHERE created_at > :date",
         ]
 
         async def simple_query_operation():
             query = random.choice(queries)
-            params = {
-                "id": random.randint(1, 1000),
-                "active": True,
-                "date": "2023-01-01"
-            }
+            params = {"id": random.randint(1, 1000), "active": True, "date": "2023-01-01"}
             return await db_optimizer.execute_optimized_query(query, params, use_cache=False)
 
         result = await BenchmarkRunner.run_benchmark(
@@ -374,7 +373,7 @@ class TestDatabaseBenchmarks:
             simple_query_operation,
             num_operations=500,
             concurrency=10,
-            warmup_operations=20
+            warmup_operations=20,
         )
 
         print(f"\nSimple Database Query Benchmark Results:")
@@ -405,15 +404,12 @@ class TestDatabaseBenchmarks:
             LEFT JOIN student_progress p ON s.student_id = p.student_id
             WHERE c.teacher_id = :teacher_id
             GROUP BY c.id, c.name
-            """
+            """,
         ]
 
         async def complex_query_operation():
             query = random.choice(complex_queries)
-            params = {
-                "active": True,
-                "teacher_id": random.randint(1, 100)
-            }
+            params = {"active": True, "teacher_id": random.randint(1, 100)}
             return await db_optimizer.execute_optimized_query(query, params, use_cache=False)
 
         result = await BenchmarkRunner.run_benchmark(
@@ -421,7 +417,7 @@ class TestDatabaseBenchmarks:
             complex_query_operation,
             num_operations=200,
             concurrency=5,
-            warmup_operations=10
+            warmup_operations=10,
         )
 
         print(f"\nComplex Database Query Benchmark Results:")
@@ -435,9 +431,12 @@ class TestDatabaseBenchmarks:
     async def test_prepared_statement_performance(self, db_optimizer):
         """Benchmark prepared statement execution."""
         # Mock prepared statements
-        with patch('apps.backend.core.db_optimization._prepared_statements') as mock_statements:
+        with patch("apps.backend.core.db_optimization._prepared_statements") as mock_statements:
             from sqlalchemy import text
-            mock_statements.get_statement.return_value = text("SELECT * FROM users WHERE id = :user_id")
+
+            mock_statements.get_statement.return_value = text(
+                "SELECT * FROM users WHERE id = :user_id"
+            )
 
             async def prepared_statement_operation():
                 return await db_optimizer.execute_prepared_statement(
@@ -449,7 +448,7 @@ class TestDatabaseBenchmarks:
                 prepared_statement_operation,
                 num_operations=500,
                 concurrency=15,
-                warmup_operations=25
+                warmup_operations=25,
             )
 
             print(f"\nPrepared Statement Benchmark Results:")
@@ -489,10 +488,7 @@ class TestDatabaseBenchmarks:
             return await db_optimizer.execute_optimized_query(query, params, use_cache=True)
 
         result = await BenchmarkRunner.run_benchmark(
-            "db_with_cache",
-            cached_query_operation,
-            num_operations=500,
-            concurrency=20
+            "db_with_cache", cached_query_operation, num_operations=500, concurrency=20
         )
 
         print(f"\nDatabase with Cache Benchmark Results:")
@@ -511,6 +507,7 @@ class TestPusherBenchmarks:
     @pytest.fixture
     def mock_pusher_clients(self):
         """Mock Pusher clients for performance testing."""
+
         class MockPusherClient:
             def __init__(self):
                 self.events_sent = 0
@@ -549,6 +546,7 @@ class TestPusherBenchmarks:
 
         # Initialize stats
         from apps.backend.services.pusher_optimized import PusherStats
+
         service.stats = PusherStats()
 
         return service
@@ -569,7 +567,7 @@ class TestPusherBenchmarks:
             single_event_operation,
             num_operations=300,
             concurrency=10,
-            warmup_operations=20
+            warmup_operations=20,
         )
 
         print(f"\nPusher Single Event Benchmark Results:")
@@ -583,6 +581,7 @@ class TestPusherBenchmarks:
 
     async def test_batched_event_performance(self, pusher_service):
         """Benchmark batched Pusher event sending."""
+
         # Override batch processor for testing
         async def mock_send_batched_events(batches):
             for channel, events in batches.items():
@@ -604,10 +603,7 @@ class TestPusherBenchmarks:
             return await pusher_service.trigger_event(channel, event, data, immediate=False)
 
         result = await BenchmarkRunner.run_benchmark(
-            "pusher_batched_event",
-            batched_event_operation,
-            num_operations=500,
-            concurrency=20
+            "pusher_batched_event", batched_event_operation, num_operations=500, concurrency=20
         )
 
         print(f"\nPusher Batched Event Benchmark Results:")
@@ -627,18 +623,16 @@ class TestPusherBenchmarks:
 
             if channel.startswith("presence"):
                 return await pusher_service.authenticate_channel(
-                    socket_id, channel,
+                    socket_id,
+                    channel,
                     user_id=f"user_{random.randint(1, 1000)}",
-                    user_info={"name": "Test User"}
+                    user_info={"name": "Test User"},
                 )
             else:
                 return await pusher_service.authenticate_channel(socket_id, channel)
 
         result = await BenchmarkRunner.run_benchmark(
-            "pusher_authentication",
-            auth_operation,
-            num_operations=200,
-            concurrency=15
+            "pusher_authentication", auth_operation, num_operations=200, concurrency=15
         )
 
         print(f"\nPusher Authentication Benchmark Results:")
@@ -651,6 +645,7 @@ class TestPusherBenchmarks:
 
     async def test_mixed_pusher_operations(self, pusher_service):
         """Benchmark mixed Pusher operations (events + auth)."""
+
         async def mixed_operation():
             if random.random() < 0.8:  # 80% events
                 channel = f"channel-{random.randint(1, 5)}"
@@ -662,10 +657,7 @@ class TestPusherBenchmarks:
                 return await pusher_service.authenticate_channel(socket_id, "private-test")
 
         result = await BenchmarkRunner.run_benchmark(
-            "pusher_mixed_operations",
-            mixed_operation,
-            num_operations=400,
-            concurrency=15
+            "pusher_mixed_operations", mixed_operation, num_operations=400, concurrency=15
         )
 
         print(f"\nPusher Mixed Operations Benchmark Results:")
@@ -685,50 +677,53 @@ class TestIntegratedPerformanceBenchmarks:
         """Setup mocks for integrated system testing."""
         # Mock cache
         mock_cache = AsyncMock()
-        mock_cache.get.side_effect = lambda k: asyncio.sleep(0.002) or (f"cached_{k}" if random.random() < 0.6 else None)
+        mock_cache.get.side_effect = lambda k: asyncio.sleep(0.002) or (
+            f"cached_{k}" if random.random() < 0.6 else None
+        )
         mock_cache.set.side_effect = lambda k, v, t: asyncio.sleep(0.003) or True
 
         # Mock database
         mock_db = AsyncMock()
+
         async def mock_execute_query(query, params, use_cache=True):
             await asyncio.sleep(random.uniform(0.010, 0.040))
             return [{"id": 1, "data": "result"}]
+
         mock_db.execute_optimized_query = mock_execute_query
 
         # Mock Pusher
         mock_pusher = AsyncMock()
+
         async def mock_trigger_event(channel, event, data, immediate=False):
             await asyncio.sleep(random.uniform(0.015, 0.035))
             return True
+
         mock_pusher.trigger_event = mock_trigger_event
 
-        return {
-            'cache': mock_cache,
-            'db': mock_db,
-            'pusher': mock_pusher
-        }
+        return {"cache": mock_cache, "db": mock_db, "pusher": mock_pusher}
 
     async def test_end_to_end_request_performance(self, integrated_system_mocks):
         """Benchmark complete request processing through all optimization layers."""
+
         async def complete_request_simulation():
             """Simulate a complete API request that uses cache, database, and Pusher."""
             # 1. Try cache first
             cache_key = f"user_data_{random.randint(1, 100)}"
-            cached_data = await integrated_system_mocks['cache'].get(cache_key)
+            cached_data = await integrated_system_mocks["cache"].get(cache_key)
 
             if cached_data is None:
                 # 2. Query database
                 query = "SELECT * FROM users WHERE id = :id"
                 params = {"id": random.randint(1, 100)}
-                data = await integrated_system_mocks['db'].execute_optimized_query(query, params)
+                data = await integrated_system_mocks["db"].execute_optimized_query(query, params)
 
                 # 3. Cache the result
-                await integrated_system_mocks['cache'].set(cache_key, data, 300)
+                await integrated_system_mocks["cache"].set(cache_key, data, 300)
             else:
                 data = cached_data
 
             # 4. Send notification via Pusher
-            await integrated_system_mocks['pusher'].trigger_event(
+            await integrated_system_mocks["pusher"].trigger_event(
                 "user-updates", "data-changed", {"user_id": random.randint(1, 100)}
             )
 
@@ -739,7 +734,7 @@ class TestIntegratedPerformanceBenchmarks:
             complete_request_simulation,
             num_operations=300,
             concurrency=15,
-            warmup_operations=20
+            warmup_operations=20,
         )
 
         print(f"\nEnd-to-End Request Benchmark Results:")
@@ -762,20 +757,20 @@ class TestIntegratedPerformanceBenchmarks:
             """Operation that heavily uses cache."""
             for _ in range(3):
                 key = f"cache_key_{random.randint(1, 50)}"
-                await integrated_system_mocks['cache'].get(key)
+                await integrated_system_mocks["cache"].get(key)
 
         async def db_heavy_operation():
             """Operation that heavily uses database."""
             for _ in range(2):
                 query = "SELECT * FROM table WHERE condition = :param"
                 params = {"param": random.randint(1, 100)}
-                await integrated_system_mocks['db'].execute_optimized_query(query, params)
+                await integrated_system_mocks["db"].execute_optimized_query(query, params)
 
         async def pusher_heavy_operation():
             """Operation that sends multiple Pusher events."""
             for _ in range(3):
                 channel = f"channel_{random.randint(1, 5)}"
-                await integrated_system_mocks['pusher'].trigger_event(
+                await integrated_system_mocks["pusher"].trigger_event(
                     channel, "event", {"data": random.randint(1, 1000)}
                 )
 
@@ -783,7 +778,7 @@ class TestIntegratedPerformanceBenchmarks:
             """Choose operation type randomly."""
             operation_type = random.choices(
                 [cache_heavy_operation, db_heavy_operation, pusher_heavy_operation],
-                weights=[0.5, 0.3, 0.2]  # 50% cache, 30% DB, 20% Pusher
+                weights=[0.5, 0.3, 0.2],  # 50% cache, 30% DB, 20% Pusher
             )[0]
             return await operation_type()
 
@@ -792,7 +787,7 @@ class TestIntegratedPerformanceBenchmarks:
             mixed_workload_operation,
             num_operations=200,
             concurrency=20,
-            warmup_operations=20
+            warmup_operations=20,
         )
 
         print(f"\nMixed Workload Benchmark Results:")
@@ -805,11 +800,12 @@ class TestIntegratedPerformanceBenchmarks:
 
     async def test_performance_under_increasing_load(self, integrated_system_mocks):
         """Test performance degradation under increasing load."""
+
         async def simple_operation():
             # Simple operation using all systems
-            await integrated_system_mocks['cache'].get("test_key")
-            await integrated_system_mocks['db'].execute_optimized_query("SELECT 1", {})
-            await integrated_system_mocks['pusher'].trigger_event("test", "event", {})
+            await integrated_system_mocks["cache"].get("test_key")
+            await integrated_system_mocks["db"].execute_optimized_query("SELECT 1", {})
+            await integrated_system_mocks["pusher"].trigger_event("test", "event", {})
 
         # Test with different concurrency levels
         concurrency_levels = [5, 10, 20, 30, 40]
@@ -821,7 +817,7 @@ class TestIntegratedPerformanceBenchmarks:
                 simple_operation,
                 num_operations=100,  # Smaller number for load testing
                 concurrency=concurrency,
-                warmup_operations=10
+                warmup_operations=10,
             )
             results.append((concurrency, result))
 
@@ -830,8 +826,10 @@ class TestIntegratedPerformanceBenchmarks:
         print("-" * 55)
 
         for concurrency, result in results:
-            print(f"{concurrency:<12} {result.p95_latency*1000:<15.2f} "
-                  f"{result.throughput:<12.2f} {result.success_rate:<12.2%}")
+            print(
+                f"{concurrency:<12} {result.p95_latency*1000:<15.2f} "
+                f"{result.throughput:<12.2f} {result.success_rate:<12.2%}"
+            )
 
         # Performance should degrade gracefully
         # Even at high concurrency, P95 should stay reasonable
@@ -858,7 +856,7 @@ class TestBenchmarkReporting:
             p99_latency=0.040,
             throughput=95.24,
             success_rate=0.99,
-            error_count=10
+            error_count=10,
         )
 
         result_dict = result.to_dict()
@@ -876,6 +874,7 @@ class TestBenchmarkReporting:
 
     async def test_benchmark_runner_edge_cases(self):
         """Test benchmark runner with edge cases."""
+
         # Test with operation that always fails
         async def failing_operation():
             raise Exception("Always fails")
@@ -885,7 +884,7 @@ class TestBenchmarkReporting:
             failing_operation,
             num_operations=10,
             concurrency=2,
-            warmup_operations=0
+            warmup_operations=0,
         )
 
         assert result.success_rate == 0.0
@@ -896,10 +895,7 @@ class TestBenchmarkReporting:
             return "instant"
 
         result = await BenchmarkRunner.run_benchmark(
-            "instant_operation",
-            instant_operation,
-            num_operations=100,
-            concurrency=10
+            "instant_operation", instant_operation, num_operations=100, concurrency=10
         )
 
         assert result.success_rate == 1.0

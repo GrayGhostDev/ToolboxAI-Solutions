@@ -9,18 +9,18 @@ import logging
 import os
 import time
 from contextlib import asynccontextmanager
-from typing import Optional
 
 from fastapi import FastAPI
 
 from apps.backend.core.config import settings
-from apps.backend.core.monitoring import initialize_sentry
 from apps.backend.core.logging import initialize_logging, logging_manager
+from apps.backend.core.monitoring import initialize_sentry
 
 # Re-enabled telemetry for production observability (Phase 1.2 - Nov 2025)
 # Wrap in try/except to prevent import-time crashes from GRPC dependencies
 try:
     from apps.backend.core.observability.telemetry import telemetry_manager
+
     TELEMETRY_AVAILABLE = True
 except Exception as e:
     logging.warning(f"Telemetry unavailable: {e}")
@@ -29,9 +29,12 @@ except Exception as e:
 
 # Will create these modules in subsequent steps
 try:
-    from apps.backend.core.lifecycle import register_startup_handlers, register_shutdown_handlers
-    from apps.backend.core.middleware import register_middleware
     from apps.backend.api.routers import register_routers
+    from apps.backend.core.lifecycle import (
+        register_shutdown_handlers,
+        register_startup_handlers,
+    )
+    from apps.backend.core.middleware import register_middleware
 
     FACTORY_COMPONENTS_AVAILABLE = True
 except ImportError as e:
@@ -99,10 +102,10 @@ async def empty_lifespan(app: FastAPI):
 def create_app(
     skip_lifespan: bool = False,
     skip_sentry: bool = False,
-    title: Optional[str] = None,
-    version: Optional[str] = None,
+    title: str | None = None,
+    version: str | None = None,
     testing_mode: bool = False,
-    config_settings: Optional[object] = None,
+    config_settings: object | None = None,
 ) -> FastAPI:
     """
     Application factory function to create and configure FastAPI app
@@ -136,7 +139,11 @@ def create_app(
     telemetry_disabled = os.getenv("DISABLE_TELEMETRY", "false").lower() == "true"
     if not testing_mode and not skip_lifespan and not telemetry_disabled and TELEMETRY_AVAILABLE:
         try:
-            from apps.backend.core.observability.telemetry import init_telemetry, TelemetryConfig
+            from apps.backend.core.observability.telemetry import (
+                TelemetryConfig,
+                init_telemetry,
+            )
+
             telemetry_config = TelemetryConfig(
                 service_name=app_settings.APP_NAME,
                 service_version=app_settings.APP_VERSION,
@@ -185,6 +192,7 @@ def create_app(
     if not testing_mode and not skip_lifespan:
         try:
             from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
             FastAPIInstrumentor.instrument_app(app)
             logger.info("FastAPI app instrumented with OpenTelemetry")
         except Exception as e:
@@ -198,6 +206,7 @@ def create_app(
         # Setup Swagger UI for API documentation
         try:
             from apps.backend.api.swagger import setup_swagger
+
             setup_swagger(app)
             logger.info("Swagger UI configured successfully at /docs")
         except ImportError as e:

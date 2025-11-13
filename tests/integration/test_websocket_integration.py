@@ -1,7 +1,8 @@
-import pytest_asyncio
+from unittest.mock import Mock, patch
 
 import pytest
-from unittest.mock import Mock, patch
+import pytest_asyncio
+
 
 @pytest.fixture
 def mock_db_connection():
@@ -30,6 +31,7 @@ See: test_pusher_integration.py
 import asyncio
 import os
 
+
 def make_json_serializable(obj):
     """Convert non-serializable objects to serializable format."""
     if hasattr(obj, '__dict__'):
@@ -42,13 +44,15 @@ def make_json_serializable(obj):
         return str(obj)
 
 import json
-import time
 import logging
-from typing import Dict, Any, List
-from tests.fixtures.pusher_mocks import MockPusherService
+import time
+from datetime import datetime, timezone
+from typing import Any, Dict, List
+
 import aiohttp
 import pytest
-from datetime import datetime, timezone
+
+from tests.fixtures.pusher_mocks import MockPusherService
 
 # Skip all tests in this module as they require external services
 # Tests are now enabled by default since we've fixed the issues

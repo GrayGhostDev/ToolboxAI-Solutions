@@ -6,24 +6,22 @@ Tests lesson management functionality for all user roles.
 Phase 1 Week 1: Authentication & user management endpoint tests
 """
 
-import pytest
-from datetime import datetime, timezone
+from unittest.mock import Mock
 from uuid import uuid4
-from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
 from fastapi import HTTPException, status
 
 # Import endpoint functions and models
 from apps.backend.api.v1.endpoints.lessons import (
-    get_lessons,
-    get_lesson_details,
-    create_lesson,
-    update_lesson_progress,
-    get_lesson_statistics,
-    in_memory_lessons,
     User,
+    create_lesson,
+    get_lesson_details,
+    get_lesson_statistics,
+    get_lessons,
+    in_memory_lessons,
+    update_lesson_progress,
 )
-
 
 # ============================================================================
 # Fixtures
@@ -417,9 +415,7 @@ class TestUpdateLessonProgress:
         assert exc_info.value.status_code == status.HTTP_403_FORBIDDEN
 
     @pytest.mark.asyncio
-    async def test_update_progress_no_db_raises_error(
-        self, mock_student_user, valid_progress_data
-    ):
+    async def test_update_progress_no_db_raises_error(self, mock_student_user, valid_progress_data):
         """Test that progress update without database raises error."""
         with pytest.raises(HTTPException) as exc_info:
             await update_lesson_progress(

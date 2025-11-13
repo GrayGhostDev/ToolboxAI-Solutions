@@ -5,26 +5,25 @@ Background tasks for aggregating metrics, generating reports, and exporting data
 """
 
 import json
-import csv
-import io
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional
+from typing import Any
+
+import pandas as pd
 from celery import shared_task
 from celery.utils.log import get_task_logger
-from sqlalchemy import func, select
-import pandas as pd
+from sqlalchemy import func
 
 from apps.backend.core.config import settings
 from apps.backend.core.database import get_session
 from apps.backend.services.pusher import pusher_service as pusher_client
 from database.models import (
-    User,
+    Analytics,
+    Assessment,
+    ClassSession,
     EducationalContent,
     Quiz,
+    User,
     UserProgress,
-    ClassSession,
-    Assessment,
-    Analytics,
 )
 
 logger = get_task_logger(__name__)
@@ -38,9 +37,7 @@ logger = get_task_logger(__name__)
     queue="analytics",
     priority=3,
 )
-def aggregate_usage_metrics(
-    self, period: str = "daily", date: Optional[str] = None
-) -> Dict[str, Any]:
+def aggregate_usage_metrics(self, period: str = "daily", date: str | None = None) -> dict[str, Any]:
     """
     Aggregate usage metrics for the specified period
 
@@ -205,8 +202,8 @@ def aggregate_usage_metrics(
     priority=4,
 )
 def generate_reports(
-    self, report_type: str, start_date: str, end_date: str, filters: Optional[Dict[str, Any]] = None
-) -> Dict[str, Any]:
+    self, report_type: str, start_date: str, end_date: str, filters: dict[str, Any] | None = None
+) -> dict[str, Any]:
     """
     Generate analytical reports
 
@@ -425,9 +422,9 @@ def export_analytics_data(
     self,
     export_format: str = "csv",
     data_type: str = "all",
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
-) -> Dict[str, Any]:
+    start_date: str | None = None,
+    end_date: str | None = None,
+) -> dict[str, Any]:
     """
     Export analytics data in various formats
 

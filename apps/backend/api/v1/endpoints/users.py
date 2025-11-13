@@ -3,12 +3,11 @@ User-specific API endpoints for different roles
 Provides role-based data and functionality
 """
 
-from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta, timezone
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
 
-from apps.backend.core.security.jwt_handler import get_current_user, require_role
+from fastapi import APIRouter, Depends
+
+from apps.backend.core.security.jwt_handler import require_role
 from database.models import User
 
 # Create routers for each role

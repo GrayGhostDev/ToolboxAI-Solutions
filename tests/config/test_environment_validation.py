@@ -1,55 +1,37 @@
 """Environment configuration validation tests"""
-import os
-import pytest
-from pathlib import Path
+
 import json
-import yaml
-from typing import Dict, List, Any
+from pathlib import Path
+
+import pytest
+
 
 class TestEnvironmentConfiguration:
     """Validate environment configuration across all services"""
 
     @pytest.fixture
-    def required_env_vars(self) -> Dict[str, List[str]]:
+    def required_env_vars(self) -> dict[str, list[str]]:
         """Define required environment variables by service"""
         return {
-            "core": [
-                "DATABASE_URL",
-                "REDIS_URL",
-                "JWT_SECRET_KEY",
-                "ENVIRONMENT"
-            ],
-            "postgres": [
-                "POSTGRES_DB",
-                "POSTGRES_USER",
-                "POSTGRES_PASSWORD"
-            ],
-            "redis": [
-                "REDIS_HOST",
-                "REDIS_PORT"
-            ],
-            "pusher": [
-                "PUSHER_APP_ID",
-                "PUSHER_KEY",
-                "PUSHER_SECRET",
-                "PUSHER_CLUSTER"
-            ],
-            "ai_services": [
-                "OPENAI_API_KEY",
-                "LANGCHAIN_API_KEY"
-            ]
+            "core": ["DATABASE_URL", "REDIS_URL", "JWT_SECRET_KEY", "ENVIRONMENT"],
+            "postgres": ["POSTGRES_DB", "POSTGRES_USER", "POSTGRES_PASSWORD"],
+            "redis": ["REDIS_HOST", "REDIS_PORT"],
+            "pusher": ["PUSHER_APP_ID", "PUSHER_KEY", "PUSHER_SECRET", "PUSHER_CLUSTER"],
+            "ai_services": ["OPENAI_API_KEY", "LANGCHAIN_API_KEY"],
         }
 
     def test_docker_compose_environment_alignment(self):
         """Test Docker Compose uses correct service names"""
-        compose_path = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/infrastructure/docker/docker-compose.dev.yml")
+        compose_path = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/infrastructure/docker/docker-compose.dev.yml"
+        )
 
-        with open(compose_path, 'r') as f:
+        with open(compose_path) as f:
             content = f.read()
 
         # Verify service names match expected
         assert "postgres:5432" in content  # Not localhost
-        assert "redis:6379" in content     # Not localhost
+        assert "redis:6379" in content  # Not localhost
         assert "container_name: toolboxai-postgres" in content
         assert "container_name: toolboxai-fastapi" in content
 
@@ -59,9 +41,11 @@ class TestEnvironmentConfiguration:
 
     def test_env_example_completeness(self):
         """Test .env.example has all required variables"""
-        env_example = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.env.example")
+        env_example = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.env.example"
+        )
 
-        with open(env_example, 'r') as f:
+        with open(env_example) as f:
             content = f.read()
 
         # Check for security recommendations
@@ -78,37 +62,48 @@ class TestEnvironmentConfiguration:
 
     def test_python_version_consistency(self):
         """Test Python version is consistent across configs"""
-        python_version_file = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.python-version")
+        python_version_file = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.python-version"
+        )
 
-        with open(python_version_file, 'r') as f:
+        with open(python_version_file) as f:
             project_version = f.read().strip()
 
         assert project_version == "3.12.11"
 
         # Check CI/CD uses compatible versions
-        ci_config = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.github/workflows")
+        ci_config = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.github/workflows"
+        )
         if ci_config.exists():
             workflow_files = list(ci_config.glob("*.yml"))
             if workflow_files:
                 for workflow_file in workflow_files:
-                    with open(workflow_file, 'r') as f:
+                    with open(workflow_file) as f:
                         content = f.read()
                         # CI should test with both 3.11 and 3.12
                         if "python-version" in content:
-                            assert "'3.11'" in content or '"3.11"' in content or "'3.12'" in content or '"3.12"' in content
+                            assert (
+                                "'3.11'" in content
+                                or '"3.11"' in content
+                                or "'3.12'" in content
+                                or '"3.12"' in content
+                            )
 
     def test_node_version_consistency(self):
         """Test Node version is consistent"""
         nvmrc = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.nvmrc")
 
-        with open(nvmrc, 'r') as f:
+        with open(nvmrc) as f:
             node_version = f.read().strip()
 
         assert node_version == "22"
 
         # Check package.json engines if specified
-        package_json = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/package.json")
-        with open(package_json, 'r') as f:
+        package_json = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/package.json"
+        )
+        with open(package_json) as f:
             package = json.load(f)
             if "engines" in package:
                 assert "node" in package["engines"]
@@ -117,36 +112,46 @@ class TestEnvironmentConfiguration:
     def test_pusher_configuration(self):
         """Test Pusher is properly configured"""
         # Check backend has Pusher
-        requirements = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/requirements.txt")
-        with open(requirements, 'r') as f:
+        requirements = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/requirements.txt"
+        )
+        with open(requirements) as f:
             content = f.read()
             assert "pusher==" in content
 
         # Check frontend has Pusher
-        package_json = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/package.json")
-        with open(package_json, 'r') as f:
+        package_json = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/package.json"
+        )
+        with open(package_json) as f:
             package = json.load(f)
             assert "pusher-js" in package.get("dependencies", {})
 
     def test_clerk_configuration(self):
         """Test Clerk authentication is configured"""
-        package_json = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/package.json")
-        with open(package_json, 'r') as f:
+        package_json = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/package.json"
+        )
+        with open(package_json) as f:
             package = json.load(f)
             assert "@clerk/clerk-react" in package.get("dependencies", {})
 
         # Check Docker Compose has Clerk env vars
-        compose_path = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/infrastructure/docker/docker-compose.dev.yml")
-        with open(compose_path, 'r') as f:
+        compose_path = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/infrastructure/docker/docker-compose.dev.yml"
+        )
+        with open(compose_path) as f:
             content = f.read()
             assert "VITE_CLERK_PUBLISHABLE_KEY" in content
             assert "VITE_ENABLE_CLERK_AUTH" in content
 
     def test_database_service_configuration(self):
         """Test database service configurations are correct"""
-        compose_path = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/infrastructure/docker/docker-compose.dev.yml")
+        compose_path = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/infrastructure/docker/docker-compose.dev.yml"
+        )
 
-        with open(compose_path, 'r') as f:
+        with open(compose_path) as f:
             content = f.read()
 
         # PostgreSQL should use correct image and setup
@@ -161,8 +166,10 @@ class TestEnvironmentConfiguration:
     def test_security_configuration_alignment(self):
         """Test security configurations are consistent"""
         # Check .env.example has security recommendations
-        env_example = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.env.example")
-        with open(env_example, 'r') as f:
+        env_example = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.env.example"
+        )
+        with open(env_example) as f:
             content = f.read()
 
         # Security recommendations should be present
@@ -174,21 +181,23 @@ class TestEnvironmentConfiguration:
 
     def test_port_configuration_consistency(self):
         """Test port configurations don't conflict"""
-        compose_path = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/infrastructure/docker/docker-compose.dev.yml")
+        compose_path = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/infrastructure/docker/docker-compose.dev.yml"
+        )
 
-        with open(compose_path, 'r') as f:
+        with open(compose_path) as f:
             content = f.read()
 
         # Extract port mappings
         expected_ports = {
             "5434": "postgres",  # PostgreSQL external port
-            "6381": "redis",     # Redis external port
+            "6381": "redis",  # Redis external port
             "8009": "fastapi-main",  # Backend API
             "5179": "dashboard-frontend",  # Frontend
             "9877": "mcp-server",  # MCP server
             "8888": "agent-coordinator",  # Agent coordinator
             "5001": "flask-bridge",  # Flask bridge
-            "8000": "ghost-backend"  # Ghost CMS
+            "8000": "ghost-backend",  # Ghost CMS
         }
 
         for port, service in expected_ports.items():
@@ -196,21 +205,32 @@ class TestEnvironmentConfiguration:
 
     def test_environment_variables_docker_alignment(self):
         """Test environment variables align between .env.example and docker-compose"""
-        env_example = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.env.example")
-        compose_path = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/infrastructure/docker/docker-compose.dev.yml")
+        env_example = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.env.example"
+        )
+        compose_path = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/infrastructure/docker/docker-compose.dev.yml"
+        )
 
-        with open(env_example, 'r') as f:
+        with open(env_example) as f:
             env_content = f.read()
 
-        with open(compose_path, 'r') as f:
+        with open(compose_path) as f:
             compose_content = f.read()
 
         # Key environment variables should be referenced in both
         key_vars = [
-            "POSTGRES_DB", "POSTGRES_USER", "POSTGRES_PASSWORD",
-            "REDIS_URL", "JWT_SECRET_KEY",
-            "PUSHER_APP_ID", "PUSHER_KEY", "PUSHER_SECRET", "PUSHER_CLUSTER",
-            "OPENAI_API_KEY", "CLERK_SECRET_KEY"
+            "POSTGRES_DB",
+            "POSTGRES_USER",
+            "POSTGRES_PASSWORD",
+            "REDIS_URL",
+            "JWT_SECRET_KEY",
+            "PUSHER_APP_ID",
+            "PUSHER_KEY",
+            "PUSHER_SECRET",
+            "PUSHER_CLUSTER",
+            "OPENAI_API_KEY",
+            "CLERK_SECRET_KEY",
         ]
 
         for var in key_vars:
@@ -222,36 +242,53 @@ class TestEnvironmentConfiguration:
 
     def test_health_check_configuration(self):
         """Test health checks are properly configured"""
-        compose_path = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/infrastructure/docker/docker-compose.dev.yml")
+        compose_path = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/infrastructure/docker/docker-compose.dev.yml"
+        )
 
-        with open(compose_path, 'r') as f:
+        with open(compose_path) as f:
             content = f.read()
 
         # All services should have health checks
         services_with_health_checks = [
-            "postgres", "redis", "fastapi-main", "mcp-server",
-            "agent-coordinator", "dashboard-frontend", "ghost-backend"
+            "postgres",
+            "redis",
+            "fastapi-main",
+            "mcp-server",
+            "agent-coordinator",
+            "dashboard-frontend",
+            "ghost-backend",
         ]
 
         for service in services_with_health_checks:
             assert f"{service}:" in content  # Service exists
             # Look for health check in the service section
             service_start = content.find(f"{service}:")
-            service_section = content[service_start:service_start + 2000]  # Look in next 2000 chars
+            service_section = content[
+                service_start : service_start + 2000
+            ]  # Look in next 2000 chars
             assert "healthcheck:" in service_section, f"Health check missing for {service}"
 
     def test_volume_configuration(self):
         """Test volume configurations are correct"""
-        compose_path = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/infrastructure/docker/docker-compose.dev.yml")
+        compose_path = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/infrastructure/docker/docker-compose.dev.yml"
+        )
 
-        with open(compose_path, 'r') as f:
+        with open(compose_path) as f:
             content = f.read()
 
         # Required volumes should be defined
         required_volumes = [
-            "postgres_data", "redis_data", "agent_data", "logs",
-            "static_files", "ghost_content", "mcp_contexts",
-            "educational_content", "dashboard-logs"
+            "postgres_data",
+            "redis_data",
+            "agent_data",
+            "logs",
+            "static_files",
+            "ghost_content",
+            "mcp_contexts",
+            "educational_content",
+            "dashboard-logs",
         ]
 
         for volume in required_volumes:
@@ -259,9 +296,11 @@ class TestEnvironmentConfiguration:
 
     def test_network_configuration(self):
         """Test network configurations are correct"""
-        compose_path = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/infrastructure/docker/docker-compose.dev.yml")
+        compose_path = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/infrastructure/docker/docker-compose.dev.yml"
+        )
 
-        with open(compose_path, 'r') as f:
+        with open(compose_path) as f:
             content = f.read()
 
         # Required networks should be defined

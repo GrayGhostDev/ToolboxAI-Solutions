@@ -6,18 +6,13 @@ Roblox integration, and real-time features to ensure the entire system works cor
 """
 
 import asyncio
-import json
 import os
 import time
 import uuid
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
-import pytest
+
 import aiohttp
-import asyncpg
-import redis.asyncio as redis
-from playwright.async_api import async_playwright, Page, Browser, BrowserContext, expect
-from pathlib import Path
+import pytest
+from playwright.async_api import Page, async_playwright
 
 
 @pytest.mark.e2e
@@ -31,14 +26,12 @@ class TestComprehensiveEndToEnd:
         async with async_playwright() as p:
             browser = await p.chromium.launch(
                 headless=os.getenv("HEADLESS", "true").lower() == "true",
-                slow_mo=100 if os.getenv("DEBUG_E2E") else 0
+                slow_mo=100 if os.getenv("DEBUG_E2E") else 0,
             )
             context = await browser.new_context(
                 viewport={"width": 1920, "height": 1080},
-                extra_http_headers={
-                    "Accept-Language": "en-US,en;q=0.9"
-                },
-                record_video_dir="test-results/videos" if os.getenv("RECORD_VIDEO") else None
+                extra_http_headers={"Accept-Language": "en-US,en;q=0.9"},
+                record_video_dir="test-results/videos" if os.getenv("RECORD_VIDEO") else None,
             )
 
             # Set up request/response logging
@@ -71,21 +64,9 @@ class TestComprehensiveEndToEnd:
 
         # Test user credentials
         self.test_users = {
-            "admin": {
-                "email": "admin@test.com",
-                "password": "admin123",
-                "role": "admin"
-            },
-            "teacher": {
-                "email": "teacher@test.com",
-                "password": "teacher123",
-                "role": "teacher"
-            },
-            "student": {
-                "email": "student@test.com",
-                "password": "student123",
-                "role": "student"
-            }
+            "admin": {"email": "admin@test.com", "password": "admin123", "role": "admin"},
+            "teacher": {"email": "teacher@test.com", "password": "teacher123", "role": "teacher"},
+            "student": {"email": "student@test.com", "password": "student123", "role": "student"},
         }
 
         # Test data
@@ -105,21 +86,24 @@ class TestComprehensiveEndToEnd:
             # Check if already logged in
             if await page.query_selector("[data-testid='dashboard'], [data-testid='user-menu']"):
                 # Log out first
-                logout_button = await page.query_selector("[data-testid='logout'], [data-testid='sign-out']")
+                logout_button = await page.query_selector(
+                    "[data-testid='logout'], [data-testid='sign-out']"
+                )
                 if logout_button:
                     await logout_button.click()
                     await page.wait_for_timeout(1000)
 
             # Wait for login form
             login_form_visible = await page.wait_for_selector(
-                "form, [data-testid='login-form'], input[type='email']",
-                timeout=10000
+                "form, [data-testid='login-form'], input[type='email']", timeout=10000
             )
 
             if login_form_visible:
                 # Fill login form
                 email_input = await page.query_selector("input[type='email'], input[name='email']")
-                password_input = await page.query_selector("input[type='password'], input[name='password']")
+                password_input = await page.query_selector(
+                    "input[type='password'], input[name='password']"
+                )
 
                 if email_input and password_input:
                     await email_input.fill(self.test_users["teacher"]["email"])
@@ -137,7 +121,7 @@ class TestComprehensiveEndToEnd:
                         try:
                             await page.wait_for_selector(
                                 "[data-testid='dashboard'], [data-testid='main-content'], .dashboard",
-                                timeout=15000
+                                timeout=15000,
                             )
                             # Authentication successful
                             assert True, "Login flow completed successfully"
@@ -177,11 +161,15 @@ class TestComprehensiveEndToEnd:
 
                 if content_form:
                     # Fill out content generation form
-                    text_inputs = await content_form.query_selector_all("input[type='text'], textarea")
+                    text_inputs = await content_form.query_selector_all(
+                        "input[type='text'], textarea"
+                    )
 
                     if len(text_inputs) > 0:
                         # Fill first text input with test content
-                        await text_inputs[0].fill(f"Generate educational content about {self.test_lesson_name}")
+                        await text_inputs[0].fill(
+                            f"Generate educational content about {self.test_lesson_name}"
+                        )
 
                         # Look for generate/submit button
                         generate_button = await content_form.query_selector(
@@ -196,7 +184,7 @@ class TestComprehensiveEndToEnd:
                                 # Look for progress indicators or results
                                 await page.wait_for_selector(
                                     "[data-testid='generation-result'], [data-testid='content-output'], .generated-content",
-                                    timeout=30000
+                                    timeout=30000,
                                 )
 
                                 # Verify content was generated
@@ -206,7 +194,9 @@ class TestComprehensiveEndToEnd:
 
                                 if result_content:
                                     content_text = await result_content.text_content()
-                                    assert len(content_text.strip()) > 10, "Generated content should not be empty"
+                                    assert (
+                                        len(content_text.strip()) > 10
+                                    ), "Generated content should not be empty"
 
                             except Exception:
                                 # Generation may still be in progress
@@ -273,8 +263,7 @@ class TestComprehensiveEndToEnd:
                                 # Verify class was created
                                 try:
                                     await page.wait_for_selector(
-                                        f"text={self.test_class_name}",
-                                        timeout=10000
+                                        f"text={self.test_class_name}", timeout=10000
                                     )
                                     assert True, "Class created successfully"
                                 except Exception:
@@ -348,8 +337,7 @@ class TestComprehensiveEndToEnd:
                                     # Verify lesson creation
                                     try:
                                         await page.wait_for_selector(
-                                            f"text={self.test_lesson_name}",
-                                            timeout=10000
+                                            f"text={self.test_lesson_name}", timeout=10000
                                         )
                                         assert True, "Lesson created successfully"
                                     except Exception:
@@ -446,7 +434,8 @@ class TestComprehensiveEndToEnd:
             # Set up message listener for real-time events
             realtime_messages = []
 
-            await page.evaluate("""
+            await page.evaluate(
+                """
                 () => {
                     window.realtimeMessages = [];
 
@@ -479,7 +468,8 @@ class TestComprehensiveEndToEnd:
                         });
                     }
                 }
-            """)
+            """
+            )
 
             # Wait a moment for real-time connections to establish
             await page.wait_for_timeout(2000)
@@ -556,7 +546,9 @@ class TestComprehensiveEndToEnd:
                     await page.wait_for_timeout(1000)
 
                     # Fill assessment form
-                    assessment_form = await page.query_selector("form, [data-testid='assessment-form']")
+                    assessment_form = await page.query_selector(
+                        "form, [data-testid='assessment-form']"
+                    )
 
                     if assessment_form:
                         # Assessment title
@@ -606,12 +598,13 @@ class TestComprehensiveEndToEnd:
                                             # Verify assessment creation
                                             try:
                                                 await page.wait_for_selector(
-                                                    f"text={test_assessment_name}",
-                                                    timeout=10000
+                                                    f"text={test_assessment_name}", timeout=10000
                                                 )
                                                 assert True, "Assessment created successfully"
                                             except Exception:
-                                                pytest.skip("Assessment creation verification failed")
+                                                pytest.skip(
+                                                    "Assessment creation verification failed"
+                                                )
 
         except Exception as e:
             pytest.skip(f"Assessment workflow test failed: {e}")
@@ -757,7 +750,8 @@ class TestEndToEndPerformance:
             await page.goto("http://localhost:5179", wait_until="networkidle")
 
             # Get performance metrics
-            metrics = await page.evaluate("""
+            metrics = await page.evaluate(
+                """
                 () => {
                     const perfData = performance.getEntriesByType('navigation')[0];
                     const paintData = performance.getEntriesByType('paint');
@@ -770,17 +764,24 @@ class TestEndToEndPerformance:
                         totalLoadTime: perfData.loadEventEnd - perfData.navigationStart
                     };
                 }
-            """)
+            """
+            )
 
             # Performance assertions
             if metrics["domContentLoaded"]:
-                assert metrics["domContentLoaded"] < 3000, f"DOM load time: {metrics['domContentLoaded']}ms"
+                assert (
+                    metrics["domContentLoaded"] < 3000
+                ), f"DOM load time: {metrics['domContentLoaded']}ms"
 
             if metrics["firstContentfulPaint"]:
-                assert metrics["firstContentfulPaint"] < 2000, f"FCP: {metrics['firstContentfulPaint']}ms"
+                assert (
+                    metrics["firstContentfulPaint"] < 2000
+                ), f"FCP: {metrics['firstContentfulPaint']}ms"
 
             if metrics["totalLoadTime"]:
-                assert metrics["totalLoadTime"] < 5000, f"Total load time: {metrics['totalLoadTime']}ms"
+                assert (
+                    metrics["totalLoadTime"] < 5000
+                ), f"Total load time: {metrics['totalLoadTime']}ms"
 
         except Exception as e:
             pytest.skip(f"Performance test failed: {e}")
@@ -844,11 +845,17 @@ class TestEndToEndPerformance:
                 results = await asyncio.gather(*tasks, return_exceptions=True)
 
                 # Analyze results
-                response_times = [r[0] for r in results if isinstance(r, tuple) and r[0] is not None]
+                response_times = [
+                    r[0] for r in results if isinstance(r, tuple) and r[0] is not None
+                ]
                 success_count = sum(1 for r in results if isinstance(r, tuple) and r[1] == 200)
 
                 if len(response_times) > 0:
                     avg_response_time = sum(response_times) / len(response_times)
-                    assert avg_response_time < 1000, f"Avg response time for {endpoint}: {avg_response_time:.2f}ms"
+                    assert (
+                        avg_response_time < 1000
+                    ), f"Avg response time for {endpoint}: {avg_response_time:.2f}ms"
 
-                assert success_count >= 7, f"Only {success_count}/10 requests to {endpoint} succeeded"
+                assert (
+                    success_count >= 7
+                ), f"Only {success_count}/10 requests to {endpoint} succeeded"

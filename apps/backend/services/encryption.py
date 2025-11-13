@@ -3,16 +3,15 @@ Secure Encryption Service for Credential Management
 Provides AES-256 encryption via Fernet for storing sensitive API credentials
 """
 
-import os
 import base64
 import hashlib
 import logging
-from typing import Optional, Tuple
+import os
+from datetime import datetime, timezone
+
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from cryptography.hazmat.backends import default_backend
-from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +22,7 @@ class CredentialEncryption:
     Implements key derivation, rotation, and secure storage patterns
     """
 
-    def __init__(self, key: Optional[str] = None):
+    def __init__(self, key: str | None = None):
         """
         Initialize encryption service with optional key
 
@@ -34,7 +33,7 @@ class CredentialEncryption:
         self.cipher = Fernet(self.key)
         self._initialized_at = datetime.now(timezone.utc)
 
-    def _get_or_create_key(self, provided_key: Optional[str] = None) -> bytes:
+    def _get_or_create_key(self, provided_key: str | None = None) -> bytes:
         """
         Get encryption key from environment, parameter, or generate new
 
@@ -53,12 +52,16 @@ class CredentialEncryption:
                 raise ValueError("Invalid encryption key format")
 
         # Try environment variable
-        env_key = os.getenv('ENCRYPTION_KEY')
+        env_key = os.getenv("ENCRYPTION_KEY")
         if env_key:
             try:
                 # Validate key format
                 test_cipher = Fernet(env_key.encode() if len(env_key) == 44 else env_key)
-                return env_key.encode() if isinstance(env_key, str) and len(env_key) == 44 else env_key.encode()
+                return (
+                    env_key.encode()
+                    if isinstance(env_key, str) and len(env_key) == 44
+                    else env_key.encode()
+                )
             except Exception:
                 # Key might need to be derived
                 return self._derive_key_from_password(env_key)
@@ -71,7 +74,7 @@ class CredentialEncryption:
         )
         return new_key
 
-    def _derive_key_from_password(self, password: str, salt: Optional[bytes] = None) -> bytes:
+    def _derive_key_from_password(self, password: str, salt: bytes | None = None) -> bytes:
         """
         Derive encryption key from password using PBKDF2
 
@@ -96,7 +99,7 @@ class CredentialEncryption:
         key = base64.urlsafe_b64encode(kdf.derive(password.encode()))
         return key
 
-    def encrypt_credential(self, credential: str) -> Tuple[str, str]:
+    def encrypt_credential(self, credential: str) -> tuple[str, str]:
         """
         Encrypt a credential and return encrypted value with metadata
 
@@ -143,7 +146,7 @@ class CredentialEncryption:
             logger.error(f"Failed to decrypt credential: {e}")
             raise ValueError("Failed to decrypt credential - invalid key or corrupted data")
 
-    def rotate_key(self, new_key: Optional[str] = None) -> 'CredentialEncryption':
+    def rotate_key(self, new_key: str | None = None) -> "CredentialEncryption":
         """
         Create new encryption instance with rotated key
 
@@ -155,7 +158,7 @@ class CredentialEncryption:
         """
         return CredentialEncryption(new_key)
 
-    def re_encrypt(self, encrypted: str, new_cipher: 'CredentialEncryption') -> str:
+    def re_encrypt(self, encrypted: str, new_cipher: "CredentialEncryption") -> str:
         """
         Re-encrypt a credential with a new key (for key rotation)
 
@@ -216,13 +219,13 @@ class EncryptionKeyManager:
     def _load_keys(self):
         """Load encryption keys from environment or configuration"""
         # Current key
-        current_key = os.getenv('ENCRYPTION_KEY')
+        current_key = os.getenv("ENCRYPTION_KEY")
         if current_key:
             self.keys[self.current_version] = CredentialEncryption(current_key)
 
         # Previous keys for backward compatibility during rotation
         for i in range(1, 4):  # Support up to 3 previous keys
-            old_key = os.getenv(f'ENCRYPTION_KEY_V{i}')
+            old_key = os.getenv(f"ENCRYPTION_KEY_V{i}")
             if old_key:
                 self.keys[i] = CredentialEncryption(old_key)
 
@@ -232,11 +235,11 @@ class EncryptionKeyManager:
             self.keys[self.current_version] = CredentialEncryption()
         return self.keys[self.current_version]
 
-    def get_cipher_by_version(self, version: int) -> Optional[CredentialEncryption]:
+    def get_cipher_by_version(self, version: int) -> CredentialEncryption | None:
         """Get encryption cipher by version"""
         return self.keys.get(version)
 
-    def rotate_keys(self, new_key: Optional[str] = None) -> int:
+    def rotate_keys(self, new_key: str | None = None) -> int:
         """
         Rotate encryption keys
 
@@ -260,6 +263,7 @@ class EncryptionKeyManager:
 
 # Singleton instance
 _encryption_manager = None
+
 
 def get_encryption_manager() -> EncryptionKeyManager:
     """Get singleton encryption manager instance"""

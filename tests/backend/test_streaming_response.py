@@ -1,16 +1,17 @@
-import pytest_asyncio
+
 #!/usr/bin/env python3
 """Test script to verify improved streaming response times for AI Assistant"""
 
 import asyncio
-import httpx
 import json
 import time
-from typing import AsyncGenerator
+
+import httpx
 
 # Configuration
 API_BASE_URL = "http://127.0.0.1:8009"  # Using port 8009
 AUTH_TOKEN = "dev-token"
+
 
 @pytest.mark.asyncio
 async def test_streaming_response():
@@ -28,7 +29,7 @@ async def test_streaming_response():
         response = await client.post(
             f"{API_BASE_URL}/api/v1/ai-chat/conversations",
             headers={"Authorization": f"Bearer {AUTH_TOKEN}"},
-            json={"title": "Streaming Test"}
+            json={"title": "Streaming Test"},
         )
 
         if response.status_code != 201:
@@ -52,15 +53,9 @@ async def test_streaming_response():
         async with client.stream(
             "POST",
             f"{API_BASE_URL}/api/v1/ai-chat/generate",
-            headers={
-                "Authorization": f"Bearer {AUTH_TOKEN}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "conversation_id": conv_id,
-                "message": message
-            },
-            timeout=60.0
+            headers={"Authorization": f"Bearer {AUTH_TOKEN}", "Content-Type": "application/json"},
+            json={"conversation_id": conv_id, "message": message},
+            timeout=60.0,
         ) as response:
             if response.status_code != 200:
                 print(f"   ❌ Request failed: {response.status_code}")
@@ -114,7 +109,7 @@ async def test_streaming_response():
         test_messages = [
             "Can you help me design interactive planets?",
             "I'd like to add quizzes about each planet",
-            "Puzzle"  # Test context understanding
+            "Puzzle",  # Test context understanding
         ]
 
         for i, msg in enumerate(test_messages, 1):
@@ -126,13 +121,10 @@ async def test_streaming_response():
                 f"{API_BASE_URL}/api/v1/ai-chat/generate",
                 headers={
                     "Authorization": f"Bearer {AUTH_TOKEN}",
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 },
-                json={
-                    "conversation_id": conv_id,
-                    "message": msg
-                },
-                timeout=60.0
+                json={"conversation_id": conv_id, "message": msg},
+                timeout=60.0,
             ) as response:
                 if response.status_code == 200:
                     first_token = None
@@ -153,6 +145,7 @@ async def test_streaming_response():
         print("STREAMING TEST COMPLETED")
         print("=" * 60)
 
+
 async def main():
     """Run the streaming test"""
     try:
@@ -160,7 +153,9 @@ async def main():
     except Exception as e:
         print(f"\n❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -1,4 +1,5 @@
 """Roblox Asset Management Agent - Placeholder"""
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -17,4 +18,4 @@ class RobloxAssetManagementAgent:
         return {"status": "asset_managed", "asset_id": asset_id}
 
 
-__all__ = ['RobloxAssetManagementAgent']
+__all__ = ["RobloxAssetManagementAgent"]

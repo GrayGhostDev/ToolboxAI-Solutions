@@ -7,27 +7,30 @@ Provides REST API access to:
 - Security validation
 """
 
-from typing import Dict, Any, Optional, List
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
-from pydantic import BaseModel, Field
-from datetime import datetime
-import json
 import logging
+from datetime import datetime
+from typing import Any
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from pydantic import BaseModel, Field
 
 from apps.backend.core.deps import get_current_user
-from database.models import User
 
 # Import types from correct location
-from apps.backend.models.schemas import SubjectType, ActivityType
+from database.models import User
 
 # Import Roblox agents
 try:
-    from core.agents.roblox.roblox_content_generation_agent import RobloxContentGenerationAgent
-    from core.agents.roblox.roblox_script_optimization_agent import (
-        RobloxScriptOptimizationAgent,
-        OptimizationLevel,
+    from core.agents.roblox.roblox_content_generation_agent import (
+        RobloxContentGenerationAgent,
     )
-    from core.agents.roblox.roblox_security_validation_agent import RobloxSecurityValidationAgent
+    from core.agents.roblox.roblox_script_optimization_agent import (
+        OptimizationLevel,
+        RobloxScriptOptimizationAgent,
+    )
+    from core.agents.roblox.roblox_security_validation_agent import (
+        RobloxSecurityValidationAgent,
+    )
 
     AGENTS_AVAILABLE = True
 except ImportError as e:
@@ -46,11 +49,11 @@ class ContentGenerationRequest(BaseModel):
     topic: str = Field(..., description="Specific topic within the subject")
     grade_level: int = Field(..., ge=1, le=12, description="Grade level (1-12)")
     activity_type: str = Field(..., description="Type of activity (quiz, lesson, experiment, etc.)")
-    accessibility_features: List[str] = Field(
+    accessibility_features: list[str] = Field(
         default=["text-to-speech", "high-contrast"], description="Accessibility features to include"
     )
     language: str = Field(default="English", description="Content language")
-    num_questions: Optional[int] = Field(
+    num_questions: int | None = Field(
         default=5, ge=1, le=20, description="Number of questions for quizzes"
     )
 
@@ -85,10 +88,10 @@ class ContentGenerationResponse(BaseModel):
     subject: str
     topic: str
     grade_level: int
-    scripts: Dict[str, str]  # Script name -> Luau code
-    assets: List[Dict[str, Any]]
-    accessibility_features: List[str]
-    metadata: Dict[str, Any]
+    scripts: dict[str, str]  # Script name -> Luau code
+    assets: list[dict[str, Any]]
+    accessibility_features: list[str]
+    metadata: dict[str, Any]
     generation_time: float
 
 
@@ -100,11 +103,11 @@ class OptimizationResponse(BaseModel):
     optimized_lines: int
     original_code: str
     optimized_code: str
-    issues_found: List[Dict[str, Any]]
-    metrics: Dict[str, Any]
+    issues_found: list[dict[str, Any]]
+    metrics: dict[str, Any]
     optimization_level: str
     performance_gain: str
-    compatibility_notes: List[str]
+    compatibility_notes: list[str]
 
 
 class SecurityValidationResponse(BaseModel):
@@ -113,11 +116,11 @@ class SecurityValidationResponse(BaseModel):
     success: bool
     scan_id: str
     risk_score: float
-    vulnerabilities: List[Dict[str, Any]]
-    compliance_status: Dict[str, bool]
-    recommendations: List[str]
-    blocked_patterns: List[str]
-    safe_patterns: List[str]
+    vulnerabilities: list[dict[str, Any]]
+    compliance_status: dict[str, bool]
+    recommendations: list[str]
+    blocked_patterns: list[str]
+    safe_patterns: list[str]
     report_markdown: str
 
 
@@ -386,7 +389,7 @@ async def validate_script_security(
 
 @router.post("/batch-validate")
 async def batch_validate_scripts(
-    scripts: List[SecurityValidationRequest],
+    scripts: list[SecurityValidationRequest],
     background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
 ):

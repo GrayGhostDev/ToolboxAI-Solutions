@@ -5,13 +5,12 @@ This module provides utilities for testing Docker services integration.
 """
 
 import asyncio
-import json
-import os
 import time
-from typing import Dict, List, Optional, Any
-import docker
+from typing import Any
+
 import aiohttp
 import asyncpg
+import docker
 import redis.asyncio as redis
 
 
@@ -24,19 +23,21 @@ class DockerTestHelper:
         self.containers = {}
         self.networks = {}
 
-    def get_container_by_name(self, name: str) -> Optional[docker.models.containers.Container]:
+    def get_container_by_name(self, name: str) -> docker.models.containers.Container | None:
         """Get container by name."""
         try:
             return self.docker_client.containers.get(name)
         except docker.errors.NotFound:
             return None
 
-    def get_containers_by_label(self, label: str, value: str = None) -> List[docker.models.containers.Container]:
+    def get_containers_by_label(
+        self, label: str, value: str = None
+    ) -> list[docker.models.containers.Container]:
         """Get containers by label."""
         filters = {"label": label if value is None else f"{label}={value}"}
         return self.docker_client.containers.list(filters=filters)
 
-    def get_toolboxai_containers(self) -> List[docker.models.containers.Container]:
+    def get_toolboxai_containers(self) -> list[docker.models.containers.Container]:
         """Get all ToolboxAI containers."""
         containers = self.docker_client.containers.list()
         return [c for c in containers if "toolboxai" in c.name.lower()]
@@ -72,7 +73,9 @@ class DockerTestHelper:
     async def check_service_connectivity(self, host: str, port: int, timeout: int = 10) -> bool:
         """Check if service is reachable."""
         try:
-            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as session:
+            async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=timeout)
+            ) as session:
                 async with session.get(f"http://{host}:{port}/health") as response:
                     return response.status == 200
         except Exception:
@@ -87,7 +90,7 @@ class DockerTestHelper:
                 database="educational_platform_dev",
                 user="eduplatform",
                 password="eduplatform2024",
-                timeout=10
+                timeout=10,
             )
             result = await conn.fetchval("SELECT 1;")
             await conn.close()
@@ -109,10 +112,10 @@ class DockerTestHelper:
         """Get container logs."""
         container = self.get_container_by_name(container_name)
         if container:
-            return container.logs(tail=tail, timestamps=True).decode('utf-8')
+            return container.logs(tail=tail, timestamps=True).decode("utf-8")
         return ""
 
-    def get_container_stats(self, container_name: str) -> Dict[str, Any]:
+    def get_container_stats(self, container_name: str) -> dict[str, Any]:
         """Get container resource statistics."""
         container = self.get_container_by_name(container_name)
         if container:
@@ -122,7 +125,7 @@ class DockerTestHelper:
                     "memory_usage": stats.get("memory_stats", {}),
                     "cpu_usage": stats.get("cpu_stats", {}),
                     "network": stats.get("networks", {}),
-                    "block_io": stats.get("blkio_stats", {})
+                    "block_io": stats.get("blkio_stats", {}),
                 }
             except Exception:
                 pass
@@ -161,7 +164,7 @@ class DockerTestHelper:
                 pass
         return False
 
-    def get_network_info(self, network_name: str) -> Dict[str, Any]:
+    def get_network_info(self, network_name: str) -> dict[str, Any]:
         """Get network information."""
         try:
             network = self.docker_client.networks.get(network_name)
@@ -170,7 +173,7 @@ class DockerTestHelper:
                 "driver": network.attrs.get("Driver", ""),
                 "containers": list(network.attrs.get("Containers", {}).keys()),
                 "scope": network.attrs.get("Scope", ""),
-                "ipam": network.attrs.get("IPAM", {})
+                "ipam": network.attrs.get("IPAM", {}),
             }
         except docker.errors.NotFound:
             return {}
@@ -190,14 +193,16 @@ class DockerTestHelper:
 
         return cleaned
 
-    def get_compose_services_status(self, compose_file: str = "docker-compose.dev.yml") -> Dict[str, str]:
+    def get_compose_services_status(
+        self, compose_file: str = "docker-compose.dev.yml"
+    ) -> dict[str, str]:
         """Get Docker Compose services status."""
-        import subprocess
+
         import yaml
 
         try:
             # Parse compose file to get service names
-            with open(compose_file, 'r') as f:
+            with open(compose_file) as f:
                 compose_config = yaml.safe_load(f)
 
             services = compose_config.get("services", {})
@@ -219,7 +224,9 @@ class DockerTestHelper:
         except Exception:
             return {}
 
-    async def wait_for_all_services(self, services: Dict[str, Dict[str, Any]], timeout: int = 120) -> Dict[str, bool]:
+    async def wait_for_all_services(
+        self, services: dict[str, dict[str, Any]], timeout: int = 120
+    ) -> dict[str, bool]:
         """Wait for all services to become healthy."""
         results = {}
         start_time = time.time()
@@ -233,7 +240,10 @@ class DockerTestHelper:
                 try:
                     # Wait for service with timeout
                     service_start = time.time()
-                    while time.time() - service_start < service_timeout and time.time() - start_time < timeout:
+                    while (
+                        time.time() - service_start < service_timeout
+                        and time.time() - start_time < timeout
+                    ):
                         if await self.check_service_connectivity(host, port, 5):
                             results[service_name] = True
                             break
@@ -261,7 +271,7 @@ class ServiceMonitor:
         self.monitored_services = {}
         self.monitoring = False
 
-    async def start_monitoring(self, services: Dict[str, Dict[str, Any]], interval: int = 30):
+    async def start_monitoring(self, services: dict[str, dict[str, Any]], interval: int = 30):
         """Start monitoring services."""
         self.monitored_services = services
         self.monitoring = True
@@ -306,15 +316,15 @@ class ServiceMonitor:
         """Stop monitoring services."""
         self.monitoring = False
 
-    def get_service_status(self, service_name: str) -> Dict[str, Any]:
+    def get_service_status(self, service_name: str) -> dict[str, Any]:
         """Get status of specific service."""
         return self.monitored_services.get(service_name, {})
 
-    def get_all_statuses(self) -> Dict[str, Dict[str, Any]]:
+    def get_all_statuses(self) -> dict[str, dict[str, Any]]:
         """Get all service statuses."""
         return self.monitored_services.copy()
 
-    def get_unhealthy_services(self) -> List[str]:
+    def get_unhealthy_services(self) -> list[str]:
         """Get list of unhealthy services."""
         unhealthy = []
         for service_name, status in self.monitored_services.items():
@@ -330,7 +340,7 @@ class IntegrationHealthChecker:
         """Initialize health checker."""
         self.health_checks = {}
 
-    async def check_all_services(self) -> Dict[str, bool]:
+    async def check_all_services(self) -> dict[str, bool]:
         """Check health of all services."""
         results = {}
 
@@ -363,7 +373,7 @@ class IntegrationHealthChecker:
                 database="educational_platform_dev",
                 user="eduplatform",
                 password="eduplatform2024",
-                timeout=10
+                timeout=10,
             )
             result = await conn.fetchval("SELECT 1;")
             await conn.close()
@@ -403,7 +413,7 @@ class IntegrationHealthChecker:
         except Exception:
             return False
 
-    def generate_health_report(self, results: Dict[str, bool]) -> str:
+    def generate_health_report(self, results: dict[str, bool]) -> str:
         """Generate health report."""
         healthy_count = sum(1 for status in results.values() if status)
         total_count = len(results)

@@ -61,6 +61,7 @@ async def async_context():
     This fixture helps manage async resources in tests, ensuring proper
     setup and teardown of async contexts.
     """
+
     @asynccontextmanager
     async def _context():
         # Setup

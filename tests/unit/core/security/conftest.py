@@ -1,4 +1,5 @@
 """Conftest for security unit tests."""
+
 import sys
 from pathlib import Path
 

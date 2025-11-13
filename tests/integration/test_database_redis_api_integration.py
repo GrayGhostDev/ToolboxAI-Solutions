@@ -1,4 +1,5 @@
 import pytest_asyncio
+
 #!/usr/bin/env python3
 """
 Database + Redis + API Integration Tests
@@ -16,8 +17,8 @@ import asyncio
 import json
 import os
 import time
-from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, List, Optional
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional
 from unittest.mock import AsyncMock, Mock, patch
 
 import httpx
@@ -99,8 +100,9 @@ async def test_database():
 @pytest.fixture
 def auth_headers():
     """Authentication headers for API requests"""
-    import jwt
     from datetime import timedelta
+
+    import jwt
 
     payload = {
         "sub": "integration_test_user",

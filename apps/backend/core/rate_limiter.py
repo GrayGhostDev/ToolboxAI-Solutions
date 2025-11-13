@@ -5,15 +5,12 @@ Implements advanced rate limiting strategies including sliding windows,
 token buckets, and user-specific limits for production environments.
 """
 
-import time
 import hashlib
 import logging
-from typing import Optional, Dict, Any, Tuple, List
+import time
 from dataclasses import dataclass, field
 from enum import Enum
-import json
-import asyncio
-from datetime import datetime, timedelta
+from typing import Any
 
 import redis.asyncio as aioredis
 from redis.exceptions import RedisError
@@ -66,12 +63,12 @@ class RateLimitConfig:
 
     # User tiers
     enable_user_tiers: bool = True
-    user_tier_multipliers: Dict[str, float] = field(
+    user_tier_multipliers: dict[str, float] = field(
         default_factory=lambda: {"free": 1.0, "basic": 2.0, "premium": 5.0, "enterprise": 10.0}
     )
 
     # Endpoint-specific limits
-    endpoint_limits: Dict[str, Dict[str, int]] = field(
+    endpoint_limits: dict[str, dict[str, int]] = field(
         default_factory=lambda: {
             "/auth/login": {"requests_per_minute": 5},
             "/auth/register": {"requests_per_hour": 10},
@@ -103,9 +100,9 @@ class RateLimitResult:
     limit: int
     remaining: int
     reset_at: int
-    retry_after: Optional[int] = None
-    reason: Optional[str] = None
-    headers: Dict[str, str] = field(default_factory=dict)
+    retry_after: int | None = None
+    reason: str | None = None
+    headers: dict[str, str] = field(default_factory=dict)
 
 
 class RateLimiter:
@@ -114,7 +111,7 @@ class RateLimiter:
     rate limiting across multiple servers.
     """
 
-    def __init__(self, redis_client: aioredis.Redis, config: Optional[RateLimitConfig] = None):
+    def __init__(self, redis_client: aioredis.Redis, config: RateLimitConfig | None = None):
         self.redis = redis_client
         self.config = config or RateLimitConfig()
         self._scripts = {}
@@ -220,9 +217,9 @@ class RateLimiter:
     async def check_rate_limit(
         self,
         identifier: str,
-        endpoint: Optional[str] = None,
+        endpoint: str | None = None,
         user_tier: str = "free",
-        custom_limit: Optional[int] = None,
+        custom_limit: int | None = None,
     ) -> RateLimitResult:
         """
         Check if request is within rate limits
@@ -275,7 +272,7 @@ class RateLimiter:
             )
 
     async def _check_sliding_window(
-        self, identifier: str, endpoint: Optional[str], limit: int, now: float
+        self, identifier: str, endpoint: str | None, limit: int, now: float
     ) -> RateLimitResult:
         """Check rate limit using sliding window algorithm"""
 
@@ -297,7 +294,7 @@ class RateLimiter:
         )
 
     async def _check_token_bucket(
-        self, identifier: str, endpoint: Optional[str], limit: int, now: float
+        self, identifier: str, endpoint: str | None, limit: int, now: float
     ) -> RateLimitResult:
         """Check rate limit using token bucket algorithm"""
 
@@ -319,7 +316,7 @@ class RateLimiter:
         )
 
     async def _check_sliding_log(
-        self, identifier: str, endpoint: Optional[str], limit: int, now: float
+        self, identifier: str, endpoint: str | None, limit: int, now: float
     ) -> RateLimitResult:
         """Check rate limit using sliding log algorithm (most precise)"""
 
@@ -341,7 +338,7 @@ class RateLimiter:
         )
 
     async def _check_fixed_window(
-        self, identifier: str, endpoint: Optional[str], limit: int, now: float
+        self, identifier: str, endpoint: str | None, limit: int, now: float
     ) -> RateLimitResult:
         """Check rate limit using fixed window algorithm (simplest)"""
 
@@ -390,7 +387,7 @@ class RateLimiter:
         return result
 
     def _get_effective_limit(
-        self, endpoint: Optional[str], user_tier: str, custom_limit: Optional[int]
+        self, endpoint: str | None, user_tier: str, custom_limit: int | None
     ) -> int:
         """Calculate effective rate limit based on various factors"""
 
@@ -413,7 +410,7 @@ class RateLimiter:
 
         return base_limit
 
-    def _generate_key(self, identifier: str, endpoint: Optional[str], suffix: str = "") -> str:
+    def _generate_key(self, identifier: str, endpoint: str | None, suffix: str = "") -> str:
         """Generate Redis key for rate limiting"""
 
         parts = [self.config.redis_key_prefix]
@@ -430,7 +427,7 @@ class RateLimiter:
 
         return ":".join(parts)
 
-    def _generate_headers(self, result: RateLimitResult) -> Dict[str, str]:
+    def _generate_headers(self, result: RateLimitResult) -> dict[str, str]:
         """Generate rate limit headers for response"""
 
         headers = {
@@ -444,7 +441,7 @@ class RateLimiter:
 
         return headers
 
-    async def reset_limits(self, identifier: str, endpoint: Optional[str] = None):
+    async def reset_limits(self, identifier: str, endpoint: str | None = None):
         """Reset rate limits for an identifier"""
 
         pattern = self._generate_key(identifier, endpoint, "*")
@@ -460,9 +457,7 @@ class RateLimiter:
 
         logger.info(f"Reset rate limits for {identifier}: {len(keys)} keys deleted")
 
-    async def get_usage_stats(
-        self, identifier: str, endpoint: Optional[str] = None
-    ) -> Dict[str, Any]:
+    async def get_usage_stats(self, identifier: str, endpoint: str | None = None) -> dict[str, Any]:
         """Get usage statistics for an identifier"""
 
         stats = {"identifier": identifier, "endpoint": endpoint, "current_usage": {}, "limits": {}}
@@ -487,7 +482,7 @@ class RateLimiter:
 class RateLimitMiddleware:
     """FastAPI middleware for rate limiting"""
 
-    def __init__(self, redis_client: aioredis.Redis, config: Optional[RateLimitConfig] = None):
+    def __init__(self, redis_client: aioredis.Redis, config: RateLimitConfig | None = None):
         self.limiter = RateLimiter(redis_client, config)
 
     async def __call__(self, request, call_next):

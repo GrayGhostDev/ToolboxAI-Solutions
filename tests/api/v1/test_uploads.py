@@ -10,11 +10,11 @@ Version: 1.0.0
 Standards: pytest-async, Python 3.12
 """
 
+from io import BytesIO
+from uuid import uuid4
+
 import pytest
 from httpx import AsyncClient
-from uuid import uuid4
-from datetime import datetime
-from io import BytesIO
 
 from apps.backend.models.schemas import User
 
@@ -32,9 +32,7 @@ class TestSingleFileUpload:
         """Test successful file upload"""
         # Arrange
         file_content = b"Test file content"
-        files = {
-            "file": ("test.txt", BytesIO(file_content), "text/plain")
-        }
+        files = {"file": ("test.txt", BytesIO(file_content), "text/plain")}
 
         # Act
         response = await async_client.post(
@@ -60,9 +58,7 @@ class TestSingleFileUpload:
         """Test file upload exceeds size limit"""
         # Arrange
         large_content = b"x" * (101 * 1024 * 1024)  # 101MB
-        files = {
-            "file": ("large.bin", BytesIO(large_content), "application/octet-stream")
-        }
+        files = {"file": ("large.bin", BytesIO(large_content), "application/octet-stream")}
 
         # Act
         response = await async_client.post(
@@ -81,9 +77,7 @@ class TestSingleFileUpload:
     ):
         """Test file upload without authentication"""
         # Arrange
-        files = {
-            "file": ("test.txt", BytesIO(b"content"), "text/plain")
-        }
+        files = {"file": ("test.txt", BytesIO(b"content"), "text/plain")}
 
         # Act
         response = await async_client.post(
@@ -137,9 +131,7 @@ class TestMultipartUpload:
         # Arrange
         upload_id = uuid4()
         part_data = b"x" * (10 * 1024 * 1024)  # 10MB chunk
-        files = {
-            "part_data": ("part", BytesIO(part_data), "application/octet-stream")
-        }
+        files = {"part_data": ("part", BytesIO(part_data), "application/octet-stream")}
         data = {
             "upload_id": str(upload_id),
             "part_number": 1,
@@ -258,9 +250,7 @@ class TestFileValidation:
     ):
         """Test upload with invalid file type"""
         # Arrange
-        files = {
-            "file": ("malicious.exe", BytesIO(b"content"), "application/x-msdownload")
-        }
+        files = {"file": ("malicious.exe", BytesIO(b"content"), "application/x-msdownload")}
 
         # Act
         response = await async_client.post(
@@ -281,9 +271,7 @@ class TestFileValidation:
     ):
         """Test upload with empty file"""
         # Arrange
-        files = {
-            "file": ("empty.txt", BytesIO(b""), "text/plain")
-        }
+        files = {"file": ("empty.txt", BytesIO(b""), "text/plain")}
 
         # Act
         response = await async_client.post(

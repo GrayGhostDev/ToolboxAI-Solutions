@@ -1,4 +1,5 @@
 """Integration Agent - External system integration"""
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -17,4 +18,4 @@ class IntegrationAgent:
         return {"status": "integration_complete", "system": system}
 
 
-__all__ = ['IntegrationAgent']
+__all__ = ["IntegrationAgent"]

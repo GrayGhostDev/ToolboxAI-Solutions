@@ -3,24 +3,16 @@ User Guidance System for providing intelligent assistance during content creatio
 """
 
 import logging
-from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime
-import json
-import re
 from enum import Enum
+from typing import Any
 
 from .models import (
-    ConversationContext,
-    UserProfile,
     ContentRequirements,
-    PersonalizationData,
-    UniquenessEnhancement,
     ContentType,
-    GradeLevel,
-    SubjectArea,
-    LearningStyle,
+    ConversationContext,
     EngagementLevel,
-    UniquenessFactor,
+    GradeLevel,
 )
 
 logger = logging.getLogger(__name__)
@@ -49,7 +41,7 @@ class UserGuidanceSystem:
         self.example_library = self._load_example_library()
         self.validation_rules = self._load_validation_rules()
 
-    def _load_guidance_templates(self) -> Dict[str, Dict[str, Any]]:
+    def _load_guidance_templates(self) -> dict[str, dict[str, Any]]:
         """Load guidance templates for different scenarios"""
         return {
             "discovery_guidance": {
@@ -139,7 +131,7 @@ class UserGuidanceSystem:
             },
         }
 
-    def _load_best_practices(self) -> Dict[str, List[str]]:
+    def _load_best_practices(self) -> dict[str, list[str]]:
         """Load best practices for educational content creation"""
         return {
             "engagement": [
@@ -179,7 +171,7 @@ class UserGuidanceSystem:
             ],
         }
 
-    def _load_example_library(self) -> Dict[str, List[Dict[str, Any]]]:
+    def _load_example_library(self) -> dict[str, list[dict[str, Any]]]:
         """Load examples of successful educational content"""
         return {
             "science_lessons": [
@@ -246,7 +238,7 @@ class UserGuidanceSystem:
             ],
         }
 
-    def _load_validation_rules(self) -> Dict[str, List[str]]:
+    def _load_validation_rules(self) -> dict[str, list[str]]:
         """Load validation rules for content quality"""
         return {
             "learning_objectives": [
@@ -279,8 +271,8 @@ class UserGuidanceSystem:
         self,
         context: ConversationContext,
         guidance_type: GuidanceType,
-        specific_area: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        specific_area: str | None = None,
+    ) -> dict[str, Any]:
         """Provide guidance based on conversation context and type"""
 
         current_stage = context.current_stage
@@ -333,8 +325,8 @@ class UserGuidanceSystem:
         return guidance
 
     def _personalize_suggestions(
-        self, suggestions: List[str], context: ConversationContext
-    ) -> List[str]:
+        self, suggestions: list[str], context: ConversationContext
+    ) -> list[str]:
         """Personalize suggestions based on user context"""
 
         personalized = []
@@ -369,7 +361,7 @@ class UserGuidanceSystem:
 
         return personalized
 
-    def _personalize_examples(self, examples: List[str], context: ConversationContext) -> List[str]:
+    def _personalize_examples(self, examples: list[str], context: ConversationContext) -> list[str]:
         """Personalize examples based on user context"""
 
         personalized = []
@@ -393,7 +385,7 @@ class UserGuidanceSystem:
 
         return personalized
 
-    async def _check_for_warnings(self, context: ConversationContext) -> List[str]:
+    async def _check_for_warnings(self, context: ConversationContext) -> list[str]:
         """Check for potential issues and generate warnings"""
 
         warnings = []
@@ -420,7 +412,7 @@ class UserGuidanceSystem:
 
         return warnings
 
-    async def _generate_encouragement(self, context: ConversationContext) -> List[str]:
+    async def _generate_encouragement(self, context: ConversationContext) -> list[str]:
         """Generate encouraging messages based on progress"""
 
         encouragement = []
@@ -460,8 +452,8 @@ class UserGuidanceSystem:
         return encouragement
 
     async def get_examples_for_content_type(
-        self, content_type: ContentType, grade_level: Optional[GradeLevel] = None
-    ) -> List[Dict[str, Any]]:
+        self, content_type: ContentType, grade_level: GradeLevel | None = None
+    ) -> list[dict[str, Any]]:
         """Get relevant examples for a specific content type and grade level"""
 
         # Filter examples by content type and grade level
@@ -479,7 +471,7 @@ class UserGuidanceSystem:
         return examples[:5]  # Limit to 5 examples
 
     def _example_matches_content_type(
-        self, example: Dict[str, Any], content_type: ContentType
+        self, example: dict[str, Any], content_type: ContentType
     ) -> bool:
         """Check if an example matches the specified content type"""
 
@@ -501,7 +493,7 @@ class UserGuidanceSystem:
 
     async def validate_content_requirements(
         self, requirements: ContentRequirements
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Validate content requirements and provide feedback"""
 
         validation_result = {
@@ -549,7 +541,7 @@ class UserGuidanceSystem:
 
         return validation_result
 
-    async def suggest_improvements(self, context: ConversationContext) -> List[str]:
+    async def suggest_improvements(self, context: ConversationContext) -> list[str]:
         """Suggest improvements based on current context"""
 
         suggestions = []
@@ -583,7 +575,7 @@ class UserGuidanceSystem:
 
         return suggestions
 
-    async def get_next_steps(self, context: ConversationContext) -> List[str]:
+    async def get_next_steps(self, context: ConversationContext) -> list[str]:
         """Get suggested next steps based on current context"""
 
         next_steps = []

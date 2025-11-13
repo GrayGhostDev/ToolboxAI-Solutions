@@ -12,18 +12,19 @@ Reference: https://docs.sqlalchemy.org/en/20/
 
 from datetime import datetime
 from enum import Enum as PyEnum
-from typing import Optional, List
+from typing import List, Optional
 from uuid import UUID
 
-from sqlalchemy import String, Boolean, Index, CheckConstraint, Enum
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Boolean, CheckConstraint, Enum, Index, String
 from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from database.models.base_modern import TenantBaseModel, GlobalBaseModel, Base
+from database.models.base_modern import TenantBaseModel
 
 
 class UserRole(PyEnum):
     """User role enumeration for access control."""
+
     STUDENT = "student"
     TEACHER = "teacher"
     ADMIN = "admin"
@@ -32,6 +33,7 @@ class UserRole(PyEnum):
 
 class UserStatus(PyEnum):
     """User account status."""
+
     ACTIVE = "active"
     INACTIVE = "inactive"
     SUSPENDED = "suspended"
@@ -49,6 +51,7 @@ class User(TenantBaseModel):
     - Email verification
     - Account status tracking
     """
+
     __tablename__ = "users"
 
     # Authentication
@@ -227,6 +230,7 @@ class User(TenantBaseModel):
         if self.failed_login_attempts >= max_attempts:
             # Lock account for 30 minutes
             from datetime import timedelta
+
             self.locked_until = datetime.utcnow() + timedelta(minutes=30)
             return True
 
@@ -239,6 +243,7 @@ class UserProfile(TenantBaseModel):
 
     One-to-one relationship with User model.
     """
+
     __tablename__ = "user_profiles"
 
     # Foreign key to User
@@ -308,6 +313,7 @@ class UserSession(TenantBaseModel):
 
     Tracks active user sessions with JWT tokens.
     """
+
     __tablename__ = "user_sessions"
 
     # Foreign key to User

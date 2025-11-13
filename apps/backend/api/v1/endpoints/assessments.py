@@ -3,13 +3,13 @@ Assessments API Endpoints for ToolboxAI Educational Platform
 Provides assessment, quiz, and test management functionality for all user roles.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import Dict, Any, List, Optional
-from datetime import datetime, timedelta
 import logging
-from apps.backend.api.auth.auth import get_current_user
+from typing import Any
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
-from typing import Optional as Opt
+
+from apps.backend.api.auth.auth import get_current_user
 
 
 # User model for type hints
@@ -17,7 +17,7 @@ class User(BaseModel):
     id: str
     username: str
     role: str
-    email: Optional[str] = None
+    email: str | None = None
 
 
 # Placeholder for database service
@@ -30,7 +30,7 @@ db_service = DBService()
 logger = logging.getLogger(__name__)
 
 # In-memory storage for development (will be replaced with database)
-in_memory_assessments: List[Dict[str, Any]] = []
+in_memory_assessments: list[dict[str, Any]] = []
 
 # Create router for assessments endpoints
 assessments_router = APIRouter(prefix="/assessments", tags=["Assessments"])
@@ -42,12 +42,12 @@ router = assessments_router
 @assessments_router.get("/")
 async def get_assessments(
     current_user: User = Depends(get_current_user),
-    class_id: Optional[int] = None,
-    assessment_type: Optional[str] = None,
-    status: Optional[str] = None,
+    class_id: int | None = None,
+    assessment_type: str | None = None,
+    status: str | None = None,
     limit: int = Query(default=20, le=100),
     offset: int = Query(default=0, ge=0),
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Get assessments based on user role and filters."""
 
     role = current_user.role.lower()
@@ -310,7 +310,7 @@ async def get_assessments(
 @assessments_router.get("/{assessment_id}")
 async def get_assessment_details(
     assessment_id: int, current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get detailed information about a specific assessment."""
 
     role = current_user.role.lower()
@@ -391,8 +391,8 @@ async def get_assessment_details(
 
 @assessments_router.post("/")
 async def create_assessment(
-    assessment_data: Dict[str, Any], current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+    assessment_data: dict[str, Any], current_user: User = Depends(get_current_user)
+) -> dict[str, Any]:
     """Create a new assessment (teachers and admins only)."""
 
     role = current_user.role.lower()
@@ -445,9 +445,9 @@ async def create_assessment(
 @assessments_router.post("/{assessment_id}/submit")
 async def submit_assessment(
     assessment_id: int,
-    submission_data: Dict[str, Any],
+    submission_data: dict[str, Any],
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Submit student assessment responses with automatic scoring.
 
@@ -557,7 +557,7 @@ async def get_assessment_results(
     assessment_id: int,
     current_user: User = Depends(get_current_user),
     limit: int = Query(default=50, le=200),
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Get assessment results (teachers and admins only)."""
 
     role = current_user.role.lower()
@@ -612,7 +612,7 @@ async def get_assessment_results(
 @assessments_router.get("/{assessment_id}/statistics")
 async def get_assessment_statistics(
     assessment_id: int, current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get detailed statistics for an assessment (teachers and admins only)."""
 
     role = current_user.role.lower()

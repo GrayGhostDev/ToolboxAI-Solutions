@@ -7,16 +7,16 @@ Provides REST API access to all monitoring components.
 
 import logging
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional
+from typing import Any
 
-from fastapi import APIRouter, HTTPException, Depends, Query, Body
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from core.agents.monitoring.migration_integration import GPT4MigrationSystem
-from core.agents.monitoring.gpt4_migration_monitor import MigrationPhase
+from core.agents.monitoring.alert_manager import AlertCategory, AlertSeverity
 from core.agents.monitoring.cost_tracker import CostCategory
-from core.agents.monitoring.alert_manager import AlertSeverity, AlertCategory
+from core.agents.monitoring.gpt4_migration_monitor import MigrationPhase
+from core.agents.monitoring.migration_integration import GPT4MigrationSystem
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +79,7 @@ async def get_current_user():
 # Endpoints
 
 
-@router.post("/initialize", response_model=Dict[str, Any])
+@router.post("/initialize", response_model=dict[str, Any])
 async def initialize_monitoring(
     phase: str = Query(default="preparation", description="Initial migration phase"),
     current_user=Depends(get_current_user),
@@ -103,14 +103,14 @@ async def initialize_monitoring(
                 status_code=500, detail=result.get("error", "Initialization failed")
             )
 
-    except ValueError as e:
+    except ValueError:
         raise HTTPException(status_code=400, detail=f"Invalid migration phase: {phase}")
     except Exception as e:
         logger.error(f"Unexpected error initializing monitoring: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/track-request", response_model=Dict[str, Any])
+@router.post("/track-request", response_model=dict[str, Any])
 async def track_api_request(
     request_data: APIRequestTracking, current_user=Depends(get_current_user)
 ):
@@ -140,7 +140,7 @@ async def track_api_request(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/status", response_model=Dict[str, Any])
+@router.get("/status", response_model=dict[str, Any])
 async def get_migration_status():
     """Get comprehensive migration status"""
 
@@ -153,7 +153,7 @@ async def get_migration_status():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/dashboard/{layout_name}", response_model=Dict[str, Any])
+@router.get("/dashboard/{layout_name}", response_model=dict[str, Any])
 async def get_dashboard_data(
     layout_name: str = "default",
     force_refresh: bool = Query(default=False, description="Force refresh cached data"),
@@ -171,7 +171,7 @@ async def get_dashboard_data(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/dashboard/layouts", response_model=List[Dict[str, str]])
+@router.get("/dashboard/layouts", response_model=list[dict[str, str]])
 async def get_available_layouts():
     """Get list of available dashboard layouts"""
 
@@ -184,7 +184,7 @@ async def get_available_layouts():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/monitoring-cycle", response_model=Dict[str, Any])
+@router.post("/monitoring-cycle", response_model=dict[str, Any])
 async def run_monitoring_cycle(current_user=Depends(get_current_user)):
     """Run a complete monitoring cycle"""
 
@@ -197,7 +197,7 @@ async def run_monitoring_cycle(current_user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/advance-phase", response_model=Dict[str, Any])
+@router.post("/advance-phase", response_model=dict[str, Any])
 async def advance_migration_phase(
     phase_data: PhaseAdvancement, current_user=Depends(get_current_user)
 ):
@@ -212,7 +212,7 @@ async def advance_migration_phase(
         )
         return result
 
-    except ValueError as e:
+    except ValueError:
         raise HTTPException(
             status_code=400, detail=f"Invalid migration phase: {phase_data.new_phase}"
         )
@@ -221,10 +221,10 @@ async def advance_migration_phase(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/alerts", response_model=Dict[str, Any])
+@router.get("/alerts", response_model=dict[str, Any])
 async def get_active_alerts(
-    severity: Optional[str] = Query(default=None, description="Filter by severity"),
-    category: Optional[str] = Query(default=None, description="Filter by category"),
+    severity: str | None = Query(default=None, description="Filter by severity"),
+    category: str | None = Query(default=None, description="Filter by category"),
     limit: int = Query(default=50, ge=1, le=1000, description="Maximum number of alerts"),
 ):
     """Get active alerts with optional filtering"""
@@ -285,7 +285,7 @@ async def get_active_alerts(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/alerts/acknowledge", response_model=Dict[str, Any])
+@router.post("/alerts/acknowledge", response_model=dict[str, Any])
 async def acknowledge_alert(ack_data: AlertAcknowledgment, current_user=Depends(get_current_user)):
     """Acknowledge an alert"""
 
@@ -310,7 +310,7 @@ async def acknowledge_alert(ack_data: AlertAcknowledgment, current_user=Depends(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/alerts/resolve", response_model=Dict[str, Any])
+@router.post("/alerts/resolve", response_model=dict[str, Any])
 async def resolve_alert(resolve_data: AlertResolution, current_user=Depends(get_current_user)):
     """Resolve an alert"""
 
@@ -335,7 +335,7 @@ async def resolve_alert(resolve_data: AlertResolution, current_user=Depends(get_
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/alerts/statistics", response_model=Dict[str, Any])
+@router.get("/alerts/statistics", response_model=dict[str, Any])
 async def get_alert_statistics(
     days_back: int = Query(default=7, ge=1, le=90, description="Number of days to analyze")
 ):
@@ -350,7 +350,7 @@ async def get_alert_statistics(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/cost/analysis", response_model=Dict[str, Any])
+@router.get("/cost/analysis", response_model=dict[str, Any])
 async def get_cost_analysis(
     days_back: int = Query(default=7, ge=1, le=90, description="Number of days to analyze")
 ):
@@ -381,7 +381,7 @@ async def get_cost_analysis(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/cost/projection", response_model=Dict[str, Any])
+@router.get("/cost/projection", response_model=dict[str, Any])
 async def get_cost_projection():
     """Get monthly cost projection"""
 
@@ -394,7 +394,7 @@ async def get_cost_projection():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/cost/budget", response_model=Dict[str, Any])
+@router.post("/cost/budget", response_model=dict[str, Any])
 async def update_budget_limit(budget_data: BudgetUpdate, current_user=Depends(get_current_user)):
     """Update budget limit for a specific period"""
 
@@ -421,7 +421,7 @@ async def update_budget_limit(budget_data: BudgetUpdate, current_user=Depends(ge
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/performance/real-time/{model}", response_model=Dict[str, Any])
+@router.get("/performance/real-time/{model}", response_model=dict[str, Any])
 async def get_real_time_performance(model: str):
     """Get real-time performance metrics for a specific model"""
 
@@ -434,7 +434,7 @@ async def get_real_time_performance(model: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/performance/summary/{model}", response_model=Dict[str, Any])
+@router.get("/performance/summary/{model}", response_model=dict[str, Any])
 async def get_performance_summary(
     model: str,
     days_back: int = Query(default=7, ge=1, le=90, description="Number of days to analyze"),
@@ -474,7 +474,7 @@ async def get_performance_summary(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/recommendations", response_model=Dict[str, Any])
+@router.get("/recommendations", response_model=dict[str, Any])
 async def get_optimization_recommendations():
     """Get optimization recommendations from all monitoring systems"""
 
@@ -487,7 +487,7 @@ async def get_optimization_recommendations():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/export", response_model=Dict[str, Any])
+@router.get("/export", response_model=dict[str, Any])
 async def export_monitoring_data(current_user=Depends(get_current_user)):
     """Export all monitoring data for analysis"""
 
@@ -502,7 +502,7 @@ async def export_monitoring_data(current_user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/control/stop", response_model=Dict[str, Any])
+@router.post("/control/stop", response_model=dict[str, Any])
 async def stop_monitoring(current_user=Depends(get_current_user)):
     """Stop the monitoring system"""
 
@@ -522,7 +522,7 @@ async def stop_monitoring(current_user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/control/restart", response_model=Dict[str, Any])
+@router.post("/control/restart", response_model=dict[str, Any])
 async def restart_monitoring(current_user=Depends(get_current_user)):
     """Restart the monitoring system"""
 
@@ -542,7 +542,7 @@ async def restart_monitoring(current_user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/health", response_model=Dict[str, Any])
+@router.get("/health", response_model=dict[str, Any])
 async def get_monitoring_health():
     """Get monitoring system health status"""
 

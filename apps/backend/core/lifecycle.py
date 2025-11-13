@@ -4,13 +4,10 @@ Application Lifecycle Management
 Handles startup and shutdown operations for the FastAPI application.
 """
 
-import asyncio
-import logging
-import os
 from fastapi import FastAPI
 
-from apps.backend.core.logging import logging_manager
 from apps.backend.core.config import settings
+from apps.backend.core.logging import logging_manager
 
 logger = logging_manager.get_logger(__name__)
 
@@ -193,8 +190,8 @@ async def _shutdown_agent_systems(app: FastAPI) -> None:
 
         # Shutdown agent services if available
         try:
-            from apps.backend.services.agent_service import shutdown_agent_service
             from apps.backend.services.agent_queue import shutdown_agent_queue
+            from apps.backend.services.agent_service import shutdown_agent_service
 
             await shutdown_agent_service()
             await shutdown_agent_queue()
@@ -240,6 +237,7 @@ async def _cleanup_monitoring(app: FastAPI) -> None:
     try:
         # Shutdown OpenTelemetry instrumentation
         from apps.backend.core.telemetry import telemetry_manager
+
         telemetry_manager.shutdown()
         logger.info("OpenTelemetry telemetry shutdown complete")
 

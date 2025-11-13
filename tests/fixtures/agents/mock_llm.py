@@ -3,59 +3,62 @@ Mock LLM Implementation for Testing
 Provides mock responses for testing without requiring OpenAI API keys
 """
 
-import random
 import asyncio
-from typing import List, Dict, Any, Optional, Union
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
+from typing import Any
+
+from langchain_core.callbacks import (
+    AsyncCallbackManagerForLLMRunForLLMRun,
+    CallbackManagerForLLMRunForLLMRun,
+)
 from langchain_core.language_models import BaseLLM
-from langchain_core.outputs import LLMResult, Generation
-from langchain_core.callbacks import CallbackManagerForLLMRunForLLMRun, AsyncCallbackManagerForLLMRunForLLMRun
+from langchain_core.messages import AIMessage, BaseMessage
+from langchain_core.outputs import Generation, LLMResult
 from pydantic import Field
 
 
 class MockLLM(BaseLLM):
     """Mock LLM for testing purposes"""
-    
+
     model_name: str = Field(default="mock-llm", alias="model")
     temperature: float = Field(default=0.7)
     streaming: bool = Field(default=False)
-    
+
     @property
     def _llm_type(self) -> str:
         """Return identifier of LLM type."""
         return "mock_llm"
-    
+
     def _generate(
         self,
-        prompts: List[str],
-        stop: Optional[List[str]] = None,
-        run_manager: Optional[CallbackManagerForLLMRunForLLMRun] = None,
+        prompts: list[str],
+        stop: list[str] | None = None,
+        run_manager: CallbackManagerForLLMRunForLLMRun | None = None,
         **kwargs: Any,
     ) -> LLMResult:
         """Generate mock responses for prompts."""
         generations = []
-        
+
         for prompt in prompts:
             # Generate contextual mock response based on prompt content
             response = self._generate_mock_response(prompt)
             generations.append([Generation(text=response)])
-        
+
         return LLMResult(generations=generations)  # type: ignore[reportCallIssue]
-    
+
     async def _agenerate(
         self,
-        prompts: List[str],
-        stop: Optional[List[str]] = None,
-        run_manager: Optional[AsyncCallbackManagerForLLMRunForLLMRun] = None,
+        prompts: list[str],
+        stop: list[str] | None = None,
+        run_manager: AsyncCallbackManagerForLLMRunForLLMRun | None = None,
         **kwargs: Any,
     ) -> LLMResult:
         """Async generate mock responses."""
         await asyncio.sleep(0.1)  # Simulate network delay
         return self._generate(prompts, stop)
-    
+
     def _generate_mock_response(self, prompt: str) -> str:
         """Generate contextual mock response based on prompt content."""
-        
+
         # Educational content generation
         if "educational" in prompt.lower() or "lesson" in prompt.lower():
             return """
@@ -74,7 +77,7 @@ class MockLLM(BaseLLM):
                 }
             }
             """
-        
+
         # Quiz generation
         elif "quiz" in prompt.lower() or "question" in prompt.lower():
             return """
@@ -100,7 +103,7 @@ class MockLLM(BaseLLM):
                 }
             }
             """
-        
+
         # Terrain generation
         elif "terrain" in prompt.lower() or "environment" in prompt.lower():
             return """
@@ -116,7 +119,7 @@ class MockLLM(BaseLLM):
                 }
             }
             """
-        
+
         # Script generation
         elif "script" in prompt.lower() or "lua" in prompt.lower() or "code" in prompt.lower():
             return """
@@ -135,7 +138,7 @@ class MockLLM(BaseLLM):
             
             return module
             """
-        
+
         # Review/validation
         elif "review" in prompt.lower() or "validate" in prompt.lower():
             return """
@@ -153,7 +156,7 @@ class MockLLM(BaseLLM):
                 }
             }
             """
-        
+
         # Task routing (for supervisor)
         elif "route" in prompt.lower() or "assign" in prompt.lower():
             return """
@@ -167,7 +170,7 @@ class MockLLM(BaseLLM):
                 }
             }
             """
-        
+
         # Orchestration response
         elif "orchestrate" in prompt.lower() or "workflow" in prompt.lower():
             return """
@@ -182,7 +185,7 @@ class MockLLM(BaseLLM):
                 "execution_time": 2.5
             }
             """
-        
+
         # Default response
         else:
             return """
@@ -200,12 +203,12 @@ class MockLLM(BaseLLM):
 
 class MockChatModel:
     """Mock chat model for testing chat-based interactions"""
-    
+
     def __init__(self, model_name: str = "mock-chat", **kwargs):
         self.model_name = model_name
         self.kwargs = kwargs
-    
-    def invoke(self, messages: List[BaseMessage], **kwargs) -> AIMessage:
+
+    def invoke(self, messages: list[BaseMessage], **kwargs) -> AIMessage:
         """Generate mock response for chat messages."""
         if messages:
             last_message = messages[-1].content if messages else ""
@@ -214,11 +217,13 @@ class MockChatModel:
             response = mock_llm._generate_mock_response(last_message)
             return AIMessage(content=response)
         return AIMessage(content="Mock response")
-    
-    async def ainvoke(self, messages_or_prompt: Union[str, List[BaseMessage]], **kwargs) -> AIMessage:
+
+    async def ainvoke(
+        self, messages_or_prompt: str | list[BaseMessage], **kwargs
+    ) -> AIMessage:
         """Async generate mock response."""
         await asyncio.sleep(0.1)
-        
+
         # Handle both string prompts and message lists
         if isinstance(messages_or_prompt, str):
             # Direct string prompt
@@ -228,11 +233,11 @@ class MockChatModel:
         else:
             # List of messages
             return self.invoke(messages_or_prompt, **kwargs)
-    
+
     def bind(self, **kwargs):
         """Bind additional parameters."""
         return self
-    
+
     def with_structured_output(self, schema=None, **kwargs):
         """Return self for structured output compatibility."""
         return self
@@ -262,21 +267,21 @@ def patch_langchain_for_testing():
     """
     import os
     import sys
-    
+
     # Check if OpenAI API key is available
     if not os.getenv("OPENAI_API_KEY") or os.getenv("USE_MOCK_LLM") == "true":
         # Patch from langchain_openai import ChatOpenAI import
         from unittest.mock import MagicMock
-        
+
         # Create mock module
         mock_openai = MagicMock()
         mock_openai.ChatOpenAI = MockChatModel
-        
+
         # Inject into sys.modules
         sys.modules["langchain_openai"] = mock_openai
         sys.modules["langchain.chat_models"] = mock_openai
-        
+
         print("🤖 Using Mock LLM for testing (no OpenAI API key required)")
         return True
-    
+
     return False

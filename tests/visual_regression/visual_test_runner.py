@@ -5,23 +5,20 @@ This module implements comprehensive visual regression testing using Playwright
 to catch UI changes and ensure consistent visual appearance across updates.
 """
 
-import os
-import sys
-import json
-import asyncio
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
-from datetime import datetime
-import hashlib
-from PIL import Image, ImageChops, ImageDraw
-import numpy as np
-from playwright.async_api import async_playwright, Page, Browser
 import argparse
+import asyncio
+import json
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+import numpy as np
+from PIL import Image, ImageChops, ImageDraw
+from playwright.async_api import Browser, Page, async_playwright
 from rich.console import Console
-from rich.table import Table
-from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.panel import Panel
-from rich.layout import Layout
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
 
 console = Console()
 
@@ -48,13 +45,13 @@ class VisualRegressionTester:
         (self.results_dir / "failures").mkdir(exist_ok=True)
 
         # Test results
-        self.results: List[Dict[str, Any]] = []
+        self.results: list[dict[str, Any]] = []
 
     async def capture_screenshot(
         self,
         page: Page,
         name: str,
-        selector: Optional[str] = None,
+        selector: str | None = None,
         full_page: bool = True,
     ) -> bytes:
         """Capture a screenshot of the page or element."""
@@ -76,7 +73,7 @@ class VisualRegressionTester:
 
     def compare_images(
         self, baseline: bytes, current: bytes, name: str
-    ) -> Tuple[bool, float, Optional[bytes]]:
+    ) -> tuple[bool, float, bytes | None]:
         """Compare two images and return difference metrics."""
         # Convert bytes to PIL Images
         baseline_img = Image.open(Path(baseline) if isinstance(baseline, (str, Path)) else baseline)
@@ -121,13 +118,13 @@ class VisualRegressionTester:
             for x in range(0, baseline_img.width, 10):
                 for y in range(0, baseline_img.height, 10):
                     # Sample region
-                    region_baseline = baseline_array[y:y+10, x:x+10]
-                    region_current = current_array[y:y+10, x:x+10]
+                    region_baseline = baseline_array[y : y + 10, x : x + 10]
+                    region_current = current_array[y : y + 10, x : x + 10]
 
                     # Check if region has differences
                     if np.mean(np.abs(region_baseline - region_current)) > 10:
                         # Highlight difference in red
-                        draw.rectangle([x, y, x+10, y+10], fill=(255, 0, 0, 128))
+                        draw.rectangle([x, y, x + 10, y + 10], fill=(255, 0, 0, 128))
 
             # Blend with original for context
             diff_image = Image.blend(current_img, diff_highlighted, 0.5)
@@ -144,9 +141,9 @@ class VisualRegressionTester:
     async def test_page(
         self,
         browser: Browser,
-        page_config: Dict[str, Any],
+        page_config: dict[str, Any],
         update_baseline: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Test a single page for visual regression."""
         page_name = page_config["name"]
         url = page_config.get("url", "/")
@@ -204,11 +201,13 @@ class VisualRegressionTester:
                         f"  ✓ {'Updated' if baseline_path.exists() else 'Created'} "
                         f"baseline for [green]{test_name}[/green]"
                     )
-                    results.append({
-                        "test": test_name,
-                        "status": "baseline_updated",
-                        "diff_percentage": 0,
-                    })
+                    results.append(
+                        {
+                            "test": test_name,
+                            "status": "baseline_updated",
+                            "diff_percentage": 0,
+                        }
+                    )
                 else:
                     # Compare with baseline
                     with open(baseline_path, "rb") as f:
@@ -241,12 +240,14 @@ class VisualRegressionTester:
                         if diff_path:
                             (failure_dir / "diff.png").write_bytes(diff_path.read_bytes())
 
-                    results.append({
-                        "test": test_name,
-                        "status": status,
-                        "diff_percentage": diff_percentage,
-                        "diff_path": str(diff_path) if diff_path else None,
-                    })
+                    results.append(
+                        {
+                            "test": test_name,
+                            "status": status,
+                            "diff_percentage": diff_percentage,
+                            "diff_path": str(diff_path) if diff_path else None,
+                        }
+                    )
 
             return {
                 "page": page_name,
@@ -258,7 +259,7 @@ class VisualRegressionTester:
         finally:
             await context.close()
 
-    async def _perform_setup(self, page: Page, setup: List[Dict[str, Any]]):
+    async def _perform_setup(self, page: Page, setup: list[dict[str, Any]]):
         """Perform setup actions on the page."""
         for action in setup:
             action_type = action["type"]
@@ -270,7 +271,9 @@ class VisualRegressionTester:
             elif action_type == "wait":
                 await page.wait_for_timeout(action["duration"])
             elif action_type == "wait_for_selector":
-                await page.wait_for_selector(action["selector"], timeout=action.get("timeout", 5000))
+                await page.wait_for_selector(
+                    action["selector"], timeout=action.get("timeout", 5000)
+                )
             elif action_type == "eval":
                 await page.evaluate(action["script"])
 
@@ -278,7 +281,7 @@ class VisualRegressionTester:
         self,
         config_file: str = "tests/visual_regression/config.json",
         update_baseline: bool = False,
-        filter_pages: Optional[List[str]] = None,
+        filter_pages: list[str] | None = None,
     ):
         """Run all visual regression tests."""
         # Load test configuration
@@ -292,13 +295,15 @@ class VisualRegressionTester:
         if filter_pages:
             pages = [p for p in pages if p["name"] in filter_pages]
 
-        console.print(Panel.fit(
-            f"[bold cyan]Visual Regression Testing[/bold cyan]\n"
-            f"Testing {len(pages)} pages\n"
-            f"Threshold: {self.threshold:.1%}\n"
-            f"Mode: {'Update Baseline' if update_baseline else 'Test'}",
-            title="Test Configuration"
-        ))
+        console.print(
+            Panel.fit(
+                f"[bold cyan]Visual Regression Testing[/bold cyan]\n"
+                f"Testing {len(pages)} pages\n"
+                f"Threshold: {self.threshold:.1%}\n"
+                f"Mode: {'Update Baseline' if update_baseline else 'Test'}",
+                title="Test Configuration",
+            )
+        )
 
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
@@ -324,20 +329,10 @@ class VisualRegressionTester:
         """Generate test report."""
         # Calculate summary statistics
         total_tests = sum(len(r["results"]) for r in self.results)
-        passed = sum(
-            1 for r in self.results
-            for t in r["results"]
-            if t["status"] == "passed"
-        )
-        failed = sum(
-            1 for r in self.results
-            for t in r["results"]
-            if t["status"] == "failed"
-        )
+        passed = sum(1 for r in self.results for t in r["results"] if t["status"] == "passed")
+        failed = sum(1 for r in self.results for t in r["results"] if t["status"] == "failed")
         updated = sum(
-            1 for r in self.results
-            for t in r["results"]
-            if t["status"] == "baseline_updated"
+            1 for r in self.results for t in r["results"] if t["status"] == "baseline_updated"
         )
 
         # Create summary table
@@ -373,31 +368,41 @@ class VisualRegressionTester:
 
         # Print summary
         console.print("\n")
-        console.print(Panel.fit(
-            f"[bold]Summary[/bold]\n\n"
-            f"Total Tests: {total_tests}\n"
-            f"[green]Passed: {passed}[/green]\n"
-            f"[red]Failed: {failed}[/red]\n"
-            f"[yellow]Updated: {updated}[/yellow]\n\n"
-            f"Pass Rate: {(passed / total_tests * 100):.1f}%" if total_tests > 0 else "N/A",
-            title="Test Summary"
-        ))
+        console.print(
+            Panel.fit(
+                (
+                    f"[bold]Summary[/bold]\n\n"
+                    f"Total Tests: {total_tests}\n"
+                    f"[green]Passed: {passed}[/green]\n"
+                    f"[red]Failed: {failed}[/red]\n"
+                    f"[yellow]Updated: {updated}[/yellow]\n\n"
+                    f"Pass Rate: {(passed / total_tests * 100):.1f}%"
+                    if total_tests > 0
+                    else "N/A"
+                ),
+                title="Test Summary",
+            )
+        )
 
         # Save JSON report
         report_path = self.results_dir / f"report_{datetime.now():%Y%m%d_%H%M%S}.json"
         with open(report_path, "w") as f:
-            json.dump({
-                "summary": {
-                    "total": total_tests,
-                    "passed": passed,
-                    "failed": failed,
-                    "updated": updated,
-                    "pass_rate": passed / total_tests if total_tests > 0 else 0,
+            json.dump(
+                {
+                    "summary": {
+                        "total": total_tests,
+                        "passed": passed,
+                        "failed": failed,
+                        "updated": updated,
+                        "pass_rate": passed / total_tests if total_tests > 0 else 0,
+                    },
+                    "threshold": self.threshold,
+                    "timestamp": datetime.now().isoformat(),
+                    "results": self.results,
                 },
-                "threshold": self.threshold,
-                "timestamp": datetime.now().isoformat(),
-                "results": self.results,
-            }, f, indent=2)
+                f,
+                indent=2,
+            )
 
         console.print(f"\n[dim]Report saved to: {report_path}[/dim]")
 

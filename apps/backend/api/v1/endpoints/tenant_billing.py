@@ -19,22 +19,16 @@ Standards: Python 3.12, FastAPI async, Pydantic v2
 
 import logging
 from datetime import datetime, timedelta
-from typing import Annotated, Optional
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    Query,
-    status,
-)
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.api.auth.auth import get_current_user
 from apps.backend.core.deps import get_async_db
-from apps.backend.middleware.tenant import get_tenant_context, TenantContext
+from apps.backend.middleware.tenant import TenantContext, get_tenant_context
 from apps.backend.models.schemas import User
 from database.models.tenant import Organization, SubscriptionTier
 
@@ -48,6 +42,7 @@ router = APIRouter(
 
 
 # === Pydantic v2 Models ===
+
 
 class UsageMetrics(BaseModel):
     """Current usage metrics with Pydantic v2"""
@@ -104,7 +99,7 @@ class Invoice(BaseModel):
     status: str
     issued_date: datetime
     due_date: datetime
-    paid_date: Optional[datetime] = None
+    paid_date: datetime | None = None
     description: str
     line_items: list[dict[str, str | float | int]] = Field(default_factory=list)
 
@@ -129,14 +124,14 @@ class SubscriptionInfo(BaseModel):
     tenant_id: UUID
     subscription_tier: SubscriptionTier
     status: str
-    started_at: Optional[datetime] = None
-    expires_at: Optional[datetime] = None
-    trial_started_at: Optional[datetime] = None
-    trial_expires_at: Optional[datetime] = None
+    started_at: datetime | None = None
+    expires_at: datetime | None = None
+    trial_started_at: datetime | None = None
+    trial_expires_at: datetime | None = None
     auto_renew: bool = True
-    next_billing_date: Optional[datetime] = None
+    next_billing_date: datetime | None = None
     is_trial: bool = False
-    days_remaining: Optional[int] = None
+    days_remaining: int | None = None
 
 
 class SubscriptionUpdateRequest(BaseModel):
@@ -145,7 +140,7 @@ class SubscriptionUpdateRequest(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     subscription_tier: SubscriptionTier
-    auto_renew: Optional[bool] = None
+    auto_renew: bool | None = None
 
 
 class SubscriptionUpdateResponse(BaseModel):
@@ -190,9 +185,9 @@ class PaymentMethod(BaseModel):
     id: UUID
     type: str  # "card", "bank_account", "paypal"
     last_four: str
-    brand: Optional[str] = None
-    expiry_month: Optional[int] = None
-    expiry_year: Optional[int] = None
+    brand: str | None = None
+    expiry_month: int | None = None
+    expiry_year: int | None = None
     is_default: bool = False
 
 
@@ -207,6 +202,7 @@ class PaymentMethodsResponse(BaseModel):
 
 # === Dependency Injection ===
 
+
 async def get_current_tenant_org(
     tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
     session: Annotated[AsyncSession, Depends(get_async_db)],
@@ -216,8 +212,7 @@ async def get_current_tenant_org(
 
     if not tenant_context.effective_tenant_id:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No tenant context available"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="No tenant context available"
         )
 
     result = await session.execute(
@@ -226,15 +221,13 @@ async def get_current_tenant_org(
     organization = result.scalar_one_or_none()
 
     if not organization:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Tenant not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
 
     return organization
 
 
 # === API Endpoints ===
+
 
 @router.get(
     "/usage",
@@ -284,10 +277,24 @@ async def get_current_usage(
         # Calculate usage percentages
         usage_percentage = {
             "users": (tenant.current_users / tenant.max_users * 100) if tenant.max_users > 0 else 0,
-            "classes": (tenant.current_classes / tenant.max_classes * 100) if tenant.max_classes > 0 else 0,
-            "storage": (tenant.current_storage_gb / tenant.max_storage_gb * 100) if tenant.max_storage_gb > 0 else 0,
-            "api_calls": (tenant.current_api_calls_this_month / tenant.max_api_calls_per_month * 100) if tenant.max_api_calls_per_month > 0 else 0,
-            "roblox_sessions": (tenant.current_roblox_sessions / tenant.max_roblox_sessions * 100) if tenant.max_roblox_sessions > 0 else 0,
+            "classes": (
+                (tenant.current_classes / tenant.max_classes * 100) if tenant.max_classes > 0 else 0
+            ),
+            "storage": (
+                (tenant.current_storage_gb / tenant.max_storage_gb * 100)
+                if tenant.max_storage_gb > 0
+                else 0
+            ),
+            "api_calls": (
+                (tenant.current_api_calls_this_month / tenant.max_api_calls_per_month * 100)
+                if tenant.max_api_calls_per_month > 0
+                else 0
+            ),
+            "roblox_sessions": (
+                (tenant.current_roblox_sessions / tenant.max_roblox_sessions * 100)
+                if tenant.max_roblox_sessions > 0
+                else 0
+            ),
         }
 
         # Check for overages and warnings
@@ -317,8 +324,7 @@ async def get_current_usage(
     except Exception as e:
         logger.error(f"Failed to get billing usage: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get billing usage"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get billing usage"
         )
 
 
@@ -332,7 +338,7 @@ async def list_invoices(
     tenant: Annotated[Organization, Depends(get_current_tenant_org)],
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    status_filter: Optional[str] = Query(None, pattern="^(paid|unpaid|overdue|pending)$"),
+    status_filter: str | None = Query(None, pattern="^(paid|unpaid|overdue|pending)$"),
 ) -> InvoiceListResponse:
     """
     List invoices for tenant.
@@ -364,8 +370,7 @@ async def list_invoices(
     except Exception as e:
         logger.error(f"Failed to list invoices: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to list invoices"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to list invoices"
         )
 
 
@@ -390,8 +395,7 @@ async def get_subscription(
     try:
         # Check if in trial
         is_trial = (
-            tenant.trial_expires_at is not None and
-            tenant.trial_expires_at > datetime.utcnow()
+            tenant.trial_expires_at is not None and tenant.trial_expires_at > datetime.utcnow()
         )
 
         days_remaining = None
@@ -415,8 +419,7 @@ async def get_subscription(
     except Exception as e:
         logger.error(f"Failed to get subscription: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get subscription"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get subscription"
         )
 
 
@@ -541,7 +544,7 @@ async def update_subscription(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update subscription"
+            detail="Failed to update subscription",
         )
 
 
@@ -585,8 +588,7 @@ async def get_usage_history(
     except Exception as e:
         logger.error(f"Failed to get usage history: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get usage history"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get usage history"
         )
 
 
@@ -624,5 +626,5 @@ async def get_payment_methods(
         logger.error(f"Failed to get payment methods: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get payment methods"
+            detail="Failed to get payment methods",
         )

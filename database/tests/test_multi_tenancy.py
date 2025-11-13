@@ -5,23 +5,26 @@ Test suite for multi-tenant database functionality including
 tenant isolation, RLS policies, and organization management.
 """
 
-import pytest
 import asyncio
+from datetime import datetime, timedelta
 from typing import Generator
 from uuid import uuid4
-from datetime import datetime, timedelta
 
+import pytest
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import text, select
 
-from database.models.base import Base
-from database.models.tenant import Organization, OrganizationInvitation, SubscriptionTier, OrganizationStatus
-from database.models.models import User, UserRole
-from database.services.tenant_service import TenantService
-from database.repositories.tenant_repository import TenantContextManager, OrganizationRepository
 from database.config.multi_tenant_config import TenantConfig
-
+from database.models.base import Base
+from database.models.models import User, UserRole
+from database.models.tenant import (
+    Organization,
+    OrganizationStatus,
+    SubscriptionTier,
+)
+from database.repositories.tenant_repository import TenantContextManager
+from database.services.tenant_service import TenantService
 
 # Test configuration
 TEST_DATABASE_URL = "postgresql+asyncpg://test_user:test_pass@localhost/test_db"
@@ -74,7 +77,7 @@ async def sample_organization(tenant_service: TenantService) -> Organization:
         admin_email="admin@test.com",
         admin_password="test_password_123",
         admin_first_name="Test",
-        admin_last_name="Admin"
+        admin_last_name="Admin",
     )
     return org
 
@@ -87,7 +90,7 @@ async def second_organization(tenant_service: TenantService) -> Organization:
         admin_email="admin2@test.com",
         admin_password="test_password_123",
         admin_first_name="Second",
-        admin_last_name="Admin"
+        admin_last_name="Admin",
     )
     return org
 
@@ -104,7 +107,7 @@ class TestOrganizationManagement:
             admin_first_name="New",
             admin_last_name="Admin",
             organization_type="education",
-            subscription_tier=SubscriptionTier.BASIC
+            subscription_tier=SubscriptionTier.BASIC,
         )
 
         assert org.name == "New Test Org"
@@ -121,16 +124,12 @@ class TestOrganizationManagement:
         """Test unique slug generation"""
         # Create first organization
         org1, _ = await tenant_service.create_organization(
-            name="Test Company",
-            admin_email="admin1@testcompany.com",
-            admin_password="password123"
+            name="Test Company", admin_email="admin1@testcompany.com", admin_password="password123"
         )
 
         # Create second organization with same name
         org2, _ = await tenant_service.create_organization(
-            name="Test Company",
-            admin_email="admin2@testcompany.com",
-            admin_password="password123"
+            name="Test Company", admin_email="admin2@testcompany.com", admin_password="password123"
         )
 
         assert org1.slug == "test-company"
@@ -143,14 +142,12 @@ class TestOrganizationManagement:
         # Check default free tier limits
         if org.subscription_tier == SubscriptionTier.FREE:
             limits = TenantConfig.get_subscription_limits(SubscriptionTier.FREE)
-            assert org.max_users == limits['max_users']
-            assert org.max_classes == limits['max_classes']
-            assert org.max_storage_gb == limits['max_storage_gb']
+            assert org.max_users == limits["max_users"]
+            assert org.max_classes == limits["max_classes"]
+            assert org.max_storage_gb == limits["max_storage_gb"]
 
     async def test_upgrade_subscription(
-        self,
-        tenant_service: TenantService,
-        sample_organization: Organization
+        self, tenant_service: TenantService, sample_organization: Organization
     ):
         """Test subscription upgrade"""
         org_id = sample_organization.id
@@ -158,8 +155,7 @@ class TestOrganizationManagement:
 
         # Upgrade to professional
         upgraded_org = await tenant_service.upgrade_subscription(
-            organization_id=org_id,
-            new_tier=SubscriptionTier.PROFESSIONAL
+            organization_id=org_id, new_tier=SubscriptionTier.PROFESSIONAL
         )
 
         assert upgraded_org.subscription_tier == SubscriptionTier.PROFESSIONAL
@@ -167,23 +163,21 @@ class TestOrganizationManagement:
         assert upgraded_org.max_users > original_max_users
 
     async def test_usage_tracking(
-        self,
-        tenant_service: TenantService,
-        sample_organization: Organization
+        self, tenant_service: TenantService, sample_organization: Organization
     ):
         """Test usage tracking and limits"""
         org_id = sample_organization.id
 
         # Test adding users
-        await tenant_service.org_repo.update_usage(org_id, 'users', 2)
+        await tenant_service.org_repo.update_usage(org_id, "users", 2)
         updated_org = await tenant_service.org_repo.get_by_id(org_id)
         assert updated_org.current_users == 3  # Initial 1 + 2 added
 
         # Test usage statistics
         stats = await tenant_service.org_repo.get_usage_stats(org_id)
-        assert 'current_usage' in stats
-        assert 'limits' in stats
-        assert 'usage_percentage' in stats
+        assert "current_usage" in stats
+        assert "limits" in stats
+        assert "usage_percentage" in stats
 
 
 class TestUserInvitations:
@@ -193,7 +187,7 @@ class TestUserInvitations:
         self,
         tenant_service: TenantService,
         sample_organization: Organization,
-        session: AsyncSession
+        session: AsyncSession,
     ):
         """Test inviting a user to organization"""
         # Get admin user
@@ -207,7 +201,7 @@ class TestUserInvitations:
             email="teacher@test.com",
             role=UserRole.TEACHER,
             invited_by_id=admin_user.id,
-            invitation_message="Welcome to our organization!"
+            invitation_message="Welcome to our organization!",
         )
 
         assert invitation.email == "teacher@test.com"
@@ -220,7 +214,7 @@ class TestUserInvitations:
         self,
         tenant_service: TenantService,
         sample_organization: Organization,
-        session: AsyncSession
+        session: AsyncSession,
     ):
         """Test accepting an invitation"""
         # Create invitation
@@ -233,7 +227,7 @@ class TestUserInvitations:
             organization_id=sample_organization.id,
             email="student@test.com",
             role=UserRole.STUDENT,
-            invited_by_id=admin_user.id
+            invited_by_id=admin_user.id,
         )
 
         # Accept invitation
@@ -242,7 +236,7 @@ class TestUserInvitations:
             user_id=uuid4(),
             password="student_password",
             first_name="Test",
-            last_name="Student"
+            last_name="Student",
         )
 
         assert new_user.email == "student@test.com"
@@ -263,7 +257,7 @@ class TestTenantIsolation:
         self,
         session: AsyncSession,
         sample_organization: Organization,
-        second_organization: Organization
+        second_organization: Organization,
     ):
         """Test that tenant context properly isolates data"""
         # Create users in different organizations
@@ -273,7 +267,7 @@ class TestTenantIsolation:
                 email="user1@org1.com",
                 username="user1",
                 password_hash="hash1",
-                role=UserRole.STUDENT
+                role=UserRole.STUDENT,
             )
 
         async with TenantContextManager(session, second_organization.id) as ctx:
@@ -282,7 +276,7 @@ class TestTenantIsolation:
                 email="user2@org2.com",
                 username="user2",
                 password_hash="hash2",
-                role=UserRole.STUDENT
+                role=UserRole.STUDENT,
             )
 
         # Test isolation - each tenant should only see their own users
@@ -304,7 +298,7 @@ class TestTenantIsolation:
         self,
         session: AsyncSession,
         sample_organization: Organization,
-        second_organization: Organization
+        second_organization: Organization,
     ):
         """Test that users cannot access data from other tenants"""
         # Create user in first organization
@@ -314,7 +308,7 @@ class TestTenantIsolation:
                 email="isolated@org1.com",
                 username="isolated",
                 password_hash="hash",
-                role=UserRole.STUDENT
+                role=UserRole.STUDENT,
             )
 
         # Try to access from second organization context
@@ -337,7 +331,7 @@ class TestTenantIsolation:
         # Test 2: Set invalid tenant context
         await session.execute(
             text("SELECT set_config('app.current_organization_id', :org_id, true)"),
-            {"org_id": str(uuid4())}
+            {"org_id": str(uuid4())},
         )
         result = await session.execute(select(User))
         users_invalid_context = result.scalars().all()
@@ -348,14 +342,11 @@ class TestUsageReporting:
     """Test usage logging and reporting"""
 
     async def test_usage_log_creation(
-        self,
-        tenant_service: TenantService,
-        sample_organization: Organization
+        self, tenant_service: TenantService, sample_organization: Organization
     ):
         """Test creating usage logs"""
         usage_log = await tenant_service.org_repo.log_usage(
-            org_id=sample_organization.id,
-            log_type="daily"
+            org_id=sample_organization.id, log_type="daily"
         )
 
         assert usage_log.organization_id == sample_organization.id
@@ -364,9 +355,7 @@ class TestUsageReporting:
         assert usage_log.usage_data is not None
 
     async def test_usage_report_generation(
-        self,
-        tenant_service: TenantService,
-        sample_organization: Organization
+        self, tenant_service: TenantService, sample_organization: Organization
     ):
         """Test generating usage reports"""
         # Create some usage logs
@@ -376,27 +365,25 @@ class TestUsageReporting:
         report = await tenant_service.generate_usage_report(
             organization_id=sample_organization.id,
             start_date=datetime.utcnow() - timedelta(days=7),
-            end_date=datetime.utcnow()
+            end_date=datetime.utcnow(),
         )
 
-        assert report['organization_id'] == sample_organization.id
-        assert 'current_stats' in report
-        assert 'historical_data' in report
-        assert 'summary' in report
+        assert report["organization_id"] == sample_organization.id
+        assert "current_stats" in report
+        assert "historical_data" in report
+        assert "summary" in report
 
     async def test_usage_limit_checking(
-        self,
-        tenant_service: TenantService,
-        sample_organization: Organization
+        self, tenant_service: TenantService, sample_organization: Organization
     ):
         """Test usage limit checking"""
         # Check current limits
         limit_status = await tenant_service.check_usage_limits(sample_organization.id)
 
-        assert 'usage_percentage' in limit_status
-        assert 'warnings' in limit_status
-        assert 'limits_exceeded' in limit_status
-        assert 'subscription_tier' in limit_status
+        assert "usage_percentage" in limit_status
+        assert "warnings" in limit_status
+        assert "limits_exceeded" in limit_status
+        assert "subscription_tier" in limit_status
 
 
 class TestErrorHandling:
@@ -406,15 +393,11 @@ class TestErrorHandling:
         """Test handling of duplicate organization slugs"""
         # This should be handled by the slug generation logic
         org1, _ = await tenant_service.create_organization(
-            name="Duplicate Test",
-            admin_email="admin1@duplicate.com",
-            admin_password="password123"
+            name="Duplicate Test", admin_email="admin1@duplicate.com", admin_password="password123"
         )
 
         org2, _ = await tenant_service.create_organization(
-            name="Duplicate Test",
-            admin_email="admin2@duplicate.com",
-            admin_password="password123"
+            name="Duplicate Test", admin_email="admin2@duplicate.com", admin_password="password123"
         )
 
         assert org1.slug != org2.slug
@@ -427,7 +410,7 @@ class TestErrorHandling:
                 user_id=uuid4(),
                 password="password",
                 first_name="Test",
-                last_name="User"
+                last_name="User",
             )
 
     async def test_organization_not_found(self, tenant_service: TenantService):
@@ -437,9 +420,7 @@ class TestErrorHandling:
         assert org is None
 
     async def test_subscription_limit_exceeded(
-        self,
-        tenant_service: TenantService,
-        sample_organization: Organization
+        self, tenant_service: TenantService, sample_organization: Organization
     ):
         """Test behavior when subscription limits are exceeded"""
         # Set usage to maximum
@@ -447,7 +428,7 @@ class TestErrorHandling:
         org.current_users = org.max_users
 
         # Try to add one more user
-        can_add = await tenant_service.org_repo.check_limits(org.id, 'users')
+        can_add = await tenant_service.org_repo.check_limits(org.id, "users")
         assert not can_add
 
 
@@ -463,7 +444,7 @@ class TestIntegrationScenarios:
             admin_email="admin@complete.com",
             admin_password="admin_password_123",
             admin_first_name="Admin",
-            admin_last_name="User"
+            admin_last_name="User",
         )
 
         # 2. Invite teacher
@@ -471,7 +452,7 @@ class TestIntegrationScenarios:
             organization_id=org.id,
             email="teacher@complete.com",
             role=UserRole.TEACHER,
-            invited_by_id=admin.id
+            invited_by_id=admin.id,
         )
 
         # 3. Accept teacher invitation
@@ -480,7 +461,7 @@ class TestIntegrationScenarios:
             user_id=uuid4(),
             password="teacher_password",
             first_name="Teacher",
-            last_name="User"
+            last_name="User",
         )
 
         # 4. Invite student
@@ -488,7 +469,7 @@ class TestIntegrationScenarios:
             organization_id=org.id,
             email="student@complete.com",
             role=UserRole.STUDENT,
-            invited_by_id=admin.id
+            invited_by_id=admin.id,
         )
 
         # 5. Accept student invitation
@@ -497,7 +478,7 @@ class TestIntegrationScenarios:
             user_id=uuid4(),
             password="student_password",
             first_name="Student",
-            last_name="User"
+            last_name="User",
         )
 
         # 6. Verify organization state
@@ -506,9 +487,7 @@ class TestIntegrationScenarios:
 
         # 7. Upgrade subscription
         final_org = await tenant_service.upgrade_subscription(
-            organization_id=org.id,
-            new_tier=SubscriptionTier.PROFESSIONAL,
-            updated_by_id=admin.id
+            organization_id=org.id, new_tier=SubscriptionTier.PROFESSIONAL, updated_by_id=admin.id
         )
 
         assert final_org.subscription_tier == SubscriptionTier.PROFESSIONAL

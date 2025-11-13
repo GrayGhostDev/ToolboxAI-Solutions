@@ -15,7 +15,6 @@ import gzip
 import io
 import logging
 import zlib
-from typing import Any, Dict, List, Optional, Set, Tuple
 
 from fastapi import Request, Response
 from starlette.datastructures import Headers, MutableHeaders
@@ -41,9 +40,9 @@ class CompressionConfig:
         self,
         minimum_size: int = 1024,  # Only compress responses larger than 1KB
         compression_level: int = 6,  # 1-9, where 9 is maximum compression
-        compressible_types: Optional[Set[str]] = None,
-        excluded_paths: Optional[Set[str]] = None,
-        excluded_user_agents: Optional[Set[str]] = None,
+        compressible_types: set[str] | None = None,
+        excluded_paths: set[str] | None = None,
+        excluded_user_agents: set[str] | None = None,
         prefer_brotli: bool = True,
     ):
         self.minimum_size = minimum_size
@@ -135,7 +134,7 @@ class AcceptEncodingParser:
     """Parse and negotiate Accept-Encoding header"""
 
     @staticmethod
-    def parse(accept_encoding: str) -> List[Tuple[str, float]]:
+    def parse(accept_encoding: str) -> list[tuple[str, float]]:
         """Parse Accept-Encoding header and return list of (encoding, quality)"""
         if not accept_encoding:
             return []
@@ -180,8 +179,8 @@ class AcceptEncodingParser:
 
     @staticmethod
     def negotiate(
-        accept_encoding: str, available: List[str], prefer_brotli: bool = True
-    ) -> Optional[str]:
+        accept_encoding: str, available: list[str], prefer_brotli: bool = True
+    ) -> str | None:
         """Negotiate best encoding based on client preferences and available encodings"""
         client_encodings = AcceptEncodingParser.parse(accept_encoding)
 
@@ -212,7 +211,7 @@ class AcceptEncodingParser:
 class CompressionMiddleware(BaseHTTPMiddleware):
     """Middleware for compressing HTTP responses"""
 
-    def __init__(self, app: ASGIApp, config: Optional[CompressionConfig] = None):
+    def __init__(self, app: ASGIApp, config: CompressionConfig | None = None):
         super().__init__(app)
         self.config = config or CompressionConfig()
         self.encoder = ContentEncoder()
@@ -378,7 +377,7 @@ class CompressionMiddleware(BaseHTTPMiddleware):
 class StreamingCompressionMiddleware:
     """Middleware for streaming compression of large responses"""
 
-    def __init__(self, app: ASGIApp, config: Optional[CompressionConfig] = None):
+    def __init__(self, app: ASGIApp, config: CompressionConfig | None = None):
         self.app = app
         self.config = config or CompressionConfig()
         self.encoder = ContentEncoder()

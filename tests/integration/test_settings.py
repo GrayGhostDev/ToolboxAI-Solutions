@@ -1,15 +1,16 @@
 """Tests for toolboxai_settings package."""
 
 import os
-import pytest
 import sys
+
+import pytest
 
 from toolboxai_settings import settings
 
 # Skip all tests in this module as they require external services
 pytestmark = pytest.mark.skipif(
-    not os.environ.get('RUN_INTEGRATION_TESTS'),
-    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
+    not os.environ.get("RUN_INTEGRATION_TESTS"),
+    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable",
 )
 
 # Ensure project root is on sys.path so pytest can import our package

@@ -1,4 +1,4 @@
-import pytest_asyncio
+
 #!/usr/bin/env python3
 """
 Test Integration Agents - Verify the agent swarm is working
@@ -10,13 +10,12 @@ Tests both direct module imports and HTTP endpoints.
 """
 
 import asyncio
-import aiohttp
-import sys
-import os
-import json
-from datetime import datetime
-import time
 import logging
+import os
+import sys
+from datetime import datetime
+
+import aiohttp
 
 # Add project root to path
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -66,11 +65,11 @@ async def test_integration_status(base_url: str):
                     print(f"   ✅ Status: {data.get('overall_health', 'unknown')}")
                     print(f"   ✅ Initialized: {data.get('initialized', False)}")
 
-                    agents = data.get('agents', {})
+                    agents = data.get("agents", {})
                     if agents:
                         print(f"   ✅ Active Agents: {len(agents)}")
                         for agent_name, agent_status in agents.items():
-                            status = agent_status.get('status', 'unknown')
+                            status = agent_status.get("status", "unknown")
                             emoji = "✅" if status == "healthy" else "⚠️"
                             print(f"      {emoji} {agent_name}: {status}")
                     return True
@@ -95,13 +94,13 @@ async def test_integration_agents_list(base_url: str):
                     return True
                 elif response.status == 200:
                     data = await response.json()
-                    agents = data.get('agents', {})
+                    agents = data.get("agents", {})
                     print(f"   ✅ Found {len(agents)} agent types")
 
                     for agent_key, agent_info in agents.items():
                         print(f"   📌 {agent_info['name']}")
                         print(f"      {agent_info['description']}")
-                        if agent_info.get('initialized'):
+                        if agent_info.get("initialized"):
                             print(f"      Status: {agent_info.get('health', 'unknown')}")
                     return True
                 else:
@@ -119,13 +118,15 @@ async def test_workflow_templates(base_url: str):
 
     async with aiohttp.ClientSession() as session:
         try:
-            async with session.post(f"{base_url}/api/v1/integration/workflow/templates") as response:
+            async with session.post(
+                f"{base_url}/api/v1/integration/workflow/templates"
+            ) as response:
                 if response.status == 401:
                     print("   ⚠️  Authentication required (expected)")
                     return True
                 elif response.status == 200:
                     data = await response.json()
-                    templates = data.get('templates', {})
+                    templates = data.get("templates", {})
                     print(f"   ✅ Found {len(templates)} workflow templates")
 
                     for template_key, template_info in templates.items():
@@ -154,7 +155,7 @@ async def test_metrics_endpoint(base_url: str):
                     return True
                 elif response.status == 200:
                     data = await response.json()
-                    totals = data.get('totals', {})
+                    totals = data.get("totals", {})
                     print(f"   ✅ Metrics Retrieved")
                     print(f"      Total Requests: {totals.get('total_requests', 0)}")
                     print(f"      Success Rate: {totals.get('success_rate', 0):.2%}")
@@ -178,9 +179,9 @@ async def test_openapi_docs(base_url: str):
             async with session.get(f"{base_url}/openapi.json") as response:
                 if response.status == 200:
                     data = await response.json()
-                    paths = data.get('paths', {})
+                    paths = data.get("paths", {})
 
-                    integration_paths = [p for p in paths if '/integration/' in p]
+                    integration_paths = [p for p in paths if "/integration/" in p]
                     print(f"   ✅ Found {len(integration_paths)} integration endpoints in OpenAPI")
 
                     for path in integration_paths[:5]:  # Show first 5
@@ -205,20 +206,15 @@ async def test_data_flow_imports():
     print("\n📦 Testing Data Flow Imports...")
     try:
         from core.agents.integration.data_flow import (
-            SchemaValidatorAgent,
-            Schema,
             SchemaType,
-            ValidationLevel,
-            ValidationResult,
-            SchemaMapping,
-            SchemaEvolution
         )
+
         print("   ✅ Data flow imports successful")
 
         # Test SchemaType enum
-        assert hasattr(SchemaType, 'JSON_SCHEMA')
-        assert hasattr(SchemaType, 'PYDANTIC')
-        assert hasattr(SchemaType, 'ROBLOX_DATASTORE')
+        assert hasattr(SchemaType, "JSON_SCHEMA")
+        assert hasattr(SchemaType, "PYDANTIC")
+        assert hasattr(SchemaType, "ROBLOX_DATASTORE")
         print("   ✅ SchemaType enum working correctly")
 
         return True
@@ -246,9 +242,9 @@ async def test_integration_agents_manager():
         print(f"   ✅ Health check successful: {len(status['agents'])} agents")
 
         # Verify all agents have health status
-        for agent_name, health in status['agents'].items():
-            assert 'status' in health
-            assert 'healthy' in health
+        for agent_name, health in status["agents"].items():
+            assert "status" in health
+            assert "healthy" in health
             print(f"      - {agent_name}: {health['status']}")
 
         # Test cleanup
@@ -259,6 +255,7 @@ async def test_integration_agents_manager():
     except Exception as e:
         print(f"   ❌ Integration agents manager test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -269,16 +266,15 @@ async def test_database_models():
     print("\n🗄️  Testing Database Models...")
     try:
         from database.models import (
-            User, Course, Lesson, Content, Quiz, UserProgress,
-            StudentProgress, SchemaDefinition, SchemaMapping,
-            AgentHealthStatus, IntegrationEvent
+            StudentProgress,
         )
+
         print("   ✅ Database models import successful")
 
         # Test that StudentProgress model is compatible
-        assert hasattr(StudentProgress, 'student_id')
-        assert hasattr(StudentProgress, 'lesson_id')
-        assert hasattr(StudentProgress, 'progress_percentage')
+        assert hasattr(StudentProgress, "student_id")
+        assert hasattr(StudentProgress, "lesson_id")
+        assert hasattr(StudentProgress, "progress_percentage")
         print("   ✅ StudentProgress model compatibility verified")
 
         return True

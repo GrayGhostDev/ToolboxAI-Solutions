@@ -19,20 +19,13 @@ Standards: Python 3.12, FastAPI async, Pydantic v2
 """
 
 import logging
-import psutil
-import time
-from datetime import datetime, timedelta
-from enum import Enum
-from typing import Annotated, Optional, Any
 from collections import defaultdict
+from datetime import datetime
+from enum import Enum
+from typing import Annotated, Any
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    Query,
-    status,
-)
+import psutil
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -51,6 +44,7 @@ router = APIRouter(
 
 # === In-Memory Metrics Store (Replace with Redis/Database in production) ===
 
+
 class MetricsStore:
     """In-memory metrics storage"""
 
@@ -62,8 +56,7 @@ class MetricsStore:
         self.status_codes = defaultdict(int)
         self.start_time = datetime.utcnow()
 
-    def record_request(self, endpoint: str, method: str, duration: float,
-                      status_code: int):
+    def record_request(self, endpoint: str, method: str, duration: float, status_code: int):
         """Record a request metric"""
         key = f"{method}:{endpoint}"
         self.request_counts[key] += 1
@@ -101,14 +94,17 @@ class MetricsStore:
         self.endpoint_hits.clear()
         self.status_codes.clear()
 
+
 # Global metrics store
 _metrics_store = MetricsStore()
 
 
 # === Enums ===
 
+
 class HealthStatus(str, Enum):
     """Health status enumeration"""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
@@ -116,6 +112,7 @@ class HealthStatus(str, Enum):
 
 class MetricType(str, Enum):
     """Metric type enumeration"""
+
     COUNTER = "counter"
     GAUGE = "gauge"
     HISTOGRAM = "histogram"
@@ -123,6 +120,7 @@ class MetricType(str, Enum):
 
 
 # === Pydantic v2 Models ===
+
 
 class SystemMetrics(BaseModel):
     """System resource metrics"""
@@ -204,6 +202,7 @@ class TimeSeriesMetrics(BaseModel):
 
 
 # === API Endpoints ===
+
 
 @router.get(
     "/health",
@@ -302,7 +301,7 @@ async def get_system_metrics() -> SystemMetrics:
         memory_available_mb = memory.available / (1024 * 1024)
 
         # Disk metrics
-        disk = psutil.disk_usage('/')
+        disk = psutil.disk_usage("/")
         disk_percent = disk.percent
         disk_used_gb = disk.used / (1024 * 1024 * 1024)
         disk_free_gb = disk.free / (1024 * 1024 * 1024)
@@ -320,8 +319,7 @@ async def get_system_metrics() -> SystemMetrics:
     except Exception as e:
         logger.error(f"Failed to get system metrics: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get system metrics"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get system metrics"
         )
 
 
@@ -359,8 +357,7 @@ async def get_performance_metrics(
             all_response_times.extend(times["avg"] for _ in range(times["count"]))
 
         avg_response_time = (
-            sum(all_response_times) / len(all_response_times)
-            if all_response_times else 0
+            sum(all_response_times) / len(all_response_times) if all_response_times else 0
         )
 
         # Calculate requests per second
@@ -373,9 +370,7 @@ async def get_performance_metrics(
         # Get top endpoints
         top_endpoints = []
         for (method, endpoint), count in sorted(
-            metrics["request_counts"].items(),
-            key=lambda x: x[1],
-            reverse=True
+            metrics["request_counts"].items(), key=lambda x: x[1], reverse=True
         )[:10]:
             key = f"{method}:{endpoint}"
             times = metrics["response_times"].get(key, {})
@@ -392,17 +387,19 @@ async def get_performance_metrics(
             else:
                 p95 = p99 = 0
 
-            top_endpoints.append(EndpointMetrics(
-                endpoint=endpoint,
-                method=method,
-                request_count=count,
-                error_count=error_count,
-                avg_response_time=times.get("avg", 0),
-                min_response_time=times.get("min", 0),
-                max_response_time=times.get("max", 0),
-                p95_response_time=p95,
-                p99_response_time=p99,
-            ))
+            top_endpoints.append(
+                EndpointMetrics(
+                    endpoint=endpoint,
+                    method=method,
+                    request_count=count,
+                    error_count=error_count,
+                    avg_response_time=times.get("avg", 0),
+                    min_response_time=times.get("min", 0),
+                    max_response_time=times.get("max", 0),
+                    p95_response_time=p95,
+                    p99_response_time=p99,
+                )
+            )
 
         return PerformanceMetrics(
             total_requests=total_requests,
@@ -419,7 +416,7 @@ async def get_performance_metrics(
         logger.error(f"Failed to get performance metrics: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get performance metrics"
+            detail="Failed to get performance metrics",
         )
 
 
@@ -463,17 +460,19 @@ async def get_endpoint_metrics(
             else:
                 p95 = p99 = 0
 
-            endpoint_metrics.append(EndpointMetrics(
-                endpoint=endpoint,
-                method=method,
-                request_count=count,
-                error_count=error_count,
-                avg_response_time=times.get("avg", 0),
-                min_response_time=times.get("min", 0),
-                max_response_time=times.get("max", 0),
-                p95_response_time=p95,
-                p99_response_time=p99,
-            ))
+            endpoint_metrics.append(
+                EndpointMetrics(
+                    endpoint=endpoint,
+                    method=method,
+                    request_count=count,
+                    error_count=error_count,
+                    avg_response_time=times.get("avg", 0),
+                    min_response_time=times.get("min", 0),
+                    max_response_time=times.get("max", 0),
+                    p95_response_time=p95,
+                    p99_response_time=p99,
+                )
+            )
 
         # Sort by request count
         endpoint_metrics.sort(key=lambda x: x.request_count, reverse=True)
@@ -484,7 +483,7 @@ async def get_endpoint_metrics(
         logger.error(f"Failed to get endpoint metrics: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get endpoint metrics"
+            detail="Failed to get endpoint metrics",
         )
 
 
@@ -511,8 +510,7 @@ async def reset_metrics(
         # Check if user is admin
         if not current_user.is_superuser:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Admin permissions required"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Admin permissions required"
             )
 
         _metrics_store.reset()
@@ -527,15 +525,14 @@ async def reset_metrics(
     except Exception as e:
         logger.error(f"Failed to reset metrics: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to reset metrics"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to reset metrics"
         )
 
 
 # === Middleware Integration Helper ===
 
-def record_request_metric(endpoint: str, method: str, duration: float,
-                         status_code: int):
+
+def record_request_metric(endpoint: str, method: str, duration: float, status_code: int):
     """
     Helper function to record request metrics from middleware.
 

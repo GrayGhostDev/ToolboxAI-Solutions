@@ -9,37 +9,32 @@ Created: 2025-09-16
 Version: 1.0.0
 """
 
-from typing import Dict, Any, List, Optional
-from datetime import datetime
-from uuid import UUID
 import logging
+from datetime import datetime
+from typing import Any
+from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
-import json
-import asyncio
 
-from apps.backend.core.deps import get_async_db
-from core.agents.database import (
-    DatabaseWorkflow,
-    DatabaseSupervisorAgent,
-    DatabaseOperation,
-    DatabaseHealth,
-    run_database_workflow,
-)
 from apps.backend.api.auth.auth import get_current_user
-from apps.backend.models.schemas import User
 from apps.backend.core.config import settings
+from apps.backend.core.deps import get_async_db
+from apps.backend.models.schemas import User
+from core.agents.database import (
+    DatabaseOperation,
+    DatabaseSupervisorAgent,
+    DatabaseWorkflow,
+)
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/database", tags=["database-swarm"])
 
 # Global instance of workflow (initialized on first use)
-_workflow_instance: Optional[DatabaseWorkflow] = None
-_supervisor_instance: Optional[DatabaseSupervisorAgent] = None
+_workflow_instance: DatabaseWorkflow | None = None
+_supervisor_instance: DatabaseSupervisorAgent | None = None
 
 
 # Pydantic models for API requests/responses
@@ -52,8 +47,8 @@ class DatabaseWorkflowRequest(BaseModel):
     priority: str = Field(
         default="medium", description="Priority level: critical, high, medium, low, background"
     )
-    params: Dict[str, Any] = Field(default_factory=dict, description="Additional parameters")
-    thread_id: Optional[str] = Field(default=None, description="Thread ID for stateful execution")
+    params: dict[str, Any] = Field(default_factory=dict, description="Additional parameters")
+    thread_id: str | None = Field(default=None, description="Thread ID for stateful execution")
 
 
 class DatabaseCommandRequest(BaseModel):
@@ -61,9 +56,9 @@ class DatabaseCommandRequest(BaseModel):
 
     command_type: DatabaseOperation = Field(..., description="Type of database operation")
     aggregate_type: str = Field(..., description="Type of aggregate/entity")
-    aggregate_id: Optional[UUID] = Field(None, description="ID of the aggregate")
-    data: Dict[str, Any] = Field(..., description="Command data")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    aggregate_id: UUID | None = Field(None, description="ID of the aggregate")
+    data: dict[str, Any] = Field(..., description="Command data")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
 
 class EventRequest(BaseModel):
@@ -72,15 +67,15 @@ class EventRequest(BaseModel):
     event_type: str = Field(..., description="Type of event")
     aggregate_type: str = Field(..., description="Type of aggregate")
     aggregate_id: UUID = Field(..., description="Aggregate ID")
-    event_data: Dict[str, Any] = Field(..., description="Event data")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Event metadata")
+    event_data: dict[str, Any] = Field(..., description="Event data")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Event metadata")
 
 
 class QueryRequest(BaseModel):
     """Request model for database queries."""
 
     query: str = Field(..., description="SQL query or natural language query")
-    params: Dict[str, Any] = Field(default_factory=dict, description="Query parameters")
+    params: dict[str, Any] = Field(default_factory=dict, description="Query parameters")
     optimize: bool = Field(default=True, description="Whether to optimize the query")
 
 
@@ -90,7 +85,7 @@ class BackupRequest(BaseModel):
     backup_type: str = Field(
         default="full", description="Type of backup: full, incremental, differential"
     )
-    targets: List[str] = Field(
+    targets: list[str] = Field(
         default_factory=list, description="Specific tables/schemas to backup"
     )
     compression: bool = Field(default=True, description="Whether to compress the backup")
@@ -102,7 +97,7 @@ class MigrationRequest(BaseModel):
 
     migration_name: str = Field(..., description="Name of the migration")
     direction: str = Field(default="up", description="Migration direction: up or down")
-    target_version: Optional[int] = Field(None, description="Target schema version")
+    target_version: int | None = Field(None, description="Target schema version")
     dry_run: bool = Field(default=False, description="Whether to perform a dry run")
 
 
@@ -118,18 +113,18 @@ class WorkflowResponse(BaseModel):
     """Response model for workflow execution."""
 
     success: bool
-    workflow_id: Optional[str] = None
-    result: Optional[Dict[str, Any]] = None
-    error: Optional[str] = None
-    execution_time: Optional[float] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    workflow_id: str | None = None
+    result: dict[str, Any] | None = None
+    error: str | None = None
+    execution_time: float | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class AgentStatusResponse(BaseModel):
     """Response model for agent status."""
 
-    supervisor: Dict[str, Any]
-    agents: Dict[str, Dict[str, Any]]
+    supervisor: dict[str, Any]
+    agents: dict[str, dict[str, Any]]
     overall_health: str
     active_workflows: int
     timestamp: datetime
@@ -323,7 +318,7 @@ async def append_event(
 async def replay_events(
     aggregate_id: UUID,
     from_version: int = Query(0, ge=0),
-    to_version: Optional[int] = Query(None, ge=0),
+    to_version: int | None = Query(None, ge=0),
     current_user: User = Depends(get_current_user),
 ):
     """Replay events for an aggregate."""

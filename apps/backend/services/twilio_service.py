@@ -6,25 +6,19 @@ Supports SMS, Voice, Video, and Verify services
 Implements webhook security and rate limiting
 """
 
+import asyncio
 import logging
 import os
-import hmac
-import hashlib
-from typing import Dict, List, Optional, Any
-from dataclasses import dataclass
-from datetime import datetime, timezone
-from urllib.parse import urlencode
-import asyncio
-from functools import wraps
 import time
+from dataclasses import dataclass
+from functools import wraps
+from typing import Any
 
-from twilio.rest import Client
 from twilio.base import exceptions as twilio_exceptions
-from twilio.request_validator import RequestValidator
 from twilio.jwt.access_token import AccessToken
-from twilio.jwt.access_token.grants import VideoGrant, ChatGrant
-
-from toolboxai_settings import settings
+from twilio.jwt.access_token.grants import VideoGrant
+from twilio.request_validator import RequestValidator
+from twilio.rest import Client
 
 logger = logging.getLogger(__name__)
 
@@ -35,9 +29,9 @@ class SMSMessage:
 
     to_number: str
     body: str
-    from_number: Optional[str] = None
-    media_urls: Optional[List[str]] = None
-    status_callback: Optional[str] = None
+    from_number: str | None = None
+    media_urls: list[str] | None = None
+    status_callback: str | None = None
 
 
 @dataclass
@@ -46,7 +40,7 @@ class VerificationRequest:
 
     to_number: str
     channel: str = "sms"  # sms, call, email, whatsapp
-    custom_message: Optional[str] = None
+    custom_message: str | None = None
     locale: str = "en"
 
 
@@ -146,10 +140,10 @@ class TwilioService:
         self,
         to_number: str,
         body: str,
-        from_number: Optional[str] = None,
-        media_urls: Optional[List[str]] = None,
-        status_callback: Optional[str] = None,
-    ) -> Optional[str]:
+        from_number: str | None = None,
+        media_urls: list[str] | None = None,
+        status_callback: str | None = None,
+    ) -> str | None:
         """
         Send SMS or MMS message
 
@@ -201,8 +195,8 @@ class TwilioService:
 
     @rate_limited(max_calls=50, period=60)
     async def send_bulk_sms(
-        self, messages: List[SMSMessage], batch_size: int = 10
-    ) -> Dict[str, Any]:
+        self, messages: list[SMSMessage], batch_size: int = 10
+    ) -> dict[str, Any]:
         """
         Send bulk SMS messages with batching
 
@@ -251,9 +245,9 @@ class TwilioService:
         self,
         to_number: str,
         channel: str = "sms",
-        custom_message: Optional[str] = None,
+        custom_message: str | None = None,
         locale: str = "en",
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Send verification code via Twilio Verify
 
@@ -333,7 +327,7 @@ class TwilioService:
         room_name: str,
         max_participants: int = 50,
         record_participants_on_connect: bool = False,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Create a video room for conferencing
 
@@ -370,8 +364,8 @@ class TwilioService:
             return None
 
     def generate_video_token(
-        self, identity: str, room_name: Optional[str] = None, ttl: int = 3600
-    ) -> Optional[str]:
+        self, identity: str, room_name: str | None = None, ttl: int = 3600
+    ) -> str | None:
         """
         Generate access token for video participant
 
@@ -404,7 +398,7 @@ class TwilioService:
             return None
 
     # Webhook Security
-    def validate_webhook(self, url: str, params: Dict[str, str], signature: str) -> bool:
+    def validate_webhook(self, url: str, params: dict[str, str], signature: str) -> bool:
         """
         Validate Twilio webhook request signature
 
@@ -427,7 +421,7 @@ class TwilioService:
             return False
 
     # Utility Methods
-    async def get_message_status(self, message_sid: str) -> Optional[str]:
+    async def get_message_status(self, message_sid: str) -> str | None:
         """Get status of a sent message"""
         if not self.client:
             return None
@@ -439,7 +433,7 @@ class TwilioService:
             logger.error(f"Error fetching message status: {e}")
             return None
 
-    async def get_phone_number_info(self, phone_number: str) -> Optional[Dict[str, Any]]:
+    async def get_phone_number_info(self, phone_number: str) -> dict[str, Any] | None:
         """
         Look up phone number information
 

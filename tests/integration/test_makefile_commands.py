@@ -7,11 +7,9 @@ commands work correctly.
 
 import os
 import subprocess
-import time
 from pathlib import Path
+
 import pytest
-import yaml
-import json
 
 
 @pytest.mark.integration
@@ -51,7 +49,7 @@ class TestMakefileCommands:
                 env=env_vars,
                 capture_output=True,
                 text=True,
-                timeout=timeout
+                timeout=timeout,
             )
             return result.returncode, result.stdout, result.stderr
         except subprocess.TimeoutExpired:
@@ -74,7 +72,9 @@ class TestMakefileCommands:
             returncode, stdout, stderr = self.run_make_command("help", timeout=10)
 
         # Should show help information
-        assert "docker" in stdout.lower() or "help" in stdout.lower(), "Help command should show usage"
+        assert (
+            "docker" in stdout.lower() or "help" in stdout.lower()
+        ), "Help command should show usage"
 
     def test_make_lint_command(self):
         """Test make lint command."""
@@ -85,8 +85,9 @@ class TestMakefileCommands:
 
         # Should mention linting
         output = stdout + stderr
-        assert any(word in output.lower() for word in ["lint", "black", "mypy", "eslint"]), \
-            "Lint command should run linters"
+        assert any(
+            word in output.lower() for word in ["lint", "black", "mypy", "eslint"]
+        ), "Lint command should run linters"
 
     def test_make_test_command(self):
         """Test make test command."""
@@ -94,8 +95,9 @@ class TestMakefileCommands:
 
         # Test command should run
         output = stdout + stderr
-        assert any(word in output.lower() for word in ["test", "pytest", "jest"]), \
-            "Test command should run tests"
+        assert any(
+            word in output.lower() for word in ["test", "pytest", "jest"]
+        ), "Test command should run tests"
 
     def test_make_build_command(self):
         """Test make build command."""
@@ -103,13 +105,14 @@ class TestMakefileCommands:
 
         # Build might fail if dependencies aren't installed, but should attempt
         output = stdout + stderr
-        assert "build" in output.lower() or "npm" in output.lower(), \
-            "Build command should attempt to build"
+        assert (
+            "build" in output.lower() or "npm" in output.lower()
+        ), "Build command should attempt to build"
 
     def test_docker_commands_availability(self):
         """Test Docker-related make commands are defined."""
         # Read Makefile content
-        with open(self.makefile_path, 'r') as f:
+        with open(self.makefile_path) as f:
             makefile_content = f.read()
 
         # Check for Docker targets
@@ -125,7 +128,7 @@ class TestMakefileCommands:
             "celery-beat",
             "roblox-sync",
             "stack-up",
-            "stack-down"
+            "stack-down",
         ]
 
         for target in docker_targets:
@@ -138,12 +141,7 @@ class TestMakefileCommands:
         # Should show service URLs
         assert returncode == 0, f"URLs command failed: {stderr}"
 
-        expected_urls = [
-            "Backend API",
-            "Dashboard",
-            "localhost:8009",
-            "localhost:5179"
-        ]
+        expected_urls = ["Backend API", "Dashboard", "localhost:8009", "localhost:5179"]
 
         for url in expected_urls:
             assert url in stdout, f"Expected URL '{url}' not in output"
@@ -161,7 +159,7 @@ class TestMakefileCommands:
 
     def test_celery_commands_defined(self):
         """Test Celery-related make commands are defined."""
-        with open(self.makefile_path, 'r') as f:
+        with open(self.makefile_path) as f:
             makefile_content = f.read()
 
         celery_targets = [
@@ -170,7 +168,7 @@ class TestMakefileCommands:
             "celery-flower",
             "celery-logs",
             "celery-status",
-            "celery-purge"
+            "celery-purge",
         ]
 
         for target in celery_targets:
@@ -178,14 +176,14 @@ class TestMakefileCommands:
 
     def test_monitoring_commands_defined(self):
         """Test monitoring stack commands are defined."""
-        with open(self.makefile_path, 'r') as f:
+        with open(self.makefile_path) as f:
             makefile_content = f.read()
 
         monitoring_targets = [
             "docker-monitoring",
             "docker-monitoring-down",
             "prometheus",
-            "grafana"
+            "grafana",
         ]
 
         # At least some monitoring targets should exist
@@ -199,12 +197,15 @@ class TestMakefileCommands:
         # Health command should check service status
         if returncode == 0:
             output = stdout + stderr
-            assert "toolboxai" in output.lower() or "health" in output.lower() or \
-                   "docker ps" in output.lower(), "Health command should check services"
+            assert (
+                "toolboxai" in output.lower()
+                or "health" in output.lower()
+                or "docker ps" in output.lower()
+            ), "Health command should check services"
 
     def test_database_commands_defined(self):
         """Test database-related commands are defined."""
-        with open(self.makefile_path, 'r') as f:
+        with open(self.makefile_path) as f:
             makefile_content = f.read()
 
         db_commands = ["db-shell", "redis-cli"]
@@ -214,17 +215,11 @@ class TestMakefileCommands:
 
     def test_makefile_variables(self):
         """Test Makefile variables are properly defined."""
-        with open(self.makefile_path, 'r') as f:
+        with open(self.makefile_path) as f:
             makefile_content = f.read()
 
         # Check for important variables
-        important_vars = [
-            "API_HOST",
-            "API_PORT",
-            "DASHBOARD_PORT",
-            "DOCKER_DIR",
-            "COMPOSE_BASE"
-        ]
+        important_vars = ["API_HOST", "API_PORT", "DASHBOARD_PORT", "DOCKER_DIR", "COMPOSE_BASE"]
 
         for var in important_vars:
             assert f"{var}" in makefile_content, f"Variable {var} not defined"
@@ -236,8 +231,7 @@ class TestMakefileCommands:
 
         # Check command would run uvicorn
         if returncode == 0:
-            assert "uvicorn" in stdout or "uvicorn" in stderr, \
-                "Backend command should use uvicorn"
+            assert "uvicorn" in stdout or "uvicorn" in stderr, "Backend command should use uvicorn"
 
     def test_make_dashboard_command(self):
         """Test make dashboard command configuration."""
@@ -246,12 +240,11 @@ class TestMakefileCommands:
 
         # Check command would run npm
         if returncode == 0:
-            assert "npm" in stdout or "npm" in stderr, \
-                "Dashboard command should use npm"
+            assert "npm" in stdout or "npm" in stderr, "Dashboard command should use npm"
 
     def test_docker_compose_files_referenced(self):
         """Test that Docker Compose files referenced in Makefile exist."""
-        with open(self.makefile_path, 'r') as f:
+        with open(self.makefile_path) as f:
             makefile_content = f.read()
 
         # Extract docker-compose file references
@@ -259,17 +252,19 @@ class TestMakefileCommands:
             "infrastructure/docker/compose/docker-compose.yml",
             "infrastructure/docker/compose/docker-compose.dev.yml",
             "infrastructure/docker/compose/docker-compose.prod.yml",
-            "infrastructure/docker/compose/docker-compose.monitoring.yml"
+            "infrastructure/docker/compose/docker-compose.monitoring.yml",
         ]
 
         for compose_file in compose_files:
             if compose_file in makefile_content:
                 file_path = self.project_root / compose_file
-                assert file_path.exists(), f"Docker Compose file {compose_file} referenced but not found"
+                assert (
+                    file_path.exists()
+                ), f"Docker Compose file {compose_file} referenced but not found"
 
     def test_phony_targets_declared(self):
         """Test that .PHONY targets are properly declared."""
-        with open(self.makefile_path, 'r') as f:
+        with open(self.makefile_path) as f:
             makefile_content = f.read()
 
         # Should have .PHONY declaration
@@ -277,16 +272,17 @@ class TestMakefileCommands:
 
     def test_docker_secrets_command(self):
         """Test Docker secrets creation command exists."""
-        with open(self.makefile_path, 'r') as f:
+        with open(self.makefile_path) as f:
             makefile_content = f.read()
 
         # Check for secrets-related commands
-        assert "docker-secrets" in makefile_content or "secrets" in makefile_content, \
-            "Docker secrets management should be defined"
+        assert (
+            "docker-secrets" in makefile_content or "secrets" in makefile_content
+        ), "Docker secrets management should be defined"
 
     def test_stack_commands_integration(self):
         """Test full stack commands are properly integrated."""
-        with open(self.makefile_path, 'r') as f:
+        with open(self.makefile_path) as f:
             makefile_content = f.read()
 
         stack_commands = ["stack-up", "stack-down", "stack-clean"]
@@ -298,8 +294,9 @@ class TestMakefileCommands:
                 cmd_text = "\n".join(cmd_section)
 
                 # Should reference docker commands
-                assert "docker" in cmd_text.lower() or "make" in cmd_text.lower(), \
-                    f"Stack command {cmd} should call docker or make commands"
+                assert (
+                    "docker" in cmd_text.lower() or "make" in cmd_text.lower()
+                ), f"Stack command {cmd} should call docker or make commands"
 
 
 @pytest.mark.integration
@@ -310,23 +307,13 @@ class TestMakefileCI:
 
     def test_ci_build_command(self):
         """Test build command works in CI."""
-        result = subprocess.run(
-            ["make", "build"],
-            capture_output=True,
-            text=True,
-            timeout=300
-        )
+        result = subprocess.run(["make", "build"], capture_output=True, text=True, timeout=300)
 
         assert result.returncode == 0, f"Build failed in CI: {result.stderr}"
 
     def test_ci_test_command(self):
         """Test test command works in CI."""
-        result = subprocess.run(
-            ["make", "test"],
-            capture_output=True,
-            text=True,
-            timeout=300
-        )
+        result = subprocess.run(["make", "test"], capture_output=True, text=True, timeout=300)
 
         # Tests might fail but command should run
         assert result.returncode in [0, 1], f"Test command failed to run: {result.stderr}"

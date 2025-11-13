@@ -140,10 +140,10 @@ const MessageItem = memo<{
                 onClick={handleStarToggle}
                 color={message.isStarred ? 'yellow' : 'gray'}
               >
-                <IconStar size={rem(14)} />
+                <IconStar size={14} />
               </ActionIcon>
               <ActionIcon size="sm" variant="subtle" onClick={handleDelete} color="red">
-                <IconTrash size={rem(14)} />
+                <IconTrash size={14} />
               </ActionIcon>
             </Group>
           </Group>
@@ -175,7 +175,7 @@ const MessageItem = memo<{
                 </Chip>
               )}
               {message.hasAttachment && (
-                <IconPaperclip size={rem(14)} color="var(--mantine-color-gray-5)" />
+                <IconPaperclip size={14} color="var(--mantine-color-gray-5)" />
               )}
               {message.threadCount > 1 && (
                 <Chip
@@ -207,10 +207,10 @@ const MessageFilters = memo<{
     onSearchChange(event.target.value);
   }, 300, [onSearchChange]);
   const filterOptions = useOptimizedMemo(() => [
-    { value: 'all', label: 'All Messages', icon: <IconInbox size={rem(16)} /> },
-    { value: 'unread', label: 'Unread', icon: <IconMail size={rem(16)} /> },
-    { value: 'starred', label: 'Starred', icon: <IconStar size={rem(16)} /> },
-    { value: 'sent', label: 'Sent', icon: <IconSend size={rem(16)} /> },
+    { value: 'all', label: 'All Messages', icon: <IconInbox size={16} /> },
+    { value: 'unread', label: 'Unread', icon: <IconMail size={16} /> },
+    { value: 'starred', label: 'Starred', icon: <IconStar size={16} /> },
+    { value: 'sent', label: 'Sent', icon: <IconSend size={16} /> },
   ], [], 'MessageFilters:filterOptions');
   return (
     <Group mb="lg" wrap="wrap">
@@ -220,7 +220,7 @@ const MessageFilters = memo<{
         onChange={handleSearchChange}
         size="sm"
         style={{ minWidth: 300, flex: 1 }}
-        leftSection={<IconSearch size={rem(16)} />}
+        leftSection={<IconSearch size={16} />}
       />
       <Group spacing="xs">
         {filterOptions.map((option) => (
@@ -238,13 +238,13 @@ const MessageFilters = memo<{
       <Group spacing="xs">
         <Button
           variant="filled"
-          leftSection={<IconEdit size={rem(16)} />}
+          leftSection={<IconEdit size={16} />}
           onClick={onCompose}
         >
           Compose
         </Button>
         <ActionIcon variant="subtle" onClick={onRefresh} loading={loading}>
-          <IconRefresh size={rem(16)} />
+          <IconRefresh size={16} />
         </ActionIcon>
       </Group>
     </Group>
@@ -398,13 +398,13 @@ export default function MessagesOptimized() {
                   onClick={() => handleStarToggle(selectedMessage.id)}
                   color={selectedMessage.isStarred ? 'yellow' : 'gray'}
                 >
-                  <IconStar size={rem(16)} />
+                  <IconStar size={16} />
                 </ActionIcon>
                 <ActionIcon variant="subtle">
-                  <IconReply size={rem(16)} />
+                  <IconReply size={16} />
                 </ActionIcon>
                 <ActionIcon variant="subtle">
-                  <IconArrowForward size={rem(16)} />
+                  <IconArrowForward size={16} />
                 </ActionIcon>
               </Group>
             </Group>
@@ -429,7 +429,7 @@ export default function MessagesOptimized() {
               <Button variant="subtle" onClick={() => setSelectedMessage(null)}>
                 Close
               </Button>
-              <Button variant="filled" leftSection={<IconReply size={rem(16)} />}>
+              <Button variant="filled" leftSection={<IconReply size={16} />}>
                 Reply
               </Button>
             </Group>
@@ -462,7 +462,7 @@ export default function MessagesOptimized() {
             <Button variant="subtle" onClick={() => setComposeOpen(false)}>
               Cancel
             </Button>
-            <Button variant="filled" leftSection={<IconSend size={rem(16)} />}>
+            <Button variant="filled" leftSection={<IconSend size={16} />}>
               Send
             </Button>
           </Group>

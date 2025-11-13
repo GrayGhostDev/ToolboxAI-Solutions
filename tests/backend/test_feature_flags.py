@@ -1,5 +1,6 @@
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 """
@@ -7,17 +8,17 @@ Test suite for Feature Flag Management System
 Validates feature flag functionality for Phase 1
 """
 
-import pytest
 import os
-import hashlib
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
+
+import pytest
 import redis
 from redis.exceptions import RedisError
 
 from apps.backend.core.feature_flags import (
     FeatureFlag,
     FeatureFlagManager,
-    get_feature_flags
+    get_feature_flags,
 )
 
 
@@ -52,7 +53,7 @@ class TestFeatureFlagManager:
     @pytest.fixture
     def manager(self, redis_mock):
         """Create feature flag manager with mocked Redis"""
-        with patch('apps.backend.core.feature_flags.redis.Redis', return_value=redis_mock):
+        with patch("apps.backend.core.feature_flags.redis.Redis", return_value=redis_mock):
             manager = FeatureFlagManager()
             manager.redis_client = redis_mock
             manager.redis_available = True
@@ -61,13 +62,16 @@ class TestFeatureFlagManager:
     @pytest.fixture
     def manager_no_redis(self):
         """Create feature flag manager without Redis"""
-        with patch('apps.backend.core.feature_flags.redis.Redis', side_effect=RedisError("Connection failed")):
+        with patch(
+            "apps.backend.core.feature_flags.redis.Redis",
+            side_effect=RedisError("Connection failed"),
+        ):
             manager = FeatureFlagManager()
             return manager
 
     def test_initialization_with_redis(self, redis_mock):
         """Test manager initialization with Redis available"""
-        with patch('apps.backend.core.feature_flags.redis.Redis', return_value=redis_mock):
+        with patch("apps.backend.core.feature_flags.redis.Redis", return_value=redis_mock):
             manager = FeatureFlagManager()
 
             assert manager.redis_available == True
@@ -75,7 +79,10 @@ class TestFeatureFlagManager:
 
     def test_initialization_without_redis(self):
         """Test manager initialization when Redis is unavailable"""
-        with patch('apps.backend.core.feature_flags.redis.Redis', side_effect=RedisError("Connection failed")):
+        with patch(
+            "apps.backend.core.feature_flags.redis.Redis",
+            side_effect=RedisError("Connection failed"),
+        ):
             manager = FeatureFlagManager()
 
             assert manager.redis_available == False
@@ -108,17 +115,17 @@ class TestFeatureFlagManager:
 
     def test_is_enabled_redis_global(self, manager):
         """Test flag evaluation with Redis global value"""
-        manager.redis_client.get = Mock(return_value='true')
+        manager.redis_client.get = Mock(return_value="true")
 
         assert manager.is_enabled(FeatureFlag.GPT5_MIGRATION) == True
 
-        manager.redis_client.get = Mock(return_value='false')
+        manager.redis_client.get = Mock(return_value="false")
         assert manager.is_enabled(FeatureFlag.GPT5_MIGRATION) == False
 
     def test_is_enabled_user_specific(self, manager):
         """Test user-specific flag evaluation"""
         # User-specific flag overrides global
-        manager.redis_client.get = Mock(side_effect=['true', None])  # User flag, then global
+        manager.redis_client.get = Mock(side_effect=["true", None])  # User flag, then global
 
         assert manager.is_enabled(FeatureFlag.GPT5_MIGRATION, user_id="user-123") == True
 
@@ -128,10 +135,10 @@ class TestFeatureFlagManager:
 
     def test_is_enabled_env_override(self, manager):
         """Test environment variable override"""
-        manager.redis_client.get = Mock(return_value='false')
+        manager.redis_client.get = Mock(return_value="false")
 
         # Set environment variable
-        with patch.dict(os.environ, {'FF_GPT5_MIGRATION': 'true'}):
+        with patch.dict(os.environ, {"FF_GPT5_MIGRATION": "true"}):
             # Recreate manager to pick up env var
             manager = FeatureFlagManager()
             manager.redis_client = Mock()
@@ -145,11 +152,11 @@ class TestFeatureFlagManager:
         # Priority: User > Redis > Env > Default
 
         # Setup: User=true, Redis=false, Default=false
-        manager.redis_client.get = Mock(side_effect=['true', 'false'])
+        manager.redis_client.get = Mock(side_effect=["true", "false"])
         assert manager.is_enabled(FeatureFlag.GPT5_MIGRATION, user_id="user-123") == True
 
         # Setup: No user, Redis=true, Default=false
-        manager.redis_client.get = Mock(side_effect=[None, 'true'])
+        manager.redis_client.get = Mock(side_effect=[None, "true"])
         assert manager.is_enabled(FeatureFlag.GPT5_MIGRATION, user_id="user-456") == True
 
         # Setup: No user, No Redis, Default=false
@@ -161,10 +168,7 @@ class TestFeatureFlagManager:
         result = manager.set_flag(FeatureFlag.GPT5_MIGRATION, True)
 
         assert result == True
-        manager.redis_client.set.assert_called_with(
-            "feature_flag:gpt5_migration",
-            "true"
-        )
+        manager.redis_client.set.assert_called_with("feature_flag:gpt5_migration", "true")
 
     def test_set_flag_user_specific(self, manager):
         """Test setting user-specific flag"""
@@ -172,8 +176,7 @@ class TestFeatureFlagManager:
 
         assert result == True
         manager.redis_client.set.assert_called_with(
-            "feature_flag:gpt5_migration:user:user-123",
-            "false"
+            "feature_flag:gpt5_migration:user:user-123", "false"
         )
 
     def test_set_flag_no_redis(self, manager_no_redis):
@@ -195,17 +198,24 @@ class TestFeatureFlagManager:
     def test_get_all_flags_with_user(self, manager):
         """Test getting all flags for specific user"""
         # Mock different responses for different flags
-        manager.redis_client.get = Mock(side_effect=[
-            'true',   # User-specific GPT5_MIGRATION
-            None,     # No global GPT5_MIGRATION
-            None,     # No user-specific OAUTH21_COMPLIANCE
-            'false',  # Global OAUTH21_COMPLIANCE
-            None, None,  # ENHANCED_MONITORING defaults
-            None, None,  # PKCE_ENFORCEMENT defaults
-            None, None,  # RATE_LIMITING defaults
-            None, None,  # SECURITY_HEADERS defaults
-            None, None,  # JWT_ROTATION defaults
-        ])
+        manager.redis_client.get = Mock(
+            side_effect=[
+                "true",  # User-specific GPT5_MIGRATION
+                None,  # No global GPT5_MIGRATION
+                None,  # No user-specific OAUTH21_COMPLIANCE
+                "false",  # Global OAUTH21_COMPLIANCE
+                None,
+                None,  # ENHANCED_MONITORING defaults
+                None,
+                None,  # PKCE_ENFORCEMENT defaults
+                None,
+                None,  # RATE_LIMITING defaults
+                None,
+                None,  # SECURITY_HEADERS defaults
+                None,
+                None,  # JWT_ROTATION defaults
+            ]
+        )
 
         flags = manager.get_all_flags(user_id="user-123")
 
@@ -217,10 +227,7 @@ class TestFeatureFlagManager:
         result = manager.enable_percentage_rollout(FeatureFlag.GPT5_MIGRATION, 25)
 
         assert result == True
-        manager.redis_client.set.assert_called_with(
-            "feature_flag:gpt5_migration:rollout",
-            "25"
-        )
+        manager.redis_client.set.assert_called_with("feature_flag:gpt5_migration:rollout", "25")
 
     def test_percentage_rollout_invalid(self, manager):
         """Test invalid percentage rollout"""
@@ -232,7 +239,7 @@ class TestFeatureFlagManager:
 
     def test_check_percentage_rollout_enabled(self, manager):
         """Test checking if user is in percentage rollout"""
-        manager.redis_client.get = Mock(return_value='50')  # 50% rollout
+        manager.redis_client.get = Mock(return_value="50")  # 50% rollout
 
         # Test with multiple users
         enabled_count = 0
@@ -245,7 +252,7 @@ class TestFeatureFlagManager:
 
     def test_check_percentage_rollout_consistent(self, manager):
         """Test percentage rollout is consistent for same user"""
-        manager.redis_client.get = Mock(return_value='50')
+        manager.redis_client.get = Mock(return_value="50")
 
         # Same user should always get same result
         user_id = "consistent-user"
@@ -258,11 +265,11 @@ class TestFeatureFlagManager:
     def test_check_percentage_rollout_boundaries(self, manager):
         """Test percentage rollout boundary conditions"""
         # 0% rollout - no users
-        manager.redis_client.get = Mock(return_value='0')
+        manager.redis_client.get = Mock(return_value="0")
         assert manager.check_percentage_rollout(FeatureFlag.GPT5_MIGRATION, "user-1") == False
 
         # 100% rollout - all users
-        manager.redis_client.get = Mock(return_value='100')
+        manager.redis_client.get = Mock(return_value="100")
         assert manager.check_percentage_rollout(FeatureFlag.GPT5_MIGRATION, "user-1") == True
 
         # No rollout configured
@@ -271,11 +278,13 @@ class TestFeatureFlagManager:
 
     def test_reset_all_flags(self, manager):
         """Test resetting all flags"""
-        manager.redis_client.keys = Mock(return_value=[
-            "feature_flag:gpt5_migration",
-            "feature_flag:oauth21_compliance",
-            "feature_flag:gpt5_migration:user:user-123"
-        ])
+        manager.redis_client.keys = Mock(
+            return_value=[
+                "feature_flag:gpt5_migration",
+                "feature_flag:oauth21_compliance",
+                "feature_flag:gpt5_migration:user:user-123",
+            ]
+        )
 
         result = manager.reset_all_flags()
 
@@ -335,7 +344,7 @@ class TestFeatureFlagIntegration:
 
     def test_singleton_pattern(self):
         """Test that get_feature_flags returns singleton"""
-        with patch('apps.backend.core.feature_flags.redis.Redis'):
+        with patch("apps.backend.core.feature_flags.redis.Redis"):
             flags1 = get_feature_flags()
             flags2 = get_feature_flags()
 

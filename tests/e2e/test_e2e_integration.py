@@ -1,7 +1,8 @@
-import pytest_asyncio
+from unittest.mock import Mock, patch
 
 import pytest
-from unittest.mock import Mock, patch
+import pytest_asyncio
+
 
 @pytest.fixture
 def mock_db_connection():
@@ -21,6 +22,7 @@ Verifies the complete content generation pipeline from Dashboard to Roblox
 
 import asyncio
 
+
 def make_json_serializable(obj):
     """Convert non-serializable objects to serializable format."""
     if hasattr(obj, '__dict__'):
@@ -33,16 +35,18 @@ def make_json_serializable(obj):
         return str(obj)
 
 import json
-import time
 import logging
-import requests
-import aiohttp
-from typing import Dict, Any, List, Optional
-from datetime import datetime, timezone
-from tests.fixtures.pusher_mocks import MockPusherService
-import subprocess
 import os
+import subprocess
+import time
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
+
+import aiohttp
 import pytest
+import requests
+
+from tests.fixtures.pusher_mocks import MockPusherService
 
 # Skip all tests in this module as they require external services
 pytestmark = pytest.mark.skip(reason="E2E tests require external services - run with --run-e2e")

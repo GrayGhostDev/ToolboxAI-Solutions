@@ -25,4 +25,4 @@ try:
 except ImportError:
     pass
 
-__all__ = ['mock_db_session', 'test_user', 'test_content', 'mock_request', 'mock_llm']
+__all__ = ["mock_db_session", "test_user", "test_content", "mock_request", "mock_llm"]

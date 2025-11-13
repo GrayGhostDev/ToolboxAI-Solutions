@@ -1,4 +1,5 @@
 import pytest_asyncio
+
 """
 Comprehensive Test Suite for Advanced Supervisor Agent
 
@@ -22,10 +23,12 @@ if str(project_root) not in sys.path:
 
 
 
-import pytest
-from tests.fixtures.agents import mock_llm
 import asyncio
 import os
+
+import pytest
+
+from tests.fixtures.agents import mock_llm
 
 # Skip integration tests by default, enable with RUN_INTEGRATION_TESTS=1
 # Tests are now enabled by default since we've fixed the issues
@@ -48,17 +51,18 @@ def make_json_serializable(obj):
 
 import json
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
 
+from core.agents.base_agent import AgentConfig, TaskResult
 from core.agents.supervisor_advanced import (
     AdvancedSupervisorAgent,
-    WorkflowStatus,
-    WorkflowPriority,
     AgentHealthStatus,
+    EnhancedAgentState,
     WorkflowExecution,
-    EnhancedAgentState
+    WorkflowPriority,
+    WorkflowStatus,
 )
-from core.agents.base_agent import AgentConfig, TaskResult
+
 
 # Create mock ChatOpenAI at module level
 class MockChatOpenAI:
@@ -754,8 +758,9 @@ async def test_memory_usage_monitoring(self):
         supervisor = AdvancedSupervisorAgent()
         
         try:
-            import psutil
             import os
+
+            import psutil
             
             process = psutil.Process(os.getpid())
             initial_memory = process.memory_info().rss / 1024 / 1024  # MB

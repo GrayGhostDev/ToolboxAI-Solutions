@@ -7,17 +7,18 @@ including helpers for connection management, event simulation, and assertion hel
 
 import asyncio
 import json
-from typing import Dict, List, Optional, Any, Callable, Union
-from unittest.mock import MagicMock, Mock, AsyncMock, patch
-from datetime import datetime
-import pytest
-import pusher
-from contextlib import contextmanager, asynccontextmanager
 import logging
+from collections.abc import Callable
+from contextlib import asynccontextmanager, contextmanager
+from datetime import datetime
+from typing import Any
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from tests.fixtures.pusher_mocks import (
-    MockPusherClient, MockPusherService, MockPusherConnection,
-    MockPusherChannelSubscription
+    MockPusherConnection,
+    MockPusherService,
 )
 
 logger = logging.getLogger(__name__)
@@ -39,7 +40,7 @@ class PusherTestHelper:
         self.subscriptions = {}
         self.event_callbacks = {}
 
-    def simulate_websocket_to_pusher_event(self, ws_message: Dict) -> Dict:
+    def simulate_websocket_to_pusher_event(self, ws_message: dict) -> dict:
         """
         Convert a WebSocket message to a Pusher event format
 
@@ -50,7 +51,7 @@ class PusherTestHelper:
             "event": ws_message.get("type", "message"),
             "data": ws_message.get("data", {}),
             "channel": ws_message.get("channel", "public-general"),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
         # Handle specific WebSocket patterns
@@ -63,19 +64,14 @@ class PusherTestHelper:
         return pusher_event
 
     def assert_pusher_event_received(
-        self,
-        channel: str,
-        event: str,
-        data: Optional[Dict] = None,
-        timeout: float = 5.0
+        self, channel: str, event: str, data: dict | None = None, timeout: float = 5.0
     ) -> bool:
         """
         Assert that a specific Pusher event was received
         Replaces WebSocket frame assertions
         """
         for received in self.received_events:
-            if (received.get("channel") == channel and
-                received.get("event") == event):
+            if received.get("channel") == channel and received.get("event") == event:
                 if data is None or received.get("data") == data:
                     return True
         return False
@@ -87,15 +83,17 @@ class PusherTestHelper:
 
         # Track all events
         original_subscribe = conn.subscribe
+
         def tracked_subscribe(channel: str):
             sub = original_subscribe(channel)
             self.subscriptions[channel] = sub
             return sub
+
         conn.subscribe = tracked_subscribe
 
         return conn
 
-    def simulate_pusher_events(self, events: List[Dict]):
+    def simulate_pusher_events(self, events: list[dict]):
         """Simulate multiple Pusher events for testing"""
         for event in events:
             self.received_events.append(event)
@@ -117,24 +115,20 @@ class PusherAsyncTestHelper(PusherTestHelper):
     """Async version of PusherTestHelper for async tests"""
 
     async def wait_for_event(
-        self,
-        channel: str,
-        event: str,
-        timeout: float = 5.0
-    ) -> Optional[Dict]:
+        self, channel: str, event: str, timeout: float = 5.0
+    ) -> dict | None:
         """Wait for a specific Pusher event asynchronously"""
         start_time = asyncio.get_event_loop().time()
 
         while asyncio.get_event_loop().time() - start_time < timeout:
             for received in self.received_events:
-                if (received.get("channel") == channel and
-                    received.get("event") == event):
+                if received.get("channel") == channel and received.get("event") == event:
                     return received
             await asyncio.sleep(0.1)
 
         return None
 
-    async def simulate_async_pusher_event(self, event: Dict):
+    async def simulate_async_pusher_event(self, event: dict):
         """Simulate an async Pusher event"""
         self.received_events.append(event)
 
@@ -150,37 +144,37 @@ class PusherAsyncTestHelper(PusherTestHelper):
 
 
 @contextmanager
-def mock_pusher_context(config: Optional[Dict] = None):
+def mock_pusher_context(config: dict | None = None):
     """
     Context manager for mocking Pusher in tests
     Replaces WebSocket connection context managers
     """
     config = config or {}
     service = MockPusherService(
-        app_id=config.get('app_id', 'test'),
-        key=config.get('key', 'test'),
-        secret=config.get('secret', 'test'),
-        cluster=config.get('cluster', 'us2')
+        app_id=config.get("app_id", "test"),
+        key=config.get("key", "test"),
+        secret=config.get("secret", "test"),
+        cluster=config.get("cluster", "us2"),
     )
 
-    with patch('pusher.Pusher', return_value=service.client):
-        with patch('apps.backend.services.pusher_realtime.pusher_client', service.client):
+    with patch("pusher.Pusher", return_value=service.client):
+        with patch("apps.backend.services.pusher_realtime.pusher_client", service.client):
             yield service
 
 
 @asynccontextmanager
-async def async_mock_pusher_context(config: Optional[Dict] = None):
+async def async_mock_pusher_context(config: dict | None = None):
     """Async context manager for mocking Pusher in async tests"""
     config = config or {}
     service = MockPusherService(
-        app_id=config.get('app_id', 'test'),
-        key=config.get('key', 'test'),
-        secret=config.get('secret', 'test'),
-        cluster=config.get('cluster', 'us2')
+        app_id=config.get("app_id", "test"),
+        key=config.get("key", "test"),
+        secret=config.get("secret", "test"),
+        cluster=config.get("cluster", "us2"),
     )
 
-    with patch('pusher.Pusher', return_value=service.client):
-        with patch('apps.backend.services.pusher_realtime.pusher_client', service.client):
+    with patch("pusher.Pusher", return_value=service.client):
+        with patch("apps.backend.services.pusher_realtime.pusher_client", service.client):
             yield service
 
 
@@ -201,14 +195,14 @@ def create_pusher_test_client(app=None):
 
     # Mock Pusher authentication endpoint
     original_post = client.post
+
     def enhanced_post(url: str, **kwargs):
         if url == "/pusher/auth":
             # Return mock authentication
-            socket_id = kwargs.get('json', {}).get('socket_id', 'test_socket')
-            channel = kwargs.get('json', {}).get('channel_name', 'test_channel')
+            socket_id = kwargs.get("json", {}).get("socket_id", "test_socket")
+            channel = kwargs.get("json", {}).get("channel_name", "test_channel")
             return MagicMock(
-                status_code=200,
-                json=lambda: {"auth": f"{socket_id}:{channel}:mock_auth"}
+                status_code=200, json=lambda: {"auth": f"{socket_id}:{channel}:mock_auth"}
             )
         return original_post(url, **kwargs)
 
@@ -226,21 +220,23 @@ class PusherEventRecorder:
 
     def record(self, channel: str, event: str, data: Any):
         """Record an event"""
-        self.events.append({
-            'channel': channel,
-            'event': event,
-            'data': data,
-            'timestamp': datetime.utcnow().isoformat()
-        })
+        self.events.append(
+            {
+                "channel": channel,
+                "event": event,
+                "data": data,
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+        )
         self.channels.add(channel)
 
-    def get_events_for_channel(self, channel: str) -> List[Dict]:
+    def get_events_for_channel(self, channel: str) -> list[dict]:
         """Get all events for a specific channel"""
-        return [e for e in self.events if e['channel'] == channel]
+        return [e for e in self.events if e["channel"] == channel]
 
-    def get_events_by_type(self, event_type: str) -> List[Dict]:
+    def get_events_by_type(self, event_type: str) -> list[dict]:
         """Get all events of a specific type"""
-        return [e for e in self.events if e['event'] == event_type]
+        return [e for e in self.events if e["event"] == event_type]
 
     def clear(self):
         """Clear all recorded events"""
@@ -257,6 +253,7 @@ class PusherEventRecorder:
 
 
 # WebSocket to Pusher migration helpers
+
 
 def convert_websocket_test_to_pusher(ws_test_func: Callable) -> Callable:
     """
@@ -298,10 +295,10 @@ class WebSocketToPusherAdapter:
         data = json.loads(message) if isinstance(message, str) else message
         event = self.pusher_helper.simulate_websocket_to_pusher_event(data)
 
-        channel = self.pusher.channel(event['channel']) or self.pusher.subscribe(event['channel'])
-        channel.trigger(event['event'], event['data'])
+        channel = self.pusher.channel(event["channel"]) or self.pusher.subscribe(event["channel"])
+        channel.trigger(event["event"], event["data"])
 
-    async def send_json(self, data: Dict):
+    async def send_json(self, data: dict):
         """WebSocket send_json compatibility"""
         await self.send_text(json.dumps(data))
 
@@ -313,7 +310,7 @@ class WebSocketToPusherAdapter:
             return json.dumps(event)
         return json.dumps({"event": "empty"})
 
-    async def receive_json(self) -> Dict:
+    async def receive_json(self) -> dict:
         """WebSocket receive_json compatibility"""
         text = await self.receive_text()
         return json.loads(text)
@@ -324,6 +321,7 @@ class WebSocketToPusherAdapter:
 
 
 # Pytest fixtures
+
 
 @pytest.fixture
 def pusher_test_helper():
@@ -361,15 +359,16 @@ async def websocket_to_pusher_adapter(mock_pusher_connection):
     adapter = WebSocketToPusherAdapter(mock_pusher_connection)
     adapter.pusher_helper = PusherTestHelper()
     yield adapter
-    if adapter.pusher.state == 'connected':
+    if adapter.pusher.state == "connected":
         adapter.pusher.disconnect()
 
 
 # Assertion helpers
 
+
 def assert_pusher_connected(connection: MockPusherConnection):
     """Assert that Pusher connection is established"""
-    assert connection.state == 'connected', "Pusher connection is not connected"
+    assert connection.state == "connected", "Pusher connection is not connected"
     assert connection.socket_id is not None, "Socket ID is not set"
 
 
@@ -382,14 +381,15 @@ def assert_channel_subscribed(connection: MockPusherConnection, channel: str):
 def assert_event_triggered(service: MockPusherService, channel: str, event: str):
     """Assert that an event was triggered"""
     for triggered in service.client.triggered_events:
-        if triggered['channel'] == channel and triggered['event'] == event:
+        if triggered["channel"] == channel and triggered["event"] == event:
             return True
     raise AssertionError(f"Event {event} on channel {channel} was not triggered")
 
 
 # Batch migration helpers
 
-def create_pusher_batch_test_suite(test_functions: List[Callable]) -> List[Callable]:
+
+def create_pusher_batch_test_suite(test_functions: list[Callable]) -> list[Callable]:
     """
     Convert multiple WebSocket test functions to Pusher tests
 
@@ -402,16 +402,19 @@ def create_pusher_batch_test_suite(test_functions: List[Callable]) -> List[Calla
 
 # E2E test helpers for Playwright
 
+
 def create_playwright_pusher_listener():
     """
     Create a Playwright page listener for Pusher events
     Replaces WebSocket frame monitoring
     """
+
     def pusher_listener(page):
         events = []
 
         # Inject Pusher event tracking into the page
-        page.evaluate("""
+        page.evaluate(
+            """
             window.pusherEvents = [];
             if (window.pusher) {
                 const originalSubscribe = window.pusher.subscribe;
@@ -433,7 +436,8 @@ def create_playwright_pusher_listener():
                     return sub;
                 };
             }
-        """)
+        """
+        )
 
         def get_events():
             return page.evaluate("window.pusherEvents || []")
@@ -445,26 +449,28 @@ def create_playwright_pusher_listener():
 
 # Configuration helpers
 
+
 def get_pusher_test_config():
     """Get Pusher test configuration"""
     return {
-        'app_id': 'test_app_id',
-        'key': 'test_key',
-        'secret': 'test_secret',
-        'cluster': 'us2',
-        'ssl': False,
-        'host': 'localhost',
-        'port': 6001  # For local Pusher server testing
+        "app_id": "test_app_id",
+        "key": "test_key",
+        "secret": "test_secret",
+        "cluster": "us2",
+        "ssl": False,
+        "host": "localhost",
+        "port": 6001,  # For local Pusher server testing
     }
 
 
 def setup_pusher_test_environment():
     """Setup environment variables for Pusher testing"""
     import os
+
     config = get_pusher_test_config()
 
-    os.environ['PUSHER_APP_ID'] = config['app_id']
-    os.environ['PUSHER_KEY'] = config['key']
-    os.environ['PUSHER_SECRET'] = config['secret']
-    os.environ['PUSHER_CLUSTER'] = config['cluster']
-    os.environ['PUSHER_ENABLED'] = 'true'
+    os.environ["PUSHER_APP_ID"] = config["app_id"]
+    os.environ["PUSHER_KEY"] = config["key"]
+    os.environ["PUSHER_SECRET"] = config["secret"]
+    os.environ["PUSHER_CLUSTER"] = config["cluster"]
+    os.environ["PUSHER_ENABLED"] = "true"

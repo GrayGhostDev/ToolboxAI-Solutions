@@ -1,16 +1,18 @@
+from unittest.mock import Mock, patch
 
 import pytest
-from unittest.mock import Mock, patch
+
 
 @pytest.fixture
 def mock_db_connection():
     """Mock database connection for tests"""
-    with patch('psycopg2.connect') as mock_connect:
+    with patch("psycopg2.connect") as mock_connect:
         mock_conn = Mock()
         mock_cursor = Mock()
         mock_conn.cursor.return_value = mock_cursor
         mock_connect.return_value = mock_conn
         yield mock_conn
+
 
 #!/usr/bin/env python3
 """
@@ -27,7 +29,6 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 import pytest
 
@@ -42,25 +43,12 @@ INTEGRATION_TEST_CONFIG = {
         "port": 5434,
         "name": "educational_platform_dev",
         "user": "eduplatform",
-        "password": "eduplatform2024"
+        "password": "eduplatform2024",
     },
-    "redis": {
-        "host": "localhost",
-        "port": 6381,
-        "db": 0
-    },
-    "api": {
-        "base_url": "http://127.0.0.1:8009",
-        "timeout": 30
-    },
-    "agent_coordinator": {
-        "base_url": "http://127.0.0.1:8888",
-        "timeout": 30
-    },
-    "websocket": {
-        "base_url": "ws://127.0.0.1:8009",
-        "timeout": 30
-    }
+    "redis": {"host": "localhost", "port": 6381, "db": 0},
+    "api": {"base_url": "http://127.0.0.1:8009", "timeout": 30},
+    "agent_coordinator": {"base_url": "http://127.0.0.1:8888", "timeout": 30},
+    "websocket": {"base_url": "ws://127.0.0.1:8009", "timeout": 30},
 }
 
 # Test suites
@@ -70,61 +58,49 @@ TEST_SUITES = {
         "files": [
             "test_comprehensive_auth_flow.py::TestLoginFlow::test_successful_login_flow",
             "test_content_generation_pipeline.py::TestBasicContentGeneration::test_simple_content_generation",
-            "test_database_redis_api_integration.py::TestDatabaseTransactionIntegrity::test_successful_transaction_commit"
+            "test_database_redis_api_integration.py::TestDatabaseTransactionIntegrity::test_successful_transaction_commit",
         ],
         "timeout": 300,  # 5 minutes
-        "parallel": True
+        "parallel": True,
     },
     "auth": {
         "description": "Authentication and authorization tests",
-        "files": [
-            "test_comprehensive_auth_flow.py"
-        ],
+        "files": ["test_comprehensive_auth_flow.py"],
         "timeout": 600,  # 10 minutes
-        "parallel": True
+        "parallel": True,
     },
     "content": {
         "description": "Content generation pipeline tests",
-        "files": [
-            "test_content_generation_pipeline.py"
-        ],
+        "files": ["test_content_generation_pipeline.py"],
         "timeout": 1800,  # 30 minutes
-        "parallel": False
+        "parallel": False,
     },
     "database": {
         "description": "Database and Redis integration tests",
-        "files": [
-            "test_database_redis_api_integration.py"
-        ],
+        "files": ["test_database_redis_api_integration.py"],
         "timeout": 900,  # 15 minutes
         "parallel": True,
-        "requires": ["postgres", "redis"]
+        "requires": ["postgres", "redis"],
     },
     "realtime": {
         "description": "Real-time communication tests",
-        "files": [
-            "test_realtime_communication.py"
-        ],
+        "files": ["test_realtime_communication.py"],
         "timeout": 600,  # 10 minutes
         "parallel": True,
-        "requires": ["websocket", "pusher"]
+        "requires": ["websocket", "pusher"],
     },
     "agents": {
         "description": "Multi-agent coordination tests",
-        "files": [
-            "test_multi_agent_coordination.py"
-        ],
+        "files": ["test_multi_agent_coordination.py"],
         "timeout": 1200,  # 20 minutes
-        "parallel": False
+        "parallel": False,
     },
     "e2e": {
         "description": "End-to-end workflow tests",
-        "files": [
-            "test_e2e_content_workflow.py"
-        ],
+        "files": ["test_e2e_content_workflow.py"],
         "timeout": 3600,  # 60 minutes
         "parallel": False,
-        "requires": ["postgres", "redis", "websocket"]
+        "requires": ["postgres", "redis", "websocket"],
     },
     "full": {
         "description": "Complete integration test suite",
@@ -134,29 +110,29 @@ TEST_SUITES = {
             "test_database_redis_api_integration.py",
             "test_realtime_communication.py",
             "test_multi_agent_coordination.py",
-            "test_e2e_content_workflow.py"
+            "test_e2e_content_workflow.py",
         ],
         "timeout": 7200,  # 2 hours
-        "parallel": False
-    }
+        "parallel": False,
+    },
 }
 
 
 class IntegrationTestRunner:
     """Integration test runner with service management and reporting"""
 
-    def __init__(self, config: Dict = None):
+    def __init__(self, config: dict = None):
         self.config = config or INTEGRATION_TEST_CONFIG
         self.test_dir = Path(__file__).parent
         self.results = {}
         self.start_time = None
         self.end_time = None
 
-    async def check_services(self) -> Dict[str, bool]:
+    async def check_services(self) -> dict[str, bool]:
         """Check availability of required services"""
         import httpx
-        import redis
         import psycopg2
+        import redis
 
         services = {}
 
@@ -171,7 +147,9 @@ class IntegrationTestRunner:
         # Check Agent Coordinator
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.get(f"{self.config['agent_coordinator']['base_url']}/health", timeout=5)
+                response = await client.get(
+                    f"{self.config['agent_coordinator']['base_url']}/health", timeout=5
+                )
                 services["agent_coordinator"] = response.status_code == 200
         except Exception:
             services["agent_coordinator"] = False
@@ -183,7 +161,7 @@ class IntegrationTestRunner:
                 port=self.config["database"]["port"],
                 database=self.config["database"]["name"],
                 user=self.config["database"]["user"],
-                password=self.config["database"]["password"]
+                password=self.config["database"]["password"],
             )
             conn.close()
             services["postgres"] = True
@@ -195,7 +173,7 @@ class IntegrationTestRunner:
             r = redis.Redis(
                 host=self.config["redis"]["host"],
                 port=self.config["redis"]["port"],
-                db=self.config["redis"]["db"]
+                db=self.config["redis"]["db"],
             )
             r.ping()
             services["redis"] = True
@@ -204,10 +182,10 @@ class IntegrationTestRunner:
 
         # Check WebSocket
         try:
-            from tests.fixtures.pusher_mocks import MockPusherService
+
             uri = f"{self.config['websocket']['base_url']}/ws"
             async with async_mock_pusher_context() as pusher:
-        # Connect using Pusheruri, timeout=5) as ws:
+                # Connect using Pusheruri, timeout=5) as ws:
                 await ws.close()
             services["websocket"] = True
         except Exception:
@@ -217,30 +195,30 @@ class IntegrationTestRunner:
 
     def setup_environment(self):
         """Setup test environment variables"""
-        os.environ.update({
-            "TESTING": "true",
-            "USE_MOCK_LLM": "true",
-            "USE_MOCK_DATABASE": "false",
-            "USE_MOCK_REDIS": "false",
-            "INTEGRATION_TESTING": "true",
-            "LOG_LEVEL": "WARNING",
-            "BYPASS_RATE_LIMIT_IN_TESTS": "true"
-        })
+        os.environ.update(
+            {
+                "TESTING": "true",
+                "USE_MOCK_LLM": "true",
+                "USE_MOCK_DATABASE": "false",
+                "USE_MOCK_REDIS": "false",
+                "INTEGRATION_TESTING": "true",
+                "LOG_LEVEL": "WARNING",
+                "BYPASS_RATE_LIMIT_IN_TESTS": "true",
+            }
+        )
 
-    def generate_pytest_args(self, suite_config: Dict, test_files: List[str]) -> List[str]:
+    def generate_pytest_args(self, suite_config: dict, test_files: list[str]) -> list[str]:
         """Generate pytest arguments for test execution"""
         args = [
             "-v",
             "--tb=short",
             "--strict-markers",
             f"--timeout={suite_config['timeout']}",
-            "--timeout-method=thread"
+            "--timeout-method=thread",
         ]
 
         # Add markers
-        args.extend([
-            "-m", "integration"
-        ])
+        args.extend(["-m", "integration"])
 
         # Add parallel execution if enabled
         if suite_config.get("parallel", False):
@@ -254,12 +232,14 @@ class IntegrationTestRunner:
 
         # Add coverage if requested
         if os.getenv("INTEGRATION_COVERAGE", "false").lower() == "true":
-            args.extend([
-                "--cov=apps/backend",
-                "--cov=core",
-                "--cov-report=html:tests/logs/integration/coverage",
-                "--cov-report=term-missing"
-            ])
+            args.extend(
+                [
+                    "--cov=apps/backend",
+                    "--cov=core",
+                    "--cov-report=html:tests/logs/integration/coverage",
+                    "--cov-report=term-missing",
+                ]
+            )
 
         # Add test files
         for test_file in test_files:
@@ -270,7 +250,7 @@ class IntegrationTestRunner:
 
         return args
 
-    async def run_test_suite(self, suite_name: str) -> Dict:
+    async def run_test_suite(self, suite_name: str) -> dict:
         """Run a specific test suite"""
         if suite_name not in TEST_SUITES:
             raise ValueError(f"Unknown test suite: {suite_name}")
@@ -301,7 +281,7 @@ class IntegrationTestRunner:
                     "tests_run": 0,
                     "passed": 0,
                     "failed": 0,
-                    "duration": 0
+                    "duration": 0,
                 }
 
             print("✅ All required services available")
@@ -334,21 +314,16 @@ class IntegrationTestRunner:
                 "status": status,
                 "exit_code": result,
                 "duration": duration,
-                "pytest_args": pytest_args
+                "pytest_args": pytest_args,
             }
 
         except Exception as e:
             duration = time.time() - start_time
-            return {
-                "suite": suite_name,
-                "status": "error",
-                "error": str(e),
-                "duration": duration
-            }
+            return {"suite": suite_name, "status": "error", "error": str(e), "duration": duration}
         finally:
             os.chdir(original_cwd)
 
-    async def run_multiple_suites(self, suite_names: List[str]) -> Dict:
+    async def run_multiple_suites(self, suite_names: list[str]) -> dict:
         """Run multiple test suites"""
         self.start_time = datetime.now()
         results = {}
@@ -371,12 +346,7 @@ class IntegrationTestRunner:
             results[suite_name] = suite_result
 
             # Print immediate results
-            status_emoji = {
-                "passed": "✅",
-                "failed": "❌",
-                "error": "💥",
-                "skipped": "⏭️"
-            }
+            status_emoji = {"passed": "✅", "failed": "❌", "error": "💥", "skipped": "⏭️"}
 
             emoji = status_emoji.get(suite_result["status"], "❓")
             duration = suite_result["duration"]
@@ -387,7 +357,7 @@ class IntegrationTestRunner:
 
         return self.generate_summary()
 
-    def generate_summary(self) -> Dict:
+    def generate_summary(self) -> dict:
         """Generate test run summary"""
         total_duration = (self.end_time - self.start_time).total_seconds()
 
@@ -401,13 +371,13 @@ class IntegrationTestRunner:
                 "passed": sum(1 for r in self.results.values() if r["status"] == "passed"),
                 "failed": sum(1 for r in self.results.values() if r["status"] == "failed"),
                 "errors": sum(1 for r in self.results.values() if r["status"] == "error"),
-                "skipped": sum(1 for r in self.results.values() if r["status"] == "skipped")
-            }
+                "skipped": sum(1 for r in self.results.values() if r["status"] == "skipped"),
+            },
         }
 
         return summary
 
-    def print_summary(self, summary: Dict):
+    def print_summary(self, summary: dict):
         """Print formatted test summary"""
         print(f"\n{'='*80}")
         print("🎯 INTEGRATION TEST SUMMARY")
@@ -418,12 +388,7 @@ class IntegrationTestRunner:
         print(f"📊 Suite Results:")
 
         for suite_name, result in summary["suites"].items():
-            status_emoji = {
-                "passed": "✅",
-                "failed": "❌",
-                "error": "💥",
-                "skipped": "⏭️"
-            }
+            status_emoji = {"passed": "✅", "failed": "❌", "error": "💥", "skipped": "⏭️"}
             emoji = status_emoji.get(result["status"], "❓")
             duration = result["duration"]
             print(f"   {emoji} {suite_name:<20} {result['status']:<10} ({duration:.2f}s)")
@@ -436,12 +401,14 @@ class IntegrationTestRunner:
         print(f"   💥 Errors: {stats['errors']}")
         print(f"   ⏭️  Skipped: {stats['skipped']}")
 
-        success_rate = (stats['passed'] / stats['total_suites']) * 100 if stats['total_suites'] > 0 else 0
+        success_rate = (
+            (stats["passed"] / stats["total_suites"]) * 100 if stats["total_suites"] > 0 else 0
+        )
         print(f"   🎯 Success Rate: {success_rate:.1f}%")
 
         print(f"\n{'='*80}")
 
-    def save_results(self, summary: Dict, output_file: Optional[str] = None):
+    def save_results(self, summary: dict, output_file: str | None = None):
         """Save results to JSON file"""
         if not output_file:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -450,7 +417,7 @@ class IntegrationTestRunner:
         output_path = Path("tests/logs/integration") / output_file
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(output_path, 'w') as f:
+        with open(output_path, "w") as f:
             json.dump(summary, f, indent=2, default=str)
 
         print(f"📄 Results saved to: {output_path}")
@@ -465,10 +432,12 @@ async def main():
         "suites",
         nargs="*",
         default=["basic"],
-        help=f"Test suites to run. Available: {', '.join(TEST_SUITES.keys())}"
+        help=f"Test suites to run. Available: {', '.join(TEST_SUITES.keys())}",
     )
     parser.add_argument("--list", action="store_true", help="List available test suites")
-    parser.add_argument("--check-services", action="store_true", help="Check service availability only")
+    parser.add_argument(
+        "--check-services", action="store_true", help="Check service availability only"
+    )
     parser.add_argument("--output", help="Output file for results")
     parser.add_argument("--coverage", action="store_true", help="Enable coverage reporting")
 
@@ -476,7 +445,7 @@ async def main():
 
     if args.list:
         print("Available Integration Test Suites:")
-        print("="*50)
+        print("=" * 50)
         for name, config in TEST_SUITES.items():
             print(f"{name:<12} - {config['description']}")
             print(f"             Files: {len(config['files'])}")

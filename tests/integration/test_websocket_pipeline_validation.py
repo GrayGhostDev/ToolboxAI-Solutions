@@ -1,11 +1,13 @@
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest_asyncio
+from unittest.mock import Mock, patch
 
 import pytest
-from unittest.mock import Mock, patch
+import pytest_asyncio
+
 
 @pytest.fixture
 def mock_db_connection():
@@ -33,22 +35,23 @@ import asyncio
 import json
 import logging
 import time
-from typing import Dict, Any, List
-from unittest.mock import Mock, patch, AsyncMock
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from tests.fixtures.pusher_mocks import MockPusherService
 from fastapi.testclient import TestClient
+
+from tests.fixtures.pusher_mocks import MockPusherService
 
 # Import application components
 try:
     from apps.backend.main import app
-    from tests.fixtures.pusher_test_utils import (
-        websocket_manager,
-        broadcast_content_update,
-        WebSocketManager
-    )
     from apps.backend.services.pusher import trigger_event
+    from tests.fixtures.pusher_test_utils import (
+        WebSocketManager,
+        broadcast_content_update,
+        websocket_manager,
+    )
 except ImportError as e:
     pytest.skip(f"Required WebSocket modules not available: {e}", allow_module_level=True)
 

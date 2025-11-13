@@ -7,18 +7,17 @@ Background tasks for AI-powered content generation and processing
 import json
 import time
 from datetime import datetime
-from typing import Dict, List, Any, Optional
-from celery import shared_task, chain, group
-from celery.utils.log import get_task_logger
-import httpx
+from typing import Any
+
 import openai
+from celery import shared_task
+from celery.utils.log import get_task_logger
 from pydantic import BaseModel, Field
 
 from apps.backend.core.config import settings
 from apps.backend.services.pusher import pusher_service as pusher_client
-from database.models import EducationalContent, Quiz, User
 from core.agents.content_agent import ContentAgent
-from core.agents.orchestrator import Orchestrator
+from database.models import EducationalContent, Quiz
 
 logger = get_task_logger(__name__)
 
@@ -30,8 +29,8 @@ class ContentRequest(BaseModel):
     grade_level: str
     content_type: str = "lesson"
     language: str = "en"
-    user_id: Optional[str] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    user_id: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 @shared_task(
@@ -43,8 +42,8 @@ class ContentRequest(BaseModel):
     priority=5,
 )
 def generate_educational_content(
-    self, request_data: Dict[str, Any], callback_channel: Optional[str] = None
-) -> Dict[str, Any]:
+    self, request_data: dict[str, Any], callback_channel: str | None = None
+) -> dict[str, Any]:
     """
     Generate educational content using AI agents
 
@@ -236,7 +235,7 @@ def generate_educational_content(
 )
 def process_quiz_generation(
     self, content_id: str, num_questions: int = 10, difficulty: str = "medium"
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Generate quiz questions based on existing content
 
@@ -325,7 +324,7 @@ def process_quiz_generation(
     queue="analysis",
     priority=3,
 )
-def analyze_content_quality(self, content_id: str) -> Dict[str, Any]:
+def analyze_content_quality(self, content_id: str) -> dict[str, Any]:
     """
     Analyze the quality of generated educational content
 

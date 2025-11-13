@@ -12,20 +12,19 @@ Provides intelligent edge caching with:
 import asyncio
 import hashlib
 import json
+import logging
 import time
-from enum import Enum
-from typing import Dict, List, Optional, Set, Any, Callable, Union
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-import logging
+from enum import Enum
 from functools import wraps
 
+import boto3
 import httpx
 import redis.asyncio as aioredis
-from fastapi import Request, Response, HTTPException
-from fastapi.responses import StreamingResponse
-import boto3
 from botocore.exceptions import ClientError
+from fastapi import Request, Response
 
 logger = logging.getLogger(__name__)
 
@@ -67,11 +66,11 @@ class CacheConfig:
     s_maxage: int = 86400  # Shared cache max age
     stale_while_revalidate: int = 60
     stale_if_error: int = 86400
-    vary_headers: List[str] = field(default_factory=lambda: ["Accept", "Accept-Encoding"])
-    cache_control_directives: List[str] = field(default_factory=list)
-    surrogate_keys: List[str] = field(default_factory=list)
-    edge_ttl: Optional[int] = None
-    browser_ttl: Optional[int] = None
+    vary_headers: list[str] = field(default_factory=lambda: ["Accept", "Accept-Encoding"])
+    cache_control_directives: list[str] = field(default_factory=list)
+    surrogate_keys: list[str] = field(default_factory=list)
+    edge_ttl: int | None = None
+    browser_ttl: int | None = None
 
 
 @dataclass
@@ -81,11 +80,11 @@ class CacheEntry:
     key: str
     value: bytes
     content_type: str
-    headers: Dict[str, str]
+    headers: dict[str, str]
     created_at: datetime
     expires_at: datetime
     etag: str
-    tags: Set[str] = field(default_factory=set)
+    tags: set[str] = field(default_factory=set)
     hit_count: int = 0
     last_accessed: datetime = field(default_factory=datetime.utcnow)
     compressed: bool = False
@@ -109,11 +108,11 @@ class CacheMetrics:
 class CDNProvider:
     """Base class for CDN providers"""
 
-    async def purge(self, urls: List[str]):
+    async def purge(self, urls: list[str]):
         """Purge URLs from CDN cache"""
         raise NotImplementedError
 
-    async def warm(self, urls: List[str]):
+    async def warm(self, urls: list[str]):
         """Pre-warm CDN cache with URLs"""
         raise NotImplementedError
 
@@ -131,7 +130,7 @@ class CloudflareCDN(CDNProvider):
         self.base_url = f"https://api.cloudflare.com/client/v4/zones/{zone_id}"
         self.headers = {"Authorization": f"Bearer {api_token}", "Content-Type": "application/json"}
 
-    async def purge(self, urls: List[str]):
+    async def purge(self, urls: list[str]):
         """Purge URLs from Cloudflare cache"""
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -140,7 +139,7 @@ class CloudflareCDN(CDNProvider):
             response.raise_for_status()
             return response.json()
 
-    async def warm(self, urls: List[str]):
+    async def warm(self, urls: list[str]):
         """Pre-warm Cloudflare cache"""
         async with httpx.AsyncClient() as client:
             tasks = [client.get(url, headers={"CF-Cache-Warmup": "1"}) for url in urls]
@@ -165,7 +164,7 @@ class CloudFrontCDN(CDNProvider):
             "cloudfront", aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key
         )
 
-    async def purge(self, urls: List[str]):
+    async def purge(self, urls: list[str]):
         """Create CloudFront invalidation"""
         try:
             response = self.client.create_invalidation(
@@ -180,7 +179,7 @@ class CloudFrontCDN(CDNProvider):
             logger.error("CloudFront invalidation failed: %s", e)
             raise
 
-    async def warm(self, urls: List[str]):
+    async def warm(self, urls: list[str]):
         """Pre-warm CloudFront cache"""
         async with httpx.AsyncClient() as client:
             tasks = [client.get(url, headers={"X-Cache-Warmup": "1"}) for url in urls]
@@ -211,7 +210,7 @@ class EdgeCache:
     def __init__(
         self,
         redis_url: str,
-        cdn_provider: Optional[CDNProvider] = None,
+        cdn_provider: CDNProvider | None = None,
         default_ttl: int = 3600,
         max_cache_size_mb: int = 1024,
         enable_compression: bool = True,
@@ -223,16 +222,16 @@ class EdgeCache:
         self.enable_compression = enable_compression
 
         # Redis clients for different tiers
-        self.redis_clients: Dict[CacheTier, aioredis.Redis] = {}
+        self.redis_clients: dict[CacheTier, aioredis.Redis] = {}
 
         # Cache metrics per tier
-        self.metrics: Dict[CacheTier, CacheMetrics] = {tier: CacheMetrics() for tier in CacheTier}
+        self.metrics: dict[CacheTier, CacheMetrics] = {tier: CacheMetrics() for tier in CacheTier}
 
         # Cache key patterns
-        self.key_patterns: Dict[str, str] = {}
+        self.key_patterns: dict[str, str] = {}
 
         # Background tasks
-        self.tasks: List[asyncio.Task] = []
+        self.tasks: list[asyncio.Task] = []
 
     async def initialize(self):
         """Initialize cache system"""
@@ -261,9 +260,7 @@ class EdgeCache:
         for client in self.redis_clients.values():
             await client.aclose()
 
-    def _generate_cache_key(
-        self, request: Request, vary_headers: Optional[List[str]] = None
-    ) -> str:
+    def _generate_cache_key(self, request: Request, vary_headers: list[str] | None = None) -> str:
         """Generate cache key from request"""
         # Base key from URL
         key_parts = [
@@ -294,7 +291,7 @@ class EdgeCache:
         key: str,
         tier: CacheTier = CacheTier.EDGE,
         strategy: CacheStrategy = CacheStrategy.CACHE_FIRST,
-    ) -> Optional[CacheEntry]:
+    ) -> CacheEntry | None:
         """Get item from cache"""
         start_time = time.time()
 
@@ -374,9 +371,9 @@ class EdgeCache:
     async def set(
         self,
         key: str,
-        entry: Union[CacheEntry, bytes],
+        entry: CacheEntry | bytes,
         tier: CacheTier = CacheTier.EDGE,
-        config: Optional[CacheConfig] = None,
+        config: CacheConfig | None = None,
     ) -> bool:
         """Set item in cache"""
         try:
@@ -443,7 +440,7 @@ class EdgeCache:
             self.metrics[tier].error_count += 1
             return False
 
-    async def delete(self, key: str, tier: Optional[CacheTier] = None):
+    async def delete(self, key: str, tier: CacheTier | None = None):
         """Delete item from cache"""
         tiers = [tier] if tier else list(CacheTier)
 
@@ -454,9 +451,7 @@ class EdgeCache:
             except Exception as e:
                 logger.error("Cache delete error for %s in %s: %s", key, t, e)
 
-    async def invalidate(
-        self, scope: InvalidationScope, value: str, tier: Optional[CacheTier] = None
-    ):
+    async def invalidate(self, scope: InvalidationScope, value: str, tier: CacheTier | None = None):
         """Invalidate cache entries"""
         tiers = [tier] if tier else list(CacheTier)
 
@@ -521,7 +516,7 @@ class EdgeCache:
                 logger.error("Cache invalidation error: %s", e)
                 self.metrics[t].error_count += 1
 
-    async def warm_cache(self, urls: List[str], tier: CacheTier = CacheTier.EDGE):
+    async def warm_cache(self, urls: list[str], tier: CacheTier = CacheTier.EDGE):
         """Pre-warm cache with URLs"""
         if self.cdn_provider:
             await self.cdn_provider.warm(urls)
@@ -769,7 +764,7 @@ class EdgeCacheMiddleware:
 
 # Decorator for caching specific endpoints
 def edge_cache(
-    ttl: int = 3600, tags: List[str] = None, strategy: CacheStrategy = CacheStrategy.CACHE_FIRST
+    ttl: int = 3600, tags: list[str] = None, strategy: CacheStrategy = CacheStrategy.CACHE_FIRST
 ):
     """Decorator for caching endpoint responses"""
 

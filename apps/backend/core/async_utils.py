@@ -6,8 +6,9 @@ primarily used by the Roblox service for bridging async content generation.
 
 import asyncio
 import threading
-from typing import Any, Coroutine
+from collections.abc import Coroutine
 from concurrent.futures import ThreadPoolExecutor
+from typing import Any
 
 
 class AsyncRunner:

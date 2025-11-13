@@ -5,14 +5,15 @@ Tests coordinator service initialization, content generation orchestration,
 health status monitoring, Pusher notifications, and service lifecycle.
 """
 
-import pytest
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from datetime import datetime
 import json
+from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import pytest
 
 from apps.backend.services.coordinator_service import (
     CoordinatorService,
-    get_coordinator
+    get_coordinator,
 )
 
 
@@ -58,21 +59,44 @@ def mock_langchain_tracer():
 
 @pytest.fixture
 def coordinator_service_with_mocks(
-    mock_redis_client,
-    mock_main_coordinator,
-    mock_pusher_service,
-    mock_langchain_tracer
+    mock_redis_client, mock_main_coordinator, mock_pusher_service, mock_langchain_tracer
 ):
     """CoordinatorService with all dependencies mocked"""
-    with patch('apps.backend.services.coordinator_service.redis.from_url', return_value=mock_redis_client):
-        with patch('apps.backend.services.coordinator_service.MainCoordinator', return_value=mock_main_coordinator):
-            with patch('apps.backend.services.coordinator_service.WorkflowCoordinator', return_value=AsyncMock()):
-                with patch('apps.backend.services.coordinator_service.ResourceCoordinator', return_value=AsyncMock()):
-                    with patch('apps.backend.services.coordinator_service.SyncCoordinator', return_value=AsyncMock()):
-                        with patch('apps.backend.services.coordinator_service.ErrorCoordinator', return_value=AsyncMock()):
-                            with patch('apps.backend.services.coordinator_service.pusher_service', mock_pusher_service):
-                                with patch('apps.backend.services.coordinator_service.LangChainTracer', return_value=mock_langchain_tracer):
-                                    with patch('apps.backend.services.coordinator_service.Client', return_value=AsyncMock()):
+    with patch(
+        "apps.backend.services.coordinator_service.redis.from_url", return_value=mock_redis_client
+    ):
+        with patch(
+            "apps.backend.services.coordinator_service.MainCoordinator",
+            return_value=mock_main_coordinator,
+        ):
+            with patch(
+                "apps.backend.services.coordinator_service.WorkflowCoordinator",
+                return_value=AsyncMock(),
+            ):
+                with patch(
+                    "apps.backend.services.coordinator_service.ResourceCoordinator",
+                    return_value=AsyncMock(),
+                ):
+                    with patch(
+                        "apps.backend.services.coordinator_service.SyncCoordinator",
+                        return_value=AsyncMock(),
+                    ):
+                        with patch(
+                            "apps.backend.services.coordinator_service.ErrorCoordinator",
+                            return_value=AsyncMock(),
+                        ):
+                            with patch(
+                                "apps.backend.services.coordinator_service.pusher_service",
+                                mock_pusher_service,
+                            ):
+                                with patch(
+                                    "apps.backend.services.coordinator_service.LangChainTracer",
+                                    return_value=mock_langchain_tracer,
+                                ):
+                                    with patch(
+                                        "apps.backend.services.coordinator_service.Client",
+                                        return_value=AsyncMock(),
+                                    ):
                                         service = CoordinatorService()
                                         service.redis_client = mock_redis_client
                                         service.main_coordinator = mock_main_coordinator
@@ -85,13 +109,33 @@ class TestCoordinatorServiceInitialization:
 
     def test_coordinator_service_construction(self):
         """Test coordinator service construction"""
-        with patch('apps.backend.services.coordinator_service.MainCoordinator', return_value=AsyncMock()):
-            with patch('apps.backend.services.coordinator_service.WorkflowCoordinator', return_value=AsyncMock()):
-                with patch('apps.backend.services.coordinator_service.ResourceCoordinator', return_value=AsyncMock()):
-                    with patch('apps.backend.services.coordinator_service.SyncCoordinator', return_value=AsyncMock()):
-                        with patch('apps.backend.services.coordinator_service.ErrorCoordinator', return_value=AsyncMock()):
-                            with patch('apps.backend.services.coordinator_service.LangChainTracer', return_value=MagicMock()):
-                                with patch('apps.backend.services.coordinator_service.Client', return_value=AsyncMock()):
+        with patch(
+            "apps.backend.services.coordinator_service.MainCoordinator", return_value=AsyncMock()
+        ):
+            with patch(
+                "apps.backend.services.coordinator_service.WorkflowCoordinator",
+                return_value=AsyncMock(),
+            ):
+                with patch(
+                    "apps.backend.services.coordinator_service.ResourceCoordinator",
+                    return_value=AsyncMock(),
+                ):
+                    with patch(
+                        "apps.backend.services.coordinator_service.SyncCoordinator",
+                        return_value=AsyncMock(),
+                    ):
+                        with patch(
+                            "apps.backend.services.coordinator_service.ErrorCoordinator",
+                            return_value=AsyncMock(),
+                        ):
+                            with patch(
+                                "apps.backend.services.coordinator_service.LangChainTracer",
+                                return_value=MagicMock(),
+                            ):
+                                with patch(
+                                    "apps.backend.services.coordinator_service.Client",
+                                    return_value=AsyncMock(),
+                                ):
                                     service = CoordinatorService()
 
         assert service.is_initialized is False
@@ -103,7 +147,13 @@ class TestCoordinatorServiceInitialization:
         assert service.main_coordinator is not None
 
     @pytest.mark.asyncio
-    async def test_initialize_success(self, coordinator_service_with_mocks, mock_redis_client, mock_main_coordinator, mock_pusher_service):
+    async def test_initialize_success(
+        self,
+        coordinator_service_with_mocks,
+        mock_redis_client,
+        mock_main_coordinator,
+        mock_pusher_service,
+    ):
         """Test successful service initialization"""
         service = coordinator_service_with_mocks
 
@@ -117,7 +167,9 @@ class TestCoordinatorServiceInitialization:
         mock_pusher_service.trigger.assert_awaited()
 
     @pytest.mark.asyncio
-    async def test_initialize_redis_connection_failure(self, coordinator_service_with_mocks, mock_redis_client):
+    async def test_initialize_redis_connection_failure(
+        self, coordinator_service_with_mocks, mock_redis_client
+    ):
         """Test initialization with Redis connection failure"""
         service = coordinator_service_with_mocks
         mock_redis_client.ping.side_effect = Exception("Redis connection failed")
@@ -129,7 +181,9 @@ class TestCoordinatorServiceInitialization:
         assert service.is_initialized is False
 
     @pytest.mark.asyncio
-    async def test_initialize_coordinator_failure(self, coordinator_service_with_mocks, mock_main_coordinator):
+    async def test_initialize_coordinator_failure(
+        self, coordinator_service_with_mocks, mock_main_coordinator
+    ):
         """Test initialization with coordinator initialization failure"""
         service = coordinator_service_with_mocks
         mock_main_coordinator.initialize.side_effect = Exception("Coordinator init failed")
@@ -146,7 +200,9 @@ class TestServiceRegistration:
     """Test service registration in Redis"""
 
     @pytest.mark.asyncio
-    async def test_register_service_success(self, coordinator_service_with_mocks, mock_redis_client):
+    async def test_register_service_success(
+        self, coordinator_service_with_mocks, mock_redis_client
+    ):
         """Test successful service registration in Redis"""
         service = coordinator_service_with_mocks
 
@@ -176,7 +232,9 @@ class TestPusherNotifications:
     """Test Pusher notification integration"""
 
     @pytest.mark.asyncio
-    async def test_notify_initialization_success(self, coordinator_service_with_mocks, mock_pusher_service):
+    async def test_notify_initialization_success(
+        self, coordinator_service_with_mocks, mock_pusher_service
+    ):
         """Test successful initialization notification via Pusher"""
         service = coordinator_service_with_mocks
 
@@ -189,7 +247,9 @@ class TestPusherNotifications:
         assert "coordinator-service" in str(call_args[1]["data"])
 
     @pytest.mark.asyncio
-    async def test_notify_initialization_failure_handled(self, coordinator_service_with_mocks, mock_pusher_service):
+    async def test_notify_initialization_failure_handled(
+        self, coordinator_service_with_mocks, mock_pusher_service
+    ):
         """Test initialization notification failure is handled gracefully"""
         service = coordinator_service_with_mocks
         mock_pusher_service.trigger.side_effect = Exception("Pusher error")
@@ -205,7 +265,13 @@ class TestContentGeneration:
     """Test educational content generation orchestration"""
 
     @pytest.mark.asyncio
-    async def test_generate_content_success(self, coordinator_service_with_mocks, mock_main_coordinator, mock_pusher_service, mock_langchain_tracer):
+    async def test_generate_content_success(
+        self,
+        coordinator_service_with_mocks,
+        mock_main_coordinator,
+        mock_pusher_service,
+        mock_langchain_tracer,
+    ):
         """Test successful content generation"""
         service = coordinator_service_with_mocks
         service.is_initialized = True
@@ -225,7 +291,7 @@ class TestContentGeneration:
         result = await service.generate_educational_content(
             subject="Mathematics",
             grade_level=5,
-            learning_objectives=["Learn addition", "Learn subtraction"]
+            learning_objectives=["Learn addition", "Learn subtraction"],
         )
 
         assert result["success"] is True
@@ -243,15 +309,15 @@ class TestContentGeneration:
 
         with pytest.raises(RuntimeError) as exc_info:
             await service.generate_educational_content(
-                subject="Math",
-                grade_level=5,
-                learning_objectives=["Objective 1"]
+                subject="Math", grade_level=5, learning_objectives=["Objective 1"]
             )
 
         assert "not initialized" in str(exc_info.value)
 
     @pytest.mark.asyncio
-    async def test_generate_content_with_custom_parameters(self, coordinator_service_with_mocks, mock_main_coordinator):
+    async def test_generate_content_with_custom_parameters(
+        self, coordinator_service_with_mocks, mock_main_coordinator
+    ):
         """Test content generation with custom parameters"""
         service = coordinator_service_with_mocks
         service.is_initialized = True
@@ -275,32 +341,37 @@ class TestContentGeneration:
             learning_objectives=["Objective 1"],
             environment_type="virtual_lab",
             include_quiz=False,
-            custom_parameters=custom_params
+            custom_parameters=custom_params,
         )
 
         assert result["success"] is True
         mock_main_coordinator.generate_educational_content.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_generate_content_coordinator_failure(self, coordinator_service_with_mocks, mock_main_coordinator, mock_pusher_service):
+    async def test_generate_content_coordinator_failure(
+        self, coordinator_service_with_mocks, mock_main_coordinator, mock_pusher_service
+    ):
         """Test content generation with coordinator failure"""
         service = coordinator_service_with_mocks
         service.is_initialized = True
 
-        mock_main_coordinator.generate_educational_content.side_effect = Exception("Generation failed")
+        mock_main_coordinator.generate_educational_content.side_effect = Exception(
+            "Generation failed"
+        )
 
         with pytest.raises(Exception) as exc_info:
             await service.generate_educational_content(
-                subject="Math",
-                grade_level=5,
-                learning_objectives=["Objective 1"]
+                subject="Math", grade_level=5, learning_objectives=["Objective 1"]
             )
 
         assert "Generation failed" in str(exc_info.value)
 
         # Verify error event was sent
-        error_calls = [call for call in mock_pusher_service.trigger.await_args_list
-                      if "generation.error" in str(call)]
+        error_calls = [
+            call
+            for call in mock_pusher_service.trigger.await_args_list
+            if "generation.error" in str(call)
+        ]
         assert len(error_calls) > 0
 
 
@@ -309,7 +380,9 @@ class TestHealthStatus:
     """Test health status monitoring"""
 
     @pytest.mark.asyncio
-    async def test_get_health_status_success(self, coordinator_service_with_mocks, mock_main_coordinator):
+    async def test_get_health_status_success(
+        self, coordinator_service_with_mocks, mock_main_coordinator
+    ):
         """Test successful health status retrieval"""
         service = coordinator_service_with_mocks
         service.is_initialized = True
@@ -322,7 +395,7 @@ class TestHealthStatus:
             "workflow": "healthy",
             "resource": "healthy",
             "sync": "healthy",
-            "error": "healthy"
+            "error": "healthy",
         }
         mock_health.active_workflows = 3
         mock_health.resource_utilization = 0.45
@@ -350,7 +423,9 @@ class TestHealthStatus:
         assert health["healthy"] is False
 
     @pytest.mark.asyncio
-    async def test_get_health_status_degraded(self, coordinator_service_with_mocks, mock_main_coordinator):
+    async def test_get_health_status_degraded(
+        self, coordinator_service_with_mocks, mock_main_coordinator
+    ):
         """Test health status when system degraded"""
         service = coordinator_service_with_mocks
         service.is_initialized = True
@@ -362,7 +437,7 @@ class TestHealthStatus:
             "workflow": "healthy",
             "resource": "unhealthy",
             "sync": "healthy",
-            "error": "healthy"
+            "error": "healthy",
         }
         mock_health.active_workflows = 1
         mock_health.resource_utilization = 0.85
@@ -379,7 +454,9 @@ class TestHealthStatus:
         assert "Resource allocation failed" in health["last_error"]
 
     @pytest.mark.asyncio
-    async def test_get_health_status_exception(self, coordinator_service_with_mocks, mock_main_coordinator):
+    async def test_get_health_status_exception(
+        self, coordinator_service_with_mocks, mock_main_coordinator
+    ):
         """Test health status with exception"""
         service = coordinator_service_with_mocks
         service.is_initialized = True
@@ -398,7 +475,13 @@ class TestServiceShutdown:
     """Test service shutdown and cleanup"""
 
     @pytest.mark.asyncio
-    async def test_shutdown_success(self, coordinator_service_with_mocks, mock_main_coordinator, mock_redis_client, mock_pusher_service):
+    async def test_shutdown_success(
+        self,
+        coordinator_service_with_mocks,
+        mock_main_coordinator,
+        mock_redis_client,
+        mock_pusher_service,
+    ):
         """Test successful service shutdown"""
         service = coordinator_service_with_mocks
         service.is_initialized = True
@@ -412,7 +495,9 @@ class TestServiceShutdown:
         mock_pusher_service.trigger.assert_awaited()
 
     @pytest.mark.asyncio
-    async def test_shutdown_with_coordinator_error(self, coordinator_service_with_mocks, mock_main_coordinator):
+    async def test_shutdown_with_coordinator_error(
+        self, coordinator_service_with_mocks, mock_main_coordinator
+    ):
         """Test shutdown with coordinator shutdown error"""
         service = coordinator_service_with_mocks
         service.is_initialized = True
@@ -439,15 +524,36 @@ class TestLangChainConfiguration:
 
     def test_configure_langchain_sets_defaults(self):
         """Test LangChain configuration sets default values"""
-        with patch('apps.backend.services.coordinator_service.os.getenv') as mock_getenv:
-            with patch('apps.backend.services.coordinator_service.os.environ', {}) as mock_environ:
-                with patch('apps.backend.services.coordinator_service.MainCoordinator', return_value=AsyncMock()):
-                    with patch('apps.backend.services.coordinator_service.WorkflowCoordinator', return_value=AsyncMock()):
-                        with patch('apps.backend.services.coordinator_service.ResourceCoordinator', return_value=AsyncMock()):
-                            with patch('apps.backend.services.coordinator_service.SyncCoordinator', return_value=AsyncMock()):
-                                with patch('apps.backend.services.coordinator_service.ErrorCoordinator', return_value=AsyncMock()):
-                                    with patch('apps.backend.services.coordinator_service.LangChainTracer', return_value=MagicMock()):
-                                        with patch('apps.backend.services.coordinator_service.Client', return_value=AsyncMock()):
+        with patch("apps.backend.services.coordinator_service.os.getenv") as mock_getenv:
+            with patch("apps.backend.services.coordinator_service.os.environ", {}) as mock_environ:
+                with patch(
+                    "apps.backend.services.coordinator_service.MainCoordinator",
+                    return_value=AsyncMock(),
+                ):
+                    with patch(
+                        "apps.backend.services.coordinator_service.WorkflowCoordinator",
+                        return_value=AsyncMock(),
+                    ):
+                        with patch(
+                            "apps.backend.services.coordinator_service.ResourceCoordinator",
+                            return_value=AsyncMock(),
+                        ):
+                            with patch(
+                                "apps.backend.services.coordinator_service.SyncCoordinator",
+                                return_value=AsyncMock(),
+                            ):
+                                with patch(
+                                    "apps.backend.services.coordinator_service.ErrorCoordinator",
+                                    return_value=AsyncMock(),
+                                ):
+                                    with patch(
+                                        "apps.backend.services.coordinator_service.LangChainTracer",
+                                        return_value=MagicMock(),
+                                    ):
+                                        with patch(
+                                            "apps.backend.services.coordinator_service.Client",
+                                            return_value=AsyncMock(),
+                                        ):
                                             mock_getenv.return_value = None
 
                                             service = CoordinatorService()
@@ -459,15 +565,36 @@ class TestLangChainConfiguration:
 
     def test_configure_langchain_warns_missing_api_key(self):
         """Test warning when LANGCHAIN_API_KEY missing"""
-        with patch('apps.backend.services.coordinator_service.os.getenv', return_value=None):
-            with patch('apps.backend.services.coordinator_service.logger') as mock_logger:
-                with patch('apps.backend.services.coordinator_service.MainCoordinator', return_value=AsyncMock()):
-                    with patch('apps.backend.services.coordinator_service.WorkflowCoordinator', return_value=AsyncMock()):
-                        with patch('apps.backend.services.coordinator_service.ResourceCoordinator', return_value=AsyncMock()):
-                            with patch('apps.backend.services.coordinator_service.SyncCoordinator', return_value=AsyncMock()):
-                                with patch('apps.backend.services.coordinator_service.ErrorCoordinator', return_value=AsyncMock()):
-                                    with patch('apps.backend.services.coordinator_service.LangChainTracer', return_value=MagicMock()):
-                                        with patch('apps.backend.services.coordinator_service.Client', return_value=AsyncMock()):
+        with patch("apps.backend.services.coordinator_service.os.getenv", return_value=None):
+            with patch("apps.backend.services.coordinator_service.logger") as mock_logger:
+                with patch(
+                    "apps.backend.services.coordinator_service.MainCoordinator",
+                    return_value=AsyncMock(),
+                ):
+                    with patch(
+                        "apps.backend.services.coordinator_service.WorkflowCoordinator",
+                        return_value=AsyncMock(),
+                    ):
+                        with patch(
+                            "apps.backend.services.coordinator_service.ResourceCoordinator",
+                            return_value=AsyncMock(),
+                        ):
+                            with patch(
+                                "apps.backend.services.coordinator_service.SyncCoordinator",
+                                return_value=AsyncMock(),
+                            ):
+                                with patch(
+                                    "apps.backend.services.coordinator_service.ErrorCoordinator",
+                                    return_value=AsyncMock(),
+                                ):
+                                    with patch(
+                                        "apps.backend.services.coordinator_service.LangChainTracer",
+                                        return_value=MagicMock(),
+                                    ):
+                                        with patch(
+                                            "apps.backend.services.coordinator_service.Client",
+                                            return_value=AsyncMock(),
+                                        ):
                                             service = CoordinatorService()
 
                                             # Verify warning was logged
@@ -479,37 +606,96 @@ class TestGlobalServiceInstance:
     """Test global singleton service instance"""
 
     @pytest.mark.asyncio
-    async def test_get_coordinator_creates_instance(self, mock_redis_client, mock_main_coordinator, mock_pusher_service):
+    async def test_get_coordinator_creates_instance(
+        self, mock_redis_client, mock_main_coordinator, mock_pusher_service
+    ):
         """Test get_coordinator creates singleton instance"""
-        with patch('apps.backend.services.coordinator_service.coordinator_service', None):
-            with patch('apps.backend.services.coordinator_service.redis.from_url', return_value=mock_redis_client):
-                with patch('apps.backend.services.coordinator_service.MainCoordinator', return_value=mock_main_coordinator):
-                    with patch('apps.backend.services.coordinator_service.WorkflowCoordinator', return_value=AsyncMock()):
-                        with patch('apps.backend.services.coordinator_service.ResourceCoordinator', return_value=AsyncMock()):
-                            with patch('apps.backend.services.coordinator_service.SyncCoordinator', return_value=AsyncMock()):
-                                with patch('apps.backend.services.coordinator_service.ErrorCoordinator', return_value=AsyncMock()):
-                                    with patch('apps.backend.services.coordinator_service.pusher_service', mock_pusher_service):
-                                        with patch('apps.backend.services.coordinator_service.LangChainTracer', return_value=MagicMock()):
-                                            with patch('apps.backend.services.coordinator_service.Client', return_value=AsyncMock()):
+        with patch("apps.backend.services.coordinator_service.coordinator_service", None):
+            with patch(
+                "apps.backend.services.coordinator_service.redis.from_url",
+                return_value=mock_redis_client,
+            ):
+                with patch(
+                    "apps.backend.services.coordinator_service.MainCoordinator",
+                    return_value=mock_main_coordinator,
+                ):
+                    with patch(
+                        "apps.backend.services.coordinator_service.WorkflowCoordinator",
+                        return_value=AsyncMock(),
+                    ):
+                        with patch(
+                            "apps.backend.services.coordinator_service.ResourceCoordinator",
+                            return_value=AsyncMock(),
+                        ):
+                            with patch(
+                                "apps.backend.services.coordinator_service.SyncCoordinator",
+                                return_value=AsyncMock(),
+                            ):
+                                with patch(
+                                    "apps.backend.services.coordinator_service.ErrorCoordinator",
+                                    return_value=AsyncMock(),
+                                ):
+                                    with patch(
+                                        "apps.backend.services.coordinator_service.pusher_service",
+                                        mock_pusher_service,
+                                    ):
+                                        with patch(
+                                            "apps.backend.services.coordinator_service.LangChainTracer",
+                                            return_value=MagicMock(),
+                                        ):
+                                            with patch(
+                                                "apps.backend.services.coordinator_service.Client",
+                                                return_value=AsyncMock(),
+                                            ):
                                                 coordinator = await get_coordinator()
 
         assert coordinator is not None
         assert isinstance(coordinator, CoordinatorService)
 
     @pytest.mark.asyncio
-    async def test_get_coordinator_returns_same_instance(self, mock_redis_client, mock_main_coordinator, mock_pusher_service):
+    async def test_get_coordinator_returns_same_instance(
+        self, mock_redis_client, mock_main_coordinator, mock_pusher_service
+    ):
         """Test get_coordinator returns same singleton instance"""
-        with patch('apps.backend.services.coordinator_service.redis.from_url', return_value=mock_redis_client):
-            with patch('apps.backend.services.coordinator_service.MainCoordinator', return_value=mock_main_coordinator):
-                with patch('apps.backend.services.coordinator_service.WorkflowCoordinator', return_value=AsyncMock()):
-                    with patch('apps.backend.services.coordinator_service.ResourceCoordinator', return_value=AsyncMock()):
-                        with patch('apps.backend.services.coordinator_service.SyncCoordinator', return_value=AsyncMock()):
-                            with patch('apps.backend.services.coordinator_service.ErrorCoordinator', return_value=AsyncMock()):
-                                with patch('apps.backend.services.coordinator_service.pusher_service', mock_pusher_service):
-                                    with patch('apps.backend.services.coordinator_service.LangChainTracer', return_value=MagicMock()):
-                                        with patch('apps.backend.services.coordinator_service.Client', return_value=AsyncMock()):
+        with patch(
+            "apps.backend.services.coordinator_service.redis.from_url",
+            return_value=mock_redis_client,
+        ):
+            with patch(
+                "apps.backend.services.coordinator_service.MainCoordinator",
+                return_value=mock_main_coordinator,
+            ):
+                with patch(
+                    "apps.backend.services.coordinator_service.WorkflowCoordinator",
+                    return_value=AsyncMock(),
+                ):
+                    with patch(
+                        "apps.backend.services.coordinator_service.ResourceCoordinator",
+                        return_value=AsyncMock(),
+                    ):
+                        with patch(
+                            "apps.backend.services.coordinator_service.SyncCoordinator",
+                            return_value=AsyncMock(),
+                        ):
+                            with patch(
+                                "apps.backend.services.coordinator_service.ErrorCoordinator",
+                                return_value=AsyncMock(),
+                            ):
+                                with patch(
+                                    "apps.backend.services.coordinator_service.pusher_service",
+                                    mock_pusher_service,
+                                ):
+                                    with patch(
+                                        "apps.backend.services.coordinator_service.LangChainTracer",
+                                        return_value=MagicMock(),
+                                    ):
+                                        with patch(
+                                            "apps.backend.services.coordinator_service.Client",
+                                            return_value=AsyncMock(),
+                                        ):
                                             # Reset global instance
                                             import apps.backend.services.coordinator_service as cs_module
+
                                             cs_module.coordinator_service = None
 
                                             coordinator1 = await get_coordinator()

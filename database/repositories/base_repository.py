@@ -7,16 +7,14 @@ All specific repositories inherit from this base class.
 Reference: https://docs.sqlalchemy.org/en/20/
 """
 
-from typing import Generic, TypeVar, Type, Optional, List, Dict, Any, Sequence
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 from uuid import UUID
 
-from sqlalchemy import select, update, delete, func, Select
+from sqlalchemy import Select, func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import IntegrityError, NoResultFound
 
 from database.models.base_modern import Base
-from database.cache_modern import cache_result, invalidate_cache
-
 
 # Type variable for model class
 ModelType = TypeVar("ModelType", bound=Base)

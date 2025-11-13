@@ -28,20 +28,19 @@ Models Supported:
     - Automatically excludes GlobalBaseModel (system_health, content_cache)
 """
 
-from typing import TypeVar, Generic, Optional, Any, Dict, List, Type, Union
-from uuid import UUID
+import logging
 from contextlib import contextmanager
 from functools import wraps
-import logging
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
+from uuid import UUID
 
-from sqlalchemy.orm import Session, Query
-from sqlalchemy import inspect, and_
-from sqlalchemy.ext.declarative import DeclarativeMeta
+from sqlalchemy import inspect
+from sqlalchemy.orm import Query, Session
 
 logger = logging.getLogger(__name__)
 
 # Type variable for generic model
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class TenantAwareQuery(Generic[T]):
@@ -62,7 +61,7 @@ class TenantAwareQuery(Generic[T]):
         session: Session,
         model: Type[T],
         organization_id: UUID,
-        bypass_tenant_check: bool = False
+        bypass_tenant_check: bool = False,
     ):
         """
         Initialize tenant-aware query
@@ -89,7 +88,7 @@ class TenantAwareQuery(Generic[T]):
     def _has_organization_id(self) -> bool:
         """Check if model has organization_id column"""
         mapper = inspect(self.model)
-        return 'organization_id' in [c.key for c in mapper.columns]
+        return "organization_id" in [c.key for c in mapper.columns]
 
     def _get_base_query(self) -> Query:
         """Get base query with organization filter"""
@@ -97,13 +96,11 @@ class TenantAwareQuery(Generic[T]):
 
         # Add organization filter if applicable
         if not self.bypass_tenant_check and self._has_organization_id():
-            query = query.filter(
-                self.model.organization_id == self.organization_id
-            )
+            query = query.filter(self.model.organization_id == self.organization_id)
 
         return query
 
-    def filter_by(self, **kwargs) -> 'TenantAwareQuery[T]':
+    def filter_by(self, **kwargs) -> "TenantAwareQuery[T]":
         """Filter by keyword arguments"""
         if self._query is None:
             self._query = self._get_base_query()
@@ -111,7 +108,7 @@ class TenantAwareQuery(Generic[T]):
         self._query = self._query.filter_by(**kwargs)
         return self
 
-    def filter(self, *args) -> 'TenantAwareQuery[T]':
+    def filter(self, *args) -> "TenantAwareQuery[T]":
         """Filter by SQLAlchemy expressions"""
         if self._query is None:
             self._query = self._get_base_query()
@@ -119,7 +116,7 @@ class TenantAwareQuery(Generic[T]):
         self._query = self._query.filter(*args)
         return self
 
-    def order_by(self, *args) -> 'TenantAwareQuery[T]':
+    def order_by(self, *args) -> "TenantAwareQuery[T]":
         """Order by column(s)"""
         if self._query is None:
             self._query = self._get_base_query()
@@ -127,7 +124,7 @@ class TenantAwareQuery(Generic[T]):
         self._query = self._query.order_by(*args)
         return self
 
-    def limit(self, limit: int) -> 'TenantAwareQuery[T]':
+    def limit(self, limit: int) -> "TenantAwareQuery[T]":
         """Limit results"""
         if self._query is None:
             self._query = self._get_base_query()
@@ -135,7 +132,7 @@ class TenantAwareQuery(Generic[T]):
         self._query = self._query.limit(limit)
         return self
 
-    def offset(self, offset: int) -> 'TenantAwareQuery[T]':
+    def offset(self, offset: int) -> "TenantAwareQuery[T]":
         """Offset results"""
         if self._query is None:
             self._query = self._get_base_query()
@@ -197,7 +194,7 @@ class TenantAwareQuery(Generic[T]):
         """Check if any records exist"""
         return self.count() > 0
 
-    def delete(self, synchronize_session: Union[str, bool] = 'fetch') -> int:
+    def delete(self, synchronize_session: Union[str, bool] = "fetch") -> int:
         """Delete matching records"""
         if self._query is None:
             self._query = self._get_base_query()
@@ -209,13 +206,15 @@ class TenantAwareQuery(Generic[T]):
         )
         return deleted_count
 
-    def update(self, values: Dict[str, Any], synchronize_session: Union[str, bool] = 'fetch') -> int:
+    def update(
+        self, values: Dict[str, Any], synchronize_session: Union[str, bool] = "fetch"
+    ) -> int:
         """Update matching records"""
         if self._query is None:
             self._query = self._get_base_query()
 
         # Ensure organization_id is not being changed
-        if 'organization_id' in values and values['organization_id'] != self.organization_id:
+        if "organization_id" in values and values["organization_id"] != self.organization_id:
             raise ValueError(
                 "Cannot change organization_id via TenantAwareQuery.update(). "
                 "This would violate tenant isolation."
@@ -248,7 +247,7 @@ def tenant_scoped(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         # Extract organization_id from kwargs
-        organization_id = kwargs.get('organization_id')
+        organization_id = kwargs.get("organization_id")
         if not organization_id:
             raise ValueError(
                 f"Function {func.__name__} decorated with @tenant_scoped "
@@ -261,15 +260,13 @@ def tenant_scoped(func):
         # If result is a Query, add organization filter
         if isinstance(query_or_result, Query):
             # Get model from query
-            model = query_or_result.column_descriptions[0]['type']
+            model = query_or_result.column_descriptions[0]["type"]
 
             # Check if model has organization_id
             mapper = inspect(model)
-            if 'organization_id' in [c.key for c in mapper.columns]:
+            if "organization_id" in [c.key for c in mapper.columns]:
                 # Add organization filter
-                query_or_result = query_or_result.filter(
-                    model.organization_id == organization_id
-                )
+                query_or_result = query_or_result.filter(model.organization_id == organization_id)
                 logger.debug(
                     f"tenant_scoped: Applied organization filter to "
                     f"{func.__name__} for org {organization_id}"
@@ -301,9 +298,7 @@ def tenant_session(session: Session, organization_id: UUID):
         Session with organization context set
     """
     # Set PostgreSQL session variable for RLS
-    session.execute(
-        f"SET app.current_organization_id = '{organization_id}'"
-    )
+    session.execute(f"SET app.current_organization_id = '{organization_id}'")
     logger.debug(f"tenant_session: Set organization context to {organization_id}")
 
     try:
@@ -335,9 +330,7 @@ class TenantAwareSessionMixin:
         self._current_organization_id = organization_id
 
         # Set PostgreSQL session variable for RLS
-        self.execute(
-            f"SET app.current_organization_id = '{organization_id}'"
-        )
+        self.execute(f"SET app.current_organization_id = '{organization_id}'")
         logger.debug(f"Session: Set organization context to {organization_id}")
 
     def reset_organization(self):
@@ -349,16 +342,9 @@ class TenantAwareSessionMixin:
     def query_tenant(self, model: Type[T], **kwargs) -> TenantAwareQuery[T]:
         """Create tenant-aware query for model"""
         if not self._current_organization_id:
-            raise ValueError(
-                "Organization not set. Call session.set_organization(org_id) first."
-            )
+            raise ValueError("Organization not set. Call session.set_organization(org_id) first.")
 
-        return TenantAwareQuery(
-            self,
-            model,
-            self._current_organization_id,
-            **kwargs
-        )
+        return TenantAwareQuery(self, model, self._current_organization_id, **kwargs)
 
     def get_organization_id(self) -> Optional[UUID]:
         """Get current organization ID"""
@@ -366,10 +352,7 @@ class TenantAwareSessionMixin:
 
 
 def verify_tenant_isolation(
-    session: Session,
-    model: Type[T],
-    organization_id: UUID,
-    expected_count: Optional[int] = None
+    session: Session, model: Type[T], organization_id: UUID, expected_count: Optional[int] = None
 ) -> bool:
     """
     Verify tenant isolation for a model
@@ -390,19 +373,15 @@ def verify_tenant_isolation(
     """
     # Check if model has organization_id
     mapper = inspect(model)
-    if 'organization_id' not in [c.key for c in mapper.columns]:
+    if "organization_id" not in [c.key for c in mapper.columns]:
         logger.warning(f"Model {model.__name__} does not have organization_id column")
         return False
 
     # Count records for this organization
-    org_count = session.query(model).filter_by(
-        organization_id=organization_id
-    ).count()
+    org_count = session.query(model).filter_by(organization_id=organization_id).count()
 
     # Count records for other organizations
-    other_count = session.query(model).filter(
-        model.organization_id != organization_id
-    ).count()
+    other_count = session.query(model).filter(model.organization_id != organization_id).count()
 
     logger.info(
         f"Tenant Isolation Check - {model.__name__}: "
@@ -428,7 +407,7 @@ def batch_update_organization(
     model: Type[T],
     records: List[Any],
     organization_id: UUID,
-    batch_size: int = 100
+    batch_size: int = 100,
 ) -> int:
     """
     Batch update organization_id for multiple records
@@ -449,20 +428,19 @@ def batch_update_organization(
 
     # Process in batches
     for i in range(0, len(records), batch_size):
-        batch = records[i:i + batch_size]
+        batch = records[i : i + batch_size]
 
         # Extract IDs if records are objects
-        if batch and hasattr(batch[0], 'id'):
+        if batch and hasattr(batch[0], "id"):
             record_ids = [r.id for r in batch]
         else:
             record_ids = batch
 
         # Update batch
-        updated_count = session.query(model).filter(
-            model.id.in_(record_ids)
-        ).update(
-            {'organization_id': organization_id},
-            synchronize_session='fetch'
+        updated_count = (
+            session.query(model)
+            .filter(model.id.in_(record_ids))
+            .update({"organization_id": organization_id}, synchronize_session="fetch")
         )
 
         total_updated += updated_count
@@ -480,9 +458,10 @@ if __name__ == "__main__":
     """
     Example usage of tenant-aware query utilities
     """
-    from database.models.agent_models import AgentInstance
-    from database.connection import get_session
     from uuid import uuid4
+
+    from database.connection import get_session
+    from database.models.agent_models import AgentInstance
 
     # Get session and organization
     session = get_session()
@@ -491,7 +470,7 @@ if __name__ == "__main__":
     # Method 1: TenantAwareQuery
     print("\n=== Method 1: TenantAwareQuery ===")
     query = TenantAwareQuery(session, AgentInstance, org_id)
-    agents = query.filter_by(agent_type='CONTENT_GENERATOR').limit(10).all()
+    agents = query.filter_by(agent_type="CONTENT_GENERATOR").limit(10).all()
     print(f"Found {len(agents)} content generator agents")
 
     # Method 2: Decorator
@@ -499,7 +478,7 @@ if __name__ == "__main__":
 
     @tenant_scoped
     def get_active_agents(session: Session, organization_id: UUID):
-        return session.query(AgentInstance).filter_by(status='IDLE')
+        return session.query(AgentInstance).filter_by(status="IDLE")
 
     active_agents = get_active_agents(session, organization_id=org_id)
     print(f"Found {active_agents.count()} active agents")

@@ -13,44 +13,45 @@ Tests cover:
 - Edge cases and error handling
 """
 
-import os
 import json
-import yaml
 import logging
+import os
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, patch
+
 import pytest
+import yaml
 
 # Import the module under test
 from core.coordinators.config import (
+    DEFAULT_CONFIG_YAML,
+    ConfigurationManager,
+    CoordinatorSystemConfig,
+    ErrorCoordinatorConfig,
     MainCoordinatorConfig,
-    WorkflowCoordinatorConfig,
     ResourceCoordinatorConfig,
     SyncCoordinatorConfig,
-    ErrorCoordinatorConfig,
-    CoordinatorSystemConfig,
-    ConfigurationManager,
-    get_development_config,
-    get_production_config,
-    get_testing_config,
+    WorkflowCoordinatorConfig,
     create_config,
     create_default_config_file,
-    validate_config,
-    setup_logging,
+    export_config_template,
     get_config_for_environment,
+    get_development_config,
     get_elementary_school_config,
     get_high_school_config,
+    get_production_config,
+    get_testing_config,
     get_university_config,
-    export_config_template,
     import_config_from_file,
-    DEFAULT_CONFIG_YAML
+    setup_logging,
+    validate_config,
 )
-
 
 # ============================================================================
 # Test MainCoordinatorConfig Dataclass
 # ============================================================================
+
 
 class TestMainCoordinatorConfig:
     """Test MainCoordinatorConfig dataclass"""
@@ -72,7 +73,7 @@ class TestMainCoordinatorConfig:
             health_check_interval=15,
             enable_caching=False,
             cache_ttl_seconds=1800,
-            metrics_collection_interval=30
+            metrics_collection_interval=30,
         )
 
         assert config.max_concurrent_requests == 20
@@ -89,13 +90,14 @@ class TestMainCoordinatorConfig:
         config_dict = asdict(config)
 
         assert isinstance(config_dict, dict)
-        assert config_dict['max_concurrent_requests'] == 10
-        assert config_dict['health_check_interval'] == 30
+        assert config_dict["max_concurrent_requests"] == 10
+        assert config_dict["health_check_interval"] == 30
 
 
 # ============================================================================
 # Test WorkflowCoordinatorConfig Dataclass
 # ============================================================================
+
 
 class TestWorkflowCoordinatorConfig:
     """Test WorkflowCoordinatorConfig dataclass"""
@@ -115,7 +117,7 @@ class TestWorkflowCoordinatorConfig:
         config = WorkflowCoordinatorConfig(
             max_concurrent_workflows=10,
             default_step_timeout=600,
-            enable_workflow_optimization=False
+            enable_workflow_optimization=False,
         )
 
         assert config.max_concurrent_workflows == 10
@@ -126,6 +128,7 @@ class TestWorkflowCoordinatorConfig:
 # ============================================================================
 # Test ResourceCoordinatorConfig Dataclass
 # ============================================================================
+
 
 class TestResourceCoordinatorConfig:
     """Test ResourceCoordinatorConfig dataclass"""
@@ -156,9 +159,7 @@ class TestResourceCoordinatorConfig:
     def test_custom_cost_settings(self):
         """Test custom cost settings"""
         config = ResourceCoordinatorConfig(
-            daily_budget=100.0,
-            cost_per_api_call=0.005,
-            cost_per_1k_tokens=0.05
+            daily_budget=100.0, cost_per_api_call=0.005, cost_per_1k_tokens=0.05
         )
 
         assert config.daily_budget == 100.0
@@ -169,6 +170,7 @@ class TestResourceCoordinatorConfig:
 # ============================================================================
 # Test SyncCoordinatorConfig Dataclass
 # ============================================================================
+
 
 class TestSyncCoordinatorConfig:
     """Test SyncCoordinatorConfig dataclass"""
@@ -187,8 +189,7 @@ class TestSyncCoordinatorConfig:
     def test_conflict_resolution_settings(self):
         """Test conflict resolution settings"""
         config = SyncCoordinatorConfig(
-            enable_conflict_resolution=False,
-            default_conflict_strategy="version_wins"
+            enable_conflict_resolution=False, default_conflict_strategy="version_wins"
         )
 
         assert config.enable_conflict_resolution is False
@@ -198,6 +199,7 @@ class TestSyncCoordinatorConfig:
 # ============================================================================
 # Test ErrorCoordinatorConfig Dataclass
 # ============================================================================
+
 
 class TestErrorCoordinatorConfig:
     """Test ErrorCoordinatorConfig dataclass"""
@@ -236,7 +238,7 @@ class TestErrorCoordinatorConfig:
             smtp_port=465,
             smtp_username="user@example.com",
             smtp_password="password",
-            alert_email="admin@example.com"
+            alert_email="admin@example.com",
         )
 
         assert config.smtp_server == "smtp.example.com"
@@ -247,6 +249,7 @@ class TestErrorCoordinatorConfig:
 # ============================================================================
 # Test CoordinatorSystemConfig Dataclass
 # ============================================================================
+
 
 class TestCoordinatorSystemConfig:
     """Test CoordinatorSystemConfig dataclass"""
@@ -283,40 +286,38 @@ class TestCoordinatorSystemConfig:
         config_dict = config.to_dict()
 
         assert isinstance(config_dict, dict)
-        assert 'main' in config_dict
-        assert 'workflow' in config_dict
-        assert 'resource' in config_dict
-        assert 'sync' in config_dict
-        assert 'error' in config_dict
-        assert config_dict['environment'] == "development"
+        assert "main" in config_dict
+        assert "workflow" in config_dict
+        assert "resource" in config_dict
+        assert "sync" in config_dict
+        assert "error" in config_dict
+        assert config_dict["environment"] == "development"
 
     def test_from_dict_conversion(self):
         """Test creation from dictionary"""
         data = {
-            'environment': 'production',
-            'log_level': 'DEBUG',
-            'enable_metrics': False,
-            'main': {
-                'max_concurrent_requests': 15
-            }
+            "environment": "production",
+            "log_level": "DEBUG",
+            "enable_metrics": False,
+            "main": {"max_concurrent_requests": 15},
         }
 
         config = CoordinatorSystemConfig.from_dict(data)
 
-        assert config.environment == 'production'
-        assert config.log_level == 'DEBUG'
+        assert config.environment == "production"
+        assert config.log_level == "DEBUG"
         assert config.enable_metrics is False
         assert config.main.max_concurrent_requests == 15
 
     def test_from_dict_with_all_sub_configs(self):
         """Test from_dict with all sub-configurations"""
         data = {
-            'environment': 'testing',
-            'main': {'max_concurrent_requests': 5},
-            'workflow': {'max_concurrent_workflows': 2},
-            'resource': {'daily_budget': 10.0},
-            'sync': {'sync_interval': 10},
-            'error': {'max_error_history': 5000}
+            "environment": "testing",
+            "main": {"max_concurrent_requests": 5},
+            "workflow": {"max_concurrent_workflows": 2},
+            "resource": {"daily_budget": 10.0},
+            "sync": {"sync_interval": 10},
+            "error": {"max_error_history": 5000},
         }
 
         config = CoordinatorSystemConfig.from_dict(data)
@@ -331,6 +332,7 @@ class TestCoordinatorSystemConfig:
 # ============================================================================
 # Test ConfigurationManager Initialization
 # ============================================================================
+
 
 class TestConfigurationManagerInitialization:
     """Test ConfigurationManager initialization"""
@@ -352,15 +354,16 @@ class TestConfigurationManagerInitialization:
 
     def test_environment_specific_config_file(self):
         """Test environment-specific config file path"""
-        with patch.dict(os.environ, {'ENVIRONMENT': 'production'}):
+        with patch.dict(os.environ, {"ENVIRONMENT": "production"}):
             manager = ConfigurationManager()
 
-            assert 'production' in str(manager.env_config_file)
+            assert "production" in str(manager.env_config_file)
 
 
 # ============================================================================
 # Test ConfigurationManager Load Configuration
 # ============================================================================
+
 
 class TestConfigurationManagerLoadConfig:
     """Test configuration loading"""
@@ -381,19 +384,19 @@ class TestConfigurationManagerLoadConfig:
             config_file = Path(tmpdir) / "coordinator_config.yaml"
 
             config_data = {
-                'environment': 'production',
-                'log_level': 'WARNING',
-                'main': {'max_concurrent_requests': 25}
+                "environment": "production",
+                "log_level": "WARNING",
+                "main": {"max_concurrent_requests": 25},
             }
 
-            with open(config_file, 'w') as f:
+            with open(config_file, "w") as f:
                 yaml.dump(config_data, f)
 
             manager = ConfigurationManager(config_dir=tmpdir)
             config = manager.load_config()
 
-            assert config.environment == 'production'
-            assert config.log_level == 'WARNING'
+            assert config.environment == "production"
+            assert config.log_level == "WARNING"
             assert config.main.max_concurrent_requests == 25
 
     def test_load_config_with_environment_override(self):
@@ -401,14 +404,14 @@ class TestConfigurationManagerLoadConfig:
         with tempfile.TemporaryDirectory() as tmpdir:
             # Base config
             base_file = Path(tmpdir) / "coordinator_config.yaml"
-            with open(base_file, 'w') as f:
-                yaml.dump({'main': {'max_concurrent_requests': 10}}, f)
+            with open(base_file, "w") as f:
+                yaml.dump({"main": {"max_concurrent_requests": 10}}, f)
 
             # Environment config
-            with patch.dict(os.environ, {'ENVIRONMENT': 'testing'}):
+            with patch.dict(os.environ, {"ENVIRONMENT": "testing"}):
                 env_file = Path(tmpdir) / "coordinator_config_testing.yaml"
-                with open(env_file, 'w') as f:
-                    yaml.dump({'main': {'max_concurrent_requests': 2}}, f)
+                with open(env_file, "w") as f:
+                    yaml.dump({"main": {"max_concurrent_requests": 2}}, f)
 
                 manager = ConfigurationManager(config_dir=tmpdir)
                 config = manager.load_config()
@@ -420,10 +423,10 @@ class TestConfigurationManagerLoadConfig:
         """Test environment variables override file config"""
         with tempfile.TemporaryDirectory() as tmpdir:
             config_file = Path(tmpdir) / "coordinator_config.yaml"
-            with open(config_file, 'w') as f:
-                yaml.dump({'main': {'max_concurrent_requests': 10}}, f)
+            with open(config_file, "w") as f:
+                yaml.dump({"main": {"max_concurrent_requests": 10}}, f)
 
-            with patch.dict(os.environ, {'COORDINATOR_MAX_CONCURRENT_REQUESTS': '50'}):
+            with patch.dict(os.environ, {"COORDINATOR_MAX_CONCURRENT_REQUESTS": "50"}):
                 manager = ConfigurationManager(config_dir=tmpdir)
                 config = manager.load_config()
 
@@ -435,24 +438,22 @@ class TestConfigurationManagerLoadConfig:
         with tempfile.TemporaryDirectory() as tmpdir:
             # Base config
             base_file = Path(tmpdir) / "coordinator_config.yaml"
-            with open(base_file, 'w') as f:
-                yaml.dump({
-                    'main': {
-                        'max_concurrent_requests': 10,
-                        'enable_caching': True
-                    }
-                }, f)
+            with open(base_file, "w") as f:
+                yaml.dump({"main": {"max_concurrent_requests": 10, "enable_caching": True}}, f)
 
             # Environment config with partial override
-            with patch.dict(os.environ, {'ENVIRONMENT': 'testing'}):
+            with patch.dict(os.environ, {"ENVIRONMENT": "testing"}):
                 env_file = Path(tmpdir) / "coordinator_config_testing.yaml"
-                with open(env_file, 'w') as f:
-                    yaml.dump({
-                        'main': {
-                            'max_concurrent_requests': 2
-                            # enable_caching not specified, should keep base value
-                        }
-                    }, f)
+                with open(env_file, "w") as f:
+                    yaml.dump(
+                        {
+                            "main": {
+                                "max_concurrent_requests": 2
+                                # enable_caching not specified, should keep base value
+                            }
+                        },
+                        f,
+                    )
 
                 manager = ConfigurationManager(config_dir=tmpdir)
                 config = manager.load_config()
@@ -466,15 +467,16 @@ class TestConfigurationManagerLoadConfig:
 # Test ConfigurationManager Environment Overrides
 # ============================================================================
 
+
 class TestConfigurationManagerEnvOverrides:
     """Test environment variable overrides"""
 
     def test_main_coordinator_overrides(self):
         """Test main coordinator env overrides"""
-        with patch.dict(os.environ, {
-            'COORDINATOR_MAX_CONCURRENT_REQUESTS': '100',
-            'COORDINATOR_ENABLE_CACHING': 'false'
-        }):
+        with patch.dict(
+            os.environ,
+            {"COORDINATOR_MAX_CONCURRENT_REQUESTS": "100", "COORDINATOR_ENABLE_CACHING": "false"},
+        ):
             with tempfile.TemporaryDirectory() as tmpdir:
                 manager = ConfigurationManager(config_dir=tmpdir)
                 config = manager.load_config()
@@ -484,10 +486,10 @@ class TestConfigurationManagerEnvOverrides:
 
     def test_resource_coordinator_overrides(self):
         """Test resource coordinator env overrides"""
-        with patch.dict(os.environ, {
-            'COORDINATOR_DAILY_BUDGET': '150.0',
-            'COORDINATOR_MAX_CPU_ALLOCATION': '0.9'
-        }):
+        with patch.dict(
+            os.environ,
+            {"COORDINATOR_DAILY_BUDGET": "150.0", "COORDINATOR_MAX_CPU_ALLOCATION": "0.9"},
+        ):
             with tempfile.TemporaryDirectory() as tmpdir:
                 manager = ConfigurationManager(config_dir=tmpdir)
                 config = manager.load_config()
@@ -497,38 +499,41 @@ class TestConfigurationManagerEnvOverrides:
 
     def test_error_coordinator_email_overrides(self):
         """Test error coordinator email overrides"""
-        with patch.dict(os.environ, {
-            'COORDINATOR_ALERT_EMAIL': 'admin@example.com',
-            'COORDINATOR_SMTP_SERVER': 'smtp.example.com',
-            'COORDINATOR_SMTP_USERNAME': 'user@example.com',
-            'COORDINATOR_SMTP_PASSWORD': 'secret'
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                "COORDINATOR_ALERT_EMAIL": "admin@example.com",
+                "COORDINATOR_SMTP_SERVER": "smtp.example.com",
+                "COORDINATOR_SMTP_USERNAME": "user@example.com",
+                "COORDINATOR_SMTP_PASSWORD": "secret",
+            },
+        ):
             with tempfile.TemporaryDirectory() as tmpdir:
                 manager = ConfigurationManager(config_dir=tmpdir)
                 config = manager.load_config()
 
-                assert config.error.alert_email == 'admin@example.com'
-                assert config.error.smtp_server == 'smtp.example.com'
-                assert config.error.smtp_username == 'user@example.com'
-                assert config.error.smtp_password == 'secret'
+                assert config.error.alert_email == "admin@example.com"
+                assert config.error.smtp_server == "smtp.example.com"
+                assert config.error.smtp_username == "user@example.com"
+                assert config.error.smtp_password == "secret"
 
     def test_global_overrides(self):
         """Test global setting overrides"""
-        with patch.dict(os.environ, {
-            'COORDINATOR_LOG_LEVEL': 'DEBUG',
-            'COORDINATOR_ENVIRONMENT': 'staging'
-        }):
+        with patch.dict(
+            os.environ, {"COORDINATOR_LOG_LEVEL": "DEBUG", "COORDINATOR_ENVIRONMENT": "staging"}
+        ):
             with tempfile.TemporaryDirectory() as tmpdir:
                 manager = ConfigurationManager(config_dir=tmpdir)
                 config = manager.load_config()
 
-                assert config.log_level == 'DEBUG'
-                assert config.environment == 'staging'
+                assert config.log_level == "DEBUG"
+                assert config.environment == "staging"
 
 
 # ============================================================================
 # Test ConfigurationManager Save Configuration
 # ============================================================================
+
 
 class TestConfigurationManagerSaveConfig:
     """Test saving configuration"""
@@ -537,9 +542,9 @@ class TestConfigurationManagerSaveConfig:
         """Test saving config to default file"""
         with tempfile.TemporaryDirectory() as tmpdir:
             manager = ConfigurationManager(config_dir=tmpdir)
-            config = CoordinatorSystemConfig(environment='testing')
+            config = CoordinatorSystemConfig(environment="testing")
 
-            with patch('core.coordinators.config.logger'):
+            with patch("core.coordinators.config.logger"):
                 manager.save_config(config)
 
             # Check file was created
@@ -549,10 +554,10 @@ class TestConfigurationManagerSaveConfig:
         """Test saving config to environment-specific file"""
         with tempfile.TemporaryDirectory() as tmpdir:
             manager = ConfigurationManager(config_dir=tmpdir)
-            config = CoordinatorSystemConfig(environment='production')
+            config = CoordinatorSystemConfig(environment="production")
 
-            with patch('core.coordinators.config.logger'):
-                manager.save_config(config, environment='production')
+            with patch("core.coordinators.config.logger"):
+                manager.save_config(config, environment="production")
 
             # Check environment file was created
             assert (Path(tmpdir) / "coordinator_config_production.yaml").exists()
@@ -564,7 +569,7 @@ class TestConfigurationManagerSaveConfig:
             manager = ConfigurationManager(config_dir=str(nested_dir))
             config = CoordinatorSystemConfig()
 
-            with patch('core.coordinators.config.logger'):
+            with patch("core.coordinators.config.logger"):
                 manager.save_config(config)
 
             assert nested_dir.exists()
@@ -574,6 +579,7 @@ class TestConfigurationManagerSaveConfig:
 # ============================================================================
 # Test ConfigurationManager Get/Reload Config
 # ============================================================================
+
 
 class TestConfigurationManagerGetReloadConfig:
     """Test getting and reloading configuration"""
@@ -617,6 +623,7 @@ class TestConfigurationManagerGetReloadConfig:
 # Test Environment-Specific Configurations
 # ============================================================================
 
+
 class TestEnvironmentSpecificConfigurations:
     """Test environment-specific configuration functions"""
 
@@ -653,19 +660,19 @@ class TestEnvironmentSpecificConfigurations:
 
     def test_create_config_factory_development(self):
         """Test create_config factory for development"""
-        config = create_config('development')
+        config = create_config("development")
 
         assert config.environment == "development"
 
     def test_create_config_factory_production(self):
         """Test create_config factory for production"""
-        config = create_config('production')
+        config = create_config("production")
 
         assert config.environment == "production"
 
     def test_create_config_factory_testing(self):
         """Test create_config factory for testing"""
-        config = create_config('testing')
+        config = create_config("testing")
 
         assert config.environment == "testing"
 
@@ -677,7 +684,7 @@ class TestEnvironmentSpecificConfigurations:
 
     def test_create_config_from_env_variable(self):
         """Test create_config reads from ENVIRONMENT variable"""
-        with patch.dict(os.environ, {'ENVIRONMENT': 'production'}):
+        with patch.dict(os.environ, {"ENVIRONMENT": "production"}):
             config = create_config()
 
             assert config.environment == "production"
@@ -687,6 +694,7 @@ class TestEnvironmentSpecificConfigurations:
 # Test Educational Presets
 # ============================================================================
 
+
 class TestEducationalPresets:
     """Test educational-specific configuration presets"""
 
@@ -694,33 +702,34 @@ class TestEducationalPresets:
         """Test elementary school configuration"""
         config_dict = get_elementary_school_config()
 
-        assert config_dict['main']['max_concurrent_requests'] == 3
-        assert config_dict['workflow']['max_concurrent_workflows'] == 2
-        assert config_dict['resource']['max_cpu_allocation'] == 0.5
-        assert config_dict['resource']['daily_budget'] == 20.0
+        assert config_dict["main"]["max_concurrent_requests"] == 3
+        assert config_dict["workflow"]["max_concurrent_workflows"] == 2
+        assert config_dict["resource"]["max_cpu_allocation"] == 0.5
+        assert config_dict["resource"]["daily_budget"] == 20.0
 
     def test_high_school_config(self):
         """Test high school configuration"""
         config_dict = get_high_school_config()
 
-        assert config_dict['main']['max_concurrent_requests'] == 8
-        assert config_dict['workflow']['max_concurrent_workflows'] == 4
-        assert config_dict['resource']['max_cpu_allocation'] == 0.7
-        assert config_dict['resource']['daily_budget'] == 40.0
+        assert config_dict["main"]["max_concurrent_requests"] == 8
+        assert config_dict["workflow"]["max_concurrent_workflows"] == 4
+        assert config_dict["resource"]["max_cpu_allocation"] == 0.7
+        assert config_dict["resource"]["daily_budget"] == 40.0
 
     def test_university_config(self):
         """Test university configuration"""
         config_dict = get_university_config()
 
-        assert config_dict['main']['max_concurrent_requests'] == 15
-        assert config_dict['workflow']['max_concurrent_workflows'] == 8
-        assert config_dict['resource']['daily_budget'] == 100.0
-        assert config_dict['environment'] == "production"
+        assert config_dict["main"]["max_concurrent_requests"] == 15
+        assert config_dict["workflow"]["max_concurrent_workflows"] == 8
+        assert config_dict["resource"]["daily_budget"] == 100.0
+        assert config_dict["environment"] == "production"
 
 
 # ============================================================================
 # Test Configuration Validation
 # ============================================================================
+
 
 class TestConfigurationValidation:
     """Test configuration validation"""
@@ -774,7 +783,7 @@ class TestConfigurationValidation:
 
     def test_validate_invalid_environment(self):
         """Test validation catches invalid environment"""
-        config = CoordinatorSystemConfig(environment='invalid_env')
+        config = CoordinatorSystemConfig(environment="invalid_env")
 
         issues = validate_config(config)
 
@@ -797,36 +806,37 @@ class TestConfigurationValidation:
 # Test Logging Setup
 # ============================================================================
 
+
 class TestLoggingSetup:
     """Test logging setup function"""
 
     def test_setup_logging_info_level(self):
         """Test logging setup with INFO level"""
-        config = CoordinatorSystemConfig(log_level='INFO')
+        config = CoordinatorSystemConfig(log_level="INFO")
 
-        with patch('logging.basicConfig') as mock_basic:
+        with patch("logging.basicConfig") as mock_basic:
             setup_logging(config)
 
             mock_basic.assert_called_once()
             args, kwargs = mock_basic.call_args
-            assert kwargs['level'] == logging.INFO
+            assert kwargs["level"] == logging.INFO
 
     def test_setup_logging_debug_level(self):
         """Test logging setup with DEBUG level"""
-        config = CoordinatorSystemConfig(log_level='DEBUG')
+        config = CoordinatorSystemConfig(log_level="DEBUG")
 
-        with patch('logging.basicConfig') as mock_basic:
+        with patch("logging.basicConfig") as mock_basic:
             setup_logging(config)
 
             args, kwargs = mock_basic.call_args
-            assert kwargs['level'] == logging.DEBUG
+            assert kwargs["level"] == logging.DEBUG
 
     def test_setup_logging_production_reduces_noise(self):
         """Test production environment reduces external library logging"""
-        config = CoordinatorSystemConfig(environment='production', log_level='INFO')
+        config = CoordinatorSystemConfig(environment="production", log_level="INFO")
 
-        with patch('logging.basicConfig'):
-            with patch('logging.getLogger') as mock_get_logger:
+        with patch("logging.basicConfig"):
+            with patch("logging.getLogger") as mock_get_logger:
                 mock_logger = Mock()
                 mock_get_logger.return_value = mock_logger
 
@@ -840,60 +850,55 @@ class TestLoggingSetup:
 # Test File Import/Export
 # ============================================================================
 
+
 class TestFileImportExport:
     """Test configuration file import/export"""
 
     def test_export_config_template_yaml(self):
         """Test exporting configuration template to YAML"""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             file_path = f.name
 
         try:
-            with patch('builtins.print'):
-                export_config_template(file_path, environment='development')
+            with patch("builtins.print"):
+                export_config_template(file_path, environment="development")
 
             # Check file was created and is valid YAML
-            with open(file_path, 'r') as f:
+            with open(file_path) as f:
                 config_data = yaml.safe_load(f)
 
             assert config_data is not None
-            assert 'main' in config_data
-            assert 'environment' in config_data
+            assert "main" in config_data
+            assert "environment" in config_data
         finally:
             os.unlink(file_path)
 
     def test_import_config_from_yaml(self):
         """Test importing configuration from YAML file"""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
-            config_data = {
-                'environment': 'production',
-                'main': {'max_concurrent_requests': 25}
-            }
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            config_data = {"environment": "production", "main": {"max_concurrent_requests": 25}}
             yaml.dump(config_data, f)
             file_path = f.name
 
         try:
             config = import_config_from_file(file_path)
 
-            assert config.environment == 'production'
+            assert config.environment == "production"
             assert config.main.max_concurrent_requests == 25
         finally:
             os.unlink(file_path)
 
     def test_import_config_from_json(self):
         """Test importing configuration from JSON file"""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            config_data = {
-                'environment': 'testing',
-                'main': {'max_concurrent_requests': 2}
-            }
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            config_data = {"environment": "testing", "main": {"max_concurrent_requests": 2}}
             json.dump(config_data, f)
             file_path = f.name
 
         try:
             config = import_config_from_file(file_path)
 
-            assert config.environment == 'testing'
+            assert config.environment == "testing"
             assert config.main.max_concurrent_requests == 2
         finally:
             os.unlink(file_path)
@@ -903,13 +908,14 @@ class TestFileImportExport:
 # Test Create Default Config File
 # ============================================================================
 
+
 class TestCreateDefaultConfigFile:
     """Test creating default configuration file"""
 
     def test_create_default_config_file_creates_file(self):
         """Test default config file creation"""
         with tempfile.TemporaryDirectory() as tmpdir:
-            with patch('builtins.print'):
+            with patch("builtins.print"):
                 create_default_config_file(config_dir=tmpdir)
 
             config_path = Path(tmpdir) / "coordinator_config.yaml"
@@ -918,15 +924,15 @@ class TestCreateDefaultConfigFile:
     def test_create_default_config_file_valid_yaml(self):
         """Test created default config file is valid YAML"""
         with tempfile.TemporaryDirectory() as tmpdir:
-            with patch('builtins.print'):
+            with patch("builtins.print"):
                 create_default_config_file(config_dir=tmpdir)
 
             config_path = Path(tmpdir) / "coordinator_config.yaml"
-            with open(config_path, 'r') as f:
+            with open(config_path) as f:
                 config_data = yaml.safe_load(f)
 
             assert config_data is not None
-            assert 'main' in config_data
+            assert "main" in config_data
 
     def test_create_default_config_file_skips_if_exists(self):
         """Test creation skips if file already exists"""
@@ -934,10 +940,10 @@ class TestCreateDefaultConfigFile:
             config_path = Path(tmpdir) / "coordinator_config.yaml"
 
             # Create existing file
-            with open(config_path, 'w') as f:
+            with open(config_path, "w") as f:
                 f.write("existing: content")
 
-            with patch('builtins.print') as mock_print:
+            with patch("builtins.print") as mock_print:
                 create_default_config_file(config_dir=tmpdir)
 
                 # Should print already exists message
@@ -949,35 +955,36 @@ class TestCreateDefaultConfigFile:
 # Test Get Config For Environment
 # ============================================================================
 
+
 class TestGetConfigForEnvironment:
     """Test get_config_for_environment function"""
 
     def test_get_config_for_environment_valid(self):
         """Test getting config for valid environment"""
-        with patch('core.coordinators.config.setup_logging'):
-            config_dict = get_config_for_environment('development')
+        with patch("core.coordinators.config.setup_logging"):
+            config_dict = get_config_for_environment("development")
 
             assert isinstance(config_dict, dict)
-            assert config_dict['environment'] == 'development'
+            assert config_dict["environment"] == "development"
 
     def test_get_config_for_environment_validates(self):
         """Test validation is performed"""
         # Create invalid config by patching create_config
-        with patch('core.coordinators.config.create_config') as mock_create:
+        with patch("core.coordinators.config.create_config") as mock_create:
             invalid_config = CoordinatorSystemConfig()
             invalid_config.main.max_concurrent_requests = 0  # Invalid
             mock_create.return_value = invalid_config
 
-            with patch('core.coordinators.config.setup_logging'):
+            with patch("core.coordinators.config.setup_logging"):
                 with pytest.raises(ValueError) as exc_info:
-                    get_config_for_environment('development')
+                    get_config_for_environment("development")
 
                 assert "validation failed" in str(exc_info.value).lower()
 
     def test_get_config_for_environment_sets_up_logging(self):
         """Test logging is set up"""
-        with patch('core.coordinators.config.setup_logging') as mock_setup:
-            get_config_for_environment('production')
+        with patch("core.coordinators.config.setup_logging") as mock_setup:
+            get_config_for_environment("production")
 
             mock_setup.assert_called_once()
 
@@ -986,6 +993,7 @@ class TestGetConfigForEnvironment:
 # Test Edge Cases and Error Handling
 # ============================================================================
 
+
 class TestEdgeCases:
     """Test edge cases and error handling"""
 
@@ -993,29 +1001,29 @@ class TestEdgeCases:
         """Test deep merge handles None values"""
         manager = ConfigurationManager()
 
-        base = {'main': {'max_concurrent_requests': 10}}
-        override = {'main': {'enable_caching': None}}
+        base = {"main": {"max_concurrent_requests": 10}}
+        override = {"main": {"enable_caching": None}}
 
         manager._deep_merge(base, override)
 
-        assert base['main']['enable_caching'] is None
+        assert base["main"]["enable_caching"] is None
 
     def test_deep_merge_non_dict_override(self):
         """Test deep merge with non-dict override"""
         manager = ConfigurationManager()
 
-        base = {'main': {'max_concurrent_requests': 10}}
-        override = {'main': 'not_a_dict'}
+        base = {"main": {"max_concurrent_requests": 10}}
+        override = {"main": "not_a_dict"}
 
         manager._deep_merge(base, override)
 
-        assert base['main'] == 'not_a_dict'
+        assert base["main"] == "not_a_dict"
 
     def test_config_from_dict_partial_data(self):
         """Test from_dict with only some sub-configs"""
         data = {
-            'environment': 'testing',
-            'main': {'max_concurrent_requests': 5}
+            "environment": "testing",
+            "main": {"max_concurrent_requests": 5},
             # Other sub-configs not provided
         }
 
@@ -1030,13 +1038,14 @@ class TestEdgeCases:
         config = CoordinatorSystemConfig.from_dict({})
 
         # Should use all defaults
-        assert config.environment == 'development'
+        assert config.environment == "development"
         assert config.main.max_concurrent_requests == 10
 
 
 # ============================================================================
 # Test DEFAULT_CONFIG_YAML Content
 # ============================================================================
+
 
 class TestDefaultConfigYAML:
     """Test DEFAULT_CONFIG_YAML template"""
@@ -1046,21 +1055,22 @@ class TestDefaultConfigYAML:
         config_data = yaml.safe_load(DEFAULT_CONFIG_YAML)
 
         assert config_data is not None
-        assert 'main' in config_data
-        assert 'workflow' in config_data
-        assert 'resource' in config_data
-        assert 'sync' in config_data
-        assert 'error' in config_data
+        assert "main" in config_data
+        assert "workflow" in config_data
+        assert "resource" in config_data
+        assert "sync" in config_data
+        assert "error" in config_data
 
     def test_default_config_yaml_has_comments(self):
         """Test DEFAULT_CONFIG_YAML has comments/documentation"""
-        assert '# ToolboxAI' in DEFAULT_CONFIG_YAML
-        assert '# API Quotas' in DEFAULT_CONFIG_YAML
+        assert "# ToolboxAI" in DEFAULT_CONFIG_YAML
+        assert "# API Quotas" in DEFAULT_CONFIG_YAML
 
 
 # ============================================================================
 # Test Dataclass Field Modifications
 # ============================================================================
+
 
 class TestDataclassFieldModifications:
     """Test modifying dataclass fields"""
@@ -1086,17 +1096,14 @@ class TestDataclassFieldModifications:
 # Test Post-Init Validation
 # ============================================================================
 
+
 class TestPostInitValidation:
     """Test __post_init__ validation"""
 
     def test_post_init_creates_sub_configs(self):
         """Test __post_init__ creates sub-configs if None"""
         config = CoordinatorSystemConfig(
-            main=None,
-            workflow=None,
-            resource=None,
-            sync=None,
-            error=None
+            main=None, workflow=None, resource=None, sync=None, error=None
         )
 
         # __post_init__ should have created them

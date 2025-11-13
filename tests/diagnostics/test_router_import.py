@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Test router imports to diagnose startup issues"""
 import sys
-sys.path.insert(0, '.')
+
+sys.path.insert(0, ".")
 
 print("=" * 60)
 print("ROUTER IMPORT TEST")
@@ -11,10 +12,12 @@ print("=" * 60)
 print("\n1. Testing routers.py import...")
 try:
     from apps.backend.api.routers import register_routers
+
     print("   ✓ routers.py imported successfully")
 except Exception as e:
     print(f"   ✗ ERROR importing routers.py: {e}")
     import traceback
+
     traceback.print_exc()
     sys.exit(1)
 
@@ -39,6 +42,7 @@ for name, module_path in endpoints_to_test:
 print("\n3. Testing FastAPI registration...")
 try:
     from fastapi import FastAPI
+
     app = FastAPI()
     register_routers(app)
     print("   ✓ Routers registered with FastAPI app")
@@ -46,6 +50,7 @@ try:
 except Exception as e:
     print(f"   ✗ ERROR during registration: {e}")
     import traceback
+
     traceback.print_exc()
 
 print("\n" + "=" * 60)

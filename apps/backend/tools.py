@@ -5,8 +5,9 @@ Provides a collection of tools for agent operations, API interactions,
 and system utilities.
 """
 
-from typing import Dict, Any, List, Callable
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -16,11 +17,11 @@ class Tool:
     name: str
     description: str
     function: Callable
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
 
 
 # Define available tools
-def search_database(query: str, limit: int = 10) -> List[Dict]:
+def search_database(query: str, limit: int = 10) -> list[dict]:
     """Search the database for educational content."""
     # Mock implementation for testing
     return []
@@ -32,20 +33,20 @@ def generate_content(prompt: str, max_tokens: int = 500) -> str:
     return f"Generated content for: {prompt}"
 
 
-def validate_quiz(quiz_data: Dict) -> bool:
+def validate_quiz(quiz_data: dict) -> bool:
     """Validate quiz structure and content."""
     # Mock implementation for testing
     required_fields = ["title", "questions"]
     return all(field in quiz_data for field in required_fields)
 
 
-def analyze_progress(student_id: str) -> Dict:
+def analyze_progress(student_id: str) -> dict:
     """Analyze student progress and performance."""
     # Mock implementation for testing
     return {"student_id": student_id, "progress": 0.0, "completed_lessons": 0, "quiz_scores": []}
 
 
-def create_terrain(config: Dict) -> Dict:
+def create_terrain(config: dict) -> dict:
     """Create Roblox terrain configuration."""
     # Mock implementation for testing
     return {
@@ -55,7 +56,7 @@ def create_terrain(config: Dict) -> Dict:
     }
 
 
-def compile_script(code: str, language: str = "lua") -> Dict:
+def compile_script(code: str, language: str = "lua") -> dict:
     """Compile and validate Roblox scripts."""
     # Mock implementation for testing
     return {"success": True, "compiled": code, "errors": [], "warnings": []}

@@ -8,22 +8,27 @@ Target: >95% code coverage for cache optimization components.
 """
 
 import asyncio
-import json
-import pickle
-import pytest
 import time
-from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, AsyncMock, MagicMock, call
-from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
 import redis.asyncio as redis
 
 from apps.backend.core.cache import (
-    RedisCache, CacheConfig, CacheKey, CacheSerializer, CacheStats,
-    RedisConnectionManager, CacheWarmer, CacheInvalidator,
-    cached, cache_result, cache, warmer, invalidator,
-    initialize_cache, get_cache_health, get_cached_dashboard, cache_dashboard,
-    _connection_manager, _cache
+    CacheConfig,
+    CacheInvalidator,
+    CacheKey,
+    CacheSerializer,
+    CacheStats,
+    CacheWarmer,
+    RedisCache,
+    RedisConnectionManager,
+    cache_dashboard,
+    cache_result,
+    cached,
+    get_cache_health,
+    get_cached_dashboard,
+    initialize_cache,
 )
 
 
@@ -139,7 +144,7 @@ class TestCacheSerializer:
         large_data = {"data": "x" * 2000}  # Exceeds compression threshold
         serialized = CacheSerializer.serialize(large_data)
         assert isinstance(serialized, bytes)
-        assert serialized.startswith(b'GZIP:')
+        assert serialized.startswith(b"GZIP:")
 
     def test_deserialize_string(self):
         """Test string deserialization."""
@@ -226,7 +231,7 @@ class TestCacheStats:
         stats.record_hit(0.01)
         stats.record_miss(0.05)
 
-        assert stats.hit_rate == 2/3  # 2 hits out of 3 total
+        assert stats.hit_rate == 2 / 3  # 2 hits out of 3 total
 
     def test_hit_rate_zero_operations(self):
         """Test hit rate with no operations."""
@@ -263,7 +268,7 @@ class TestRedisConnectionManager:
     @pytest.fixture
     def mock_settings(self):
         """Mock settings for testing."""
-        with patch('apps.backend.core.cache.settings') as mock:
+        with patch("apps.backend.core.cache.settings") as mock:
             mock.REDIS_URL = "redis://localhost:6379/0"
             yield mock
 
@@ -272,9 +277,11 @@ class TestRedisConnectionManager:
         """Create fresh connection manager for testing."""
         return RedisConnectionManager()
 
-    @patch('redis.asyncio.ConnectionPool.from_url')
-    @patch('redis.asyncio.Redis')
-    async def test_initialize_success(self, mock_redis, mock_pool, connection_manager, mock_settings):
+    @patch("redis.asyncio.ConnectionPool.from_url")
+    @patch("redis.asyncio.Redis")
+    async def test_initialize_success(
+        self, mock_redis, mock_pool, connection_manager, mock_settings
+    ):
         """Test successful connection pool initialization."""
         # Mock pool and client
         mock_pool_instance = Mock()
@@ -290,7 +297,7 @@ class TestRedisConnectionManager:
         assert connection_manager.client == mock_client
         mock_client.ping.assert_called_once()
 
-    @patch('redis.asyncio.ConnectionPool.from_url')
+    @patch("redis.asyncio.ConnectionPool.from_url")
     async def test_initialize_connection_error(self, mock_pool, connection_manager, mock_settings):
         """Test initialization with connection error."""
         mock_pool.side_effect = redis.ConnectionError("Connection failed")
@@ -300,7 +307,7 @@ class TestRedisConnectionManager:
 
     async def test_get_client_not_initialized(self, connection_manager):
         """Test getting client when not initialized."""
-        with patch.object(connection_manager, 'initialize') as mock_init:
+        with patch.object(connection_manager, "initialize") as mock_init:
             mock_init.return_value = None
             connection_manager.client = Mock()
 
@@ -331,8 +338,8 @@ class TestRedisConnectionManager:
 
     async def test_double_initialization_prevention(self, connection_manager, mock_settings):
         """Test that double initialization is prevented."""
-        with patch('redis.asyncio.ConnectionPool.from_url') as mock_pool:
-            with patch('redis.asyncio.Redis') as mock_redis:
+        with patch("redis.asyncio.ConnectionPool.from_url") as mock_pool:
+            with patch("redis.asyncio.Redis") as mock_redis:
                 mock_client = AsyncMock()
                 mock_redis.return_value = mock_client
                 mock_client.ping.return_value = True
@@ -489,7 +496,7 @@ class TestCachedDecorator:
     @pytest.fixture
     def mock_cache(self):
         """Mock cache instance."""
-        with patch('apps.backend.core.cache._cache') as mock:
+        with patch("apps.backend.core.cache._cache") as mock:
             yield mock
 
     async def test_cached_decorator_hit(self, mock_cache):
@@ -567,7 +574,7 @@ class TestCacheWarmer:
         """Create cache warmer instance."""
         return CacheWarmer(mock_cache)
 
-    @patch('apps.backend.core.cache.db_service')
+    @patch("apps.backend.core.cache.db_service")
     async def test_warm_user_dashboard_success(self, mock_db_service, warmer, mock_cache):
         """Test successful dashboard cache warming."""
         mock_dashboard_data = {"user_id": 123, "role": "student"}
@@ -579,7 +586,7 @@ class TestCacheWarmer:
         mock_db_service.get_dashboard_data.assert_called_once_with("student", 123)
         mock_cache.set.assert_called_once()
 
-    @patch('apps.backend.core.cache.db_service')
+    @patch("apps.backend.core.cache.db_service")
     async def test_warm_user_dashboard_db_error(self, mock_db_service, warmer, mock_cache):
         """Test dashboard warming with database error."""
         mock_db_service.get_dashboard_data.side_effect = Exception("DB error")
@@ -634,7 +641,7 @@ class TestCacheResultDecorator:
             call_count += 1
             return f"result_{arg}"
 
-        with patch('apps.backend.core.cache._cache') as mock_cache:
+        with patch("apps.backend.core.cache._cache") as mock_cache:
             mock_cache.get.side_effect = [None, "cached_result"]
 
             # First call - cache miss
@@ -649,6 +656,7 @@ class TestCacheResultDecorator:
 
     def test_cache_result_sync_function(self):
         """Test cache_result decorator with sync function."""
+
         @cache_result(ttl=300)
         def sync_function(arg):
             return f"sync_result_{arg}"
@@ -661,7 +669,7 @@ class TestCacheResultDecorator:
 class TestCacheHealthAndMetrics:
     """Test cache health monitoring and metrics."""
 
-    @patch('apps.backend.core.cache._connection_manager')
+    @patch("apps.backend.core.cache._connection_manager")
     async def test_get_cache_health_success(self, mock_manager):
         """Test successful cache health check."""
         mock_client = AsyncMock()
@@ -671,10 +679,10 @@ class TestCacheHealthAndMetrics:
             "used_memory_peak_human": "15MB",
             "mem_fragmentation_ratio": "1.2",
             "connected_clients": "5",
-            "blocked_clients": "0"
+            "blocked_clients": "0",
         }
 
-        with patch('apps.backend.core.cache.cache') as mock_cache:
+        with patch("apps.backend.core.cache.cache") as mock_cache:
             mock_cache.get_stats.return_value = {"hits": 100, "misses": 20}
 
             health = await get_cache_health()
@@ -684,7 +692,7 @@ class TestCacheHealthAndMetrics:
             assert health["memory"]["used"] == "10MB"
             assert health["connections"]["connected_clients"] == "5"
 
-    @patch('apps.backend.core.cache._connection_manager')
+    @patch("apps.backend.core.cache._connection_manager")
     async def test_get_cache_health_error(self, mock_manager):
         """Test cache health check with error."""
         mock_manager.get_client.side_effect = redis.ConnectionError("Connection failed")
@@ -702,7 +710,7 @@ class TestCacheConvenienceFunctions:
 
     async def test_get_cached_dashboard(self):
         """Test getting cached dashboard data."""
-        with patch('apps.backend.core.cache.cache') as mock_cache:
+        with patch("apps.backend.core.cache.cache") as mock_cache:
             mock_cache.get.return_value = {"user_id": 123, "role": "student"}
 
             result = await get_cached_dashboard(123, "student")
@@ -715,7 +723,7 @@ class TestCacheConvenienceFunctions:
         """Test caching dashboard data."""
         dashboard_data = {"user_id": 123, "role": "student"}
 
-        with patch('apps.backend.core.cache.cache') as mock_cache:
+        with patch("apps.backend.core.cache.cache") as mock_cache:
             await cache_dashboard(123, "student", dashboard_data)
 
             expected_key = CacheKey.user_dashboard(123, "student")
@@ -728,7 +736,7 @@ class TestCacheConvenienceFunctions:
 class TestCacheInitialization:
     """Test cache system initialization."""
 
-    @patch('apps.backend.core.cache._connection_manager')
+    @patch("apps.backend.core.cache._connection_manager")
     async def test_initialize_cache_success(self, mock_manager):
         """Test successful cache initialization."""
         mock_manager.initialize.return_value = None
@@ -737,7 +745,7 @@ class TestCacheInitialization:
 
         mock_manager.initialize.assert_called_once()
 
-    @patch('apps.backend.core.cache._connection_manager')
+    @patch("apps.backend.core.cache._connection_manager")
     async def test_initialize_cache_error(self, mock_manager):
         """Test cache initialization with error."""
         mock_manager.initialize.side_effect = redis.ConnectionError("Connection failed")
@@ -833,7 +841,7 @@ class TestCachePerformance:
         stats.record_hit(0.005)  # Slower hit
         stats.record_miss(0.050)  # Slow miss (database query)
 
-        assert stats.hit_rate == 2/3
+        assert stats.hit_rate == 2 / 3
         assert stats.avg_time == (0.001 + 0.005 + 0.050) / 3
 
         performance_data = stats.to_dict()
@@ -848,6 +856,7 @@ class TestCacheWithMockRedis:
     @pytest.fixture
     async def mock_redis_client(self):
         """Create a mock Redis client that behaves like real Redis."""
+
         class MockRedisClient:
             def __init__(self):
                 self._data = {}
@@ -878,6 +887,7 @@ class TestCacheWithMockRedis:
 
             async def keys(self, pattern):
                 import fnmatch
+
                 return [key for key in self._data.keys() if fnmatch.fnmatch(key, pattern)]
 
             async def mget(self, keys):
@@ -892,7 +902,7 @@ class TestCacheWithMockRedis:
                     "used_memory_peak_human": "2MB",
                     "mem_fragmentation_ratio": "1.1",
                     "connected_clients": "1",
-                    "blocked_clients": "0"
+                    "blocked_clients": "0",
                 }
 
         return MockRedisClient()

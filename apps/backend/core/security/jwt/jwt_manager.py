@@ -6,14 +6,14 @@ ToolboxAI authentication system, providing automatic secret validation,
 rotation capabilities, and enhanced security features.
 """
 
-import os
 import logging
-from typing import Optional, Dict, Any, Tuple
-from datetime import datetime, timedelta
+import os
+from datetime import datetime
 from pathlib import Path
+from typing import Any
 
+from ..secrets_manager import SecretsManager
 from .jwt_secret_generator import JWTSecretGenerator
-from ..secrets_manager import get_secret, get_required_secret, SecretsManager
 
 logger = logging.getLogger(__name__)
 
@@ -21,13 +21,13 @@ logger = logging.getLogger(__name__)
 class JWTSecurityManager:
     """Enhanced JWT security manager with automatic secret validation and rotation"""
 
-    def __init__(self, secrets_manager: Optional[SecretsManager] = None):
+    def __init__(self, secrets_manager: SecretsManager | None = None):
         self.secrets_manager = secrets_manager
         self.generator = JWTSecretGenerator()
-        self._current_secret: Optional[str] = None
+        self._current_secret: str | None = None
         self._secret_validated = False
 
-    def initialize(self) -> Tuple[bool, Dict[str, Any]]:
+    def initialize(self) -> tuple[bool, dict[str, Any]]:
         """
         Initialize JWT security with validation and auto-generation
 
@@ -99,7 +99,7 @@ class JWTSecurityManager:
             status_report["warnings"].append(f"Initialization error: {str(e)}")
             return False, status_report
 
-    def _get_existing_secret(self) -> Optional[str]:
+    def _get_existing_secret(self) -> str | None:
         """Get existing JWT secret from environment or secrets manager"""
         # Try secrets manager first
         if self.secrets_manager:
@@ -110,7 +110,7 @@ class JWTSecurityManager:
         # Fallback to environment variable
         return os.getenv("JWT_SECRET_KEY")
 
-    def _generate_and_replace_secret(self) -> Optional[str]:
+    def _generate_and_replace_secret(self) -> str | None:
         """Generate new secure secret and provide instructions for deployment"""
         try:
             # Generate secure secret
@@ -159,7 +159,7 @@ class JWTSecurityManager:
 
         return self._current_secret
 
-    def validate_current_secret(self) -> Dict[str, Any]:
+    def validate_current_secret(self) -> dict[str, Any]:
         """
         Validate the currently configured JWT secret
 
@@ -216,7 +216,7 @@ class JWTSecurityManager:
                 issues = report.get("issues", ["Unknown validation failure"])
                 raise ValueError(f"PRODUCTION SECURITY ERROR: {'; '.join(issues)}")
 
-    def rotate_secret(self, force: bool = False) -> Tuple[bool, Dict[str, Any]]:
+    def rotate_secret(self, force: bool = False) -> tuple[bool, dict[str, Any]]:
         """
         Rotate JWT secret
 
@@ -286,7 +286,7 @@ class JWTSecurityManager:
             rotation_report["rotation_reason"] = f"Rotation failed: {str(e)}"
             return False, rotation_report
 
-    def get_security_status(self) -> Dict[str, Any]:
+    def get_security_status(self) -> dict[str, Any]:
         """
         Get comprehensive JWT security status
 
@@ -342,10 +342,10 @@ class JWTSecurityManager:
 
 
 # Global JWT security manager instance
-_jwt_security_manager: Optional[JWTSecurityManager] = None
+_jwt_security_manager: JWTSecurityManager | None = None
 
 
-def init_jwt_security(secrets_manager: Optional[SecretsManager] = None) -> JWTSecurityManager:
+def init_jwt_security(secrets_manager: SecretsManager | None = None) -> JWTSecurityManager:
     """
     Initialize global JWT security manager
 
@@ -369,7 +369,7 @@ def init_jwt_security(secrets_manager: Optional[SecretsManager] = None) -> JWTSe
     return _jwt_security_manager
 
 
-def get_jwt_security_manager() -> Optional[JWTSecurityManager]:
+def get_jwt_security_manager() -> JWTSecurityManager | None:
     """Get the global JWT security manager instance"""
     return _jwt_security_manager
 

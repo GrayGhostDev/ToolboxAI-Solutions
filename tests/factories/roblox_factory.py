@@ -1,10 +1,11 @@
 """Roblox-related test data factories."""
 
+
 import factory
 from factory import fuzzy
 from faker import Faker
-from .base_factory import DictFactory, AsyncMixin
-import json
+
+from .base_factory import AsyncMixin, DictFactory
 
 fake = Faker()
 
@@ -16,12 +17,14 @@ class RobloxScriptFactory(DictFactory, AsyncMixin):
     name = factory.LazyFunction(lambda: f"{fake.word()}Script")
     script_type = fuzzy.FuzzyChoice(["ServerScript", "LocalScript", "ModuleScript"])
     parent_path = factory.LazyFunction(
-        lambda: fake.random_element([
-            "game.ServerScriptService",
-            "game.StarterPlayer.StarterPlayerScripts",
-            "game.ReplicatedStorage",
-            "game.Workspace"
-        ])
+        lambda: fake.random_element(
+            [
+                "game.ServerScriptService",
+                "game.StarterPlayer.StarterPlayerScripts",
+                "game.ReplicatedStorage",
+                "game.Workspace",
+            ]
+        )
     )
 
     # Script content
@@ -74,7 +77,9 @@ return Module
     created_at = factory.LazyFunction(lambda: fake.date_time_this_year().isoformat())
     updated_at = factory.LazyFunction(lambda: fake.date_time_this_month().isoformat())
     author_id = factory.LazyFunction(lambda: fake.uuid4())
-    version = factory.LazyFunction(lambda: f"{fake.random_int(1, 3)}.{fake.random_int(0, 9)}.{fake.random_int(0, 99)}")
+    version = factory.LazyFunction(
+        lambda: f"{fake.random_int(1, 3)}.{fake.random_int(0, 9)}.{fake.random_int(0, 99)}"
+    )
 
     # Security and optimization
     security_issues = factory.LazyFunction(
@@ -125,7 +130,9 @@ return Module
         script["educational_annotations"] = [
             {
                 "line": fake.random_int(1, 50),
-                "concept": fake.random_element(["loops", "events", "functions", "variables", "tables"]),
+                "concept": fake.random_element(
+                    ["loops", "events", "functions", "variables", "tables"]
+                ),
                 "explanation": fake.paragraph(),
                 "difficulty": fake.random_element(["beginner", "intermediate", "advanced"]),
             }
@@ -143,28 +150,22 @@ class RobloxEnvironmentFactory(DictFactory):
     universe_id = factory.LazyFunction(lambda: fake.random_int(100000, 999999))
 
     # Environment type
-    environment_type = fuzzy.FuzzyChoice([
-        "classroom", "laboratory", "playground",
-        "adventure", "puzzle", "simulation"
-    ])
+    environment_type = fuzzy.FuzzyChoice(
+        ["classroom", "laboratory", "playground", "adventure", "puzzle", "simulation"]
+    )
 
     # Game settings
     max_players = factory.LazyFunction(lambda: fake.random_int(1, 50))
-    genre = fuzzy.FuzzyChoice([
-        "Education", "Adventure", "Simulation",
-        "Role Playing", "Building", "Puzzle"
-    ])
+    genre = fuzzy.FuzzyChoice(
+        ["Education", "Adventure", "Simulation", "Role Playing", "Building", "Puzzle"]
+    )
 
     # Educational settings
-    subject = fuzzy.FuzzyChoice([
-        "Mathematics", "Science", "Programming",
-        "History", "Language Arts", "Art"
-    ])
+    subject = fuzzy.FuzzyChoice(
+        ["Mathematics", "Science", "Programming", "History", "Language Arts", "Art"]
+    )
     grade_levels = factory.LazyFunction(
-        lambda: list(range(
-            fake.random_int(1, 6),
-            fake.random_int(7, 12) + 1
-        ))
+        lambda: list(range(fake.random_int(1, 6), fake.random_int(7, 12) + 1))
     )
 
     # Components
@@ -223,17 +224,16 @@ class RobloxEnvironmentFactory(DictFactory):
 
     # Status
     status = fuzzy.FuzzyChoice(["development", "testing", "published", "maintenance"])
-    published_date = factory.LazyFunction(lambda: fake.date_this_year().isoformat() if fake.boolean() else None)
+    published_date = factory.LazyFunction(
+        lambda: fake.date_this_year().isoformat() if fake.boolean() else None
+    )
     last_updated = factory.LazyFunction(lambda: fake.date_time_this_month().isoformat())
 
     @classmethod
     def with_scripts(cls, num_scripts: int = 5, **kwargs):
         """Create environment with associated scripts."""
         environment = cls.create(**kwargs)
-        environment["scripts"] = [
-            RobloxScriptFactory.create()
-            for _ in range(num_scripts)
-        ]
+        environment["scripts"] = [RobloxScriptFactory.create() for _ in range(num_scripts)]
         return environment
 
     @classmethod
@@ -249,7 +249,9 @@ class RobloxEnvironmentFactory(DictFactory):
                 {
                     "name": fake.sentence(),
                     "duration": fake.random_int(5, 20),
-                    "type": fake.random_element(["introduction", "exploration", "challenge", "assessment"]),
+                    "type": fake.random_element(
+                        ["introduction", "exploration", "challenge", "assessment"]
+                    ),
                     "description": fake.paragraph(),
                 }
                 for _ in range(fake.random_int(3, 7))
@@ -279,7 +281,9 @@ class RobloxPlayerFactory(DictFactory):
         lambda: {
             "thumbnail_url": fake.image_url(),
             "avatar_type": fake.random_element(["R15", "R6"]),
-            "accessories": [fake.random_int(1000000, 9999999) for _ in range(fake.random_int(0, 10))],
+            "accessories": [
+                fake.random_int(1000000, 9999999) for _ in range(fake.random_int(0, 10))
+            ],
         }
     )
 

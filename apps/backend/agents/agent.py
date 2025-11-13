@@ -7,21 +7,18 @@ and swarm intelligence coordination.
 """
 
 import asyncio
-import json
 import logging
 
 # Import agents from other modules
 import sys
 import uuid
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from contextlib import asynccontextmanager
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 import redis
 from langchain_core.chat_history import InMemoryChatMessageHistory
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 
 try:
     from langchain_openai import ChatOpenAI
@@ -29,10 +26,9 @@ except ImportError:
     # Fallback for compatibility
     from langchain_community.chat_models import ChatOpenAI
 
-from apps.backend.api.auth.auth import get_current_user
+
 from apps.backend.core.config import settings
 from apps.backend.models.schemas import ContentRequest, ContentResponse, User
-from langgraph.prebuilt import create_react_agent
 
 # Import placeholder agent classes
 from .agent_classes import (
@@ -854,8 +850,8 @@ class AgentPool:
 
     def __init__(self, pool_size: int = 5):
         self.pool_size = pool_size
-        self.agents: Dict[str, List[Any]] = {}
-        self.active_agents: Dict[str, int] = {}
+        self.agents: dict[str, list[Any]] = {}
+        self.active_agents: dict[str, int] = {}
         self._lock = asyncio.Lock()
         self.executor = ThreadPoolExecutor(max_workers=pool_size)
 
@@ -926,7 +922,7 @@ class AgentPool:
 
             self.active_agents[agent_type] = max(0, self.active_agents[agent_type] - 1)
 
-    def get_pool_status(self) -> Dict[str, Dict[str, int]]:
+    def get_pool_status(self) -> dict[str, dict[str, int]]:
         """Get current pool status"""
         status = {}
         for agent_type, agents_list in self.agents.items():
@@ -952,7 +948,7 @@ class TaskRouter:
             "comprehensive": ["content", "quiz", "terrain", "script", "review"],
         }
 
-    async def route_task(self, task_type: str, task_data: Dict[str, Any]) -> List[str]:
+    async def route_task(self, task_type: str, task_data: dict[str, Any]) -> list[str]:
         """Route task to appropriate agent types"""
 
         # Use supervisor agent for intelligent routing
@@ -996,8 +992,8 @@ class ResultAggregator:
         }
 
     async def aggregate_results(
-        self, task_type: str, results: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+        self, task_type: str, results: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """Aggregate results from multiple agents"""
         strategy = self.aggregation_strategies.get(task_type, self._default_aggregation)
 
@@ -1021,14 +1017,14 @@ class ResultAggregator:
             logger.error("Result aggregation failed: %s", e)
             return self._fallback_aggregation(results)
 
-    def _merge_content(self, aggregated: Dict[str, Any], result: Dict[str, Any]):
+    def _merge_content(self, aggregated: dict[str, Any], result: dict[str, Any]):
         """Merge content from result into aggregated"""
         if "content" in result:
             aggregated["content"].update(result["content"])
         if "scripts" in result:
             aggregated["scripts"].extend(result["scripts"])
 
-    def _merge_terrain(self, aggregated: Dict[str, Any], result: Dict[str, Any]):
+    def _merge_terrain(self, aggregated: dict[str, Any], result: dict[str, Any]):
         """Merge terrain using most detailed version"""
         if "terrain" in result and result["terrain"]:
             if not aggregated["terrain"] or len(str(result["terrain"])) > len(
@@ -1036,7 +1032,7 @@ class ResultAggregator:
             ):
                 aggregated["terrain"] = result["terrain"]
 
-    def _merge_resources(self, aggregated: Dict[str, Any], result: Dict[str, Any]):
+    def _merge_resources(self, aggregated: dict[str, Any], result: dict[str, Any]):
         """Merge resource requirements"""
         aggregated["estimated_build_time"] += result.get("estimated_build_time", 0)
         if "resource_requirements" in result:
@@ -1051,7 +1047,7 @@ class ResultAggregator:
         ):
             aggregated["game_mechanics"] = result["game_mechanics"]
 
-    def _aggregate_content_results(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _aggregate_content_results(self, results: list[dict[str, Any]]) -> dict[str, Any]:
         """Aggregate content generation results"""
         if not results:
             return {}
@@ -1072,7 +1068,7 @@ class ResultAggregator:
 
         return aggregated
 
-    async def _aggregate_quiz_results(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _aggregate_quiz_results(self, results: list[dict[str, Any]]) -> dict[str, Any]:
         """Aggregate quiz generation results"""
         if not results:
             return {}
@@ -1103,8 +1099,8 @@ class ResultAggregator:
         return best_result
 
     async def _aggregate_comprehensive_results(
-        self, results: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+        self, results: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """Aggregate comprehensive task results"""
         # Combine content and quiz results
         content_results = [r for r in results if r.get("type") == "content"]
@@ -1120,7 +1116,7 @@ class ResultAggregator:
 
         return aggregated
 
-    async def _default_aggregation(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _default_aggregation(self, results: list[dict[str, Any]]) -> dict[str, Any]:
         """Default aggregation strategy"""
         if not results:
             return {}
@@ -1132,7 +1128,7 @@ class ResultAggregator:
 
         return aggregated
 
-    def _fallback_aggregation(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _fallback_aggregation(self, results: list[dict[str, Any]]) -> dict[str, Any]:
         """Fallback aggregation in case of errors"""
         return {
             "results": results,
@@ -1160,13 +1156,13 @@ class AgentManager:
         self.mcp_server = MCPServer(port=9876)
 
         # Task tracking
-        self.active_tasks: Dict[str, Dict[str, Any]] = {}
-        self.task_history: List[Dict[str, Any]] = []
+        self.active_tasks: dict[str, dict[str, Any]] = {}
+        self.task_history: list[dict[str, Any]] = []
 
         logger.info("AgentManager initialized with all components")
 
     async def generate_content(
-        self, request: ContentRequest, user: Optional[User] = None
+        self, request: ContentRequest, user: User | None = None
     ) -> ContentResponse:
         """Generate educational content using multi-agent system with SPARC, Swarm, and MCP"""
 
@@ -1329,11 +1325,11 @@ class AgentManager:
             )
 
     async def _execute_agents_parallel(
-        self, agent_types: List[str], request: ContentRequest, task_id: str
-    ) -> List[Dict[str, Any]]:
+        self, agent_types: list[str], request: ContentRequest, task_id: str
+    ) -> list[dict[str, Any]]:
         """Execute multiple agents in parallel"""
 
-        async def execute_single_agent(agent_type: str) -> Dict[str, Any]:
+        async def execute_single_agent(agent_type: str) -> dict[str, Any]:
             agent = await self.agent_pool.get_agent(agent_type)
 
             try:
@@ -1373,19 +1369,19 @@ class AgentManager:
 
         return valid_results
 
-    async def get_task_status(self, task_id: str) -> Optional[Dict[str, Any]]:
+    async def get_task_status(self, task_id: str) -> dict[str, Any] | None:
         """Get status of a specific task"""
         return self.active_tasks.get(task_id)
 
-    async def list_active_tasks(self) -> List[Dict[str, Any]]:
+    async def list_active_tasks(self) -> list[dict[str, Any]]:
         """List all active tasks"""
         return list(self.active_tasks.values())
 
-    async def get_task_history(self, limit: int = 100) -> List[Dict[str, Any]]:
+    async def get_task_history(self, limit: int = 100) -> list[dict[str, Any]]:
         """Get task history"""
         return self.task_history[-limit:]
 
-    async def get_agent_status(self) -> Dict[str, Any]:
+    async def get_agent_status(self) -> dict[str, Any]:
         """Get agent pool status"""
         pool_status = self.agent_pool.get_pool_status()
 
@@ -1439,7 +1435,7 @@ async def initialize_agents():
 
 
 async def generate_educational_content(
-    request: ContentRequest, user: Optional[User] = None
+    request: ContentRequest, user: User | None = None
 ) -> ContentResponse:
     """Generate educational content"""
     return await agent_manager.generate_content(request, user)

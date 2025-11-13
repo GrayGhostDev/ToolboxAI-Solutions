@@ -7,20 +7,16 @@ and overall system performance to ensure the entire system meets performance req
 
 import asyncio
 import json
-import os
-import time
 import statistics
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
-import pytest
+import time
+from datetime import datetime
+from pathlib import Path
+
 import aiohttp
 import asyncpg
-import redis.asyncio as redis
 import psutil
-from pathlib import Path
-import tempfile
-import threading
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import pytest
+import redis.asyncio as redis
 
 
 @pytest.mark.performance
@@ -39,15 +35,11 @@ class TestComprehensivePerformance:
             "database_query_time": 100,
             "page_load_time": 3000,
             "memory_usage_mb": 1024,
-            "cpu_usage_percent": 80
+            "cpu_usage_percent": 80,
         }
 
         # Test data sizes
-        self.test_data_sizes = {
-            "small": 100,
-            "medium": 1000,
-            "large": 10000
-        }
+        self.test_data_sizes = {"small": 100, "medium": 1000, "large": 10000}
 
         # Database configuration
         self.db_config = {
@@ -55,7 +47,7 @@ class TestComprehensivePerformance:
             "port": 5434,
             "database": "educational_platform_dev",
             "user": "eduplatform",
-            "password": "eduplatform2024"
+            "password": "eduplatform2024",
         }
 
         # Redis configuration
@@ -95,12 +87,14 @@ class TestComprehensivePerformance:
                                 response_times.append((end_time - start_time) * 1000)
                                 status_codes.append(response.status)
                         elif method == "POST":
-                            async with session.post(f"{self.api_url}{endpoint}", json=data) as response:
+                            async with session.post(
+                                f"{self.api_url}{endpoint}", json=data
+                            ) as response:
                                 end_time = time.time()
                                 response_times.append((end_time - start_time) * 1000)
                                 status_codes.append(response.status)
 
-                    except Exception as e:
+                    except Exception:
                         # Record failed request
                         response_times.append(5000)  # 5 second timeout
                         status_codes.append(0)
@@ -110,22 +104,27 @@ class TestComprehensivePerformance:
                     performance_results[endpoint] = {
                         "avg_response_time": statistics.mean(response_times),
                         "median_response_time": statistics.median(response_times),
-                        "p95_response_time": sorted(response_times)[int(0.95 * len(response_times))],
+                        "p95_response_time": sorted(response_times)[
+                            int(0.95 * len(response_times))
+                        ],
                         "max_response_time": max(response_times),
                         "min_response_time": min(response_times),
-                        "success_rate": sum(1 for code in status_codes if 200 <= code < 400) / len(status_codes),
-                        "status_codes": status_codes
+                        "success_rate": sum(1 for code in status_codes if 200 <= code < 400)
+                        / len(status_codes),
+                        "status_codes": status_codes,
                     }
 
                     # Assert performance thresholds
                     avg_time = performance_results[endpoint]["avg_response_time"]
                     success_rate = performance_results[endpoint]["success_rate"]
 
-                    assert avg_time < self.performance_thresholds["api_response_time"], \
-                        f"{endpoint} avg response time: {avg_time:.2f}ms (threshold: {self.performance_thresholds['api_response_time']}ms)"
+                    assert (
+                        avg_time < self.performance_thresholds["api_response_time"]
+                    ), f"{endpoint} avg response time: {avg_time:.2f}ms (threshold: {self.performance_thresholds['api_response_time']}ms)"
 
-                    assert success_rate >= 0.95, \
-                        f"{endpoint} success rate: {success_rate:.2f} (threshold: 0.95)"
+                    assert (
+                        success_rate >= 0.95
+                    ), f"{endpoint} success rate: {success_rate:.2f} (threshold: 0.95)"
 
             return performance_results
 
@@ -139,7 +138,8 @@ class TestComprehensivePerformance:
 
             # Create test table for performance testing
             test_table = f"perf_test_{int(time.time())}"
-            await conn.execute(f"""
+            await conn.execute(
+                f"""
                 CREATE TABLE {test_table} (
                     id SERIAL PRIMARY KEY,
                     data TEXT,
@@ -148,15 +148,17 @@ class TestComprehensivePerformance:
                 );
                 CREATE INDEX idx_{test_table}_number ON {test_table}(number_value);
                 CREATE INDEX idx_{test_table}_created ON {test_table}(created_at);
-            """)
+            """
+            )
 
             # Insert test data
-            insert_data = [(f"test_data_{i}", i % 1000) for i in range(self.test_data_sizes["medium"])]
+            insert_data = [
+                (f"test_data_{i}", i % 1000) for i in range(self.test_data_sizes["medium"])
+            ]
 
             start_time = time.time()
             await conn.executemany(
-                f"INSERT INTO {test_table} (data, number_value) VALUES ($1, $2);",
-                insert_data
+                f"INSERT INTO {test_table} (data, number_value) VALUES ($1, $2);", insert_data
             )
             insert_time = (time.time() - start_time) * 1000
 
@@ -166,10 +168,19 @@ class TestComprehensivePerformance:
             query_tests = [
                 ("Simple SELECT", f"SELECT COUNT(*) FROM {test_table};"),
                 ("Indexed WHERE", f"SELECT * FROM {test_table} WHERE number_value = 500;"),
-                ("Range Query", f"SELECT * FROM {test_table} WHERE number_value BETWEEN 100 AND 200;"),
+                (
+                    "Range Query",
+                    f"SELECT * FROM {test_table} WHERE number_value BETWEEN 100 AND 200;",
+                ),
                 ("ORDER BY", f"SELECT * FROM {test_table} ORDER BY created_at DESC LIMIT 100;"),
-                ("GROUP BY", f"SELECT number_value, COUNT(*) FROM {test_table} GROUP BY number_value LIMIT 10;"),
-                ("Text Search", f"SELECT * FROM {test_table} WHERE data LIKE 'test_data_1%' LIMIT 50;"),
+                (
+                    "GROUP BY",
+                    f"SELECT number_value, COUNT(*) FROM {test_table} GROUP BY number_value LIMIT 10;",
+                ),
+                (
+                    "Text Search",
+                    f"SELECT * FROM {test_table} WHERE data LIKE 'test_data_1%' LIMIT 50;",
+                ),
             ]
 
             query_performance = {}
@@ -190,12 +201,13 @@ class TestComprehensivePerformance:
                 query_performance[query_name] = {
                     "avg_time": avg_time,
                     "max_time": max_time,
-                    "min_time": min(response_times)
+                    "min_time": min(response_times),
                 }
 
                 # Assert query performance
-                assert avg_time < self.performance_thresholds["database_query_time"], \
-                    f"{query_name} avg time: {avg_time:.2f}ms (threshold: {self.performance_thresholds['database_query_time']}ms)"
+                assert (
+                    avg_time < self.performance_thresholds["database_query_time"]
+                ), f"{query_name} avg time: {avg_time:.2f}ms (threshold: {self.performance_thresholds['database_query_time']}ms)"
 
             # Test concurrent query performance
             async def concurrent_query():
@@ -208,8 +220,9 @@ class TestComprehensivePerformance:
             concurrent_times = await asyncio.gather(*concurrent_tasks)
 
             avg_concurrent_time = statistics.mean(concurrent_times)
-            assert avg_concurrent_time < self.performance_thresholds["database_query_time"] * 2, \
-                f"Concurrent query avg time: {avg_concurrent_time:.2f}ms"
+            assert (
+                avg_concurrent_time < self.performance_thresholds["database_query_time"] * 2
+            ), f"Concurrent query avg time: {avg_concurrent_time:.2f}ms"
 
             # Cleanup
             await conn.execute(f"DROP TABLE {test_table};")
@@ -304,7 +317,9 @@ class TestComprehensivePerformance:
             concurrent_times = await asyncio.gather(*concurrent_tasks)
 
             avg_concurrent_time = statistics.mean(concurrent_times)
-            assert avg_concurrent_time < 50, f"Concurrent Redis ops too slow: {avg_concurrent_time:.2f}ms"
+            assert (
+                avg_concurrent_time < 50
+            ), f"Concurrent Redis ops too slow: {avg_concurrent_time:.2f}ms"
 
             # Cleanup
             await redis_client.flushdb()
@@ -342,7 +357,8 @@ class TestComprehensivePerformance:
                     load_times.append((end_time - start_time) * 1000)
 
                     # Get performance metrics
-                    metrics = await page.evaluate("""
+                    metrics = await page.evaluate(
+                        """
                         () => {
                             const perfData = performance.getEntriesByType('navigation')[0];
                             const resources = performance.getEntriesByType('resource');
@@ -354,21 +370,25 @@ class TestComprehensivePerformance:
                                 totalResourceSize: resources.reduce((sum, r) => sum + (r.transferSize || 0), 0)
                             };
                         }
-                    """)
+                    """
+                    )
 
                     resource_counts.append(metrics["resourceCount"])
 
                     # Assert individual load metrics
                     if metrics["domContentLoaded"]:
-                        assert metrics["domContentLoaded"] < 2000, \
-                            f"DOM content loaded: {metrics['domContentLoaded']}ms"
+                        assert (
+                            metrics["domContentLoaded"] < 2000
+                        ), f"DOM content loaded: {metrics['domContentLoaded']}ms"
 
                 avg_load_time = statistics.mean(load_times)
-                assert avg_load_time < self.performance_thresholds["page_load_time"], \
-                    f"Avg page load time: {avg_load_time:.2f}ms"
+                assert (
+                    avg_load_time < self.performance_thresholds["page_load_time"]
+                ), f"Avg page load time: {avg_load_time:.2f}ms"
 
                 # Test JavaScript performance
-                js_performance = await page.evaluate("""
+                js_performance = await page.evaluate(
+                    """
                     () => {
                         const start = performance.now();
 
@@ -381,7 +401,8 @@ class TestComprehensivePerformance:
                         const end = performance.now();
                         return end - start;
                     }
-                """)
+                """
+                )
 
                 assert js_performance < 100, f"JS computation too slow: {js_performance:.2f}ms"
 
@@ -390,7 +411,7 @@ class TestComprehensivePerformance:
                 return {
                     "avg_load_time": avg_load_time,
                     "avg_resource_count": statistics.mean(resource_counts),
-                    "js_performance": js_performance
+                    "js_performance": js_performance,
                 }
 
         except ImportError:
@@ -428,11 +449,7 @@ class TestComprehensivePerformance:
                         return None
 
                 total_time = (time.time() - start_time) * 1000
-                return {
-                    "total_time": total_time,
-                    "response_times": response_times,
-                    "success": True
-                }
+                return {"total_time": total_time, "response_times": response_times, "success": True}
 
         # Test with increasing concurrent users
         user_counts = [1, 5, 10, 20]
@@ -454,23 +471,25 @@ class TestComprehensivePerformance:
 
             if successful_users:
                 avg_user_time = statistics.mean([r["total_time"] for r in successful_users])
-                avg_response_time = statistics.mean([
-                    time for r in successful_users for time in r["response_times"]
-                ])
+                avg_response_time = statistics.mean(
+                    [time for r in successful_users for time in r["response_times"]]
+                )
 
                 load_test_results[user_count] = {
                     "success_rate": success_rate,
                     "avg_user_time": avg_user_time,
                     "avg_response_time": avg_response_time,
-                    "total_test_time": (end_time - start_time) * 1000
+                    "total_test_time": (end_time - start_time) * 1000,
                 }
 
                 # Assert performance under load
-                assert success_rate >= 0.9, \
-                    f"Success rate too low with {user_count} users: {success_rate:.2f}"
+                assert (
+                    success_rate >= 0.9
+                ), f"Success rate too low with {user_count} users: {success_rate:.2f}"
 
-                assert avg_response_time < self.performance_thresholds["api_response_time"] * 2, \
-                    f"Response time too high with {user_count} users: {avg_response_time:.2f}ms"
+                assert (
+                    avg_response_time < self.performance_thresholds["api_response_time"] * 2
+                ), f"Response time too high with {user_count} users: {avg_response_time:.2f}ms"
 
         return load_test_results
 
@@ -498,12 +517,17 @@ class TestComprehensivePerformance:
 
                             # Assert memory usage is reasonable
                             if "postgres" in container.name:
-                                assert memory_mb < 512, f"PostgreSQL using too much memory: {memory_mb:.1f}MB"
+                                assert (
+                                    memory_mb < 512
+                                ), f"PostgreSQL using too much memory: {memory_mb:.1f}MB"
                             elif "redis" in container.name:
-                                assert memory_mb < 256, f"Redis using too much memory: {memory_mb:.1f}MB"
+                                assert (
+                                    memory_mb < 256
+                                ), f"Redis using too much memory: {memory_mb:.1f}MB"
                             else:
-                                assert memory_mb < self.performance_thresholds["memory_usage_mb"], \
-                                    f"{container.name} using too much memory: {memory_mb:.1f}MB"
+                                assert (
+                                    memory_mb < self.performance_thresholds["memory_usage_mb"]
+                                ), f"{container.name} using too much memory: {memory_mb:.1f}MB"
 
                     except Exception as e:
                         print(f"Could not get memory stats for {container.name}: {e}")
@@ -512,7 +536,9 @@ class TestComprehensivePerformance:
             system_memory = psutil.virtual_memory()
             memory_usage_percent = system_memory.percent
 
-            assert memory_usage_percent < 90, f"System memory usage too high: {memory_usage_percent:.1f}%"
+            assert (
+                memory_usage_percent < 90
+            ), f"System memory usage too high: {memory_usage_percent:.1f}%"
 
             return memory_stats
 
@@ -555,15 +581,16 @@ class TestComprehensivePerformance:
                 avg_cpu = statistics.mean(cpu_measurements)
                 max_cpu = max(cpu_measurements)
 
-                assert avg_cpu < self.performance_thresholds["cpu_usage_percent"], \
-                    f"Average CPU usage too high: {avg_cpu:.1f}%"
+                assert (
+                    avg_cpu < self.performance_thresholds["cpu_usage_percent"]
+                ), f"Average CPU usage too high: {avg_cpu:.1f}%"
 
                 assert max_cpu < 95, f"Peak CPU usage too high: {max_cpu:.1f}%"
 
                 return {
                     "avg_cpu": avg_cpu,
                     "max_cpu": max_cpu,
-                    "successful_requests": successful_requests
+                    "successful_requests": successful_requests,
                 }
 
         except Exception as e:
@@ -585,11 +612,7 @@ class TestComprehensivePerformance:
                 await conn.fetchval("SELECT 1;")
                 query_time = (time.time() - query_start) * 1000
 
-                return {
-                    "connect_time": connect_time,
-                    "query_time": query_time,
-                    "success": True
-                }
+                return {"connect_time": connect_time, "query_time": query_time, "success": True}
 
             except Exception:
                 return {"success": False}
@@ -605,22 +628,28 @@ class TestComprehensivePerformance:
             tasks = [test_connection_usage() for _ in range(count)]
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
-            successful_connections = [r for r in results if isinstance(r, dict) and r.get("success")]
+            successful_connections = [
+                r for r in results if isinstance(r, dict) and r.get("success")
+            ]
             success_rate = len(successful_connections) / count
 
             if successful_connections:
-                avg_connect_time = statistics.mean([r["connect_time"] for r in successful_connections])
+                avg_connect_time = statistics.mean(
+                    [r["connect_time"] for r in successful_connections]
+                )
                 avg_query_time = statistics.mean([r["query_time"] for r in successful_connections])
 
                 pool_performance[count] = {
                     "success_rate": success_rate,
                     "avg_connect_time": avg_connect_time,
-                    "avg_query_time": avg_query_time
+                    "avg_query_time": avg_query_time,
                 }
 
                 # Assert connection pool performance
                 assert success_rate >= 0.9, f"Connection success rate too low: {success_rate:.2f}"
-                assert avg_connect_time < 1000, f"Connection time too high: {avg_connect_time:.2f}ms"
+                assert (
+                    avg_connect_time < 1000
+                ), f"Connection time too high: {avg_connect_time:.2f}ms"
                 assert avg_query_time < 100, f"Query time too high: {avg_query_time:.2f}ms"
 
         return pool_performance
@@ -639,7 +668,7 @@ class TestComprehensivePerformance:
                 try:
                     start_time = time.time()
                     async with async_mock_pusher_context() as pusher:
-        # Connect using Pusherws_url, timeout=10) as websocket:
+                        # Connect using Pusherws_url, timeout=10) as websocket:
                         connect_time = (time.time() - start_time) * 1000
 
                         # Test message round-trip
@@ -651,7 +680,7 @@ class TestComprehensivePerformance:
                         return {
                             "connect_time": connect_time,
                             "message_time": message_time,
-                            "success": True
+                            "success": True,
                         }
 
                 except Exception:
@@ -661,21 +690,31 @@ class TestComprehensivePerformance:
             ws_tasks = [test_websocket_connection() for _ in range(10)]
             ws_results = await asyncio.gather(*ws_tasks, return_exceptions=True)
 
-            successful_connections = [r for r in ws_results if isinstance(r, dict) and r.get("success")]
+            successful_connections = [
+                r for r in ws_results if isinstance(r, dict) and r.get("success")
+            ]
             success_rate = len(successful_connections) / 10
 
             if successful_connections:
-                avg_connect_time = statistics.mean([r["connect_time"] for r in successful_connections])
-                avg_message_time = statistics.mean([r["message_time"] for r in successful_connections])
+                avg_connect_time = statistics.mean(
+                    [r["connect_time"] for r in successful_connections]
+                )
+                avg_message_time = statistics.mean(
+                    [r["message_time"] for r in successful_connections]
+                )
 
                 assert success_rate >= 0.8, f"WebSocket success rate too low: {success_rate:.2f}"
-                assert avg_connect_time < 1000, f"WebSocket connect time too high: {avg_connect_time:.2f}ms"
-                assert avg_message_time < 100, f"WebSocket message time too high: {avg_message_time:.2f}ms"
+                assert (
+                    avg_connect_time < 1000
+                ), f"WebSocket connect time too high: {avg_connect_time:.2f}ms"
+                assert (
+                    avg_message_time < 100
+                ), f"WebSocket message time too high: {avg_message_time:.2f}ms"
 
                 return {
                     "success_rate": success_rate,
                     "avg_connect_time": avg_connect_time,
-                    "avg_message_time": avg_message_time
+                    "avg_message_time": avg_message_time,
                 }
 
         except ImportError:
@@ -726,15 +765,19 @@ class TestComprehensivePerformance:
         benchmark_file = Path(f"test-results/performance-benchmark-{timestamp}.json")
         benchmark_file.parent.mkdir(exist_ok=True)
 
-        with open(benchmark_file, 'w') as f:
-            json.dump({
-                "timestamp": timestamp,
-                "performance_score": performance_score,
-                "results": benchmark_results
-            }, f, indent=2)
+        with open(benchmark_file, "w") as f:
+            json.dump(
+                {
+                    "timestamp": timestamp,
+                    "performance_score": performance_score,
+                    "results": benchmark_results,
+                },
+                f,
+                indent=2,
+            )
 
         return {
             "performance_score": performance_score,
             "benchmark_file": str(benchmark_file),
-            "results": benchmark_results
+            "results": benchmark_results,
         }

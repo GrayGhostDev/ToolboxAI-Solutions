@@ -10,20 +10,23 @@ Provides comprehensive analytics and reporting capabilities:
 """
 
 import logging
-import uuid
 import statistics
-from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, List, Optional, Union
+import uuid
+from datetime import datetime, timedelta, timezone
 from enum import Enum
+from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from fastapi.security import HTTPBearer
-from pydantic import BaseModel, Field, field_validator, ConfigDict
-from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # Import authentication and dependencies
 try:
-    from apps.backend.api.auth.auth import get_current_user, require_role, require_any_role
+    from apps.backend.api.auth.auth import (
+        get_current_user,
+        require_any_role,
+        require_role,
+    )
     from apps.backend.core.deps import get_db
     from apps.backend.core.security.rate_limit_manager import rate_limit
 except ImportError:
@@ -49,7 +52,7 @@ except ImportError:
 
 # Import models and services
 try:
-    from apps.backend.models.schemas import User, BaseResponse
+    from apps.backend.models.schemas import BaseResponse, User
     from apps.backend.services.pusher import trigger_event
 except ImportError:
 
@@ -141,11 +144,11 @@ class AggregationMethod(str, Enum):
 class AnalyticsQuery(BaseModel):
     """Request for analytics data"""
 
-    metric_types: List[MetricType] = Field(..., min_items=1)
+    metric_types: list[MetricType] = Field(..., min_items=1)
     start_date: datetime = Field(..., description="Start date for analytics period")
     end_date: datetime = Field(..., description="End date for analytics period")
     granularity: TimeGranularity = TimeGranularity.DAY
-    filters: Dict[str, Any] = Field(default_factory=dict)
+    filters: dict[str, Any] = Field(default_factory=dict)
     aggregation_method: AggregationMethod = AggregationMethod.AVERAGE
     include_comparisons: bool = Field(False, description="Include period-over-period comparisons")
     include_benchmarks: bool = Field(False, description="Include benchmark data")
@@ -168,15 +171,15 @@ class ReportRequest(BaseModel):
 
     report_type: ReportType
     title: str = Field(..., min_length=1, max_length=200)
-    description: Optional[str] = Field(None, max_length=1000)
-    parameters: Dict[str, Any] = Field(default_factory=dict)
-    filters: Dict[str, Any] = Field(default_factory=dict)
-    date_range: Dict[str, datetime] = Field(..., description="start_date and end_date")
+    description: str | None = Field(None, max_length=1000)
+    parameters: dict[str, Any] = Field(default_factory=dict)
+    filters: dict[str, Any] = Field(default_factory=dict)
+    date_range: dict[str, datetime] = Field(..., description="start_date and end_date")
     format: str = Field("json", description="json, pdf, csv, xlsx")
-    recipients: List[str] = Field(
+    recipients: list[str] = Field(
         default_factory=list, description="Email addresses for report delivery"
     )
-    schedule: Optional[Dict[str, Any]] = Field(
+    schedule: dict[str, Any] | None = Field(
         None, description="Scheduling configuration for recurring reports"
     )
 
@@ -196,11 +199,11 @@ class DashboardConfigRequest(BaseModel):
     """Request to configure dashboard widgets"""
 
     dashboard_name: str = Field(..., min_length=1, max_length=100)
-    widgets: List[Dict[str, Any]] = Field(..., min_items=1, max_items=20)
-    layout: Dict[str, Any] = Field(default_factory=dict)
+    widgets: list[dict[str, Any]] = Field(..., min_items=1, max_items=20)
+    layout: dict[str, Any] = Field(default_factory=dict)
     refresh_interval: int = Field(300, ge=30, le=3600, description="Refresh interval in seconds")
     is_default: bool = Field(False)
-    sharing_settings: Dict[str, Any] = Field(default_factory=dict)
+    sharing_settings: dict[str, Any] = Field(default_factory=dict)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -208,13 +211,13 @@ class DashboardConfigRequest(BaseModel):
 class LearningAnalyticsRequest(BaseModel):
     """Request for learning-specific analytics"""
 
-    student_ids: Optional[List[str]] = None
-    class_ids: Optional[List[str]] = None
-    subject_areas: Optional[List[str]] = None
-    competency_areas: Optional[List[str]] = None
-    learning_objectives: Optional[List[str]] = None
-    assessment_types: Optional[List[str]] = None
-    time_period: Dict[str, datetime] = Field(..., description="start_date and end_date")
+    student_ids: list[str] | None = None
+    class_ids: list[str] | None = None
+    subject_areas: list[str] | None = None
+    competency_areas: list[str] | None = None
+    learning_objectives: list[str] | None = None
+    assessment_types: list[str] | None = None
+    time_period: dict[str, datetime] = Field(..., description="start_date and end_date")
     include_predictions: bool = Field(False)
     include_recommendations: bool = Field(True)
 
@@ -227,8 +230,8 @@ class MetricDataPoint(BaseModel):
 
     timestamp: datetime
     value: float
-    label: Optional[str] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    label: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -239,10 +242,10 @@ class MetricSeries(BaseModel):
     metric_type: MetricType
     metric_name: str
     unit: str
-    data_points: List[MetricDataPoint]
+    data_points: list[MetricDataPoint]
     aggregation_method: AggregationMethod
-    summary_statistics: Dict[str, float] = Field(default_factory=dict)
-    trend_analysis: Dict[str, Any] = Field(default_factory=dict)
+    summary_statistics: dict[str, float] = Field(default_factory=dict)
+    trend_analysis: dict[str, Any] = Field(default_factory=dict)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -251,12 +254,12 @@ class AnalyticsResponse(BaseModel):
     """Response containing analytics data"""
 
     query_id: str
-    metric_series: List[MetricSeries]
-    period_summary: Dict[str, Any]
-    comparisons: Optional[Dict[str, Any]] = None
-    benchmarks: Optional[Dict[str, Any]] = None
-    insights: List[str] = Field(default_factory=list)
-    recommendations: List[str] = Field(default_factory=list)
+    metric_series: list[MetricSeries]
+    period_summary: dict[str, Any]
+    comparisons: dict[str, Any] | None = None
+    benchmarks: dict[str, Any] | None = None
+    insights: list[str] = Field(default_factory=list)
+    recommendations: list[str] = Field(default_factory=list)
     generated_at: datetime
     query_execution_time_ms: float
 
@@ -270,13 +273,13 @@ class ReportResponse(BaseModel):
     report_type: ReportType
     title: str
     status: str = "generated"
-    file_url: Optional[str] = None
-    preview_data: Optional[Dict[str, Any]] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    file_url: str | None = None
+    preview_data: dict[str, Any] | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
     generated_at: datetime
     generated_by: str
-    file_size_bytes: Optional[int] = None
-    expires_at: Optional[datetime] = None
+    file_size_bytes: int | None = None
+    expires_at: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -287,10 +290,10 @@ class DashboardWidget(BaseModel):
     widget_id: str
     widget_type: str
     title: str
-    position: Dict[str, int] = Field(default_factory=dict)
-    size: Dict[str, int] = Field(default_factory=dict)
-    configuration: Dict[str, Any] = Field(default_factory=dict)
-    data: Optional[Dict[str, Any]] = None
+    position: dict[str, int] = Field(default_factory=dict)
+    size: dict[str, int] = Field(default_factory=dict)
+    configuration: dict[str, Any] = Field(default_factory=dict)
+    data: dict[str, Any] | None = None
     last_updated: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -301,13 +304,13 @@ class DashboardResponse(BaseModel):
 
     dashboard_id: str
     dashboard_name: str
-    widgets: List[DashboardWidget]
-    layout: Dict[str, Any]
+    widgets: list[DashboardWidget]
+    layout: dict[str, Any]
     refresh_interval: int
     last_updated: datetime
     created_by: str
     is_default: bool
-    sharing_settings: Dict[str, Any]
+    sharing_settings: dict[str, Any]
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -316,14 +319,14 @@ class LearningAnalyticsResponse(BaseModel):
     """Learning-specific analytics response"""
 
     analysis_id: str
-    student_performance: Dict[str, Any] = Field(default_factory=dict)
-    class_performance: Dict[str, Any] = Field(default_factory=dict)
-    competency_analysis: Dict[str, Any] = Field(default_factory=dict)
-    learning_progression: List[Dict[str, Any]] = Field(default_factory=list)
-    engagement_metrics: Dict[str, Any] = Field(default_factory=dict)
-    at_risk_students: List[Dict[str, Any]] = Field(default_factory=list)
-    recommendations: List[Dict[str, Any]] = Field(default_factory=list)
-    predictions: Optional[Dict[str, Any]] = None
+    student_performance: dict[str, Any] = Field(default_factory=dict)
+    class_performance: dict[str, Any] = Field(default_factory=dict)
+    competency_analysis: dict[str, Any] = Field(default_factory=dict)
+    learning_progression: list[dict[str, Any]] = Field(default_factory=list)
+    engagement_metrics: dict[str, Any] = Field(default_factory=dict)
+    at_risk_students: list[dict[str, Any]] = Field(default_factory=list)
+    recommendations: list[dict[str, Any]] = Field(default_factory=list)
+    predictions: dict[str, Any] | None = None
     generated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -337,10 +340,10 @@ class SystemHealthMetrics(BaseModel):
     error_rate: float
     active_users: int
     concurrent_sessions: int
-    resource_utilization: Dict[str, float]
-    database_performance: Dict[str, Any]
-    api_performance: Dict[str, Any]
-    recent_alerts: List[Dict[str, Any]] = Field(default_factory=list)
+    resource_utilization: dict[str, float]
+    database_performance: dict[str, Any]
+    api_performance: dict[str, Any]
+    recent_alerts: list[dict[str, Any]] = Field(default_factory=list)
     timestamp: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -355,29 +358,29 @@ class EngagementAnalytics(BaseModel):
     monthly_active_users: int
     session_duration_avg: float
     page_views_total: int
-    feature_usage: Dict[str, int]
-    user_retention: Dict[str, float]
+    feature_usage: dict[str, int]
+    user_retention: dict[str, float]
     engagement_score: float
     churn_rate: float
-    most_popular_content: List[Dict[str, Any]]
+    most_popular_content: list[dict[str, Any]]
 
     model_config = ConfigDict(from_attributes=True)
 
 
 # Mock data stores
-_mock_analytics_cache: Dict[str, Any] = {}
-_mock_reports_db: Dict[str, ReportResponse] = {}
-_mock_dashboards_db: Dict[str, DashboardResponse] = {}
-_mock_learning_analytics: Dict[str, LearningAnalyticsResponse] = {}
+_mock_analytics_cache: dict[str, Any] = {}
+_mock_reports_db: dict[str, ReportResponse] = {}
+_mock_dashboards_db: dict[str, DashboardResponse] = {}
+_mock_learning_analytics: dict[str, LearningAnalyticsResponse] = {}
 
 
 # Utility functions
 def generate_mock_metrics(
     metric_type: MetricType, start_date: datetime, end_date: datetime, granularity: TimeGranularity
-) -> List[MetricDataPoint]:
+) -> list[MetricDataPoint]:
     """Generate mock metric data points"""
-    import random
     import math
+    import random
 
     data_points = []
     current = start_date
@@ -421,7 +424,7 @@ def generate_mock_metrics(
     return data_points
 
 
-def calculate_summary_statistics(data_points: List[MetricDataPoint]) -> Dict[str, float]:
+def calculate_summary_statistics(data_points: list[MetricDataPoint]) -> dict[str, float]:
     """Calculate summary statistics for metric data"""
     if not data_points:
         return {}
@@ -439,7 +442,7 @@ def calculate_summary_statistics(data_points: List[MetricDataPoint]) -> Dict[str
     }
 
 
-def analyze_trend(data_points: List[MetricDataPoint]) -> Dict[str, Any]:
+def analyze_trend(data_points: list[MetricDataPoint]) -> dict[str, Any]:
     """Analyze trend in metric data"""
     if len(data_points) < 2:
         return {"trend": "insufficient_data"}
@@ -470,7 +473,7 @@ def analyze_trend(data_points: List[MetricDataPoint]) -> Dict[str, Any]:
     }
 
 
-async def notify_analytics_update(event_type: str, data: Dict[str, Any], user_id: str):
+async def notify_analytics_update(event_type: str, data: dict[str, Any], user_id: str):
     """Notify about analytics updates"""
     try:
         await trigger_event(
@@ -530,7 +533,7 @@ initialize_mock_dashboards()
 async def query_analytics(
     request: AnalyticsQuery,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Query analytics data with flexible filtering and aggregation.
@@ -636,7 +639,7 @@ async def query_analytics(
 async def generate_report(
     request: ReportRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
 ):
     """
@@ -708,12 +711,12 @@ async def generate_report(
         )
 
 
-@router.get("/reports", response_model=List[ReportResponse])
+@router.get("/reports", response_model=list[ReportResponse])
 async def list_reports(
-    report_type: Optional[ReportType] = Query(None, description="Filter by report type"),
-    status_filter: Optional[str] = Query(None, description="Filter by status"),
+    report_type: ReportType | None = Query(None, description="Filter by report type"),
+    status_filter: str | None = Query(None, description="Filter by status"),
     limit: int = Query(20, ge=1, le=100, description="Maximum results"),
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """
     List generated reports with filtering options.
@@ -743,7 +746,7 @@ async def list_reports(
 
 
 @router.get("/reports/{report_id}", response_model=ReportResponse)
-async def get_report(report_id: str, current_user: Dict = Depends(get_current_user)):
+async def get_report(report_id: str, current_user: dict = Depends(get_current_user)):
     """
     Get specific report details.
     """
@@ -775,7 +778,7 @@ async def get_report(report_id: str, current_user: Dict = Depends(get_current_us
 async def create_dashboard(
     request: DashboardConfigRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
 ):
     """
@@ -840,8 +843,8 @@ async def create_dashboard(
         )
 
 
-@router.get("/dashboards", response_model=List[DashboardResponse])
-async def list_dashboards(current_user: Dict = Depends(get_current_user)):
+@router.get("/dashboards", response_model=list[DashboardResponse])
+async def list_dashboards(current_user: dict = Depends(get_current_user)):
     """
     List available dashboards for the current user.
     """
@@ -876,7 +879,7 @@ async def list_dashboards(current_user: Dict = Depends(get_current_user)):
 
 
 @router.get("/dashboards/{dashboard_id}", response_model=DashboardResponse)
-async def get_dashboard(dashboard_id: str, current_user: Dict = Depends(get_current_user)):
+async def get_dashboard(dashboard_id: str, current_user: dict = Depends(get_current_user)):
     """
     Get specific dashboard configuration and data.
     """
@@ -928,7 +931,7 @@ async def get_dashboard(dashboard_id: str, current_user: Dict = Depends(get_curr
 async def analyze_learning_data(
     request: LearningAnalyticsRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
 ):
     """
@@ -1086,7 +1089,7 @@ async def analyze_learning_data(
 
 @router.get("/system-health", response_model=SystemHealthMetrics)
 async def get_system_health(
-    current_user: Dict = Depends(get_current_user), _: None = Depends(require_role("admin"))
+    current_user: dict = Depends(get_current_user), _: None = Depends(require_role("admin"))
 ):
     """
     Get system health and performance metrics.
@@ -1149,7 +1152,7 @@ async def get_system_health(
 @router.get("/engagement", response_model=EngagementAnalytics)
 async def get_engagement_analytics(
     time_period: str = Query("7d", description="Time period: 1d, 7d, 30d, 90d"),
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
 ):
     """
@@ -1212,7 +1215,7 @@ async def get_engagement_analytics(
 async def export_analytics_data(
     query_id: str,
     format: str = Query("csv", description="Export format: csv, json, xlsx"),
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Export analytics data in various formats.

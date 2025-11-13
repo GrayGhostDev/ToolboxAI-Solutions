@@ -10,7 +10,7 @@ from datetime import datetime
 
 def generate_html_report(output_file: str):
     """Generate an HTML security report"""
-    
+
     html_content = f"""
 <!DOCTYPE html>
 <html lang="en">
@@ -197,27 +197,27 @@ def generate_html_report(output_file: str):
 </body>
 </html>
 """
-    
+
     # Write the report
-    with open(output_file, 'w') as f:
+    with open(output_file, "w") as f:
         f.write(html_content)
-    
+
     print(f"✅ Security report generated: {output_file}")
     return 0
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Generate security report')
-    parser.add_argument('--output', default='security-report.html', help='Output file path')
-    parser.add_argument('--format', default='html', choices=['html', 'json'], help='Output format')
-    
+    parser = argparse.ArgumentParser(description="Generate security report")
+    parser.add_argument("--output", default="security-report.html", help="Output file path")
+    parser.add_argument("--format", default="html", choices=["html", "json"], help="Output format")
+
     args = parser.parse_args()
-    
-    if args.format == 'html':
+
+    if args.format == "html":
         return generate_html_report(args.output)
-    
+
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     exit(main())

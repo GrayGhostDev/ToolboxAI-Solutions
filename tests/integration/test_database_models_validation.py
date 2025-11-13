@@ -1,7 +1,8 @@
-import pytest_asyncio
+from unittest.mock import Mock, patch
 
 import pytest
-from unittest.mock import Mock, patch
+import pytest_asyncio
+
 
 @pytest.fixture
 def mock_db_connection():
@@ -30,31 +31,27 @@ import asyncio
 import logging
 import time
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import text, inspect, MetaData
+from sqlalchemy import MetaData, inspect, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 # Import database components
 try:
-    from database.connection import get_async_session, AsyncSessionLocal, engine
+    from database.connection import AsyncSessionLocal, engine, get_async_session
     from database.models import (
-        Base,
-        User,
         Agent,
-        ContentGenerationRequest,
-        EnhancedContentGeneration,
+        Base,
         ContentGenerationBatch,
-        EducationalContent
+        ContentGenerationRequest,
+        EducationalContent,
+        EnhancedContentGeneration,
+        User,
     )
-    from database.repositories import (
-        UserRepository,
-        ContentRepository,
-        AgentRepository
-    )
+    from database.repositories import AgentRepository, ContentRepository, UserRepository
 except ImportError as e:
     pytest.skip(f"Required database modules not available: {e}", allow_module_level=True)
 
@@ -721,7 +718,7 @@ if __name__ == "__main__":
 
     # Test model imports
     try:
-        from database.models import User, EnhancedContentGeneration, ContentGenerationBatch
+        from database.models import ContentGenerationBatch, EnhancedContentGeneration, User
         print("✓ Database models import successful")
     except Exception as e:
         print(f"✗ Database models import failed: {e}")

@@ -6,36 +6,34 @@ Tests workflow management including review, approval, and publishing processes.
 Phase 1 Week 1: Authentication & user management endpoint tests
 """
 
-import pytest
 from datetime import datetime, timedelta
-from uuid import uuid4, UUID
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
+from uuid import UUID, uuid4
 
-from fastapi import HTTPException, status, BackgroundTasks
+import pytest
+from fastapi import BackgroundTasks
 
 # Import endpoint functions and models
 from apps.backend.api.v1.endpoints.content_workflow import (
-    submit_for_review,
-    approve_content,
-    reject_content,
-    publish_content,
-    get_pending_reviews,
-    get_workflow_status,
-    WorkflowStatus,
+    ContentWorkflowInfo,
+    PendingReviewsResponse,
+    PublishContentRequest,
+    PublishContentResponse,
+    ReviewContentRequest,
+    ReviewContentResponse,
     ReviewDecision,
     SubmitForReviewRequest,
     SubmitForReviewResponse,
-    ReviewContentRequest,
-    ReviewContentResponse,
-    PublishContentRequest,
-    PublishContentResponse,
-    ContentWorkflowInfo,
-    PendingReviewsResponse,
+    WorkflowStatus,
+    approve_content,
+    get_pending_reviews,
+    get_workflow_status,
+    publish_content,
+    reject_content,
+    submit_for_review,
 )
-
-from apps.backend.models.schemas import User
 from apps.backend.middleware.tenant import TenantContext
-
+from apps.backend.models.schemas import User
 
 # ============================================================================
 # Fixtures
@@ -627,9 +625,7 @@ class TestGetWorkflowStatus:
     """Test workflow status endpoint."""
 
     @pytest.mark.asyncio
-    async def test_get_workflow_status_success(
-        self, mock_session, mock_teacher_user
-    ):
+    async def test_get_workflow_status_success(self, mock_session, mock_teacher_user):
         """Test successful workflow status retrieval."""
         content_id = uuid4()
 
@@ -644,9 +640,7 @@ class TestGetWorkflowStatus:
         assert isinstance(result.status, WorkflowStatus)
 
     @pytest.mark.asyncio
-    async def test_get_workflow_status_structure(
-        self, mock_session, mock_teacher_user
-    ):
+    async def test_get_workflow_status_structure(self, mock_session, mock_teacher_user):
         """Test workflow status response structure."""
         content_id = uuid4()
 

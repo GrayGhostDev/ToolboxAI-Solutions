@@ -6,27 +6,26 @@ Tests message retrieval, sending, reading, archiving, and notification endpoints
 Phase 1 Week 1: Authentication & user management endpoint tests
 """
 
-import pytest
 from datetime import datetime, timezone
+from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
 
+import pytest
 from fastapi import HTTPException, status
 
 # Import endpoint functions and models
 from apps.backend.api.v1.endpoints.messages import (
-    get_messages,
-    get_unread_message_count,
-    get_message_details,
-    send_message,
-    mark_message_as_read,
-    archive_message,
-    delete_message,
-    get_recent_notifications,
     User,
+    archive_message,
     db_service,
+    delete_message,
+    get_message_details,
+    get_messages,
+    get_recent_notifications,
+    get_unread_message_count,
+    mark_message_as_read,
+    send_message,
 )
-
 
 # ============================================================================
 # Fixtures
@@ -203,9 +202,7 @@ class TestGetMessages:
     async def test_get_messages_with_read_filter(self, mock_user):
         """Test getting messages with read status filter."""
         with patch.object(db_service, "pool", None):
-            result = await get_messages(
-                current_user=mock_user, folder="inbox", is_read=False
-            )
+            result = await get_messages(current_user=mock_user, folder="inbox", is_read=False)
 
         assert isinstance(result, list)
 
@@ -213,9 +210,7 @@ class TestGetMessages:
     async def test_get_messages_with_pagination(self, mock_user):
         """Test getting messages with pagination."""
         with patch.object(db_service, "pool", None):
-            result = await get_messages(
-                current_user=mock_user, folder="inbox", limit=10, offset=5
-            )
+            result = await get_messages(current_user=mock_user, folder="inbox", limit=10, offset=5)
 
         assert isinstance(result, list)
 
@@ -244,9 +239,7 @@ class TestGetMessages:
     ):
         """Test sent messages differ by role."""
         with patch.object(db_service, "pool", None):
-            teacher_messages = await get_messages(
-                current_user=mock_teacher_user, folder="sent"
-            )
+            teacher_messages = await get_messages(current_user=mock_teacher_user, folder="sent")
             student_messages = await get_messages(current_user=mock_user, folder="sent")
 
         # Both should return lists, but content differs by role
@@ -361,23 +354,17 @@ class TestSendMessage:
     """Test send message endpoint."""
 
     @pytest.mark.asyncio
-    async def test_send_message_no_db_raises_error(
-        self, mock_user, send_message_data
-    ):
+    async def test_send_message_no_db_raises_error(self, mock_user, send_message_data):
         """Test sending message without database raises error."""
         with patch.object(db_service, "pool", None):
             with pytest.raises(HTTPException) as exc_info:
-                await send_message(
-                    message_data=send_message_data, current_user=mock_user
-                )
+                await send_message(message_data=send_message_data, current_user=mock_user)
 
             assert exc_info.value.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
             assert "Failed to send message" in exc_info.value.detail
 
     @pytest.mark.asyncio
-    async def test_send_message_success_with_db(
-        self, mock_user, send_message_data, mock_db_pool
-    ):
+    async def test_send_message_success_with_db(self, mock_user, send_message_data, mock_db_pool):
         """Test successful message sending with database."""
         pool, conn = mock_db_pool
         conn.fetchrow.return_value = {
@@ -387,9 +374,7 @@ class TestSendMessage:
         }
 
         with patch.object(db_service, "pool", pool):
-            result = await send_message(
-                message_data=send_message_data, current_user=mock_user
-            )
+            result = await send_message(message_data=send_message_data, current_user=mock_user)
 
         assert result["id"] == 1
         assert result["subject"] == send_message_data["subject"]
@@ -407,9 +392,7 @@ class TestSendMessage:
         conn.fetchrow.return_value = {"id": 1}
 
         with patch.object(db_service, "pool", pool):
-            result = await send_message(
-                message_data=message_data, current_user=mock_user
-            )
+            result = await send_message(message_data=message_data, current_user=mock_user)
 
         assert result is not None
 
@@ -426,9 +409,7 @@ class TestSendMessage:
         conn.fetchrow.return_value = {"id": 1}
 
         with patch.object(db_service, "pool", pool):
-            result = await send_message(
-                message_data=message_data, current_user=mock_user
-            )
+            result = await send_message(message_data=message_data, current_user=mock_user)
 
         assert result is not None
 
@@ -616,9 +597,7 @@ class TestGetRecentNotifications:
     async def test_get_recent_notifications_teacher_fallback(self, mock_teacher_user):
         """Test getting recent notifications for teacher."""
         with patch.object(db_service, "pool", None):
-            result = await get_recent_notifications(
-                current_user=mock_teacher_user, limit=10
-            )
+            result = await get_recent_notifications(current_user=mock_teacher_user, limit=10)
 
         assert isinstance(result, list)
 
@@ -634,9 +613,7 @@ class TestGetRecentNotifications:
     async def test_get_recent_notifications_empty_for_admin(self, mock_admin_user):
         """Test getting notifications for admin (may be empty)."""
         with patch.object(db_service, "pool", None):
-            result = await get_recent_notifications(
-                current_user=mock_admin_user, limit=10
-            )
+            result = await get_recent_notifications(current_user=mock_admin_user, limit=10)
 
         # Admin fallback returns empty list
         assert isinstance(result, list)

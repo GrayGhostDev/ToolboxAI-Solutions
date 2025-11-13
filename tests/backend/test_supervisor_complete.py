@@ -1,9 +1,10 @@
-import pytest_asyncio
+
 """
 Test CompleteSupervisorAgent with real OpenAI API
 """
 import asyncio
 import os
+
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -11,10 +12,13 @@ load_dotenv()
 
 # Add the path to the system
 import sys
-sys.path.insert(0, '/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions')
+
+sys.path.insert(0, "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions")
 
 from core.agents.supervisor_complete import CompleteSupervisorAgent
+
 from core.agents.base_agent import AgentConfig
+
 
 @pytest.mark.asyncio
 async def test_real_openai():
@@ -38,7 +42,7 @@ async def test_real_openai():
         timeout=120,
         verbose=True,
         memory_enabled=True,
-        max_context_length=128000
+        max_context_length=128000,
     )
 
     try:
@@ -47,7 +51,9 @@ async def test_real_openai():
         print("✓ Agent initialized successfully")
 
         # Test task
-        task = "Create an educational game about basic geometry for middle school students with a quiz"
+        task = (
+            "Create an educational game about basic geometry for middle school students with a quiz"
+        )
         context = {
             "grade_level": "middle_school",
             "subject": "mathematics",
@@ -55,8 +61,8 @@ async def test_real_openai():
             "learning_objectives": [
                 "Understand shapes and their properties",
                 "Calculate area and perimeter",
-                "Identify geometric patterns"
-            ]
+                "Identify geometric patterns",
+            ],
         }
 
         print(f"\n2. Submitting task: {task[:100]}...")
@@ -101,7 +107,9 @@ async def test_real_openai():
     except Exception as e:
         print(f"\nERROR: {str(e)}")
         import traceback
+
         traceback.print_exc()
+
 
 if __name__ == "__main__":
     asyncio.run(test_real_openai())

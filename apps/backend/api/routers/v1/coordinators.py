@@ -5,25 +5,26 @@ This router provides API endpoints for agent coordination, content generation,
 and system health monitoring with full LangChain tracing and Pusher integration.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
-from pydantic import BaseModel, Field
-from typing import Dict, Any, List, Optional
-from datetime import datetime
 import logging
+from datetime import datetime
+from typing import Any
 
-from apps.backend.services.coordinator_service import get_coordinator, CoordinatorService
-from apps.backend.core.auth import get_current_user
 from apps.backend.models.user import User
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from pydantic import BaseModel, Field
+
+from apps.backend.core.auth import get_current_user
+from apps.backend.services.coordinator_service import (
+    CoordinatorService,
+    get_coordinator,
+)
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/api/v1/coordinators",
     tags=["coordinators", "agents"],
-    responses={
-        404: {"description": "Not found"},
-        500: {"description": "Internal server error"}
-    }
+    responses={404: {"description": "Not found"}, 500: {"description": "Internal server error"}},
 )
 
 
@@ -33,17 +34,15 @@ class ContentGenerationRequest(BaseModel):
 
     subject: str = Field(..., description="Subject matter for content")
     grade_level: int = Field(..., ge=1, le=12, description="Grade level (1-12)")
-    learning_objectives: List[str] = Field(..., description="List of learning objectives")
+    learning_objectives: list[str] = Field(..., description="List of learning objectives")
     environment_type: str = Field(
-        default="interactive_classroom",
-        description="Type of Roblox environment to generate"
+        default="interactive_classroom", description="Type of Roblox environment to generate"
     )
     include_quiz: bool = Field(default=True, description="Include quiz generation")
     include_gamification: bool = Field(default=True, description="Include gamification elements")
     difficulty_level: str = Field(default="medium", description="Content difficulty level")
-    custom_parameters: Optional[Dict[str, Any]] = Field(
-        default=None,
-        description="Additional custom parameters for generation"
+    custom_parameters: dict[str, Any] | None = Field(
+        default=None, description="Additional custom parameters for generation"
     )
 
     class Config:
@@ -54,12 +53,12 @@ class ContentGenerationRequest(BaseModel):
                 "learning_objectives": [
                     "Understand fractions",
                     "Perform fraction operations",
-                    "Apply fractions in real-world problems"
+                    "Apply fractions in real-world problems",
                 ],
                 "environment_type": "interactive_classroom",
                 "include_quiz": True,
                 "include_gamification": True,
-                "difficulty_level": "medium"
+                "difficulty_level": "medium",
             }
         }
 
@@ -69,16 +68,13 @@ class ContentGenerationResponse(BaseModel):
 
     success: bool
     request_id: str
-    content: Optional[Dict[str, Any]]
-    scripts: Optional[List[str]]
-    quiz_data: Optional[Dict[str, Any]]
-    metrics: Dict[str, Any]
+    content: dict[str, Any] | None
+    scripts: list[str] | None
+    quiz_data: dict[str, Any] | None
+    metrics: dict[str, Any]
     generation_time: float
-    trace_url: Optional[str] = Field(
-        default=None,
-        description="LangSmith trace URL for debugging"
-    )
-    message: Optional[str] = None
+    trace_url: str | None = Field(default=None, description="LangSmith trace URL for debugging")
+    message: str | None = None
 
 
 class HealthResponse(BaseModel):
@@ -87,11 +83,11 @@ class HealthResponse(BaseModel):
     status: str
     healthy: bool
     timestamp: str
-    components: Dict[str, str]
+    components: dict[str, str]
     active_workflows: int
-    resource_utilization: Dict[str, float]
+    resource_utilization: dict[str, float]
     error_count: int
-    last_error: Optional[str]
+    last_error: str | None
 
 
 class AgentStatusResponse(BaseModel):
@@ -99,10 +95,10 @@ class AgentStatusResponse(BaseModel):
 
     agent_name: str
     status: str
-    current_task: Optional[str]
+    current_task: str | None
     progress: float
     last_activity: str
-    metrics: Dict[str, Any]
+    metrics: dict[str, Any]
 
 
 # API Endpoints
@@ -111,7 +107,7 @@ async def generate_educational_content(
     request: ContentGenerationRequest,
     background_tasks: BackgroundTasks,
     coordinator: CoordinatorService = Depends(get_coordinator),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Generate educational content using the agent coordinator system.
@@ -128,8 +124,7 @@ async def generate_educational_content(
         # Validate request
         if not request.learning_objectives:
             raise HTTPException(
-                status_code=400,
-                detail="At least one learning objective is required"
+                status_code=400, detail="At least one learning objective is required"
             )
 
         # Generate content
@@ -143,13 +138,13 @@ async def generate_educational_content(
                 "user_id": current_user.id,
                 "include_gamification": request.include_gamification,
                 "difficulty_level": request.difficulty_level,
-                **(request.custom_parameters or {})
-            }
+                **(request.custom_parameters or {}),
+            },
         )
 
         # Get LangSmith trace URL if available
         trace_url = None
-        if hasattr(coordinator, 'tracer') and hasattr(coordinator.tracer, 'get_run_url'):
+        if hasattr(coordinator, "tracer") and hasattr(coordinator.tracer, "get_run_url"):
             trace_url = coordinator.tracer.get_run_url()
 
         return ContentGenerationResponse(
@@ -161,23 +156,18 @@ async def generate_educational_content(
             metrics=result.get("metrics", {}),
             generation_time=result.get("generation_time", 0.0),
             trace_url=trace_url,
-            message="Content generated successfully" if result["success"] else "Generation failed"
+            message="Content generated successfully" if result["success"] else "Generation failed",
         )
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Content generation failed: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Content generation failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Content generation failed: {str(e)}")
 
 
 @router.get("/health", response_model=HealthResponse)
-async def get_coordinator_health(
-    coordinator: CoordinatorService = Depends(get_coordinator)
-):
+async def get_coordinator_health(coordinator: CoordinatorService = Depends(get_coordinator)):
     """
     Get health status of the coordinator system.
 
@@ -195,7 +185,7 @@ async def get_coordinator_health(
             active_workflows=health.get("active_workflows", 0),
             resource_utilization=health.get("resource_utilization", {}),
             error_count=health.get("error_count", 0),
-            last_error=health.get("last_error")
+            last_error=health.get("last_error"),
         )
 
     except Exception as e:
@@ -208,14 +198,14 @@ async def get_coordinator_health(
             active_workflows=0,
             resource_utilization={},
             error_count=1,
-            last_error=str(e)
+            last_error=str(e),
         )
 
 
-@router.get("/agents", response_model=List[AgentStatusResponse])
+@router.get("/agents", response_model=list[AgentStatusResponse])
 async def get_agent_statuses(
     coordinator: CoordinatorService = Depends(get_coordinator),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Get status of all active agents in the system.
@@ -233,7 +223,7 @@ async def get_agent_statuses(
                 "current_task": None,
                 "progress": 0.0,
                 "last_activity": datetime.now().isoformat(),
-                "metrics": {"tasks_completed": 0, "avg_time": 0}
+                "metrics": {"tasks_completed": 0, "avg_time": 0},
             },
             {
                 "agent_name": "QuizAgent",
@@ -241,7 +231,7 @@ async def get_agent_statuses(
                 "current_task": None,
                 "progress": 0.0,
                 "last_activity": datetime.now().isoformat(),
-                "metrics": {"quizzes_generated": 0}
+                "metrics": {"quizzes_generated": 0},
             },
             {
                 "agent_name": "ScriptAgent",
@@ -249,27 +239,24 @@ async def get_agent_statuses(
                 "current_task": None,
                 "progress": 0.0,
                 "last_activity": datetime.now().isoformat(),
-                "metrics": {"scripts_generated": 0}
-            }
+                "metrics": {"scripts_generated": 0},
+            },
         ]
 
         return [AgentStatusResponse(**agent) for agent in agents]
 
     except Exception as e:
         logger.error(f"Failed to get agent statuses: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve agent statuses: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve agent statuses: {str(e)}")
 
 
 @router.post("/agents/{agent_name}/execute")
 async def execute_agent_task(
     agent_name: str,
-    task: Dict[str, Any],
+    task: dict[str, Any],
     background_tasks: BackgroundTasks,
     coordinator: CoordinatorService = Depends(get_coordinator),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Execute a specific task on a named agent.
@@ -279,16 +266,10 @@ async def execute_agent_task(
     """
     try:
         # Validate agent exists
-        valid_agents = [
-            "content", "quiz", "terrain", "script",
-            "review", "testing", "supervisor"
-        ]
+        valid_agents = ["content", "quiz", "terrain", "script", "review", "testing", "supervisor"]
 
         if agent_name.lower() not in valid_agents:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Agent '{agent_name}' not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Agent '{agent_name}' not found")
 
         # This would execute the task on the specific agent
         # For now, return a mock response
@@ -297,23 +278,20 @@ async def execute_agent_task(
             "agent": agent_name,
             "task_id": f"task_{datetime.now().timestamp()}",
             "status": "queued",
-            "message": f"Task queued for {agent_name}"
+            "message": f"Task queued for {agent_name}",
         }
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Task execution failed: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Task execution failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Task execution failed: {str(e)}")
 
 
 @router.get("/workflows")
 async def get_active_workflows(
     coordinator: CoordinatorService = Depends(get_coordinator),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Get list of active workflows in the coordinator system.
@@ -324,25 +302,18 @@ async def get_active_workflows(
     try:
         # This would query the workflow coordinator
         # For now, return empty list or mock data
-        return {
-            "workflows": [],
-            "total": 0,
-            "timestamp": datetime.now().isoformat()
-        }
+        return {"workflows": [], "total": 0, "timestamp": datetime.now().isoformat()}
 
     except Exception as e:
         logger.error(f"Failed to get workflows: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve workflows: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve workflows: {str(e)}")
 
 
 @router.delete("/workflows/{workflow_id}")
 async def cancel_workflow(
     workflow_id: str,
     coordinator: CoordinatorService = Depends(get_coordinator),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Cancel an active workflow.
@@ -357,12 +328,9 @@ async def cancel_workflow(
             "success": True,
             "workflow_id": workflow_id,
             "status": "cancelled",
-            "message": "Workflow cancelled successfully"
+            "message": "Workflow cancelled successfully",
         }
 
     except Exception as e:
         logger.error(f"Failed to cancel workflow: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to cancel workflow: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to cancel workflow: {str(e)}")

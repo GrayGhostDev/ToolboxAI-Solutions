@@ -1,5 +1,6 @@
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 """
@@ -8,19 +9,21 @@ Integration tests for the Validation API
 Tests the REST API endpoints for Roblox script validation.
 """
 
-import pytest
 import asyncio
-from fastapi.testclient import TestClient
-from unittest.mock import Mock, patch
 import json
+from unittest.mock import Mock, patch
+
+import pytest
+from fastapi.testclient import TestClient
 
 # Import the FastAPI app and validation router
 try:
-    from apps.backend.main import app
     from apps.backend.api.v1.endpoints.validation import validation_router
+    from apps.backend.main import app
 except ImportError:
     # Create a minimal test app if main app is not available
     from fastapi import FastAPI
+
     from apps.backend.api.v1.endpoints.validation import validation_router
 
     app = FastAPI()
@@ -38,17 +41,13 @@ class TestValidationAPI:
     @pytest.fixture
     def mock_user(self):
         """Mock authenticated user"""
-        return {
-            "email": "teacher@test.com",
-            "role": "teacher",
-            "id": "test_teacher_123"
-        }
+        return {"email": "teacher@test.com", "role": "teacher", "id": "test_teacher_123"}
 
     @pytest.fixture
     def sample_script_request(self):
         """Sample script validation request"""
         return {
-            "script_code": '''
+            "script_code": """
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -57,18 +56,15 @@ local function greetPlayer(player)
 end
 
 game.Players.PlayerAdded:Connect(greetPlayer)
-            ''',
+            """,
             "script_name": "greeting_script.lua",
             "validation_type": "comprehensive",
             "grade_level": "elementary",
             "subject": "computer_science",
-            "learning_objectives": [
-                "Learn basic Roblox scripting",
-                "Understand event connections"
-            ],
+            "learning_objectives": ["Learn basic Roblox scripting", "Understand event connections"],
             "strict_mode": False,
             "include_suggestions": True,
-            "educational_context": True
+            "educational_context": True,
         }
 
     @pytest.fixture
@@ -90,25 +86,25 @@ game.Players.PlayerAdded:Connect(greetPlayer)
                 "complexity_score": 80.0,
                 "total_lines": 8,
                 "function_count": 1,
-                "variable_count": 2
+                "variable_count": 2,
             },
             "security_analysis": {
                 "overall_score": 95.0,
                 "threat_level": "low",
                 "findings": [],
                 "remote_events_secure": True,
-                "recommendations": []
+                "recommendations": [],
             },
             "quality_assessment": {
                 "overall_score": 85.0,
                 "quality_level": "good",
                 "issues": [],
-                "recommendations": []
+                "recommendations": [],
             },
             "compliance_check": {
                 "overall_compliance": "compliant",
                 "violations": [],
-                "platform_ready": True
+                "platform_ready": True,
             },
             "critical_issues": [],
             "warnings": [],
@@ -119,17 +115,21 @@ game.Players.PlayerAdded:Connect(greetPlayer)
                 "security": 95.0,
                 "quality": 85.0,
                 "compliance": 100.0,
-                "educational": 88.0
+                "educational": 88.0,
             },
             "deployment_ready": True,
             "educational_ready": True,
-            "platform_compliant": True
+            "platform_compliant": True,
         }
 
-    def test_validate_script_success(self, client, sample_script_request, mock_validation_report, mock_user):
+    def test_validate_script_success(
+        self, client, sample_script_request, mock_validation_report, mock_user
+    ):
         """Test successful script validation"""
-        with patch("apps.backend.api.v1.endpoints.validation.get_current_user") as mock_auth, \
-             patch("apps.backend.api.v1.endpoints.validation.validation_engine") as mock_engine:
+        with (
+            patch("apps.backend.api.v1.endpoints.validation.get_current_user") as mock_auth,
+            patch("apps.backend.api.v1.endpoints.validation.validation_engine") as mock_engine,
+        ):
 
             # Mock authentication
             mock_auth.return_value = Mock(**mock_user)
@@ -139,10 +139,7 @@ game.Players.PlayerAdded:Connect(greetPlayer)
             mock_engine.export_report.return_value = json.dumps(mock_validation_report)
 
             # Make request
-            response = client.post(
-                "/api/v1/validation/validate",
-                json=sample_script_request
-            )
+            response = client.post("/api/v1/validation/validate", json=sample_script_request)
 
             # Assertions
             assert response.status_code == 200
@@ -160,13 +157,12 @@ game.Players.PlayerAdded:Connect(greetPlayer)
         """Test validation with unauthorized user"""
         with patch("apps.backend.api.v1.endpoints.validation.get_current_user") as mock_auth:
             # Mock unauthorized user
-            mock_auth.return_value = Mock(email="student@test.com", role="student", id="student_123")
+            mock_auth.return_value = Mock(
+                email="student@test.com", role="student", id="student_123"
+            )
 
             # Make request
-            response = client.post(
-                "/api/v1/validation/validate",
-                json=sample_script_request
-            )
+            response = client.post("/api/v1/validation/validate", json=sample_script_request)
 
             # Assertions
             assert response.status_code == 403
@@ -184,18 +180,17 @@ game.Players.PlayerAdded:Connect(greetPlayer)
             }
 
             # Make request
-            response = client.post(
-                "/api/v1/validation/validate",
-                json=invalid_request
-            )
+            response = client.post("/api/v1/validation/validate", json=invalid_request)
 
             # Assertions
             assert response.status_code == 422  # Validation error
 
     def test_validate_script_with_security_issues(self, client, sample_script_request, mock_user):
         """Test validation with security issues"""
-        with patch("apps.backend.api.v1.endpoints.validation.get_current_user") as mock_auth, \
-             patch("apps.backend.api.v1.endpoints.validation.validation_engine") as mock_engine:
+        with (
+            patch("apps.backend.api.v1.endpoints.validation.get_current_user") as mock_auth,
+            patch("apps.backend.api.v1.endpoints.validation.validation_engine") as mock_engine,
+        ):
 
             mock_auth.return_value = Mock(**mock_user)
 
@@ -211,12 +206,7 @@ game.Players.PlayerAdded:Connect(greetPlayer)
                 "deployment_ready": False,
                 "educational_ready": False,
                 "platform_compliant": False,
-                "scores": {
-                    "syntax": 90.0,
-                    "security": 20.0,
-                    "quality": 60.0,
-                    "compliance": 30.0
-                }
+                "scores": {"syntax": 90.0, "security": 20.0, "quality": 60.0, "compliance": 30.0},
             }
 
             mock_engine.validate_script.return_value = Mock(**security_report)
@@ -227,10 +217,7 @@ game.Players.PlayerAdded:Connect(greetPlayer)
             sample_script_request["script_name"] = "insecure_script.lua"
 
             # Make request
-            response = client.post(
-                "/api/v1/validation/validate",
-                json=sample_script_request
-            )
+            response = client.post("/api/v1/validation/validate", json=sample_script_request)
 
             # Assertions
             assert response.status_code == 200
@@ -244,8 +231,10 @@ game.Players.PlayerAdded:Connect(greetPlayer)
 
     def test_batch_validation_success(self, client, sample_script_request, mock_user):
         """Test successful batch validation"""
-        with patch("apps.backend.api.v1.endpoints.validation.get_current_user") as mock_auth, \
-             patch("apps.backend.api.v1.endpoints.validation.validation_engine") as mock_engine:
+        with (
+            patch("apps.backend.api.v1.endpoints.validation.get_current_user") as mock_auth,
+            patch("apps.backend.api.v1.endpoints.validation.validation_engine") as mock_engine,
+        ):
 
             mock_auth.return_value = Mock(**mock_user)
 
@@ -260,7 +249,7 @@ game.Players.PlayerAdded:Connect(greetPlayer)
                     warnings=[],
                     deployment_ready=True,
                     educational_ready=True,
-                    platform_compliant=True
+                    platform_compliant=True,
                 ),
                 Mock(
                     script_name="script2.lua",
@@ -271,8 +260,8 @@ game.Players.PlayerAdded:Connect(greetPlayer)
                     warnings=["Minor performance issue"],
                     deployment_ready=True,
                     educational_ready=True,
-                    platform_compliant=True
-                )
+                    platform_compliant=True,
+                ),
             ]
 
             mock_engine.batch_validate.return_value = mock_reports
@@ -281,16 +270,13 @@ game.Players.PlayerAdded:Connect(greetPlayer)
             batch_request = {
                 "scripts": [
                     sample_script_request.copy(),
-                    {**sample_script_request, "script_name": "script2.lua"}
+                    {**sample_script_request, "script_name": "script2.lua"},
                 ],
-                "parallel_processing": True
+                "parallel_processing": True,
             }
 
             # Make request
-            response = client.post(
-                "/api/v1/validation/validate/batch",
-                json=batch_request
-            )
+            response = client.post("/api/v1/validation/validate/batch", json=batch_request)
 
             # Assertions
             assert response.status_code == 200
@@ -305,8 +291,10 @@ game.Players.PlayerAdded:Connect(greetPlayer)
 
     def test_batch_validation_with_failures(self, client, sample_script_request, mock_user):
         """Test batch validation with some failures"""
-        with patch("apps.backend.api.v1.endpoints.validation.get_current_user") as mock_auth, \
-             patch("apps.backend.api.v1.endpoints.validation.validation_engine") as mock_engine:
+        with (
+            patch("apps.backend.api.v1.endpoints.validation.get_current_user") as mock_auth,
+            patch("apps.backend.api.v1.endpoints.validation.validation_engine") as mock_engine,
+        ):
 
             mock_auth.return_value = Mock(**mock_user)
 
@@ -321,7 +309,7 @@ game.Players.PlayerAdded:Connect(greetPlayer)
                     warnings=[],
                     deployment_ready=True,
                     educational_ready=True,
-                    platform_compliant=True
+                    platform_compliant=True,
                 ),
                 Mock(
                     script_name="script2.lua",
@@ -332,8 +320,8 @@ game.Players.PlayerAdded:Connect(greetPlayer)
                     warnings=[],
                     deployment_ready=False,
                     educational_ready=False,
-                    platform_compliant=False
-                )
+                    platform_compliant=False,
+                ),
             ]
 
             mock_engine.batch_validate.return_value = mock_reports
@@ -342,16 +330,17 @@ game.Players.PlayerAdded:Connect(greetPlayer)
             batch_request = {
                 "scripts": [
                     sample_script_request.copy(),
-                    {**sample_script_request, "script_name": "script2.lua", "script_code": "invalid syntax"}
+                    {
+                        **sample_script_request,
+                        "script_name": "script2.lua",
+                        "script_code": "invalid syntax",
+                    },
                 ],
-                "parallel_processing": True
+                "parallel_processing": True,
             }
 
             # Make request
-            response = client.post(
-                "/api/v1/validation/validate/batch",
-                json=batch_request
-            )
+            response = client.post("/api/v1/validation/validate/batch", json=batch_request)
 
             # Assertions
             assert response.status_code == 200
@@ -364,8 +353,10 @@ game.Players.PlayerAdded:Connect(greetPlayer)
 
     def test_get_validation_statistics(self, client, mock_user):
         """Test getting validation statistics"""
-        with patch("apps.backend.api.v1.endpoints.validation.get_current_user") as mock_auth, \
-             patch("apps.backend.api.v1.endpoints.validation.validation_engine") as mock_engine:
+        with (
+            patch("apps.backend.api.v1.endpoints.validation.get_current_user") as mock_auth,
+            patch("apps.backend.api.v1.endpoints.validation.validation_engine") as mock_engine,
+        ):
 
             mock_auth.return_value = Mock(**mock_user)
 
@@ -378,8 +369,8 @@ game.Players.PlayerAdded:Connect(greetPlayer)
                 "common_issues": {
                     "Missing input validation": 15,
                     "Performance issues": 8,
-                    "Code style violations": 12
-                }
+                    "Code style violations": 12,
+                },
             }
 
             mock_engine.get_validation_statistics.return_value = mock_stats
@@ -404,8 +395,7 @@ game.Players.PlayerAdded:Connect(greetPlayer)
 
             # Make request
             response = client.post(
-                "/api/v1/validation/templates/secure",
-                params={"template_type": "remote_event"}
+                "/api/v1/validation/templates/secure", params={"template_type": "remote_event"}
             )
 
             # Assertions
@@ -424,8 +414,7 @@ game.Players.PlayerAdded:Connect(greetPlayer)
 
             # Make request
             response = client.post(
-                "/api/v1/validation/templates/secure",
-                params={"template_type": "invalid_template"}
+                "/api/v1/validation/templates/secure", params={"template_type": "invalid_template"}
             )
 
             # Assertions
@@ -468,8 +457,10 @@ game.Players.PlayerAdded:Connect(greetPlayer)
 
     def test_validation_engine_error(self, client, sample_script_request, mock_user):
         """Test handling of validation engine errors"""
-        with patch("apps.backend.api.v1.endpoints.validation.get_current_user") as mock_auth, \
-             patch("apps.backend.api.v1.endpoints.validation.validation_engine") as mock_engine:
+        with (
+            patch("apps.backend.api.v1.endpoints.validation.get_current_user") as mock_auth,
+            patch("apps.backend.api.v1.endpoints.validation.validation_engine") as mock_engine,
+        ):
 
             mock_auth.return_value = Mock(**mock_user)
 
@@ -477,19 +468,20 @@ game.Players.PlayerAdded:Connect(greetPlayer)
             mock_engine.validate_script.side_effect = Exception("Engine failure")
 
             # Make request
-            response = client.post(
-                "/api/v1/validation/validate",
-                json=sample_script_request
-            )
+            response = client.post("/api/v1/validation/validate", json=sample_script_request)
 
             # Assertions
             assert response.status_code == 500
             assert "Validation failed" in response.json()["detail"]
 
-    def test_validation_report_formats(self, client, sample_script_request, mock_validation_report, mock_user):
+    def test_validation_report_formats(
+        self, client, sample_script_request, mock_validation_report, mock_user
+    ):
         """Test different validation report formats"""
-        with patch("apps.backend.api.v1.endpoints.validation.get_current_user") as mock_auth, \
-             patch("apps.backend.api.v1.endpoints.validation.validation_engine") as mock_engine:
+        with (
+            patch("apps.backend.api.v1.endpoints.validation.get_current_user") as mock_auth,
+            patch("apps.backend.api.v1.endpoints.validation.validation_engine") as mock_engine,
+        ):
 
             mock_auth.return_value = Mock(**mock_user)
             mock_engine.validate_script.return_value = Mock(**mock_validation_report)
@@ -497,8 +489,7 @@ game.Players.PlayerAdded:Connect(greetPlayer)
             # Test JSON format
             mock_engine.export_report.return_value = json.dumps(mock_validation_report)
             response = client.post(
-                "/api/v1/validation/validate?report_format=json",
-                json=sample_script_request
+                "/api/v1/validation/validate?report_format=json", json=sample_script_request
             )
             assert response.status_code == 200
             data = response.json()
@@ -507,8 +498,7 @@ game.Players.PlayerAdded:Connect(greetPlayer)
             # Test summary format
             mock_engine.export_report.return_value = "Summary report text"
             response = client.post(
-                "/api/v1/validation/validate?report_format=summary",
-                json=sample_script_request
+                "/api/v1/validation/validate?report_format=summary", json=sample_script_request
             )
             assert response.status_code == 200
             data = response.json()
@@ -516,8 +506,10 @@ game.Players.PlayerAdded:Connect(greetPlayer)
 
     def test_large_script_validation(self, client, mock_user):
         """Test validation of large scripts"""
-        with patch("apps.backend.api.v1.endpoints.validation.get_current_user") as mock_auth, \
-             patch("apps.backend.api.v1.endpoints.validation.validation_engine") as mock_engine:
+        with (
+            patch("apps.backend.api.v1.endpoints.validation.get_current_user") as mock_auth,
+            patch("apps.backend.api.v1.endpoints.validation.validation_engine") as mock_engine,
+        ):
 
             mock_auth.return_value = Mock(**mock_user)
 
@@ -527,7 +519,7 @@ game.Players.PlayerAdded:Connect(greetPlayer)
                 "script_code": large_script,
                 "script_name": "large_script.lua",
                 "validation_type": "comprehensive",
-                "educational_context": False
+                "educational_context": False,
             }
 
             # Mock successful validation
@@ -540,17 +532,14 @@ game.Players.PlayerAdded:Connect(greetPlayer)
                 warnings=["Large script detected"],
                 deployment_ready=True,
                 educational_ready=True,
-                platform_compliant=True
+                platform_compliant=True,
             )
 
             mock_engine.validate_script.return_value = mock_report
             mock_engine.export_report.return_value = json.dumps({})
 
             # Make request
-            response = client.post(
-                "/api/v1/validation/validate",
-                json=large_request
-            )
+            response = client.post("/api/v1/validation/validate", json=large_request)
 
             # Assertions
             assert response.status_code == 200
@@ -560,8 +549,10 @@ game.Players.PlayerAdded:Connect(greetPlayer)
 
     def test_concurrent_validations(self, client, sample_script_request, mock_user):
         """Test handling of concurrent validation requests"""
-        with patch("apps.backend.api.v1.endpoints.validation.get_current_user") as mock_auth, \
-             patch("apps.backend.api.v1.endpoints.validation.validation_engine") as mock_engine:
+        with (
+            patch("apps.backend.api.v1.endpoints.validation.get_current_user") as mock_auth,
+            patch("apps.backend.api.v1.endpoints.validation.validation_engine") as mock_engine,
+        ):
 
             mock_auth.return_value = Mock(**mock_user)
 
@@ -577,7 +568,7 @@ game.Players.PlayerAdded:Connect(greetPlayer)
                     warnings=[],
                     deployment_ready=True,
                     educational_ready=True,
-                    platform_compliant=True
+                    platform_compliant=True,
                 )
 
             mock_engine.validate_script.side_effect = mock_validate
@@ -593,10 +584,7 @@ game.Players.PlayerAdded:Connect(greetPlayer)
             # Send requests concurrently (in real scenario would use async client)
             responses = []
             for req in requests:
-                response = client.post(
-                    "/api/v1/validation/validate",
-                    json=req
-                )
+                response = client.post("/api/v1/validation/validate", json=req)
                 responses.append(response)
 
             # Assertions

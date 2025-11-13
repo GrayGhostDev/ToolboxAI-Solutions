@@ -5,12 +5,12 @@ This module provides endpoints for tracking user progress and achievements.
 """
 
 from datetime import datetime
-from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field
 
-from apps.backend.core.deps import get_db, get_current_user
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
+
+from apps.backend.core.deps import get_current_user, get_db
 from database.models import User
 
 router = APIRouter(
@@ -28,8 +28,8 @@ class ProgressItem(BaseModel):
     item_type: str = Field(..., description="Type of progress item (lesson, assessment, etc.)")
     status: str = Field("pending", description="Status of the progress item")
     percentage: float = Field(0.0, ge=0.0, le=100.0, description="Completion percentage")
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
     metadata: dict = Field(default_factory=dict, description="Additional metadata")
 
 
@@ -41,8 +41,8 @@ class UserProgress(BaseModel):
     completed_items: int = 0
     in_progress_items: int = 0
     overall_percentage: float = 0.0
-    last_activity: Optional[datetime] = None
-    items: List[ProgressItem] = []
+    last_activity: datetime | None = None
+    items: list[ProgressItem] = []
 
 
 class UpdateProgressRequest(BaseModel):
@@ -52,7 +52,7 @@ class UpdateProgressRequest(BaseModel):
     item_type: str
     status: str = Field(..., description="Status: pending, in_progress, completed")
     percentage: float = Field(..., ge=0.0, le=100.0)
-    metadata: Optional[dict] = None
+    metadata: dict | None = None
 
 
 class ProgressResponse(BaseModel):
@@ -60,7 +60,7 @@ class ProgressResponse(BaseModel):
 
     success: bool
     message: str
-    data: Optional[ProgressItem] = None
+    data: ProgressItem | None = None
 
 
 class UserProgressResponse(BaseModel):

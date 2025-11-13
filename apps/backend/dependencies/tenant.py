@@ -7,23 +7,17 @@ context in the ToolBoxAI Educational Platform.
 """
 
 import logging
-from typing import Optional, Dict, Any, Generator
-from uuid import UUID
+from collections.abc import Generator
+from typing import Any
 
 from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from apps.backend.api.auth.auth import (
     get_current_user,
-    get_current_organization,
-    AuthorizationError
 )
+from apps.backend.middleware.tenant import TenantContext, get_tenant_context
 from apps.backend.models.schemas import User
-from apps.backend.middleware.tenant import (
-    get_tenant_context,
-    TenantContext,
-    validate_tenant_access
-)
 from database.models.tenant import Organization
 
 # Database session would be imported from database module
@@ -33,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 # === TENANT CONTEXT DEPENDENCIES ===
+
 
 async def get_current_tenant() -> TenantContext:
     """
@@ -49,13 +44,13 @@ async def get_current_tenant() -> TenantContext:
     if not context.has_tenant and not context.is_super_admin:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Tenant context is required for this operation"
+            detail="Tenant context is required for this operation",
         )
 
     return context
 
 
-async def get_optional_tenant() -> Optional[TenantContext]:
+async def get_optional_tenant() -> TenantContext | None:
     """
     Get the current tenant context if available, otherwise return None.
 
@@ -71,7 +66,7 @@ async def get_optional_tenant() -> Optional[TenantContext]:
 
 async def require_tenant_member(
     current_user: User = Depends(get_current_user),
-    tenant_context: TenantContext = Depends(get_current_tenant)
+    tenant_context: TenantContext = Depends(get_current_tenant),
 ) -> tuple[User, TenantContext]:
     """
     Require user to be a member of the current tenant organization.
@@ -93,18 +88,14 @@ async def require_tenant_member(
     # Check if user belongs to the organization
     if not tenant_context.effective_tenant_id:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No tenant context available"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="No tenant context available"
         )
 
     # In production, check database for organization membership
     # For now, check if user has organization context
-    user_org_id = getattr(current_user, 'organization_id', None)
+    user_org_id = getattr(current_user, "organization_id", None)
     if str(user_org_id) != tenant_context.effective_tenant_id:
         # Allow if it's in the JWT token context (organization switching)
-        from apps.backend.api.auth.auth import get_current_organization
-        from fastapi.security import HTTPBearer
-        from fastapi import Request
 
         # This is a simplified check - in production, verify organization membership
         logger.warning(
@@ -117,7 +108,7 @@ async def require_tenant_member(
 
 async def require_tenant_admin(
     current_user: User = Depends(get_current_user),
-    tenant_context: TenantContext = Depends(get_current_tenant)
+    tenant_context: TenantContext = Depends(get_current_tenant),
 ) -> tuple[User, TenantContext]:
     """
     Require user to be an admin of the current tenant organization.
@@ -141,15 +132,14 @@ async def require_tenant_admin(
 
     # Check admin role in organization
     # In production, check database for organization role
-    user_role = getattr(current_user, 'role', '').lower()
-    org_role = getattr(current_user, 'organization_role', user_role).lower()
+    user_role = getattr(current_user, "role", "").lower()
+    org_role = getattr(current_user, "organization_role", user_role).lower()
 
-    admin_roles = ['admin', 'owner', 'super_admin', 'system_admin']
+    admin_roles = ["admin", "owner", "super_admin", "system_admin"]
 
     if user_role not in admin_roles and org_role not in admin_roles:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required for this operation"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required for this operation"
         )
 
     return user, context
@@ -157,7 +147,7 @@ async def require_tenant_admin(
 
 async def require_tenant_manager(
     current_user: User = Depends(get_current_user),
-    tenant_context: TenantContext = Depends(get_current_tenant)
+    tenant_context: TenantContext = Depends(get_current_tenant),
 ) -> tuple[User, TenantContext]:
     """
     Require user to be a manager or admin of the current tenant organization.
@@ -180,21 +170,22 @@ async def require_tenant_manager(
     user, context = await require_tenant_member(current_user, tenant_context)
 
     # Check manager+ role in organization
-    user_role = getattr(current_user, 'role', '').lower()
-    org_role = getattr(current_user, 'organization_role', user_role).lower()
+    user_role = getattr(current_user, "role", "").lower()
+    org_role = getattr(current_user, "organization_role", user_role).lower()
 
-    manager_roles = ['admin', 'manager', 'owner', 'super_admin', 'system_admin']
+    manager_roles = ["admin", "manager", "owner", "super_admin", "system_admin"]
 
     if user_role not in manager_roles and org_role not in manager_roles:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Manager access required for this operation"
+            detail="Manager access required for this operation",
         )
 
     return user, context
 
 
 # === ORGANIZATION-SPECIFIC DEPENDENCIES ===
+
 
 def require_organization_access(organization_id: str):
     """
@@ -206,9 +197,10 @@ def require_organization_access(organization_id: str):
     Returns:
         Callable: FastAPI dependency function
     """
+
     async def organization_access_dependency(
         current_user: User = Depends(get_current_user),
-        tenant_context: TenantContext = Depends(get_current_tenant)
+        tenant_context: TenantContext = Depends(get_current_tenant),
     ) -> tuple[User, str]:
         """Check access to specific organization"""
 
@@ -220,7 +212,7 @@ def require_organization_access(organization_id: str):
         if not tenant_context.can_access_tenant(organization_id):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Access denied to organization {organization_id}"
+                detail=f"Access denied to organization {organization_id}",
             )
 
         return current_user, organization_id
@@ -239,9 +231,10 @@ def require_organization_role(organization_id: str, required_role: str):
     Returns:
         Callable: FastAPI dependency function
     """
+
     async def organization_role_dependency(
         current_user: User = Depends(get_current_user),
-        tenant_context: TenantContext = Depends(get_current_tenant)
+        tenant_context: TenantContext = Depends(get_current_tenant),
     ) -> tuple[User, str]:
         """Check role in specific organization"""
 
@@ -253,25 +246,25 @@ def require_organization_role(organization_id: str, required_role: str):
         if not tenant_context.can_access_tenant(organization_id):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Access denied to organization {organization_id}"
+                detail=f"Access denied to organization {organization_id}",
             )
 
         # Check role hierarchy
-        user_role = getattr(current_user, 'role', '').lower()
-        org_role = getattr(current_user, 'organization_role', user_role).lower()
+        user_role = getattr(current_user, "role", "").lower()
+        org_role = getattr(current_user, "organization_role", user_role).lower()
 
         role_hierarchy = {
-            'admin': ['admin', 'manager', 'teacher', 'member'],
-            'manager': ['manager', 'teacher', 'member'],
-            'teacher': ['teacher', 'member'],
-            'member': ['member']
+            "admin": ["admin", "manager", "teacher", "member"],
+            "manager": ["manager", "teacher", "member"],
+            "teacher": ["teacher", "member"],
+            "member": ["member"],
         }
 
         allowed_roles = role_hierarchy.get(org_role, [])
         if required_role not in allowed_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Role '{required_role}' required in organization {organization_id}"
+                detail=f"Role '{required_role}' required in organization {organization_id}",
             )
 
         return current_user, organization_id
@@ -281,13 +274,15 @@ def require_organization_role(organization_id: str, required_role: str):
 
 # === DATABASE SESSION DEPENDENCIES ===
 
+
 def get_mock_tenant_db_session():
     """
     Mock tenant-scoped database session for development.
     In production, this would return a real database session with tenant filtering.
     """
+
     class MockTenantSession:
-        def __init__(self, tenant_id: Optional[str] = None):
+        def __init__(self, tenant_id: str | None = None):
             self.tenant_id = tenant_id
             self._filters = {"organization_id": tenant_id} if tenant_id else {}
 
@@ -295,7 +290,7 @@ def get_mock_tenant_db_session():
             return MockTenantQuery(self._filters)
 
         def add(self, obj):
-            if self.tenant_id and hasattr(obj, 'organization_id'):
+            if self.tenant_id and hasattr(obj, "organization_id"):
                 obj.organization_id = self.tenant_id
 
         def commit(self):
@@ -311,7 +306,7 @@ def get_mock_tenant_db_session():
             return self._filters
 
     class MockTenantQuery:
-        def __init__(self, tenant_filters: Dict[str, Any]):
+        def __init__(self, tenant_filters: dict[str, Any]):
             self.tenant_filters = tenant_filters
 
         def filter(self, *args):
@@ -404,7 +399,7 @@ async def get_organization_db_session(
     if not tenant_context.is_super_admin and not tenant_context.can_access_tenant(organization_id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Access denied to organization {organization_id}"
+            detail=f"Access denied to organization {organization_id}",
         )
 
     # Mock implementation
@@ -419,10 +414,11 @@ async def get_organization_db_session(
 
 # === UTILITY DEPENDENCIES ===
 
+
 async def get_organization_info(
     tenant_context: TenantContext = Depends(get_current_tenant),
-    db_session = Depends(get_tenant_db_session)
-) -> Optional[Organization]:
+    db_session=Depends(get_tenant_db_session),
+) -> Organization | None:
     """
     Get the current organization information.
 
@@ -452,7 +448,7 @@ async def get_organization_info(
 async def validate_organization_limits(
     action: str,
     tenant_context: TenantContext = Depends(get_current_tenant),
-    organization: Optional[Organization] = Depends(get_organization_info)
+    organization: Organization | None = Depends(get_organization_info),
 ) -> bool:
     """
     Validate if an action can be performed within organization limits.
@@ -478,10 +474,10 @@ async def validate_organization_limits(
 
     # Mock limit validation
     limits_map = {
-        'add_user': 'can_add_user',
-        'add_class': 'can_add_class',
-        'api_call': 'can_make_api_call',
-        'storage_usage': 'can_use_storage'
+        "add_user": "can_add_user",
+        "add_class": "can_add_class",
+        "api_call": "can_make_api_call",
+        "storage_usage": "can_use_storage",
     }
 
     limit_method = limits_map.get(action)
@@ -490,7 +486,7 @@ async def validate_organization_limits(
         if not can_perform:
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail=f"Organization limit exceeded for action: {action}"
+                detail=f"Organization limit exceeded for action: {action}",
             )
 
     return True
@@ -498,10 +494,10 @@ async def validate_organization_limits(
 
 # === REQUEST CONTEXT DEPENDENCIES ===
 
+
 async def get_request_context(
-    request: Request,
-    tenant_context: TenantContext = Depends(get_current_tenant)
-) -> Dict[str, Any]:
+    request: Request, tenant_context: TenantContext = Depends(get_current_tenant)
+) -> dict[str, Any]:
     """
     Get enriched request context with tenant information.
 
@@ -513,13 +509,13 @@ async def get_request_context(
         Dict[str, Any]: Request context with tenant information
     """
     return {
-        "request_id": getattr(request.state, 'request_id', None),
+        "request_id": getattr(request.state, "request_id", None),
         "path": request.url.path,
         "method": request.method,
         "client_ip": request.client.host,
         "user_agent": request.headers.get("User-Agent"),
         "tenant_context": tenant_context.to_dict(),
-        "timestamp": "datetime.now().isoformat()"  # Would use real datetime
+        "timestamp": "datetime.now().isoformat()",  # Would use real datetime
     }
 
 
@@ -531,15 +527,12 @@ __all__ = [
     "require_tenant_member",
     "require_tenant_admin",
     "require_tenant_manager",
-
     # Organization-specific dependencies
     "require_organization_access",
     "require_organization_role",
-
     # Database session dependencies
     "get_tenant_db_session",
     "get_organization_db_session",
-
     # Utility dependencies
     "get_organization_info",
     "validate_organization_limits",

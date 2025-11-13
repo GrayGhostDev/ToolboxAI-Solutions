@@ -4,28 +4,31 @@ Unit tests for Class Management API endpoints.
 Tests all class CRUD operations, enrollment management, and role-based access control.
 """
 
-import pytest
 from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, Mock, patch
 from uuid import UUID, uuid4
-from unittest.mock import Mock, AsyncMock, patch
-from typing import List
 
+import pytest
 from fastapi import HTTPException, status
 
 from apps.backend.api.v1.endpoints.classes import (
-    get_classes,
+    batch_enroll_students,
+    create_class,
+    delete_class,
+    enroll_student,
     get_class_details,
     get_class_students,
-    create_class,
-    update_class,
-    enroll_student,
+    get_classes,
     unenroll_student,
-    batch_enroll_students,
-    delete_class,
+    update_class,
 )
-from apps.backend.models.classes import ClassCreate, ClassUpdate, ClassSummary, ClassDetails
+from apps.backend.models.classes import (
+    ClassCreate,
+    ClassDetails,
+    ClassSummary,
+    ClassUpdate,
+)
 from database.models.models import Class, ClassEnrollment, User
-
 
 # ============================================================================
 # Fixtures
@@ -302,9 +305,7 @@ class TestGetClassDetails:
 
     @pytest.mark.asyncio
     @patch("apps.backend.api.v1.endpoints.classes.database_service")
-    async def test_get_class_details_not_found(
-        self, mock_db_service, mock_current_user_teacher
-    ):
+    async def test_get_class_details_not_found(self, mock_db_service, mock_current_user_teacher):
         """Test class not found error."""
         # Setup
         mock_db_service.initialize = AsyncMock()
@@ -320,9 +321,7 @@ class TestGetClassDetails:
 
         # Execute & Assert
         with pytest.raises(HTTPException) as exc_info:
-            await get_class_details(
-                class_id=str(uuid4()), current_user=mock_current_user_teacher
-            )
+            await get_class_details(class_id=str(uuid4()), current_user=mock_current_user_teacher)
 
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
 
@@ -366,9 +365,9 @@ class TestGetClassStudents:
 
         # Mock students query
         students_result = AsyncMock()
-        students_result.all = Mock(return_value=[
-            (sample_student, datetime.now(), "active", None, None)
-        ])
+        students_result.all = Mock(
+            return_value=[(sample_student, datetime.now(), "active", None, None)]
+        )
 
         mock_session.execute = AsyncMock(side_effect=[class_result, students_result])
 
@@ -436,7 +435,9 @@ class TestCreateClass:
 
         with patch("apps.backend.api.v1.endpoints.classes.Class", return_value=mock_class):
             # Execute
-            result = await create_class(class_data=class_data, current_user=mock_current_user_teacher)
+            result = await create_class(
+                class_data=class_data, current_user=mock_current_user_teacher
+            )
 
         # Assert
         assert isinstance(result, ClassSummary)
@@ -516,9 +517,7 @@ class TestUpdateClass:
 
     @pytest.mark.asyncio
     @patch("apps.backend.api.v1.endpoints.classes.database_service")
-    async def test_update_class_not_found(
-        self, mock_db_service, mock_current_user_teacher
-    ):
+    async def test_update_class_not_found(self, mock_db_service, mock_current_user_teacher):
         """Test updating non-existent class."""
         # Setup
         mock_db_service.initialize = AsyncMock()
@@ -537,7 +536,9 @@ class TestUpdateClass:
         # Execute & Assert
         with pytest.raises(HTTPException) as exc_info:
             await update_class(
-                class_id=str(uuid4()), class_data=update_data, current_user=mock_current_user_teacher
+                class_id=str(uuid4()),
+                class_data=update_data,
+                current_user=mock_current_user_teacher,
             )
 
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
@@ -661,7 +662,9 @@ class TestEnrollStudent:
         # Execute & Assert
         with pytest.raises(HTTPException) as exc_info:
             await enroll_student(
-                class_id=str(uuid4()), student_id=str(uuid4()), current_user=mock_current_user_student
+                class_id=str(uuid4()),
+                student_id=str(uuid4()),
+                current_user=mock_current_user_student,
             )
 
         assert exc_info.value.status_code == status.HTTP_403_FORBIDDEN
@@ -677,9 +680,7 @@ class TestUnenrollStudent:
 
     @pytest.mark.asyncio
     @patch("apps.backend.api.v1.endpoints.classes.database_service")
-    async def test_unenroll_student_success(
-        self, mock_db_service, mock_current_user_teacher
-    ):
+    async def test_unenroll_student_success(self, mock_db_service, mock_current_user_teacher):
         """Test successfully unenrolling a student."""
         # Setup
         mock_db_service.initialize = AsyncMock()
@@ -723,9 +724,7 @@ class TestUnenrollStudent:
 
     @pytest.mark.asyncio
     @patch("apps.backend.api.v1.endpoints.classes.database_service")
-    async def test_unenroll_student_not_enrolled(
-        self, mock_db_service, mock_current_user_teacher
-    ):
+    async def test_unenroll_student_not_enrolled(self, mock_db_service, mock_current_user_teacher):
         """Test unenrolling non-enrolled student."""
         # Setup
         mock_db_service.initialize = AsyncMock()
@@ -889,9 +888,7 @@ class TestDeleteClass:
 
     @pytest.mark.asyncio
     @patch("apps.backend.api.v1.endpoints.classes.database_service")
-    async def test_delete_class_not_found(
-        self, mock_db_service, mock_current_user_admin
-    ):
+    async def test_delete_class_not_found(self, mock_db_service, mock_current_user_admin):
         """Test deleting non-existent class."""
         # Setup
         mock_db_service.initialize = AsyncMock()

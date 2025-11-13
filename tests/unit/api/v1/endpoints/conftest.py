@@ -1,4 +1,5 @@
 """Conftest for API endpoint unit tests."""
+
 import sys
 from pathlib import Path
 

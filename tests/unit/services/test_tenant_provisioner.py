@@ -8,14 +8,14 @@ Tests tenant provisioning workflow including:
 - Tenant deprovisioning workflow
 """
 
-import pytest
-from datetime import datetime, timedelta, timezone
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
+
+import pytest
 
 from apps.backend.services.tenant_provisioner import TenantProvisioner
 from database.models.tenant import Organization, OrganizationStatus, SubscriptionTier
-from database.models.user_modern import User, UserRole, UserStatus
+from database.models.user_modern import User
 
 
 @pytest.fixture
@@ -68,16 +68,26 @@ class TestProvisionTenant:
         # Arrange
         mock_session.get.return_value = mock_organization
 
-        with patch.object(provisioner, '_create_admin_user', new_callable=AsyncMock) as mock_create_admin, \
-             patch.object(provisioner, '_initialize_default_settings', new_callable=AsyncMock) as mock_init_settings, \
-             patch.object(provisioner, '_configure_default_features', new_callable=AsyncMock) as mock_config_features, \
-             patch.object(provisioner, '_send_welcome_email', new_callable=AsyncMock) as mock_send_email:
+        with (
+            patch.object(
+                provisioner, "_create_admin_user", new_callable=AsyncMock
+            ) as mock_create_admin,
+            patch.object(
+                provisioner, "_initialize_default_settings", new_callable=AsyncMock
+            ) as mock_init_settings,
+            patch.object(
+                provisioner, "_configure_default_features", new_callable=AsyncMock
+            ) as mock_config_features,
+            patch.object(
+                provisioner, "_send_welcome_email", new_callable=AsyncMock
+            ) as mock_send_email,
+        ):
 
             mock_create_admin.return_value = {
                 "user_id": 1,
                 "email": "admin@test-org.com",
                 "username": "admin_test-org",
-                "password": "generated_password"
+                "password": "generated_password",
             }
 
             # Act
@@ -87,7 +97,7 @@ class TestProvisionTenant:
                 admin_username="admin_test-org",
                 create_admin=True,
                 initialize_defaults=True,
-                send_welcome_email=True
+                send_welcome_email=True,
             )
 
             # Assert
@@ -103,7 +113,9 @@ class TestProvisionTenant:
             mock_session.commit.assert_called()
 
     @pytest.mark.asyncio
-    async def test_provision_tenant_already_provisioned(self, provisioner, mock_session, mock_organization):
+    async def test_provision_tenant_already_provisioned(
+        self, provisioner, mock_session, mock_organization
+    ):
         """Test provisioning attempt for already provisioned organization."""
         # Arrange
         mock_organization.status = OrganizationStatus.ACTIVE
@@ -112,8 +124,7 @@ class TestProvisionTenant:
 
         # Act
         result = await provisioner.provision_tenant(
-            organization_id=mock_organization.id,
-            create_admin=True
+            organization_id=mock_organization.id, create_admin=True
         )
 
         # Assert
@@ -130,23 +141,32 @@ class TestProvisionTenant:
 
         # Act & Assert
         with pytest.raises(ValueError) as exc_info:
-            await provisioner.provision_tenant(
-                organization_id=organization_id,
-                create_admin=True
-            )
+            await provisioner.provision_tenant(organization_id=organization_id, create_admin=True)
 
         assert "Organization not found" in str(exc_info.value)
 
     @pytest.mark.asyncio
-    async def test_provision_tenant_partial_success(self, provisioner, mock_session, mock_organization):
+    async def test_provision_tenant_partial_success(
+        self, provisioner, mock_session, mock_organization
+    ):
         """Test provisioning with some steps failing."""
         # Arrange
         mock_session.get.return_value = mock_organization
 
-        with patch.object(provisioner, '_create_admin_user', new_callable=AsyncMock) as mock_create_admin, \
-             patch.object(provisioner, '_initialize_default_settings', new_callable=AsyncMock) as mock_init_settings, \
-             patch.object(provisioner, '_configure_default_features', new_callable=AsyncMock) as mock_config_features, \
-             patch.object(provisioner, '_send_welcome_email', new_callable=AsyncMock) as mock_send_email:
+        with (
+            patch.object(
+                provisioner, "_create_admin_user", new_callable=AsyncMock
+            ) as mock_create_admin,
+            patch.object(
+                provisioner, "_initialize_default_settings", new_callable=AsyncMock
+            ) as mock_init_settings,
+            patch.object(
+                provisioner, "_configure_default_features", new_callable=AsyncMock
+            ) as mock_config_features,
+            patch.object(
+                provisioner, "_send_welcome_email", new_callable=AsyncMock
+            ) as mock_send_email,
+        ):
 
             # Make admin creation fail
             mock_create_admin.side_effect = Exception("Email service unavailable")
@@ -157,9 +177,7 @@ class TestProvisionTenant:
 
             # Act
             result = await provisioner.provision_tenant(
-                organization_id=mock_organization.id,
-                create_admin=True,
-                initialize_defaults=True
+                organization_id=mock_organization.id, create_admin=True, initialize_defaults=True
             )
 
             # Assert
@@ -169,13 +187,21 @@ class TestProvisionTenant:
             assert len(result["steps_completed"]) > 0  # Some steps completed
 
     @pytest.mark.asyncio
-    async def test_provision_tenant_without_admin(self, provisioner, mock_session, mock_organization):
+    async def test_provision_tenant_without_admin(
+        self, provisioner, mock_session, mock_organization
+    ):
         """Test provisioning without creating admin user."""
         # Arrange
         mock_session.get.return_value = mock_organization
 
-        with patch.object(provisioner, '_initialize_default_settings', new_callable=AsyncMock) as mock_init_settings, \
-             patch.object(provisioner, '_configure_default_features', new_callable=AsyncMock) as mock_config_features:
+        with (
+            patch.object(
+                provisioner, "_initialize_default_settings", new_callable=AsyncMock
+            ) as mock_init_settings,
+            patch.object(
+                provisioner, "_configure_default_features", new_callable=AsyncMock
+            ) as mock_config_features,
+        ):
 
             mock_init_settings.return_value = None
             mock_config_features.return_value = None
@@ -185,7 +211,7 @@ class TestProvisionTenant:
                 organization_id=mock_organization.id,
                 create_admin=False,
                 initialize_defaults=True,
-                send_welcome_email=False
+                send_welcome_email=False,
             )
 
             # Assert
@@ -207,13 +233,13 @@ class TestCreateAdminUser:
         mock_user.email = "admin@test-org.com"
         mock_user.username = "admin_test-org"
 
-        with patch('apps.backend.services.tenant_provisioner.User', return_value=mock_user):
+        with patch("apps.backend.services.tenant_provisioner.User", return_value=mock_user):
             # Act
             result = await provisioner._create_admin_user(
                 org=mock_organization,
                 email="admin@test-org.com",
                 username="admin_test-org",
-                password="SecurePassword123!"
+                password="SecurePassword123!",
             )
 
             # Assert
@@ -225,19 +251,21 @@ class TestCreateAdminUser:
             mock_session.commit.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_create_admin_user_auto_generated_credentials(self, provisioner, mock_session, mock_organization):
+    async def test_create_admin_user_auto_generated_credentials(
+        self, provisioner, mock_session, mock_organization
+    ):
         """Test admin user creation with auto-generated credentials."""
         # Arrange
         mock_user = Mock(spec=User)
         mock_user.id = 1
 
-        with patch('apps.backend.services.tenant_provisioner.User', return_value=mock_user):
+        with patch("apps.backend.services.tenant_provisioner.User", return_value=mock_user):
             # Act
             result = await provisioner._create_admin_user(
                 org=mock_organization,
                 email=None,  # Should use org email
                 username=None,  # Should be auto-generated
-                password=None  # Should be auto-generated
+                password=None,  # Should be auto-generated
             )
 
             # Assert
@@ -255,8 +283,7 @@ class TestCreateAdminUser:
         # Act & Assert
         with pytest.raises(ValueError) as exc_info:
             await provisioner._create_admin_user(
-                org=mock_organization,
-                email=None  # No email provided and org has no email
+                org=mock_organization, email=None  # No email provided and org has no email
             )
 
         assert "Admin email is required" in str(exc_info.value)
@@ -266,7 +293,9 @@ class TestInitializeDefaultSettings:
     """Test default settings initialization."""
 
     @pytest.mark.asyncio
-    async def test_initialize_default_settings_success(self, provisioner, mock_session, mock_organization):
+    async def test_initialize_default_settings_success(
+        self, provisioner, mock_session, mock_organization
+    ):
         """Test successful default settings initialization."""
         # Arrange
         mock_organization.settings = {}
@@ -284,12 +313,14 @@ class TestInitializeDefaultSettings:
         mock_session.commit.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_initialize_default_settings_merge_existing(self, provisioner, mock_session, mock_organization):
+    async def test_initialize_default_settings_merge_existing(
+        self, provisioner, mock_session, mock_organization
+    ):
         """Test that default settings merge with existing settings."""
         # Arrange
         mock_organization.settings = {
             "custom_setting": "custom_value",
-            "email_notifications": False  # Will be overridden
+            "email_notifications": False,  # Will be overridden
         }
 
         # Act
@@ -305,7 +336,9 @@ class TestConfigureDefaultFeatures:
     """Test default features configuration."""
 
     @pytest.mark.asyncio
-    async def test_configure_default_features_by_tier(self, provisioner, mock_session, mock_organization):
+    async def test_configure_default_features_by_tier(
+        self, provisioner, mock_session, mock_organization
+    ):
         """Test that features are configured correctly for each tier."""
         # Test FREE tier
         mock_organization.subscription_tier = SubscriptionTier.FREE
@@ -353,16 +386,16 @@ class TestDeprovisionTenant:
     """Test tenant deprovisioning workflow."""
 
     @pytest.mark.asyncio
-    async def test_deprovision_tenant_soft_delete(self, provisioner, mock_session, mock_organization):
+    async def test_deprovision_tenant_soft_delete(
+        self, provisioner, mock_session, mock_organization
+    ):
         """Test soft delete deprovisioning."""
         # Arrange
         mock_session.get.return_value = mock_organization
 
         # Act
         result = await provisioner.deprovision_tenant(
-            organization_id=mock_organization.id,
-            delete_data=False,
-            backup_data=True
+            organization_id=mock_organization.id, delete_data=False, backup_data=True
         )
 
         # Assert
@@ -373,16 +406,16 @@ class TestDeprovisionTenant:
         mock_session.commit.assert_called()
 
     @pytest.mark.asyncio
-    async def test_deprovision_tenant_hard_delete(self, provisioner, mock_session, mock_organization):
+    async def test_deprovision_tenant_hard_delete(
+        self, provisioner, mock_session, mock_organization
+    ):
         """Test hard delete deprovisioning."""
         # Arrange
         mock_session.get.return_value = mock_organization
 
         # Act
         result = await provisioner.deprovision_tenant(
-            organization_id=mock_organization.id,
-            delete_data=True,
-            backup_data=True
+            organization_id=mock_organization.id, delete_data=True, backup_data=True
         )
 
         # Assert
@@ -402,10 +435,7 @@ class TestDeprovisionTenant:
 
         # Act & Assert
         with pytest.raises(ValueError) as exc_info:
-            await provisioner.deprovision_tenant(
-                organization_id=organization_id,
-                delete_data=False
-            )
+            await provisioner.deprovision_tenant(organization_id=organization_id, delete_data=False)
 
         assert "Organization not found" in str(exc_info.value)
 

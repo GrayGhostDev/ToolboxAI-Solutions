@@ -4,18 +4,16 @@ Flask Bridge Server Test Script
 Tests the Flask bridge server that facilitates Roblox Studio plugin communication.
 """
 
-import pytest
-import requests
-import json
-import time
 import logging
 import os
-from typing import Dict, Any
+
+import pytest
+import requests
 
 # Skip all tests in this module as they require external services
 pytestmark = pytest.mark.skipif(
-    not os.environ.get('RUN_INTEGRATION_TESTS'),
-    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
+    not os.environ.get("RUN_INTEGRATION_TESTS"),
+    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable",
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -100,10 +98,10 @@ def main():
         logger.info("Attempting to start Flask bridge server...")
 
         # Try to start the server
-        import subprocess
-        import os
 
-        env_path = "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Solutions"
+        env_path = (
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/ToolboxAI-Solutions"
+        )
         try:
             # Create a simple Flask test server
             flask_test = """

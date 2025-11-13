@@ -21,10 +21,9 @@ import json
 import logging
 import secrets
 import time
-from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Optional, Set, Any
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from enum import Enum
+from typing import Any
 
 import redis
 from redis.client import Pipeline
@@ -55,18 +54,18 @@ class SessionInfo:
     created_at: float
     last_activity: float
     expires_at: float
-    ip_address: Optional[str] = None
-    user_agent: Optional[str] = None
-    device_id: Optional[str] = None
+    ip_address: str | None = None
+    user_agent: str | None = None
+    device_id: str | None = None
     is_active: bool = True
-    refresh_token: Optional[str] = None
+    refresh_token: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for Redis storage"""
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "SessionInfo":
+    def from_dict(cls, data: dict[str, Any]) -> "SessionInfo":
         """Create from dictionary retrieved from Redis"""
         return cls(**data)
 
@@ -97,7 +96,7 @@ class SessionManager:
 
     def __init__(
         self,
-        redis_client: Optional[redis.Redis] = None,
+        redis_client: redis.Redis | None = None,
         session_timeout: int = DEFAULT_SESSION_TIMEOUT,
         refresh_timeout: int = DEFAULT_REFRESH_TIMEOUT,
         max_sessions_per_user: int = MAX_SESSIONS_PER_USER,
@@ -117,13 +116,13 @@ class SessionManager:
         self.max_sessions_per_user = max_sessions_per_user
 
         # In-memory fallback for development (NOT for production)
-        self._memory_sessions: Dict[str, SessionInfo] = {}
-        self._memory_user_sessions: Dict[str, Set[str]] = {}
-        self._memory_session_versions: Dict[str, int] = {}
-        self._memory_session_fingerprints: Dict[str, str] = {}
+        self._memory_sessions: dict[str, SessionInfo] = {}
+        self._memory_user_sessions: dict[str, set[str]] = {}
+        self._memory_session_versions: dict[str, int] = {}
+        self._memory_session_fingerprints: dict[str, str] = {}
 
         # OWASP: Track absolute session creation time for maximum lifetime
-        self._session_absolute_timeout: Dict[str, float] = {}
+        self._session_absolute_timeout: dict[str, float] = {}
 
         if not self.redis_client:
             logger.warning("No Redis client provided. Using in-memory storage (NOT for production)")
@@ -169,9 +168,9 @@ class SessionManager:
         user_id: str,
         username: str,
         role: str,
-        ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None,
-        device_id: Optional[str] = None,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+        device_id: str | None = None,
     ) -> SessionInfo:
         """
         Create a new session for a user.
@@ -263,7 +262,7 @@ class SessionManager:
         if session.user_id not in self._memory_session_versions:
             self._memory_session_versions[session.user_id] = 1
 
-    def get_session(self, session_id: str) -> Optional[SessionInfo]:
+    def get_session(self, session_id: str) -> SessionInfo | None:
         """
         Retrieve session information.
 
@@ -278,7 +277,7 @@ class SessionManager:
         else:
             return self._get_session_memory(session_id)
 
-    def _get_session_redis(self, session_id: str) -> Optional[SessionInfo]:
+    def _get_session_redis(self, session_id: str) -> SessionInfo | None:
         """Retrieve session from Redis"""
         session_key = f"{self.SESSION_PREFIX}{session_id}"
         session_data = self.redis_client.hgetall(session_key)
@@ -311,7 +310,7 @@ class SessionManager:
 
         return session
 
-    def _get_session_memory(self, session_id: str) -> Optional[SessionInfo]:
+    def _get_session_memory(self, session_id: str) -> SessionInfo | None:
         """Retrieve session from memory"""
         session = self._memory_sessions.get(session_id)
 
@@ -454,7 +453,7 @@ class SessionManager:
 
         return len(session_ids)
 
-    def get_user_sessions(self, user_id: str) -> List[SessionInfo]:
+    def get_user_sessions(self, user_id: str) -> list[SessionInfo]:
         """
         Get all active sessions for a user.
 
@@ -469,7 +468,7 @@ class SessionManager:
         else:
             return self._get_user_sessions_memory(user_id)
 
-    def _get_user_sessions_redis(self, user_id: str) -> List[SessionInfo]:
+    def _get_user_sessions_redis(self, user_id: str) -> list[SessionInfo]:
         """Get user sessions from Redis"""
         user_sessions_key = f"{self.USER_SESSIONS_PREFIX}{user_id}"
         session_ids = self.redis_client.smembers(user_sessions_key)
@@ -482,7 +481,7 @@ class SessionManager:
 
         return sessions
 
-    def _get_user_sessions_memory(self, user_id: str) -> List[SessionInfo]:
+    def _get_user_sessions_memory(self, user_id: str) -> list[SessionInfo]:
         """Get user sessions from memory"""
         if user_id not in self._memory_user_sessions:
             return []
@@ -513,7 +512,7 @@ class SessionManager:
             self.invalidate_session(session.session_id)
             logger.info(f"Removed old session {session.session_id} due to session limit")
 
-    def refresh_session(self, session_id: str, refresh_token: str) -> Optional[SessionInfo]:
+    def refresh_session(self, session_id: str, refresh_token: str) -> SessionInfo | None:
         """
         Refresh a session using refresh token.
 
@@ -572,8 +571,8 @@ class SessionManager:
         user_id: str,
         session_id: str,
         event: SessionEvent,
-        ip_address: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        ip_address: str | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         """
         Log session events for audit trail.
@@ -636,10 +635,10 @@ class SessionManager:
 
 
 # Global session manager instance
-_session_manager: Optional[SessionManager] = None
+_session_manager: SessionManager | None = None
 
 
-def get_session_manager(redis_client: Optional[redis.Redis] = None) -> SessionManager:
+def get_session_manager(redis_client: redis.Redis | None = None) -> SessionManager:
     """
     Get or create the global session manager instance.
 
@@ -658,7 +657,7 @@ def get_session_manager(redis_client: Optional[redis.Redis] = None) -> SessionMa
 
 
 def initialize_session_manager(
-    redis_client: Optional[redis.Redis] = None,
+    redis_client: redis.Redis | None = None,
     session_timeout: int = SessionManager.DEFAULT_SESSION_TIMEOUT,
     refresh_timeout: int = SessionManager.DEFAULT_REFRESH_TIMEOUT,
     max_sessions_per_user: int = SessionManager.MAX_SESSIONS_PER_USER,

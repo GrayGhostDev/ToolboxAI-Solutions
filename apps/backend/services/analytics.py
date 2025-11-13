@@ -4,27 +4,25 @@ Analytics API Endpoints
 Provides REST API endpoints for advanced analytics and reporting features.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, Path
-from fastapi.responses import StreamingResponse, FileResponse
-from typing import Dict, List, Optional, Any
-from datetime import datetime, timedelta, timezone
-from pydantic import BaseModel, Field
+import io
 import random
-from sqlalchemy.ext.asyncio import AsyncSession
-from database.connection import get_db
-from apps.backend.api.auth.auth import get_current_user
+from datetime import datetime, timedelta, timezone
+from enum import Enum
+from typing import Any
+
+import pandas as pd
 from apps.backend.analytics_advanced import (
     AdvancedAnalytics,
     generate_analytics_report,
-    PredictionResult,
-    InsightResult,
-    AnalyticsReport,
 )
 from apps.backend.cache import cache_result
-import json
-import io
-import pandas as pd
-from enum import Enum
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Query
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from apps.backend.api.auth.auth import get_current_user
+from database.connection import get_db
 
 router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 
@@ -69,9 +67,9 @@ class PredictionRequest(BaseModel):
     """Request model for predictions"""
 
     metric_type: MetricType
-    user_id: Optional[str] = None
-    course_id: Optional[str] = None
-    additional_params: Optional[Dict[str, Any]] = None
+    user_id: str | None = None
+    course_id: str | None = None
+    additional_params: dict[str, Any] | None = None
 
 
 class ReportRequest(BaseModel):
@@ -80,27 +78,27 @@ class ReportRequest(BaseModel):
     report_type: ReportType
     start_date: datetime
     end_date: datetime
-    filters: Optional[Dict[str, Any]] = None
+    filters: dict[str, Any] | None = None
     format: ReportFormat = ReportFormat.JSON
-    email_delivery: Optional[str] = None
+    email_delivery: str | None = None
 
 
 class InsightRequest(BaseModel):
     """Request model for ML insights"""
 
     scope: InsightScope
-    entity_id: Optional[str] = None
+    entity_id: str | None = None
     limit: int = Field(default=10, le=50)
 
 
 class DashboardMetrics(BaseModel):
     """Response model for dashboard metrics"""
 
-    period: Dict[str, str]
-    metrics: Dict[str, Any]
-    trends: Dict[str, List[Dict[str, Any]]]
-    predictions: List[Dict[str, Any]]
-    insights: List[Dict[str, Any]]
+    period: dict[str, str]
+    metrics: dict[str, Any]
+    trends: dict[str, list[dict[str, Any]]]
+    predictions: list[dict[str, Any]]
+    insights: list[dict[str, Any]]
 
 
 @router.get("/dashboard", response_model=DashboardMetrics)
@@ -414,11 +412,11 @@ async def detect_anomalies(
 
 @router.get("/trends/engagement")
 async def get_engagement_trends(
-    start_date: Optional[datetime] = Query(None, description="Start date for trends"),
-    end_date: Optional[datetime] = Query(None, description="End date for trends"),
+    start_date: datetime | None = Query(None, description="Start date for trends"),
+    end_date: datetime | None = Query(None, description="End date for trends"),
     interval: str = Query("day", description="Interval for data points"),
     current_user: dict = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get engagement trend data"""
 
     # Default to last 30 days if dates not provided
@@ -480,10 +478,10 @@ async def get_engagement_trends(
 
 @router.get("/trends/content")
 async def get_content_trends(
-    start_date: Optional[datetime] = Query(None, description="Start date for trends"),
-    end_date: Optional[datetime] = Query(None, description="End date for trends"),
+    start_date: datetime | None = Query(None, description="Start date for trends"),
+    end_date: datetime | None = Query(None, description="End date for trends"),
     current_user: dict = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get content consumption trends"""
 
     # Default to last 30 days if dates not provided
@@ -557,9 +555,9 @@ async def get_content_trends(
 @router.get("/subject_mastery")
 async def get_subject_mastery(
     time_range: str = Query("30d"),
-    student_id: Optional[str] = Query(None),
+    student_id: str | None = Query(None),
     current_user: dict = Depends(get_current_user),
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Get subject mastery levels"""
     subjects = [
         "Mathematics",
@@ -623,9 +621,9 @@ async def get_metric_trends(
 
 @router.post("/export")
 async def export_analytics_data(
-    start_date: Optional[datetime] = Query(None),
-    end_date: Optional[datetime] = Query(None),
-    data_types: List[str] = Query(...),
+    start_date: datetime | None = Query(None),
+    end_date: datetime | None = Query(None),
+    data_types: list[str] = Query(...),
     format: ReportFormat = Query(default=ReportFormat.CSV),
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),

@@ -3,8 +3,9 @@ Application Metrics Module - Production Monitoring
 """
 
 import time
-from prometheus_client import Counter, Histogram, Gauge, generate_latest
 from functools import wraps
+
+from prometheus_client import Counter, Gauge, Histogram, generate_latest
 
 # Request metrics
 REQUEST_COUNT = Counter(
@@ -59,7 +60,7 @@ def track_request(method: str, endpoint: str):
             try:
                 result = await func(*args, **kwargs)
                 return result
-            except Exception as e:
+            except Exception:
                 status = 500
                 raise
             finally:
@@ -94,7 +95,7 @@ def track_gpt41_request(model: str):
                     GPT41_COST.labels(model).inc(cost)
 
                 return result
-            except Exception as e:
+            except Exception:
                 status = "error"
                 raise
             finally:

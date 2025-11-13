@@ -1,4 +1,5 @@
 import pytest_asyncio
+
 """
 Comprehensive tests for Roblox plugin pipeline integration
 Tests the complete flow from plugin request to agent execution and response
@@ -13,30 +14,29 @@ if str(project_root) not in sys.path:
 
 
 
-import pytest
-from tests.fixtures.agents import mock_llm
 import asyncio
 import json
 from datetime import datetime
-from unittest.mock import Mock, patch, AsyncMock, MagicMock
-from typing import Dict, Any
+from typing import Any, Dict
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import pytest
+
+from apps.backend.roblox_server import PluginManager, PluginSecurity
 
 # Import components to test
-from core.agents.plugin_communication import (
-    PluginCommunicationHub,
-    PluginRequest,
-    PluginResponse,
-    PluginEventType as EventType
-)
+from core.agents.plugin_communication import PluginCommunicationHub
+from core.agents.plugin_communication import PluginEventType as EventType
+from core.agents.plugin_communication import PluginRequest, PluginResponse
 from core.agents.supervisor import SupervisorAgent
-from apps.backend.roblox_server import PluginManager, PluginSecurity
+from database.core.roblox_models import PluginRequest as DBPluginRequest
 from database.core.roblox_models import (
     RobloxContent,
-    PluginRequest as DBPluginRequest,
+    RobloxDatabaseHelper,
     RobloxSession,
     StudentProgress,
-    RobloxDatabaseHelper
 )
+from tests.fixtures.agents import mock_llm
 
 
 class TestPluginCommunicationHub:
@@ -511,7 +511,7 @@ class TestDatabaseIntegration:
     async def db_session(self):
         """Create a mock database session for testing"""
         from unittest.mock import AsyncMock, MagicMock
-        
+
         # Create a mock session with all necessary methods
         session = AsyncMock()
         session.add = MagicMock()
@@ -537,8 +537,9 @@ class TestDatabaseIntegration:
 async def test_store_generated_content(self, db_session):
         """Test storing generated content - mocked"""
         from unittest.mock import MagicMock
+
         from database.core.roblox_models import RobloxDatabaseHelper
-        
+
         # Create a mock content object
         mock_content = MagicMock()
         mock_content.id = "content-123"
@@ -574,8 +575,9 @@ async def test_store_generated_content(self, db_session):
 async def test_get_content_for_lesson(self, db_session):
         """Test retrieving content for a lesson - mocked"""
         from unittest.mock import MagicMock
+
         from database.core.roblox_models import RobloxDatabaseHelper
-        
+
         # Create mock content objects
         mock_quiz = MagicMock()
         mock_quiz.content_type = "quiz"
@@ -622,8 +624,9 @@ async def test_get_content_for_lesson(self, db_session):
 async def test_track_student_progress(self, db_session):
         """Test tracking student progress - mocked"""
         from unittest.mock import MagicMock
+
         from database.core.roblox_models import RobloxDatabaseHelper
-        
+
         # Create mock progress object
         mock_progress = MagicMock()
         mock_progress.student_id = "student-001"
@@ -673,8 +676,9 @@ async def test_track_student_progress(self, db_session):
 async def test_create_session(self, db_session):
         """Test creating a Roblox session - mocked"""
         from unittest.mock import MagicMock
+
         from database.core.roblox_models import RobloxDatabaseHelper
-        
+
         # Create mock session object
         mock_session = MagicMock()
         mock_session.session_id = "session-123"

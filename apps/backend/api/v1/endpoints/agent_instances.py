@@ -8,24 +8,21 @@ user's organization.
 Phase 1 Task 1.4: Multi-tenant API endpoint implementation
 """
 
-from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from sqlalchemy.orm import selectinload
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.core.deps import (
-    get_current_user,
+    get_async_db,
     get_current_active_user,
     get_current_organization_id,
-    get_async_db,
 )
 from apps.backend.core.logging import logging_manager
-from database.models.agent_models import AgentInstance, AgentExecution, AgentMetrics
 from database.models import User
+from database.models.agent_models import AgentExecution, AgentInstance, AgentMetrics
 
 # Initialize logger
 logger = logging_manager.get_logger(__name__)
@@ -41,51 +38,45 @@ router = APIRouter(prefix="/instances", tags=["agent-instances"])
 
 class AgentInstanceCreate(BaseModel):
     """Schema for creating a new agent instance"""
+
     agent_id: str = Field(..., description="Unique identifier for the agent")
     agent_type: str = Field(..., description="Type of agent (CONTENT_GENERATOR, etc.)")
-    configuration: Optional[dict] = Field(default_factory=dict, description="Agent configuration")
+    configuration: dict | None = Field(default_factory=dict, description="Agent configuration")
 
     class Config:
         json_schema_extra = {
             "example": {
                 "agent_id": "content-gen-001",
                 "agent_type": "CONTENT_GENERATOR",
-                "configuration": {
-                    "model": "gpt-4",
-                    "temperature": 0.7
-                }
+                "configuration": {"model": "gpt-4", "temperature": 0.7},
             }
         }
 
 
 class AgentInstanceUpdate(BaseModel):
     """Schema for updating an agent instance"""
-    status: Optional[str] = Field(None, description="Agent status")
-    configuration: Optional[dict] = Field(None, description="Updated configuration")
+
+    status: str | None = Field(None, description="Agent status")
+    configuration: dict | None = Field(None, description="Updated configuration")
 
     class Config:
         json_schema_extra = {
-            "example": {
-                "status": "IDLE",
-                "configuration": {
-                    "model": "gpt-4",
-                    "temperature": 0.8
-                }
-            }
+            "example": {"status": "IDLE", "configuration": {"model": "gpt-4", "temperature": 0.8}}
         }
 
 
 class AgentInstanceResponse(BaseModel):
     """Schema for agent instance response"""
+
     id: UUID
     agent_id: str
     agent_type: str
     status: str
     organization_id: UUID
-    created_by_id: Optional[UUID]
+    created_by_id: UUID | None
     created_at: str
-    updated_at: Optional[str]
-    configuration: Optional[dict]
+    updated_at: str | None
+    configuration: dict | None
 
     class Config:
         from_attributes = True
@@ -93,7 +84,8 @@ class AgentInstanceResponse(BaseModel):
 
 class AgentInstanceListResponse(BaseModel):
     """Schema for paginated agent instance list"""
-    items: List[AgentInstanceResponse]
+
+    items: list[AgentInstanceResponse]
     total: int
     page: int
     page_size: int
@@ -110,8 +102,8 @@ async def list_agent_instances(
     org_id: UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_active_user),
-    status_filter: Optional[str] = Query(None, description="Filter by status"),
-    agent_type_filter: Optional[str] = Query(None, description="Filter by agent type"),
+    status_filter: str | None = Query(None, description="Filter by status"),
+    agent_type_filter: str | None = Query(None, description="Filter by agent type"),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(50, ge=1, le=100, description="Items per page"),
 ):
@@ -292,9 +284,7 @@ async def get_agent_instance(
     """
     try:
         # Query with organization filter (defense in depth with RLS)
-        query = select(AgentInstance).filter_by(
-            agent_id=agent_id, organization_id=org_id
-        )
+        query = select(AgentInstance).filter_by(agent_id=agent_id, organization_id=org_id)
         result = await db.execute(query)
         agent = result.scalar_one_or_none()
 
@@ -357,9 +347,7 @@ async def update_agent_instance(
     """
     try:
         # Query with organization filter
-        query = select(AgentInstance).filter_by(
-            agent_id=agent_id, organization_id=org_id
-        )
+        query = select(AgentInstance).filter_by(agent_id=agent_id, organization_id=org_id)
         result = await db.execute(query)
         agent = result.scalar_one_or_none()
 
@@ -432,9 +420,7 @@ async def delete_agent_instance(
     """
     try:
         # Query with organization filter
-        query = select(AgentInstance).filter_by(
-            agent_id=agent_id, organization_id=org_id
-        )
+        query = select(AgentInstance).filter_by(agent_id=agent_id, organization_id=org_id)
         result = await db.execute(query)
         agent = result.scalar_one_or_none()
 
@@ -468,7 +454,7 @@ async def delete_agent_instance(
         )
 
 
-@router.get("/{agent_id}/executions", response_model=List[dict])
+@router.get("/{agent_id}/executions", response_model=list[dict])
 async def get_agent_executions(
     agent_id: str,
     org_id: UUID = Depends(get_current_organization_id),
@@ -497,9 +483,7 @@ async def get_agent_executions(
     """
     try:
         # First verify agent belongs to current organization
-        agent_query = select(AgentInstance).filter_by(
-            agent_id=agent_id, organization_id=org_id
-        )
+        agent_query = select(AgentInstance).filter_by(agent_id=agent_id, organization_id=org_id)
         agent_result = await db.execute(agent_query)
         agent = agent_result.scalar_one_or_none()
 
@@ -576,9 +560,7 @@ async def get_agent_metrics(
     """
     try:
         # First verify agent belongs to current organization
-        agent_query = select(AgentInstance).filter_by(
-            agent_id=agent_id, organization_id=org_id
-        )
+        agent_query = select(AgentInstance).filter_by(agent_id=agent_id, organization_id=org_id)
         agent_result = await db.execute(agent_query)
         agent = agent_result.scalar_one_or_none()
 
@@ -619,9 +601,9 @@ async def get_agent_metrics(
             "successful_executions": metrics.successful_executions,
             "failed_executions": metrics.failed_executions,
             "average_execution_time": metrics.average_execution_time,
-            "last_execution_time": metrics.last_execution_time.isoformat()
-            if metrics.last_execution_time
-            else None,
+            "last_execution_time": (
+                metrics.last_execution_time.isoformat() if metrics.last_execution_time else None
+            ),
         }
 
     except HTTPException:

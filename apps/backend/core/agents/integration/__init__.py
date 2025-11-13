@@ -8,16 +8,18 @@ Provides:
 - IntegrationPlatform: Platform management and service orchestration
 - IntegrationEvent: Event handling for integration workflows
 """
+
 import logging
-from typing import Dict, List, Any, Optional
 from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class IntegrationStatus(Enum):
     """Status codes for integration operations"""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -37,8 +39,8 @@ class IntegrationEvent:
         self,
         event_type: str,
         platform: str,
-        data: Dict[str, Any],
-        metadata: Optional[Dict[str, Any]] = None
+        data: dict[str, Any],
+        metadata: dict[str, Any] | None = None,
     ):
         """
         Initialize integration event
@@ -70,7 +72,7 @@ class IntegrationEvent:
         self.metadata["error"] = error
         logger.error(f"Event {self.event_id} failed: {error}")
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert event to dictionary"""
         return {
             "event_id": self.event_id,
@@ -79,7 +81,7 @@ class IntegrationEvent:
             "data": self.data,
             "metadata": self.metadata,
             "timestamp": self.timestamp.isoformat(),
-            "status": self.status.value
+            "status": self.status.value,
         }
 
 
@@ -91,7 +93,7 @@ class IntegrationPlatform:
     Handles authentication, rate limiting, and service coordination.
     """
 
-    def __init__(self, platform_name: str, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, platform_name: str, config: dict[str, Any] | None = None):
         """
         Initialize integration platform
 
@@ -102,7 +104,7 @@ class IntegrationPlatform:
         self.platform_name = platform_name
         self.config = config or {}
         self.is_connected = False
-        self.events: List[IntegrationEvent] = []
+        self.events: list[IntegrationEvent] = []
 
         logger.info(f"Initialized {platform_name} integration platform")
 
@@ -117,19 +119,22 @@ class IntegrationPlatform:
             logger.info(f"Connecting to {self.platform_name}...")
 
             # Platform-specific connection logic
-            if self.platform_name.lower() == 'roblox':
+            if self.platform_name.lower() == "roblox":
                 from apps.backend.services.roblox_service import RobloxService
-                api_key = self.config.get('api_key') or self.config.get('ROBLOX_API_KEY')
+
+                api_key = self.config.get("api_key") or self.config.get("ROBLOX_API_KEY")
                 self._service = RobloxService(api_key=api_key)
                 logger.info("Roblox service initialized")
 
-            elif self.platform_name.lower() == 'stripe':
+            elif self.platform_name.lower() == "stripe":
                 from apps.backend.services.stripe_service import StripeService
+
                 self._service = StripeService()
                 logger.info("Stripe service initialized")
 
-            elif self.platform_name.lower() in ['sendgrid', 'email']:
+            elif self.platform_name.lower() in ["sendgrid", "email"]:
                 from apps.backend.services.email import email_service
+
                 self._service = email_service
                 logger.info("SendGrid email service initialized")
 
@@ -153,7 +158,7 @@ class IntegrationPlatform:
         logger.info(f"Disconnecting from {self.platform_name}")
         self.is_connected = False
 
-    async def send_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def send_data(self, data: dict[str, Any]) -> dict[str, Any]:
         """
         Send data to external platform
 
@@ -170,63 +175,60 @@ class IntegrationPlatform:
 
         try:
             # Route to platform-specific service
-            if self.platform_name.lower() == 'roblox':
+            if self.platform_name.lower() == "roblox":
                 # Roblox operations: upload_script or upload_asset
-                operation = data.get('operation', 'upload_script')
+                operation = data.get("operation", "upload_script")
 
-                if operation == 'upload_script':
+                if operation == "upload_script":
                     result = self._service.upload_script(
-                        universe_id=data.get('universe_id', ''),
-                        script_name=data.get('script_name', ''),
-                        script_content=data.get('script_content', ''),
-                        script_type=data.get('script_type', 'ModuleScript')
+                        universe_id=data.get("universe_id", ""),
+                        script_name=data.get("script_name", ""),
+                        script_content=data.get("script_content", ""),
+                        script_type=data.get("script_type", "ModuleScript"),
                     )
-                elif operation == 'upload_asset':
+                elif operation == "upload_asset":
                     result = self._service.upload_asset(
-                        universe_id=data.get('universe_id', ''),
-                        asset_name=data.get('asset_name', ''),
-                        asset_data=data.get('asset_data', b''),
-                        asset_type=data.get('asset_type', 'Model')
+                        universe_id=data.get("universe_id", ""),
+                        asset_name=data.get("asset_name", ""),
+                        asset_data=data.get("asset_data", b""),
+                        asset_type=data.get("asset_type", "Model"),
                     )
                 else:
                     result = {"success": False, "error": f"Unknown Roblox operation: {operation}"}
 
-            elif self.platform_name.lower() == 'stripe':
+            elif self.platform_name.lower() == "stripe":
                 # Stripe operations - for now return success
                 # In production, this would call specific Stripe methods
                 logger.info(f"Stripe operation: {data.get('operation', 'payment')}")
                 result = {
                     "success": True,
                     "message": "Stripe operation completed",
-                    "operation": data.get('operation', 'payment')
+                    "operation": data.get("operation", "payment"),
                 }
 
-            elif self.platform_name.lower() in ['sendgrid', 'email']:
+            elif self.platform_name.lower() in ["sendgrid", "email"]:
                 # SendGrid email operations
                 import asyncio
+
                 email_result = await self._service.send_email(
-                    to_emails=data.get('to_email', data.get('to_emails', '')),
-                    subject=data.get('subject', ''),
-                    text_content=data.get('body', data.get('text_content', '')),
-                    html_content=data.get('html_body', data.get('html_content', None)),
-                    attachments=data.get('attachments', None)
+                    to_emails=data.get("to_email", data.get("to_emails", "")),
+                    subject=data.get("subject", ""),
+                    text_content=data.get("body", data.get("text_content", "")),
+                    html_content=data.get("html_body", data.get("html_content", None)),
+                    attachments=data.get("attachments", None),
                 )
                 result = email_result
 
             else:
                 # Generic platform - return mock success
                 logger.warning(f"Generic send_data for platform: {self.platform_name}")
-                result = {
-                    "success": True,
-                    "message": "Data sent to generic platform",
-                    "data": data
-                }
+                result = {"success": True, "message": "Data sent to generic platform", "data": data}
 
             # Add platform metadata to result
             return {
                 **result,
                 "platform": self.platform_name,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
         except Exception as e:
@@ -235,10 +237,10 @@ class IntegrationPlatform:
                 "status": "error",
                 "platform": self.platform_name,
                 "error": str(e),
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
-    async def receive_data(self) -> Optional[Dict[str, Any]]:
+    async def receive_data(self) -> dict[str, Any] | None:
         """
         Receive data from external platform
 
@@ -253,25 +255,16 @@ class IntegrationPlatform:
         return None
 
     def create_event(
-        self,
-        event_type: str,
-        data: Dict[str, Any],
-        metadata: Optional[Dict[str, Any]] = None
+        self, event_type: str, data: dict[str, Any], metadata: dict[str, Any] | None = None
     ) -> IntegrationEvent:
         """Create and track integration event"""
         event = IntegrationEvent(
-            event_type=event_type,
-            platform=self.platform_name,
-            data=data,
-            metadata=metadata
+            event_type=event_type, platform=self.platform_name, data=data, metadata=metadata
         )
         self.events.append(event)
         return event
 
-    def get_events(
-        self,
-        status: Optional[IntegrationStatus] = None
-    ) -> List[IntegrationEvent]:
+    def get_events(self, status: IntegrationStatus | None = None) -> list[IntegrationEvent]:
         """
         Get integration events, optionally filtered by status
 
@@ -294,14 +287,14 @@ class IntegrationAgent:
     Coordinates with IntegrationPlatform for specific service connections.
     """
 
-    def __init__(self, platforms: Optional[List[str]] = None):
+    def __init__(self, platforms: list[str] | None = None):
         """
         Initialize integration agent
 
         Args:
             platforms: List of platform names to manage
         """
-        self.platforms: Dict[str, IntegrationPlatform] = {}
+        self.platforms: dict[str, IntegrationPlatform] = {}
 
         if platforms:
             for platform_name in platforms:
@@ -310,9 +303,7 @@ class IntegrationAgent:
         logger.info(f"IntegrationAgent initialized with {len(self.platforms)} platforms")
 
     def register_platform(
-        self,
-        platform_name: str,
-        config: Optional[Dict[str, Any]] = None
+        self, platform_name: str, config: dict[str, Any] | None = None
     ) -> IntegrationPlatform:
         """
         Register a new platform
@@ -329,11 +320,11 @@ class IntegrationAgent:
         logger.info(f"Registered platform: {platform_name}")
         return platform
 
-    def get_platform(self, platform_name: str) -> Optional[IntegrationPlatform]:
+    def get_platform(self, platform_name: str) -> IntegrationPlatform | None:
         """Get platform by name"""
         return self.platforms.get(platform_name)
 
-    async def integrate(self, system: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def integrate(self, system: str, data: dict[str, Any]) -> dict[str, Any]:
         """
         Integrate with external system
 
@@ -361,10 +352,10 @@ class IntegrationAgent:
             "status": "integration_complete",
             "system": system,
             "result": result,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
-    async def sync_all(self) -> Dict[str, Any]:
+    async def sync_all(self) -> dict[str, Any]:
         """
         Sync data across all registered platforms
 
@@ -381,21 +372,18 @@ class IntegrationAgent:
                 # Placeholder for sync logic
                 results[platform_name] = {
                     "status": "synced",
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.utcnow().isoformat(),
                 }
             except Exception as e:
-                results[platform_name] = {
-                    "status": "error",
-                    "error": str(e)
-                }
+                results[platform_name] = {"status": "error", "error": str(e)}
                 logger.error(f"Sync failed for {platform_name}: {e}")
 
         return results
 
 
 __all__ = [
-    'IntegrationAgent',
-    'IntegrationPlatform',
-    'IntegrationEvent',
-    'IntegrationStatus',
+    "IntegrationAgent",
+    "IntegrationPlatform",
+    "IntegrationEvent",
+    "IntegrationStatus",
 ]

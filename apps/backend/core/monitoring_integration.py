@@ -12,16 +12,14 @@ This module integrates comprehensive monitoring capabilities into the FastAPI ap
 
 import logging
 import time
-from typing import Optional
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from prometheus_fastapi_instrumentator import Instrumentator, metrics
-from prometheus_client import CollectorRegistry
 
-from apps.backend.core.metrics import metrics as custom_metrics, setup_metrics_endpoint
-from apps.backend.middleware.prometheus_middleware import setup_prometheus_middleware
 from apps.backend.api.health.enhanced_health import router as health_router
 from apps.backend.core.config import settings
+from apps.backend.core.metrics import metrics as custom_metrics
+from apps.backend.middleware.prometheus_middleware import setup_prometheus_middleware
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +48,7 @@ class ToolBoxAIMonitoringIntegration:
         enable_health_checks: bool = True,
         enable_custom_metrics: bool = True,
         metrics_endpoint: str = "/metrics",
-        excluded_paths: Optional[set] = None,
+        excluded_paths: set | None = None,
     ) -> None:
         """
         Setup comprehensive monitoring for the FastAPI application.
@@ -353,7 +351,7 @@ def setup_monitoring_for_app(app: FastAPI, **kwargs) -> ToolBoxAIMonitoringInteg
     return monitoring_integration
 
 
-def get_monitoring_integration() -> Optional[ToolBoxAIMonitoringIntegration]:
+def get_monitoring_integration() -> ToolBoxAIMonitoringIntegration | None:
     """Get the current monitoring integration instance"""
     return monitoring_integration
 

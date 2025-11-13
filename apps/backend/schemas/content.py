@@ -5,10 +5,10 @@ Content schema definitions
 from ..models.schemas import (
     ContentRequest,
     ContentResponse,
-    GeneratedScript,
-    TerrainConfiguration,
     GameMechanics,
+    GeneratedScript,
     LearningObjective,
+    TerrainConfiguration,
 )
 
 # Content-related schemas

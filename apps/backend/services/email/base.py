@@ -6,7 +6,6 @@ Preserves ALL global instances for backwards compatibility
 @since 2025-09-27
 """
 
-import os
 import logging
 
 logger = logging.getLogger(__name__)
@@ -16,8 +15,9 @@ logger = logging.getLogger(__name__)
 try:
     from apps.backend.services.email.factory import (
         get_email_service,
-        get_email_service_singleton
+        get_email_service_singleton,
     )
+
     # Don't import 'email_service' from factory - we'll create our own
 except ImportError as e:
     logger.error(f"Could not import email factory: {e}")
@@ -26,13 +26,17 @@ except ImportError as e:
 
 try:
     from apps.backend.services.email.sendgrid import (
-        SendGridEmailService,
-        email_service as sendgrid_instance,  # Rename to avoid conflict
-        EmailService as SendGridEmailServiceClass,
-        EmailType,
+        EmailAttachment,
         EmailPriority,
         EmailRecipient,
-        EmailAttachment
+        EmailType,
+        SendGridEmailService,
+    )
+    from apps.backend.services.email.sendgrid import (
+        EmailService as SendGridEmailServiceClass,
+    )
+    from apps.backend.services.email.sendgrid import (
+        email_service as sendgrid_instance,  # Rename to avoid conflict
     )
 except ImportError as e:
     logger.error(f"Could not import SendGrid service: {e}")
@@ -69,11 +73,14 @@ except ImportError as e:
             self.filename = filename
             self.content_type = content_type
 
+
 try:
     from apps.backend.services.email.mock import (
         MockEmailService,
+        MockEmailServiceInstance,
+    )
+    from apps.backend.services.email.mock import (
         mock_email_service as mock_instance,  # Rename to avoid conflict
-        MockEmailServiceInstance
     )
 except ImportError as e:
     logger.error(f"Could not import Mock service: {e}")
@@ -128,6 +135,7 @@ get_email_service_singleton = get_email_service_singleton  # Singleton factory
 # Default service (uses factory to determine which to use)
 default_email_service = email_service  # Points to whichever service is active
 
+
 # Additional utility function for testing
 def get_active_service_type():
     """Get the type of the currently active email service"""
@@ -135,42 +143,40 @@ def get_active_service_type():
         return type(email_service).__name__
     return None
 
+
 # Log the final configuration
-logger.info(f"""
+logger.info(
+    f"""
 Email Service Configuration:
 - Active Service: {get_active_service_type()}
 - SendGrid Available: {sendgrid_email_service is not None}
 - Mock Available: {mock_email_service is not None}
 - Factory Available: {get_email_service is not None}
-""")
+"""
+)
 
 # Export all globals for backwards compatibility
 __all__ = [
     # Main service instance
-    'email_service',
-    'default_email_service',
-
+    "email_service",
+    "default_email_service",
     # SendGrid instances and classes
-    'sendgrid_email_service',
-    'SendGridEmailService',
-    'SendGridServiceInstance',
-    'EmailService',  # Legacy alias for SendGridEmailService
-
+    "sendgrid_email_service",
+    "SendGridEmailService",
+    "SendGridServiceInstance",
+    "EmailService",  # Legacy alias for SendGridEmailService
     # Mock instances and classes
-    'mock_email_service',
-    'MockEmailService',
-    'MockEmailServiceInstance',
-
+    "mock_email_service",
+    "MockEmailService",
+    "MockEmailServiceInstance",
     # Factory functions
-    'get_email_service',
-    'get_email_service_singleton',
-
+    "get_email_service",
+    "get_email_service_singleton",
     # Enums and models
-    'EmailType',
-    'EmailPriority',
-    'EmailRecipient',
-    'EmailAttachment',
-
+    "EmailType",
+    "EmailPriority",
+    "EmailRecipient",
+    "EmailAttachment",
     # Utility
-    'get_active_service_type',
+    "get_active_service_type",
 ]

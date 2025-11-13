@@ -18,13 +18,11 @@ Version: 1.0.0
 """
 
 import asyncio
-import json
 import logging
 import uuid
-from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, List, Optional, Union
+from datetime import datetime, timedelta, timezone
 from enum import Enum
-import pickle
+from typing import Any
 
 try:
     import redis.asyncio as redis
@@ -71,9 +69,9 @@ class QueuedTask:
         task_id: str,
         agent_type: str,
         task_type: str,
-        task_data: Dict[str, Any],
+        task_data: dict[str, Any],
         priority: TaskPriority = TaskPriority.NORMAL,
-        user_id: Optional[str] = None,
+        user_id: str | None = None,
         max_retries: int = 3,
     ):
         self.task_id = task_id
@@ -85,14 +83,14 @@ class QueuedTask:
         self.max_retries = max_retries
         self.retry_count = 0
         self.created_at = datetime.now(timezone.utc)
-        self.scheduled_at: Optional[datetime] = None
-        self.started_at: Optional[datetime] = None
-        self.completed_at: Optional[datetime] = None
-        self.error_message: Optional[str] = None
-        self.result: Optional[Dict[str, Any]] = None
+        self.scheduled_at: datetime | None = None
+        self.started_at: datetime | None = None
+        self.completed_at: datetime | None = None
+        self.error_message: str | None = None
+        self.result: dict[str, Any] | None = None
         self.status = TaskStatus.PENDING
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert task to dictionary for serialization"""
         return {
             "task_id": self.task_id,
@@ -113,7 +111,7 @@ class QueuedTask:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "QueuedTask":
+    def from_dict(cls, data: dict[str, Any]) -> "QueuedTask":
         """Create task from dictionary"""
         task = cls(
             task_id=data["task_id"],
@@ -157,8 +155,8 @@ class AgentTaskQueue:
 
     def __init__(self, redis_url: str = "redis://localhost:6379"):
         self.redis_url = redis_url
-        self.redis: Optional[Redis] = None
-        self.workers: Dict[str, asyncio.Task] = {}
+        self.redis: Redis | None = None
+        self.workers: dict[str, asyncio.Task] = {}
         self.running = False
         self.agent_service = None
 
@@ -198,9 +196,9 @@ class AgentTaskQueue:
         self,
         agent_type: str,
         task_type: str,
-        task_data: Dict[str, Any],
+        task_data: dict[str, Any],
         priority: TaskPriority = TaskPriority.NORMAL,
-        user_id: Optional[str] = None,
+        user_id: str | None = None,
         delay_seconds: int = 0,
     ) -> str:
         """
@@ -262,7 +260,7 @@ class AgentTaskQueue:
         logger.info(f"Enqueued task {task_id} for {agent_type} with priority {priority.value}")
         return task_id
 
-    async def dequeue_task(self, agent_type: str) -> Optional[QueuedTask]:
+    async def dequeue_task(self, agent_type: str) -> QueuedTask | None:
         """
         Get the next task from the queue for a specific agent type.
 
@@ -306,7 +304,7 @@ class AgentTaskQueue:
 
         return task
 
-    async def complete_task(self, task_id: str, result: Dict[str, Any]):
+    async def complete_task(self, task_id: str, result: dict[str, Any]):
         """
         Mark a task as completed.
 
@@ -489,7 +487,7 @@ class AgentTaskQueue:
 
                         logger.info(f"Moved retry task {task_id} back to queue")
 
-    async def start_workers(self, agent_types: List[str], workers_per_type: int = 2):
+    async def start_workers(self, agent_types: list[str], workers_per_type: int = 2):
         """
         Start background workers to process tasks.
 
@@ -623,7 +621,7 @@ class AgentTaskQueue:
                 await self.redis.zremrangebyscore(queue, 0, cutoff_time)
                 logger.debug(f"Cleaned up {len(old_tasks)} old dead letter tasks from {queue}")
 
-    async def get_queue_stats(self) -> Dict[str, Any]:
+    async def get_queue_stats(self) -> dict[str, Any]:
         """Get queue statistics"""
         if not self.redis:
             return {}
@@ -673,7 +671,7 @@ class AgentTaskQueue:
 
         return stats
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform health check on the queue system"""
         if not self.redis:
             return {"healthy": False, "error": "Redis not available"}
@@ -698,7 +696,7 @@ class AgentTaskQueue:
 
 
 # Global queue instance
-_agent_queue: Optional[AgentTaskQueue] = None
+_agent_queue: AgentTaskQueue | None = None
 
 
 async def get_agent_queue() -> AgentTaskQueue:

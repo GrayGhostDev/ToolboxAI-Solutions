@@ -4,22 +4,21 @@ Handles migration from GPT-4.5 Preview to GPT-4.1
 Critical: GPT-4.5 Preview deprecation on July 14, 2025
 """
 
-import os
-import json
-import time
 import hashlib
-import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Union, AsyncGenerator
-from dataclasses import dataclass, field
-from enum import Enum
+import json
 import logging
+import os
+import time
+from collections.abc import AsyncGenerator
+from dataclasses import dataclass
+from datetime import datetime
+from enum import Enum
+from typing import Any
 
-import httpx
-from openai import AsyncOpenAI, OpenAI
-from tenacity import retry, stop_after_attempt, wait_exponential
 import redis.asyncio as redis
-from prometheus_client import Counter, Histogram, Gauge
+from openai import AsyncOpenAI, OpenAI
+from prometheus_client import Counter, Gauge, Histogram
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +61,7 @@ class ModelCapabilities:
     cost_per_1m_input: float  # Cost per 1M tokens
     cost_per_1m_output: float
     latency_ms_p50: int  # Median latency
-    deprecation_date: Optional[datetime] = None
+    deprecation_date: datetime | None = None
 
 
 MODEL_REGISTRY = {
@@ -228,7 +227,7 @@ class ModelSelector:
     """Intelligent model selection based on query complexity"""
 
     @staticmethod
-    def analyze_complexity(messages: List[Dict[str, str]]) -> float:
+    def analyze_complexity(messages: list[dict[str, str]]) -> float:
         """
         Analyze query complexity to select appropriate model variant
         Returns complexity score 0.0 (simple) to 1.0 (complex)
@@ -294,9 +293,9 @@ class ModelSelector:
 
     @staticmethod
     def select_model(
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         config: GPT41MigrationConfig,
-        force_model: Optional[GPTModel] = None,
+        force_model: GPTModel | None = None,
     ) -> GPTModel:
         """Select appropriate GPT-4.1 variant based on complexity"""
 
@@ -322,9 +321,9 @@ class GPT41MigrationClient:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
-        config: Optional[GPT41MigrationConfig] = None,
-        redis_client: Optional[redis.Redis] = None,
+        api_key: str | None = None,
+        config: GPT41MigrationConfig | None = None,
+        redis_client: redis.Redis | None = None,
     ):
         # API setup
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
@@ -347,7 +346,7 @@ class GPT41MigrationClient:
         self._init_redis()
 
         # Response cache
-        self._response_cache: Dict[str, Dict[str, Any]] = {}
+        self._response_cache: dict[str, dict[str, Any]] = {}
 
         # Check deprecation warning
         self._check_deprecation_status()
@@ -412,12 +411,12 @@ class GPT41MigrationClient:
         hash_int = int(hashlib.md5(request_hash.encode()).hexdigest()[:8], 16)
         return (hash_int % 100) < self.config.rollout_percentage
 
-    def _get_cache_key(self, messages: List[Dict[str, str]], model: GPTModel, **kwargs) -> str:
+    def _get_cache_key(self, messages: list[dict[str, str]], model: GPTModel, **kwargs) -> str:
         """Generate cache key for deduplication"""
         content = json.dumps({"model": model.value, "messages": messages, **kwargs}, sort_keys=True)
         return hashlib.sha256(content.encode()).hexdigest()
 
-    async def _check_cache(self, cache_key: str) -> Optional[Dict[str, Any]]:
+    async def _check_cache(self, cache_key: str) -> dict[str, Any] | None:
         """Check Redis cache for response"""
         if not self.redis_client:
             return None
@@ -432,7 +431,7 @@ class GPT41MigrationClient:
 
         return None
 
-    async def _save_cache(self, cache_key: str, response: Dict[str, Any]):
+    async def _save_cache(self, cache_key: str, response: dict[str, Any]):
         """Save response to Redis cache"""
         if not self.redis_client:
             return
@@ -446,8 +445,8 @@ class GPT41MigrationClient:
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=60))
     async def _make_request(
-        self, model: GPTModel, messages: List[Dict[str, str]], **kwargs
-    ) -> Dict[str, Any]:
+        self, model: GPTModel, messages: list[dict[str, str]], **kwargs
+    ) -> dict[str, Any]:
         """Make API request with retry logic"""
 
         # Check model capabilities
@@ -509,13 +508,13 @@ class GPT41MigrationClient:
 
     async def chat_completion(
         self,
-        messages: List[Dict[str, str]],
-        model: Optional[GPTModel] = None,
+        messages: list[dict[str, str]],
+        model: GPTModel | None = None,
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
-        force_model: Optional[GPTModel] = None,
+        max_tokens: int | None = None,
+        force_model: GPTModel | None = None,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create chat completion with automatic GPT-4.1 migration
 
@@ -617,8 +616,8 @@ class GPT41MigrationClient:
             raise
 
     async def stream_chat_completion(
-        self, messages: List[Dict[str, str]], model: Optional[GPTModel] = None, **kwargs
-    ) -> AsyncGenerator[Dict[str, Any], None]:
+        self, messages: list[dict[str, str]], model: GPTModel | None = None, **kwargs
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """Stream chat completion with GPT-4.1"""
 
         if not model:
@@ -671,7 +670,7 @@ class GPT41MigrationClient:
             primary_model=self.config.primary_model.value,
         )
 
-    async def get_migration_status(self) -> Dict[str, Any]:
+    async def get_migration_status(self) -> dict[str, Any]:
         """Get current migration status and metrics"""
 
         status = {
@@ -726,7 +725,7 @@ class GPT41MigrationClient:
 
         return status
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Check health of GPT-4.1 endpoints"""
 
         health = {"timestamp": datetime.utcnow().isoformat(), "models": {}}
@@ -757,7 +756,7 @@ class GPT41MigrationClient:
 
 
 # Convenience function for dependency injection
-_migration_client: Optional[GPT41MigrationClient] = None
+_migration_client: GPT41MigrationClient | None = None
 
 
 def get_gpt41_client() -> GPT41MigrationClient:

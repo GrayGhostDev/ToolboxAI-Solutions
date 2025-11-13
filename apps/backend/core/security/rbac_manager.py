@@ -23,20 +23,19 @@ Usage:
 """
 
 import logging
-from typing import Dict, List, Set, Optional, Any
-from enum import Enum
 from dataclasses import dataclass, field
-from datetime import datetime
+from enum import Enum
+from typing import Any
 from uuid import UUID
 
 from database.models import User
-
 
 logger = logging.getLogger(__name__)
 
 
 class Role(str, Enum):
     """System roles with hierarchy."""
+
     ADMIN = "admin"
     TEACHER = "teacher"
     STUDENT = "student"
@@ -45,6 +44,7 @@ class Role(str, Enum):
 
 class ResourceType(str, Enum):
     """Resource types for permission scoping."""
+
     CONTENT = "content"
     AGENT = "agent"
     ORGANIZATION = "organization"
@@ -56,6 +56,7 @@ class ResourceType(str, Enum):
 
 class Action(str, Enum):
     """Actions that can be performed on resources."""
+
     CREATE = "create"
     READ = "read"
     UPDATE = "update"
@@ -67,10 +68,11 @@ class Action(str, Enum):
 @dataclass
 class Permission:
     """Permission definition with scope and constraints."""
+
     resource: str  # e.g., "content", "agent", "organization"
-    action: str    # e.g., "create", "read", "update", "delete"
+    action: str  # e.g., "create", "read", "update", "delete"
     scope: str = "own"  # "own", "organization", "all"
-    conditions: Dict[str, Any] = field(default_factory=dict)
+    conditions: dict[str, Any] = field(default_factory=dict)
 
     def __str__(self) -> str:
         """String representation: resource:action[:scope]"""
@@ -94,10 +96,11 @@ class Permission:
 @dataclass
 class RoleDefinition:
     """Role definition with permissions and hierarchy."""
+
     name: str
     display_name: str
-    permissions: Set[str]
-    inherits_from: Optional[str] = None
+    permissions: set[str]
+    inherits_from: str | None = None
     description: str = ""
     level: int = 0  # Hierarchy level (higher = more privileged)
 
@@ -124,23 +127,18 @@ class RBACManager:
             return
 
         # Role hierarchy (higher level = more privileged)
-        self.ROLE_HIERARCHY = {
-            Role.ADMIN: 100,
-            Role.TEACHER: 50,
-            Role.STUDENT: 10,
-            Role.GUEST: 0
-        }
+        self.ROLE_HIERARCHY = {Role.ADMIN: 100, Role.TEACHER: 50, Role.STUDENT: 10, Role.GUEST: 0}
 
         # Define roles with permissions
-        self.roles: Dict[str, RoleDefinition] = self._define_roles()
+        self.roles: dict[str, RoleDefinition] = self._define_roles()
 
         # Permission cache for performance
-        self._permission_cache: Dict[str, Set[str]] = {}
+        self._permission_cache: dict[str, set[str]] = {}
 
         self._initialized = True
         logger.info("RBACManager initialized with roles: %s", list(self.roles.keys()))
 
-    def _define_roles(self) -> Dict[str, RoleDefinition]:
+    def _define_roles(self) -> dict[str, RoleDefinition]:
         """Define system roles and their permissions."""
         return {
             # ADMIN - Full system access
@@ -154,47 +152,40 @@ class RBACManager:
                     "system:manage",
                     "system:configure",
                     "system:monitor",
-
                     # User management
                     "user:create:all",
                     "user:read:all",
                     "user:update:all",
                     "user:delete:all",
                     "user:manage:all",
-
                     # Organization management
                     "organization:create:all",
                     "organization:read:all",
                     "organization:update:all",
                     "organization:delete:all",
                     "organization:manage:all",
-
                     # Content management
                     "content:create:all",
                     "content:read:all",
                     "content:update:all",
                     "content:delete:all",
                     "content:publish:all",
-
                     # Agent management
                     "agent:create:all",
                     "agent:read:all",
                     "agent:update:all",
                     "agent:delete:all",
                     "agent:execute:all",
-
                     # Analytics
                     "analytics:read:all",
                     "analytics:export:all",
-
                     # Class management
                     "class:create:all",
                     "class:read:all",
                     "class:update:all",
                     "class:delete:all",
-                }
+                },
             ),
-
             # TEACHER - Organization-scoped access
             Role.TEACHER: RoleDefinition(
                 name=Role.TEACHER,
@@ -205,37 +196,30 @@ class RBACManager:
                     # Own profile
                     "user:read:own",
                     "user:update:own",
-
                     # Organization scope
                     "organization:read:organization",
-
                     # Content management (organization scope)
                     "content:create:organization",
                     "content:read:organization",
                     "content:update:own",
                     "content:delete:own",
                     "content:publish:organization",
-
                     # Agent usage
                     "agent:read:organization",
                     "agent:execute:organization",
-
                     # Class management (organization scope)
                     "class:create:organization",
                     "class:read:organization",
                     "class:update:own",
                     "class:delete:own",
-
                     # Student management (within classes)
                     "user:read:organization",
                     "user:update:organization",  # For student management
-
                     # Analytics (organization scope)
                     "analytics:read:organization",
                     "analytics:export:organization",
-                }
+                },
             ),
-
             # STUDENT - Limited access
             Role.STUDENT: RoleDefinition(
                 name=Role.STUDENT,
@@ -246,22 +230,17 @@ class RBACManager:
                     # Own profile
                     "user:read:own",
                     "user:update:own",
-
                     # Content access (read only)
                     "content:read:organization",
-
                     # Agent usage (limited)
                     "agent:read:organization",
                     "agent:execute:own",
-
                     # Class access
                     "class:read:own",
-
                     # Own analytics
                     "analytics:read:own",
-                }
+                },
             ),
-
             # GUEST - Minimal access
             Role.GUEST: RoleDefinition(
                 name=Role.GUEST,
@@ -270,11 +249,11 @@ class RBACManager:
                 description="Limited read-only access",
                 permissions={
                     "content:read:public",
-                }
-            )
+                },
+            ),
         }
 
-    def get_role_permissions(self, role: str) -> Set[str]:
+    def get_role_permissions(self, role: str) -> set[str]:
         """
         Get all permissions for a role, including inherited permissions.
 
@@ -305,7 +284,7 @@ class RBACManager:
 
         return permissions
 
-    def get_user_permissions(self, user: User) -> Set[str]:
+    def get_user_permissions(self, user: User) -> set[str]:
         """
         Get all permissions for a user based on their role.
 
@@ -315,7 +294,7 @@ class RBACManager:
         Returns:
             Set of permission strings
         """
-        if not user or not hasattr(user, 'role'):
+        if not user or not hasattr(user, "role"):
             return set()
 
         return self.get_role_permissions(user.role)
@@ -324,8 +303,8 @@ class RBACManager:
         self,
         user: User,
         permission: str,
-        resource_owner_id: Optional[int] = None,
-        organization_id: Optional[UUID] = None
+        resource_owner_id: int | None = None,
+        organization_id: UUID | None = None,
     ) -> bool:
         """
         Check if user has a specific permission.
@@ -339,7 +318,7 @@ class RBACManager:
         Returns:
             True if user has permission
         """
-        if not user or not hasattr(user, 'role'):
+        if not user or not hasattr(user, "role"):
             return False
 
         # Parse permission
@@ -363,7 +342,7 @@ class RBACManager:
             org_perm = f"{perm.resource}:{perm.action}:organization"
             if org_perm in user_permissions:
                 # Verify organization match
-                if organization_id and hasattr(user, 'organization_id'):
+                if organization_id and hasattr(user, "organization_id"):
                     if user.organization_id == organization_id:
                         return True
 
@@ -397,7 +376,7 @@ class RBACManager:
         Returns:
             True if user has role or higher
         """
-        if not user or not hasattr(user, 'role'):
+        if not user or not hasattr(user, "role"):
             return False
 
         user_level = self.ROLE_HIERARCHY.get(user.role, -1)
@@ -410,8 +389,8 @@ class RBACManager:
         user: User,
         resource_type: str,
         action: str,
-        resource_owner_id: Optional[int] = None,
-        resource_org_id: Optional[UUID] = None
+        resource_owner_id: int | None = None,
+        resource_org_id: UUID | None = None,
     ) -> bool:
         """
         Check if user can perform action on resource.
@@ -433,7 +412,7 @@ class RBACManager:
                 return True
 
         # Check organization scope
-        if resource_org_id and hasattr(user, 'organization_id'):
+        if resource_org_id and hasattr(user, "organization_id"):
             if resource_org_id == user.organization_id:
                 org_perm = f"{resource_type}:{action}:organization"
                 if self.has_permission(user, org_perm):
@@ -447,11 +426,8 @@ class RBACManager:
         return False
 
     def get_accessible_resources(
-        self,
-        user: User,
-        resource_type: str,
-        action: str = "read"
-    ) -> Dict[str, Any]:
+        self, user: User, resource_type: str, action: str = "read"
+    ) -> dict[str, Any]:
         """
         Get scope of resources accessible to user.
 
@@ -463,11 +439,7 @@ class RBACManager:
         Returns:
             Dictionary with scope information
         """
-        result = {
-            "scope": "none",
-            "organization_id": None,
-            "user_id": None
-        }
+        result = {"scope": "none", "organization_id": None, "user_id": None}
 
         # Check for "all" scope (admin)
         all_perm = f"{resource_type}:{action}:all"
@@ -477,7 +449,7 @@ class RBACManager:
 
         # Check for organization scope
         org_perm = f"{resource_type}:{action}:organization"
-        if self.has_permission(user, org_perm) and hasattr(user, 'organization_id'):
+        if self.has_permission(user, org_perm) and hasattr(user, "organization_id"):
             result["scope"] = "organization"
             result["organization_id"] = user.organization_id
             return result

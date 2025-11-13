@@ -9,15 +9,15 @@ Created: 2025-01-27
 Version: 1.0.0
 """
 
-import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 from uuid import UUID
 
-from supabase import Client
 from storage3.utils import StorageException
+
+from supabase import Client
 
 logger = logging.getLogger(__name__)
 
@@ -25,15 +25,16 @@ logger = logging.getLogger(__name__)
 @dataclass
 class StorageUsage:
     """Storage usage statistics"""
+
     organization_id: str
     total_files: int = 0
     total_size_bytes: int = 0
     used_quota_percentage: float = 0.0
-    files_by_category: Dict[str, int] = field(default_factory=dict)
-    size_by_category: Dict[str, int] = field(default_factory=dict)
-    largest_files: List[Dict[str, Any]] = field(default_factory=list)
-    oldest_files: List[Dict[str, Any]] = field(default_factory=list)
-    recent_activity: List[Dict[str, Any]] = field(default_factory=list)
+    files_by_category: dict[str, int] = field(default_factory=dict)
+    size_by_category: dict[str, int] = field(default_factory=dict)
+    largest_files: list[dict[str, Any]] = field(default_factory=list)
+    oldest_files: list[dict[str, Any]] = field(default_factory=list)
+    recent_activity: list[dict[str, Any]] = field(default_factory=list)
     last_updated: datetime = field(default_factory=datetime.utcnow)
 
     @property
@@ -46,7 +47,7 @@ class StorageUsage:
         """Get total size in GB"""
         return self.total_size_bytes / (1024 * 1024 * 1024)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization"""
         return {
             "organization_id": self.organization_id,
@@ -60,13 +61,14 @@ class StorageUsage:
             "largest_files": self.largest_files,
             "oldest_files": self.oldest_files,
             "recent_activity": self.recent_activity,
-            "last_updated": self.last_updated.isoformat()
+            "last_updated": self.last_updated.isoformat(),
         }
 
 
 @dataclass
 class QuotaAlert:
     """Storage quota alert"""
+
     organization_id: str
     alert_type: str  # warning, critical, exceeded
     current_usage: int
@@ -75,7 +77,7 @@ class QuotaAlert:
     triggered_at: datetime = field(default_factory=datetime.utcnow)
     message: str = ""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization"""
         return {
             "organization_id": self.organization_id,
@@ -84,7 +86,7 @@ class QuotaAlert:
             "quota_limit": self.quota_limit,
             "percentage_used": self.percentage_used,
             "triggered_at": self.triggered_at.isoformat(),
-            "message": self.message
+            "message": self.message,
         }
 
 
@@ -114,9 +116,9 @@ class TenantStorageManager:
         self.critical_threshold = 95  # 95% usage critical
 
         # Cache for bucket existence and quota info
-        self._bucket_cache: Dict[str, bool] = {}
-        self._quota_cache: Dict[str, Dict[str, Any]] = {}
-        self._usage_cache: Dict[str, StorageUsage] = {}
+        self._bucket_cache: dict[str, bool] = {}
+        self._quota_cache: dict[str, dict[str, Any]] = {}
+        self._usage_cache: dict[str, StorageUsage] = {}
 
         logger.info("TenantStorageManager initialized")
 
@@ -145,7 +147,7 @@ class TenantStorageManager:
         try:
             # Check if bucket exists
             buckets = self.supabase.storage.list_buckets()
-            existing_buckets = {bucket['name'] for bucket in buckets}
+            existing_buckets = {bucket["name"] for bucket in buckets}
 
             if bucket_name not in existing_buckets:
                 # Create new bucket
@@ -161,11 +163,7 @@ class TenantStorageManager:
             logger.error(f"Bucket management failed for org {organization_id}: {e}")
             raise StorageException(f"Bucket management failed: {str(e)}")
 
-    async def check_quota(
-        self,
-        organization_id: str,
-        additional_size: int = 0
-    ) -> bool:
+    async def check_quota(self, organization_id: str, additional_size: int = 0) -> bool:
         """
         Check if organization has available quota for file upload.
 
@@ -201,9 +199,7 @@ class TenantStorageManager:
             return True
 
     async def get_storage_usage(
-        self,
-        organization_id: str,
-        force_refresh: bool = False
+        self, organization_id: str, force_refresh: bool = False
     ) -> StorageUsage:
         """
         Get comprehensive storage usage statistics.
@@ -238,7 +234,9 @@ class TenantStorageManager:
                 file_size = file_data.get("file_size", 0)
 
                 usage.files_by_category[category] = usage.files_by_category.get(category, 0) + 1
-                usage.size_by_category[category] = usage.size_by_category.get(category, 0) + file_size
+                usage.size_by_category[category] = (
+                    usage.size_by_category.get(category, 0) + file_size
+                )
 
             # Get quota info
             quota_info = await self._get_quota_info(organization_id)
@@ -255,20 +253,22 @@ class TenantStorageManager:
                     "filename": file_data.get("filename", "unknown"),
                     "size": file_data.get("file_size", 0),
                     "category": file_data.get("category", "unknown"),
-                    "created_at": file_data.get("created_at")
+                    "created_at": file_data.get("created_at"),
                 }
                 for file_data in sorted_files[:10]
             ]
 
             # Get oldest files (top 10)
-            sorted_by_date = sorted(files_data, key=lambda x: x.get("created_at", ""), reverse=False)
+            sorted_by_date = sorted(
+                files_data, key=lambda x: x.get("created_at", ""), reverse=False
+            )
             usage.oldest_files = [
                 {
                     "id": file_data["id"],
                     "filename": file_data.get("filename", "unknown"),
                     "age_days": self._calculate_age_days(file_data.get("created_at")),
                     "category": file_data.get("category", "unknown"),
-                    "size": file_data.get("file_size", 0)
+                    "size": file_data.get("file_size", 0),
                 }
                 for file_data in sorted_by_date[:10]
             ]
@@ -276,7 +276,8 @@ class TenantStorageManager:
             # Get recent activity (last 7 days)
             recent_cutoff = datetime.utcnow() - timedelta(days=7)
             recent_files = [
-                file_data for file_data in files_data
+                file_data
+                for file_data in files_data
                 if self._parse_date(file_data.get("created_at")) > recent_cutoff
             ]
 
@@ -285,7 +286,7 @@ class TenantStorageManager:
                     "action": "upload",
                     "filename": file_data.get("filename", "unknown"),
                     "size": file_data.get("file_size", 0),
-                    "date": file_data.get("created_at")
+                    "date": file_data.get("created_at"),
                 }
                 for file_data in recent_files[-10:]  # Last 10 recent activities
             ]
@@ -293,7 +294,9 @@ class TenantStorageManager:
             # Cache the result
             self._usage_cache[organization_id] = usage
 
-            logger.info(f"Storage usage calculated for org {organization_id}: {usage.total_size_mb:.2f}MB")
+            logger.info(
+                f"Storage usage calculated for org {organization_id}: {usage.total_size_mb:.2f}MB"
+            )
             return usage
 
         except Exception as e:
@@ -302,10 +305,7 @@ class TenantStorageManager:
             return StorageUsage(organization_id=organization_id)
 
     async def update_quota(
-        self,
-        organization_id: str,
-        new_quota_gb: float,
-        updated_by: Optional[str] = None
+        self, organization_id: str, new_quota_gb: float, updated_by: str | None = None
     ) -> bool:
         """
         Update storage quota for organization.
@@ -326,7 +326,7 @@ class TenantStorageManager:
                 "organization_id": organization_id,
                 "total_quota": new_quota_bytes,
                 "updated_at": datetime.utcnow().isoformat(),
-                "updated_by": updated_by
+                "updated_by": updated_by,
             }
 
             success = await self._update_quota_record(organization_id, quota_data)
@@ -344,7 +344,7 @@ class TenantStorageManager:
             logger.error(f"Quota update failed for org {organization_id}: {e}")
             return False
 
-    async def check_quota_alerts(self, organization_id: str) -> List[QuotaAlert]:
+    async def check_quota_alerts(self, organization_id: str) -> list[QuotaAlert]:
         """
         Check for quota alerts and return any triggered alerts.
 
@@ -365,32 +365,38 @@ class TenantStorageManager:
 
             # Check for alerts
             if percentage_used >= 100:
-                alerts.append(QuotaAlert(
-                    organization_id=organization_id,
-                    alert_type="exceeded",
-                    current_usage=usage.total_size_bytes,
-                    quota_limit=quota_limit,
-                    percentage_used=percentage_used,
-                    message=f"Storage quota exceeded: {percentage_used:.1f}%"
-                ))
+                alerts.append(
+                    QuotaAlert(
+                        organization_id=organization_id,
+                        alert_type="exceeded",
+                        current_usage=usage.total_size_bytes,
+                        quota_limit=quota_limit,
+                        percentage_used=percentage_used,
+                        message=f"Storage quota exceeded: {percentage_used:.1f}%",
+                    )
+                )
             elif percentage_used >= self.critical_threshold:
-                alerts.append(QuotaAlert(
-                    organization_id=organization_id,
-                    alert_type="critical",
-                    current_usage=usage.total_size_bytes,
-                    quota_limit=quota_limit,
-                    percentage_used=percentage_used,
-                    message=f"Critical storage usage: {percentage_used:.1f}%"
-                ))
+                alerts.append(
+                    QuotaAlert(
+                        organization_id=organization_id,
+                        alert_type="critical",
+                        current_usage=usage.total_size_bytes,
+                        quota_limit=quota_limit,
+                        percentage_used=percentage_used,
+                        message=f"Critical storage usage: {percentage_used:.1f}%",
+                    )
+                )
             elif percentage_used >= self.warning_threshold:
-                alerts.append(QuotaAlert(
-                    organization_id=organization_id,
-                    alert_type="warning",
-                    current_usage=usage.total_size_bytes,
-                    quota_limit=quota_limit,
-                    percentage_used=percentage_used,
-                    message=f"Storage usage warning: {percentage_used:.1f}%"
-                ))
+                alerts.append(
+                    QuotaAlert(
+                        organization_id=organization_id,
+                        alert_type="warning",
+                        current_usage=usage.total_size_bytes,
+                        quota_limit=quota_limit,
+                        percentage_used=percentage_used,
+                        message=f"Storage usage warning: {percentage_used:.1f}%",
+                    )
+                )
 
             return alerts
 
@@ -399,10 +405,7 @@ class TenantStorageManager:
             return []
 
     async def cleanup_old_files(
-        self,
-        organization_id: str,
-        max_age_days: int = 365,
-        categories: Optional[List[str]] = None
+        self, organization_id: str, max_age_days: int = 365, categories: list[str] | None = None
     ) -> int:
         """
         Clean up old files based on retention policies.
@@ -423,9 +426,12 @@ class TenantStorageManager:
             files_data = await self._get_organization_files(organization_id)
 
             old_files = [
-                file_data for file_data in files_data
-                if (self._parse_date(file_data.get("created_at", "")) < cutoff_date and
-                    (categories is None or file_data.get("category") in categories))
+                file_data
+                for file_data in files_data
+                if (
+                    self._parse_date(file_data.get("created_at", "")) < cutoff_date
+                    and (categories is None or file_data.get("category") in categories)
+                )
             ]
 
             # Clean up files
@@ -449,11 +455,7 @@ class TenantStorageManager:
             logger.error(f"File cleanup failed for org {organization_id}: {e}")
             return 0
 
-    async def get_storage_analytics(
-        self,
-        organization_id: str,
-        days: int = 30
-    ) -> Dict[str, Any]:
+    async def get_storage_analytics(self, organization_id: str, days: int = 30) -> dict[str, Any]:
         """
         Get storage analytics for the specified period.
 
@@ -481,9 +483,9 @@ class TenantStorageManager:
                 "trends": {
                     "daily_uploads": await self._get_daily_upload_trends(organization_id, days),
                     "category_growth": await self._get_category_growth(organization_id, days),
-                    "size_trends": await self._get_size_trends(organization_id, days)
+                    "size_trends": await self._get_size_trends(organization_id, days),
                 },
-                "recommendations": await self._generate_recommendations(usage)
+                "recommendations": await self._generate_recommendations(usage),
             }
 
             return analytics
@@ -498,19 +500,22 @@ class TenantStorageManager:
         """Create a new organization bucket with proper policies"""
         try:
             # Create bucket
-            bucket_response = self.supabase.storage.create_bucket(bucket_name, {
-                "public": False,
-                "allowed_mime_types": [
-                    "image/*",
-                    "video/*",
-                    "audio/*",
-                    "application/pdf",
-                    "application/msword",
-                    "application/vnd.openxmlformats-officedocument.*",
-                    "text/*"
-                ],
-                "file_size_limit": 100 * 1024 * 1024  # 100MB per file
-            })
+            bucket_response = self.supabase.storage.create_bucket(
+                bucket_name,
+                {
+                    "public": False,
+                    "allowed_mime_types": [
+                        "image/*",
+                        "video/*",
+                        "audio/*",
+                        "application/pdf",
+                        "application/msword",
+                        "application/vnd.openxmlformats-officedocument.*",
+                        "text/*",
+                    ],
+                    "file_size_limit": 100 * 1024 * 1024,  # 100MB per file
+                },
+            )
 
             # Set up bucket policies (RLS)
             await self._setup_bucket_policies(bucket_name, organization_id)
@@ -529,7 +534,7 @@ class TenantStorageManager:
         # to ensure organization isolation
         logger.info(f"Setting up policies for bucket {bucket_name}")
 
-    async def _get_quota_info(self, organization_id: str) -> Dict[str, Any]:
+    async def _get_quota_info(self, organization_id: str) -> dict[str, Any]:
         """Get quota information from database"""
         # Check cache first
         if organization_id in self._quota_cache:
@@ -540,20 +545,20 @@ class TenantStorageManager:
             "organization_id": organization_id,
             "total_quota": self.default_quota_gb * 1024 * 1024 * 1024,  # Default 10GB
             "used_storage": 0,
-            "file_count": 0
+            "file_count": 0,
         }
 
         # Cache the result
         self._quota_cache[organization_id] = quota_info
         return quota_info
 
-    async def _get_organization_files(self, organization_id: str) -> List[Dict[str, Any]]:
+    async def _get_organization_files(self, organization_id: str) -> list[dict[str, Any]]:
         """Get all files for organization from database"""
         # This would query your File model with organization filter
         # For now, return mock data
         return []
 
-    async def _update_quota_record(self, organization_id: str, quota_data: Dict[str, Any]) -> bool:
+    async def _update_quota_record(self, organization_id: str, quota_data: dict[str, Any]) -> bool:
         """Update quota record in database"""
         # This would update your StorageQuota model
         return True
@@ -563,22 +568,24 @@ class TenantStorageManager:
         # This would delete file from Supabase Storage and update database
         return True
 
-    async def _get_daily_upload_trends(self, organization_id: str, days: int) -> List[Dict[str, Any]]:
+    async def _get_daily_upload_trends(
+        self, organization_id: str, days: int
+    ) -> list[dict[str, Any]]:
         """Get daily upload trends"""
         # This would aggregate daily upload data
         return []
 
-    async def _get_category_growth(self, organization_id: str, days: int) -> Dict[str, Any]:
+    async def _get_category_growth(self, organization_id: str, days: int) -> dict[str, Any]:
         """Get category growth trends"""
         # This would analyze growth by file category
         return {}
 
-    async def _get_size_trends(self, organization_id: str, days: int) -> List[Dict[str, Any]]:
+    async def _get_size_trends(self, organization_id: str, days: int) -> list[dict[str, Any]]:
         """Get storage size trends"""
         # This would track storage size over time
         return []
 
-    async def _generate_recommendations(self, usage: StorageUsage) -> List[str]:
+    async def _generate_recommendations(self, usage: StorageUsage) -> list[str]:
         """Generate storage optimization recommendations"""
         recommendations = []
 
@@ -590,7 +597,9 @@ class TenantStorageManager:
         if usage.largest_files:
             large_file_count = len([f for f in usage.largest_files if f["size"] > 50 * 1024 * 1024])
             if large_file_count > 0:
-                recommendations.append(f"You have {large_file_count} files larger than 50MB that could be optimized")
+                recommendations.append(
+                    f"You have {large_file_count} files larger than 50MB that could be optimized"
+                )
 
         # Check category distribution
         if "temporary" in usage.files_by_category and usage.files_by_category["temporary"] > 10:
@@ -598,7 +607,7 @@ class TenantStorageManager:
 
         return recommendations
 
-    def _calculate_age_days(self, date_str: Optional[str]) -> int:
+    def _calculate_age_days(self, date_str: str | None) -> int:
         """Calculate age in days from date string"""
         if not date_str:
             return 0
@@ -609,15 +618,15 @@ class TenantStorageManager:
         except Exception:
             return 0
 
-    def _parse_date(self, date_str: Optional[str]) -> datetime:
+    def _parse_date(self, date_str: str | None) -> datetime:
         """Parse date string to datetime"""
         if not date_str:
             return datetime.utcnow()
 
         try:
             # Handle ISO format
-            if 'T' in date_str:
-                return datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+            if "T" in date_str:
+                return datetime.fromisoformat(date_str.replace("Z", "+00:00"))
             else:
                 return datetime.fromisoformat(date_str)
         except Exception:

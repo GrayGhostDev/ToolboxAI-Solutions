@@ -1,7 +1,8 @@
-import pytest_asyncio
+from unittest.mock import Mock, patch
 
 import pytest
-from unittest.mock import Mock, patch
+import pytest_asyncio
+
 
 @pytest.fixture
 def mock_db_connection():
@@ -28,12 +29,13 @@ if str(project_root) not in sys.path:
 
 
 import asyncio
-import time
-import pytest
-import statistics
-from typing import List, Dict, Any
-import json
 import concurrent.futures
+import json
+import statistics
+import time
+from typing import Any, Dict, List
+
+import pytest
 
 # Skip all tests in this module as they require external services
 pytestmark = pytest.mark.skip(reason="Performance tests require external services - run with --run-performance")
@@ -90,9 +92,9 @@ async def test_query_performance(self):
         """Test database query performance for common operations"""
         try:
             from database.core.repositories import (
-                UserRepository, 
-                CourseRepository, 
-                ContentRepository
+                ContentRepository,
+                CourseRepository,
+                UserRepository,
             )
             
             repositories = {

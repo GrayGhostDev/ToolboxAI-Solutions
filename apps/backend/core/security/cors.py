@@ -11,12 +11,11 @@ References:
 
 import logging
 import re
-from typing import List, Optional, Set
 from urllib.parse import urlparse
-from fastapi import Request
+
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.datastructures import Headers, MutableHeaders
-from starlette.types import ASGIApp, Message, Receive, Scope, Send
+from starlette.datastructures import Headers
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 logger = logging.getLogger(__name__)
 
@@ -29,12 +28,12 @@ class SecureCORSConfig:
     def __init__(
         self,
         environment: str = "production",
-        allowed_origins: Optional[List[str]] = None,
-        allowed_origins_regex: Optional[str] = None,
+        allowed_origins: list[str] | None = None,
+        allowed_origins_regex: str | None = None,
         allow_credentials: bool = True,
-        allowed_methods: Optional[List[str]] = None,
-        allowed_headers: Optional[List[str]] = None,
-        exposed_headers: Optional[List[str]] = None,
+        allowed_methods: list[str] | None = None,
+        allowed_headers: list[str] | None = None,
+        exposed_headers: list[str] | None = None,
         max_age: int = 600,
     ):
         """
@@ -53,6 +52,8 @@ class SecureCORSConfig:
         self.environment = environment
         self.allow_credentials = allow_credentials
         self.max_age = max_age
+
+        wildcard_patterns: list[str] = []
 
         # Set default allowed origins based on environment
         if allowed_origins is None:
@@ -90,18 +91,27 @@ class SecureCORSConfig:
                 ]
                 logger.info(f"Production CORS configured with origins: {self.allowed_origins}")
         else:
-            # Validate and sanitize origins
-            self.allowed_origins = self._validate_origins(allowed_origins)
+            # Validate and sanitize origins (with wildcard support)
+            self.allowed_origins, wildcard_patterns = self._process_origins(allowed_origins)
 
         # Set regex pattern for dynamic validation
-        self.allowed_origins_regex = allowed_origins_regex
+        regex_patterns: list[str] = []
+
         if allowed_origins_regex:
+            regex_patterns.append(allowed_origins_regex)
+
+        if wildcard_patterns:
+            regex_patterns.extend(wildcard_patterns)
+
+        if regex_patterns:
+            self.allowed_origins_regex = "|".join(regex_patterns)
             try:
-                self.origin_pattern = re.compile(allowed_origins_regex)
+                self.origin_pattern = re.compile(self.allowed_origins_regex)
             except re.error as e:
                 logger.error(f"Invalid CORS origin regex pattern: {e}")
                 self.origin_pattern = None
         else:
+            self.allowed_origins_regex = None
             self.origin_pattern = None
 
         # Set allowed methods (be specific, avoid wildcards)
@@ -157,49 +167,59 @@ class SecureCORSConfig:
         logger.info(f"Allowed origins: {self.allowed_origins}")
         logger.info(f"Allowed methods: {self.allowed_methods}")
 
-    def _validate_origins(self, origins: List[str]) -> List[str]:
-        """
-        Validate and sanitize origin URLs
-
-        Args:
-            origins: List of origin URLs to validate
-
-        Returns:
-            List of validated origins
-        """
-        validated = []
+    def _process_origins(self, origins: list[str]) -> tuple[list[str], list[str]]:
+        """Validate origins and extract wildcard regex patterns."""
+        validated: list[str] = []
+        wildcard_patterns: list[str] = []
 
         for origin in origins:
-            # Skip wildcards in production
             if origin == "*":
                 if self.environment != "development":
                     logger.error("Wildcard origin (*) not allowed in production")
                     continue
-                else:
-                    logger.warning("Using wildcard origin (*) in development - not secure!")
-                    validated.append(origin)
-                    continue
+                logger.warning("Using wildcard origin (*) in development - not secure!")
+                validated.append(origin)
+                continue
 
-            # Validate URL format
+            if "*" in origin:
+                pattern = self._wildcard_to_regex(origin)
+                if pattern:
+                    wildcard_patterns.append(pattern)
+                continue
+
             try:
                 parsed = urlparse(origin)
                 if not parsed.scheme or not parsed.netloc:
                     logger.warning(f"Invalid origin format: {origin}")
                     continue
 
-                # Only allow http and https protocols
                 if parsed.scheme not in ["http", "https"]:
                     logger.warning(f"Invalid protocol in origin: {origin}")
                     continue
 
-                # Reconstruct origin without path
                 clean_origin = f"{parsed.scheme}://{parsed.netloc}"
                 validated.append(clean_origin)
 
             except Exception as e:
                 logger.error(f"Error validating origin {origin}: {e}")
 
-        return validated
+        return validated, wildcard_patterns
+
+    def _wildcard_to_regex(self, origin: str) -> str | None:
+        """Convert wildcard origin (e.g., https://*.vercel.app) to a regex string."""
+        try:
+            parsed = urlparse(origin)
+            if not parsed.scheme or not parsed.netloc:
+                logger.warning(f"Invalid wildcard origin format: {origin}")
+                return None
+
+            escaped_host = re.escape(parsed.netloc).replace(r"\*", r"[^/]+")
+            regex = f"^{parsed.scheme}://{escaped_host}$"
+            logger.info(f"Converted wildcard origin '{origin}' to regex '{regex}'")
+            return regex
+        except Exception as e:
+            logger.error(f"Error converting wildcard origin {origin} to regex: {e}")
+            return None
 
     def is_origin_allowed(self, origin: str) -> bool:
         """
@@ -344,8 +364,8 @@ class CORSMiddlewareWithLogging(CORSMiddleware):
 
 def create_cors_middleware(
     environment: str,
-    allowed_origins: Optional[List[str]] = None,
-    allowed_origins_regex: Optional[str] = None,
+    allowed_origins: list[str] | None = None,
+    allowed_origins_regex: str | None = None,
     **kwargs,
 ) -> CORSMiddlewareWithLogging:
     """

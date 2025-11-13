@@ -8,35 +8,32 @@ Following 2025 best practices for payment recovery
 """
 
 import logging
-import asyncio
 from datetime import datetime, timedelta, timezone
-from typing import Optional, List, Dict, Any
-from decimal import Decimal
 from enum import Enum
+from typing import Any
 
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, and_, or_
 from sqlalchemy.orm import selectinload
 
 from apps.backend.core.config import settings
-from apps.backend.services.stripe_service import stripe_service
 from apps.backend.services.email import email_service
+from apps.backend.services.stripe_service import stripe_service
 from database.models.payment import (
     Customer,
-    Subscription,
-    Payment,
     Invoice,
+    Payment,
     PaymentStatus,
+    Subscription,
     SubscriptionStatus,
-    InvoiceStatus
 )
-from database.connection import get_db
 
 logger = logging.getLogger(__name__)
 
 
 class DunningState(str, Enum):
     """Dunning process states"""
+
     ACTIVE = "active"
     GRACE_PERIOD = "grace_period"
     RETRY_1 = "retry_1"
@@ -55,16 +52,12 @@ class DunningService:
 
     def __init__(self):
         """Initialize dunning service with configuration"""
-        self.max_retries = getattr(settings, 'DUNNING_MAX_RETRIES', 3)
-        self.grace_period_days = getattr(settings, 'DUNNING_GRACE_PERIOD_DAYS', 3)
+        self.max_retries = getattr(settings, "DUNNING_MAX_RETRIES", 3)
+        self.grace_period_days = getattr(settings, "DUNNING_GRACE_PERIOD_DAYS", 3)
         self.retry_intervals = [1, 3, 5, 7]  # Days between retries
         self.final_notice_days = 10  # Days before cancellation
 
-    async def process_failed_payment(
-        self,
-        payment_id: int,
-        db: AsyncSession
-    ) -> Dict[str, Any]:
+    async def process_failed_payment(self, payment_id: int, db: AsyncSession) -> dict[str, Any]:
         """
         Process a failed payment and initiate dunning process
 
@@ -77,11 +70,10 @@ class DunningService:
         """
         try:
             # Get payment with related data
-            payment_query = select(Payment).where(
-                Payment.id == payment_id
-            ).options(
-                selectinload(Payment.customer),
-                selectinload(Payment.invoice)
+            payment_query = (
+                select(Payment)
+                .where(Payment.id == payment_id)
+                .options(selectinload(Payment.customer), selectinload(Payment.invoice))
             )
             payment = await db.execute(payment_query)
             payment = payment.scalar_one_or_none()
@@ -91,7 +83,7 @@ class DunningService:
                 return {"success": False, "error": "Payment not found"}
 
             # Check if already in dunning
-            if payment.metadata and payment.metadata.get('dunning_state'):
+            if payment.metadata and payment.metadata.get("dunning_state"):
                 logger.info(f"Payment {payment_id} already in dunning process")
                 return await self._continue_dunning(payment, db)
 
@@ -102,11 +94,7 @@ class DunningService:
             logger.error(f"Error processing failed payment: {e}")
             return {"success": False, "error": str(e)}
 
-    async def _initiate_dunning(
-        self,
-        payment: Payment,
-        db: AsyncSession
-    ) -> Dict[str, Any]:
+    async def _initiate_dunning(self, payment: Payment, db: AsyncSession) -> dict[str, Any]:
         """
         Initiate dunning process for a payment
 
@@ -126,7 +114,7 @@ class DunningService:
                 "dunning_state": DunningState.GRACE_PERIOD,
                 "retry_count": 0,
                 "dunning_started_at": datetime.now(timezone.utc).isoformat(),
-                "next_retry_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat()
+                "next_retry_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
             }
 
             if not payment.metadata:
@@ -152,7 +140,7 @@ class DunningService:
                 customer=customer,
                 payment=payment,
                 invoice=invoice,
-                retry_date=datetime.now(timezone.utc) + timedelta(days=1)
+                retry_date=datetime.now(timezone.utc) + timedelta(days=1),
             )
 
             # Schedule first retry
@@ -165,7 +153,7 @@ class DunningService:
                 "success": True,
                 "payment_id": payment.id,
                 "dunning_state": DunningState.GRACE_PERIOD,
-                "next_retry": dunning_metadata["next_retry_at"]
+                "next_retry": dunning_metadata["next_retry_at"],
             }
 
         except Exception as e:
@@ -173,11 +161,7 @@ class DunningService:
             await db.rollback()
             return {"success": False, "error": str(e)}
 
-    async def _continue_dunning(
-        self,
-        payment: Payment,
-        db: AsyncSession
-    ) -> Dict[str, Any]:
+    async def _continue_dunning(self, payment: Payment, db: AsyncSession) -> dict[str, Any]:
         """
         Continue existing dunning process
 
@@ -212,14 +196,16 @@ class DunningService:
                 next_state = getattr(DunningState, f"RETRY_{retry_count}")
                 payment.metadata["dunning_state"] = next_state
 
-                days_until_retry = self.retry_intervals[min(retry_count, len(self.retry_intervals) - 1)]
+                days_until_retry = self.retry_intervals[
+                    min(retry_count, len(self.retry_intervals) - 1)
+                ]
                 await self._schedule_retry(payment, days=days_until_retry)
 
                 # Send retry notification
                 await self._send_retry_notification(
                     payment=payment,
                     retry_number=retry_count,
-                    next_retry_date=datetime.now(timezone.utc) + timedelta(days=days_until_retry)
+                    next_retry_date=datetime.now(timezone.utc) + timedelta(days=days_until_retry),
                 )
 
                 await db.commit()
@@ -229,7 +215,7 @@ class DunningService:
                     "payment_id": payment.id,
                     "dunning_state": next_state,
                     "retry_count": retry_count,
-                    "next_retry": payment.metadata.get("next_retry_at")
+                    "next_retry": payment.metadata.get("next_retry_at"),
                 }
 
         except Exception as e:
@@ -237,7 +223,7 @@ class DunningService:
             await db.rollback()
             return {"success": False, "error": str(e)}
 
-    async def _retry_payment(self, payment: Payment) -> Dict[str, Any]:
+    async def _retry_payment(self, payment: Payment) -> dict[str, Any]:
         """
         Attempt to retry a failed payment
 
@@ -265,11 +251,7 @@ class DunningService:
             logger.error(f"Payment retry failed: {e}")
             return {"success": False, "error": str(e)}
 
-    async def _final_notice(
-        self,
-        payment: Payment,
-        db: AsyncSession
-    ) -> Dict[str, Any]:
+    async def _final_notice(self, payment: Payment, db: AsyncSession) -> dict[str, Any]:
         """
         Send final notice before subscription cancellation
 
@@ -287,9 +269,7 @@ class DunningService:
 
             # Send final notice email
             await self._send_final_notice_email(
-                customer=payment.customer,
-                payment=payment,
-                cancellation_date=cancellation_date
+                customer=payment.customer, payment=payment, cancellation_date=cancellation_date
             )
 
             # Schedule cancellation
@@ -302,7 +282,7 @@ class DunningService:
                 "success": False,
                 "payment_id": payment.id,
                 "dunning_state": DunningState.FINAL_NOTICE,
-                "scheduled_cancellation": cancellation_date.isoformat()
+                "scheduled_cancellation": cancellation_date.isoformat(),
             }
 
         except Exception as e:
@@ -311,11 +291,8 @@ class DunningService:
             return {"success": False, "error": str(e)}
 
     async def _end_dunning(
-        self,
-        payment: Payment,
-        db: AsyncSession,
-        success: bool
-    ) -> Dict[str, Any]:
+        self, payment: Payment, db: AsyncSession, success: bool
+    ) -> dict[str, Any]:
         """
         End the dunning process
 
@@ -372,7 +349,7 @@ class DunningService:
             return {
                 "success": success,
                 "payment_id": payment.id,
-                "dunning_result": payment.metadata["dunning_result"]
+                "dunning_result": payment.metadata["dunning_result"],
             }
 
         except Exception as e:
@@ -380,15 +357,9 @@ class DunningService:
             await db.rollback()
             return {"success": False, "error": str(e)}
 
-    async def _cancel_subscription(
-        self,
-        subscription_id: int,
-        db: AsyncSession
-    ) -> None:
+    async def _cancel_subscription(self, subscription_id: int, db: AsyncSession) -> None:
         """Cancel a subscription due to payment failure"""
-        subscription_query = select(Subscription).where(
-            Subscription.id == subscription_id
-        )
+        subscription_query = select(Subscription).where(Subscription.id == subscription_id)
         subscription = await db.execute(subscription_query)
         subscription = subscription.scalar_one_or_none()
 
@@ -401,8 +372,7 @@ class DunningService:
             # Cancel in Stripe
             if subscription.stripe_subscription_id:
                 await stripe_service.cancel_subscription(
-                    subscription.stripe_subscription_id,
-                    immediately=True
+                    subscription.stripe_subscription_id, immediately=True
                 )
 
     async def _schedule_retry(self, payment: Payment, days: int) -> None:
@@ -421,11 +391,7 @@ class DunningService:
 
     # Email notification methods
     async def _send_payment_failed_email(
-        self,
-        customer: Customer,
-        payment: Payment,
-        invoice: Optional[Invoice],
-        retry_date: datetime
+        self, customer: Customer, payment: Payment, invoice: Invoice | None, retry_date: datetime
     ) -> None:
         """Send payment failed notification"""
         await email_service.send_email(
@@ -436,15 +402,12 @@ class DunningService:
                 "customer_name": customer.name,
                 "amount": float(payment.amount),
                 "retry_date": retry_date.strftime("%B %d, %Y"),
-                "update_payment_url": f"{settings.FRONTEND_URL}/account/payment-methods"
-            }
+                "update_payment_url": f"{settings.FRONTEND_URL}/account/payment-methods",
+            },
         )
 
     async def _send_retry_notification(
-        self,
-        payment: Payment,
-        retry_number: int,
-        next_retry_date: datetime
+        self, payment: Payment, retry_number: int, next_retry_date: datetime
     ) -> None:
         """Send retry notification"""
         await email_service.send_email(
@@ -455,15 +418,12 @@ class DunningService:
                 "customer_name": payment.customer.name,
                 "retry_number": retry_number,
                 "next_retry_date": next_retry_date.strftime("%B %d, %Y"),
-                "update_payment_url": f"{settings.FRONTEND_URL}/account/payment-methods"
-            }
+                "update_payment_url": f"{settings.FRONTEND_URL}/account/payment-methods",
+            },
         )
 
     async def _send_final_notice_email(
-        self,
-        customer: Customer,
-        payment: Payment,
-        cancellation_date: datetime
+        self, customer: Customer, payment: Payment, cancellation_date: datetime
     ) -> None:
         """Send final notice before cancellation"""
         await email_service.send_email(
@@ -474,8 +434,8 @@ class DunningService:
                 "customer_name": customer.name,
                 "cancellation_date": cancellation_date.strftime("%B %d, %Y"),
                 "amount": float(payment.amount),
-                "update_payment_url": f"{settings.FRONTEND_URL}/account/payment-methods"
-            }
+                "update_payment_url": f"{settings.FRONTEND_URL}/account/payment-methods",
+            },
         )
 
     async def _send_payment_recovered_email(self, payment: Payment) -> None:
@@ -486,8 +446,8 @@ class DunningService:
             template_name="payment_recovered",
             template_context={
                 "customer_name": payment.customer.name,
-                "amount": float(payment.amount)
-            }
+                "amount": float(payment.amount),
+            },
         )
 
     async def _send_subscription_canceled_email(self, payment: Payment) -> None:
@@ -498,11 +458,11 @@ class DunningService:
             template_name="subscription_canceled",
             template_context={
                 "customer_name": payment.customer.name,
-                "reactivate_url": f"{settings.FRONTEND_URL}/pricing"
-            }
+                "reactivate_url": f"{settings.FRONTEND_URL}/pricing",
+            },
         )
 
-    async def check_pending_retries(self, db: AsyncSession) -> List[Dict[str, Any]]:
+    async def check_pending_retries(self, db: AsyncSession) -> list[dict[str, Any]]:
         """
         Check for payments that need retry attempts
         Called by scheduled job
@@ -518,10 +478,7 @@ class DunningService:
             now = datetime.now(timezone.utc)
 
             payments_query = select(Payment).where(
-                and_(
-                    Payment.status == PaymentStatus.FAILED,
-                    Payment.metadata.isnot(None)
-                )
+                and_(Payment.status == PaymentStatus.FAILED, Payment.metadata.isnot(None))
             )
 
             result = await db.execute(payments_query)

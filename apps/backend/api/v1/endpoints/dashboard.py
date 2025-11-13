@@ -3,11 +3,12 @@ Dashboard API Endpoints for ToolboxAI Educational Platform
 Provides real data for dashboard views across all user roles.
 """
 
-from fastapi import APIRouter, Depends, HTTPException
-from typing import Dict, Any, List
-from datetime import datetime, timedelta
-import random
 import logging
+from datetime import datetime, timedelta
+from typing import Any
+
+from fastapi import APIRouter, Depends
+
 from apps.backend.api.auth.auth import get_current_user
 from apps.backend.models.schemas import User
 from apps.backend.services.database import db_service
@@ -20,14 +21,14 @@ dashboard_router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
 @dashboard_router.get("/overview")
 async def get_dashboard_overview_v2(
-    current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+    current_user: User = Depends(get_current_user),
+) -> dict[str, Any]:
     """
     Get dashboard overview data based on authenticated user role (API v2).
     This endpoint matches frontend expectations and extracts role from JWT token.
     """
     # Extract role from authenticated user
-    role = getattr(current_user, 'role', 'student').lower()
+    role = getattr(current_user, "role", "student").lower()
 
     # Reuse existing logic with user's role
     return await get_dashboard_overview(role, current_user)
@@ -36,7 +37,7 @@ async def get_dashboard_overview_v2(
 @dashboard_router.get("/overview/{role}")
 async def get_dashboard_overview(
     role: str, current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get dashboard overview data based on user role."""
 
     # Normalize role
@@ -327,7 +328,7 @@ async def get_dashboard_overview(
 
 
 @dashboard_router.get("/metrics")
-async def get_dashboard_metrics(current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+async def get_dashboard_metrics(current_user: User = Depends(get_current_user)) -> dict[str, Any]:
     """Get general metrics for the dashboard."""
 
     return {
@@ -345,7 +346,7 @@ async def get_dashboard_metrics(current_user: User = Depends(get_current_user)) 
 
 
 @dashboard_router.get("/notifications")
-async def get_notifications(current_user: User = Depends(get_current_user)) -> List[Dict[str, Any]]:
+async def get_notifications(current_user: User = Depends(get_current_user)) -> list[dict[str, Any]]:
     """Get user notifications."""
 
     notifications = [
@@ -371,31 +372,31 @@ async def get_notifications(current_user: User = Depends(get_current_user)) -> L
 
 
 @dashboard_router.get("/student")
-async def get_student_dashboard(current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+async def get_student_dashboard(current_user: User = Depends(get_current_user)) -> dict[str, Any]:
     """Get student-specific dashboard data."""
     return await get_dashboard_overview("student", current_user)
 
 
 @dashboard_router.get("/teacher")
-async def get_teacher_dashboard(current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+async def get_teacher_dashboard(current_user: User = Depends(get_current_user)) -> dict[str, Any]:
     """Get teacher-specific dashboard data."""
     return await get_dashboard_overview("teacher", current_user)
 
 
 @dashboard_router.get("/admin")
-async def get_admin_dashboard(current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+async def get_admin_dashboard(current_user: User = Depends(get_current_user)) -> dict[str, Any]:
     """Get admin-specific dashboard data."""
     return await get_dashboard_overview("admin", current_user)
 
 
 @dashboard_router.get("/parent")
-async def get_parent_dashboard(current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+async def get_parent_dashboard(current_user: User = Depends(get_current_user)) -> dict[str, Any]:
     """Get parent-specific dashboard data."""
     return await get_dashboard_overview("parent", current_user)
 
 
 @dashboard_router.get("/quick-stats")
-async def get_quick_stats(current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+async def get_quick_stats(current_user: User = Depends(get_current_user)) -> dict[str, Any]:
     """Get quick statistics for the dashboard header."""
 
     role = current_user.role.lower()

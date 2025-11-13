@@ -5,12 +5,13 @@ Tests all authentication and authorization operations including user authenticat
 token management, permission checking, and resource access control.
 """
 
-import pytest
-from unittest.mock import Mock, AsyncMock, patch
 from datetime import datetime, timedelta, timezone
+from unittest.mock import AsyncMock, Mock, patch
 
-from apps.backend.services.auth_service import AuthService, get_auth_service
+import pytest
+
 from apps.backend.models.schemas import User
+from apps.backend.services.auth_service import AuthService, get_auth_service
 
 
 @pytest.fixture
@@ -27,7 +28,7 @@ def sample_user():
         username="testuser",
         email="testuser@example.com",
         role="student",
-        is_active=True
+        is_active=True,
     )
 
 
@@ -39,7 +40,7 @@ def admin_user():
         username="adminuser",
         email="admin@example.com",
         role="admin",
-        is_active=True
+        is_active=True,
     )
 
 
@@ -51,7 +52,7 @@ def teacher_user():
         username="teacheruser",
         email="teacher@example.com",
         role="teacher",
-        is_active=True
+        is_active=True,
     )
 
 
@@ -63,7 +64,7 @@ def inactive_user():
         username="inactiveuser",
         email="inactive@example.com",
         role="student",
-        is_active=False
+        is_active=False,
     )
 
 
@@ -106,7 +107,9 @@ class TestAuthentication:
     @pytest.mark.asyncio
     async def test_authenticate_user_exception(self, auth_service):
         """Test authentication with exception"""
-        with patch('apps.backend.services.auth_service.User', side_effect=Exception("Database error")):
+        with patch(
+            "apps.backend.services.auth_service.User", side_effect=Exception("Database error")
+        ):
             user = await auth_service.authenticate_user("testuser", "password123")
 
             assert user is None
@@ -130,7 +133,9 @@ class TestUserRetrieval:
     @pytest.mark.asyncio
     async def test_get_user_by_id_exception(self, auth_service):
         """Test user retrieval with exception"""
-        with patch('apps.backend.services.auth_service.User', side_effect=Exception("Database error")):
+        with patch(
+            "apps.backend.services.auth_service.User", side_effect=Exception("Database error")
+        ):
             user = await auth_service.get_user_by_id("user_123")
 
             assert user is None
@@ -138,13 +143,11 @@ class TestUserRetrieval:
     @pytest.mark.asyncio
     async def test_get_user_by_token_success(self, auth_service, sample_user):
         """Test successful user retrieval by token"""
-        mock_payload = {
-            "sub": "user_123",
-            "username": "testuser",
-            "role": "student"
-        }
+        mock_payload = {"sub": "user_123", "username": "testuser", "role": "student"}
 
-        with patch('apps.backend.services.auth_service.decode_jwt_token', return_value=mock_payload):
+        with patch(
+            "apps.backend.services.auth_service.decode_jwt_token", return_value=mock_payload
+        ):
             user = await auth_service.get_user_by_token("valid_token")
 
             assert user is not None
@@ -153,7 +156,7 @@ class TestUserRetrieval:
     @pytest.mark.asyncio
     async def test_get_user_by_token_invalid_token(self, auth_service):
         """Test user retrieval with invalid token"""
-        with patch('apps.backend.services.auth_service.decode_jwt_token', return_value=None):
+        with patch("apps.backend.services.auth_service.decode_jwt_token", return_value=None):
             user = await auth_service.get_user_by_token("invalid_token")
 
             assert user is None
@@ -161,12 +164,11 @@ class TestUserRetrieval:
     @pytest.mark.asyncio
     async def test_get_user_by_token_missing_sub(self, auth_service):
         """Test user retrieval with token missing 'sub' claim"""
-        mock_payload = {
-            "username": "testuser",
-            "role": "student"
-        }
+        mock_payload = {"username": "testuser", "role": "student"}
 
-        with patch('apps.backend.services.auth_service.decode_jwt_token', return_value=mock_payload):
+        with patch(
+            "apps.backend.services.auth_service.decode_jwt_token", return_value=mock_payload
+        ):
             user = await auth_service.get_user_by_token("token_without_sub")
 
             assert user is None
@@ -174,7 +176,10 @@ class TestUserRetrieval:
     @pytest.mark.asyncio
     async def test_get_user_by_token_exception(self, auth_service):
         """Test user retrieval with exception"""
-        with patch('apps.backend.services.auth_service.decode_jwt_token', side_effect=Exception("Decode error")):
+        with patch(
+            "apps.backend.services.auth_service.decode_jwt_token",
+            side_effect=Exception("Decode error"),
+        ):
             user = await auth_service.get_user_by_token("token")
 
             assert user is None
@@ -189,7 +194,7 @@ class TestTokenManagement:
         """Test successful access token creation"""
         mock_token = "mock_jwt_token_abc123"
 
-        with patch('apps.backend.services.auth_service.create_jwt_token', return_value=mock_token):
+        with patch("apps.backend.services.auth_service.create_jwt_token", return_value=mock_token):
             result = await auth_service.create_access_token(sample_user)
 
             assert result["access_token"] == mock_token
@@ -208,7 +213,7 @@ class TestTokenManagement:
 
         mock_token = "mock_jwt_token_xyz789"
 
-        with patch('apps.backend.services.auth_service.create_jwt_token', return_value=mock_token):
+        with patch("apps.backend.services.auth_service.create_jwt_token", return_value=mock_token):
             result = await service.create_access_token(sample_user)
 
             assert result["expires_in"] == 60 * 60
@@ -216,7 +221,10 @@ class TestTokenManagement:
     @pytest.mark.asyncio
     async def test_create_access_token_exception(self, auth_service, sample_user):
         """Test access token creation with exception"""
-        with patch('apps.backend.services.auth_service.create_jwt_token', side_effect=Exception("JWT error")):
+        with patch(
+            "apps.backend.services.auth_service.create_jwt_token",
+            side_effect=Exception("JWT error"),
+        ):
             with pytest.raises(Exception):
                 await auth_service.create_access_token(sample_user)
 
@@ -226,8 +234,12 @@ class TestTokenManagement:
         mock_payload = {"sub": "user_123"}
         mock_new_token = "new_access_token"
 
-        with patch('apps.backend.services.auth_service.decode_jwt_token', return_value=mock_payload):
-            with patch('apps.backend.services.auth_service.create_jwt_token', return_value=mock_new_token):
+        with patch(
+            "apps.backend.services.auth_service.decode_jwt_token", return_value=mock_payload
+        ):
+            with patch(
+                "apps.backend.services.auth_service.create_jwt_token", return_value=mock_new_token
+            ):
                 result = await auth_service.refresh_token("refresh_token")
 
                 assert result is not None
@@ -237,7 +249,7 @@ class TestTokenManagement:
     @pytest.mark.asyncio
     async def test_refresh_token_invalid_token(self, auth_service):
         """Test token refresh with invalid token"""
-        with patch('apps.backend.services.auth_service.decode_jwt_token', return_value=None):
+        with patch("apps.backend.services.auth_service.decode_jwt_token", return_value=None):
             result = await auth_service.refresh_token("invalid_token")
 
             assert result is None
@@ -245,7 +257,10 @@ class TestTokenManagement:
     @pytest.mark.asyncio
     async def test_refresh_token_exception(self, auth_service):
         """Test token refresh with exception"""
-        with patch('apps.backend.services.auth_service.decode_jwt_token', side_effect=Exception("Decode error")):
+        with patch(
+            "apps.backend.services.auth_service.decode_jwt_token",
+            side_effect=Exception("Decode error"),
+        ):
             result = await auth_service.refresh_token("token")
 
             assert result is None
@@ -260,7 +275,7 @@ class TestTokenManagement:
     @pytest.mark.asyncio
     async def test_revoke_token_exception(self, auth_service):
         """Test token revocation with exception"""
-        with patch('apps.backend.services.auth_service.logger') as mock_logger:
+        with patch("apps.backend.services.auth_service.logger") as mock_logger:
             mock_logger.info.side_effect = Exception("Logging error")
             result = await auth_service.revoke_token("token")
 
@@ -379,9 +394,7 @@ class TestResourceAccess:
     @pytest.mark.asyncio
     async def test_check_resource_access_own_user_resource(self, auth_service, sample_user):
         """Test user access to own user resource"""
-        result = await auth_service.check_resource_access(
-            sample_user, "user", "user_123", "read"
-        )
+        result = await auth_service.check_resource_access(sample_user, "user", "user_123", "read")
 
         assert result is True
 
@@ -406,9 +419,7 @@ class TestResourceAccess:
     @pytest.mark.asyncio
     async def test_check_resource_access_none_user(self, auth_service):
         """Test None user denied access"""
-        result = await auth_service.check_resource_access(
-            None, "content", "content_123", "read"
-        )
+        result = await auth_service.check_resource_access(None, "content", "content_123", "read")
 
         assert result is False
 
@@ -444,7 +455,9 @@ class TestUserStats:
     @pytest.mark.asyncio
     async def test_get_user_stats_exception(self, auth_service):
         """Test user stats retrieval with exception"""
-        with patch('apps.backend.services.auth_service.datetime', side_effect=Exception("Time error")):
+        with patch(
+            "apps.backend.services.auth_service.datetime", side_effect=Exception("Time error")
+        ):
             stats = await auth_service.get_user_stats("user_123")
 
             assert stats == {}
@@ -453,9 +466,7 @@ class TestUserStats:
     async def test_update_user_activity_success(self, auth_service):
         """Test successful activity update"""
         result = await auth_service.update_user_activity(
-            "user_123",
-            "login",
-            {"ip_address": "127.0.0.1", "user_agent": "Mozilla"}
+            "user_123", "login", {"ip_address": "127.0.0.1", "user_agent": "Mozilla"}
         )
 
         assert result is True
@@ -478,7 +489,7 @@ class TestUserStats:
     @pytest.mark.asyncio
     async def test_update_user_activity_exception(self, auth_service):
         """Test activity update with exception"""
-        with patch('apps.backend.services.auth_service.logger') as mock_logger:
+        with patch("apps.backend.services.auth_service.logger") as mock_logger:
             mock_logger.info.side_effect = Exception("Logging error")
             result = await auth_service.update_user_activity("user_123", "login", {})
 
@@ -516,7 +527,7 @@ class TestServiceConfiguration:
 
     def test_custom_token_expiry_from_settings(self):
         """Test custom token expiry from settings"""
-        with patch('apps.backend.services.auth_service.settings') as mock_settings:
+        with patch("apps.backend.services.auth_service.settings") as mock_settings:
             mock_settings.TOKEN_EXPIRE_MINUTES = 60
             service = AuthService()
 

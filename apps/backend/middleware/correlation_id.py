@@ -9,9 +9,9 @@ Features:
 - OpenTelemetry integration ready
 """
 
-import uuid
 import logging
-from typing import Callable
+import uuid
+from collections.abc import Callable
 from datetime import datetime, timezone
 
 from fastapi import Request, Response

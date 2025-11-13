@@ -1,4 +1,5 @@
 import pytest_asyncio
+
 """
 Test Comprehensive Error Handling
 
@@ -16,11 +17,11 @@ if str(project_root) not in sys.path:
 
 
 import json
-import pytest
 from datetime import datetime
 from unittest.mock import Mock, patch
 from uuid import uuid4
 
+import pytest
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.testclient import TestClient
@@ -31,8 +32,8 @@ from apps.backend.core.errors import (
     ApplicationError,
     AuthenticationError,
     AuthorizationError,
-    ConflictError,
     ConfigurationError,
+    ConflictError,
     DatabaseError,
     ErrorCategory,
     ErrorDetail,

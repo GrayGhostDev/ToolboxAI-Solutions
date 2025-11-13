@@ -4,27 +4,29 @@ Complete integration with OAuth2, Open Cloud, Rojo, and Conversation Flow
 """
 
 import logging
-from typing import Dict, Any, Optional, List
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query
+import secrets
+from typing import Any
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
-from datetime import datetime
-import secrets
 
 from apps.backend.api.auth.auth import get_current_user
+from apps.backend.core.prompts.enhanced_conversation_flow import (
+    enhanced_conversation_flow,
+)
 from apps.backend.models.schemas import User
+from apps.backend.services.pusher_realtime import pusher_service
 from apps.backend.services.roblox.auth import roblox_auth_service
 from apps.backend.services.roblox.open_cloud import (
-    open_cloud_client,
     AssetDescription,
-    CreationContext,
     AssetType,
+    CreationContext,
     DataStoreEntry,
     MessagingServiceMessage,
+    open_cloud_client,
 )
 from apps.backend.services.roblox.rojo_manager import rojo_manager
-from apps.backend.core.prompts.enhanced_conversation_flow import enhanced_conversation_flow
-from apps.backend.services.pusher_realtime import pusher_service
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +38,8 @@ router = APIRouter(prefix="/roblox", tags=["roblox-integration"])
 class ConversationStartRequest(BaseModel):
     """Request to start a new conversation"""
 
-    initial_message: Optional[str] = Field(None, description="Initial user message")
-    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    initial_message: str | None = Field(None, description="Initial user message")
+    metadata: dict[str, Any] | None = Field(default_factory=dict)
 
 
 class ConversationInputRequest(BaseModel):
@@ -50,7 +52,7 @@ class ConversationInputRequest(BaseModel):
 class RobloxAuthRequest(BaseModel):
     """Request for Roblox OAuth2 authentication"""
 
-    additional_scopes: Optional[List[str]] = Field(default_factory=list)
+    additional_scopes: list[str] | None = Field(default_factory=list)
 
 
 class AssetUploadRequest(BaseModel):
@@ -69,7 +71,7 @@ class DataStoreRequest(BaseModel):
     datastore_name: str
     key: str
     value: Any
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: dict[str, Any] | None = None
 
 
 class MessagePublishRequest(BaseModel):
@@ -77,7 +79,7 @@ class MessagePublishRequest(BaseModel):
 
     universe_id: str
     topic: str
-    message: Dict[str, Any]
+    message: dict[str, Any]
 
 
 # ==================== OAuth2 Endpoints ====================

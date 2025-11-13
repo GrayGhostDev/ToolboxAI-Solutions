@@ -6,56 +6,50 @@ Main router for API v1 endpoints including the new Roblox AI agent endpoints.
 
 from fastapi import APIRouter
 
-# Import endpoint modules directly to avoid circular imports
-from .endpoints import auth
-from .endpoints import users
-from .endpoints import schools
-from .endpoints import classes
-from .endpoints import lessons
-from .endpoints import assessments
-from .endpoints import progress
-from .endpoints import gamification
-from .endpoints import messages
-from .endpoints import analytics
-from .endpoints import compliance
-from .endpoints import reports
-from .endpoints import roblox_ai
-
-# Re-enabled for agent connectivity implementation
-from .endpoints import roblox_agents
-from .endpoints import direct_agents
-from .endpoints import orchestrator
-from .endpoints import admin
-from .endpoints import observability
-
-# Storage and Media endpoints (2025-10-02)
-from .endpoints import uploads
-from .endpoints import media
-
-# Tenant Management endpoints (2025-10-02)
-from .endpoints import tenant_admin
-from .endpoints import tenant_settings
-from .endpoints import tenant_billing
-
-# Content Management endpoints (2025-10-02)
-from .endpoints import content_versions
-from .endpoints import content_workflow
-from .endpoints import content_tags
-
-# Analytics endpoints (2025-10-02)
-from .endpoints import analytics_reports
-from .endpoints import analytics_export
-from .endpoints import analytics_dashboards
-
-# User Management endpoints (2025-10-02)
-from .endpoints import user_preferences
-from .endpoints import user_notifications
-
-# Monitoring endpoints (2025-10-02)
-from .endpoints import api_metrics
-
 # MCP Context API - Pusher + Redis Hybrid (2025-11-12)
-from .endpoints import mcp_context
+# Monitoring endpoints (2025-10-02)
+# User Management endpoints (2025-10-02)
+# Analytics endpoints (2025-10-02)
+# Content Management endpoints (2025-10-02)
+# Tenant Management endpoints (2025-10-02)
+# Storage and Media endpoints (2025-10-02)
+# Re-enabled for agent connectivity implementation
+# Import endpoint modules directly to avoid circular imports
+from .endpoints import (
+    admin,
+    analytics,
+    analytics_dashboards,
+    analytics_export,
+    analytics_reports,
+    api_metrics,
+    assessments,
+    auth,
+    classes,
+    compliance,
+    content_tags,
+    content_versions,
+    content_workflow,
+    direct_agents,
+    gamification,
+    lessons,
+    mcp_context,
+    media,
+    messages,
+    observability,
+    orchestrator,
+    progress,
+    reports,
+    roblox_agents,
+    roblox_ai,
+    schools,
+    tenant_admin,
+    tenant_billing,
+    tenant_settings,
+    uploads,
+    user_notifications,
+    user_preferences,
+    users,
+)
 
 # Create main API v1 router
 api_router = APIRouter()
@@ -109,6 +103,7 @@ api_router.include_router(api_metrics.router, tags=["api-metrics"])
 
 # MCP Context router (2025-11-12) - Pusher + Redis hybrid implementation
 api_router.include_router(mcp_context.router, tags=["mcp"])
+
 
 # Health check endpoint
 @api_router.get("/health")

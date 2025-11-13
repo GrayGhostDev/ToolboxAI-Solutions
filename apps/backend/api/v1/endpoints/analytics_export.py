@@ -21,23 +21,17 @@ Standards: Python 3.12, FastAPI async, Pydantic v2
 import logging
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Annotated, Optional, Any
+from typing import Annotated, Any
 from uuid import UUID, uuid4
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    BackgroundTasks,
-    status,
-)
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.api.auth.auth import get_current_user
 from apps.backend.core.deps import get_async_db
-from apps.backend.middleware.tenant import get_tenant_context, TenantContext
+from apps.backend.middleware.tenant import TenantContext, get_tenant_context
 from apps.backend.models.schemas import User
 
 logger = logging.getLogger(__name__)
@@ -51,8 +45,10 @@ router = APIRouter(
 
 # === Enums ===
 
+
 class ExportFormat(str, Enum):
     """Export format enumeration"""
+
     CSV = "csv"
     EXCEL = "excel"
     PDF = "pdf"
@@ -61,6 +57,7 @@ class ExportFormat(str, Enum):
 
 class ExportStatus(str, Enum):
     """Export status enumeration"""
+
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"
@@ -69,6 +66,7 @@ class ExportStatus(str, Enum):
 
 
 # === Pydantic v2 Models ===
+
 
 class ExportCSVRequest(BaseModel):
     """Request model for CSV export with Pydantic v2"""
@@ -119,7 +117,7 @@ class ExportResponse(BaseModel):
     format: ExportFormat
     status: ExportStatus
     message: str
-    estimated_completion: Optional[datetime] = None
+    estimated_completion: datetime | None = None
 
 
 class ExportStatus_Response(BaseModel):
@@ -132,13 +130,13 @@ class ExportStatus_Response(BaseModel):
     status: ExportStatus
     progress_percentage: float = 0.0
     records_processed: int = 0
-    total_records: Optional[int] = None
-    file_size: Optional[int] = None
-    download_url: Optional[str] = None
-    expires_at: Optional[datetime] = None
+    total_records: int | None = None
+    file_size: int | None = None
+    download_url: str | None = None
+    expires_at: datetime | None = None
     created_at: datetime
-    completed_at: Optional[datetime] = None
-    error_message: Optional[str] = None
+    completed_at: datetime | None = None
+    error_message: str | None = None
 
 
 class ExportHistoryItem(BaseModel):
@@ -150,13 +148,13 @@ class ExportHistoryItem(BaseModel):
     data_source: str
     format: ExportFormat
     status: ExportStatus
-    file_size: Optional[int] = None
-    record_count: Optional[int] = None
+    file_size: int | None = None
+    record_count: int | None = None
     created_by: UUID
     created_by_name: str
     created_at: datetime
-    download_url: Optional[str] = None
-    expires_at: Optional[datetime] = None
+    download_url: str | None = None
+    expires_at: datetime | None = None
 
 
 class ExportHistoryResponse(BaseModel):
@@ -181,6 +179,7 @@ class ExportDownloadResponse(BaseModel):
 
 
 # === API Endpoints ===
+
 
 @router.post(
     "/csv",
@@ -213,9 +212,7 @@ async def export_to_csv(
         ExportResponse: Export job details
     """
     try:
-        logger.info(
-            f"User {current_user.id} exporting {request.data_source} to CSV"
-        )
+        logger.info(f"User {current_user.id} exporting {request.data_source} to CSV")
 
         export_id = uuid4()
 
@@ -225,7 +222,7 @@ async def export_to_csv(
             export_id,
             request,
             current_user.id,
-            tenant_context.effective_tenant_id
+            tenant_context.effective_tenant_id,
         )
 
         return ExportResponse(
@@ -239,8 +236,7 @@ async def export_to_csv(
     except Exception as e:
         logger.error(f"Failed to start CSV export: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to start CSV export"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to start CSV export"
         )
 
 
@@ -274,9 +270,7 @@ async def export_to_excel(
         ExportResponse: Export job details
     """
     try:
-        logger.info(
-            f"User {current_user.id} exporting {request.data_source} to Excel"
-        )
+        logger.info(f"User {current_user.id} exporting {request.data_source} to Excel")
 
         export_id = uuid4()
 
@@ -286,7 +280,7 @@ async def export_to_excel(
             export_id,
             request,
             current_user.id,
-            tenant_context.effective_tenant_id
+            tenant_context.effective_tenant_id,
         )
 
         return ExportResponse(
@@ -300,8 +294,7 @@ async def export_to_excel(
     except Exception as e:
         logger.error(f"Failed to start Excel export: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to start Excel export"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to start Excel export"
         )
 
 
@@ -335,9 +328,7 @@ async def export_to_pdf(
         ExportResponse: Export job details
     """
     try:
-        logger.info(
-            f"User {current_user.id} exporting {request.data_source} to PDF"
-        )
+        logger.info(f"User {current_user.id} exporting {request.data_source} to PDF")
 
         export_id = uuid4()
 
@@ -347,7 +338,7 @@ async def export_to_pdf(
             export_id,
             request,
             current_user.id,
-            tenant_context.effective_tenant_id
+            tenant_context.effective_tenant_id,
         )
 
         return ExportResponse(
@@ -361,8 +352,7 @@ async def export_to_pdf(
     except Exception as e:
         logger.error(f"Failed to start PDF export: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to start PDF export"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to start PDF export"
         )
 
 
@@ -414,8 +404,7 @@ async def get_export_status(
     except Exception as e:
         logger.error(f"Failed to get export status: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get export status"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get export status"
         )
 
 
@@ -452,8 +441,7 @@ async def download_export(
         # - Stream file content
 
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Export not found or not ready"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Export not found or not ready"
         )
 
     except HTTPException:
@@ -461,8 +449,7 @@ async def download_export(
     except Exception as e:
         logger.error(f"Failed to download export: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to download export"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to download export"
         )
 
 
@@ -476,8 +463,8 @@ async def get_export_history(
     session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
-    format_filter: Optional[ExportFormat] = None,
-    status_filter: Optional[ExportStatus] = None,
+    format_filter: ExportFormat | None = None,
+    status_filter: ExportStatus | None = None,
 ) -> ExportHistoryResponse:
     """
     Get export history.
@@ -508,8 +495,7 @@ async def get_export_history(
     except Exception as e:
         logger.error(f"Failed to get export history: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get export history"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get export history"
         )
 
 
@@ -549,18 +535,15 @@ async def delete_export(
         logger.error(f"Failed to delete export: {str(e)}", exc_info=True)
         await session.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete export"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete export"
         )
 
 
 # === Background Tasks ===
 
+
 async def _process_csv_export(
-    export_id: UUID,
-    request: ExportCSVRequest,
-    user_id: UUID,
-    tenant_id: Optional[str]
+    export_id: UUID, request: ExportCSVRequest, user_id: UUID, tenant_id: str | None
 ) -> None:
     """Process CSV export asynchronously"""
     logger.info(f"Processing CSV export: {export_id}")
@@ -568,10 +551,7 @@ async def _process_csv_export(
 
 
 async def _process_excel_export(
-    export_id: UUID,
-    request: ExportExcelRequest,
-    user_id: UUID,
-    tenant_id: Optional[str]
+    export_id: UUID, request: ExportExcelRequest, user_id: UUID, tenant_id: str | None
 ) -> None:
     """Process Excel export asynchronously"""
     logger.info(f"Processing Excel export: {export_id}")
@@ -579,10 +559,7 @@ async def _process_excel_export(
 
 
 async def _process_pdf_export(
-    export_id: UUID,
-    request: ExportPDFRequest,
-    user_id: UUID,
-    tenant_id: Optional[str]
+    export_id: UUID, request: ExportPDFRequest, user_id: UUID, tenant_id: str | None
 ) -> None:
     """Process PDF export asynchronously"""
     logger.info(f"Processing PDF export: {export_id}")

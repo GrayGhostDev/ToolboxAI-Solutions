@@ -1,9 +1,10 @@
 """WebSocket to Pusher Migration Tests"""
-import pytest
-import asyncio
+
+
 import httpx
-from unittest.mock import patch, Mock
+import pytest
 from pusher import Pusher
+
 
 class TestWebSocketToPusherMigration:
     """Test suite for WebSocket to Pusher migration validation"""
@@ -12,11 +13,7 @@ class TestWebSocketToPusherMigration:
     def pusher_client(self):
         """Create test Pusher client"""
         return Pusher(
-            app_id="test-app",
-            key="test-key",
-            secret="test-secret",
-            cluster="us2",
-            ssl=True
+            app_id="test-app", key="test-key", secret="test-secret", cluster="us2", ssl=True
         )
 
     @pytest.mark.asyncio
@@ -27,17 +24,13 @@ class TestWebSocketToPusherMigration:
             "/ws/content",
             "/ws/plugin/test-id",
             "/ws/agent/agent-123",
-            "/ws/native"
+            "/ws/native",
         ]
 
         async with httpx.AsyncClient(base_url="http://localhost:8009") as client:
             for endpoint in websocket_endpoints:
                 response = await client.get(
-                    endpoint,
-                    headers={
-                        "Upgrade": "websocket",
-                        "Connection": "Upgrade"
-                    }
+                    endpoint, headers={"Upgrade": "websocket", "Connection": "Upgrade"}
                 )
 
                 # Should include deprecation headers
@@ -52,16 +45,12 @@ class TestWebSocketToPusherMigration:
             "/ws/roblox": "roblox-sync",
             "/ws/content": "content-generation",
             "/ws/agent/123": "agent-status",
-            "/ws/plugin/xyz": "private-plugin-xyz"
+            "/ws/plugin/xyz": "private-plugin-xyz",
         }
 
         for ws_endpoint, pusher_channel in channel_mappings.items():
             # Verify channel can be triggered
-            result = pusher_client.trigger(
-                pusher_channel,
-                'test-event',
-                {'message': 'test'}
-            )
+            result = pusher_client.trigger(pusher_channel, "test-event", {"message": "test"})
             assert result is not None
 
     @pytest.mark.asyncio
@@ -72,10 +61,7 @@ class TestWebSocketToPusherMigration:
         adapter = WebSocketToPusherAdapter()
 
         # Old WebSocket message
-        ws_message = {
-            "type": "message",
-            "data": {"content": "test message"}
-        }
+        ws_message = {"type": "message", "data": {"content": "test message"}}
 
         # Convert to Pusher format
         pusher_event = adapter.convert_ws_to_pusher(ws_message)
@@ -89,14 +75,11 @@ class TestWebSocketToPusherMigration:
         async with httpx.AsyncClient(base_url="http://localhost:8009") as client:
             response = await client.post(
                 "/pusher/auth",
-                data={
-                    "socket_id": "test.socket",
-                    "channel_name": "private-test-channel"
-                },
+                data={"socket_id": "test.socket", "channel_name": "private-test-channel"},
                 headers={
                     "Authorization": "Bearer test-token",
-                    "Content-Type": "application/x-www-form-urlencoded"
-                }
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
             )
 
             # Should return auth signature for private channels
@@ -111,12 +94,9 @@ class TestWebSocketToPusherMigration:
                 json={
                     "channel": "test-channel",
                     "event": "test-event",
-                    "data": {"message": "test"}
+                    "data": {"message": "test"},
                 },
-                headers={
-                    "Authorization": "Bearer test-token",
-                    "Content-Type": "application/json"
-                }
+                headers={"Authorization": "Bearer test-token", "Content-Type": "application/json"},
             )
 
             # Should accept event triggering
@@ -132,7 +112,7 @@ class TestWebSocketToPusherMigration:
             ("/ws/roblox", "roblox-sync"),
             ("/ws/content", "content-generation"),
             ("/ws/agent/123", "agent-status-123"),
-            ("/ws/plugin/xyz", "plugin-xyz")
+            ("/ws/plugin/xyz", "plugin-xyz"),
         ]
 
         for ws_endpoint, expected_channel in test_cases:

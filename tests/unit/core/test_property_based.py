@@ -5,16 +5,15 @@ Uses hypothesis to generate comprehensive test cases for data models and core fu
 This approach ensures edge cases are covered and significantly boosts test coverage.
 """
 
-import pytest
-from hypothesis import given, strategies as st, settings, assume
-from hypothesis.strategies import composite
-import string
-import re
-from datetime import datetime, timedelta
-from typing import Optional, Dict, Any, List
-from unittest.mock import Mock, AsyncMock, patch
-import uuid
 import json
+import re
+import string
+from datetime import datetime
+
+import pytest
+from hypothesis import assume, given, settings
+from hypothesis import strategies as st
+from hypothesis.strategies import composite
 
 
 # Strategy for generating valid emails
@@ -78,11 +77,13 @@ def content_data_strategy(draw):
         "type": draw(st.sampled_from(["lesson", "quiz", "assignment", "project"])),
         "difficulty": draw(st.sampled_from(["easy", "medium", "hard", "expert"])),
         "tags": draw(st.lists(st.text(min_size=1, max_size=20), max_size=10)),
-        "metadata": draw(st.dictionaries(
-            keys=st.text(min_size=1, max_size=20),
-            values=st.one_of(st.text(), st.integers(), st.booleans()),
-            max_size=10
-        ))
+        "metadata": draw(
+            st.dictionaries(
+                keys=st.text(min_size=1, max_size=20),
+                values=st.one_of(st.text(), st.integers(), st.booleans()),
+                max_size=10,
+            )
+        ),
     }
 
 
@@ -93,14 +94,14 @@ class TestPropertyBasedValidation:
     def test_email_validation_valid(self, email):
         """Test that generated emails pass validation"""
         # Simple email regex validation
-        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
         assert re.match(email_pattern, email) is not None
 
     @given(text=st.text())
     def test_email_validation_invalid(self, text):
         """Test that random text usually fails email validation"""
         assume("@" not in text or "." not in text)
-        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
         assert re.match(email_pattern, text) is None
 
     @given(password=password_strategy())
@@ -146,12 +147,14 @@ class TestPropertyBasedBusinessLogic:
 
     @given(
         score=st.floats(min_value=0, max_value=100),
-        passing_threshold=st.floats(min_value=0, max_value=100)
+        passing_threshold=st.floats(min_value=0, max_value=100),
     )
     def test_grading_logic(self, score, passing_threshold):
         """Test grading logic with various scores"""
         assume(not (isinstance(score, float) and score != score))  # Filter NaN
-        assume(not (isinstance(passing_threshold, float) and passing_threshold != passing_threshold))
+        assume(
+            not (isinstance(passing_threshold, float) and passing_threshold != passing_threshold)
+        )
 
         is_passing = score >= passing_threshold
         grade = self._calculate_grade(score)
@@ -184,7 +187,7 @@ class TestPropertyBasedBusinessLogic:
     @given(
         items=st.lists(st.integers(min_value=1, max_value=1000), min_size=0, max_size=100),
         page=st.integers(min_value=1, max_value=100),
-        limit=st.integers(min_value=1, max_value=50)
+        limit=st.integers(min_value=1, max_value=50),
     )
     def test_pagination_logic(self, items, page, limit):
         """Test pagination with various inputs"""
@@ -207,6 +210,7 @@ class TestPropertyBasedSecurity:
     def test_token_generation(self, token_length):
         """Test token generation with various lengths"""
         import secrets
+
         token = secrets.token_urlsafe(token_length)
 
         # Token should be URL-safe
@@ -216,7 +220,7 @@ class TestPropertyBasedSecurity:
 
     @given(
         user_id=st.uuids(),
-        permissions=st.lists(st.sampled_from(["read", "write", "delete", "admin"]), unique=True)
+        permissions=st.lists(st.sampled_from(["read", "write", "delete", "admin"]), unique=True),
     )
     def test_permission_checking(self, user_id, permissions):
         """Test permission checking logic"""
@@ -240,18 +244,15 @@ class TestPropertyBasedAPIResponses:
         message=st.text(max_size=500),
         data=st.one_of(
             st.none(),
-            st.dictionaries(st.text(min_size=1), st.one_of(st.text(), st.integers(), st.booleans()))
+            st.dictionaries(
+                st.text(min_size=1), st.one_of(st.text(), st.integers(), st.booleans())
+            ),
         ),
-        metadata=st.dictionaries(st.text(min_size=1), st.text(), max_size=5)
+        metadata=st.dictionaries(st.text(min_size=1), st.text(), max_size=5),
     )
     def test_api_response_format(self, status, message, data, metadata):
         """Test API response formatting"""
-        response = {
-            "status": status,
-            "message": message,
-            "data": data,
-            "metadata": metadata
-        }
+        response = {"status": status, "message": message, "data": data, "metadata": metadata}
 
         assert response["status"] in ["success", "error", "warning"]
         assert isinstance(response["message"], str)
@@ -265,7 +266,7 @@ class TestPropertyBasedCaching:
     @given(
         key=st.text(min_size=1, max_size=100),
         value=st.one_of(st.text(), st.integers(), st.dictionaries(st.text(), st.text())),
-        ttl=st.integers(min_value=1, max_value=3600)
+        ttl=st.integers(min_value=1, max_value=3600),
     )
     def test_cache_operations(self, key, value, ttl):
         """Test cache set/get operations"""
@@ -282,7 +283,7 @@ class TestPropertyBasedCaching:
 
     @given(
         keys=st.lists(st.text(min_size=1, max_size=20), min_size=0, max_size=100, unique=True),
-        pattern=st.text(min_size=1, max_size=10)
+        pattern=st.text(min_size=1, max_size=10),
     )
     def test_cache_key_matching(self, keys, pattern):
         """Test cache key pattern matching"""
@@ -301,9 +302,7 @@ class TestPropertyBasedCaching:
 class TestPropertyBasedDataTransformation:
     """Property-based tests for data transformation functions"""
 
-    @given(
-        input_data=st.lists(st.integers(), min_size=0, max_size=100)
-    )
+    @given(input_data=st.lists(st.integers(), min_size=0, max_size=100))
     def test_data_normalization(self, input_data):
         """Test data normalization"""
         if not input_data:
@@ -323,10 +322,7 @@ class TestPropertyBasedDataTransformation:
         # Length should be preserved
         assert len(normalized) == len(input_data)
 
-    @given(
-        text=st.text(),
-        max_length=st.integers(min_value=1, max_value=100)
-    )
+    @given(text=st.text(), max_length=st.integers(min_value=1, max_value=100))
     def test_text_truncation(self, text, max_length):
         """Test text truncation logic"""
         if len(text) <= max_length:
@@ -336,7 +332,7 @@ class TestPropertyBasedDataTransformation:
             if max_length <= 3:
                 truncated = "..."
             else:
-                truncated = text[:max_length-3] + "..."
+                truncated = text[: max_length - 3] + "..."
 
         # Truncated should never be longer than original or max_length (whichever is smaller)
         assert len(truncated) <= max(len(text), max_length)
@@ -352,7 +348,7 @@ class TestPropertyBasedRateLimiting:
     @given(
         requests=st.lists(st.floats(min_value=0, max_value=3600), min_size=0, max_size=1000),
         window_size=st.floats(min_value=1, max_value=60),
-        max_requests=st.integers(min_value=1, max_value=100)
+        max_requests=st.integers(min_value=1, max_value=100),
     )
     def test_rate_limiting_window(self, requests, window_size, max_requests):
         """Test rate limiting with sliding window"""
@@ -365,7 +361,7 @@ class TestPropertyBasedRateLimiting:
         for i, current_time in enumerate(requests):
             # Count requests in window
             window_start = current_time - window_size
-            requests_in_window = sum(1 for t in requests[:i+1] if t >= window_start)
+            requests_in_window = sum(1 for t in requests[: i + 1] if t >= window_start)
 
             # Check if rate limit exceeded
             is_allowed = requests_in_window <= max_requests
@@ -386,13 +382,12 @@ class TestPropertyBasedSerialization:
                 st.booleans(),
                 st.integers(),
                 st.floats(allow_nan=False, allow_infinity=False),
-                st.text()
+                st.text(),
             ),
             lambda children: st.one_of(
-                st.lists(children),
-                st.dictionaries(st.text(min_size=1), children)
+                st.lists(children), st.dictionaries(st.text(min_size=1), children)
             ),
-            max_leaves=50
+            max_leaves=50,
         )
     )
     def test_json_serialization(self, data):

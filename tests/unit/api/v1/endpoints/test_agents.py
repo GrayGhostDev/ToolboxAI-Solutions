@@ -6,32 +6,35 @@ Tests agent health, listing, execution, status, and system control endpoints.
 Phase 2 Days 17-18: Agent endpoint test implementation
 """
 
-import pytest
-from uuid import uuid4
 from unittest.mock import AsyncMock, Mock, patch
+from uuid import uuid4
 
-from fastapi import HTTPException, BackgroundTasks, status
+import pytest
+from fastapi import BackgroundTasks
 
 # Import endpoint functions and models directly
 from apps.backend.api.v1.endpoints.agents import (
-    get_agents_health,
-    list_agents,
-    execute_agent_task,
-    get_agent_status,
-    restart_agent,
-    initialize_agent_system,
-    shutdown_agent_system,
     AgentExecuteRequest,
     AgentHealthResponse,
     AgentListResponse,
+    execute_agent_task,
+    get_agent_status,
+    get_agents_health,
+    initialize_agent_system,
+    list_agents,
+    restart_agent,
+    shutdown_agent_system,
+)
+
+# Import actual exceptions
+from apps.backend.core.exceptions import (
+    ExternalServiceError,
+    NotFoundError,
+    ValidationError,
 )
 
 # Import actual models from schemas
 from apps.backend.models.schemas import BaseResponse, User
-
-# Import actual exceptions
-from apps.backend.core.exceptions import NotFoundError, ExternalServiceError, ValidationError
-
 
 # ============================================================================
 # Fixtures
@@ -116,7 +119,9 @@ class TestGetAgentsHealth:
     async def test_get_health_success(self, mock_current_user, sample_health_data):
         """Test successfully retrieving agent health."""
         # Patch agent_manager.get_agent_status instead of get_agent_health wrapper
-        with patch("apps.backend.agents.agent.agent_manager.get_agent_status", new_callable=AsyncMock) as mock_status:
+        with patch(
+            "apps.backend.agents.agent.agent_manager.get_agent_status", new_callable=AsyncMock
+        ) as mock_status:
             mock_status.return_value = sample_health_data
 
             result = await get_agents_health(current_user=mock_current_user)
@@ -130,7 +135,9 @@ class TestGetAgentsHealth:
     @pytest.mark.asyncio
     async def test_get_health_no_agents(self, mock_current_user):
         """Test health check when no agents found."""
-        with patch("apps.backend.agents.agent.agent_manager.get_agent_status", new_callable=AsyncMock) as mock_status:
+        with patch(
+            "apps.backend.agents.agent.agent_manager.get_agent_status", new_callable=AsyncMock
+        ) as mock_status:
             mock_status.return_value = None
 
             # Endpoint catches NotFoundError and re-raises as ExternalServiceError
@@ -140,7 +147,9 @@ class TestGetAgentsHealth:
     @pytest.mark.asyncio
     async def test_get_health_service_error(self, mock_current_user):
         """Test handling service errors during health check."""
-        with patch("apps.backend.agents.agent.agent_manager.get_agent_status", new_callable=AsyncMock) as mock_status:
+        with patch(
+            "apps.backend.agents.agent.agent_manager.get_agent_status", new_callable=AsyncMock
+        ) as mock_status:
             mock_status.side_effect = Exception("Service unavailable")
 
             with pytest.raises(ExternalServiceError):

@@ -8,9 +8,9 @@ import logging
 from typing import List, Optional
 
 from fastapi import Depends, HTTPException, Request, Security, status
-from fastapi.security import APIKeyHeader, APIKeyQuery, APIKeyCookie
+from fastapi.security import APIKeyCookie, APIKeyHeader, APIKeyQuery
 
-from apps.backend.services.api_key_manager import api_key_manager, APIKeyScope
+from apps.backend.services.api_key_manager import APIKeyScope, api_key_manager
 
 logger = logging.getLogger(__name__)
 
@@ -36,10 +36,7 @@ async def get_api_key(
     return header_key or query_key or cookie_key
 
 
-async def validate_api_key(
-    request: Request,
-    api_key: Optional[str] = Depends(get_api_key)
-) -> dict:
+async def validate_api_key(request: Request, api_key: Optional[str] = Depends(get_api_key)) -> dict:
     """
     Validate API key and return key details.
 
@@ -57,7 +54,7 @@ async def validate_api_key(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="API key required",
-            headers={"WWW-Authenticate": "ApiKey"}
+            headers={"WWW-Authenticate": "ApiKey"},
         )
 
     # Get request details for validation
@@ -66,29 +63,26 @@ async def validate_api_key(
 
     # Validate the key
     is_valid, key_model = await api_key_manager.validate_api_key(
-        api_key=api_key,
-        request_ip=client_ip,
-        origin=origin
+        api_key=api_key, request_ip=client_ip, origin=origin
     )
 
     if not is_valid:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid API key",
-            headers={"WWW-Authenticate": "ApiKey"}
+            headers={"WWW-Authenticate": "ApiKey"},
         )
 
     # Check rate limiting
     allowed, retry_after = await api_key_manager.check_rate_limit(
-        api_key=key_model,
-        source=request.url.path
+        api_key=key_model, source=request.url.path
     )
 
     if not allowed:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Rate limit exceeded",
-            headers={"Retry-After": str(retry_after)}
+            headers={"Retry-After": str(retry_after)},
         )
 
     # Store key info in request state for logging
@@ -96,7 +90,7 @@ async def validate_api_key(
         "key_id": key_model.key_id,
         "name": key_model.name,
         "organization": key_model.organization,
-        "scopes": key_model.scopes
+        "scopes": key_model.scopes,
     }
 
     return request.state.api_key
@@ -119,16 +113,14 @@ def require_api_key(scopes: Optional[List[str]] = None):
     Returns:
         Dependency function
     """
-    async def dependency(
-        request: Request,
-        api_key: Optional[str] = Depends(get_api_key)
-    ) -> dict:
+
+    async def dependency(request: Request, api_key: Optional[str] = Depends(get_api_key)) -> dict:
         """Validate API key with required scopes."""
         if not api_key:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="API key required",
-                headers={"WWW-Authenticate": "ApiKey"}
+                headers={"WWW-Authenticate": "ApiKey"},
             )
 
         # Get request details
@@ -137,10 +129,7 @@ def require_api_key(scopes: Optional[List[str]] = None):
 
         # Validate with scopes
         is_valid, key_model = await api_key_manager.validate_api_key(
-            api_key=api_key,
-            required_scopes=scopes,
-            request_ip=client_ip,
-            origin=origin
+            api_key=api_key, required_scopes=scopes, request_ip=client_ip, origin=origin
         )
 
         if not is_valid:
@@ -149,22 +138,18 @@ def require_api_key(scopes: Optional[List[str]] = None):
             else:
                 detail = "Invalid API key"
 
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=detail
-            )
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
 
         # Check rate limiting
         allowed, retry_after = await api_key_manager.check_rate_limit(
-            api_key=key_model,
-            source=request.url.path
+            api_key=key_model, source=request.url.path
         )
 
         if not allowed:
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail="Rate limit exceeded",
-                headers={"Retry-After": str(retry_after)}
+                headers={"Retry-After": str(retry_after)},
             )
 
         # Store in request state
@@ -172,7 +157,7 @@ def require_api_key(scopes: Optional[List[str]] = None):
             "key_id": key_model.key_id,
             "name": key_model.name,
             "organization": key_model.organization,
-            "scopes": key_model.scopes
+            "scopes": key_model.scopes,
         }
 
         return request.state.api_key
@@ -194,8 +179,7 @@ require_content_access = require_api_key([APIKeyScope.CONTENT])
 
 
 async def optional_api_key(
-    request: Request,
-    api_key: Optional[str] = Depends(get_api_key)
+    request: Request, api_key: Optional[str] = Depends(get_api_key)
 ) -> Optional[dict]:
     """
     Optional API key validation.
@@ -212,9 +196,7 @@ async def optional_api_key(
 
     # Validate the key
     is_valid, key_model = await api_key_manager.validate_api_key(
-        api_key=api_key,
-        request_ip=client_ip,
-        origin=origin
+        api_key=api_key, request_ip=client_ip, origin=origin
     )
 
     if not is_valid:
@@ -227,7 +209,7 @@ async def optional_api_key(
         "key_id": key_model.key_id,
         "name": key_model.name,
         "organization": key_model.organization,
-        "scopes": key_model.scopes
+        "scopes": key_model.scopes,
     }
 
     return request.state.api_key
@@ -246,5 +228,5 @@ __all__ = [
     "require_ai_access",
     "require_webhook_access",
     "require_analytics_access",
-    "require_content_access"
+    "require_content_access",
 ]

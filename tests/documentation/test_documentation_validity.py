@@ -12,26 +12,26 @@ Usage:
     pytest tests/documentation/test_documentation_validity.py -k "coverage" -v
 """
 
-import os
-import sys
-import json
-import pytest
 import asyncio
-import tempfile
 import shutil
+import sys
+import tempfile
+from datetime import datetime
 from pathlib import Path
-from unittest.mock import Mock, patch, AsyncMock
-from datetime import datetime, timezone
+from unittest.mock import Mock
+
+import pytest
 
 # Add scripts to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "scripts" / "validation"))
 
+from api_doc_sync import APIDocumentationSync
+from code_example_validator import CodeBlock, CodeExampleValidator, CodeLanguage
+from doc_coverage import CodeItem, DocumentationCoverageAnalyzer
+
 # Import validation modules
-from doc_validator import DocumentationValidator, ValidationConfig, ValidationIssue, Severity
-from api_doc_sync import APIDocumentationSync, APIEndpoint, SyncIssue
-from code_example_validator import CodeExampleValidator, CodeBlock, CodeLanguage, ValidationResult
-from migration_checker import MigrationDocumentationChecker, MigrationItem, MigrationStatus
-from doc_coverage import DocumentationCoverageAnalyzer, CodeItem, CoverageGap
+from doc_validator import DocumentationValidator, Severity, ValidationConfig
+from migration_checker import MigrationDocumentationChecker
 
 
 class TestDocumentationValidator:
@@ -48,7 +48,8 @@ class TestDocumentationValidator:
 
         # Good markdown file
         good_md = temp_path / "docs" / "good.md"
-        good_md.write_text("""
+        good_md.write_text(
+            """
 # Test Documentation
 
 This is a well-formatted document with proper structure.
@@ -86,11 +87,13 @@ Create a new test resource.
 
 - [Internal Link](./good.md)
 - [External Link](https://github.com/example/repo)
-""")
+"""
+        )
 
         # Bad markdown file with issues
         bad_md = temp_path / "docs" / "bad.md"
-        bad_md.write_text("""
+        bad_md.write_text(
+            """
 # Bad Documentation
 
 This file has various issues.
@@ -121,11 +124,13 @@ sudo rm -rf /
 
 This uses fastapi instead of FastAPI.
 Also mentions nodejs instead of Node.js.
-""")
+"""
+        )
 
         # Configuration file
         config_yaml = temp_path / "validation_config.yaml"
-        config_yaml.write_text("""
+        config_yaml.write_text(
+            """
 include_patterns:
   - "**/*.md"
 exclude_patterns:
@@ -136,7 +141,8 @@ auto_fix_enabled: false
 terminology:
   fastapi: ["FastAPI"]
   nodejs: ["Node.js"]
-""")
+"""
+        )
 
         yield temp_path
 
@@ -165,7 +171,7 @@ terminology:
         config = ValidationConfig(
             root_dir=temp_docs,
             check_links=False,  # Skip external link checks for speed
-            check_code_examples=False
+            check_code_examples=False,
         )
         validator = DocumentationValidator(config)
 
@@ -183,10 +189,7 @@ terminology:
     async def test_link_validation(self, temp_docs):
         """Test link validation"""
         config = ValidationConfig(
-            root_dir=temp_docs,
-            check_links=True,
-            check_code_examples=False,
-            check_terminology=False
+            root_dir=temp_docs, check_links=True, check_code_examples=False, check_terminology=False
         )
         validator = DocumentationValidator(config)
 
@@ -200,10 +203,7 @@ terminology:
     async def test_formatting_validation(self, temp_docs):
         """Test formatting validation"""
         config = ValidationConfig(
-            root_dir=temp_docs,
-            check_formatting=True,
-            check_links=False,
-            check_code_examples=False
+            root_dir=temp_docs, check_formatting=True, check_links=False, check_code_examples=False
         )
         validator = DocumentationValidator(config)
 
@@ -217,10 +217,7 @@ terminology:
     async def test_terminology_validation(self, temp_docs):
         """Test terminology consistency"""
         config = ValidationConfig(
-            root_dir=temp_docs,
-            check_terminology=True,
-            check_links=False,
-            check_code_examples=False
+            root_dir=temp_docs, check_terminology=True, check_links=False, check_code_examples=False
         )
         validator = DocumentationValidator(config)
 
@@ -234,10 +231,7 @@ terminology:
     async def test_code_security_validation(self, temp_docs):
         """Test dangerous code detection"""
         config = ValidationConfig(
-            root_dir=temp_docs,
-            check_code_examples=True,
-            check_links=False,
-            check_terminology=False
+            root_dir=temp_docs, check_code_examples=True, check_links=False, check_terminology=False
         )
         validator = DocumentationValidator(config)
 
@@ -249,11 +243,7 @@ terminology:
 
     def test_auto_fix_functionality(self, temp_docs):
         """Test auto-fix functionality"""
-        config = ValidationConfig(
-            root_dir=temp_docs,
-            auto_fix_enabled=True,
-            max_auto_fixes=10
-        )
+        config = ValidationConfig(root_dir=temp_docs, auto_fix_enabled=True, max_auto_fixes=10)
         validator = DocumentationValidator(config)
 
         # Create a file with fixable issues
@@ -288,45 +278,29 @@ class TestAPIDocumentationSync:
                         "summary": "Get all users",
                         "tags": ["users"],
                         "responses": {
-                            "200": {
-                                "content": {
-                                    "application/json": {
-                                        "schema": {"type": "array"}
-                                    }
-                                }
-                            }
-                        }
+                            "200": {"content": {"application/json": {"schema": {"type": "array"}}}}
+                        },
                     },
                     "post": {
                         "operationId": "create_user",
                         "summary": "Create user",
                         "tags": ["users"],
                         "requestBody": {
-                            "content": {
-                                "application/json": {
-                                    "schema": {"type": "object"}
-                                }
-                            }
+                            "content": {"application/json": {"schema": {"type": "object"}}}
                         },
                         "responses": {
-                            "201": {
-                                "content": {
-                                    "application/json": {
-                                        "schema": {"type": "object"}
-                                    }
-                                }
-                            }
-                        }
-                    }
+                            "201": {"content": {"application/json": {"schema": {"type": "object"}}}}
+                        },
+                    },
                 },
                 "/api/v1/health": {
                     "get": {
                         "operationId": "health_check",
                         "summary": "Health check",
-                        "responses": {"200": {"content": {}}}
+                        "responses": {"200": {"content": {}}},
                     }
-                }
-            }
+                },
+            },
         }
 
     @pytest.fixture
@@ -337,7 +311,8 @@ class TestAPIDocumentationSync:
 
         # Create API documentation
         api_docs = temp_path / "api.md"
-        api_docs.write_text("""
+        api_docs.write_text(
+            """
 # API Documentation
 
 ## User Management
@@ -353,7 +328,8 @@ Create a new user.
 ### GET /api/v1/missing
 
 This endpoint is documented but doesn't exist on the server.
-""")
+"""
+        )
 
         yield temp_path
         shutil.rmtree(temp_dir)
@@ -364,7 +340,7 @@ This endpoint is documented but doesn't exist on the server.
         syncer = APIDocumentationSync(
             server_url="http://localhost:8000",
             docs_dir=temp_docs_with_api,
-            output_dir=temp_docs_with_api / "output"
+            output_dir=temp_docs_with_api / "output",
         )
 
         assert syncer.server_url == "http://localhost:8000"
@@ -376,7 +352,7 @@ This endpoint is documented but doesn't exist on the server.
         syncer = APIDocumentationSync(
             server_url="http://localhost:8000",
             docs_dir=temp_docs_with_api,
-            output_dir=temp_docs_with_api / "output"
+            output_dir=temp_docs_with_api / "output",
         )
 
         syncer.openapi_spec = mock_openapi_spec
@@ -393,7 +369,7 @@ This endpoint is documented but doesn't exist on the server.
         syncer = APIDocumentationSync(
             server_url="http://localhost:8000",
             docs_dir=temp_docs_with_api,
-            output_dir=temp_docs_with_api / "output"
+            output_dir=temp_docs_with_api / "output",
         )
 
         await syncer._scan_documentation()
@@ -409,7 +385,7 @@ This endpoint is documented but doesn't exist on the server.
         syncer = APIDocumentationSync(
             server_url="http://localhost:8000",
             docs_dir=temp_docs_with_api,
-            output_dir=temp_docs_with_api / "output"
+            output_dir=temp_docs_with_api / "output",
         )
 
         # Set up mock data
@@ -419,10 +395,8 @@ This endpoint is documented but doesn't exist on the server.
 
         # Create mock report
         from api_doc_sync import SyncReport
-        report = SyncReport(
-            timestamp=datetime.now(),
-            server_url="http://localhost:8000"
-        )
+
+        report = SyncReport(timestamp=datetime.now(), server_url="http://localhost:8000")
 
         syncer._compare_endpoints(report)
 
@@ -446,7 +420,8 @@ class TestCodeExampleValidator:
 
         # Create docs with various code examples
         code_examples = temp_path / "examples.md"
-        code_examples.write_text("""
+        code_examples.write_text(
+            """
 # Code Examples
 
 ## Python Example
@@ -511,7 +486,8 @@ dependencies:
   - python>=3.8
   - fastapi
 ```
-""")
+"""
+        )
 
         yield temp_path
         shutil.rmtree(temp_dir)
@@ -522,7 +498,7 @@ dependencies:
         validator = CodeExampleValidator(
             docs_dir=temp_docs_with_code,
             output_dir=temp_docs_with_code / "output",
-            use_docker=False  # Disable Docker for testing
+            use_docker=False,  # Disable Docker for testing
         )
 
         code_blocks = await validator._extract_code_blocks()
@@ -542,10 +518,10 @@ dependencies:
         validator = CodeExampleValidator(
             docs_dir=temp_docs_with_code,
             output_dir=temp_docs_with_code / "output",
-            use_docker=False
+            use_docker=False,
         )
 
-        code_blocks = await validator._extract_code_blocks(['python'])
+        code_blocks = await validator._extract_code_blocks(["python"])
         python_blocks = [b for b in code_blocks if b.language == CodeLanguage.PYTHON]
 
         results = []
@@ -565,7 +541,7 @@ dependencies:
         validator = CodeExampleValidator(
             docs_dir=temp_docs_with_code,
             output_dir=temp_docs_with_code / "output",
-            use_docker=False
+            use_docker=False,
         )
 
         # Test valid JSON
@@ -573,7 +549,7 @@ dependencies:
             content='{"name": "test", "version": "1.0.0"}',
             language=CodeLanguage.JSON,
             file_path=Path("test.md"),
-            line_number=1
+            line_number=1,
         )
 
         result = validator._validate_json_code(valid_json_block)
@@ -584,7 +560,7 @@ dependencies:
             content='{"name": "test", "version": 1.0.0, // invalid}',
             language=CodeLanguage.JSON,
             file_path=Path("test.md"),
-            line_number=1
+            line_number=1,
         )
 
         result = validator._validate_json_code(invalid_json_block)
@@ -597,7 +573,7 @@ dependencies:
         validator = CodeExampleValidator(
             docs_dir=temp_docs_with_code,
             output_dir=temp_docs_with_code / "output",
-            use_docker=False
+            use_docker=False,
         )
 
         # Create dangerous code block
@@ -605,7 +581,7 @@ dependencies:
             content="sudo rm -rf /",
             language=CodeLanguage.BASH,
             file_path=Path("test.md"),
-            line_number=1
+            line_number=1,
         )
 
         result = await validator._validate_code_block(dangerous_block, fix_errors=False)
@@ -625,7 +601,8 @@ class TestMigrationChecker:
         # Create migration guide
         migration_guide = temp_path / "docs" / "migration.md"
         migration_guide.parent.mkdir(parents=True)
-        migration_guide.write_text("""
+        migration_guide.write_text(
+            """
 # WebSocket to Pusher Migration Guide
 
 ## Overview
@@ -663,28 +640,33 @@ const pusher = new Pusher('your-key', {
 ## Troubleshooting
 
 Common issues and solutions.
-""")
+"""
+        )
 
         # Create code files with deprecated features
         backend_file = temp_path / "apps" / "backend" / "websocket.py"
         backend_file.parent.mkdir(parents=True)
-        backend_file.write_text("""
+        backend_file.write_text(
+            """
 from fastapi import WebSocket
 
 @app.websocket("/ws/test")
 async def websocket_endpoint(websocket: WebSocket):
     # TODO: Remove this WebSocket endpoint after Pusher migration
     await websocket.accept()
-""")
+"""
+        )
 
         frontend_file = temp_path / "apps" / "dashboard" / "socket.js"
         frontend_file.parent.mkdir(parents=True)
-        frontend_file.write_text("""
+        frontend_file.write_text(
+            """
 import io from 'socket.io-client';
 
 // FIXME: Replace with Pusher implementation
 const socket = io(process.env.REACT_APP_WS_URL);
-""")
+"""
+        )
 
         yield temp_path
         shutil.rmtree(temp_dir)
@@ -693,8 +675,7 @@ const socket = io(process.env.REACT_APP_WS_URL);
     async def test_migration_checker_initialization(self, temp_repo_with_migrations):
         """Test migration checker initialization"""
         checker = MigrationDocumentationChecker(
-            root_dir=temp_repo_with_migrations,
-            output_dir=temp_repo_with_migrations / "output"
+            root_dir=temp_repo_with_migrations, output_dir=temp_repo_with_migrations / "output"
         )
 
         assert len(checker.known_migrations) >= 3  # Should have predefined migrations
@@ -703,11 +684,10 @@ const socket = io(process.env.REACT_APP_WS_URL);
     async def test_todo_extraction(self, temp_repo_with_migrations):
         """Test TODO item extraction"""
         checker = MigrationDocumentationChecker(
-            root_dir=temp_repo_with_migrations,
-            output_dir=temp_repo_with_migrations / "output"
+            root_dir=temp_repo_with_migrations, output_dir=temp_repo_with_migrations / "output"
         )
 
-        report = type('Report', (), {'todos': []})()
+        report = type("Report", (), {"todos": []})()
         await checker._extract_todo_items(report)
 
         # Should find TODO and FIXME items
@@ -721,28 +701,26 @@ const socket = io(process.env.REACT_APP_WS_URL);
     async def test_deprecated_feature_detection(self, temp_repo_with_migrations):
         """Test deprecated feature detection"""
         checker = MigrationDocumentationChecker(
-            root_dir=temp_repo_with_migrations,
-            output_dir=temp_repo_with_migrations / "output"
+            root_dir=temp_repo_with_migrations, output_dir=temp_repo_with_migrations / "output"
         )
 
-        report = type('Report', (), {'deprecations': [], 'issues': []})()
+        report = type("Report", (), {"deprecations": [], "issues": []})()
         await checker._find_deprecated_features(report)
 
         # Should find WebSocket and Socket.IO usage
         assert len(report.deprecations) >= 2
 
         deprecation_names = [d.name for d in report.deprecations]
-        assert 'websocket_endpoints' in deprecation_names or 'socketio_client' in deprecation_names
+        assert "websocket_endpoints" in deprecation_names or "socketio_client" in deprecation_names
 
     @pytest.mark.asyncio
     async def test_migration_guide_validation(self, temp_repo_with_migrations):
         """Test migration guide validation"""
         checker = MigrationDocumentationChecker(
-            root_dir=temp_repo_with_migrations,
-            output_dir=temp_repo_with_migrations / "output"
+            root_dir=temp_repo_with_migrations, output_dir=temp_repo_with_migrations / "output"
         )
 
-        report = type('Report', (), {'issues': []})()
+        report = type("Report", (), {"issues": []})()
         await checker._verify_migration_guides(report)
 
         # Should validate the migration guide exists and has required sections
@@ -762,7 +740,8 @@ class TestDocumentationCoverage:
 
         # Create Python module
         module_file = temp_path / "example_module.py"
-        module_file.write_text('''
+        module_file.write_text(
+            '''
 """
 Example module for testing documentation coverage.
 """
@@ -812,11 +791,13 @@ DATABASE_URL = "postgresql://localhost/test"  # config
 
 # Regular constant
 MAX_RETRIES = 3
-''')
+'''
+        )
 
         # Create API endpoint file
         api_file = temp_path / "api.py"
-        api_file.write_text('''
+        api_file.write_text(
+            '''
 from fastapi import APIRouter
 
 router = APIRouter()
@@ -834,14 +815,16 @@ async def documented_endpoint():
 @router.post("/api/v1/undocumented")
 async def undocumented_endpoint():
     return {"message": "no docs"}
-''')
+'''
+        )
 
         # Create some documentation
         docs_dir = temp_path / "docs"
         docs_dir.mkdir()
 
         api_docs = docs_dir / "api.md"
-        api_docs.write_text("""
+        api_docs.write_text(
+            """
 # API Documentation
 
 ## Endpoints
@@ -849,7 +832,8 @@ async def undocumented_endpoint():
 ### GET /api/v1/documented
 
 This endpoint is documented here.
-""")
+"""
+        )
 
         yield temp_path
         shutil.rmtree(temp_dir)
@@ -858,33 +842,33 @@ This endpoint is documented here.
     async def test_code_analysis(self, temp_python_project):
         """Test code analysis for coverage"""
         analyzer = DocumentationCoverageAnalyzer(
-            root_dir=temp_python_project,
-            output_dir=temp_python_project / "output"
+            root_dir=temp_python_project, output_dir=temp_python_project / "output"
         )
 
-        report = type('Report', (), {'code_items': []})()
+        report = type("Report", (), {"code_items": []})()
         await analyzer._analyze_code_files(report, Mock(), Mock())
 
         # Should find classes, functions, and constants
-        assert len(report.code_items) >= 8  # 1 class + 2 methods + 2 functions + 2 constants + 1 endpoint
+        assert (
+            len(report.code_items) >= 8
+        )  # 1 class + 2 methods + 2 functions + 2 constants + 1 endpoint
 
         # Check item types
         item_types = [item.item_type for item in report.code_items]
-        assert 'class' in item_types
-        assert 'function' in item_types
-        assert 'method' in item_types
-        assert 'endpoint' in item_types
-        assert 'config' in item_types
+        assert "class" in item_types
+        assert "function" in item_types
+        assert "method" in item_types
+        assert "endpoint" in item_types
+        assert "config" in item_types
 
     @pytest.mark.asyncio
     async def test_documentation_analysis(self, temp_python_project):
         """Test documentation analysis"""
         analyzer = DocumentationCoverageAnalyzer(
-            root_dir=temp_python_project,
-            output_dir=temp_python_project / "output"
+            root_dir=temp_python_project, output_dir=temp_python_project / "output"
         )
 
-        report = type('Report', (), {'documentation_files': []})()
+        report = type("Report", (), {"documentation_files": []})()
         await analyzer._analyze_documentation_files(report, Mock(), Mock())
 
         # Should find documentation files
@@ -898,21 +882,24 @@ This endpoint is documented here.
     async def test_coverage_calculation(self, temp_python_project):
         """Test coverage calculation"""
         analyzer = DocumentationCoverageAnalyzer(
-            root_dir=temp_python_project,
-            output_dir=temp_python_project / "output"
+            root_dir=temp_python_project, output_dir=temp_python_project / "output"
         )
 
         # Create mock report with items
-        report = type('Report', (), {
-            'code_items': [],
-            'documentation_files': [],
-            'total_items': 0,
-            'documented_items': 0,
-            'coverage_percentage': 0.0,
-            'stats_by_type': {},
-            'stats_by_module': {},
-            'quality_metrics': {}
-        })()
+        report = type(
+            "Report",
+            (),
+            {
+                "code_items": [],
+                "documentation_files": [],
+                "total_items": 0,
+                "documented_items": 0,
+                "coverage_percentage": 0.0,
+                "stats_by_type": {},
+                "stats_by_module": {},
+                "quality_metrics": {},
+            },
+        )()
 
         # Add some mock items
         documented_item = CodeItem(
@@ -920,14 +907,14 @@ This endpoint is documented here.
             item_type="function",
             file_path=Path("test.py"),
             line_number=1,
-            docstring="This is documented"
+            docstring="This is documented",
         )
 
         undocumented_item = CodeItem(
             name="undocumented_function",
             item_type="function",
             file_path=Path("test.py"),
-            line_number=10
+            line_number=10,
         )
 
         report.code_items = [documented_item, undocumented_item]
@@ -942,8 +929,7 @@ This endpoint is documented here.
     def test_gap_identification(self, temp_python_project):
         """Test coverage gap identification"""
         analyzer = DocumentationCoverageAnalyzer(
-            root_dir=temp_python_project,
-            output_dir=temp_python_project / "output"
+            root_dir=temp_python_project, output_dir=temp_python_project / "output"
         )
 
         # Create items with different documentation states
@@ -952,7 +938,7 @@ This endpoint is documented here.
             item_type="endpoint",
             file_path=Path("api.py"),
             line_number=1,
-            is_public=True
+            is_public=True,
         )
 
         poorly_documented = CodeItem(
@@ -962,14 +948,18 @@ This endpoint is documented here.
             line_number=1,
             docstring="Short.",  # Too short
             complexity_score=15,  # High complexity
-            is_public=True
+            is_public=True,
         )
 
-        report = type('Report', (), {
-            'code_items': [undocumented_api, poorly_documented],
-            'documentation_files': [],
-            'coverage_gaps': []
-        })()
+        report = type(
+            "Report",
+            (),
+            {
+                "code_items": [undocumented_api, poorly_documented],
+                "documentation_files": [],
+                "coverage_gaps": [],
+            },
+        )()
 
         analyzer._identify_coverage_gaps(report, Mock(), Mock())
 
@@ -978,7 +968,7 @@ This endpoint is documented here.
 
         # Check severity assignment
         severities = [gap.severity for gap in report.coverage_gaps]
-        assert 'critical' in severities  # API endpoint should be critical
+        assert "critical" in severities  # API endpoint should be critical
 
 
 class TestIntegrationTests:
@@ -996,7 +986,8 @@ class TestIntegrationTests:
 
         # Add FastAPI application
         app_file = temp_path / "apps" / "backend" / "main.py"
-        app_file.write_text('''
+        app_file.write_text(
+            '''
 """
 Main FastAPI application.
 """
@@ -1023,11 +1014,13 @@ async def get_users():
 async def create_user():
     # Missing documentation
     return {"message": "user created"}
-''')
+'''
+        )
 
         # Add documentation
         readme = temp_path / "README.md"
-        readme.write_text("""
+        readme.write_text(
+            """
 # Test Project
 
 This is a test project for documentation validation.
@@ -1046,11 +1039,13 @@ Get all users in the system.
 
 - [ ] Add user creation documentation
 - [ ] Improve error handling docs @john by 2024-12-31
-""")
+"""
+        )
 
         # Add API documentation
         api_docs = temp_path / "docs" / "api" / "users.md"
-        api_docs.write_text("""
+        api_docs.write_text(
+            """
 # User API
 
 ## Endpoints
@@ -1069,7 +1064,8 @@ Returns all users.
 ### GET /api/v1/missing
 
 This endpoint is documented but doesn't exist.
-""")
+"""
+        )
 
         yield temp_path
         shutil.rmtree(temp_dir)
@@ -1083,7 +1079,7 @@ This endpoint is documented but doesn't exist.
             root_dir=sample_project,
             check_links=False,  # Skip external links for speed
             check_code_examples=True,
-            check_terminology=True
+            check_terminology=True,
         )
         doc_validator = DocumentationValidator(doc_config)
         doc_stats = await doc_validator.validate_all()
@@ -1093,8 +1089,7 @@ This endpoint is documented but doesn't exist.
 
         # 2. Run coverage analysis
         coverage_analyzer = DocumentationCoverageAnalyzer(
-            root_dir=sample_project,
-            output_dir=sample_project / "reports"
+            root_dir=sample_project, output_dir=sample_project / "reports"
         )
         coverage_report = await coverage_analyzer.generate_coverage_report()
 
@@ -1103,8 +1098,7 @@ This endpoint is documented but doesn't exist.
 
         # 3. Run migration checker
         migration_checker = MigrationDocumentationChecker(
-            root_dir=sample_project,
-            output_dir=sample_project / "reports"
+            root_dir=sample_project, output_dir=sample_project / "reports"
         )
         migration_report = await migration_checker.check_all_migrations()
 
@@ -1114,9 +1108,9 @@ This endpoint is documented but doesn't exist.
         # 4. Verify integration
         # The validation should be comprehensive
         total_issues = (
-            len(doc_validator.issues) +
-            len(coverage_report.coverage_gaps) +
-            len(migration_report.issues)
+            len(doc_validator.issues)
+            + len(coverage_report.coverage_gaps)
+            + len(migration_report.issues)
         )
 
         assert total_issues > 0  # Should find issues to validate
@@ -1138,4 +1132,5 @@ pytestmark = pytest.mark.asyncio
 if __name__ == "__main__":
     # Allow running tests directly
     import pytest
+
     pytest.main([__file__, "-v"])

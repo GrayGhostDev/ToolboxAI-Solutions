@@ -8,18 +8,16 @@ Target: Reduce Pusher operation latency from ~30ms to <20ms
 import asyncio
 import logging
 import time
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
-from datetime import datetime, timezone, timedelta
-from dataclasses import dataclass
 from collections import defaultdict, deque
-import json
-import hashlib
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from typing import Any
 
 import pusher
 from pusher.errors import PusherError
 
+from apps.backend.core.cache import CacheConfig, cache
 from apps.backend.core.config import settings
-from apps.backend.core.cache import cache, CacheConfig
 
 logger = logging.getLogger(__name__)
 
@@ -30,15 +28,15 @@ class PusherEvent:
 
     channel: str
     event: str
-    data: Dict[str, Any]
-    socket_id: Optional[str] = None
+    data: dict[str, Any]
+    socket_id: str | None = None
     timestamp: datetime = None
 
     def __post_init__(self):
         if self.timestamp is None:
             self.timestamp = datetime.now(timezone.utc)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for Pusher API"""
         return {
             "channel": self.channel,
@@ -93,7 +91,7 @@ class PusherStats:
     def avg_latency(self) -> float:
         return (self.total_latency / self.events_sent) if self.events_sent > 0 else 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "events_sent": self.events_sent,
             "batch_events_sent": self.batch_events_sent,
@@ -114,7 +112,7 @@ class ConnectionPool:
 
     def __init__(self, pool_size: int = 5):
         self.pool_size = pool_size
-        self.clients: List[pusher.Pusher] = []
+        self.clients: list[pusher.Pusher] = []
         self.current_index = 0
         self._lock = asyncio.Lock()
         self._initialized = False
@@ -174,7 +172,7 @@ class EventBatcher:
     def __init__(self, batch_size: int = 10, batch_timeout: float = 0.1):
         self.batch_size = batch_size
         self.batch_timeout = batch_timeout
-        self.pending_events: Dict[str, List[PusherEvent]] = defaultdict(list)
+        self.pending_events: dict[str, list[PusherEvent]] = defaultdict(list)
         self.last_flush = time.time()
         self._lock = asyncio.Lock()
 
@@ -189,7 +187,7 @@ class EventBatcher:
 
             return total_events >= self.batch_size or time_since_last_flush >= self.batch_timeout
 
-    async def get_batches(self) -> Dict[str, List[PusherEvent]]:
+    async def get_batches(self) -> dict[str, list[PusherEvent]]:
         """Get and clear current batches"""
         async with self._lock:
             batches = dict(self.pending_events)
@@ -202,8 +200,8 @@ class ChannelManager:
     """Optimized channel management with caching"""
 
     def __init__(self):
-        self.active_channels: Set[str] = set()
-        self.channel_stats: Dict[str, Dict[str, Any]] = defaultdict(
+        self.active_channels: set[str] = set()
+        self.channel_stats: dict[str, dict[str, Any]] = defaultdict(
             lambda: {"events_sent": 0, "subscribers": 0, "last_activity": None}
         )
         self._cache_prefix = "pusher_channel"
@@ -226,12 +224,12 @@ class ChannelManager:
         await self.register_channel(channel)
         self.channel_stats[channel]["events_sent"] += 1
 
-    async def get_channel_info(self, channel: str) -> Optional[Dict[str, Any]]:
+    async def get_channel_info(self, channel: str) -> dict[str, Any] | None:
         """Get cached channel information"""
         cache_key = f"{self._cache_prefix}:{channel}"
         return await cache.get(cache_key)
 
-    def get_channel_stats(self) -> Dict[str, Any]:
+    def get_channel_stats(self) -> dict[str, Any]:
         """Get channel usage statistics"""
         return {
             "active_channels": len(self.active_channels),
@@ -283,7 +281,7 @@ class OptimizedPusherService:
         self.stats = PusherStats()
 
         # Background task for processing batches
-        self._batch_task: Optional[asyncio.Task] = None
+        self._batch_task: asyncio.Task | None = None
         self._running = False
 
     async def initialize(self):
@@ -314,7 +312,7 @@ class OptimizedPusherService:
             except Exception as e:
                 logger.error(f"Error in batch processor: {e}")
 
-    async def _send_batched_events(self, batches: Dict[str, List[PusherEvent]]):
+    async def _send_batched_events(self, batches: dict[str, list[PusherEvent]]):
         """Send batched events efficiently"""
         for channel, events in batches.items():
             if not events:
@@ -382,8 +380,8 @@ class OptimizedPusherService:
         self,
         channel: str,
         event: str,
-        data: Dict[str, Any],
-        socket_id: Optional[str] = None,
+        data: dict[str, Any],
+        socket_id: str | None = None,
         immediate: bool = False,
     ) -> bool:
         """Trigger a Pusher event with optimization"""
@@ -447,9 +445,9 @@ class OptimizedPusherService:
         self,
         socket_id: str,
         channel_name: str,
-        user_id: Optional[str] = None,
-        user_info: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        user_id: str | None = None,
+        user_info: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Authenticate channel access with caching"""
 
         # Check cache for recent authentication
@@ -488,7 +486,7 @@ class OptimizedPusherService:
             logger.error(f"Channel authentication failed: {e}")
             raise
 
-    async def get_channel_info(self, channel: str) -> Dict[str, Any]:
+    async def get_channel_info(self, channel: str) -> dict[str, Any]:
         """Get channel information with caching"""
         cached_info = await self.channel_manager.get_channel_info(channel)
         if cached_info:
@@ -525,7 +523,7 @@ class OptimizedPusherService:
         await self.connection_pool.close()
         logger.info("Optimized Pusher service closed")
 
-    def get_performance_stats(self) -> Dict[str, Any]:
+    def get_performance_stats(self) -> dict[str, Any]:
         """Get comprehensive performance statistics"""
         return {
             "pusher_stats": self.stats.to_dict(),
@@ -540,7 +538,7 @@ class OptimizedPusherService:
 
 
 # Global optimized service instance
-_optimized_pusher_service: Optional[OptimizedPusherService] = None
+_optimized_pusher_service: OptimizedPusherService | None = None
 
 
 async def get_optimized_pusher_service() -> OptimizedPusherService:
@@ -558,8 +556,8 @@ async def get_optimized_pusher_service() -> OptimizedPusherService:
 async def trigger_optimized(
     channel: str,
     event: str,
-    data: Dict[str, Any],
-    socket_id: Optional[str] = None,
+    data: dict[str, Any],
+    socket_id: str | None = None,
     immediate: bool = False,
 ) -> bool:
     """Trigger event using optimized service"""
@@ -570,15 +568,15 @@ async def trigger_optimized(
 async def authenticate_optimized(
     socket_id: str,
     channel_name: str,
-    user_id: Optional[str] = None,
-    user_info: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
+    user_id: str | None = None,
+    user_info: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Authenticate channel using optimized service"""
     service = await get_optimized_pusher_service()
     return await service.authenticate_channel(socket_id, channel_name, user_id, user_info)
 
 
-async def get_pusher_health() -> Dict[str, Any]:
+async def get_pusher_health() -> dict[str, Any]:
     """Get Pusher service health and performance metrics"""
     try:
         service = await get_optimized_pusher_service()

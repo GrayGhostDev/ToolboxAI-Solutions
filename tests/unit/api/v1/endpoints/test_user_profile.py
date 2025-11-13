@@ -6,24 +6,23 @@ Tests user profile retrieval, updates, and preferences endpoints.
 Phase 1 Week 1: Authentication & user management endpoint tests
 """
 
-import pytest
 from datetime import datetime, timezone
+from unittest.mock import Mock
 from uuid import uuid4
-from unittest.mock import Mock, patch
 
+import pytest
 from fastapi import HTTPException
 
 # Import endpoint functions and models
 from apps.backend.api.v1.endpoints.user_profile import (
+    UserProfile,
+    get_user_preferences,
     get_user_profile,
     update_user_profile,
-    get_user_preferences,
-    UserProfile,
 )
 
 # Import User model
 from database.models import User
-
 
 # ============================================================================
 # Fixtures

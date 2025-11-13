@@ -63,8 +63,16 @@
   },
   "rewrites": [
     {
+      "source": "/manifest.json",
+      "destination": "/manifest.json"
+    },
+    {
       "source": "/api/:path*",
       "destination": "$VITE_API_BASE_URL/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
   "cleanUrls": true,

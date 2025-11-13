@@ -22,22 +22,15 @@ Standards: Python 3.12, FastAPI async, Pydantic v2
 import logging
 from datetime import datetime
 from enum import Enum
-from typing import Annotated, Optional, Any
+from typing import Annotated, Any
 from uuid import UUID, uuid4
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    Query,
-    status,
-)
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.api.auth.auth import get_current_user
 from apps.backend.core.deps import get_async_db
-from apps.backend.middleware.tenant import get_tenant_context, TenantContext
 from apps.backend.models.schemas import User
 
 logger = logging.getLogger(__name__)
@@ -51,8 +44,10 @@ router = APIRouter(
 
 # === Enums ===
 
+
 class NotificationType(str, Enum):
     """Notification type enumeration"""
+
     INFO = "info"
     SUCCESS = "success"
     WARNING = "warning"
@@ -63,6 +58,7 @@ class NotificationType(str, Enum):
 
 class NotificationPriority(str, Enum):
     """Notification priority levels"""
+
     LOW = "low"
     NORMAL = "normal"
     HIGH = "high"
@@ -71,6 +67,7 @@ class NotificationPriority(str, Enum):
 
 class NotificationChannel(str, Enum):
     """Notification delivery channels"""
+
     IN_APP = "in_app"
     EMAIL = "email"
     PUSH = "push"
@@ -79,12 +76,14 @@ class NotificationChannel(str, Enum):
 
 class NotificationStatus(str, Enum):
     """Notification status"""
+
     UNREAD = "unread"
     READ = "read"
     ARCHIVED = "archived"
 
 
 # === Pydantic v2 Models ===
+
 
 class NotificationAction(BaseModel):
     """Notification action button with Pydantic v2"""
@@ -93,7 +92,7 @@ class NotificationAction(BaseModel):
 
     label: str = Field(..., min_length=1, max_length=50)
     action_type: str = Field(..., min_length=1, max_length=50)
-    url: Optional[str] = None
+    url: str | None = None
     data: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -113,10 +112,10 @@ class Notification(BaseModel):
     channels: list[NotificationChannel] = Field(default_factory=list)
     status: NotificationStatus = NotificationStatus.UNREAD
     created_at: datetime
-    read_at: Optional[datetime] = None
-    expires_at: Optional[datetime] = None
-    icon: Optional[str] = None
-    image_url: Optional[str] = None
+    read_at: datetime | None = None
+    expires_at: datetime | None = None
+    icon: str | None = None
+    image_url: str | None = None
 
 
 class NotificationListResponse(BaseModel):
@@ -142,9 +141,9 @@ class CreateNotificationRequest(BaseModel):
     data: dict[str, Any] = Field(default_factory=dict)
     actions: list[NotificationAction] = Field(default_factory=list)
     channels: list[NotificationChannel] = Field(default_factory=list)
-    icon: Optional[str] = None
-    image_url: Optional[str] = None
-    expires_in_seconds: Optional[int] = Field(None, ge=60, le=2592000)
+    icon: str | None = None
+    image_url: str | None = None
+    expires_in_seconds: int | None = Field(None, ge=60, le=2592000)
 
 
 class BulkNotificationRequest(BaseModel):
@@ -184,6 +183,7 @@ class NotificationStats(BaseModel):
 
 # === API Endpoints ===
 
+
 @router.get(
     "",
     response_model=NotificationListResponse,
@@ -193,9 +193,9 @@ class NotificationStats(BaseModel):
 async def list_notifications(
     session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
-    status_filter: Optional[NotificationStatus] = None,
-    type_filter: Optional[NotificationType] = None,
-    priority_filter: Optional[NotificationPriority] = None,
+    status_filter: NotificationStatus | None = None,
+    type_filter: NotificationType | None = None,
+    priority_filter: NotificationPriority | None = None,
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
 ) -> NotificationListResponse:
@@ -231,8 +231,7 @@ async def list_notifications(
     except Exception as e:
         logger.error(f"Failed to list notifications: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to list notifications"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to list notifications"
         )
 
 
@@ -265,18 +264,14 @@ async def get_notification(
         logger.info(f"Getting notification: {notification_id}")
 
         # TODO: Implement actual notification retrieval
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Notification not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Notification not found")
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to get notification: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get notification"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get notification"
         )
 
 
@@ -338,7 +333,7 @@ async def create_notification(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create notification"
+            detail="Failed to create notification",
         )
 
 
@@ -384,7 +379,7 @@ async def create_bulk_notifications(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create bulk notifications"
+            detail="Failed to create bulk notifications",
         )
 
 
@@ -418,10 +413,7 @@ async def mark_as_read(
         # - Update status
         # - Set read timestamp
 
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Notification not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Notification not found")
 
     except HTTPException:
         raise
@@ -430,7 +422,7 @@ async def mark_as_read(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to mark notification as read"
+            detail="Failed to mark notification as read",
         )
 
 
@@ -474,7 +466,7 @@ async def mark_multiple_as_read(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to mark notifications as read"
+            detail="Failed to mark notifications as read",
         )
 
 
@@ -513,7 +505,7 @@ async def mark_all_as_read(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to mark all notifications as read"
+            detail="Failed to mark all notifications as read",
         )
 
 
@@ -551,7 +543,7 @@ async def delete_notification(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete notification"
+            detail="Failed to delete notification",
         )
 
 
@@ -577,7 +569,9 @@ async def archive_notifications(
         dict: Operation result
     """
     try:
-        logger.info(f"User {current_user.id} archiving {len(request.notification_ids)} notifications")
+        logger.info(
+            f"User {current_user.id} archiving {len(request.notification_ids)} notifications"
+        )
 
         # TODO: Implement notification archiving
         # - Verify ownership
@@ -593,7 +587,7 @@ async def archive_notifications(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to archive notifications"
+            detail="Failed to archive notifications",
         )
 
 
@@ -634,7 +628,7 @@ async def get_notification_stats(
         logger.error(f"Failed to get notification stats: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get notification stats"
+            detail="Failed to get notification stats",
         )
 
 
@@ -681,5 +675,5 @@ async def clear_old_notifications(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to clear old notifications"
+            detail="Failed to clear old notifications",
         )

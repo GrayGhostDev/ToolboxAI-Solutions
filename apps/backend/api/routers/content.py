@@ -4,25 +4,20 @@ Content Generation Router
 Handles content generation, retrieval, and management endpoints.
 """
 
-import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional, List
 
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
-from apps.backend.core.logging import logging_manager, log_execution_time, log_audit
-from apps.backend.core.config import settings
+from apps.backend.api.auth.auth import get_current_user, require_any_role
+from apps.backend.core.logging import log_audit, log_execution_time, logging_manager
 from apps.backend.models.schemas import (
     ContentRequest,
     ContentResponse,
-    BaseResponse,
-    ErrorResponse,
     User,
 )
-from apps.backend.api.auth.auth import get_current_user, require_any_role
 
 logger = logging_manager.get_logger(__name__)
 
@@ -32,33 +27,40 @@ router = APIRouter(tags=["Content Generation"])
 # Request/Response Models for Celery Tasks
 class GenerateLessonRequest(BaseModel):
     """Request model for lesson content generation"""
+
     lesson_id: str = Field(..., description="Unique lesson identifier")
     subject: str = Field(..., description="Subject area (e.g., Mathematics, Science)")
     topic: str = Field(..., description="Specific topic for the lesson")
     grade_level: str = Field(..., description="Target grade level (e.g., 3-5, 6-8)")
-    learning_objectives: Optional[List[str]] = Field(None, description="List of learning objectives")
+    learning_objectives: list[str] | None = Field(None, description="List of learning objectives")
     duration: int = Field(45, description="Lesson duration in minutes")
 
 
 class GenerateQuizRequest(BaseModel):
     """Request model for quiz generation"""
+
     assessment_id: str = Field(..., description="Unique assessment identifier")
     subject: str = Field(..., description="Subject area")
     topic: str = Field(..., description="Specific topic for questions")
     grade_level: str = Field(..., description="Target grade level")
     num_questions: int = Field(10, description="Number of questions to generate")
     difficulty: str = Field("medium", description="Difficulty level (easy, medium, hard, expert)")
-    question_types: Optional[List[str]] = Field(None, description="Question types (multiple_choice, true_false)")
-    learning_objectives: Optional[List[str]] = Field(None, description="Learning objectives to assess")
-    lesson_id: Optional[str] = Field(None, description="Associated lesson ID")
+    question_types: list[str] | None = Field(
+        None, description="Question types (multiple_choice, true_false)"
+    )
+    learning_objectives: list[str] | None = Field(None, description="Learning objectives to assess")
+    lesson_id: str | None = Field(None, description="Associated lesson ID")
 
 
 class OptimizeScriptRequest(BaseModel):
     """Request model for Roblox script optimization"""
+
     script_id: str = Field(..., description="Unique script identifier")
     script_code: str = Field(..., description="Luau script code to optimize")
     script_name: str = Field(..., description="Name/description of the script")
-    optimization_level: str = Field("balanced", description="Optimization level (conservative, balanced, aggressive)")
+    optimization_level: str = Field(
+        "balanced", description="Optimization level (conservative, balanced, aggressive)"
+    )
     preserve_comments: bool = Field(True, description="Whether to preserve comments")
     generate_report: bool = Field(True, description="Whether to generate detailed report")
 
@@ -358,8 +360,8 @@ async def _broadcast_content_update(
     user_id: str,
     content_id: str,
     status: str,
-    result: Optional[str] = None,
-    error: Optional[str] = None,
+    result: str | None = None,
+    error: str | None = None,
 ) -> None:
     """
     Broadcast content generation update via Pusher
@@ -423,7 +425,9 @@ async def generate_lesson_content(
     """
     try:
         # Import Celery task
-        from apps.backend.workers.tasks.content_tasks import generate_lesson_content_sync
+        from apps.backend.workers.tasks.content_tasks import (
+            generate_lesson_content_sync,
+        )
 
         # Get organization ID from user context
         organization_id = getattr(current_user, "organization_id", "default_org")
@@ -436,7 +440,7 @@ async def generate_lesson_content(
             topic=request.topic,
             grade_level=request.grade_level,
             learning_objectives=request.learning_objectives,
-            duration=request.duration
+            duration=request.duration,
         )
 
         # Log task queued
@@ -449,8 +453,8 @@ async def generate_lesson_content(
                 "task_id": task.id,
                 "subject": request.subject,
                 "topic": request.topic,
-                "organization_id": organization_id
-            }
+                "organization_id": organization_id,
+            },
         )
 
         logger.info(f"Lesson generation task queued: {task.id} for lesson {request.lesson_id}")
@@ -469,19 +473,18 @@ async def generate_lesson_content(
                         "content-generation-started",
                         "content-generation-progress",
                         "content-generation-completed",
-                        "content-generation-failed"
-                    ]
+                        "content-generation-failed",
+                    ],
                 },
-                "message": "Lesson generation task queued successfully"
+                "message": "Lesson generation task queued successfully",
             },
-            status_code=202  # Accepted - processing asynchronously
+            status_code=202,  # Accepted - processing asynchronously
         )
 
     except Exception as e:
         logger.error(f"Failed to queue lesson generation task: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to queue lesson generation task: {str(e)}"
+            status_code=500, detail=f"Failed to queue lesson generation task: {str(e)}"
         )
 
 
@@ -506,7 +509,9 @@ async def generate_quiz_questions(
     """
     try:
         # Import Celery task
-        from apps.backend.workers.tasks.content_tasks import generate_quiz_questions_sync
+        from apps.backend.workers.tasks.content_tasks import (
+            generate_quiz_questions_sync,
+        )
 
         # Get organization ID from user context
         organization_id = getattr(current_user, "organization_id", "default_org")
@@ -522,7 +527,7 @@ async def generate_quiz_questions(
             difficulty=request.difficulty,
             question_types=request.question_types,
             learning_objectives=request.learning_objectives,
-            lesson_id=request.lesson_id
+            lesson_id=request.lesson_id,
         )
 
         # Log task queued
@@ -536,11 +541,13 @@ async def generate_quiz_questions(
                 "subject": request.subject,
                 "topic": request.topic,
                 "num_questions": request.num_questions,
-                "organization_id": organization_id
-            }
+                "organization_id": organization_id,
+            },
         )
 
-        logger.info(f"Quiz generation task queued: {task.id} for assessment {request.assessment_id}")
+        logger.info(
+            f"Quiz generation task queued: {task.id} for assessment {request.assessment_id}"
+        )
 
         return JSONResponse(
             content={
@@ -555,19 +562,18 @@ async def generate_quiz_questions(
                     "pusher_events": [
                         "quiz-generation-started",
                         "quiz-generation-completed",
-                        "quiz-generation-failed"
-                    ]
+                        "quiz-generation-failed",
+                    ],
                 },
-                "message": "Quiz generation task queued successfully"
+                "message": "Quiz generation task queued successfully",
             },
-            status_code=202  # Accepted - processing asynchronously
+            status_code=202,  # Accepted - processing asynchronously
         )
 
     except Exception as e:
         logger.error(f"Failed to queue quiz generation task: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to queue quiz generation task: {str(e)}"
+            status_code=500, detail=f"Failed to queue quiz generation task: {str(e)}"
         )
 
 
@@ -602,7 +608,7 @@ async def optimize_roblox_script(
         if request.optimization_level not in valid_levels:
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid optimization level. Must be one of: {', '.join(valid_levels)}"
+                detail=f"Invalid optimization level. Must be one of: {', '.join(valid_levels)}",
             )
 
         # Queue the task
@@ -613,7 +619,7 @@ async def optimize_roblox_script(
             script_name=request.script_name,
             optimization_level=request.optimization_level,
             preserve_comments=request.preserve_comments,
-            generate_report=request.generate_report
+            generate_report=request.generate_report,
         )
 
         # Log task queued
@@ -626,8 +632,8 @@ async def optimize_roblox_script(
                 "task_id": task.id,
                 "script_name": request.script_name,
                 "optimization_level": request.optimization_level,
-                "organization_id": organization_id
-            }
+                "organization_id": organization_id,
+            },
         )
 
         logger.info(f"Script optimization task queued: {task.id} for script {request.script_id}")
@@ -646,12 +652,12 @@ async def optimize_roblox_script(
                         "script-optimization-started",
                         "script-optimization-progress",
                         "script-optimization-completed",
-                        "script-optimization-failed"
-                    ]
+                        "script-optimization-failed",
+                    ],
                 },
-                "message": "Script optimization task queued successfully"
+                "message": "Script optimization task queued successfully",
             },
-            status_code=202  # Accepted - processing asynchronously
+            status_code=202,  # Accepted - processing asynchronously
         )
 
     except HTTPException:
@@ -659,6 +665,5 @@ async def optimize_roblox_script(
     except Exception as e:
         logger.error(f"Failed to queue script optimization task: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to queue script optimization task: {str(e)}"
+            status_code=500, detail=f"Failed to queue script optimization task: {str(e)}"
         )

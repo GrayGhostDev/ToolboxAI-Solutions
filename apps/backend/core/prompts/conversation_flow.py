@@ -3,29 +3,26 @@ Conversation Flow Manager for guiding users through educational content creation
 """
 
 import logging
-from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime
-import asyncio
 from enum import Enum
+from typing import Any
 
+from .content_validation import ContentValidationSystem
 from .models import (
+    ContentType,
     ConversationContext,
     ConversationStage,
-    PromptTemplate,
-    PromptResponse,
-    UserProfile,
-    ContentRequirements,
-    PersonalizationData,
-    UniquenessEnhancement,
-    ContentType,
-    GradeLevel,
-    SubjectArea,
-    LearningStyle,
     EngagementLevel,
+    GradeLevel,
+    PersonalizationData,
+    PromptResponse,
+    PromptTemplate,
+    SubjectArea,
+    UniquenessEnhancement,
+    UserProfile,
 )
 from .template_engine import PromptTemplateEngine
 from .user_guidance import UserGuidanceSystem
-from .content_validation import ContentValidationSystem
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +47,7 @@ class ConversationFlowManager:
         self.template_engine = PromptTemplateEngine()
         self.guidance_system = UserGuidanceSystem()
         self.validation_system = ContentValidationSystem()
-        self.active_conversations: Dict[str, ConversationContext] = {}
+        self.active_conversations: dict[str, ConversationContext] = {}
 
         # Define conversation flow rules
         self.flow_rules = self._define_flow_rules()
@@ -58,7 +55,7 @@ class ConversationFlowManager:
         # Define stage transitions
         self.stage_transitions = self._define_stage_transitions()
 
-    def _define_flow_rules(self) -> Dict[ConversationStage, Dict[str, Any]]:
+    def _define_flow_rules(self) -> dict[ConversationStage, dict[str, Any]]:
         """Define rules for each conversation stage"""
         return {
             ConversationStage.GREETING: {
@@ -136,7 +133,7 @@ class ConversationFlowManager:
             },
         }
 
-    def _define_stage_transitions(self) -> Dict[ConversationStage, List[ConversationStage]]:
+    def _define_stage_transitions(self) -> dict[ConversationStage, list[ConversationStage]]:
         """Define valid stage transitions"""
         return {
             ConversationStage.GREETING: [ConversationStage.DISCOVERY],
@@ -176,7 +173,7 @@ class ConversationFlowManager:
         }
 
     async def start_conversation(
-        self, user_profile: UserProfile, initial_message: Optional[str] = None
+        self, user_profile: UserProfile, initial_message: str | None = None
     ) -> ConversationContext:
         """Start a new conversation with a user"""
 
@@ -198,8 +195,8 @@ class ConversationFlowManager:
         self,
         conversation_id: str,
         user_input: str,
-        additional_context: Optional[Dict[str, Any]] = None,
-    ) -> Tuple[PromptResponse, FlowDecision]:
+        additional_context: dict[str, Any] | None = None,
+    ) -> tuple[PromptResponse, FlowDecision]:
         """Process user input and determine next steps"""
 
         context = self.active_conversations.get(conversation_id)
@@ -250,7 +247,7 @@ class ConversationFlowManager:
 
     async def _extract_information(
         self, user_input: str, context: ConversationContext
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Extract relevant information from user input"""
 
         extracted = {}
@@ -270,7 +267,7 @@ class ConversationFlowManager:
 
         return extracted
 
-    async def _extract_discovery_info(self, user_input: str) -> Dict[str, Any]:
+    async def _extract_discovery_info(self, user_input: str) -> dict[str, Any]:
         """Extract information during discovery stage"""
         extracted = {}
 
@@ -332,7 +329,7 @@ class ConversationFlowManager:
 
         return extracted
 
-    async def _extract_requirements_info(self, user_input: str) -> Dict[str, Any]:
+    async def _extract_requirements_info(self, user_input: str) -> dict[str, Any]:
         """Extract information during requirements stage"""
         extracted = {}
 
@@ -361,7 +358,7 @@ class ConversationFlowManager:
 
         return extracted
 
-    async def _extract_personalization_info(self, user_input: str) -> Dict[str, Any]:
+    async def _extract_personalization_info(self, user_input: str) -> dict[str, Any]:
         """Extract information during personalization stage"""
         extracted = {}
 
@@ -383,7 +380,7 @@ class ConversationFlowManager:
 
         return extracted
 
-    async def _extract_design_info(self, user_input: str) -> Dict[str, Any]:
+    async def _extract_design_info(self, user_input: str) -> dict[str, Any]:
         """Extract information during content design stage"""
         extracted = {}
 
@@ -399,7 +396,7 @@ class ConversationFlowManager:
 
         return extracted
 
-    async def _extract_uniqueness_info(self, user_input: str) -> Dict[str, Any]:
+    async def _extract_uniqueness_info(self, user_input: str) -> dict[str, Any]:
         """Extract information during uniqueness enhancement stage"""
         extracted = {}
 
@@ -417,7 +414,7 @@ class ConversationFlowManager:
 
     async def _evaluate_stage_progression(
         self, context: ConversationContext
-    ) -> Tuple[bool, Optional[ConversationStage]]:
+    ) -> tuple[bool, ConversationStage | None]:
         """Evaluate if conversation can progress to next stage"""
 
         current_stage = context.current_stage
@@ -447,7 +444,7 @@ class ConversationFlowManager:
         return False, None
 
     async def _generate_stage_prompt(
-        self, context: ConversationContext, additional_context: Optional[Dict[str, Any]] = None
+        self, context: ConversationContext, additional_context: dict[str, Any] | None = None
     ) -> PromptResponse:
         """Generate appropriate prompt for current stage"""
 
@@ -468,7 +465,7 @@ class ConversationFlowManager:
         return prompt_response
 
     def _select_best_template(
-        self, templates: List[PromptTemplate], context: ConversationContext
+        self, templates: list[PromptTemplate], context: ConversationContext
     ) -> PromptTemplate:
         """Select the best template for current context"""
 
@@ -504,7 +501,7 @@ class ConversationFlowManager:
         # Default to continue
         return FlowDecision.CONTINUE
 
-    async def get_conversation_status(self, conversation_id: str) -> Optional[Dict[str, Any]]:
+    async def get_conversation_status(self, conversation_id: str) -> dict[str, Any] | None:
         """Get current status of a conversation"""
 
         context = self.active_conversations.get(conversation_id)
@@ -521,7 +518,7 @@ class ConversationFlowManager:
         }
 
     async def update_user_profile(
-        self, conversation_id: str, profile_updates: Dict[str, Any]
+        self, conversation_id: str, profile_updates: dict[str, Any]
     ) -> bool:
         """Update user profile during conversation"""
 
@@ -563,7 +560,7 @@ class ConversationFlowManager:
         context.updated_at = datetime.utcnow()
         return True
 
-    async def complete_conversation(self, conversation_id: str) -> Optional[ConversationContext]:
+    async def complete_conversation(self, conversation_id: str) -> ConversationContext | None:
         """Mark conversation as complete and return final context"""
 
         context = self.active_conversations.get(conversation_id)
@@ -575,7 +572,7 @@ class ConversationFlowManager:
 
         return context
 
-    def get_active_conversations(self) -> List[str]:
+    def get_active_conversations(self) -> list[str]:
         """Get list of active conversation IDs"""
         return list(self.active_conversations.keys())
 

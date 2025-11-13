@@ -11,9 +11,8 @@ Version: 1.0.0
 
 import asyncio
 import logging
-import uuid
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -33,6 +32,7 @@ try:
         RobloxAssetManagementAgent,
     )
     from core.agents.roblox.roblox_testing_agent import RobloxTestingAgent
+
     ROBLOX_AGENTS_AVAILABLE = True
 except ImportError as e:
     logger = logging.getLogger(__name__)
@@ -49,7 +49,9 @@ class TestAgentIntegration:
     def mock_llm(self):
         """Mock LLM for testing"""
         mock = AsyncMock()
-        mock.ainvoke.return_value = Mock(content="High quality test response content with detailed explanations and comprehensive coverage")
+        mock.ainvoke.return_value = Mock(
+            content="High quality test response content with detailed explanations and comprehensive coverage"
+        )
         return mock
 
     @pytest.mark.asyncio
@@ -60,7 +62,7 @@ class TestAgentIntegration:
             ("quiz", QuizGenerationAgent(llm=mock_llm)),
             ("terrain", TerrainGenerationAgent(llm=mock_llm)),
             ("script", ScriptGenerationAgent(llm=mock_llm)),
-            ("review", CodeReviewAgent(llm=mock_llm))
+            ("review", CodeReviewAgent(llm=mock_llm)),
         ]
 
         quality_scores = {}
@@ -72,7 +74,7 @@ class TestAgentIntegration:
                         subject="Mathematics",
                         grade_level=5,
                         objectives=["Learn fractions", "Understand decimals"],
-                        include_assessment=True
+                        include_assessment=True,
                     )
                     quality_scores[agent_name] = result.get("quality_score", 0.0)
 
@@ -81,7 +83,7 @@ class TestAgentIntegration:
                         subject="Mathematics",
                         objectives=["Learn fractions", "Understand decimals"],
                         num_questions=5,
-                        difficulty="medium"
+                        difficulty="medium",
                     )
                     quality_scores[agent_name] = result.get("quality_score", 0.0)
 
@@ -90,7 +92,7 @@ class TestAgentIntegration:
                         environment_type="classroom",
                         subject="Mathematics",
                         size="medium",
-                        features=["desks", "whiteboard"]
+                        features=["desks", "whiteboard"],
                     )
                     quality_scores[agent_name] = result.get("quality_score", 0.0)
 
@@ -98,7 +100,7 @@ class TestAgentIntegration:
                     result = await agent.generate_script(
                         script_type="game_mechanics",
                         functionality="quiz",
-                        params={"subject": "Mathematics", "difficulty": "medium"}
+                        params={"subject": "Mathematics", "difficulty": "medium"},
                     )
                     quality_scores[agent_name] = result.get("quality_score", 0.0)
 
@@ -139,19 +141,20 @@ class TestAgentIntegration:
         overall_average = sum(quality_scores.values()) / len(quality_scores)
         assert overall_average >= 0.9, f"Overall average {overall_average:.3f} below 90%"
 
-        logger.info("All backend agents meet quality threshold: %s",
-                   {name: f"{score:.1%}" for name, score in quality_scores.items()})
+        logger.info(
+            "All backend agents meet quality threshold: %s",
+            {name: f"{score:.1%}" for name, score in quality_scores.items()},
+        )
 
     @pytest.mark.skipif(not ROBLOX_AGENTS_AVAILABLE, reason="Roblox agents not available")
     @pytest.mark.asyncio
     async def test_roblox_agents_quality(self):
         """Test that Roblox agents meet 85% quality threshold"""
-        from core.agents.base_agent import AgentConfig
 
         roblox_agents = [
             ("asset_management", RobloxAssetManagementAgent()),
             ("testing", RobloxTestingAgent()),
-            ("analytics", RobloxAnalyticsAgent())
+            ("analytics", RobloxAnalyticsAgent()),
         ]
 
         quality_scores = {}
@@ -160,14 +163,25 @@ class TestAgentIntegration:
             try:
                 if agent_name == "asset_management":
                     # Test asset optimization
-                    result = await agent.execute("optimize_assets", {
-                        "task_type": "optimize",
-                        "assets": [
-                            {"asset_id": "test_asset_1", "type": "model", "size_bytes": 1000000},
-                            {"asset_id": "test_asset_2", "type": "texture", "size_bytes": 500000}
-                        ],
-                        "optimization_level": "balanced"
-                    })
+                    result = await agent.execute(
+                        "optimize_assets",
+                        {
+                            "task_type": "optimize",
+                            "assets": [
+                                {
+                                    "asset_id": "test_asset_1",
+                                    "type": "model",
+                                    "size_bytes": 1000000,
+                                },
+                                {
+                                    "asset_id": "test_asset_2",
+                                    "type": "texture",
+                                    "size_bytes": 500000,
+                                },
+                            ],
+                            "optimization_level": "balanced",
+                        },
+                    )
 
                     # Calculate quality based on optimization results
                     if result.success and result.output:
@@ -185,26 +199,34 @@ class TestAgentIntegration:
 
                 elif agent_name == "testing":
                     # Test unit testing functionality
-                    result = await agent.execute("run_tests", {
-                        "test_type": "unit",
-                        "script_code": "local function test() return true end",
-                        "test_suite_id": "integration_test"
-                    })
+                    result = await agent.execute(
+                        "run_tests",
+                        {
+                            "test_type": "unit",
+                            "script_code": "local function test() return true end",
+                            "test_suite_id": "integration_test",
+                        },
+                    )
 
                     if result.success and result.output:
                         success_rate = result.output.get("success_rate", 0)
-                        coverage = result.output.get("coverage_metrics", {}).get("overall_coverage", 0)
+                        coverage = result.output.get("coverage_metrics", {}).get(
+                            "overall_coverage", 0
+                        )
                         quality_scores[agent_name] = max(0.85, (success_rate + coverage) / 2)
                     else:
                         quality_scores[agent_name] = 0.8
 
                 elif agent_name == "analytics":
                     # Test behavior analysis
-                    result = await agent.execute("analyze_behavior", {
-                        "analysis_type": "behavior",
-                        "player_id": "test_player_123",
-                        "time_window_days": 7
-                    })
+                    result = await agent.execute(
+                        "analyze_behavior",
+                        {
+                            "analysis_type": "behavior",
+                            "player_id": "test_player_123",
+                            "time_window_days": 7,
+                        },
+                    )
 
                     if result.success and result.output:
                         if "behavior_patterns" in result.output:
@@ -220,10 +242,14 @@ class TestAgentIntegration:
 
         # Verify all Roblox agents meet threshold
         for agent_name, score in quality_scores.items():
-            assert score >= 0.85, f"Roblox agent {agent_name} scored {score:.3f}, below 85% threshold"
+            assert (
+                score >= 0.85
+            ), f"Roblox agent {agent_name} scored {score:.3f}, below 85% threshold"
 
-        logger.info("All Roblox agents meet quality threshold: %s",
-                   {name: f"{score:.1%}" for name, score in quality_scores.items()})
+        logger.info(
+            "All Roblox agents meet quality threshold: %s",
+            {name: f"{score:.1%}" for name, score in quality_scores.items()},
+        )
 
     @pytest.mark.asyncio
     async def test_agent_workflow_integration(self, mock_llm):
@@ -240,14 +266,17 @@ class TestAgentIntegration:
             "subject": "Science",
             "grade_level": 7,
             "topic": "Photosynthesis",
-            "learning_objectives": ["Understand chlorophyll function", "Learn about light absorption"]
+            "learning_objectives": [
+                "Understand chlorophyll function",
+                "Learn about light absorption",
+            ],
         }
 
         # Step 1: Generate educational content
         content_result = await content_agent.generate_content(
             subject=workflow_context["subject"],
             grade_level=workflow_context["grade_level"],
-            objectives=workflow_context["learning_objectives"]
+            objectives=workflow_context["learning_objectives"],
         )
 
         assert content_result is not None
@@ -258,7 +287,7 @@ class TestAgentIntegration:
             subject=workflow_context["subject"],
             objectives=workflow_context["learning_objectives"],
             num_questions=5,
-            difficulty="medium"
+            difficulty="medium",
         )
 
         assert quiz_result is not None
@@ -268,7 +297,7 @@ class TestAgentIntegration:
         terrain_result = await terrain_agent.generate_terrain(
             environment_type="forest",  # Appropriate for biology
             subject=workflow_context["subject"],
-            size="medium"
+            size="medium",
         )
 
         assert terrain_result is not None
@@ -278,7 +307,7 @@ class TestAgentIntegration:
         script_result = await script_agent.generate_script(
             script_type="game_mechanics",
             functionality="quiz",
-            params={"environment": "forest", "subject": workflow_context["subject"]}
+            params={"environment": "forest", "subject": workflow_context["subject"]},
         )
 
         assert script_result is not None
@@ -309,7 +338,7 @@ class TestAgentIntegration:
             ("quiz", QuizGenerationAgent(llm=failing_llm)),
             ("terrain", TerrainGenerationAgent(llm=failing_llm)),
             ("script", ScriptGenerationAgent(llm=failing_llm)),
-            ("review", CodeReviewAgent(llm=failing_llm))
+            ("review", CodeReviewAgent(llm=failing_llm)),
         ]
 
         recovery_scores = {}
@@ -318,25 +347,19 @@ class TestAgentIntegration:
             try:
                 if agent_name == "content":
                     result = await agent.generate_content(
-                        subject="Mathematics",
-                        grade_level=5,
-                        objectives=["Test objective"]
+                        subject="Mathematics", grade_level=5, objectives=["Test objective"]
                     )
                 elif agent_name == "quiz":
                     result = await agent.generate_quiz(
-                        subject="Mathematics",
-                        objectives=["Test objective"],
-                        num_questions=3
+                        subject="Mathematics", objectives=["Test objective"], num_questions=3
                     )
                 elif agent_name == "terrain":
                     result = await agent.generate_terrain(
-                        environment_type="classroom",
-                        subject="Mathematics"
+                        environment_type="classroom", subject="Mathematics"
                     )
                 elif agent_name == "script":
                     result = await agent.generate_script(
-                        script_type="game_mechanics",
-                        functionality="quiz"
+                        script_type="game_mechanics", functionality="quiz"
                     )
                 elif agent_name == "review":
                     result = await agent.review_code("local x = 1", "lua")
@@ -369,8 +392,10 @@ class TestAgentIntegration:
         avg_recovery = sum(recovery_scores.values()) / len(recovery_scores)
         assert avg_recovery >= 0.85, f"Average error recovery {avg_recovery:.3f} below 85%"
 
-        logger.info("All agents demonstrate excellent error handling: %s",
-                   {name: f"{score:.1%}" for name, score in recovery_scores.items()})
+        logger.info(
+            "All agents demonstrate excellent error handling: %s",
+            {name: f"{score:.1%}" for name, score in recovery_scores.items()},
+        )
 
     @pytest.mark.asyncio
     async def test_agent_performance_benchmarks(self, mock_llm):
@@ -378,7 +403,7 @@ class TestAgentIntegration:
         agents = [
             ("content", ContentGenerationAgent(llm=mock_llm)),
             ("quiz", QuizGenerationAgent(llm=mock_llm)),
-            ("terrain", TerrainGenerationAgent(llm=mock_llm))
+            ("terrain", TerrainGenerationAgent(llm=mock_llm)),
         ]
 
         performance_scores = {}
@@ -389,20 +414,15 @@ class TestAgentIntegration:
             try:
                 if agent_name == "content":
                     result = await agent.generate_content(
-                        subject="Science",
-                        grade_level=6,
-                        objectives=["Understand ecosystems"]
+                        subject="Science", grade_level=6, objectives=["Understand ecosystems"]
                     )
                 elif agent_name == "quiz":
                     result = await agent.generate_quiz(
-                        subject="Science",
-                        objectives=["Understand ecosystems"],
-                        num_questions=5
+                        subject="Science", objectives=["Understand ecosystems"], num_questions=5
                     )
                 elif agent_name == "terrain":
                     result = await agent.generate_terrain(
-                        environment_type="forest",
-                        subject="Science"
+                        environment_type="forest", subject="Science"
                     )
 
                 execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
@@ -414,7 +434,9 @@ class TestAgentIntegration:
                 performance_scores[agent_name] = (time_score + quality_score) / 2
 
                 # Performance requirements
-                assert execution_time < 5.0, f"Agent {agent_name} took {execution_time:.2f}s, exceeds 5s limit"
+                assert (
+                    execution_time < 5.0
+                ), f"Agent {agent_name} took {execution_time:.2f}s, exceeds 5s limit"
 
             except Exception as e:
                 logger.error("Performance test failed for %s: %s", agent_name, str(e))
@@ -424,8 +446,10 @@ class TestAgentIntegration:
         for agent_name, score in performance_scores.items():
             assert score >= 0.85, f"Agent {agent_name} performance scored {score:.3f}, below 85%"
 
-        logger.info("All agents meet performance benchmarks: %s",
-                   {name: f"{score:.1%}" for name, score in performance_scores.items()})
+        logger.info(
+            "All agents meet performance benchmarks: %s",
+            {name: f"{score:.1%}" for name, score in performance_scores.items()},
+        )
 
     @pytest.mark.asyncio
     async def test_concurrent_agent_execution(self, mock_llm):
@@ -440,19 +464,12 @@ class TestAgentIntegration:
 
         tasks = [
             content_agent.generate_content(
-                subject="History",
-                grade_level=8,
-                objectives=["Learn about Ancient Rome"]
+                subject="History", grade_level=8, objectives=["Learn about Ancient Rome"]
             ),
             quiz_agent.generate_quiz(
-                subject="History",
-                objectives=["Learn about Ancient Rome"],
-                num_questions=5
+                subject="History", objectives=["Learn about Ancient Rome"], num_questions=5
             ),
-            terrain_agent.generate_terrain(
-                environment_type="classroom",
-                subject="History"
-            )
+            terrain_agent.generate_terrain(environment_type="classroom", subject="History"),
         ]
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -489,7 +506,7 @@ class TestAgentIntegration:
                 subject=f"Subject_{i % 5}",
                 objectives=[f"Objective_{i}"],
                 num_questions=3,
-                difficulty="medium"
+                difficulty="medium",
             )
             for i in range(num_requests)
         ]
@@ -507,13 +524,19 @@ class TestAgentIntegration:
         assert success_rate >= 0.85, f"Success rate under load {success_rate:.1%} below 85%"
 
         # Quality under load
-        quality_scores = [r.get("quality_score", 0) for r in successful_results if isinstance(r, dict)]
+        quality_scores = [
+            r.get("quality_score", 0) for r in successful_results if isinstance(r, dict)
+        ]
         if quality_scores:
             avg_quality = sum(quality_scores) / len(quality_scores)
             assert avg_quality >= 0.85, f"Average quality under load {avg_quality:.3f} below 85%"
 
-        logger.info("Load test: %d requests in %.2fs, %.1%% success rate",
-                   num_requests, total_time, success_rate * 100)
+        logger.info(
+            "Load test: %d requests in %.2fs, %.1%% success rate",
+            num_requests,
+            total_time,
+            success_rate * 100,
+        )
 
     @pytest.mark.asyncio
     async def test_agent_input_validation(self, mock_llm):
@@ -528,9 +551,9 @@ class TestAgentIntegration:
                     "subject": "Mathematics",
                     "grade_level": 5,
                     "objectives": ["Learn addition"],
-                    "include_assessment": True
+                    "include_assessment": True,
                 },
-                "should_succeed": True
+                "should_succeed": True,
             },
             {
                 "name": "empty_subject",
@@ -538,9 +561,9 @@ class TestAgentIntegration:
                     "subject": "",
                     "grade_level": 5,
                     "objectives": ["Learn addition"],
-                    "include_assessment": True
+                    "include_assessment": True,
                 },
-                "should_succeed": False
+                "should_succeed": False,
             },
             {
                 "name": "invalid_grade_level",
@@ -548,9 +571,9 @@ class TestAgentIntegration:
                     "subject": "Mathematics",
                     "grade_level": -1,
                     "objectives": ["Learn addition"],
-                    "include_assessment": True
+                    "include_assessment": True,
                 },
-                "should_succeed": False
+                "should_succeed": False,
             },
             {
                 "name": "empty_objectives",
@@ -558,10 +581,10 @@ class TestAgentIntegration:
                     "subject": "Mathematics",
                     "grade_level": 5,
                     "objectives": [],
-                    "include_assessment": True
+                    "include_assessment": True,
                 },
-                "should_succeed": False
-            }
+                "should_succeed": False,
+            },
         ]
 
         validation_scores = []
@@ -586,7 +609,7 @@ class TestAgentIntegration:
                     else:
                         validation_scores.append(0.5)  # Poor handling
 
-            except Exception as e:
+            except Exception:
                 if test_case["should_succeed"]:
                     validation_scores.append(0.3)  # Unexpected exception
                 else:
@@ -594,7 +617,9 @@ class TestAgentIntegration:
 
         # Input validation quality should be high
         avg_validation_quality = sum(validation_scores) / len(validation_scores)
-        assert avg_validation_quality >= 0.85, f"Input validation quality {avg_validation_quality:.3f} below 85%"
+        assert (
+            avg_validation_quality >= 0.85
+        ), f"Input validation quality {avg_validation_quality:.3f} below 85%"
 
         logger.info("Input validation test passed with quality %.1%", avg_validation_quality * 100)
 
@@ -608,7 +633,7 @@ class TestAgentIntegration:
             "subject": "Mathematics",
             "objectives": ["Learn basic arithmetic"],
             "num_questions": 5,
-            "difficulty": "medium"
+            "difficulty": "medium",
         }
 
         results = []
@@ -627,7 +652,9 @@ class TestAgentIntegration:
                 has_quality_score = "quality_score" in result
                 meets_quality = result.get("quality_score", 0) >= 0.85
 
-                structure_score = sum([has_subject, has_questions, has_quality_score, meets_quality]) / 4
+                structure_score = (
+                    sum([has_subject, has_questions, has_quality_score, meets_quality]) / 4
+                )
                 consistency_scores.append(structure_score)
             else:
                 consistency_scores.append(0.5)  # Error case
@@ -653,7 +680,7 @@ class TestAgentIntegration:
             "assessment_creation": QuizGenerationAgent(llm=mock_llm),
             "environment_design": TerrainGenerationAgent(llm=mock_llm),
             "script_development": ScriptGenerationAgent(llm=mock_llm),
-            "quality_assurance": CodeReviewAgent(llm=mock_llm)
+            "quality_assurance": CodeReviewAgent(llm=mock_llm),
         }
 
         # System integration test scenario
@@ -663,18 +690,18 @@ class TestAgentIntegration:
             "learning_objectives": [
                 "Understand the role of chlorophyll",
                 "Learn about light absorption",
-                "Understand oxygen production"
+                "Understand oxygen production",
             ],
             "assessment_requirements": {
                 "num_questions": 8,
                 "difficulty": "medium",
-                "question_types": ["multiple_choice", "true_false"]
+                "question_types": ["multiple_choice", "true_false"],
             },
             "environment_requirements": {
                 "type": "forest",
                 "size": "medium",
-                "interactive_elements": ["plants", "sunlight_simulation"]
-            }
+                "interactive_elements": ["plants", "sunlight_simulation"],
+            },
         }
 
         # Execute integrated workflow
@@ -686,7 +713,7 @@ class TestAgentIntegration:
             subject="Biology",
             grade_level=7,
             objectives=integration_scenario["learning_objectives"],
-            include_assessment=True
+            include_assessment=True,
         )
         workflow_results["content"] = content_result
         if isinstance(content_result, dict):
@@ -696,7 +723,7 @@ class TestAgentIntegration:
         quiz_result = await system_components["assessment_creation"].generate_quiz(
             subject="Biology",
             objectives=integration_scenario["learning_objectives"],
-            **integration_scenario["assessment_requirements"]
+            **integration_scenario["assessment_requirements"],
         )
         workflow_results["assessment"] = quiz_result
         if isinstance(quiz_result, dict):
@@ -707,7 +734,7 @@ class TestAgentIntegration:
             environment_type=integration_scenario["environment_requirements"]["type"],
             subject="Biology",
             size=integration_scenario["environment_requirements"]["size"],
-            features=integration_scenario["environment_requirements"]["interactive_elements"]
+            features=integration_scenario["environment_requirements"]["interactive_elements"],
         )
         workflow_results["environment"] = terrain_result
         if isinstance(terrain_result, dict):
@@ -720,8 +747,8 @@ class TestAgentIntegration:
             params={
                 "subject": "Biology",
                 "environment": "forest",
-                "learning_objectives": integration_scenario["learning_objectives"]
-            }
+                "learning_objectives": integration_scenario["learning_objectives"],
+            },
         )
         workflow_results["scripts"] = script_result
         if isinstance(script_result, dict):
@@ -730,8 +757,7 @@ class TestAgentIntegration:
         # Step 5: Quality Assurance
         if script_result and isinstance(script_result, dict) and script_result.get("code"):
             review_result = await system_components["quality_assurance"].review_code(
-                script_result["code"],
-                "lua"
+                script_result["code"], "lua"
             )
             workflow_results["quality_review"] = review_result
             if isinstance(review_result, dict):
@@ -742,16 +768,26 @@ class TestAgentIntegration:
 
         if overall_quality_scores:
             system_quality = sum(overall_quality_scores) / len(overall_quality_scores)
-            assert system_quality >= 0.85, f"System integration quality {system_quality:.3f} below 85%"
+            assert (
+                system_quality >= 0.85
+            ), f"System integration quality {system_quality:.3f} below 85%"
 
         # Verify workflow coherence
         content_subject = workflow_results.get("content", {}).get("subject", "")
         quiz_subject = workflow_results.get("assessment", {}).get("subject", "")
 
-        assert content_subject == quiz_subject or not content_subject or not quiz_subject, "Subject consistency check"
+        assert (
+            content_subject == quiz_subject or not content_subject or not quiz_subject
+        ), "Subject consistency check"
 
-        logger.info("Comprehensive system integration test passed with %.1f%% quality",
-                   (sum(overall_quality_scores) / len(overall_quality_scores) * 100) if overall_quality_scores else 0)
+        logger.info(
+            "Comprehensive system integration test passed with %.1f%% quality",
+            (
+                (sum(overall_quality_scores) / len(overall_quality_scores) * 100)
+                if overall_quality_scores
+                else 0
+            ),
+        )
 
     def _calculate_variance(self, values: list) -> float:
         """Calculate variance of a list of values"""
@@ -774,7 +810,7 @@ class TestAgentQualityAssurance:
             QuizGenerationAgent(llm=mock_llm),
             TerrainGenerationAgent(llm=mock_llm),
             ScriptGenerationAgent(llm=mock_llm),
-            CodeReviewAgent(llm=mock_llm)
+            CodeReviewAgent(llm=mock_llm),
         ]
 
         # Test multiple runs for consistency
@@ -788,40 +824,35 @@ class TestAgentQualityAssurance:
                 subject="Science",
                 grade_level=6,
                 objectives=["Test objective"],
-                include_assessment=True
+                include_assessment=True,
             )
             if isinstance(content_result, dict):
                 run_scores.append(content_result.get("quality_score", 0))
 
             # Quiz agent
             quiz_result = await agents[1].generate_quiz(
-                subject="Science",
-                objectives=["Test objective"],
-                num_questions=5
+                subject="Science", objectives=["Test objective"], num_questions=5
             )
             if isinstance(quiz_result, dict):
                 run_scores.append(quiz_result.get("quality_score", 0))
 
             # Terrain agent
             terrain_result = await agents[2].generate_terrain(
-                environment_type="classroom",
-                subject="Science"
+                environment_type="classroom", subject="Science"
             )
             if isinstance(terrain_result, dict):
                 run_scores.append(terrain_result.get("quality_score", 0))
 
             # Script agent
             script_result = await agents[3].generate_script(
-                script_type="game_mechanics",
-                functionality="quiz"
+                script_type="game_mechanics", functionality="quiz"
             )
             if isinstance(script_result, dict):
                 run_scores.append(script_result.get("quality_score", 0))
 
             # Review agent
             review_result = await agents[4].review_code(
-                "local Players = game:GetService('Players')",
-                "lua"
+                "local Players = game:GetService('Players')", "lua"
             )
             if isinstance(review_result, dict):
                 run_scores.append(review_result.get("score", 0) / 100)
@@ -838,13 +869,18 @@ class TestAgentQualityAssurance:
         # Consistency across runs
         if len(consistency_results) > 1:
             consistency_variance = self._calculate_variance(consistency_results)
-            assert consistency_variance < 0.02, f"Quality variance {consistency_variance:.4f} too high"
+            assert (
+                consistency_variance < 0.02
+            ), f"Quality variance {consistency_variance:.4f} too high"
 
         overall_average = sum(consistency_results) / len(consistency_results)
         assert overall_average >= 0.9, f"Overall average quality {overall_average:.3f} below 90%"
 
-        logger.info("Quality threshold compliance: %.1%% across %d runs",
-                   overall_average * 100, len(consistency_results))
+        logger.info(
+            "Quality threshold compliance: %.1%% across %d runs",
+            overall_average * 100,
+            len(consistency_results),
+        )
 
     def _calculate_variance(self, values: list) -> float:
         """Calculate variance of a list of values"""

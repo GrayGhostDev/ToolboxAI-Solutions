@@ -18,12 +18,12 @@ Version: 1.0.0
 """
 
 import logging
-import asyncio
-import time
 import os
+import time
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Any
+
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -36,10 +36,10 @@ class SupabaseHealthResponse(BaseModel):
     """Response model for Supabase health status"""
 
     status: str = Field(description="Supabase status (healthy/unhealthy/degraded)")
-    response_time_ms: Optional[float] = Field(description="Response time in milliseconds")
+    response_time_ms: float | None = Field(description="Response time in milliseconds")
     tables_accessible: int = Field(description="Number of accessible tables", default=0)
-    database_size_mb: Optional[float] = Field(description="Database size in MB")
-    connection_pool: Dict[str, Any] = Field(
+    database_size_mb: float | None = Field(description="Database size in MB")
+    connection_pool: dict[str, Any] = Field(
         description="Connection pool status", default_factory=dict
     )
     realtime_status: str = Field(description="Real-time subscription status", default="unknown")
@@ -61,7 +61,7 @@ async def get_supabase_service():
         return None
 
 
-async def check_supabase_connection() -> Dict[str, Any]:
+async def check_supabase_connection() -> dict[str, Any]:
     """Comprehensive Supabase connection health check"""
     health_status = {
         "healthy": False,

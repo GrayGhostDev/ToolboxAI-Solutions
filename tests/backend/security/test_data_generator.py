@@ -8,9 +8,10 @@ Ensures production safety while maintaining development functionality.
 import secrets
 import string
 import uuid
-from datetime import datetime, timezone
-from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from typing import Any
+
 from passlib.context import CryptContext
 
 # Password hashing
@@ -20,6 +21,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 @dataclass
 class TestUser:
     """Secure test user data structure"""
+
     id: str
     username: str
     email: str
@@ -32,7 +34,7 @@ class TestUser:
 class SecureTestDataGenerator:
     """Generates secure test data for development and testing"""
 
-    def __init__(self, seed: Optional[str] = None):
+    def __init__(self, seed: str | None = None):
         """
         Initialize with optional seed for reproducible test data
 
@@ -50,7 +52,9 @@ class SecureTestDataGenerator:
             chars = string.ascii_letters + string.digits + "!@#$%"
             # Create deterministic but varied password
             password_seed = f"{self.seed}_{self._deterministic_counter}"
-            password = ''.join(chars[hash(f"{password_seed}_{i}") % len(chars)] for i in range(length))
+            password = "".join(
+                chars[hash(f"{password_seed}_{i}") % len(chars)] for i in range(length)
+            )
             # Ensure it has required complexity
             if not any(c.isupper() for c in password):
                 password = password[0].upper() + password[1:]
@@ -60,7 +64,7 @@ class SecureTestDataGenerator:
         else:
             # Truly random for production-like testing
             chars = string.ascii_letters + string.digits + "!@#$%^&*"
-            return ''.join(secrets.choice(chars) for _ in range(length))
+            return "".join(secrets.choice(chars) for _ in range(length))
 
     def generate_user_id(self) -> str:
         """Generate a unique user ID"""
@@ -78,16 +82,22 @@ class SecureTestDataGenerator:
             base_names = {
                 "admin": ["admin.user", "system.admin", "super.admin"],
                 "teacher": ["jane.smith", "john.doe", "alice.brown", "bob.wilson"],
-                "student": ["alex.johnson", "sam.davis", "taylor.kim", "jordan.lee"]
+                "student": ["alex.johnson", "sam.davis", "taylor.kim", "jordan.lee"],
             }
             names = base_names.get(role, ["test.user"])
             return names[index % len(names)]
         else:
             # Random usernames for production-like testing
-            first_names = ["admin", "user", "test"] if role == "admin" else [
-                secrets.choice(["alex", "sam", "taylor", "jordan", "casey", "robin", "drew"])
+            first_names = (
+                ["admin", "user", "test"]
+                if role == "admin"
+                else [secrets.choice(["alex", "sam", "taylor", "jordan", "casey", "robin", "drew"])]
+            )
+            last_names = [
+                "user",
+                "test",
+                secrets.choice(["smith", "doe", "brown", "wilson", "davis", "kim", "lee"]),
             ]
-            last_names = ["user", "test", secrets.choice(["smith", "doe", "brown", "wilson", "davis", "kim", "lee"])]
             return f"{secrets.choice(first_names)}.{secrets.choice(last_names)}"
 
     def generate_email(self, username: str, domain: str = "toolboxai-test.local") -> str:
@@ -114,10 +124,12 @@ class SecureTestDataGenerator:
             password_hash=password_hash,
             role=role,
             created_at=datetime.now(timezone.utc),
-            is_active=True
+            is_active=True,
         )
 
-    def generate_test_users(self, counts: Optional[Dict[str, int]] = None) -> Dict[str, List[TestUser]]:
+    def generate_test_users(
+        self, counts: dict[str, int] | None = None
+    ) -> dict[str, list[TestUser]]:
         """
         Generate a set of test users by role
 
@@ -133,7 +145,7 @@ class SecureTestDataGenerator:
 
         return users
 
-    def get_test_credentials(self) -> List[Dict[str, str]]:
+    def get_test_credentials(self) -> list[dict[str, str]]:
         """
         Get test credentials for authentication testing
 
@@ -148,19 +160,21 @@ class SecureTestDataGenerator:
             for i, user in enumerate(user_list):
                 # Generate fresh password for credentials (unhashed)
                 password = self.generate_password()
-                credentials.append({
-                    "username": user.username,
-                    "email": user.email,
-                    "password": password,
-                    "password_hash": self.hash_password(password),
-                    "role": role,
-                    "id": user.id
-                })
+                credentials.append(
+                    {
+                        "username": user.username,
+                        "email": user.email,
+                        "password": password,
+                        "password_hash": self.hash_password(password),
+                        "role": role,
+                        "id": user.id,
+                    }
+                )
 
         return credentials
 
 
-def get_secure_test_data(seed: Optional[str] = None) -> Dict[str, Any]:
+def get_secure_test_data(seed: str | None = None) -> dict[str, Any]:
     """
     Get secure test data for development/testing
 
@@ -193,21 +207,21 @@ def get_secure_test_data(seed: Optional[str] = None) -> Dict[str, Any]:
         "users_by_email": users_by_email,
         "credentials": credentials,
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "seed": seed
+        "seed": seed,
     }
 
 
 # Development helper functions
-def get_development_credentials() -> List[Dict[str, str]]:
+def get_development_credentials() -> list[dict[str, str]]:
     """Get development credentials (deterministic for consistency)"""
     return get_secure_test_data(seed="development_2025")["credentials"]
 
 
-def get_testing_credentials() -> List[Dict[str, str]]:
+def get_testing_credentials() -> list[dict[str, str]]:
     """Get testing credentials (deterministic for test consistency)"""
     return get_secure_test_data(seed="testing_2025")["credentials"]
 
 
-def get_production_test_credentials() -> List[Dict[str, str]]:
+def get_production_test_credentials() -> list[dict[str, str]]:
     """Get production-safe test credentials (truly random)"""
     return get_secure_test_data(seed=None)["credentials"]

@@ -16,28 +16,29 @@ Created: 2025-09-21
 Version: 1.0.0
 """
 
-import asyncio
 import logging
-import uuid
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional, Union
+from typing import Any
 
 from fastapi import (
     APIRouter,
+    BackgroundTasks,
     Depends,
     HTTPException,
-    Query,
-    BackgroundTasks,
-    status,
     WebSocket,
     WebSocketDisconnect,
+    status,
 )
 from fastapi.security import HTTPBearer
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 # Import authentication and dependencies
 try:
-    from apps.backend.api.auth.auth import get_current_user, require_role, require_any_role
+    from apps.backend.api.auth.auth import (
+        get_current_user,
+        require_any_role,
+        require_role,
+    )
     from apps.backend.core.deps import get_db
     from apps.backend.core.security.rate_limit_manager import rate_limit
 except ImportError:
@@ -63,9 +64,9 @@ except ImportError:
 
 # Import models and services
 try:
-    from apps.backend.models.schemas import User, BaseResponse
+    from apps.backend.models.schemas import BaseResponse, User
+    from apps.backend.services.agent_service import AgentService, get_agent_service
     from apps.backend.services.pusher import trigger_event
-    from apps.backend.services.agent_service import get_agent_service, AgentService
 except ImportError:
 
     class User(BaseModel):
@@ -115,8 +116,8 @@ class ContentGenerationRequest(BaseModel):
 
     subject: str = Field(..., description="Subject area (e.g., Math, Science)")
     grade_level: int = Field(..., ge=1, le=12, description="Grade level (1-12)")
-    objectives: List[str] = Field(..., min_items=1, description="Learning objectives")
-    context: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    objectives: list[str] = Field(..., min_items=1, description="Learning objectives")
+    context: dict[str, Any] | None = Field(default_factory=dict)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -125,10 +126,10 @@ class QuizGenerationRequest(BaseModel):
     """Request for quiz generation"""
 
     subject: str = Field(..., description="Subject area")
-    objectives: List[str] = Field(..., min_items=1, description="Learning objectives")
+    objectives: list[str] = Field(..., min_items=1, description="Learning objectives")
     num_questions: int = Field(5, ge=1, le=50, description="Number of questions")
     difficulty: str = Field("medium", description="Difficulty level: easy, medium, hard")
-    context: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    context: dict[str, Any] | None = Field(default_factory=dict)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -139,8 +140,8 @@ class TerrainGenerationRequest(BaseModel):
     subject: str = Field(..., description="Subject area for educational terrain")
     terrain_type: str = Field("educational", description="Type of terrain to generate")
     complexity: str = Field("medium", description="Complexity level: simple, medium, complex")
-    features: List[str] = Field(default_factory=list, description="Specific features to include")
-    context: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    features: list[str] = Field(default_factory=list, description="Specific features to include")
+    context: dict[str, Any] | None = Field(default_factory=dict)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -152,8 +153,8 @@ class ScriptGenerationRequest(BaseModel):
         "ServerScript", description="Type of script: ServerScript, LocalScript, ModuleScript"
     )
     functionality: str = Field(..., description="Description of desired functionality")
-    requirements: List[str] = Field(default_factory=list, description="Specific requirements")
-    context: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    requirements: list[str] = Field(default_factory=list, description="Specific requirements")
+    context: dict[str, Any] | None = Field(default_factory=dict)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -166,7 +167,7 @@ class CodeReviewRequest(BaseModel):
     review_type: str = Field(
         "comprehensive", description="Type of review: security, performance, comprehensive"
     )
-    context: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    context: dict[str, Any] | None = Field(default_factory=dict)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -176,8 +177,8 @@ class RobloxAssetRequest(BaseModel):
 
     asset_type: str = Field(..., description="Type of asset: model, script, texture, etc.")
     action: str = Field(..., description="Action: create, update, delete, analyze")
-    asset_data: Dict[str, Any] = Field(..., description="Asset data and parameters")
-    context: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    asset_data: dict[str, Any] = Field(..., description="Asset data and parameters")
+    context: dict[str, Any] | None = Field(default_factory=dict)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -186,8 +187,8 @@ class RobloxTestingRequest(BaseModel):
     """Request for Roblox testing"""
 
     test_type: str = Field(..., description="Type of test: functional, performance, security")
-    test_data: Dict[str, Any] = Field(..., description="Test configuration and data")
-    context: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    test_data: dict[str, Any] = Field(..., description="Test configuration and data")
+    context: dict[str, Any] | None = Field(default_factory=dict)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -198,8 +199,8 @@ class RobloxAnalyticsRequest(BaseModel):
     data_type: str = Field(
         ..., description="Type of data to analyze: player_behavior, performance, learning"
     )
-    analysis_data: Dict[str, Any] = Field(..., description="Data to analyze")
-    context: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    analysis_data: dict[str, Any] = Field(..., description="Data to analyze")
+    context: dict[str, Any] | None = Field(default_factory=dict)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -210,11 +211,11 @@ class AgentTaskResponse(BaseModel):
 
     success: bool
     task_id: str
-    agent_id: Optional[str] = None
-    result: Optional[Dict[str, Any]] = None
-    execution_time: Optional[float] = None
+    agent_id: str | None = None
+    result: dict[str, Any] | None = None
+    execution_time: float | None = None
     status: str
-    error: Optional[str] = None
+    error: str | None = None
     message: str = ""
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -227,14 +228,14 @@ class AgentStatusResponse(BaseModel):
     agent_id: str
     agent_type: str
     status: str
-    current_task_id: Optional[str] = None
+    current_task_id: str | None = None
     total_tasks_completed: int = 0
     total_tasks_failed: int = 0
     average_execution_time: float = 0.0
     last_activity: str
     created_at: str
-    performance_metrics: Dict[str, Any] = Field(default_factory=dict)
-    resource_usage: Dict[str, Any] = Field(default_factory=dict)
+    performance_metrics: dict[str, Any] = Field(default_factory=dict)
+    resource_usage: dict[str, Any] = Field(default_factory=dict)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -242,9 +243,9 @@ class AgentStatusResponse(BaseModel):
 class SystemMetricsResponse(BaseModel):
     """Response with system-wide metrics"""
 
-    agents: Dict[str, Any]
-    tasks: Dict[str, Any]
-    system: Dict[str, Any]
+    agents: dict[str, Any]
+    tasks: dict[str, Any]
+    system: dict[str, Any]
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     model_config = ConfigDict(from_attributes=True)
@@ -253,8 +254,8 @@ class SystemMetricsResponse(BaseModel):
 # WebSocket connection manager
 class AgentWebSocketManager:
     def __init__(self):
-        self.active_connections: Dict[str, WebSocket] = {}
-        self.agent_subscribers: Dict[str, List[str]] = {}
+        self.active_connections: dict[str, WebSocket] = {}
+        self.agent_subscribers: dict[str, list[str]] = {}
 
     async def connect(self, websocket: WebSocket, client_id: str):
         await websocket.accept()
@@ -270,7 +271,7 @@ class AgentWebSocketManager:
                 subscribers.remove(client_id)
         logger.info(f"Agent WebSocket client disconnected: {client_id}")
 
-    async def send_personal_message(self, message: Dict[str, Any], client_id: str):
+    async def send_personal_message(self, message: dict[str, Any], client_id: str):
         if client_id in self.active_connections:
             websocket = self.active_connections[client_id]
             try:
@@ -279,7 +280,7 @@ class AgentWebSocketManager:
                 logger.error(f"Error sending message to {client_id}: {e}")
                 self.disconnect(client_id)
 
-    async def broadcast_agent_update(self, agent_id: str, message: Dict[str, Any]):
+    async def broadcast_agent_update(self, agent_id: str, message: dict[str, Any]):
         if agent_id in self.agent_subscribers:
             for client_id in self.agent_subscribers[agent_id].copy():
                 await self.send_personal_message(message, client_id)
@@ -298,9 +299,9 @@ ws_manager = AgentWebSocketManager()
 # Endpoints
 
 
-@router.get("/status", response_model=List[AgentStatusResponse])
+@router.get("/status", response_model=list[AgentStatusResponse])
 async def get_all_agents_status(
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     agent_service: AgentService = Depends(get_agent_service),
 ):
     """
@@ -323,7 +324,7 @@ async def get_all_agents_status(
 @router.get("/status/{agent_id}", response_model=AgentStatusResponse)
 async def get_agent_status(
     agent_id: str,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     agent_service: AgentService = Depends(get_agent_service),
 ):
     """
@@ -350,7 +351,7 @@ async def get_agent_status(
 
 @router.get("/metrics", response_model=SystemMetricsResponse)
 async def get_system_metrics(
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
     agent_service: AgentService = Depends(get_agent_service),
 ):
@@ -381,7 +382,7 @@ async def get_system_metrics(
 async def generate_content(
     request: ContentGenerationRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
     agent_service: AgentService = Depends(get_agent_service),
 ):
@@ -449,7 +450,7 @@ async def generate_content(
 async def generate_quiz(
     request: QuizGenerationRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
     agent_service: AgentService = Depends(get_agent_service),
 ):
@@ -518,7 +519,7 @@ async def generate_quiz(
 async def generate_terrain(
     request: TerrainGenerationRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
     agent_service: AgentService = Depends(get_agent_service),
 ):
@@ -587,7 +588,7 @@ async def generate_terrain(
 async def generate_script(
     request: ScriptGenerationRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
     agent_service: AgentService = Depends(get_agent_service),
 ):
@@ -655,7 +656,7 @@ async def generate_script(
 async def review_code(
     request: CodeReviewRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
     agent_service: AgentService = Depends(get_agent_service),
 ):
@@ -724,7 +725,7 @@ async def review_code(
 async def manage_roblox_asset(
     request: RobloxAssetRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
     agent_service: AgentService = Depends(get_agent_service),
 ):
@@ -779,7 +780,7 @@ async def manage_roblox_asset(
 async def run_roblox_tests(
     request: RobloxTestingRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
     agent_service: AgentService = Depends(get_agent_service),
 ):
@@ -828,7 +829,7 @@ async def run_roblox_tests(
 async def analyze_roblox_data(
     request: RobloxAnalyticsRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
     agent_service: AgentService = Depends(get_agent_service),
 ):
@@ -878,7 +879,7 @@ async def analyze_roblox_data(
 @router.get("/tasks/{task_id}")
 async def get_task_status(
     task_id: str,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     agent_service: AgentService = Depends(get_agent_service),
 ):
     """
@@ -980,7 +981,7 @@ async def agent_websocket_endpoint(
 # Health check endpoint
 @router.get("/health")
 async def agent_system_health(
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     agent_service: AgentService = Depends(get_agent_service),
 ):
     """

@@ -9,14 +9,14 @@ Created: 2025-01-27
 Version: 1.0.0
 """
 
-import asyncio
 import logging
 from abc import ABC, abstractmethod
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union, AsyncGenerator, BinaryIO
+from typing import Any, BinaryIO
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 class UploadStatus(str, Enum):
     """Upload status enumeration"""
+
     PENDING = "pending"
     UPLOADING = "uploading"
     PROCESSING = "processing"
@@ -36,6 +37,7 @@ class UploadStatus(str, Enum):
 
 class DownloadPermission(str, Enum):
     """Download permission levels"""
+
     PUBLIC = "public"
     AUTHENTICATED = "authenticated"
     ORGANIZATION = "organization"
@@ -46,11 +48,12 @@ class DownloadPermission(str, Enum):
 @dataclass
 class UploadProgress:
     """Progress tracking for file uploads"""
+
     upload_id: str
     status: UploadStatus
     bytes_uploaded: int = 0
     total_bytes: int = 0
-    error_message: Optional[str] = None
+    error_message: str | None = None
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
 
@@ -74,11 +77,12 @@ class UploadProgress:
 
 class UploadOptions(BaseModel):
     """Options for file upload operations"""
+
     file_category: str = "media_resource"
-    title: Optional[str] = None
-    description: Optional[str] = None
-    tags: List[str] = Field(default_factory=list)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    title: str | None = None
+    description: str | None = None
+    tags: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
     # Security options
     virus_scan: bool = True
@@ -92,55 +96,59 @@ class UploadOptions(BaseModel):
 
     # Access control
     download_permission: DownloadPermission = DownloadPermission.ORGANIZATION
-    allowed_user_ids: List[str] = Field(default_factory=list)
+    allowed_user_ids: list[str] = Field(default_factory=list)
 
     # Retention
-    retention_days: Optional[int] = None
-    auto_delete_after_days: Optional[int] = None
+    retention_days: int | None = None
+    auto_delete_after_days: int | None = None
 
 
 @dataclass
 class UploadResult:
     """Result of a file upload operation"""
+
     file_id: UUID
     upload_id: str
     storage_path: str
-    cdn_url: Optional[str] = None
-    thumbnail_url: Optional[str] = None
+    cdn_url: str | None = None
+    thumbnail_url: str | None = None
     file_size: int = 0
     mime_type: str = ""
     checksum: str = ""
     status: UploadStatus = UploadStatus.COMPLETED
-    warnings: List[str] = field(default_factory=list)
-    processing_metadata: Dict[str, Any] = field(default_factory=dict)
+    warnings: list[str] = field(default_factory=list)
+    processing_metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class DownloadOptions(BaseModel):
     """Options for file download operations"""
+
     include_metadata: bool = False
     track_access: bool = True
     signed_url_expires_in: int = 3600  # 1 hour default
-    transformation: Optional[Dict[str, Any]] = None  # Image transformations
+    transformation: dict[str, Any] | None = None  # Image transformations
 
 
 @dataclass
 class DownloadResult:
     """Result of a file download operation"""
+
     file_id: UUID
     file_url: str
-    expires_at: Optional[datetime] = None
+    expires_at: datetime | None = None
     content_type: str = ""
     content_length: int = 0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class ListOptions(BaseModel):
     """Options for listing files"""
-    prefix: Optional[str] = None
+
+    prefix: str | None = None
     limit: int = 100
     offset: int = 0
-    file_types: List[str] = Field(default_factory=list)
-    categories: List[str] = Field(default_factory=list)
+    file_types: list[str] = Field(default_factory=list)
+    categories: list[str] = Field(default_factory=list)
     include_metadata: bool = False
     sort_by: str = "created_at"
     sort_order: str = "desc"  # "asc" or "desc"
@@ -149,18 +157,19 @@ class ListOptions(BaseModel):
 @dataclass
 class FileInfo:
     """Information about a stored file"""
+
     file_id: UUID
     filename: str
     original_filename: str
     file_size: int
     mime_type: str
     storage_path: str
-    cdn_url: Optional[str] = None
-    thumbnail_url: Optional[str] = None
+    cdn_url: str | None = None
+    thumbnail_url: str | None = None
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    tags: List[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
+    tags: list[str] = field(default_factory=list)
 
 
 class StorageService(ABC):
@@ -171,12 +180,7 @@ class StorageService(ABC):
     operations with multi-tenant support and security features.
     """
 
-    def __init__(
-        self,
-        organization_id: Optional[str] = None,
-        user_id: Optional[str] = None,
-        **kwargs
-    ):
+    def __init__(self, organization_id: str | None = None, user_id: str | None = None, **kwargs):
         """
         Initialize storage service.
 
@@ -188,11 +192,10 @@ class StorageService(ABC):
         self.organization_id = organization_id
         self.user_id = user_id
         self.config = kwargs
-        self._upload_progress: Dict[str, UploadProgress] = {}
+        self._upload_progress: dict[str, UploadProgress] = {}
 
         logger.info(
-            f"Storage service initialized for organization: {organization_id}, "
-            f"user: {user_id}"
+            f"Storage service initialized for organization: {organization_id}, " f"user: {user_id}"
         )
 
     # Abstract methods that must be implemented by providers
@@ -200,9 +203,9 @@ class StorageService(ABC):
     @abstractmethod
     async def upload_file(
         self,
-        file_data: Union[bytes, BinaryIO],
+        file_data: bytes | BinaryIO,
         filename: str,
-        options: Optional[UploadOptions] = None
+        options: UploadOptions | None = None,
     ) -> UploadResult:
         """
         Upload a file to storage.
@@ -226,7 +229,7 @@ class StorageService(ABC):
         file_stream: AsyncGenerator[bytes, None],
         filename: str,
         total_size: int,
-        options: Optional[UploadOptions] = None
+        options: UploadOptions | None = None,
     ) -> AsyncGenerator[UploadProgress, UploadResult]:
         """
         Upload a large file using multipart upload with progress tracking.
@@ -250,9 +253,7 @@ class StorageService(ABC):
 
     @abstractmethod
     async def download_file(
-        self,
-        file_id: UUID,
-        options: Optional[DownloadOptions] = None
+        self, file_id: UUID, options: DownloadOptions | None = None
     ) -> DownloadResult:
         """
         Download a file from storage.
@@ -271,9 +272,7 @@ class StorageService(ABC):
 
     @abstractmethod
     async def get_file_stream(
-        self,
-        file_id: UUID,
-        chunk_size: int = 8192
+        self, file_id: UUID, chunk_size: int = 8192
     ) -> AsyncGenerator[bytes, None]:
         """
         Get file content as a stream.
@@ -308,10 +307,7 @@ class StorageService(ABC):
         pass
 
     @abstractmethod
-    async def list_files(
-        self,
-        options: Optional[ListOptions] = None
-    ) -> List[FileInfo]:
+    async def list_files(self, options: ListOptions | None = None) -> list[FileInfo]:
         """
         List files in storage.
 
@@ -327,7 +323,7 @@ class StorageService(ABC):
         pass
 
     @abstractmethod
-    async def get_file_info(self, file_id: UUID) -> Optional[FileInfo]:
+    async def get_file_info(self, file_id: UUID) -> FileInfo | None:
         """
         Get information about a specific file.
 
@@ -344,10 +340,7 @@ class StorageService(ABC):
 
     @abstractmethod
     async def generate_signed_url(
-        self,
-        file_id: UUID,
-        expires_in: int = 3600,
-        permission: str = "read"
+        self, file_id: UUID, expires_in: int = 3600, permission: str = "read"
     ) -> str:
         """
         Generate a signed URL for file access.
@@ -367,10 +360,7 @@ class StorageService(ABC):
 
     @abstractmethod
     async def copy_file(
-        self,
-        source_file_id: UUID,
-        destination_path: str,
-        options: Optional[UploadOptions] = None
+        self, source_file_id: UUID, destination_path: str, options: UploadOptions | None = None
     ) -> UploadResult:
         """
         Copy a file to a new location.
@@ -389,11 +379,7 @@ class StorageService(ABC):
         pass
 
     @abstractmethod
-    async def move_file(
-        self,
-        file_id: UUID,
-        new_path: str
-    ) -> bool:
+    async def move_file(self, file_id: UUID, new_path: str) -> bool:
         """
         Move a file to a new location.
 
@@ -411,7 +397,7 @@ class StorageService(ABC):
 
     # Common utility methods
 
-    def get_upload_progress(self, upload_id: str) -> Optional[UploadProgress]:
+    def get_upload_progress(self, upload_id: str) -> UploadProgress | None:
         """
         Get upload progress for a specific upload.
 
@@ -429,7 +415,7 @@ class StorageService(ABC):
         status: UploadStatus,
         bytes_uploaded: int = 0,
         total_bytes: int = 0,
-        error_message: Optional[str] = None
+        error_message: str | None = None,
     ) -> UploadProgress:
         """
         Update upload progress tracking.
@@ -446,9 +432,7 @@ class StorageService(ABC):
         """
         if upload_id not in self._upload_progress:
             self._upload_progress[upload_id] = UploadProgress(
-                upload_id=upload_id,
-                status=status,
-                total_bytes=total_bytes
+                upload_id=upload_id, status=status, total_bytes=total_bytes
             )
 
         progress = self._upload_progress[upload_id]
@@ -461,10 +445,7 @@ class StorageService(ABC):
         return progress
 
     def _generate_storage_path(
-        self,
-        filename: str,
-        file_category: str = "media_resource",
-        include_timestamp: bool = True
+        self, filename: str, file_category: str = "media_resource", include_timestamp: bool = True
     ) -> str:
         """
         Generate a storage path for a file.
@@ -497,11 +478,7 @@ class StorageService(ABC):
         if self.organization_id:
             path_parts.append(f"org_{self.organization_id}")
 
-        path_parts.extend([
-            file_category,
-            datetime.utcnow().strftime("%Y/%m"),
-            new_filename
-        ])
+        path_parts.extend([file_category, datetime.utcnow().strftime("%Y/%m"), new_filename])
 
         return "/".join(path_parts)
 
@@ -516,6 +493,7 @@ class StorageService(ABC):
             str: SHA256 checksum
         """
         import hashlib
+
         return hashlib.sha256(data).hexdigest()
 
     async def _validate_tenant_access(self, file_id: UUID) -> bool:
@@ -533,9 +511,7 @@ class StorageService(ABC):
         return self.organization_id is not None
 
     def set_tenant_context(
-        self,
-        organization_id: Optional[str] = None,
-        user_id: Optional[str] = None
+        self, organization_id: str | None = None, user_id: str | None = None
     ) -> None:
         """
         Update tenant context for the storage service.
@@ -559,8 +535,8 @@ class StorageError(Exception):
     def __init__(
         self,
         message: str,
-        error_code: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        error_code: str | None = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(message)
         self.message = message
@@ -570,29 +546,35 @@ class StorageError(Exception):
 
 class TenantIsolationError(StorageError):
     """Error when tenant isolation is violated"""
+
     pass
 
 
 class QuotaExceededError(StorageError):
     """Error when storage quota is exceeded"""
+
     pass
 
 
 class FileNotFoundError(StorageError):
     """Error when file is not found"""
+
     pass
 
 
 class AccessDeniedError(StorageError):
     """Error when access is denied"""
+
     pass
 
 
 class ValidationError(StorageError):
     """Error during file validation"""
+
     pass
 
 
 class VirusScanError(StorageError):
     """Error during virus scanning"""
+
     pass

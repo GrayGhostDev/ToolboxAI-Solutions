@@ -1,30 +1,33 @@
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest_asyncio
+
 """
 Test suite for Pusher Realtime Service
 Replaces Socket.IO tests with Pusher equivalents
 """
 
-import pytest
 import asyncio
-from unittest.mock import Mock, patch, AsyncMock, MagicMock
 from datetime import datetime, timezone
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+import pytest
+
+from apps.backend.services.pusher import PusherUnavailable
 from apps.backend.services.pusher_realtime import (
     PusherRealtimeService,
+    _check_channel_access,
+    _get_required_roles,
+    emit_agent_status,
+    emit_content_generated,
+    emit_dashboard_update,
+    emit_quiz_submitted,
     get_pusher_service,
     get_pusher_status,
-    emit_dashboard_update,
-    emit_content_generated,
-    emit_quiz_submitted,
-    emit_agent_status,
-    _check_channel_access,
-    _get_required_roles
 )
-from apps.backend.services.pusher import PusherUnavailable
 
 
 class TestPusherRealtimeService:

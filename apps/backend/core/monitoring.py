@@ -10,16 +10,15 @@ Provides comprehensive Sentry integration for the ToolboxAI FastAPI application 
 """
 
 import functools
-import json
 import logging
 import socket
+from collections.abc import Callable
 from datetime import datetime, timezone
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any
 
 import sentry_sdk
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
-from sentry_sdk.integrations.redis import RedisIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from sentry_sdk.integrations.starlette import StarletteIntegration
 
@@ -35,7 +34,7 @@ class SentryManager:
         self.initialized = False
         self.config = None
 
-    def initialize(self, dsn: Optional[str] = None, **kwargs) -> bool:
+    def initialize(self, dsn: str | None = None, **kwargs) -> bool:
         """Initialize Sentry SDK with comprehensive configuration"""
         try:
             # Use provided DSN or get from settings
@@ -132,8 +131,8 @@ class SentryManager:
             return False
 
     def _before_send_filter(
-        self, event: Dict[str, Any], hint: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
+        self, event: dict[str, Any], hint: dict[str, Any]
+    ) -> dict[str, Any] | None:
         """Filter and modify events before sending to Sentry"""
         try:
             # Skip certain errors in production
@@ -165,8 +164,8 @@ class SentryManager:
             return event
 
     def _before_send_transaction_filter(
-        self, event: Dict[str, Any], hint: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
+        self, event: dict[str, Any], hint: dict[str, Any]
+    ) -> dict[str, Any] | None:
         """Filter transactions before sending to Sentry"""
         try:
             # Skip health check transactions in production
@@ -189,7 +188,7 @@ class SentryManager:
             logger.error(f"Error in Sentry transaction filter: {e}")
             return event
 
-    def _sanitize_event_data(self, event: Dict[str, Any]):
+    def _sanitize_event_data(self, event: dict[str, Any]):
         """Sanitize sensitive data from Sentry events"""
         sensitive_keys = {
             "password",
@@ -204,7 +203,7 @@ class SentryManager:
             "bearer",
         }
 
-        def sanitize_dict(data: Dict[str, Any]):
+        def sanitize_dict(data: dict[str, Any]):
             for key, value in list(data.items()):
                 if isinstance(key, str) and any(
                     sensitive in key.lower() for sensitive in sensitive_keys
@@ -266,7 +265,7 @@ class SentryManager:
         message: str,
         category: str = "default",
         level: str = "info",
-        data: Dict[str, Any] = None,
+        data: dict[str, Any] = None,
     ):
         """Add custom breadcrumb for debugging"""
         if not self.initialized:
@@ -287,7 +286,7 @@ class SentryManager:
 
         sentry_sdk.set_tag(key, value)
 
-    def set_tags(self, tags: Dict[str, str]):
+    def set_tags(self, tags: dict[str, str]):
         """Set multiple custom tags"""
         if not self.initialized:
             return
@@ -295,14 +294,14 @@ class SentryManager:
         for key, value in tags.items():
             sentry_sdk.set_tag(key, str(value))
 
-    def set_context(self, name: str, data: Dict[str, Any]):
+    def set_context(self, name: str, data: dict[str, Any]):
         """Set custom context"""
         if not self.initialized:
             return
 
         sentry_sdk.set_context(name, data)
 
-    def capture_exception(self, exception: Exception, **kwargs) -> Optional[str]:
+    def capture_exception(self, exception: Exception, **kwargs) -> str | None:
         """Capture exception with context"""
         if not self.initialized:
             logger.error(f"Exception (Sentry disabled): {exception}")
@@ -310,7 +309,7 @@ class SentryManager:
 
         return sentry_sdk.capture_exception(exception, **kwargs)
 
-    def capture_message(self, message: str, level: str = "info", **kwargs) -> Optional[str]:
+    def capture_message(self, message: str, level: str = "info", **kwargs) -> str | None:
         """Capture custom message"""
         if not self.initialized:
             logger.log(getattr(logging, level.upper(), logging.INFO), message)
@@ -511,7 +510,7 @@ def configure_sentry_logging():
         root_logger.addHandler(sentry_handler)
 
 
-def initialize_sentry(dsn: Optional[str] = None) -> bool:
+def initialize_sentry(dsn: str | None = None) -> bool:
     """Initialize Sentry SDK with production-ready configuration"""
     return sentry_manager.initialize(dsn)
 
@@ -562,7 +561,7 @@ class SentrySpanContext:
 
 # Utility functions
 def capture_educational_content_error(
-    content_request: Dict[str, Any], error: Exception, user_id: str = None
+    content_request: dict[str, Any], error: Exception, user_id: str = None
 ):
     """Capture educational content generation errors with context"""
     if not sentry_manager.initialized:

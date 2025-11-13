@@ -9,31 +9,26 @@ Provides comprehensive tool implementations for:
 - Multi-modal educational resource access
 """
 
-import os
 import json
-import requests
-from typing import Optional, List, Dict, Any, Union
-from langchain_core.tools import BaseTool, tool
-from langchain_community.tools import WikipediaQueryRun, DuckDuckGoSearchRun
-from langchain_community.utilities import WikipediaAPIWrapper, DuckDuckGoSearchAPIWrapper
-from pydantic import BaseModel, Field
 import logging
-from datetime import datetime
-import hashlib
 import uuid
+from typing import Any
 
-from apps.backend.core.config import settings
+import requests
+from langchain_community.tools import DuckDuckGoSearchRun, WikipediaQueryRun
+from langchain_community.utilities import (
+    DuckDuckGoSearchAPIWrapper,
+    WikipediaAPIWrapper,
+)
+from langchain_core.tools import BaseTool
+from pydantic import BaseModel, Field
+
 from apps.backend.api.auth.auth import LMSAuthenticator
+from apps.backend.core.config import settings
 from apps.backend.models.schemas import (
-    SubjectType,
     DifficultyLevel,
     QuizType,
-    QuizQuestion,
-    QuizOption,
     TerrainSize,
-    EnvironmentType,
-    LMSCourse,
-    LMSAssignment,
 )
 
 logger = logging.getLogger(__name__)
@@ -52,8 +47,8 @@ class ContentSearchInput(BaseModel):
     """Input for content search tools"""
 
     query: str = Field(..., description="Search query for educational content")
-    subject: Optional[str] = Field(None, description="Educational subject to focus on")
-    grade_level: Optional[int] = Field(None, description="Target grade level")
+    subject: str | None = Field(None, description="Educational subject to focus on")
+    grade_level: int | None = Field(None, description="Target grade level")
     max_results: int = Field(5, description="Maximum number of results to return")
 
 
@@ -63,10 +58,8 @@ class TerrainGenerationInput(BaseModel):
     theme: str = Field(..., description="Terrain theme (ocean, forest, desert, urban, etc.)")
     size: TerrainSize = Field(TerrainSize.MEDIUM, description="Terrain size")
     biome: str = Field("temperate", description="Terrain biome")
-    features: List[str] = Field(default_factory=list, description="Specific terrain features")
-    educational_context: Optional[str] = Field(
-        None, description="Educational context for the terrain"
-    )
+    features: list[str] = Field(default_factory=list, description="Specific terrain features")
+    educational_context: str | None = Field(None, description="Educational context for the terrain")
 
 
 class QuizGenerationInput(BaseModel):
@@ -77,7 +70,7 @@ class QuizGenerationInput(BaseModel):
     difficulty: DifficultyLevel = Field(DifficultyLevel.MEDIUM, description="Quiz difficulty level")
     num_questions: int = Field(5, description="Number of questions to generate")
     grade_level: int = Field(5, description="Target grade level")
-    question_types: List[QuizType] = Field(
+    question_types: list[QuizType] = Field(
         default_factory=lambda: [QuizType.MULTIPLE_CHOICE],
         description="Types of questions to include",
     )
@@ -238,8 +231,8 @@ class EducationalWikipediaSearch(BaseTool):
     def _run(
         self,
         query: str,
-        subject: Optional[str] = None,
-        grade_level: Optional[int] = None,
+        subject: str | None = None,
+        grade_level: int | None = None,
         max_results: int = 5,
     ) -> str:
         """Execute educational Wikipedia search"""
@@ -278,8 +271,8 @@ class EducationalWikipediaSearch(BaseTool):
             return f"Error: Educational Wikipedia search failed - {str(e)}"
 
     def _generate_activity_suggestions(
-        self, query: str, subject: Optional[str], grade_level: Optional[int]
-    ) -> List[str]:
+        self, query: str, subject: str | None, grade_level: int | None
+    ) -> list[str]:
         """Generate educational activity suggestions based on the search"""
         suggestions = []
 
@@ -326,8 +319,8 @@ class EducationalWebSearch(BaseTool):
     def _run(
         self,
         query: str,
-        subject: Optional[str] = None,
-        grade_level: Optional[int] = None,
+        subject: str | None = None,
+        grade_level: int | None = None,
         max_results: int = 5,
     ) -> str:
         """Execute educational web search"""
@@ -381,7 +374,7 @@ class EducationalWebSearch(BaseTool):
 
         return min(10, max(1, int(score)))
 
-    def _assess_roblox_applicability(self, results: str, subject: Optional[str]) -> List[str]:
+    def _assess_roblox_applicability(self, results: str, subject: str | None) -> list[str]:
         """Assess how the content could be applied in Roblox"""
         applications = []
         results_lower = results.lower()
@@ -415,8 +408,8 @@ class RobloxTerrainGenerator(BaseTool):
         theme: str,
         size: TerrainSize = TerrainSize.MEDIUM,
         biome: str = "temperate",
-        features: List[str] = None,
-        educational_context: Optional[str] = None,
+        features: list[str] = None,
+        educational_context: str | None = None,
     ) -> str:
         """Generate Roblox terrain script"""
         try:
@@ -462,10 +455,10 @@ class RobloxTerrainGenerator(BaseTool):
     def _generate_terrain_script(
         self,
         theme: str,
-        dimensions: Dict[str, int],
+        dimensions: dict[str, int],
         biome: str,
-        features: List[str],
-        educational_context: Optional[str],
+        features: list[str],
+        educational_context: str | None,
     ) -> str:
         """Generate the actual Lua script for terrain creation"""
         script = f"""-- Generated Terrain Script for {theme.title()} Theme
@@ -528,7 +521,7 @@ print("Educational context: """
 
         return script
 
-    def _generate_ocean_terrain(self, dimensions: Dict[str, int]) -> str:
+    def _generate_ocean_terrain(self, dimensions: dict[str, int]) -> str:
         """Generate ocean-specific terrain"""
         return (
             """
@@ -588,7 +581,7 @@ end
 """
         )
 
-    def _generate_forest_terrain(self, dimensions: Dict[str, int]) -> str:
+    def _generate_forest_terrain(self, dimensions: dict[str, int]) -> str:
         """Generate forest-specific terrain"""
         return (
             """
@@ -633,7 +626,7 @@ end
 """
         )
 
-    def _generate_desert_terrain(self, dimensions: Dict[str, int]) -> str:
+    def _generate_desert_terrain(self, dimensions: dict[str, int]) -> str:
         """Generate desert-specific terrain"""
         return (
             """
@@ -678,7 +671,7 @@ end
 """
         )
 
-    def _generate_urban_terrain(self, dimensions: Dict[str, int]) -> str:
+    def _generate_urban_terrain(self, dimensions: dict[str, int]) -> str:
         """Generate urban-specific terrain"""
         return (
             """
@@ -727,7 +720,7 @@ end
 """
         )
 
-    def _generate_mountain_terrain(self, dimensions: Dict[str, int]) -> str:
+    def _generate_mountain_terrain(self, dimensions: dict[str, int]) -> str:
         """Generate mountain-specific terrain"""
         return (
             """
@@ -779,7 +772,7 @@ end
 """
         )
 
-    def _generate_generic_terrain(self, dimensions: Dict[str, int], theme: str) -> str:
+    def _generate_generic_terrain(self, dimensions: dict[str, int], theme: str) -> str:
         """Generate generic terrain for custom themes"""
         return f"""
 -- Generic Terrain Generation for {theme}
@@ -810,7 +803,7 @@ for i = 1, 6 do
 end
 """
 
-    def _generate_feature_script(self, feature: str, dimensions: Dict[str, int]) -> str:
+    def _generate_feature_script(self, feature: str, dimensions: dict[str, int]) -> str:
         """Generate script for specific terrain features"""
         if feature.lower() == "river":
             return (
@@ -862,15 +855,15 @@ end
 print("Educational elements added for: {educational_context}")
 """
 
-    def _estimate_build_time(self, dimensions: Dict[str, int], features: List[str]) -> int:
+    def _estimate_build_time(self, dimensions: dict[str, int], features: list[str]) -> int:
         """Estimate build time in minutes based on complexity"""
         base_time = max(1, dimensions["x"] * dimensions["z"] // 10000)  # 1 minute per 10k sq units
         feature_time = len(features) * 2  # 2 minutes per feature
         return base_time + feature_time
 
     def _suggest_educational_activities(
-        self, theme: str, educational_context: Optional[str]
-    ) -> List[str]:
+        self, theme: str, educational_context: str | None
+    ) -> list[str]:
         """Suggest educational activities based on theme and context"""
         activities = []
 
@@ -920,7 +913,7 @@ class RobloxQuizGenerator(BaseTool):
         difficulty: DifficultyLevel = DifficultyLevel.MEDIUM,
         num_questions: int = 5,
         grade_level: int = 5,
-        question_types: List[QuizType] = None,
+        question_types: list[QuizType] = None,
     ) -> str:
         """Generate educational quiz"""
         try:
@@ -970,8 +963,8 @@ class RobloxQuizGenerator(BaseTool):
         difficulty: DifficultyLevel,
         num_questions: int,
         grade_level: int,
-        question_types: List[QuizType],
-    ) -> List[Dict]:
+        question_types: list[QuizType],
+    ) -> list[dict]:
         """Generate quiz questions based on parameters"""
         questions = []
 
@@ -1019,7 +1012,7 @@ class RobloxQuizGenerator(BaseTool):
 
     def _get_question_templates(
         self, subject: str, topic: str, grade_level: int
-    ) -> Dict[str, Dict]:
+    ) -> dict[str, dict]:
         """Get question templates based on subject and topic"""
         # This would ideally be expanded with a comprehensive database of questions
         # For now, providing basic templates
@@ -1086,7 +1079,7 @@ class RobloxQuizGenerator(BaseTool):
         multiplier = difficulty_multipliers.get(difficulty, 1.0)
         return int(base_time * multiplier)
 
-    def _generate_quiz_script(self, questions: List[Dict], subject: str, topic: str) -> str:
+    def _generate_quiz_script(self, questions: list[dict], subject: str, topic: str) -> str:
         """Generate Lua script for quiz implementation"""
         script = f"""-- Quiz Script: {subject} - {topic}
 -- Generated by ToolboxAI Roblox Environment
@@ -1245,7 +1238,7 @@ return QuizManager
 
         return script
 
-    def _generate_ui_config(self, questions: List[Dict]) -> List[Dict[str, Any]]:
+    def _generate_ui_config(self, questions: list[dict]) -> list[dict[str, Any]]:
         """Generate UI element configurations"""
         ui_elements = []
 
@@ -1903,7 +1896,7 @@ end
 return {script_type.title()}Manager
 """
 
-    def _get_implementation_notes(self, script_type: str) -> List[str]:
+    def _get_implementation_notes(self, script_type: str) -> list[str]:
         """Get implementation notes for script type"""
         notes_map = {
             "ui": [
@@ -1931,7 +1924,7 @@ return {script_type.title()}Manager
             ["Follow Roblox best practices", "Test thoroughly before deployment"],
         )
 
-    def _get_script_dependencies(self, script_type: str) -> List[str]:
+    def _get_script_dependencies(self, script_type: str) -> list[str]:
         """Get script dependencies"""
         deps_map = {
             "ui": ["TweenService", "UserInputService", "GuiService"],
@@ -1941,7 +1934,7 @@ return {script_type.title()}Manager
 
         return deps_map.get(script_type.lower(), ["ReplicatedStorage", "Players"])
 
-    def _get_testing_instructions(self, script_type: str, functionality: str) -> List[str]:
+    def _get_testing_instructions(self, script_type: str, functionality: str) -> list[str]:
         """Get testing instructions for the script"""
         return [
             f"Test {functionality} with multiple users",

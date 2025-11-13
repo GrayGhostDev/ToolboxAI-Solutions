@@ -3,17 +3,17 @@ Health check endpoints for monitoring and deployment verification.
 Updated 2025-09-21 to include comprehensive health monitoring for all system components.
 """
 
-from datetime import datetime
-from typing import Dict, Any
 import os
+from datetime import datetime
+from typing import Any
+
 import psutil
+import redis.asyncio as redis
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
-import redis.asyncio as redis
 
 from database.connection import get_async_session
-from toolboxai_settings import settings
 
 # Import new health check routers
 try:
@@ -60,7 +60,7 @@ if SUPABASE_HEALTH_AVAILABLE:
     router.include_router(supabase_health_router)
 
 
-async def check_database_connection(session: AsyncSession) -> Dict[str, Any]:
+async def check_database_connection(session: AsyncSession) -> dict[str, Any]:
     """Check database connectivity and basic stats."""
     try:
         # Test database connection
@@ -91,7 +91,7 @@ async def check_database_connection(session: AsyncSession) -> Dict[str, Any]:
         return {"status": "unhealthy", "error": str(e), "connection": "failed"}
 
 
-async def check_redis_connection() -> Dict[str, Any]:
+async def check_redis_connection() -> dict[str, Any]:
     """Check Redis connectivity."""
     try:
         redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
@@ -117,7 +117,7 @@ async def check_redis_connection() -> Dict[str, Any]:
 
 
 @router.get("/health")
-async def health_check() -> Dict[str, Any]:
+async def health_check() -> dict[str, Any]:
     """
     Basic health check endpoint.
     Returns 200 if service is running.
@@ -132,7 +132,7 @@ async def health_check() -> Dict[str, Any]:
 
 
 @router.get("/ready")
-async def readiness_check(session: AsyncSession = Depends(get_async_session)) -> Dict[str, Any]:
+async def readiness_check(session: AsyncSession = Depends(get_async_session)) -> dict[str, Any]:
     """
     Readiness check endpoint.
     Verifies that all dependencies are accessible.
@@ -157,7 +157,7 @@ async def readiness_check(session: AsyncSession = Depends(get_async_session)) ->
 
 
 @router.get("/live")
-async def liveness_check() -> Dict[str, Any]:
+async def liveness_check() -> dict[str, Any]:
     """
     Liveness check endpoint.
     Verifies that the service is still alive and responsive.
@@ -209,7 +209,7 @@ async def liveness_check() -> Dict[str, Any]:
 
 
 @router.get("/metrics")
-async def metrics_endpoint(session: AsyncSession = Depends(get_async_session)) -> Dict[str, Any]:
+async def metrics_endpoint(session: AsyncSession = Depends(get_async_session)) -> dict[str, Any]:
     """
     Metrics endpoint for monitoring.
     Returns detailed metrics about the service.

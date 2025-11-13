@@ -19,21 +19,17 @@ References:
 import json
 import logging
 import time
-import hashlib
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple, Union
-from dataclasses import dataclass, asdict, field
-from enum import Enum
-import numpy as np
+from dataclasses import dataclass, field
+from typing import Any
 
+import hiredis  # C-accelerated parser for better performance
+import numpy as np
 import redis
 from redis import Redis
-from redis.commands.search.field import TextField, NumericField, TagField, VectorField
+from redis.commands.search.field import NumericField, TagField, TextField, VectorField
 from redis.commands.search.indexDefinition import IndexDefinition, IndexType
 from redis.commands.search.query import Query
-from redis_om import JsonModel, Field, get_redis_connection
-from redis_om import Migrator
-import hiredis  # C-accelerated parser for better performance
+from redis_om import Field, JsonModel, Migrator, get_redis_connection
 
 logger = logging.getLogger(__name__)
 
@@ -49,12 +45,12 @@ class RedisAIConnectionPool:
         host: str = "localhost",
         port: int = 6379,
         db: int = 0,
-        password: Optional[str] = None,
+        password: str | None = None,
         max_connections: int = 50,
         socket_keepalive: bool = True,
-        socket_keepalive_options: Optional[Dict] = None,
+        socket_keepalive_options: dict | None = None,
         health_check_interval: int = 30,
-        retry_on_error: List[Exception] = None,
+        retry_on_error: list[Exception] = None,
         decode_responses: bool = True,
     ):
         """
@@ -135,9 +131,9 @@ class AgentState(JsonModel):
     status: str = Field(index=True, default="idle")
     created_at: float = Field(default_factory=time.time)
     updated_at: float = Field(default_factory=time.time)
-    context: Dict = Field(default_factory=dict)
-    memory: List[Dict] = Field(default_factory=list)
-    metrics: Dict = Field(default_factory=dict)
+    context: dict = Field(default_factory=dict)
+    memory: list[dict] = Field(default_factory=list)
+    metrics: dict = Field(default_factory=dict)
 
     class Meta:
         database = get_redis_connection(decode_responses=True)
@@ -150,7 +146,7 @@ class VectorDocument:
     id: str
     content: str
     embedding: np.ndarray
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
 
 
@@ -171,7 +167,7 @@ class RedisAIManager:
 
     def __init__(
         self,
-        connection_pool: Optional[RedisAIConnectionPool] = None,
+        connection_pool: RedisAIConnectionPool | None = None,
         vector_dim: int = 1536,  # OpenAI embedding dimension
         vector_index_name: str = "agent_vectors",
     ):
@@ -231,7 +227,7 @@ class RedisAIManager:
     # ========== Session Management with Expiration ==========
 
     def create_session(
-        self, session_id: str, user_id: str, data: Dict[str, Any], ttl: int = 3600
+        self, session_id: str, user_id: str, data: dict[str, Any], ttl: int = 3600
     ) -> bool:
         """
         Create a session with automatic expiration.
@@ -268,7 +264,7 @@ class RedisAIManager:
         results = pipe.execute()
         return all(results)
 
-    def get_session(self, session_id: str) -> Optional[Dict[str, Any]]:
+    def get_session(self, session_id: str) -> dict[str, Any] | None:
         """Get session data"""
         key = f"{self.PREFIX_SESSION}{session_id}"
         data = self.redis.json().get(key)
@@ -316,7 +312,7 @@ class RedisAIManager:
 
         return agent.pk
 
-    def get_agent_state(self, agent_id: str) -> Optional[AgentState]:
+    def get_agent_state(self, agent_id: str) -> AgentState | None:
         """Get agent state"""
         try:
             return AgentState.get(agent_id)
@@ -328,7 +324,7 @@ class RedisAIManager:
                 return AgentState(**data)
             return None
 
-    def update_agent_metrics(self, agent_id: str, metrics: Dict[str, Any]):
+    def update_agent_metrics(self, agent_id: str, metrics: dict[str, Any]):
         """Update agent metrics"""
         key = f"{self.PREFIX_AGENT}{agent_id}"
 
@@ -344,10 +340,10 @@ class RedisAIManager:
         self,
         doc_id: str,
         content: str,
-        embedding: Union[List[float], np.ndarray],
+        embedding: list[float] | np.ndarray,
         agent_id: str,
         doc_type: str = "memory",
-        metadata: Optional[Dict] = None,
+        metadata: dict | None = None,
     ) -> bool:
         """
         Store document with vector embedding for similarity search.
@@ -381,11 +377,11 @@ class RedisAIManager:
 
     def search_similar_vectors(
         self,
-        query_embedding: Union[List[float], np.ndarray],
+        query_embedding: list[float] | np.ndarray,
         k: int = 10,
-        agent_id: Optional[str] = None,
-        doc_type: Optional[str] = None,
-    ) -> List[Tuple[str, float, Dict]]:
+        agent_id: str | None = None,
+        doc_type: str | None = None,
+    ) -> list[tuple[str, float, dict]]:
         """
         Search for similar vectors using cosine similarity.
 
@@ -468,7 +464,7 @@ class RedisAIManager:
 
         return self.redis.setex(cache_key, ttl, value)
 
-    def cache_get(self, key: str, namespace: str = "default") -> Optional[Any]:
+    def cache_get(self, key: str, namespace: str = "default") -> Any | None:
         """Get cached value"""
         cache_key = f"{self.PREFIX_CACHE}{namespace}:{key}"
         value = self.redis.get(cache_key)
@@ -496,7 +492,7 @@ class RedisAIManager:
 
     def acquire_lock(
         self, resource: str, timeout: int = 10, blocking: bool = True, blocking_timeout: int = 5
-    ) -> Optional[redis.lock.Lock]:
+    ) -> redis.lock.Lock | None:
         """
         Acquire distributed lock for resource.
 
@@ -521,7 +517,7 @@ class RedisAIManager:
 
     # ========== Pub/Sub for Agent Communication ==========
 
-    def publish_agent_event(self, agent_id: str, event_type: str, data: Dict[str, Any]) -> int:
+    def publish_agent_event(self, agent_id: str, event_type: str, data: dict[str, Any]) -> int:
         """
         Publish agent event to channel.
 
@@ -542,7 +538,7 @@ class RedisAIManager:
         return self.redis.publish(channel, message)
 
     def subscribe_agent_events(
-        self, agent_id: str, callback: callable, event_types: Optional[List[str]] = None
+        self, agent_id: str, callback: callable, event_types: list[str] | None = None
     ):
         """
         Subscribe to agent events.
@@ -575,8 +571,8 @@ class RedisAIManager:
         self,
         metric_name: str,
         value: float,
-        labels: Optional[Dict[str, str]] = None,
-        timestamp: Optional[int] = None,
+        labels: dict[str, str] | None = None,
+        timestamp: int | None = None,
     ):
         """
         Record time series metric.
@@ -606,10 +602,10 @@ class RedisAIManager:
     def get_metrics(
         self,
         metric_name: str,
-        start_time: Optional[int] = None,
-        end_time: Optional[int] = None,
-        labels: Optional[Dict[str, str]] = None,
-    ) -> List[Tuple[float, int]]:
+        start_time: int | None = None,
+        end_time: int | None = None,
+        labels: dict[str, str] | None = None,
+    ) -> list[tuple[float, int]]:
         """
         Get time series metrics.
 
@@ -647,7 +643,7 @@ class RedisAIManager:
 
     # ========== Health Check ==========
 
-    def health_check(self) -> Dict[str, Any]:
+    def health_check(self) -> dict[str, Any]:
         """
         Perform comprehensive health check.
 
@@ -693,11 +689,11 @@ class RedisAIManager:
 
 
 # Global Redis AI manager instance
-_redis_ai_manager: Optional[RedisAIManager] = None
+_redis_ai_manager: RedisAIManager | None = None
 
 
 def get_redis_ai_manager(
-    host: str = "localhost", port: int = 6379, password: Optional[str] = None
+    host: str = "localhost", port: int = 6379, password: str | None = None
 ) -> RedisAIManager:
     """
     Get or create global Redis AI manager instance.

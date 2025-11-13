@@ -5,28 +5,27 @@ This service initializes and manages the coordinator system, providing
 integration with LangChain tracing and Pusher for real-time updates.
 """
 
-import os
-import asyncio
-import logging
-from typing import Dict, Any, Optional, List
-from datetime import datetime
 import json
-import redis.asyncio as redis
+import logging
+import os
+from datetime import datetime
+from typing import Any
 
+import redis.asyncio as redis
 from langchain.callbacks.tracers import LangChainTracer
 from langsmith import Client
 
-# Import coordinators from core
-from core.coordinators import (
-    MainCoordinator,
-    WorkflowCoordinator,
-    ResourceCoordinator,
-    SyncCoordinator,
-    ErrorCoordinator
-)
-
 # Import Pusher service for real-time updates
 from apps.backend.services.pusher import pusher_service
+
+# Import coordinators from core
+from core.coordinators import (
+    ErrorCoordinator,
+    MainCoordinator,
+    ResourceCoordinator,
+    SyncCoordinator,
+    WorkflowCoordinator,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -63,17 +62,16 @@ class CoordinatorService:
                 "max_concurrent_requests": 10,
                 "health_check_interval": 30,
                 "enable_caching": True,
-                "langchain_tracing": True
-            }
+                "langchain_tracing": True,
+            },
         )
 
         # LangChain tracer for monitoring
         self.tracer = LangChainTracer(
             project_name="ToolboxAI-Coordinators",
             client=Client(
-                api_key=os.getenv("LANGCHAIN_API_KEY"),
-                api_url="https://api.smith.langchain.com"
-            )
+                api_key=os.getenv("LANGCHAIN_API_KEY"), api_url="https://api.smith.langchain.com"
+            ),
         )
 
         # Track initialization status
@@ -86,7 +84,7 @@ class CoordinatorService:
         langchain_defaults = {
             "LANGCHAIN_PROJECT": "ToolboxAI-Solutions",
             "LANGCHAIN_TRACING_V2": "true",
-            "LANGCHAIN_ENDPOINT": "https://api.smith.langchain.com"
+            "LANGCHAIN_ENDPOINT": "https://api.smith.langchain.com",
         }
 
         for key, value in langchain_defaults.items():
@@ -110,9 +108,7 @@ class CoordinatorService:
 
             # Connect to Redis
             self.redis_client = await redis.from_url(
-                self.redis_url,
-                encoding="utf-8",
-                decode_responses=True
+                self.redis_url, encoding="utf-8", decode_responses=True
             )
 
             # Test Redis connection
@@ -147,17 +143,15 @@ class CoordinatorService:
                 "agent-orchestration",
                 "workflow-management",
                 "resource-allocation",
-                "error-handling"
+                "error-handling",
             ],
             "registered_at": datetime.now().isoformat(),
             "langchain_enabled": True,
-            "pusher_enabled": True
+            "pusher_enabled": True,
         }
 
         await self.redis_client.hset(
-            "services:registry",
-            "coordinator-service",
-            json.dumps(service_info)
+            "services:registry", "coordinator-service", json.dumps(service_info)
         )
 
         # Set expiry for health checking
@@ -175,10 +169,8 @@ class CoordinatorService:
                     "service": "coordinator-service",
                     "timestamp": datetime.now().isoformat(),
                     "status": "ready",
-                    "coordinators": [
-                        "main", "workflow", "resource", "sync", "error"
-                    ]
-                }
+                    "coordinators": ["main", "workflow", "resource", "sync", "error"],
+                },
             )
             logger.info("Initialization event sent via Pusher")
         except Exception as e:
@@ -188,11 +180,11 @@ class CoordinatorService:
         self,
         subject: str,
         grade_level: int,
-        learning_objectives: List[str],
+        learning_objectives: list[str],
         environment_type: str = "interactive_classroom",
         include_quiz: bool = True,
-        custom_parameters: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        custom_parameters: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         Generate educational content using the coordinator system.
 
@@ -222,7 +214,7 @@ class CoordinatorService:
                 environment_type=environment_type,
                 include_quiz=include_quiz,
                 custom_parameters=custom_parameters or {},
-                priority=1
+                priority=1,
             )
 
             # Send start event via Pusher
@@ -232,8 +224,8 @@ class CoordinatorService:
                 data={
                     "request_id": request.request_id,
                     "subject": subject,
-                    "grade_level": grade_level
-                }
+                    "grade_level": grade_level,
+                },
             )
 
             # Execute generation with tracing
@@ -244,7 +236,7 @@ class CoordinatorService:
                     learning_objectives=learning_objectives,
                     environment_type=environment_type,
                     include_quiz=include_quiz,
-                    custom_parameters=custom_parameters
+                    custom_parameters=custom_parameters,
                 )
 
             # Send completion event via Pusher
@@ -254,8 +246,8 @@ class CoordinatorService:
                 data={
                     "request_id": request.request_id,
                     "success": result.success,
-                    "generation_time": result.generation_time
-                }
+                    "generation_time": result.generation_time,
+                },
             )
 
             return {
@@ -265,7 +257,7 @@ class CoordinatorService:
                 "scripts": result.scripts,
                 "quiz_data": result.quiz_data,
                 "metrics": result.metrics,
-                "generation_time": result.generation_time
+                "generation_time": result.generation_time,
             }
 
         except Exception as e:
@@ -275,15 +267,12 @@ class CoordinatorService:
             await pusher_service.trigger(
                 channel="private-agent-orchestration",
                 event="generation.error",
-                data={
-                    "error": str(e),
-                    "timestamp": datetime.now().isoformat()
-                }
+                data={"error": str(e), "timestamp": datetime.now().isoformat()},
             )
 
             raise
 
-    async def get_health_status(self) -> Dict[str, Any]:
+    async def get_health_status(self) -> dict[str, Any]:
         """
         Get health status of all coordinators.
 
@@ -294,7 +283,7 @@ class CoordinatorService:
             return {
                 "status": "not_initialized",
                 "healthy": False,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
         try:
@@ -308,7 +297,7 @@ class CoordinatorService:
                 "active_workflows": health.active_workflows,
                 "resource_utilization": health.resource_utilization,
                 "error_count": health.error_count,
-                "last_error": health.last_error
+                "last_error": health.last_error,
             }
 
         except Exception as e:
@@ -317,7 +306,7 @@ class CoordinatorService:
                 "status": "error",
                 "healthy": False,
                 "error": str(e),
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
     async def shutdown(self):
@@ -328,7 +317,7 @@ class CoordinatorService:
 
         try:
             # Shutdown main coordinator
-            if hasattr(self.main_coordinator, 'shutdown'):
+            if hasattr(self.main_coordinator, "shutdown"):
                 await self.main_coordinator.shutdown()
 
             # Unregister from Redis
@@ -340,10 +329,7 @@ class CoordinatorService:
             await pusher_service.trigger(
                 channel="private-system",
                 event="coordinator.shutdown",
-                data={
-                    "service": "coordinator-service",
-                    "timestamp": datetime.now().isoformat()
-                }
+                data={"service": "coordinator-service", "timestamp": datetime.now().isoformat()},
             )
 
             self.is_initialized = False

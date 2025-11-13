@@ -4,10 +4,11 @@ Compliance API Endpoints
 This module provides endpoints for compliance management and reporting.
 """
 
-from datetime import datetime
-from typing import List, Optional, Dict, Any
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from datetime import datetime
+from typing import Any
+
+from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 router = APIRouter()
@@ -20,8 +21,8 @@ class ComplianceStatus(BaseModel):
     compliant: bool = Field(..., description="Compliance status")
     category: str = Field(..., description="Compliance category (FERPA, COPPA, GDPR, etc.)")
     last_checked: datetime = Field(default_factory=datetime.now)
-    issues: List[str] = Field(default_factory=list)
-    recommendations: List[str] = Field(default_factory=list)
+    issues: list[str] = Field(default_factory=list)
+    recommendations: list[str] = Field(default_factory=list)
 
 
 class ComplianceReport(BaseModel):
@@ -29,11 +30,11 @@ class ComplianceReport(BaseModel):
 
     report_id: str = Field(..., description="Unique report identifier")
     generated_at: datetime = Field(default_factory=datetime.now)
-    school_id: Optional[str] = None
-    categories: List[ComplianceStatus] = []
+    school_id: str | None = None
+    categories: list[ComplianceStatus] = []
     overall_compliant: bool = True
     risk_level: str = Field(default="low", description="Risk level: low, medium, high")
-    next_review_date: Optional[datetime] = None
+    next_review_date: datetime | None = None
 
 
 class AuditLog(BaseModel):
@@ -44,9 +45,9 @@ class AuditLog(BaseModel):
     user_id: str
     action: str
     resource: str
-    details: Dict[str, Any]
-    ip_address: Optional[str] = None
-    user_agent: Optional[str] = None
+    details: dict[str, Any]
+    ip_address: str | None = None
+    user_agent: str | None = None
 
 
 # Mock data for development
@@ -72,10 +73,10 @@ MOCK_COMPLIANCE_STATUSES = [
 ]
 
 
-@router.get("/status", response_model=List[ComplianceStatus])
+@router.get("/status", response_model=list[ComplianceStatus])
 async def get_compliance_status(
-    category: Optional[str] = Query(None, description="Filter by compliance category")
-) -> List[ComplianceStatus]:
+    category: str | None = Query(None, description="Filter by compliance category")
+) -> list[ComplianceStatus]:
     """
     Get current compliance status across different categories.
 
@@ -90,11 +91,11 @@ async def get_compliance_status(
     return statuses
 
 
-@router.get("/reports", response_model=List[ComplianceReport])
+@router.get("/reports", response_model=list[ComplianceReport])
 async def get_compliance_reports(
-    school_id: Optional[str] = Query(None, description="Filter by school ID"),
+    school_id: str | None = Query(None, description="Filter by school ID"),
     limit: int = Query(10, ge=1, le=100, description="Number of reports to return"),
-) -> List[ComplianceReport]:
+) -> list[ComplianceReport]:
     """
     Get compliance reports.
 
@@ -121,7 +122,7 @@ async def get_compliance_reports(
 
 
 @router.post("/reports", response_model=ComplianceReport, status_code=status.HTTP_201_CREATED)
-async def generate_compliance_report(school_id: Optional[str] = None) -> ComplianceReport:
+async def generate_compliance_report(school_id: str | None = None) -> ComplianceReport:
     """
     Generate a new compliance report.
 
@@ -142,14 +143,14 @@ async def generate_compliance_report(school_id: Optional[str] = None) -> Complia
     return report
 
 
-@router.get("/audit-logs", response_model=List[AuditLog])
+@router.get("/audit-logs", response_model=list[AuditLog])
 async def get_audit_logs(
-    user_id: Optional[str] = Query(None, description="Filter by user ID"),
-    action: Optional[str] = Query(None, description="Filter by action type"),
-    start_date: Optional[datetime] = Query(None, description="Start date for filtering"),
-    end_date: Optional[datetime] = Query(None, description="End date for filtering"),
+    user_id: str | None = Query(None, description="Filter by user ID"),
+    action: str | None = Query(None, description="Filter by action type"),
+    start_date: datetime | None = Query(None, description="Start date for filtering"),
+    end_date: datetime | None = Query(None, description="End date for filtering"),
     limit: int = Query(50, ge=1, le=500, description="Maximum logs to return"),
-) -> List[AuditLog]:
+) -> list[AuditLog]:
     """
     Retrieve audit logs for compliance tracking.
 
@@ -212,8 +213,8 @@ async def verify_compliance(
     return status
 
 
-@router.get("/requirements/{category}", response_model=Dict[str, Any])
-async def get_compliance_requirements(category: str) -> Dict[str, Any]:
+@router.get("/requirements/{category}", response_model=dict[str, Any])
+async def get_compliance_requirements(category: str) -> dict[str, Any]:
     """
     Get compliance requirements for a specific category.
 

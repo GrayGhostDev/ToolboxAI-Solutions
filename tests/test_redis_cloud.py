@@ -19,9 +19,11 @@ sys.path.insert(0, str(project_root))
 
 # Load environment variables
 from dotenv import load_dotenv
+
 load_dotenv()
 
 import logging
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -32,8 +34,8 @@ async def test_redis_cloud_connection():
 
     logger.info("Testing Redis Cloud connection...")
 
-    redis_url = os.getenv('REDIS_URL')
-    cert_path = os.getenv('REDIS_CLOUD_CA_CERT_PATH')
+    redis_url = os.getenv("REDIS_URL")
+    cert_path = os.getenv("REDIS_CLOUD_CA_CERT_PATH")
 
     if not redis_url:
         logger.error("REDIS_URL not found in environment")
@@ -41,14 +43,14 @@ async def test_redis_cloud_connection():
 
     try:
         # Create Redis client with TLS
-        if redis_url.startswith('rediss://'):
+        if redis_url.startswith("rediss://"):
             # Redis Cloud with TLS
             client = await redis.from_url(
                 redis_url,
                 decode_responses=True,
                 socket_connect_timeout=5,
-                ssl_cert_reqs='required',
-                ssl_ca_certs=cert_path if cert_path and os.path.exists(cert_path) else None
+                ssl_cert_reqs="required",
+                ssl_ca_certs=cert_path if cert_path and os.path.exists(cert_path) else None,
             )
         else:
             # Local Redis without TLS
@@ -59,18 +61,18 @@ async def test_redis_cloud_connection():
         logger.info("✅ Redis Cloud connection successful!")
 
         # Test basic operations
-        await client.set('test:key', 'test_value', ex=60)
-        value = await client.get('test:key')
-        assert value == 'test_value', f"Expected 'test_value', got '{value}'"
+        await client.set("test:key", "test_value", ex=60)
+        value = await client.get("test:key")
+        assert value == "test_value", f"Expected 'test_value', got '{value}'"
         logger.info("✅ Redis basic operations working!")
 
         # Test increment for rate limiting
-        await client.incr('test:counter')
-        counter = await client.get('test:counter')
+        await client.incr("test:counter")
+        counter = await client.get("test:counter")
         logger.info(f"✅ Redis counter operations working! Counter value: {counter}")
 
         # Clean up
-        await client.delete('test:key', 'test:counter')
+        await client.delete("test:key", "test:counter")
         await client.aclose()  # Use aclose() instead of deprecated close()
 
         return True
@@ -84,9 +86,9 @@ async def test_langcache():
     """Test LangCache semantic caching."""
     logger.info("Testing LangCache...")
 
-    api_key = os.getenv('LANGCACHE_API_KEY')
-    cache_id = os.getenv('LANGCACHE_CACHE_ID')
-    server_url = os.getenv('LANGCACHE_SERVER_URL')
+    api_key = os.getenv("LANGCACHE_API_KEY")
+    cache_id = os.getenv("LANGCACHE_CACHE_ID")
+    server_url = os.getenv("LANGCACHE_SERVER_URL")
 
     if not all([api_key, cache_id, server_url]):
         logger.warning("LangCache configuration not complete, skipping test")
@@ -102,12 +104,11 @@ async def test_langcache():
         ) as lang_cache:
             # Save an entry
             test_prompt = "What is semantic caching and how does it work?"
-            test_response = "Semantic caching stores and retrieves data based on meaning, not exact matches."
-
-            save_response = lang_cache.set(
-                prompt=test_prompt,
-                response=test_response
+            test_response = (
+                "Semantic caching stores and retrieves data based on meaning, not exact matches."
             )
+
+            save_response = lang_cache.set(prompt=test_prompt, response=test_response)
             logger.info(f"✅ LangCache save successful: {save_response}")
 
             # Search for similar entry
@@ -116,10 +117,10 @@ async def test_langcache():
 
             # Handle LangCache response object
             if search_response:
-                matches = getattr(search_response, 'matches', [])
+                matches = getattr(search_response, "matches", [])
                 if matches and len(matches) > 0:
                     best_match = matches[0]
-                    similarity = getattr(best_match, 'similarity', 0)
+                    similarity = getattr(best_match, "similarity", 0)
                     logger.info(f"✅ LangCache search successful! Similarity: {similarity}")
                     return True
             else:
@@ -159,7 +160,7 @@ async def test_rate_limiter():
                 identifier=test_identifier,
                 max_requests=max_requests,
                 window_seconds=window_seconds,
-                source="test"
+                source="test",
             )
             assert allowed, f"Request {i+1} should be allowed"
             logger.info(f"  Request {i+1}/{max_requests}: Allowed")
@@ -169,7 +170,7 @@ async def test_rate_limiter():
             identifier=test_identifier,
             max_requests=max_requests,
             window_seconds=window_seconds,
-            source="test"
+            source="test",
         )
         assert not allowed, "Request should be rate limited"
         assert retry_after is not None, "Retry-after should be provided"
@@ -195,22 +196,19 @@ async def test_semantic_cache_service():
 
         # Test basic caching
         test_prompt = "Explain quantum computing in simple terms"
-        test_response = "Quantum computing uses quantum bits (qubits) that can be both 0 and 1 simultaneously."
+        test_response = (
+            "Quantum computing uses quantum bits (qubits) that can be both 0 and 1 simultaneously."
+        )
 
         # Save to cache
         saved = await semantic_cache.set(
-            prompt=test_prompt,
-            response=test_response,
-            model="gpt-3.5-turbo",
-            temperature=0.7
+            prompt=test_prompt, response=test_response, model="gpt-3.5-turbo", temperature=0.7
         )
         logger.info(f"  Cache save: {'✅' if saved else '❌'}")
 
         # Retrieve from cache with exact match
         cached = await semantic_cache.get(
-            prompt=test_prompt,
-            model="gpt-3.5-turbo",
-            temperature=0.7
+            prompt=test_prompt, model="gpt-3.5-turbo", temperature=0.7
         )
 
         if cached:
@@ -221,18 +219,18 @@ async def test_semantic_cache_service():
         # Test with similar prompt
         similar_prompt = "Can you explain quantum computing simply?"
         cached_similar = await semantic_cache.get(
-            prompt=similar_prompt,
-            model="gpt-3.5-turbo",
-            temperature=0.7
+            prompt=similar_prompt, model="gpt-3.5-turbo", temperature=0.7
         )
 
         if cached_similar:
-            similarity = cached_similar.get('similarity', 0)
+            similarity = cached_similar.get("similarity", 0)
             logger.info(f"✅ Semantic match found! Similarity: {similarity}")
 
         # Get statistics
         stats = semantic_cache.get_statistics()
-        logger.info(f"  Cache stats: Hits={stats['hits']}, Misses={stats['misses']}, Hit Rate={stats['hit_rate']:.2%}")
+        logger.info(
+            f"  Cache stats: Hits={stats['hits']}, Misses={stats['misses']}, Hit Rate={stats['hit_rate']:.2%}"
+        )
 
         return True
 
@@ -251,7 +249,7 @@ async def main():
         "Redis Cloud Connection": await test_redis_cloud_connection(),
         "LangCache": await test_langcache(),
         "Rate Limiter": await test_rate_limiter(),
-        "Semantic Cache Service": await test_semantic_cache_service()
+        "Semantic Cache Service": await test_semantic_cache_service(),
     }
 
     logger.info("\n" + "=" * 60)

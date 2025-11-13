@@ -3,13 +3,14 @@ Messages API Endpoints for ToolboxAI Educational Platform
 Provides messaging system and notifications functionality for all user roles.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import Dict, Any, List, Optional
-from datetime import datetime, timedelta
 import logging
-from apps.backend.api.auth.auth import get_current_user
+from datetime import datetime
+from typing import Any
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
-from typing import Optional as Opt
+
+from apps.backend.api.auth.auth import get_current_user
 
 
 # User model for type hints
@@ -17,7 +18,7 @@ class User(BaseModel):
     id: str
     username: str
     role: str
-    email: Optional[str] = None
+    email: str | None = None
 
 
 # Placeholder for database service
@@ -40,11 +41,11 @@ router = messages_router
 async def get_messages(
     current_user: User = Depends(get_current_user),
     folder: str = Query(default="inbox"),
-    message_type: Optional[str] = None,
-    is_read: Optional[bool] = None,
+    message_type: str | None = None,
+    is_read: bool | None = None,
     limit: int = Query(default=20, le=100),
     offset: int = Query(default=0, ge=0),
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Get messages based on folder and filters."""
 
     role = current_user.role.lower()
@@ -282,7 +283,7 @@ async def get_messages(
 @messages_router.get("/unread-count")
 async def get_unread_message_count(
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get count of unread messages and notifications."""
 
     user_id = current_user.id
@@ -358,7 +359,7 @@ async def get_unread_message_count(
 @messages_router.get("/{message_id}")
 async def get_message_details(
     message_id: int, current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get detailed information about a specific message."""
 
     user_id = current_user.id
@@ -441,8 +442,8 @@ Mr. Smith""",
 
 @messages_router.post("/")
 async def send_message(
-    message_data: Dict[str, Any], current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+    message_data: dict[str, Any], current_user: User = Depends(get_current_user)
+) -> dict[str, Any]:
     """Send a new message."""
 
     try:
@@ -474,7 +475,7 @@ async def send_message(
 @messages_router.put("/{message_id}/read")
 async def mark_message_as_read(
     message_id: int, current_user: User = Depends(get_current_user)
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Mark a message as read."""
 
     try:
@@ -501,7 +502,7 @@ async def mark_message_as_read(
 @messages_router.put("/{message_id}/archive")
 async def archive_message(
     message_id: int, current_user: User = Depends(get_current_user)
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Archive a message."""
 
     try:
@@ -528,7 +529,7 @@ async def archive_message(
 @messages_router.delete("/{message_id}")
 async def delete_message(
     message_id: int, current_user: User = Depends(get_current_user)
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Delete a message (move to trash)."""
 
     try:
@@ -570,7 +571,7 @@ async def delete_message(
 @messages_router.get("/notifications/recent")
 async def get_recent_notifications(
     current_user: User = Depends(get_current_user), limit: int = Query(default=10, le=50)
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Get recent notifications for the current user."""
 
     try:

@@ -4,18 +4,16 @@ Stripe Payment Router
 Handles Stripe checkout sessions, subscriptions, and webhook events.
 """
 
-import logging
-from typing import Dict, Any, Optional, List
-from datetime import datetime
+from typing import Any
 
-from fastapi import APIRouter, HTTPException, Request, Depends, Header
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from apps.backend.core.logging import logging_manager, log_audit
-from apps.backend.core.config import settings
-from apps.backend.models.schemas import User
 from apps.backend.api.auth.auth import get_current_user
+from apps.backend.core.config import settings
+from apps.backend.core.logging import log_audit, logging_manager
+from apps.backend.models.schemas import User
 from apps.backend.services.stripe_service import StripeService
 
 logger = logging_manager.get_logger(__name__)
@@ -29,12 +27,14 @@ stripe_service = StripeService()
 class CheckoutSessionRequest(BaseModel):
     """Request model for creating a Stripe Checkout session"""
 
-    price_id: Optional[str] = Field(None, description="Stripe Price ID for subscription")
-    line_items: Optional[List[Dict[str, Any]]] = Field(None, description="Line items for one-time payments")
+    price_id: str | None = Field(None, description="Stripe Price ID for subscription")
+    line_items: list[dict[str, Any]] | None = Field(
+        None, description="Line items for one-time payments"
+    )
     mode: str = Field("payment", description="Checkout mode: payment, subscription, or setup")
-    success_url: Optional[str] = Field(None, description="URL to redirect after successful payment")
-    cancel_url: Optional[str] = Field(None, description="URL to redirect after cancellation")
-    metadata: Optional[Dict[str, str]] = Field(None, description="Additional metadata")
+    success_url: str | None = Field(None, description="URL to redirect after successful payment")
+    cancel_url: str | None = Field(None, description="URL to redirect after cancellation")
+    metadata: dict[str, str] | None = Field(None, description="Additional metadata")
 
 
 class SubscriptionRequest(BaseModel):
@@ -42,16 +42,16 @@ class SubscriptionRequest(BaseModel):
 
     price_id: str = Field(..., description="Stripe Price ID")
     trial_days: int = Field(14, description="Number of trial days")
-    payment_method_id: Optional[str] = Field(None, description="Payment method ID")
-    metadata: Optional[Dict[str, str]] = Field(None, description="Additional metadata")
+    payment_method_id: str | None = Field(None, description="Payment method ID")
+    metadata: dict[str, str] | None = Field(None, description="Additional metadata")
 
 
 class SubscriptionUpdateRequest(BaseModel):
     """Request model for updating a subscription"""
 
-    price_id: Optional[str] = Field(None, description="New price ID")
-    cancel_at_period_end: Optional[bool] = Field(None, description="Cancel at period end")
-    metadata: Optional[Dict[str, str]] = Field(None, description="Additional metadata")
+    price_id: str | None = Field(None, description="New price ID")
+    cancel_at_period_end: bool | None = Field(None, description="Cancel at period end")
+    metadata: dict[str, str] | None = Field(None, description="Additional metadata")
 
 
 @router.post("/stripe/checkout")
@@ -75,11 +75,17 @@ async def create_checkout_session(
             user_id=str(current_user.id),
             email=current_user.email,
             name=getattr(current_user, "name", None),
-            metadata={"user_id": str(current_user.id), "role": getattr(current_user, "role", "student")},
+            metadata={
+                "user_id": str(current_user.id),
+                "role": getattr(current_user, "role", "student"),
+            },
         )
 
         # Set success and cancel URLs with defaults
-        success_url = request.success_url or f"{settings.FRONTEND_URL}/billing/success?session_id={{CHECKOUT_SESSION_ID}}"
+        success_url = (
+            request.success_url
+            or f"{settings.FRONTEND_URL}/billing/success?session_id={{CHECKOUT_SESSION_ID}}"
+        )
         cancel_url = request.cancel_url or f"{settings.FRONTEND_URL}/billing/cancel"
 
         # Create checkout session
@@ -414,7 +420,9 @@ async def handle_stripe_webhook(
         )
 
         if not success:
-            raise HTTPException(status_code=400, detail=result.get("error", "Webhook verification failed"))
+            raise HTTPException(
+                status_code=400, detail=result.get("error", "Webhook verification failed")
+            )
 
         # Log webhook processing
         logger.info(f"Processed Stripe webhook: {result.get('event_type')}")

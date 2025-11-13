@@ -132,15 +132,16 @@ export function HealthStatusBanner({
    * Get icon based on status
    */
   const getIcon = (status: BackendHealthStatus) => {
+    const iconSize = 20;
     switch (status) {
       case 'online':
-        return <IconWifi size={rem(20)} />;
+        return <IconWifi size={iconSize} />;
       case 'offline':
-        return <IconWifiOff size={rem(20)} />;
+        return <IconWifiOff size={iconSize} />;
       case 'checking':
-        return <IconAlertCircle size={rem(20)} />;
+        return <IconAlertCircle size={iconSize} />;
       default:
-        return <IconAlertCircle size={rem(20)} />;
+        return <IconAlertCircle size={iconSize} />;
     }
   };
 
@@ -216,7 +217,7 @@ export function HealthStatusBanner({
                 <Button
                   variant="white"
                   size="xs"
-                  leftSection={<IconRefresh size={rem(14)} />}
+                  leftSection={<IconRefresh size={14} />}
                   onClick={handleRetry}
                   loading={isRetrying}
                   styles={{

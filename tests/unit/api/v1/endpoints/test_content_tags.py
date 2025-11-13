@@ -7,28 +7,22 @@ Phase 1 Week 1: Authentication & user management endpoint tests
 Phase B: Converted to TestClient pattern
 """
 
-import pytest
 from datetime import datetime
-from uuid import uuid4, UUID
-from unittest.mock import AsyncMock, Mock, patch
+from uuid import UUID, uuid4
 
-from fastapi import FastAPI, HTTPException, status
+import pytest
+from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
 # Import router and models
 from apps.backend.api.v1.endpoints.content_tags import (
-    router,
-    Tag,
     TagCreateRequest,
-    TagUpdateRequest,
-    TagListResponse,
     TagMergeRequest,
-    TagMergeResponse,
-    PopularTagsResponse,
+    TagUpdateRequest,
+    router,
 )
 from apps.backend.core.security.jwt_handler import create_access_token
 from tests.utils import APITestHelper
-
 
 # ============================================================================
 # Fixtures
@@ -175,15 +169,10 @@ class TestCreateTag:
 
     def test_create_tag_success(self, client, teacher_headers, valid_tag_create_request):
         """Test successful tag creation."""
-        response = client.post(
-            "/tags/",
-            json=valid_tag_create_request,
-            headers=teacher_headers
-        )
+        response = client.post("/tags/", json=valid_tag_create_request, headers=teacher_headers)
 
         data = APITestHelper.assert_success_response(
-            response,
-            expected_status=status.HTTP_201_CREATED
+            response, expected_status=status.HTTP_201_CREATED
         )
 
         assert data["name"] == valid_tag_create_request["name"]
@@ -195,15 +184,10 @@ class TestCreateTag:
         """Test that tag creation generates slug from name."""
         request_data = {"name": "Test Tag Name"}
 
-        response = client.post(
-            "/tags/",
-            json=request_data,
-            headers=teacher_headers
-        )
+        response = client.post("/tags/", json=request_data, headers=teacher_headers)
 
         data = APITestHelper.assert_success_response(
-            response,
-            expected_status=status.HTTP_201_CREATED
+            response, expected_status=status.HTTP_201_CREATED
         )
 
         assert data["slug"] == "test-tag-name"
@@ -212,46 +196,33 @@ class TestCreateTag:
         """Test that tag creation assigns default color when not provided."""
         request_data = {"name": "No Color Tag"}
 
-        response = client.post(
-            "/tags/",
-            json=request_data,
-            headers=teacher_headers
-        )
+        response = client.post("/tags/", json=request_data, headers=teacher_headers)
 
         data = APITestHelper.assert_success_response(
-            response,
-            expected_status=status.HTTP_201_CREATED
+            response, expected_status=status.HTTP_201_CREATED
         )
 
         assert data["color"] == "#3B82F6"  # Default blue
 
     def test_create_tag_sets_created_by(self, client, teacher_headers, valid_tag_create_request):
         """Test that tag creation sets creator information."""
-        response = client.post(
-            "/tags/",
-            json=valid_tag_create_request,
-            headers=teacher_headers
-        )
+        response = client.post("/tags/", json=valid_tag_create_request, headers=teacher_headers)
 
         data = APITestHelper.assert_success_response(
-            response,
-            expected_status=status.HTTP_201_CREATED
+            response, expected_status=status.HTTP_201_CREATED
         )
 
         assert "created_by" in data
         assert "created_by_name" in data
 
-    def test_create_tag_initial_usage_count_zero(self, client, teacher_headers, valid_tag_create_request):
+    def test_create_tag_initial_usage_count_zero(
+        self, client, teacher_headers, valid_tag_create_request
+    ):
         """Test that new tags have zero usage count."""
-        response = client.post(
-            "/tags/",
-            json=valid_tag_create_request,
-            headers=teacher_headers
-        )
+        response = client.post("/tags/", json=valid_tag_create_request, headers=teacher_headers)
 
         data = APITestHelper.assert_success_response(
-            response,
-            expected_status=status.HTTP_201_CREATED
+            response, expected_status=status.HTTP_201_CREATED
         )
 
         assert data["usage_count"] == 0
@@ -260,33 +231,23 @@ class TestCreateTag:
         """Test that created tag has timestamp."""
         before = datetime.utcnow()
 
-        response = client.post(
-            "/tags/",
-            json=valid_tag_create_request,
-            headers=teacher_headers
-        )
+        response = client.post("/tags/", json=valid_tag_create_request, headers=teacher_headers)
 
         after = datetime.utcnow()
 
         data = APITestHelper.assert_success_response(
-            response,
-            expected_status=status.HTTP_201_CREATED
+            response, expected_status=status.HTTP_201_CREATED
         )
 
-        created_at = datetime.fromisoformat(data["created_at"].replace('Z', '+00:00'))
+        created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
         assert before <= created_at <= after
 
     def test_create_tag_has_unique_id(self, client, teacher_headers, valid_tag_create_request):
         """Test that created tag has unique UUID."""
-        response = client.post(
-            "/tags/",
-            json=valid_tag_create_request,
-            headers=teacher_headers
-        )
+        response = client.post("/tags/", json=valid_tag_create_request, headers=teacher_headers)
 
         data = APITestHelper.assert_success_response(
-            response,
-            expected_status=status.HTTP_201_CREATED
+            response, expected_status=status.HTTP_201_CREATED
         )
 
         # Verify it's a valid UUID string
@@ -309,9 +270,7 @@ class TestGetTag:
         response = client.get(f"/tags/{tag_id}")
 
         APITestHelper.assert_error_response(
-            response,
-            expected_status=status.HTTP_404_NOT_FOUND,
-            expected_detail="not found"
+            response, expected_status=status.HTTP_404_NOT_FOUND, expected_detail="not found"
         )
 
 
@@ -328,15 +287,10 @@ class TestUpdateTag:
         tag_id = uuid4()
 
         response = client.put(
-            f"/tags/{tag_id}",
-            json=valid_tag_update_request,
-            headers=teacher_headers
+            f"/tags/{tag_id}", json=valid_tag_update_request, headers=teacher_headers
         )
 
-        APITestHelper.assert_error_response(
-            response,
-            expected_status=status.HTTP_404_NOT_FOUND
-        )
+        APITestHelper.assert_error_response(response, expected_status=status.HTTP_404_NOT_FOUND)
 
 
 # ============================================================================
@@ -354,10 +308,7 @@ class TestDeleteTag:
         response = client.delete(f"/tags/{tag_id}", headers=teacher_headers)
 
         # Should return 204 No Content or 200 OK with message
-        assert response.status_code in [
-            status.HTTP_200_OK,
-            status.HTTP_204_NO_CONTENT
-        ]
+        assert response.status_code in [status.HTTP_200_OK, status.HTTP_204_NO_CONTENT]
 
 
 # ============================================================================
@@ -421,16 +372,10 @@ class TestMergeTags:
 
     def test_merge_tags_not_found(self, client, teacher_headers, valid_tag_merge_request):
         """Test merging with non-existent target tag returns 404."""
-        response = client.post(
-            "/tags/merge",
-            json=valid_tag_merge_request,
-            headers=teacher_headers
-        )
+        response = client.post("/tags/merge", json=valid_tag_merge_request, headers=teacher_headers)
 
         APITestHelper.assert_error_response(
-            response,
-            expected_status=status.HTTP_404_NOT_FOUND,
-            expected_detail="not found"
+            response, expected_status=status.HTTP_404_NOT_FOUND, expected_detail="not found"
         )
 
 

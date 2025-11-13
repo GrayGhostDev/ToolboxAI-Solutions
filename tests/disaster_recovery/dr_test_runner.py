@@ -5,28 +5,25 @@ This module implements comprehensive disaster recovery testing including
 backup/restore validation, failover testing, and data integrity verification.
 """
 
-import os
-import sys
-import json
-import time
-import subprocess
-import hashlib
-import shutil
-from pathlib import Path
-from typing import Dict, List, Optional, Any, Tuple
-from datetime import datetime, timedelta
-import psycopg2
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-import redis
-import docker
-import requests
-from rich.console import Console
-from rich.table import Table
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
-from rich.panel import Panel
 import argparse
 import asyncio
+import hashlib
+import json
+import os
+import shutil
+import subprocess
+import time
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
 import aiohttp
+import docker
+import psycopg2
+import redis
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
 
 console = Console()
 
@@ -38,10 +35,10 @@ class DisasterRecoveryTester:
         self.config_file = Path(config_file)
         self.config = self._load_config()
         self.docker_client = docker.from_env()
-        self.test_results: List[Dict] = []
-        self.checkpoints: Dict[str, Any] = {}
+        self.test_results: list[dict] = []
+        self.checkpoints: dict[str, Any] = {}
 
-    def _load_config(self) -> Dict:
+    def _load_config(self) -> dict:
         """Load DR testing configuration."""
         if self.config_file.exists():
             with open(self.config_file) as f:
@@ -119,14 +116,11 @@ class DisasterRecoveryTester:
                 },
             }
 
-    async def run_scenario(self, scenario_name: str) -> Dict[str, Any]:
+    async def run_scenario(self, scenario_name: str) -> dict[str, Any]:
         """Run a specific disaster recovery scenario."""
         console.print(f"\n[bold cyan]Running DR Scenario: {scenario_name}[/bold cyan]")
 
-        scenario = next(
-            (s for s in self.config["scenarios"] if s["name"] == scenario_name),
-            None
-        )
+        scenario = next((s for s in self.config["scenarios"] if s["name"] == scenario_name), None)
 
         if not scenario:
             raise ValueError(f"Unknown scenario: {scenario_name}")
@@ -149,11 +143,13 @@ class DisasterRecoveryTester:
                 console.print(f"  Executing: [yellow]{step_name}[/yellow]")
 
                 step_result = await self._execute_step(step_name)
-                result["steps"].append({
-                    "name": step_name,
-                    "result": step_result,
-                    "timestamp": datetime.now().isoformat(),
-                })
+                result["steps"].append(
+                    {
+                        "name": step_name,
+                        "result": step_result,
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                )
 
                 if not step_result.get("success"):
                     result["status"] = "failed"
@@ -210,7 +206,7 @@ class DisasterRecoveryTester:
 
         return checkpoint_id
 
-    async def _capture_database_state(self) -> Dict:
+    async def _capture_database_state(self) -> dict:
         """Capture current database state."""
         state = {
             "row_counts": {},
@@ -222,18 +218,19 @@ class DisasterRecoveryTester:
             # Connect to database
             conn = psycopg2.connect(
                 os.environ.get(
-                    "DATABASE_URL",
-                    "postgresql://test_user:test_password@localhost/test_db"
+                    "DATABASE_URL", "postgresql://test_user:test_password@localhost/test_db"
                 )
             )
             cursor = conn.cursor()
 
             # Get row counts for all tables
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT tablename
                 FROM pg_tables
                 WHERE schemaname = 'public'
-            """)
+            """
+            )
             tables = cursor.fetchall()
 
             for (table,) in tables:
@@ -241,10 +238,12 @@ class DisasterRecoveryTester:
                 state["row_counts"][table] = cursor.fetchone()[0]
 
                 # Calculate checksum for table data
-                cursor.execute(f"""
+                cursor.execute(
+                    f"""
                     SELECT md5(array_agg(md5(t::text))::text)
                     FROM {table} t
-                """)
+                """
+                )
                 checksum_result = cursor.fetchone()
                 state["checksums"][table] = checksum_result[0] if checksum_result[0] else "empty"
 
@@ -261,7 +260,7 @@ class DisasterRecoveryTester:
 
         return state
 
-    async def _capture_file_state(self) -> Dict:
+    async def _capture_file_state(self) -> dict:
         """Capture file system state."""
         state = {
             "checksums": {},
@@ -281,7 +280,7 @@ class DisasterRecoveryTester:
 
         return state
 
-    async def _capture_service_state(self) -> Dict:
+    async def _capture_service_state(self) -> dict:
         """Capture service states."""
         state = {
             "containers": {},
@@ -328,7 +327,7 @@ class DisasterRecoveryTester:
 
         return False
 
-    async def _execute_step(self, step_name: str) -> Dict:
+    async def _execute_step(self, step_name: str) -> dict:
         """Execute a disaster recovery step."""
         step_handlers = {
             "backup": self._step_backup,
@@ -353,7 +352,7 @@ class DisasterRecoveryTester:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def _step_backup(self) -> Dict:
+    async def _step_backup(self) -> dict:
         """Perform backup."""
         backup_results = {}
 
@@ -374,7 +373,7 @@ class DisasterRecoveryTester:
 
         return {"backups": backup_results}
 
-    async def _backup_database(self) -> Dict:
+    async def _backup_database(self) -> dict:
         """Backup database."""
         backup_dir = Path(self.config["backup"]["database"]["location"])
         backup_dir.mkdir(parents=True, exist_ok=True)
@@ -384,8 +383,7 @@ class DisasterRecoveryTester:
 
         # Run pg_dump
         db_url = os.environ.get(
-            "DATABASE_URL",
-            "postgresql://test_user:test_password@localhost/test_db"
+            "DATABASE_URL", "postgresql://test_user:test_password@localhost/test_db"
         )
 
         cmd = ["pg_dump", db_url, "-f", str(backup_file)]
@@ -403,7 +401,7 @@ class DisasterRecoveryTester:
             "timestamp": timestamp,
         }
 
-    async def _backup_files(self) -> Dict:
+    async def _backup_files(self) -> dict:
         """Backup files."""
         backup_dir = Path(self.config["backup"]["files"]["location"])
         backup_dir.mkdir(parents=True, exist_ok=True)
@@ -434,7 +432,7 @@ class DisasterRecoveryTester:
 
         return {"success": False, "error": "No directories to backup"}
 
-    async def _backup_redis(self) -> Dict:
+    async def _backup_redis(self) -> dict:
         """Backup Redis data."""
         try:
             r = redis.Redis(host="localhost", port=6379)
@@ -471,23 +469,22 @@ class DisasterRecoveryTester:
 
         return {"success": False, "error": "Redis dump file not found"}
 
-    async def _step_corrupt_db(self) -> Dict:
+    async def _step_corrupt_db(self) -> dict:
         """Simulate database corruption."""
         # WARNING: This is for testing only!
         conn = psycopg2.connect(
-            os.environ.get(
-                "DATABASE_URL",
-                "postgresql://test_user:test_password@localhost/test_db"
-            )
+            os.environ.get("DATABASE_URL", "postgresql://test_user:test_password@localhost/test_db")
         )
         cursor = conn.cursor()
 
         # Drop a random index to simulate corruption
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT indexname FROM pg_indexes
             WHERE schemaname = 'public'
             LIMIT 1
-        """)
+        """
+        )
         result = cursor.fetchone()
 
         if result:
@@ -502,7 +499,7 @@ class DisasterRecoveryTester:
 
         return {"corrupted": "none"}
 
-    async def _step_corrupt_data(self) -> Dict:
+    async def _step_corrupt_data(self) -> dict:
         """Simulate data corruption."""
         # Modify random files
         corrupted_files = []
@@ -520,7 +517,7 @@ class DisasterRecoveryTester:
 
         return {"corrupted_files": corrupted_files}
 
-    async def _step_encrypt_files(self) -> Dict:
+    async def _step_encrypt_files(self) -> dict:
         """Simulate ransomware encryption."""
         encrypted_files = []
 
@@ -537,7 +534,7 @@ class DisasterRecoveryTester:
 
         return {"encrypted_files": encrypted_files}
 
-    async def _step_kill_services(self) -> Dict:
+    async def _step_kill_services(self) -> dict:
         """Simulate service failure."""
         killed_services = []
 
@@ -550,7 +547,7 @@ class DisasterRecoveryTester:
 
         return {"killed_services": killed_services}
 
-    async def _step_detect_corruption(self) -> Dict:
+    async def _step_detect_corruption(self) -> dict:
         """Detect data corruption."""
         detected_issues = []
 
@@ -558,37 +555,42 @@ class DisasterRecoveryTester:
         try:
             conn = psycopg2.connect(
                 os.environ.get(
-                    "DATABASE_URL",
-                    "postgresql://test_user:test_password@localhost/test_db"
+                    "DATABASE_URL", "postgresql://test_user:test_password@localhost/test_db"
                 )
             )
             cursor = conn.cursor()
 
             # Check for missing indexes
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT tablename, indexname
                 FROM pg_indexes
                 WHERE schemaname = 'public'
-            """)
+            """
+            )
             current_indexes = cursor.fetchall()
 
             # Compare with checkpoint
             # (In real scenario, would compare with stored metadata)
-            detected_issues.append({
-                "type": "database",
-                "issue": "index_check",
-                "status": "checked",
-            })
+            detected_issues.append(
+                {
+                    "type": "database",
+                    "issue": "index_check",
+                    "status": "checked",
+                }
+            )
 
             cursor.close()
             conn.close()
 
         except Exception as e:
-            detected_issues.append({
-                "type": "database",
-                "issue": "connection_failed",
-                "error": str(e),
-            })
+            detected_issues.append(
+                {
+                    "type": "database",
+                    "issue": "connection_failed",
+                    "error": str(e),
+                }
+            )
 
         # Check file integrity
         for directory in self.config["backup"]["files"]["directories"]:
@@ -600,15 +602,17 @@ class DisasterRecoveryTester:
                         with open(file_path, "rb") as f:
                             content = f.read()
                             if b"CORRUPTED_DATA_MARKER" in content:
-                                detected_issues.append({
-                                    "type": "file",
-                                    "issue": "corruption_detected",
-                                    "file": str(file_path),
-                                })
+                                detected_issues.append(
+                                    {
+                                        "type": "file",
+                                        "issue": "corruption_detected",
+                                        "file": str(file_path),
+                                    }
+                                )
 
         return {"detected_issues": detected_issues}
 
-    async def _step_isolate_system(self) -> Dict:
+    async def _step_isolate_system(self) -> dict:
         """Isolate affected systems."""
         isolated_components = []
 
@@ -624,7 +628,7 @@ class DisasterRecoveryTester:
 
         return {"isolated": isolated_components}
 
-    async def _step_restore(self) -> Dict:
+    async def _step_restore(self) -> dict:
         """Restore from backup."""
         restore_results = {}
 
@@ -640,8 +644,9 @@ class DisasterRecoveryTester:
                 if latest_backup.suffix == ".gz":
                     # Decompress first
                     restore_cmd = [
-                        "sh", "-c",
-                        f"gunzip -c {latest_backup} | psql {os.environ.get('DATABASE_URL')}"
+                        "sh",
+                        "-c",
+                        f"gunzip -c {latest_backup} | psql {os.environ.get('DATABASE_URL')}",
                     ]
 
                 result = subprocess.run(restore_cmd, capture_output=True, text=True)
@@ -669,7 +674,7 @@ class DisasterRecoveryTester:
 
         return {"restore_results": restore_results}
 
-    async def _step_restore_order(self) -> Dict:
+    async def _step_restore_order(self) -> dict:
         """Restore services in correct order."""
         restore_order = [
             "database",
@@ -688,7 +693,7 @@ class DisasterRecoveryTester:
 
         return {"restored_services": restored_services}
 
-    async def _step_verify(self) -> Dict:
+    async def _step_verify(self) -> dict:
         """Verify system recovery."""
         verification_results = {}
 
@@ -696,8 +701,7 @@ class DisasterRecoveryTester:
         try:
             conn = psycopg2.connect(
                 os.environ.get(
-                    "DATABASE_URL",
-                    "postgresql://test_user:test_password@localhost/test_db"
+                    "DATABASE_URL", "postgresql://test_user:test_password@localhost/test_db"
                 )
             )
             cursor = conn.cursor()
@@ -726,7 +730,7 @@ class DisasterRecoveryTester:
 
         return {"verification": verification_results}
 
-    async def _validate_recovery(self, checkpoint_id: str) -> Dict:
+    async def _validate_recovery(self, checkpoint_id: str) -> dict:
         """Validate recovery against checkpoint."""
         if checkpoint_id not in self.checkpoints:
             return {"error": "Checkpoint not found"}
@@ -783,7 +787,7 @@ class DisasterRecoveryTester:
         except:
             return -1
 
-    def _calculate_metrics(self, result: Dict) -> Dict:
+    def _calculate_metrics(self, result: dict) -> dict:
         """Calculate disaster recovery metrics."""
         metrics = {}
 
@@ -801,8 +805,7 @@ class DisasterRecoveryTester:
 
         # Calculate success rate
         successful_steps = sum(
-            1 for step in result.get("steps", [])
-            if step.get("result", {}).get("success")
+            1 for step in result.get("steps", []) if step.get("result", {}).get("success")
         )
         total_steps = len(result.get("steps", []))
         metrics["success_rate"] = successful_steps / total_steps if total_steps > 0 else 0
@@ -811,15 +814,16 @@ class DisasterRecoveryTester:
         if "validation" in result:
             integrity_checks = result["validation"].get("data_integrity", {})
             passed_checks = sum(
-                1 for check in integrity_checks.values()
-                if check.get("match") is True
+                1 for check in integrity_checks.values() if check.get("match") is True
             )
             total_checks = len(integrity_checks)
-            metrics["data_integrity_score"] = passed_checks / total_checks if total_checks > 0 else 0
+            metrics["data_integrity_score"] = (
+                passed_checks / total_checks if total_checks > 0 else 0
+            )
 
         return metrics
 
-    def _display_scenario_result(self, result: Dict):
+    def _display_scenario_result(self, result: dict):
         """Display scenario execution result."""
         status_color = {
             "completed": "green",
@@ -827,7 +831,7 @@ class DisasterRecoveryTester:
             "error": "red",
         }.get(result["status"], "yellow")
 
-        console.print("\n" + "="*60)
+        console.print("\n" + "=" * 60)
         console.print(
             f"[{status_color}]Scenario: {result['scenario']} - {result['status'].upper()}[/{status_color}]"
         )
@@ -856,7 +860,7 @@ class DisasterRecoveryTester:
             Panel.fit(
                 "[bold cyan]Disaster Recovery Testing Suite[/bold cyan]\n"
                 f"Running {len(self.config['scenarios'])} scenarios",
-                title="DR Testing"
+                title="DR Testing",
             )
         )
 
@@ -905,16 +909,22 @@ class DisasterRecoveryTester:
         report_file = report_path / f"dr_report_{timestamp}.json"
 
         with open(report_file, "w") as f:
-            json.dump({
-                "timestamp": datetime.now().isoformat(),
-                "summary": {
-                    "total_scenarios": len(self.test_results),
-                    "passed": sum(1 for r in self.test_results if r["status"] == "completed"),
-                    "failed": sum(1 for r in self.test_results if r["status"] in ["failed", "error"]),
+            json.dump(
+                {
+                    "timestamp": datetime.now().isoformat(),
+                    "summary": {
+                        "total_scenarios": len(self.test_results),
+                        "passed": sum(1 for r in self.test_results if r["status"] == "completed"),
+                        "failed": sum(
+                            1 for r in self.test_results if r["status"] in ["failed", "error"]
+                        ),
+                    },
+                    "config": self.config,
+                    "results": self.test_results,
                 },
-                "config": self.config,
-                "results": self.test_results,
-            }, f, indent=2)
+                f,
+                indent=2,
+            )
 
         console.print(f"\n[dim]Report saved to: {report_file}[/dim]")
 

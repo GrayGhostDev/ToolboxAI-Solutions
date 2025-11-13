@@ -7,16 +7,13 @@ Integrates with Supabase RLS policies for data access validation
 import json
 import logging
 import re
-from typing import Any, Dict, List, Optional, Set, Type, Union
-from urllib.parse import parse_qs, unquote
+from typing import Any
 
 from fastapi import HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, ValidationError, validator
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
-
-from apps.backend.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +63,7 @@ class SanitizationRules:
     """Rules for input sanitization"""
 
     @staticmethod
-    def sanitize_string(value: str, max_length: Optional[int] = None) -> str:
+    def sanitize_string(value: str, max_length: int | None = None) -> str:
         """Sanitize string input"""
         if not isinstance(value, str):
             return str(value)
@@ -134,16 +131,16 @@ class RequestSchemas:
     class PaginationParams(BaseModel):
         page: int = Field(1, ge=1, le=1000)
         limit: int = Field(10, ge=1, le=100)
-        sort: Optional[str] = Field(None, max_length=50)
-        order: Optional[str] = Field("asc", regex="^(asc|desc)$")
+        sort: str | None = Field(None, max_length=50)
+        order: str | None = Field("asc", regex="^(asc|desc)$")
 
     class SearchParams(BaseModel):
         query: str = Field(..., min_length=1, max_length=500)
-        filters: Optional[Dict[str, Any]] = None
-        fields: Optional[List[str]] = Field(None, max_items=50)
+        filters: dict[str, Any] | None = None
+        fields: list[str] | None = Field(None, max_items=50)
 
     class IDParam(BaseModel):
-        id: Union[str, int] = Field(...)
+        id: str | int = Field(...)
 
         @validator("id")
         def validate_id(cls, v):
@@ -168,10 +165,8 @@ class RequestValidator:
         self.validation_cache = {}
 
     async def validate_request(
-        self,
-        request: Request,
-        schema: Optional[Type[BaseModel]] = None
-    ) -> Dict[str, Any]:
+        self, request: Request, schema: type[BaseModel] | None = None
+    ) -> dict[str, Any]:
         """
         Validate request against schema and security rules
 
@@ -191,7 +186,7 @@ class RequestValidator:
             if content_type not in self.config.ALLOWED_CONTENT_TYPES:
                 raise HTTPException(
                     status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-                    detail=f"Content type {content_type} not supported"
+                    detail=f"Content type {content_type} not supported",
                 )
 
         # Validate headers
@@ -203,7 +198,7 @@ class RequestValidator:
             if body_size > self.config.MAX_BODY_SIZE:
                 raise HTTPException(
                     status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                    detail=f"Request body too large: {body_size} bytes"
+                    detail=f"Request body too large: {body_size} bytes",
                 )
 
         # Get and validate data based on content type
@@ -226,8 +221,7 @@ class RequestValidator:
                 data = validated.dict()
             except ValidationError as e:
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=e.errors()
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=e.errors()
                 )
 
         # Check for injection attempts
@@ -237,15 +231,12 @@ class RequestValidator:
 
     def _validate_headers(self, request: Request):
         """Validate request headers"""
-        total_header_size = sum(
-            len(k) + len(v)
-            for k, v in request.headers.items()
-        )
+        total_header_size = sum(len(k) + len(v) for k, v in request.headers.items())
 
         if total_header_size > self.config.MAX_HEADER_SIZE:
             raise HTTPException(
                 status_code=status.HTTP_431_REQUEST_HEADER_FIELDS_TOO_LARGE,
-                detail="Request headers too large"
+                detail="Request headers too large",
             )
 
         # Check for suspicious headers
@@ -254,7 +245,7 @@ class RequestValidator:
             if header in request.headers:
                 logger.warning(f"Suspicious header detected: {header}")
 
-    async def _validate_json(self, request: Request) -> Dict[str, Any]:
+    async def _validate_json(self, request: Request) -> dict[str, Any]:
         """Validate JSON body"""
         try:
             body = await request.body()
@@ -266,8 +257,7 @@ class RequestValidator:
             # Check JSON depth
             if self._get_json_depth(data) > self.config.MAX_JSON_DEPTH:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="JSON nesting too deep"
+                    status_code=status.HTTP_400_BAD_REQUEST, detail="JSON nesting too deep"
                 )
 
             # Sanitize strings in JSON
@@ -275,11 +265,10 @@ class RequestValidator:
 
         except json.JSONDecodeError as e:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid JSON: {str(e)}"
+                status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid JSON: {str(e)}"
             )
 
-    async def _validate_form_data(self, request: Request) -> Dict[str, Any]:
+    async def _validate_form_data(self, request: Request) -> dict[str, Any]:
         """Validate form data"""
         form_data = await request.form()
         data = {}
@@ -292,7 +281,7 @@ class RequestValidator:
 
         return data
 
-    async def _validate_multipart(self, request: Request) -> Dict[str, Any]:
+    async def _validate_multipart(self, request: Request) -> dict[str, Any]:
         """Validate multipart form data"""
         form = await request.form()
         data = {}
@@ -304,7 +293,7 @@ class RequestValidator:
                 data[key] = {
                     "filename": filename,
                     "content_type": value.content_type,
-                    "size": len(await value.read())
+                    "size": len(await value.read()),
                 }
                 # Reset file pointer
                 await value.seek(0)
@@ -313,14 +302,14 @@ class RequestValidator:
 
         return data
 
-    def _validate_query_params(self, request: Request) -> Dict[str, Any]:
+    def _validate_query_params(self, request: Request) -> dict[str, Any]:
         """Validate query parameters"""
         query_params = dict(request.query_params)
 
         if len(query_params) > self.config.MAX_QUERY_PARAMS:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Too many query parameters: {len(query_params)}"
+                detail=f"Too many query parameters: {len(query_params)}",
             )
 
         cleaned_params = {}
@@ -342,7 +331,7 @@ class RequestValidator:
             if len(data) > self.config.MAX_ARRAY_LENGTH:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Array too long: {len(data)} items"
+                    detail=f"Array too long: {len(data)} items",
                 )
             return [self._sanitize_json(item) for item in data]
         elif isinstance(data, str):
@@ -358,30 +347,24 @@ class RequestValidator:
         if isinstance(obj, dict):
             if not obj:
                 return current_depth
-            return max(
-                self._get_json_depth(v, current_depth + 1)
-                for v in obj.values()
-            )
+            return max(self._get_json_depth(v, current_depth + 1) for v in obj.values())
         elif isinstance(obj, list):
             if not obj:
                 return current_depth
-            return max(
-                self._get_json_depth(item, current_depth + 1)
-                for item in obj
-            )
+            return max(self._get_json_depth(item, current_depth + 1) for item in obj)
         else:
             return current_depth
 
     def _check_injection_attacks(self, data: Any):
         """Check for potential injection attacks"""
+
         def check_value(value: str):
             # Check SQL injection
             for pattern in self.config.SQL_INJECTION_PATTERNS:
                 if re.search(pattern, value, re.IGNORECASE):
                     logger.warning(f"Potential SQL injection detected: {value[:100]}")
                     raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail="Invalid input detected"
+                        status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid input detected"
                     )
 
             # Check XSS
@@ -389,8 +372,7 @@ class RequestValidator:
                 if re.search(pattern, value, re.IGNORECASE):
                     logger.warning(f"Potential XSS detected: {value[:100]}")
                     raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail="Invalid input detected"
+                        status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid input detected"
                     )
 
             # Check path traversal
@@ -398,8 +380,7 @@ class RequestValidator:
                 if re.search(pattern, value, re.IGNORECASE):
                     logger.warning(f"Potential path traversal detected: {value[:100]}")
                     raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail="Invalid input detected"
+                        status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid input detected"
                     )
 
         def recursive_check(obj: Any):
@@ -462,10 +443,7 @@ class RequestValidatorMiddleware(BaseHTTPMiddleware):
             if "injection" in str(e.detail).lower():
                 self.validation_stats["injection_attempts"] += 1
 
-            return JSONResponse(
-                status_code=e.status_code,
-                content={"detail": e.detail}
-            )
+            return JSONResponse(status_code=e.status_code, content={"detail": e.detail})
 
         except Exception as e:
             logger.error(f"Validation error: {e}")
@@ -473,7 +451,7 @@ class RequestValidatorMiddleware(BaseHTTPMiddleware):
 
             return JSONResponse(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                content={"detail": "Internal validation error"}
+                content={"detail": "Internal validation error"},
             )
 
     def _should_skip_validation(self, request: Request) -> bool:
@@ -492,7 +470,7 @@ class RequestValidatorMiddleware(BaseHTTPMiddleware):
 
         return False
 
-    def get_stats(self) -> Dict[str, int]:
+    def get_stats(self) -> dict[str, int]:
         """Get validation statistics"""
         return self.validation_stats.copy()
 
@@ -503,5 +481,5 @@ __all__ = [
     "RequestValidator",
     "ValidationConfig",
     "SanitizationRules",
-    "RequestSchemas"
+    "RequestSchemas",
 ]

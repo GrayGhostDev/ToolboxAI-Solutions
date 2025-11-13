@@ -9,34 +9,37 @@ Provides comprehensive Roblox integration capabilities:
 - Asset marketplace integration
 """
 
+import base64
 import logging
 import uuid
-import base64
-import asyncio
-from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, List, Optional, Union
+from datetime import datetime, timedelta, timezone
 from enum import Enum
+from typing import Any
 
 from fastapi import (
     APIRouter,
+    BackgroundTasks,
     Depends,
     HTTPException,
     Query,
-    BackgroundTasks,
-    status,
     WebSocket,
     WebSocketDisconnect,
+    status,
 )
 from fastapi.security import HTTPBearer
-from pydantic import BaseModel, Field, field_validator, ConfigDict
-from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # Import authentication and dependencies
 try:
-    from apps.backend.api.auth.auth import get_current_user, require_role, require_any_role
+    from apps.backend.services.websocket_handler import websocket_manager
+
+    from apps.backend.api.auth.auth import (
+        get_current_user,
+        require_any_role,
+        require_role,
+    )
     from apps.backend.core.deps import get_db
     from apps.backend.core.security.rate_limit_manager import rate_limit
-    from apps.backend.services.websocket_handler import websocket_manager
 except ImportError:
     # Fallback for development
     def get_current_user():
@@ -71,7 +74,7 @@ except ImportError:
 
 # Import models and services
 try:
-    from apps.backend.models.schemas import User, BaseResponse
+    from apps.backend.models.schemas import BaseResponse, User
     from apps.backend.services.pusher import trigger_event
 except ImportError:
 
@@ -162,8 +165,8 @@ class ScriptGenerationRequest(BaseModel):
     educational_context: str = Field(..., description="Educational purpose and context")
     grade_level: int = Field(..., ge=1, le=12)
     complexity_level: str = Field("beginner", description="beginner, intermediate, advanced")
-    required_services: List[str] = Field(default_factory=list, description="Roblox services needed")
-    custom_requirements: Optional[str] = None
+    required_services: list[str] = Field(default_factory=list, description="Roblox services needed")
+    custom_requirements: str | None = None
     include_comments: bool = Field(default=True)
     include_error_handling: bool = Field(default=True)
     target_age_appropriate: bool = Field(default=True)
@@ -180,7 +183,7 @@ class ScriptValidationRequest(BaseModel):
     check_security: bool = Field(default=True)
     check_performance: bool = Field(default=True)
     check_best_practices: bool = Field(default=True)
-    educational_context: Optional[str] = None
+    educational_context: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -191,11 +194,11 @@ class AssetUploadRequest(BaseModel):
     asset_name: str = Field(..., min_length=1, max_length=100)
     asset_type: AssetType
     description: str = Field(..., max_length=500)
-    educational_tags: List[str] = Field(default_factory=list)
-    grade_levels: List[int] = Field(..., description="Applicable grade levels")
-    subject_areas: List[str] = Field(default_factory=list)
+    educational_tags: list[str] = Field(default_factory=list)
+    grade_levels: list[int] = Field(..., description="Applicable grade levels")
+    subject_areas: list[str] = Field(default_factory=list)
     asset_data: str = Field(..., description="Base64 encoded asset data")
-    thumbnail_data: Optional[str] = Field(None, description="Base64 encoded thumbnail")
+    thumbnail_data: str | None = Field(None, description="Base64 encoded thumbnail")
     license_type: str = Field("educational", description="Asset license type")
 
     @field_validator("grade_levels")
@@ -214,14 +217,14 @@ class EnvironmentDeploymentRequest(BaseModel):
     environment_name: str = Field(..., min_length=1, max_length=100)
     environment_type: EnvironmentType
     description: str = Field(..., max_length=1000)
-    lesson_id: Optional[str] = None
+    lesson_id: str | None = None
     grade_level: int = Field(..., ge=1, le=12)
     max_students: int = Field(default=30, ge=1, le=100)
     session_duration: int = Field(default=45, description="Session duration in minutes")
-    required_assets: List[str] = Field(default_factory=list)
-    custom_scripts: List[str] = Field(default_factory=list)
-    spawn_configuration: Dict[str, Any] = Field(default_factory=dict)
-    environment_settings: Dict[str, Any] = Field(default_factory=dict)
+    required_assets: list[str] = Field(default_factory=list)
+    custom_scripts: list[str] = Field(default_factory=list)
+    spawn_configuration: dict[str, Any] = Field(default_factory=dict)
+    environment_settings: dict[str, Any] = Field(default_factory=dict)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -232,7 +235,7 @@ class StudioSyncRequest(BaseModel):
     studio_session_id: str
     project_name: str
     sync_type: str = Field(..., description="pull, push, or bidirectional")
-    file_filters: List[str] = Field(default_factory=list)
+    file_filters: list[str] = Field(default_factory=list)
     include_assets: bool = Field(default=True)
     include_scripts: bool = Field(default=True)
     backup_before_sync: bool = Field(default=True)
@@ -248,12 +251,12 @@ class ScriptGenerationResponse(BaseModel):
     script_content: str
     script_type: ScriptType
     generated_at: datetime
-    complexity_analysis: Dict[str, Any]
-    educational_features: List[str]
-    required_services: List[str]
-    performance_notes: List[str]
+    complexity_analysis: dict[str, Any]
+    educational_features: list[str]
+    required_services: list[str]
+    performance_notes: list[str]
     security_compliance: bool
-    estimated_execution_time: Optional[float] = None
+    estimated_execution_time: float | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -264,12 +267,12 @@ class ScriptValidationResponse(BaseModel):
     validation_id: str
     is_valid: bool
     validation_score: float = Field(..., ge=0, le=100)
-    issues: List[Dict[str, Any]] = Field(default_factory=list)
-    suggestions: List[str] = Field(default_factory=list)
-    security_report: Dict[str, Any] = Field(default_factory=dict)
-    performance_report: Dict[str, Any] = Field(default_factory=dict)
-    educational_compliance: Dict[str, Any] = Field(default_factory=dict)
-    recommended_improvements: List[str] = Field(default_factory=list)
+    issues: list[dict[str, Any]] = Field(default_factory=list)
+    suggestions: list[str] = Field(default_factory=list)
+    security_report: dict[str, Any] = Field(default_factory=dict)
+    performance_report: dict[str, Any] = Field(default_factory=dict)
+    educational_compliance: dict[str, Any] = Field(default_factory=dict)
+    recommended_improvements: list[str] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -282,11 +285,11 @@ class AssetResponse(BaseModel):
     asset_type: AssetType
     description: str
     upload_status: str
-    roblox_asset_id: Optional[str] = None
-    download_url: Optional[str] = None
-    thumbnail_url: Optional[str] = None
-    educational_metadata: Dict[str, Any] = Field(default_factory=dict)
-    usage_statistics: Dict[str, Any] = Field(default_factory=dict)
+    roblox_asset_id: str | None = None
+    download_url: str | None = None
+    thumbnail_url: str | None = None
+    educational_metadata: dict[str, Any] = Field(default_factory=dict)
+    usage_statistics: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime
     updated_at: datetime
 
@@ -300,12 +303,12 @@ class EnvironmentDeploymentResponse(BaseModel):
     environment_name: str
     environment_type: EnvironmentType
     status: DeploymentStatus
-    roblox_place_id: Optional[str] = None
-    join_url: Optional[str] = None
+    roblox_place_id: str | None = None
+    join_url: str | None = None
     deployment_progress: int = Field(default=0, ge=0, le=100)
-    estimated_completion: Optional[datetime] = None
-    deployment_logs: List[str] = Field(default_factory=list)
-    resource_usage: Dict[str, Any] = Field(default_factory=dict)
+    estimated_completion: datetime | None = None
+    deployment_logs: list[str] = Field(default_factory=list)
+    resource_usage: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime
     last_updated: datetime
 
@@ -319,11 +322,11 @@ class StudioSyncResponse(BaseModel):
     sync_status: str
     files_synced: int
     assets_synced: int
-    sync_log: List[str] = Field(default_factory=list)
-    conflicts: List[Dict[str, Any]] = Field(default_factory=list)
-    sync_statistics: Dict[str, Any] = Field(default_factory=dict)
+    sync_log: list[str] = Field(default_factory=list)
+    conflicts: list[dict[str, Any]] = Field(default_factory=list)
+    sync_statistics: dict[str, Any] = Field(default_factory=dict)
     started_at: datetime
-    completed_at: Optional[datetime] = None
+    completed_at: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -337,22 +340,22 @@ class RobloxEnvironmentStatus(BaseModel):
     active_students: int
     max_capacity: int
     session_start: datetime
-    session_end: Optional[datetime] = None
-    performance_metrics: Dict[str, Any] = Field(default_factory=dict)
-    active_features: List[str] = Field(default_factory=list)
+    session_end: datetime | None = None
+    performance_metrics: dict[str, Any] = Field(default_factory=dict)
+    active_features: list[str] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
 
 
 # Mock data stores
-_mock_scripts_db: Dict[str, ScriptGenerationResponse] = {}
-_mock_assets_db: Dict[str, AssetResponse] = {}
-_mock_deployments_db: Dict[str, EnvironmentDeploymentResponse] = {}
-_mock_environments_db: Dict[str, RobloxEnvironmentStatus] = {}
+_mock_scripts_db: dict[str, ScriptGenerationResponse] = {}
+_mock_assets_db: dict[str, AssetResponse] = {}
+_mock_deployments_db: dict[str, EnvironmentDeploymentResponse] = {}
+_mock_environments_db: dict[str, RobloxEnvironmentStatus] = {}
 
 
 # Utility functions
-async def notify_roblox_update(event_type: str, data: Dict[str, Any], user_id: str):
+async def notify_roblox_update(event_type: str, data: dict[str, Any], user_id: str):
     """Notify about Roblox integration updates"""
     try:
         await trigger_event(
@@ -364,7 +367,7 @@ async def notify_roblox_update(event_type: str, data: Dict[str, Any], user_id: s
         logger.warning(f"Failed to send Roblox update notification: {e}")
 
 
-def validate_script_security(script_content: str) -> Dict[str, Any]:
+def validate_script_security(script_content: str) -> dict[str, Any]:
     """Validate script for security issues"""
     # Mock security validation
     security_issues = []
@@ -385,7 +388,7 @@ def validate_script_security(script_content: str) -> Dict[str, Any]:
     }
 
 
-def analyze_script_performance(script_content: str) -> Dict[str, Any]:
+def analyze_script_performance(script_content: str) -> dict[str, Any]:
     """Analyze script for performance issues"""
     # Mock performance analysis
     performance_issues = []
@@ -420,7 +423,7 @@ def analyze_script_performance(script_content: str) -> Dict[str, Any]:
 async def generate_script(
     request: ScriptGenerationRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
 ):
     """
@@ -506,7 +509,7 @@ educationalFunction()
 @router.post("/scripts/validate", response_model=ScriptValidationResponse)
 # @rate_limit(requests=20)  # 20 validations per minute
 async def validate_script(
-    request: ScriptValidationRequest, current_user: Dict = Depends(get_current_user)
+    request: ScriptValidationRequest, current_user: dict = Depends(get_current_user)
 ):
     """
     Validate Roblox scripts for security, performance, and educational compliance.
@@ -592,7 +595,7 @@ async def validate_script(
 async def upload_asset(
     request: AssetUploadRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
 ):
     """
@@ -666,14 +669,14 @@ async def upload_asset(
         )
 
 
-@router.get("/assets", response_model=List[AssetResponse])
+@router.get("/assets", response_model=list[AssetResponse])
 async def list_assets(
-    asset_type: Optional[AssetType] = Query(None, description="Filter by asset type"),
-    grade_level: Optional[int] = Query(None, ge=1, le=12, description="Filter by grade level"),
-    subject_area: Optional[str] = Query(None, description="Filter by subject area"),
-    search: Optional[str] = Query(None, min_length=2, description="Search in name/description"),
+    asset_type: AssetType | None = Query(None, description="Filter by asset type"),
+    grade_level: int | None = Query(None, ge=1, le=12, description="Filter by grade level"),
+    subject_area: str | None = Query(None, description="Filter by subject area"),
+    search: str | None = Query(None, min_length=2, description="Search in name/description"),
     limit: int = Query(20, ge=1, le=100, description="Maximum results"),
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """
     List available Roblox assets with filtering options.
@@ -723,7 +726,7 @@ async def list_assets(
 async def deploy_environment(
     request: EnvironmentDeploymentRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
 ):
     """
@@ -778,7 +781,7 @@ async def deploy_environment(
 
 
 @router.get("/environments/{deployment_id}/status", response_model=EnvironmentDeploymentResponse)
-async def get_deployment_status(deployment_id: str, current_user: Dict = Depends(get_current_user)):
+async def get_deployment_status(deployment_id: str, current_user: dict = Depends(get_current_user)):
     """
     Get the status of an environment deployment.
     """
@@ -808,7 +811,7 @@ async def get_deployment_status(deployment_id: str, current_user: Dict = Depends
 async def sync_with_studio(
     request: StudioSyncRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
 ):
     """
@@ -859,7 +862,7 @@ async def sync_with_studio(
 
 @router.websocket("/environments/{environment_id}/realtime")
 async def environment_realtime(
-    websocket: WebSocket, environment_id: str, current_user: Dict = Depends(get_current_user)
+    websocket: WebSocket, environment_id: str, current_user: dict = Depends(get_current_user)
 ):
     """
     Real-time WebSocket connection for environment monitoring.
@@ -911,8 +914,8 @@ async def environment_realtime(
         logger.info(f"WebSocket disconnected for environment {environment_id}")
 
 
-@router.get("/environments/active", response_model=List[RobloxEnvironmentStatus])
-async def get_active_environments(current_user: Dict = Depends(get_current_user)):
+@router.get("/environments/active", response_model=list[RobloxEnvironmentStatus])
+async def get_active_environments(current_user: dict = Depends(get_current_user)):
     """
     Get list of currently active Roblox environments.
     """
@@ -932,13 +935,13 @@ async def get_active_environments(current_user: Dict = Depends(get_current_user)
         )
 
 
-@router.get("/marketplace/browse", response_model=List[AssetResponse])
+@router.get("/marketplace/browse", response_model=list[AssetResponse])
 async def browse_marketplace(
-    category: Optional[AssetType] = Query(None, description="Asset category"),
-    grade_level: Optional[int] = Query(None, ge=1, le=12, description="Grade level"),
+    category: AssetType | None = Query(None, description="Asset category"),
+    grade_level: int | None = Query(None, ge=1, le=12, description="Grade level"),
     featured: bool = Query(False, description="Show only featured assets"),
     limit: int = Query(20, ge=1, le=100, description="Maximum results"),
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Browse the educational asset marketplace.

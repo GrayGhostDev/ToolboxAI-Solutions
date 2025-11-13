@@ -1,20 +1,24 @@
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
+
 
 @pytest.fixture
 def mock_db_connection():
     """Mock database connection for tests"""
-    with patch('psycopg2.connect') as mock_connect:
+    with patch("psycopg2.connect") as mock_connect:
         mock_conn = Mock()
         mock_cursor = Mock()
         mock_conn.cursor.return_value = mock_cursor
         mock_connect.return_value = mock_conn
         yield mock_conn
+
 
 """
 Basic System Validation Tests
@@ -22,7 +26,6 @@ Basic System Validation Tests
 Tests core system functionality without database dependencies.
 """
 
-import json
 import time
 from unittest.mock import Mock, patch
 
@@ -31,8 +34,8 @@ from fastapi.testclient import TestClient
 
 # Import application components
 try:
-    from apps.backend.main import app
     from apps.backend.core.config import settings
+    from apps.backend.main import app
 except ImportError as e:
     pytest.skip(f"Required modules not available: {e}", allow_module_level=True)
 
@@ -43,14 +46,14 @@ class TestSystemHealth:
     def test_app_import_successful(self):
         """Test that the FastAPI app can be imported without errors"""
         assert app is not None
-        assert hasattr(app, 'routes')
+        assert hasattr(app, "routes")
         assert len(app.routes) > 0
 
     def test_settings_configuration(self):
         """Test that settings are properly configured"""
         assert settings is not None
-        assert hasattr(settings, 'database_url')
-        assert hasattr(settings, 'redis_url')
+        assert hasattr(settings, "database_url")
+        assert hasattr(settings, "redis_url")
 
     def test_health_endpoint(self):
         """Test the main health endpoint"""
@@ -76,10 +79,7 @@ class TestSystemHealth:
             # Test preflight request
             response = client.options(
                 "/health",
-                headers={
-                    "Origin": "http://localhost:3000",
-                    "Access-Control-Request-Method": "GET"
-                }
+                headers={"Origin": "http://localhost:3000", "Access-Control-Request-Method": "GET"},
             )
             # Should handle CORS requests
             assert response.status_code in [200, 204]
@@ -96,13 +96,10 @@ class TestAgentSystem:
             data = response.json()
             assert "agents" in data or "status" in data
 
-    @patch('apps.backend.agents.agent.generate_educational_content')
+    @patch("apps.backend.agents.agent.generate_educational_content")
     def test_content_generation_endpoint_mock(self, mock_gen):
         """Test content generation endpoint with mocked LLM"""
-        mock_gen.return_value = {
-            "content": "Test content",
-            "metadata": {"topic": "fractions"}
-        }
+        mock_gen.return_value = {"content": "Test content", "metadata": {"topic": "fractions"}}
 
         with TestClient(app) as client:
             test_request = {
@@ -110,7 +107,7 @@ class TestAgentSystem:
                 "grade_level": "5th",
                 "content_type": "lesson",
                 "topic": "fractions",
-                "requirements": "Interactive lesson with examples"
+                "requirements": "Interactive lesson with examples",
             }
             response = client.post("/api/v1/content/generate", json=test_request)
             # Should get either success or auth error (depending on setup)
@@ -149,10 +146,7 @@ class TestSecurityFeatures:
         """Test that authentication endpoints are available"""
         with TestClient(app) as client:
             # Test login endpoint exists
-            login_data = {
-                "username": "test@example.com",
-                "password": "invalid"
-            }
+            login_data = {"username": "test@example.com", "password": "invalid"}
             response = client.post("/api/v1/auth/login", json=login_data)
             # Should return auth error or validation error, not 404
             assert response.status_code in [400, 401, 422]
@@ -191,10 +185,9 @@ class TestSystemIntegration:
         """Test Pusher integration availability"""
         with TestClient(app) as client:
             # Test Pusher auth endpoint
-            response = client.post("/pusher/auth", json={
-                "socket_id": "test_socket",
-                "channel_name": "private-test"
-            })
+            response = client.post(
+                "/pusher/auth", json={"socket_id": "test_socket", "channel_name": "private-test"}
+            )
             # Should return auth response or error, not 404
             assert response.status_code in [200, 401, 403, 422]
 
@@ -221,7 +214,7 @@ def run_basic_system_validation():
         "security": True,
         "performance": True,
         "integration": True,
-        "critical_issues": []
+        "critical_issues": [],
     }
 
     try:
@@ -251,6 +244,7 @@ if __name__ == "__main__":
     # Test app import
     try:
         from apps.backend.main import app
+
         print("✓ FastAPI app import successful")
     except Exception as e:
         print(f"✗ FastAPI app import failed: {e}")
@@ -286,4 +280,6 @@ if __name__ == "__main__":
     print("\n✓ All critical systems are operational!")
     print("✓ Error handling agents properly implemented")
     print("✓ System ready for comprehensive testing")
-    print("\nRun 'pytest tests/integration/test_system_validation_basic.py -v' for detailed test results")
+    print(
+        "\nRun 'pytest tests/integration/test_system_validation_basic.py -v' for detailed test results"
+    )

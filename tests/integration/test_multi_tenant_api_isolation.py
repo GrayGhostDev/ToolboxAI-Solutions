@@ -11,19 +11,19 @@ Each test creates resources for multiple organizations and verifies that:
 Run with: pytest tests/integration/test_multi_tenant_api_isolation.py -v
 """
 
+from uuid import UUID, uuid4
+
 import pytest
-from uuid import uuid4, UUID
 from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.main import app
-from database.models.agent_models import AgentInstance, AgentExecution
-from database.models.roblox_models import RobloxEnvironment, RobloxAsset
-from database.models.content_pipeline_models import ContentGeneration, ContentReview
-from database.models.payment import Subscription, Invoice
-from database.models.models import User, Organization
-
+from database.models.agent_models import AgentInstance
+from database.models.content_pipeline_models import ContentGeneration
+from database.models.models import User
+from database.models.payment import Subscription
+from database.models.roblox_models import RobloxEnvironment
 
 # ============================================================================
 # Fixtures
@@ -81,7 +81,9 @@ async def auth_token_org_a(user_org_a: User) -> str:
     """JWT token for Organization A user"""
     from apps.backend.core.auth import create_access_token
 
-    return create_access_token({"sub": str(user_org_a.id), "organization_id": str(user_org_a.organization_id)})
+    return create_access_token(
+        {"sub": str(user_org_a.id), "organization_id": str(user_org_a.organization_id)}
+    )
 
 
 @pytest.fixture
@@ -89,7 +91,9 @@ async def auth_token_org_b(user_org_b: User) -> str:
     """JWT token for Organization B user"""
     from apps.backend.core.auth import create_access_token
 
-    return create_access_token({"sub": str(user_org_b.id), "organization_id": str(user_org_b.organization_id)})
+    return create_access_token(
+        {"sub": str(user_org_b.id), "organization_id": str(user_org_b.organization_id)}
+    )
 
 
 @pytest.fixture
@@ -597,4 +601,7 @@ async def test_cross_organization_resource_access_blocked(
             endpoint,
             headers={"Authorization": f"Bearer {auth_token_org_b}"},
         )
-        assert response.status_code in [403, 404], f"Endpoint {endpoint} should block cross-org access"
+        assert response.status_code in [
+            403,
+            404,
+        ], f"Endpoint {endpoint} should block cross-org access"

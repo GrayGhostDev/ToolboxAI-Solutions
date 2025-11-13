@@ -17,14 +17,14 @@ Version: 1.0.0
 """
 
 import asyncio
-import json
 import logging
-from datetime import datetime, timezone
-from typing import Dict, Any, Optional, Callable, List
+from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from typing import Any
 
 # Pusher integration
-from apps.backend.services.pusher import trigger_event, AGENT_CHANNELS, AGENT_EVENTS
+from apps.backend.services.pusher import AGENT_CHANNELS, AGENT_EVENTS, trigger_event
 
 # Supabase integration
 from apps.backend.services.supabase_service import get_supabase_service
@@ -38,8 +38,8 @@ class RealtimeEvent:
 
     table: str
     event_type: str  # INSERT, UPDATE, DELETE
-    old_record: Optional[Dict[str, Any]]
-    new_record: Optional[Dict[str, Any]]
+    old_record: dict[str, Any] | None
+    new_record: dict[str, Any] | None
     timestamp: datetime
     schema: str = "public"
 
@@ -54,8 +54,8 @@ class RealtimeIntegrationService:
 
     def __init__(self):
         self.supabase_service = get_supabase_service()
-        self.active_subscriptions: Dict[str, Any] = {}
-        self.event_handlers: Dict[str, List[Callable]] = {}
+        self.active_subscriptions: dict[str, Any] = {}
+        self.event_handlers: dict[str, list[Callable]] = {}
         self.is_running = False
         self._setup_event_handlers()
 
@@ -130,7 +130,7 @@ class RealtimeIntegrationService:
         except Exception as e:
             logger.error(f"Failed to subscribe to {table_name}: {e}")
 
-    async def _process_realtime_event(self, table_name: str, payload: Dict[str, Any]):
+    async def _process_realtime_event(self, table_name: str, payload: dict[str, Any]):
         """Process a real-time event from Supabase"""
         try:
             # Extract event data
@@ -378,7 +378,7 @@ class RealtimeIntegrationService:
             except ValueError:
                 logger.warning(f"Handler not found for {table_name}")
 
-    async def get_status(self) -> Dict[str, Any]:
+    async def get_status(self) -> dict[str, Any]:
         """Get real-time integration service status"""
         return {
             "running": self.is_running,
@@ -392,7 +392,7 @@ class RealtimeIntegrationService:
 
 
 # Global service instance
-_realtime_integration_service: Optional[RealtimeIntegrationService] = None
+_realtime_integration_service: RealtimeIntegrationService | None = None
 
 
 def get_realtime_integration_service() -> RealtimeIntegrationService:
@@ -425,9 +425,9 @@ class RealtimeHealthMonitor:
     """
 
     def __init__(self):
-        self.event_counts: Dict[str, int] = {}
-        self.error_counts: Dict[str, int] = {}
-        self.last_event_times: Dict[str, datetime] = {}
+        self.event_counts: dict[str, int] = {}
+        self.error_counts: dict[str, int] = {}
+        self.last_event_times: dict[str, datetime] = {}
         self.start_time = datetime.now(timezone.utc)
 
     def record_event(self, table_name: str, event_type: str):
@@ -442,7 +442,7 @@ class RealtimeHealthMonitor:
         self.error_counts[key] = self.error_counts.get(key, 0) + 1
         logger.error(f"Real-time error for {table_name}: {error}")
 
-    def get_health_report(self) -> Dict[str, Any]:
+    def get_health_report(self) -> dict[str, Any]:
         """Get health report for real-time integration"""
         now = datetime.now(timezone.utc)
         uptime = (now - self.start_time).total_seconds()
@@ -464,7 +464,7 @@ class RealtimeHealthMonitor:
 
 
 # Global health monitor
-_realtime_health_monitor: Optional[RealtimeHealthMonitor] = None
+_realtime_health_monitor: RealtimeHealthMonitor | None = None
 
 
 def get_realtime_health_monitor() -> RealtimeHealthMonitor:

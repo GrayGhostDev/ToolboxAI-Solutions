@@ -1,25 +1,28 @@
-import pytest_asyncio
+from unittest.mock import Mock, patch
 
 import pytest
-from unittest.mock import Mock, patch
+
 
 @pytest.fixture
 def mock_db_connection():
     """Mock database connection for tests"""
-    with patch('psycopg2.connect') as mock_connect:
+    with patch("psycopg2.connect") as mock_connect:
         mock_conn = Mock()
         mock_cursor = Mock()
         mock_conn.cursor.return_value = mock_cursor
         mock_connect.return_value = mock_conn
         yield mock_conn
 
+
 #!/usr/bin/env python
 """End-to-end integration test for AI Chat system with Roblox content generation"""
 
 import asyncio
-import httpx
 import json
 from datetime import datetime
+
+import httpx
+
 
 @pytest.mark.asyncio
 async def test_full_chat_flow():
@@ -39,7 +42,7 @@ async def test_full_chat_flow():
             response = await client.post(
                 f"{base_url}/api/v1/ai-chat/conversations",
                 json={"title": "Integration Test Chat", "context": {"test": True}},
-                headers={"Authorization": "Bearer test"}  # Mock auth
+                headers={"Authorization": "Bearer test"},  # Mock auth
             )
             if response.status_code == 201:
                 conversation = response.json()
@@ -61,7 +64,7 @@ async def test_full_chat_flow():
             response = await client.post(
                 f"{base_url}/api/v1/ai-chat/conversations/{conversation['id']}/messages",
                 json={"message": "Create a math lesson for grade 5 about fractions"},
-                headers={"Authorization": "Bearer test"}
+                headers={"Authorization": "Bearer test"},
             )
             if response.status_code == 200:
                 message = response.json()
@@ -79,19 +82,25 @@ async def test_full_chat_flow():
         print("\n3. Testing WebSocket streaming...")
         try:
             from tests.fixtures.pusher_mocks import MockPusherService
+
             ws_url = f"pusher://app_key@cluster/{conversation['id']}"
 
             try:
                 async with async_mock_pusher_context() as pusher:
-        # Connect using Pusherws_url) as websocket:
+                    # Connect using Pusherws_url) as websocket:
                     # Send a message via WebSocket
-                    await pusher.trigger(json.dumps({
-                        "type": "message",
-                        "content": "Design a space station environment for science experiments"
-                    }))
+                    await pusher.trigger(
+                        json.dumps(
+                            {
+                                "type": "message",
+                                "content": "Design a space station environment for science experiments",
+                            }
+                        )
+                    )
 
                     # Wait for streaming response
                     response_count = 0
+
                     async def receive_with_timeout():
                         try:
                             return await asyncio.wait_for(websocket.recv(), timeout=2.0)
@@ -104,7 +113,9 @@ async def test_full_chat_flow():
                             message = json.loads(data)
                             if message.get("type") == "stream_token":
                                 response_count += 1
-                                print(f"   Received token {response_count}: {message.get('content', '')[:20]}")
+                                print(
+                                    f"   Received token {response_count}: {message.get('content', '')[:20]}"
+                                )
 
                     if response_count > 0:
                         print(f"✅ WebSocket streaming working ({response_count} tokens received)")
@@ -125,11 +136,11 @@ async def test_full_chat_flow():
         try:
             response = await client.get(
                 f"{base_url}/api/v1/ai-chat/conversations/{conversation['id']}",
-                headers={"Authorization": "Bearer test"}
+                headers={"Authorization": "Bearer test"},
             )
             if response.status_code == 200:
                 conv_data = response.json()
-                message_count = len(conv_data.get('messages', []))
+                message_count = len(conv_data.get("messages", []))
                 print(f"✅ Retrieved conversation with {message_count} messages")
                 results.append(f"PASS: Conversation retrieval ({message_count} messages)")
             else:
@@ -151,9 +162,9 @@ async def test_full_chat_flow():
                     "difficulty": "intermediate",
                     "learning_objectives": ["Understanding fractions", "Adding fractions"],
                     "description": "Interactive lesson about fractions",
-                    "ai_assistance": True
+                    "ai_assistance": True,
                 },
-                headers={"Authorization": "Bearer test"}
+                headers={"Authorization": "Bearer test"},
             )
             if response.status_code in [200, 201, 202]:
                 content = response.json()
@@ -171,8 +182,7 @@ async def test_full_chat_flow():
         print("\n6. Listing conversations...")
         try:
             response = await client.get(
-                f"{base_url}/api/v1/ai-chat/conversations",
-                headers={"Authorization": "Bearer test"}
+                f"{base_url}/api/v1/ai-chat/conversations", headers={"Authorization": "Bearer test"}
             )
             if response.status_code == 200:
                 conversations = response.json()
@@ -190,7 +200,7 @@ async def test_full_chat_flow():
         try:
             response = await client.delete(
                 f"{base_url}/api/v1/ai-chat/conversations/{conversation['id']}",
-                headers={"Authorization": "Bearer test"}
+                headers={"Authorization": "Bearer test"},
             )
             if response.status_code == 204:
                 print(f"✅ Conversation archived successfully")
@@ -203,6 +213,7 @@ async def test_full_chat_flow():
             results.append(f"FAIL: Archive conversation - {e}")
 
     return results
+
 
 def print_summary(results):
     """Print test summary"""
@@ -244,6 +255,7 @@ def print_summary(results):
 
     return pass_rate
 
+
 async def main():
     """Run the integration test"""
     print(f"Starting integration test at {datetime.now()}")
@@ -271,6 +283,7 @@ async def main():
 
     # Return exit code
     return 0 if pass_rate >= 85 else 1
+
 
 if __name__ == "__main__":
     exit_code = asyncio.run(main())

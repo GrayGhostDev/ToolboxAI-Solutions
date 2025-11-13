@@ -11,25 +11,21 @@ Comprehensive health checks for all load balancing components:
 """
 
 import asyncio
-import time
-from typing import Dict, List, Optional, Any, Tuple
-from datetime import datetime, timedelta
-from enum import Enum
 import logging
+import time
+from datetime import datetime
+from enum import Enum
 
-from fastapi import APIRouter, HTTPException, Depends, Request
-from fastapi.responses import JSONResponse
 import httpx
 import redis.asyncio as aioredis
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
-
-from apps.backend.core.circuit_breaker import get_circuit_breaker, CircuitBreakerState
-from apps.backend.core.rate_limiter import RateLimiter
-from database.replica_router import get_replica_router, ConsistencyLevel
 from apps.backend.core.websocket_cluster import get_websocket_cluster
-from apps.backend.core.edge_cache import EdgeCache, CacheTier
-from apps.backend.core.global_load_balancer import GlobalLoadBalancer
+from database.replica_router import get_replica_router
+from fastapi import APIRouter, Depends
+from fastapi.responses import JSONResponse
+
+from apps.backend.core.circuit_breaker import CircuitBreakerState, get_circuit_breaker
+from apps.backend.core.edge_cache import CacheTier, EdgeCache
+from apps.backend.core.rate_limiter import RateLimiter
 
 logger = logging.getLogger(__name__)
 
@@ -70,10 +66,10 @@ class ComponentHealth:
 class LoadBalancingHealthChecker:
     """Comprehensive health checker for load balancing infrastructure"""
 
-    def __init__(self, redis_url: Optional[str] = None, enable_detailed_checks: bool = True):
+    def __init__(self, redis_url: str | None = None, enable_detailed_checks: bool = True):
         self.redis_url = redis_url or "redis://localhost:6379"
         self.enable_detailed = enable_detailed_checks
-        self.redis_client: Optional[aioredis.Redis] = None
+        self.redis_client: aioredis.Redis | None = None
         self.last_check_time = {}
         self.cached_results = {}
         self.cache_ttl = 30  # seconds
@@ -434,7 +430,7 @@ class LoadBalancingHealthChecker:
         health.latency_ms = (time.time() - start_time) * 1000
         return health
 
-    async def check_all_components(self) -> Dict[str, ComponentHealth]:
+    async def check_all_components(self) -> dict[str, ComponentHealth]:
         """Run all health checks"""
         checks = [
             self.check_circuit_breakers(),
@@ -461,8 +457,8 @@ class LoadBalancingHealthChecker:
         return health_results
 
     def calculate_overall_health(
-        self, component_health: Dict[str, ComponentHealth]
-    ) -> Tuple[HealthStatus, str]:
+        self, component_health: dict[str, ComponentHealth]
+    ) -> tuple[HealthStatus, str]:
         """Calculate overall system health from component health"""
 
         statuses = [h.status for h in component_health.values()]
@@ -478,7 +474,7 @@ class LoadBalancingHealthChecker:
 
 
 # Global health checker instance
-_health_checker: Optional[LoadBalancingHealthChecker] = None
+_health_checker: LoadBalancingHealthChecker | None = None
 
 
 async def get_health_checker() -> LoadBalancingHealthChecker:

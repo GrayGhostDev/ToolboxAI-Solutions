@@ -17,22 +17,22 @@ import os
 import sys
 import time
 from datetime import datetime, timezone
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
 import pytest
 from aiohttp import web
-from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
 
 # Import the module under test
 from core.coordinators.health_check import (
     AgentCoordinatorHealthCheck,
     AgentCoordinatorHealthServer,
-    run_health_server
+    run_health_server,
 )
-
 
 # ============================================================================
 # Test Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def mock_coordinator():
@@ -46,20 +46,17 @@ def mock_coordinator():
     mock_agent2 = Mock()
     mock_agent2.is_healthy = Mock(return_value=True)
 
-    coordinator.agents = {
-        'agent_1': mock_agent1,
-        'agent_2': mock_agent2
-    }
+    coordinator.agents = {"agent_1": mock_agent1, "agent_2": mock_agent2}
 
     # Mock communication
     coordinator.message_queue = []
-    coordinator.communication_channels = ['channel_1', 'channel_2']
+    coordinator.communication_channels = ["channel_1", "channel_2"]
     coordinator.last_activity = datetime.now(timezone.utc).isoformat()
 
     # Mock swarms
     mock_swarm = Mock()
     mock_swarm.is_healthy = Mock(return_value=True)
-    coordinator.swarms = {'swarm_1': mock_swarm}
+    coordinator.swarms = {"swarm_1": mock_swarm}
 
     # Mock SPARC manager
     mock_sparc = Mock()
@@ -98,6 +95,7 @@ def health_server(mock_coordinator):
 # Test AgentCoordinatorHealthCheck Initialization
 # ============================================================================
 
+
 class TestHealthCheckInitialization:
     """Test health check initialization"""
 
@@ -129,6 +127,7 @@ class TestHealthCheckInitialization:
 # Test Basic Health Check
 # ============================================================================
 
+
 class TestBasicHealthCheck:
     """Test basic health check functionality"""
 
@@ -143,7 +142,10 @@ class TestBasicHealthCheck:
         assert result["version"] == "1.1.0"
         assert "uptime_seconds" in result
         assert result["process_id"] == os.getpid()
-        assert result["python_version"] == f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+        assert (
+            result["python_version"]
+            == f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+        )
 
     @pytest.mark.asyncio
     async def test_basic_health_uptime(self, health_checker):
@@ -159,7 +161,7 @@ class TestBasicHealthCheck:
         result = await health_checker.basic_health()
 
         # Should be able to parse as ISO timestamp
-        timestamp = datetime.fromisoformat(result["timestamp"].replace('Z', '+00:00'))
+        timestamp = datetime.fromisoformat(result["timestamp"].replace("Z", "+00:00"))
         assert isinstance(timestamp, datetime)
 
     @pytest.mark.asyncio
@@ -176,19 +178,48 @@ class TestBasicHealthCheck:
 # Test Detailed Health Check
 # ============================================================================
 
+
 class TestDetailedHealthCheck:
     """Test detailed health check functionality"""
 
     @pytest.mark.asyncio
     async def test_detailed_health_all_healthy(self, health_checker):
         """Test detailed health when all systems healthy"""
-        with patch.object(health_checker, '_check_coordinator_service', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_active_agents', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_agent_communication', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_swarm_coordination', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_sparc_framework', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_task_queue', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_system_resources', new=AsyncMock(return_value={'healthy': True})):
+        with (
+            patch.object(
+                health_checker,
+                "_check_coordinator_service",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+            patch.object(
+                health_checker,
+                "_check_active_agents",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+            patch.object(
+                health_checker,
+                "_check_agent_communication",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+            patch.object(
+                health_checker,
+                "_check_swarm_coordination",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+            patch.object(
+                health_checker,
+                "_check_sparc_framework",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+            patch.object(
+                health_checker, "_check_task_queue", new=AsyncMock(return_value={"healthy": True})
+            ),
+            patch.object(
+                health_checker,
+                "_check_system_resources",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+        ):
 
             result = await health_checker.detailed_health()
 
@@ -200,13 +231,41 @@ class TestDetailedHealthCheck:
     @pytest.mark.asyncio
     async def test_detailed_health_one_unhealthy(self, health_checker):
         """Test detailed health when one system unhealthy"""
-        with patch.object(health_checker, '_check_coordinator_service', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_active_agents', new=AsyncMock(return_value={'healthy': False})), \
-             patch.object(health_checker, '_check_agent_communication', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_swarm_coordination', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_sparc_framework', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_task_queue', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_system_resources', new=AsyncMock(return_value={'healthy': True})):
+        with (
+            patch.object(
+                health_checker,
+                "_check_coordinator_service",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+            patch.object(
+                health_checker,
+                "_check_active_agents",
+                new=AsyncMock(return_value={"healthy": False}),
+            ),
+            patch.object(
+                health_checker,
+                "_check_agent_communication",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+            patch.object(
+                health_checker,
+                "_check_swarm_coordination",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+            patch.object(
+                health_checker,
+                "_check_sparc_framework",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+            patch.object(
+                health_checker, "_check_task_queue", new=AsyncMock(return_value={"healthy": True})
+            ),
+            patch.object(
+                health_checker,
+                "_check_system_resources",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+        ):
 
             result = await health_checker.detailed_health()
 
@@ -216,13 +275,41 @@ class TestDetailedHealthCheck:
     @pytest.mark.asyncio
     async def test_detailed_health_includes_duration(self, health_checker):
         """Test detailed health includes check duration"""
-        with patch.object(health_checker, '_check_coordinator_service', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_active_agents', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_agent_communication', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_swarm_coordination', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_sparc_framework', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_task_queue', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_system_resources', new=AsyncMock(return_value={'healthy': True})):
+        with (
+            patch.object(
+                health_checker,
+                "_check_coordinator_service",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+            patch.object(
+                health_checker,
+                "_check_active_agents",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+            patch.object(
+                health_checker,
+                "_check_agent_communication",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+            patch.object(
+                health_checker,
+                "_check_swarm_coordination",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+            patch.object(
+                health_checker,
+                "_check_sparc_framework",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+            patch.object(
+                health_checker, "_check_task_queue", new=AsyncMock(return_value={"healthy": True})
+            ),
+            patch.object(
+                health_checker,
+                "_check_system_resources",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+        ):
 
             result = await health_checker.detailed_health()
 
@@ -233,13 +320,41 @@ class TestDetailedHealthCheck:
     @pytest.mark.asyncio
     async def test_detailed_health_includes_uptime(self, health_checker):
         """Test detailed health includes uptime"""
-        with patch.object(health_checker, '_check_coordinator_service', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_active_agents', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_agent_communication', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_swarm_coordination', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_sparc_framework', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_task_queue', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_system_resources', new=AsyncMock(return_value={'healthy': True})):
+        with (
+            patch.object(
+                health_checker,
+                "_check_coordinator_service",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+            patch.object(
+                health_checker,
+                "_check_active_agents",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+            patch.object(
+                health_checker,
+                "_check_agent_communication",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+            patch.object(
+                health_checker,
+                "_check_swarm_coordination",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+            patch.object(
+                health_checker,
+                "_check_sparc_framework",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+            patch.object(
+                health_checker, "_check_task_queue", new=AsyncMock(return_value={"healthy": True})
+            ),
+            patch.object(
+                health_checker,
+                "_check_system_resources",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+        ):
 
             result = await health_checker.detailed_health()
 
@@ -250,6 +365,7 @@ class TestDetailedHealthCheck:
 # ============================================================================
 # Test Coordinator Service Check
 # ============================================================================
+
 
 class TestCoordinatorServiceCheck:
     """Test coordinator service health check"""
@@ -276,7 +392,7 @@ class TestCoordinatorServiceCheck:
     @pytest.mark.asyncio
     async def test_check_coordinator_without_reference(self, health_checker_no_coordinator):
         """Test coordinator check without direct reference"""
-        with patch('socket.socket') as mock_socket:
+        with patch("socket.socket") as mock_socket:
             mock_sock_instance = MagicMock()
             mock_sock_instance.__enter__ = Mock(return_value=mock_sock_instance)
             mock_sock_instance.__exit__ = Mock(return_value=False)
@@ -291,7 +407,7 @@ class TestCoordinatorServiceCheck:
     @pytest.mark.asyncio
     async def test_check_coordinator_port_not_open(self, health_checker_no_coordinator):
         """Test coordinator check when port not open"""
-        with patch('socket.socket') as mock_socket:
+        with patch("socket.socket") as mock_socket:
             mock_sock_instance = MagicMock()
             mock_sock_instance.__enter__ = Mock(return_value=mock_sock_instance)
             mock_sock_instance.__exit__ = Mock(return_value=False)
@@ -317,6 +433,7 @@ class TestCoordinatorServiceCheck:
 # Test Active Agents Check
 # ============================================================================
 
+
 class TestActiveAgentsCheck:
     """Test active agents health check"""
 
@@ -333,7 +450,7 @@ class TestActiveAgentsCheck:
     @pytest.mark.asyncio
     async def test_check_agents_one_unhealthy(self, health_checker):
         """Test agents check with one unhealthy agent"""
-        health_checker.coordinator.agents['agent_1'].is_healthy = Mock(return_value=False)
+        health_checker.coordinator.agents["agent_1"].is_healthy = Mock(return_value=False)
 
         result = await health_checker._check_active_agents()
 
@@ -344,13 +461,13 @@ class TestActiveAgentsCheck:
     @pytest.mark.asyncio
     async def test_check_agents_by_type(self, health_checker):
         """Test agents check tracks agent types"""
-        health_checker.coordinator.agents['agent_1'].__class__.__name__ = 'ContentAgent'
-        health_checker.coordinator.agents['agent_2'].__class__.__name__ = 'QuizAgent'
+        health_checker.coordinator.agents["agent_1"].__class__.__name__ = "ContentAgent"
+        health_checker.coordinator.agents["agent_2"].__class__.__name__ = "QuizAgent"
 
         result = await health_checker._check_active_agents()
 
-        assert 'ContentAgent' in result["details"]["agent_types"]
-        assert 'QuizAgent' in result["details"]["agent_types"]
+        assert "ContentAgent" in result["details"]["agent_types"]
+        assert "QuizAgent" in result["details"]["agent_types"]
 
     @pytest.mark.asyncio
     async def test_check_agents_no_coordinator(self, health_checker_no_coordinator):
@@ -364,7 +481,7 @@ class TestActiveAgentsCheck:
         """Test agents without is_healthy method assumed healthy"""
         # Create agent without is_healthy method
         mock_agent = Mock(spec=[])  # No methods
-        health_checker.coordinator.agents = {'agent_1': mock_agent}
+        health_checker.coordinator.agents = {"agent_1": mock_agent}
 
         result = await health_checker._check_active_agents()
 
@@ -374,7 +491,9 @@ class TestActiveAgentsCheck:
     @pytest.mark.asyncio
     async def test_check_agents_exception(self, health_checker):
         """Test agents check with exception"""
-        health_checker.coordinator.agents = {'agent_1': Mock(is_healthy=Mock(side_effect=Exception("Test error")))}
+        health_checker.coordinator.agents = {
+            "agent_1": Mock(is_healthy=Mock(side_effect=Exception("Test error")))
+        }
 
         result = await health_checker._check_active_agents()
 
@@ -385,6 +504,7 @@ class TestActiveAgentsCheck:
 # ============================================================================
 # Test Agent Communication Check
 # ============================================================================
+
 
 class TestAgentCommunicationCheck:
     """Test agent communication health check"""
@@ -438,6 +558,7 @@ class TestAgentCommunicationCheck:
 # Test Swarm Coordination Check
 # ============================================================================
 
+
 class TestSwarmCoordinationCheck:
     """Test swarm coordination health check"""
 
@@ -454,7 +575,7 @@ class TestSwarmCoordinationCheck:
     @pytest.mark.asyncio
     async def test_check_swarm_unhealthy(self, health_checker):
         """Test swarm check with unhealthy swarm"""
-        health_checker.coordinator.swarms['swarm_1'].is_healthy = Mock(return_value=False)
+        health_checker.coordinator.swarms["swarm_1"].is_healthy = Mock(return_value=False)
 
         result = await health_checker._check_swarm_coordination()
 
@@ -467,7 +588,7 @@ class TestSwarmCoordinationCheck:
         """Test swarm check with multiple swarms"""
         mock_swarm2 = Mock()
         mock_swarm2.is_healthy = Mock(return_value=True)
-        health_checker.coordinator.swarms['swarm_2'] = mock_swarm2
+        health_checker.coordinator.swarms["swarm_2"] = mock_swarm2
 
         result = await health_checker._check_swarm_coordination()
 
@@ -483,7 +604,9 @@ class TestSwarmCoordinationCheck:
     @pytest.mark.asyncio
     async def test_check_swarm_exception(self, health_checker):
         """Test swarm check with exception"""
-        health_checker.coordinator.swarms = {'swarm_1': Mock(is_healthy=Mock(side_effect=Exception("Test error")))}
+        health_checker.coordinator.swarms = {
+            "swarm_1": Mock(is_healthy=Mock(side_effect=Exception("Test error")))
+        }
 
         result = await health_checker._check_swarm_coordination()
 
@@ -495,13 +618,14 @@ class TestSwarmCoordinationCheck:
 # Test SPARC Framework Check
 # ============================================================================
 
+
 class TestSPARCFrameworkCheck:
     """Test SPARC framework health check"""
 
     @pytest.mark.asyncio
     async def test_check_sparc_healthy(self, health_checker):
         """Test SPARC check when healthy"""
-        with patch.dict('sys.modules', {'core.sparc.state_manager': Mock()}):
+        with patch.dict("sys.modules", {"core.sparc.state_manager": Mock()}):
             result = await health_checker._check_sparc_framework()
 
             assert result["healthy"] is True
@@ -511,8 +635,8 @@ class TestSPARCFrameworkCheck:
     @pytest.mark.asyncio
     async def test_check_sparc_active_workflows(self, health_checker):
         """Test SPARC check with active workflows"""
-        with patch.dict('sys.modules', {'core.sparc.state_manager': Mock()}):
-            health_checker.coordinator.sparc_manager.active_workflows = ['workflow_1', 'workflow_2']
+        with patch.dict("sys.modules", {"core.sparc.state_manager": Mock()}):
+            health_checker.coordinator.sparc_manager.active_workflows = ["workflow_1", "workflow_2"]
 
             result = await health_checker._check_sparc_framework()
 
@@ -521,8 +645,8 @@ class TestSPARCFrameworkCheck:
     @pytest.mark.asyncio
     async def test_check_sparc_import_error(self, health_checker):
         """Test SPARC check with import error"""
-        with patch.dict('sys.modules', {'core.sparc.state_manager': None}):
-            with patch('builtins.__import__', side_effect=ImportError("Module not found")):
+        with patch.dict("sys.modules", {"core.sparc.state_manager": None}):
+            with patch("builtins.__import__", side_effect=ImportError("Module not found")):
                 result = await health_checker._check_sparc_framework()
 
                 assert result["healthy"] is False
@@ -531,7 +655,7 @@ class TestSPARCFrameworkCheck:
     @pytest.mark.asyncio
     async def test_check_sparc_no_coordinator(self, health_checker_no_coordinator):
         """Test SPARC check without coordinator"""
-        with patch.dict('sys.modules', {'core.sparc.state_manager': Mock()}):
+        with patch.dict("sys.modules", {"core.sparc.state_manager": Mock()}):
             result = await health_checker_no_coordinator._check_sparc_framework()
 
             assert result["details"]["active_workflows"] == 0
@@ -539,7 +663,7 @@ class TestSPARCFrameworkCheck:
     @pytest.mark.asyncio
     async def test_check_sparc_exception(self, health_checker):
         """Test SPARC check with exception"""
-        with patch('builtins.__import__', side_effect=Exception("Test error")):
+        with patch("builtins.__import__", side_effect=Exception("Test error")):
             result = await health_checker._check_sparc_framework()
 
             assert result["healthy"] is False
@@ -549,6 +673,7 @@ class TestSPARCFrameworkCheck:
 # ============================================================================
 # Test Task Queue Check
 # ============================================================================
+
 
 class TestTaskQueueCheck:
     """Test task queue health check"""
@@ -576,8 +701,8 @@ class TestTaskQueueCheck:
     @pytest.mark.asyncio
     async def test_check_queue_completed_and_failed(self, health_checker):
         """Test queue check tracks completed and failed"""
-        health_checker.coordinator.task_queue.completed = ['task_1', 'task_2']
-        health_checker.coordinator.task_queue.failed = ['task_3']
+        health_checker.coordinator.task_queue.completed = ["task_1", "task_2"]
+        health_checker.coordinator.task_queue.failed = ["task_3"]
 
         result = await health_checker._check_task_queue()
 
@@ -606,16 +731,19 @@ class TestTaskQueueCheck:
 # Test System Resources Check
 # ============================================================================
 
+
 class TestSystemResourcesCheck:
     """Test system resources health check"""
 
     @pytest.mark.asyncio
     async def test_check_resources_healthy(self, health_checker):
         """Test resources check when healthy"""
-        with patch('psutil.Process') as mock_process, \
-             patch('psutil.cpu_percent', return_value=50.0), \
-             patch('psutil.virtual_memory') as mock_memory, \
-             patch('psutil.disk_usage') as mock_disk:
+        with (
+            patch("psutil.Process") as mock_process,
+            patch("psutil.cpu_percent", return_value=50.0),
+            patch("psutil.virtual_memory") as mock_memory,
+            patch("psutil.disk_usage") as mock_disk,
+        ):
 
             # Mock process metrics
             mock_proc_instance = Mock()
@@ -628,7 +756,9 @@ class TestSystemResourcesCheck:
 
             # Mock system metrics
             mock_memory.return_value = Mock(percent=60.0)
-            mock_disk.return_value = Mock(free=100*1024*1024*1024, total=500*1024*1024*1024)  # 100GB free of 500GB
+            mock_disk.return_value = Mock(
+                free=100 * 1024 * 1024 * 1024, total=500 * 1024 * 1024 * 1024
+            )  # 100GB free of 500GB
 
             result = await health_checker._check_system_resources()
 
@@ -641,10 +771,12 @@ class TestSystemResourcesCheck:
     @pytest.mark.asyncio
     async def test_check_resources_high_cpu(self, health_checker):
         """Test resources check with high CPU"""
-        with patch('psutil.Process') as mock_process, \
-             patch('psutil.cpu_percent', return_value=50.0), \
-             patch('psutil.virtual_memory') as mock_memory, \
-             patch('psutil.disk_usage') as mock_disk:
+        with (
+            patch("psutil.Process") as mock_process,
+            patch("psutil.cpu_percent", return_value=50.0),
+            patch("psutil.virtual_memory") as mock_memory,
+            patch("psutil.disk_usage") as mock_disk,
+        ):
 
             mock_proc_instance = Mock()
             mock_proc_instance.cpu_percent.return_value = 85.0  # High CPU
@@ -655,7 +787,9 @@ class TestSystemResourcesCheck:
             mock_process.return_value = mock_proc_instance
 
             mock_memory.return_value = Mock(percent=60.0)
-            mock_disk.return_value = Mock(free=100*1024*1024*1024, total=500*1024*1024*1024)
+            mock_disk.return_value = Mock(
+                free=100 * 1024 * 1024 * 1024, total=500 * 1024 * 1024 * 1024
+            )
 
             result = await health_checker._check_system_resources()
 
@@ -664,10 +798,12 @@ class TestSystemResourcesCheck:
     @pytest.mark.asyncio
     async def test_check_resources_high_memory(self, health_checker):
         """Test resources check with high memory"""
-        with patch('psutil.Process') as mock_process, \
-             patch('psutil.cpu_percent', return_value=50.0), \
-             patch('psutil.virtual_memory') as mock_memory, \
-             patch('psutil.disk_usage') as mock_disk:
+        with (
+            patch("psutil.Process") as mock_process,
+            patch("psutil.cpu_percent", return_value=50.0),
+            patch("psutil.virtual_memory") as mock_memory,
+            patch("psutil.disk_usage") as mock_disk,
+        ):
 
             mock_proc_instance = Mock()
             mock_proc_instance.cpu_percent.return_value = 30.0
@@ -678,7 +814,9 @@ class TestSystemResourcesCheck:
             mock_process.return_value = mock_proc_instance
 
             mock_memory.return_value = Mock(percent=60.0)
-            mock_disk.return_value = Mock(free=100*1024*1024*1024, total=500*1024*1024*1024)
+            mock_disk.return_value = Mock(
+                free=100 * 1024 * 1024 * 1024, total=500 * 1024 * 1024 * 1024
+            )
 
             result = await health_checker._check_system_resources()
 
@@ -687,10 +825,12 @@ class TestSystemResourcesCheck:
     @pytest.mark.asyncio
     async def test_check_resources_low_disk(self, health_checker):
         """Test resources check with low disk space"""
-        with patch('psutil.Process') as mock_process, \
-             patch('psutil.cpu_percent', return_value=50.0), \
-             patch('psutil.virtual_memory') as mock_memory, \
-             patch('psutil.disk_usage') as mock_disk:
+        with (
+            patch("psutil.Process") as mock_process,
+            patch("psutil.cpu_percent", return_value=50.0),
+            patch("psutil.virtual_memory") as mock_memory,
+            patch("psutil.disk_usage") as mock_disk,
+        ):
 
             mock_proc_instance = Mock()
             mock_proc_instance.cpu_percent.return_value = 30.0
@@ -701,7 +841,9 @@ class TestSystemResourcesCheck:
             mock_process.return_value = mock_proc_instance
 
             mock_memory.return_value = Mock(percent=60.0)
-            mock_disk.return_value = Mock(free=5*1024*1024*1024, total=500*1024*1024*1024)  # Only 5GB free
+            mock_disk.return_value = Mock(
+                free=5 * 1024 * 1024 * 1024, total=500 * 1024 * 1024 * 1024
+            )  # Only 5GB free
 
             result = await health_checker._check_system_resources()
 
@@ -710,11 +852,13 @@ class TestSystemResourcesCheck:
     @pytest.mark.asyncio
     async def test_check_resources_includes_load_average(self, health_checker):
         """Test resources check includes load average if available"""
-        with patch('psutil.Process') as mock_process, \
-             patch('psutil.cpu_percent', return_value=50.0), \
-             patch('psutil.virtual_memory') as mock_memory, \
-             patch('psutil.disk_usage') as mock_disk, \
-             patch('os.getloadavg', return_value=(1.0, 1.5, 2.0)):
+        with (
+            patch("psutil.Process") as mock_process,
+            patch("psutil.cpu_percent", return_value=50.0),
+            patch("psutil.virtual_memory") as mock_memory,
+            patch("psutil.disk_usage") as mock_disk,
+            patch("os.getloadavg", return_value=(1.0, 1.5, 2.0)),
+        ):
 
             mock_proc_instance = Mock()
             mock_proc_instance.cpu_percent.return_value = 30.0
@@ -725,7 +869,9 @@ class TestSystemResourcesCheck:
             mock_process.return_value = mock_proc_instance
 
             mock_memory.return_value = Mock(percent=60.0)
-            mock_disk.return_value = Mock(free=100*1024*1024*1024, total=500*1024*1024*1024)
+            mock_disk.return_value = Mock(
+                free=100 * 1024 * 1024 * 1024, total=500 * 1024 * 1024 * 1024
+            )
 
             result = await health_checker._check_system_resources()
 
@@ -734,7 +880,7 @@ class TestSystemResourcesCheck:
     @pytest.mark.asyncio
     async def test_check_resources_exception(self, health_checker):
         """Test resources check with exception"""
-        with patch('psutil.Process', side_effect=Exception("Test error")):
+        with patch("psutil.Process", side_effect=Exception("Test error")):
             result = await health_checker._check_system_resources()
 
             assert result["healthy"] is False
@@ -744,6 +890,7 @@ class TestSystemResourcesCheck:
 # ============================================================================
 # Test AgentCoordinatorHealthServer Initialization
 # ============================================================================
+
 
 class TestHealthServerInitialization:
     """Test health server initialization"""
@@ -778,17 +925,18 @@ class TestHealthServerInitialization:
 
         # Check routes are registered
         routes = [route.path for route in health_server.app.router.routes()]
-        assert '/health' in routes
-        assert '/health/detailed' in routes
-        assert '/health/agents' in routes
-        assert '/health/live' in routes
-        assert '/health/ready' in routes
-        assert '/metrics' in routes
+        assert "/health" in routes
+        assert "/health/detailed" in routes
+        assert "/health/agents" in routes
+        assert "/health/live" in routes
+        assert "/health/ready" in routes
+        assert "/metrics" in routes
 
 
 # ============================================================================
 # Test Health Server Route Handlers
 # ============================================================================
+
 
 class TestHealthServerRouteHandlers:
     """Test health server HTTP route handlers"""
@@ -798,37 +946,48 @@ class TestHealthServerRouteHandlers:
         """Test basic health handler returns 200"""
         mock_request = Mock()
 
-        with patch.object(health_server.health_checker, 'basic_health', new=AsyncMock(return_value={
-            'status': 'healthy',
-            'timestamp': datetime.now(timezone.utc).isoformat()
-        })):
+        with patch.object(
+            health_server.health_checker,
+            "basic_health",
+            new=AsyncMock(
+                return_value={
+                    "status": "healthy",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                }
+            ),
+        ):
             response = await health_server.basic_health_handler(mock_request)
 
             assert response.status == 200
             body = json.loads(response.body)
-            assert body['status'] == 'healthy'
+            assert body["status"] == "healthy"
 
     @pytest.mark.asyncio
     async def test_basic_health_handler_exception(self, health_server):
         """Test basic health handler with exception"""
         mock_request = Mock()
 
-        with patch.object(health_server.health_checker, 'basic_health', new=AsyncMock(side_effect=Exception("Test error"))):
+        with patch.object(
+            health_server.health_checker,
+            "basic_health",
+            new=AsyncMock(side_effect=Exception("Test error")),
+        ):
             response = await health_server.basic_health_handler(mock_request)
 
             assert response.status == 500
             body = json.loads(response.body)
-            assert body['status'] == 'error'
+            assert body["status"] == "error"
 
     @pytest.mark.asyncio
     async def test_detailed_health_handler_healthy(self, health_server):
         """Test detailed health handler when healthy"""
         mock_request = Mock()
 
-        with patch.object(health_server.health_checker, 'detailed_health', new=AsyncMock(return_value={
-            'status': 'healthy',
-            'checks': {}
-        })):
+        with patch.object(
+            health_server.health_checker,
+            "detailed_health",
+            new=AsyncMock(return_value={"status": "healthy", "checks": {}}),
+        ):
             response = await health_server.detailed_health_handler(mock_request)
 
             assert response.status == 200
@@ -838,10 +997,11 @@ class TestHealthServerRouteHandlers:
         """Test detailed health handler when unhealthy"""
         mock_request = Mock()
 
-        with patch.object(health_server.health_checker, 'detailed_health', new=AsyncMock(return_value={
-            'status': 'unhealthy',
-            'checks': {}
-        })):
+        with patch.object(
+            health_server.health_checker,
+            "detailed_health",
+            new=AsyncMock(return_value={"status": "unhealthy", "checks": {}}),
+        ):
             response = await health_server.detailed_health_handler(mock_request)
 
             assert response.status == 503
@@ -851,15 +1011,16 @@ class TestHealthServerRouteHandlers:
         """Test agents health handler"""
         mock_request = Mock()
 
-        with patch.object(health_server.health_checker, '_check_active_agents', new=AsyncMock(return_value={
-            'healthy': True,
-            'details': {'total_agents': 2}
-        })):
+        with patch.object(
+            health_server.health_checker,
+            "_check_active_agents",
+            new=AsyncMock(return_value={"healthy": True, "details": {"total_agents": 2}}),
+        ):
             response = await health_server.agents_health_handler(mock_request)
 
             assert response.status == 200
             body = json.loads(response.body)
-            assert body['status'] == 'healthy'
+            assert body["status"] == "healthy"
 
     @pytest.mark.asyncio
     async def test_liveness_handler(self, health_server):
@@ -870,45 +1031,51 @@ class TestHealthServerRouteHandlers:
 
         assert response.status == 200
         body = json.loads(response.body)
-        assert body['status'] == 'alive'
-        assert body['service'] == 'agent-coordinator'
+        assert body["status"] == "alive"
+        assert body["service"] == "agent-coordinator"
 
     @pytest.mark.asyncio
     async def test_readiness_handler_ready(self, health_server):
         """Test Kubernetes readiness handler when ready"""
         mock_request = Mock()
 
-        with patch.object(health_server.health_checker, 'detailed_health', new=AsyncMock(return_value={
-            'status': 'healthy',
-            'checks': {}
-        })):
+        with patch.object(
+            health_server.health_checker,
+            "detailed_health",
+            new=AsyncMock(return_value={"status": "healthy", "checks": {}}),
+        ):
             response = await health_server.readiness_handler(mock_request)
 
             assert response.status == 200
             body = json.loads(response.body)
-            assert body['status'] == 'ready'
+            assert body["status"] == "ready"
 
     @pytest.mark.asyncio
     async def test_readiness_handler_not_ready(self, health_server):
         """Test Kubernetes readiness handler when not ready"""
         mock_request = Mock()
 
-        with patch.object(health_server.health_checker, 'detailed_health', new=AsyncMock(return_value={
-            'status': 'unhealthy',
-            'checks': {}
-        })):
+        with patch.object(
+            health_server.health_checker,
+            "detailed_health",
+            new=AsyncMock(return_value={"status": "unhealthy", "checks": {}}),
+        ):
             response = await health_server.readiness_handler(mock_request)
 
             assert response.status == 503
             body = json.loads(response.body)
-            assert body['status'] == 'not_ready'
+            assert body["status"] == "not_ready"
 
     @pytest.mark.asyncio
     async def test_readiness_handler_exception(self, health_server):
         """Test readiness handler with exception"""
         mock_request = Mock()
 
-        with patch.object(health_server.health_checker, 'detailed_health', new=AsyncMock(side_effect=Exception("Test error"))):
+        with patch.object(
+            health_server.health_checker,
+            "detailed_health",
+            new=AsyncMock(side_effect=Exception("Test error")),
+        ):
             response = await health_server.readiness_handler(mock_request)
 
             assert response.status == 503
@@ -918,6 +1085,7 @@ class TestHealthServerRouteHandlers:
 # Test Prometheus Metrics Handler
 # ============================================================================
 
+
 class TestPrometheusMetricsHandler:
     """Test Prometheus metrics generation"""
 
@@ -926,77 +1094,82 @@ class TestPrometheusMetricsHandler:
         """Test metrics handler generates Prometheus format"""
         mock_request = Mock()
 
-        with patch.object(health_server.health_checker, 'detailed_health', new=AsyncMock(return_value={
-            'uptime_seconds': 123.45,
-            'checks': {
-                'active_agents': {
-                    'details': {
-                        'total_agents': 5,
-                        'healthy_agents': 4,
-                        'error_agents': 1
-                    }
-                },
-                'task_queue': {
-                    'details': {
-                        'pending_tasks': 10,
-                        'completed_tasks': 50,
-                        'failed_tasks': 2
-                    }
-                },
-                'system_resources': {
-                    'details': {
-                        'process_cpu_percent': 30.0,
-                        'process_memory_percent': 40.0
-                    }
+        with patch.object(
+            health_server.health_checker,
+            "detailed_health",
+            new=AsyncMock(
+                return_value={
+                    "uptime_seconds": 123.45,
+                    "checks": {
+                        "active_agents": {
+                            "details": {"total_agents": 5, "healthy_agents": 4, "error_agents": 1}
+                        },
+                        "task_queue": {
+                            "details": {
+                                "pending_tasks": 10,
+                                "completed_tasks": 50,
+                                "failed_tasks": 2,
+                            }
+                        },
+                        "system_resources": {
+                            "details": {"process_cpu_percent": 30.0, "process_memory_percent": 40.0}
+                        },
+                    },
                 }
-            }
-        })):
+            ),
+        ):
             response = await health_server.metrics_handler(mock_request)
 
             assert response.status == 200
-            assert response.content_type == 'text/plain; version=0.0.4; charset=utf-8'
+            assert response.content_type == "text/plain; version=0.0.4; charset=utf-8"
 
             # Check metrics are in response
             text = response.text
-            assert 'agent_coordinator_up' in text
-            assert 'agent_coordinator_uptime_seconds' in text
-            assert 'agent_coordinator_total_agents' in text
-            assert 'agent_coordinator_pending_tasks' in text
+            assert "agent_coordinator_up" in text
+            assert "agent_coordinator_uptime_seconds" in text
+            assert "agent_coordinator_total_agents" in text
+            assert "agent_coordinator_pending_tasks" in text
 
     @pytest.mark.asyncio
     async def test_metrics_handler_exception(self, health_server):
         """Test metrics handler with exception"""
         mock_request = Mock()
 
-        with patch.object(health_server.health_checker, 'detailed_health', new=AsyncMock(side_effect=Exception("Test error"))):
+        with patch.object(
+            health_server.health_checker,
+            "detailed_health",
+            new=AsyncMock(side_effect=Exception("Test error")),
+        ):
             response = await health_server.metrics_handler(mock_request)
 
             assert response.status == 500
-            assert '# Error generating metrics' in response.text
+            assert "# Error generating metrics" in response.text
 
     @pytest.mark.asyncio
     async def test_metrics_handler_format(self, health_server):
         """Test metrics are in correct Prometheus format"""
         mock_request = Mock()
 
-        with patch.object(health_server.health_checker, 'detailed_health', new=AsyncMock(return_value={
-            'uptime_seconds': 100,
-            'checks': {}
-        })):
+        with patch.object(
+            health_server.health_checker,
+            "detailed_health",
+            new=AsyncMock(return_value={"uptime_seconds": 100, "checks": {}}),
+        ):
             response = await health_server.metrics_handler(mock_request)
 
             text = response.text
-            lines = text.strip().split('\n')
+            lines = text.strip().split("\n")
 
             # Each line should be in format: metric_name {labels} value
             for line in lines:
                 if line.strip():
-                    assert '{' in line or '}' in line or line.startswith('#')
+                    assert "{" in line or "}" in line or line.startswith("#")
 
 
 # ============================================================================
 # Test Server Lifecycle
 # ============================================================================
+
 
 class TestHealthServerLifecycle:
     """Test health server lifecycle management"""
@@ -1004,8 +1177,10 @@ class TestHealthServerLifecycle:
     @pytest.mark.asyncio
     async def test_start_server(self, health_server):
         """Test server startup"""
-        with patch('aiohttp.web.AppRunner') as mock_runner, \
-             patch('aiohttp.web.TCPSite') as mock_site:
+        with (
+            patch("aiohttp.web.AppRunner") as mock_runner,
+            patch("aiohttp.web.TCPSite") as mock_site,
+        ):
 
             mock_runner_instance = Mock()
             mock_runner_instance.setup = AsyncMock()
@@ -1026,7 +1201,9 @@ class TestHealthServerLifecycle:
         """Test run_health_server handles KeyboardInterrupt"""
         mock_coordinator = Mock()
 
-        with patch('core.coordinators.health_check.AgentCoordinatorHealthServer') as mock_server_class:
+        with patch(
+            "core.coordinators.health_check.AgentCoordinatorHealthServer"
+        ) as mock_server_class:
             mock_server = Mock()
             mock_runner = Mock()
             mock_runner.cleanup = AsyncMock()
@@ -1039,7 +1216,7 @@ class TestHealthServerLifecycle:
                     raise KeyboardInterrupt()
                 await asyncio.sleep(duration)
 
-            with patch('asyncio.sleep', side_effect=sleep_then_interrupt):
+            with patch("asyncio.sleep", side_effect=sleep_then_interrupt):
                 await run_health_server(coordinator=mock_coordinator, port=8889)
 
             mock_runner.cleanup.assert_called_once()
@@ -1048,6 +1225,7 @@ class TestHealthServerLifecycle:
 # ============================================================================
 # Test Edge Cases and Error Handling
 # ============================================================================
+
 
 class TestEdgeCases:
     """Test edge cases and error handling"""
@@ -1059,7 +1237,7 @@ class TestEdgeCases:
 
         # Should not raise exception
         result = await checker.basic_health()
-        assert result['status'] == 'healthy'
+        assert result["status"] == "healthy"
 
     @pytest.mark.asyncio
     async def test_health_check_with_missing_attributes(self):
@@ -1069,7 +1247,7 @@ class TestEdgeCases:
 
         # Should handle gracefully
         result = await checker.detailed_health()
-        assert 'status' in result
+        assert "status" in result
 
     @pytest.mark.asyncio
     async def test_concurrent_health_checks(self, health_checker):
@@ -1080,18 +1258,18 @@ class TestEdgeCases:
 
         # All should succeed
         assert len(results) == 10
-        assert all(r['status'] == 'healthy' for r in results)
+        assert all(r["status"] == "healthy" for r in results)
 
     @pytest.mark.asyncio
     async def test_uptime_increases_over_time(self, health_checker):
         """Test uptime calculation increases"""
         result1 = await health_checker.basic_health()
-        uptime1 = result1['uptime_seconds']
+        uptime1 = result1["uptime_seconds"]
 
         await asyncio.sleep(0.1)
 
         result2 = await health_checker.basic_health()
-        uptime2 = result2['uptime_seconds']
+        uptime2 = result2["uptime_seconds"]
 
         assert uptime2 > uptime1
 
@@ -1099,6 +1277,7 @@ class TestEdgeCases:
 # ============================================================================
 # Test Data Classes and Helpers
 # ============================================================================
+
 
 class TestDataClasses:
     """Test data classes and helper functions"""
@@ -1116,19 +1295,47 @@ class TestDataClasses:
         """Test all timestamps use consistent ISO format"""
         basic = await health_checker.basic_health()
 
-        with patch.object(health_checker, '_check_coordinator_service', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_active_agents', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_agent_communication', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_swarm_coordination', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_sparc_framework', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_task_queue', new=AsyncMock(return_value={'healthy': True})), \
-             patch.object(health_checker, '_check_system_resources', new=AsyncMock(return_value={'healthy': True})):
+        with (
+            patch.object(
+                health_checker,
+                "_check_coordinator_service",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+            patch.object(
+                health_checker,
+                "_check_active_agents",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+            patch.object(
+                health_checker,
+                "_check_agent_communication",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+            patch.object(
+                health_checker,
+                "_check_swarm_coordination",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+            patch.object(
+                health_checker,
+                "_check_sparc_framework",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+            patch.object(
+                health_checker, "_check_task_queue", new=AsyncMock(return_value={"healthy": True})
+            ),
+            patch.object(
+                health_checker,
+                "_check_system_resources",
+                new=AsyncMock(return_value={"healthy": True}),
+            ),
+        ):
 
             detailed = await health_checker.detailed_health()
 
         # Both should have parseable timestamps
-        basic_ts = datetime.fromisoformat(basic['timestamp'].replace('Z', '+00:00'))
-        detailed_ts = datetime.fromisoformat(detailed['timestamp'].replace('Z', '+00:00'))
+        basic_ts = datetime.fromisoformat(basic["timestamp"].replace("Z", "+00:00"))
+        detailed_ts = datetime.fromisoformat(detailed["timestamp"].replace("Z", "+00:00"))
 
         assert isinstance(basic_ts, datetime)
         assert isinstance(detailed_ts, datetime)

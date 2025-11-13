@@ -1,7 +1,8 @@
-import pytest_asyncio
+from unittest.mock import Mock, patch
 
 import pytest
-from unittest.mock import Mock, patch
+import pytest_asyncio
+
 
 @pytest.fixture
 def mock_db_connection():
@@ -22,29 +23,31 @@ import asyncio
 import os
 import sys
 import time
-import pytest
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from typing import List
-from concurrent.futures import ThreadPoolExecutor, as_completed
+
+import pytest
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlalchemy import text
+
 from database.connection_manager import (
+    cleanup_databases,
     db_manager,
-    get_session,
     get_async_session,
+    get_session,
     health_check,
     initialize_databases,
-    cleanup_databases
 )
 from database.core.pool_config import (
     PoolConfig,
     PoolConfigFactory,
-    PoolStrategy,
     PoolMonitor,
-    get_database_pool_config
+    PoolStrategy,
+    get_database_pool_config,
 )
 from tests.test_logger import TestLogger
 

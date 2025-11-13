@@ -9,10 +9,10 @@ Version: 1.0.0
 Standards: pytest-async, Python 3.12
 """
 
+from uuid import uuid4
+
 import pytest
 from httpx import AsyncClient
-from uuid import uuid4
-from datetime import datetime, timedelta
 
 
 class TestAnalyticsReports:
@@ -405,16 +405,19 @@ class TestAnalyticsDashboards:
         assert response.status_code in [201, 404]
 
 
-from httpx import AsyncClient, ASGITransport
 import pytest
+from httpx import ASGITransport, AsyncClient
+
 
 @pytest.fixture
 async def async_client() -> AsyncClient:
     """Async HTTP client fixture bound to FastAPI app"""
     from apps.backend.main import app  # adjust import path if needed
+
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
+
 
 @pytest.fixture
 def auth_headers():

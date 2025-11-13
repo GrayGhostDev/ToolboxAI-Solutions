@@ -3,24 +3,25 @@ OAuth 2.1 API Routes
 Phase 3 Implementation - OAuth 2.1 compliant endpoints
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Response, Form
-from fastapi.responses import RedirectResponse, HTMLResponse
-from pydantic import BaseModel, Field, HttpUrl
-from typing import Optional, Dict, Any, List
-from datetime import datetime
+import json
 import logging
 import secrets
-import json
-from urllib.parse import urlencode, parse_qs
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+from urllib.parse import parse_qs, urlencode
 
-from apps.backend.api.auth.oauth21 import (
-    OAuth21Server,
-    AuthorizationRequest,
-    TokenRequest,
-    PKCEMethod,
-    get_oauth_server
-)
+from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response, status
+from fastapi.responses import HTMLResponse, RedirectResponse
+from pydantic import BaseModel, Field, HttpUrl
+
 from apps.backend.api.auth.auth import get_current_user
+from apps.backend.api.auth.oauth21 import (
+    AuthorizationRequest,
+    OAuth21Server,
+    PKCEMethod,
+    TokenRequest,
+    get_oauth_server,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +29,10 @@ router = APIRouter(prefix="/oauth", tags=["OAuth 2.1"])
 
 # ===== Request/Response Models =====
 
+
 class AuthorizeParams(BaseModel):
     """OAuth 2.1 Authorization Request Parameters"""
+
     client_id: str = Field(..., description="Client application ID")
     redirect_uri: HttpUrl = Field(..., description="Redirect URI")
     response_type: str = Field(..., pattern="^code$", description="Must be 'code'")
@@ -38,8 +41,10 @@ class AuthorizeParams(BaseModel):
     code_challenge: str = Field(..., min_length=43, max_length=128, description="PKCE challenge")
     code_challenge_method: PKCEMethod = Field(PKCEMethod.S256, description="PKCE method")
 
+
 class TokenRequestForm(BaseModel):
     """OAuth 2.1 Token Request"""
+
     grant_type: str = Field(..., description="Grant type")
     code: Optional[str] = Field(None, description="Authorization code")
     redirect_uri: Optional[HttpUrl] = Field(None, description="Redirect URI")
@@ -49,22 +54,28 @@ class TokenRequestForm(BaseModel):
     refresh_token: Optional[str] = Field(None, description="Refresh token for renewal")
     scope: Optional[str] = Field(None, description="Requested scopes")
 
+
 class IntrospectRequest(BaseModel):
     """Token Introspection Request"""
+
     token: str = Field(..., description="Token to introspect")
     token_type_hint: Optional[str] = Field(None, description="Token type hint")
     client_id: str = Field(..., description="Client ID")
     client_secret: Optional[str] = Field(None, description="Client secret")
 
+
 class RevokeRequest(BaseModel):
     """Token Revocation Request"""
+
     token: str = Field(..., description="Token to revoke")
     token_type_hint: Optional[str] = Field(None, description="Token type hint")
     client_id: str = Field(..., description="Client ID")
     client_secret: Optional[str] = Field(None, description="Client secret")
 
+
 class ClientRegistrationRequest(BaseModel):
     """Dynamic Client Registration"""
+
     client_name: str = Field(..., description="Human-readable client name")
     redirect_uris: List[HttpUrl] = Field(..., description="Redirect URIs")
     grant_types: List[str] = Field(["authorization_code"], description="Grant types")
@@ -78,7 +89,9 @@ class ClientRegistrationRequest(BaseModel):
     policy_uri: Optional[HttpUrl] = Field(None, description="Privacy policy")
     tos_uri: Optional[HttpUrl] = Field(None, description="Terms of service")
 
+
 # ===== Authorization Endpoints =====
+
 
 @router.get("/authorize", response_class=HTMLResponse)
 async def authorization_endpoint(
@@ -90,7 +103,7 @@ async def authorization_endpoint(
     state: str,
     code_challenge: str,
     code_challenge_method: str = "S256",
-    oauth_server: OAuth21Server = Depends(get_oauth_server)
+    oauth_server: OAuth21Server = Depends(get_oauth_server),
 ):
     """
     OAuth 2.1 Authorization Endpoint
@@ -103,7 +116,7 @@ async def authorization_endpoint(
         error_params = {
             "error": "unsupported_response_type",
             "error_description": "Only 'code' response type is supported",
-            "state": state
+            "state": state,
         }
         return RedirectResponse(f"{redirect_uri}?{urlencode(error_params)}")
 
@@ -111,7 +124,7 @@ async def authorization_endpoint(
         error_params = {
             "error": "invalid_request",
             "error_description": "Invalid code_challenge_method",
-            "state": state
+            "state": state,
         }
         return RedirectResponse(f"{redirect_uri}?{urlencode(error_params)}")
 
@@ -121,7 +134,7 @@ async def authorization_endpoint(
         error_params = {
             "error": "invalid_client",
             "error_description": "Client not found",
-            "state": state
+            "state": state,
         }
         return RedirectResponse(f"{redirect_uri}?{urlencode(error_params)}")
 
@@ -129,7 +142,7 @@ async def authorization_endpoint(
         error_params = {
             "error": "invalid_request",
             "error_description": "Invalid redirect_uri",
-            "state": state
+            "state": state,
         }
         return RedirectResponse(f"{redirect_uri}?{urlencode(error_params)}")
 
@@ -239,6 +252,7 @@ async def authorization_endpoint(
 
     return HTMLResponse(content=consent_html)
 
+
 @router.post("/authorize/consent")
 async def process_consent(
     request: Request,
@@ -250,7 +264,7 @@ async def process_consent(
     code_challenge: str = Form(...),
     code_challenge_method: str = Form("S256"),
     current_user: dict = Depends(get_current_user),
-    oauth_server: OAuth21Server = Depends(get_oauth_server)
+    oauth_server: OAuth21Server = Depends(get_oauth_server),
 ):
     """Process user consent decision"""
 
@@ -259,7 +273,7 @@ async def process_consent(
         error_params = {
             "error": "access_denied",
             "error_description": "User denied consent",
-            "state": state
+            "state": state,
         }
         return RedirectResponse(f"{redirect_uri}?{urlencode(error_params)}")
 
@@ -270,24 +284,20 @@ async def process_consent(
         scope=scope,
         state=state,
         code_challenge=code_challenge,
-        code_challenge_method=PKCEMethod(code_challenge_method)
+        code_challenge_method=PKCEMethod(code_challenge_method),
     )
 
     # Generate authorization code
-    auth_code = await oauth_server.create_authorization_request(
-        auth_request,
-        current_user["id"]
-    )
+    auth_code = await oauth_server.create_authorization_request(auth_request, current_user["id"])
 
     # Redirect with authorization code
-    success_params = {
-        "code": auth_code,
-        "state": state
-    }
+    success_params = {"code": auth_code, "state": state}
 
     return RedirectResponse(f"{redirect_uri}?{urlencode(success_params)}")
 
+
 # ===== Token Endpoints =====
+
 
 @router.post("/token", status_code=status.HTTP_200_OK)
 async def token_endpoint(
@@ -299,7 +309,7 @@ async def token_endpoint(
     code_verifier: Optional[str] = Form(None),
     refresh_token: Optional[str] = Form(None),
     scope: Optional[str] = Form(None),
-    oauth_server: OAuth21Server = Depends(get_oauth_server)
+    oauth_server: OAuth21Server = Depends(get_oauth_server),
 ):
     """
     OAuth 2.1 Token Endpoint
@@ -312,7 +322,7 @@ async def token_endpoint(
             if not code or not redirect_uri or not code_verifier:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Missing required parameters for authorization_code grant"
+                    detail="Missing required parameters for authorization_code grant",
                 )
 
             # Create token request
@@ -322,7 +332,7 @@ async def token_endpoint(
                 redirect_uri=redirect_uri,
                 client_id=client_id,
                 client_secret=client_secret,
-                code_verifier=code_verifier
+                code_verifier=code_verifier,
             )
 
             # Exchange code for tokens
@@ -331,22 +341,18 @@ async def token_endpoint(
         elif grant_type == "refresh_token":
             if not refresh_token:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Missing refresh_token"
+                    status_code=status.HTTP_400_BAD_REQUEST, detail="Missing refresh_token"
                 )
 
             # Refresh access token
             token_response = await oauth_server.refresh_access_token(
-                refresh_token,
-                client_id,
-                client_secret,
-                scope
+                refresh_token, client_id, client_secret, scope
             )
 
         else:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Unsupported grant_type: {grant_type}"
+                detail=f"Unsupported grant_type: {grant_type}",
             )
 
         return token_response
@@ -355,15 +361,12 @@ async def token_endpoint(
         raise
     except Exception as e:
         logger.error(f"Token endpoint error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid request"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid request")
+
 
 @router.post("/introspect", status_code=status.HTTP_200_OK)
 async def introspection_endpoint(
-    request: IntrospectRequest,
-    oauth_server: OAuth21Server = Depends(get_oauth_server)
+    request: IntrospectRequest, oauth_server: OAuth21Server = Depends(get_oauth_server)
 ):
     """
     Token Introspection Endpoint (RFC 7662)
@@ -374,29 +377,22 @@ async def introspection_endpoint(
     # Validate client credentials
     client = await oauth_server.get_client(request.client_id)
     if not client:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid client"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid client")
 
     if client.get("client_secret") and client["client_secret"] != request.client_secret:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid client credentials"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid client credentials"
         )
 
     # Introspect token
-    introspection = await oauth_server.introspect_token(
-        request.token,
-        request.token_type_hint
-    )
+    introspection = await oauth_server.introspect_token(request.token, request.token_type_hint)
 
     return introspection
 
+
 @router.post("/revoke", status_code=status.HTTP_200_OK)
 async def revocation_endpoint(
-    request: RevokeRequest,
-    oauth_server: OAuth21Server = Depends(get_oauth_server)
+    request: RevokeRequest, oauth_server: OAuth21Server = Depends(get_oauth_server)
 ):
     """
     Token Revocation Endpoint (RFC 7009)
@@ -407,33 +403,28 @@ async def revocation_endpoint(
     # Validate client credentials
     client = await oauth_server.get_client(request.client_id)
     if not client:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid client"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid client")
 
     if client.get("client_secret") and client["client_secret"] != request.client_secret:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid client credentials"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid client credentials"
         )
 
     # Revoke token
-    success = await oauth_server.revoke_token(
-        request.token,
-        request.token_type_hint
-    )
+    success = await oauth_server.revoke_token(request.token, request.token_type_hint)
 
     # Always return 200 OK per RFC 7009
     return {"revoked": success}
 
+
 # ===== Client Management =====
+
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def client_registration(
     request: ClientRegistrationRequest,
     current_user: dict = Depends(get_current_user),
-    oauth_server: OAuth21Server = Depends(get_oauth_server)
+    oauth_server: OAuth21Server = Depends(get_oauth_server),
 ):
     """
     Dynamic Client Registration Endpoint (RFC 7591)
@@ -445,7 +436,7 @@ async def client_registration(
     if current_user.get("role") not in ["developer", "admin"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient privileges to register clients"
+            detail="Insufficient privileges to register clients",
         )
 
     # Generate client credentials
@@ -474,7 +465,7 @@ async def client_registration(
         "tos_uri": str(request.tos_uri) if request.tos_uri else None,
         "owner_id": current_user["id"],
         "created_at": datetime.utcnow().isoformat(),
-        "client_id_issued_at": int(datetime.utcnow().timestamp())
+        "client_id_issued_at": int(datetime.utcnow().timestamp()),
     }
 
     # Store client
@@ -489,7 +480,7 @@ async def client_registration(
         "grant_types": request.grant_types,
         "response_types": request.response_types,
         "scope": request.scope,
-        "token_endpoint_auth_method": request.token_endpoint_auth_method
+        "token_endpoint_auth_method": request.token_endpoint_auth_method,
     }
 
     if client_secret:
@@ -498,10 +489,11 @@ async def client_registration(
 
     return response
 
+
 @router.get("/clients", status_code=status.HTTP_200_OK)
 async def list_clients(
     current_user: dict = Depends(get_current_user),
-    oauth_server: OAuth21Server = Depends(get_oauth_server)
+    oauth_server: OAuth21Server = Depends(get_oauth_server),
 ):
     """List OAuth clients owned by the current user"""
 
@@ -514,33 +506,30 @@ async def list_clients(
             "client_id": client["client_id"],
             "client_name": client["client_name"],
             "redirect_uris": client["redirect_uris"],
-            "created_at": client["created_at"]
+            "created_at": client["created_at"],
         }
         safe_clients.append(safe_client)
 
     return {"clients": safe_clients}
 
+
 @router.delete("/clients/{client_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_client(
     client_id: str,
     current_user: dict = Depends(get_current_user),
-    oauth_server: OAuth21Server = Depends(get_oauth_server)
+    oauth_server: OAuth21Server = Depends(get_oauth_server),
 ):
     """Delete an OAuth client"""
 
     # Get client
     client = await oauth_server.get_client(client_id)
     if not client:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Client not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Client not found")
 
     # Check ownership
     if client["owner_id"] != current_user["id"] and current_user.get("role") != "admin":
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to delete this client"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to delete this client"
         )
 
     # Delete client and all associated tokens
@@ -548,12 +537,12 @@ async def delete_client(
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
+
 # ===== JWKS Endpoint =====
 
+
 @router.get("/.well-known/jwks.json", status_code=status.HTTP_200_OK)
-async def jwks_endpoint(
-    oauth_server: OAuth21Server = Depends(get_oauth_server)
-):
+async def jwks_endpoint(oauth_server: OAuth21Server = Depends(get_oauth_server)):
     """
     JSON Web Key Set Endpoint
 
@@ -564,7 +553,9 @@ async def jwks_endpoint(
 
     return jwks
 
+
 # ===== OAuth Metadata =====
+
 
 @router.get("/.well-known/oauth-authorization-server", status_code=status.HTTP_200_OK)
 async def oauth_metadata():
@@ -596,32 +587,22 @@ async def oauth_metadata():
             "offline_access",
             "read",
             "write",
-            "admin"
+            "admin",
         ],
         "token_endpoint_auth_methods_supported": [
             "client_secret_post",
             "client_secret_basic",
-            "none"
+            "none",
         ],
-        "claims_supported": [
-            "sub",
-            "name",
-            "email",
-            "email_verified",
-            "picture",
-            "locale"
-        ],
+        "claims_supported": ["sub", "name", "email", "email_verified", "picture", "locale"],
         "code_challenge_methods_supported": ["S256", "plain"],
         "introspection_endpoint_auth_methods_supported": [
             "client_secret_post",
-            "client_secret_basic"
+            "client_secret_basic",
         ],
-        "revocation_endpoint_auth_methods_supported": [
-            "client_secret_post",
-            "client_secret_basic"
-        ],
+        "revocation_endpoint_auth_methods_supported": ["client_secret_post", "client_secret_basic"],
         "service_documentation": f"{base_url}/docs/oauth",
-        "ui_locales_supported": ["en-US"]
+        "ui_locales_supported": ["en-US"],
     }
 
     return metadata

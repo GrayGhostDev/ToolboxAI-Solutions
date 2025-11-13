@@ -1,16 +1,18 @@
 import pytest_asyncio
+
 """
 API Performance Tests
 Specific tests for API endpoint response times and throughput
 """
 
 import asyncio
-import time
-import pytest
-import aiohttp
-import statistics
-from typing import List, Dict, Any
 import json
+import statistics
+import time
+from typing import Any, Dict, List
+
+import aiohttp
+import pytest
 
 # Skip all tests in this module as they require external services
 pytestmark = pytest.mark.skip(reason="Performance tests require external services - run with --run-performance")

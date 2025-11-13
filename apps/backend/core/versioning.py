@@ -12,13 +12,13 @@ Comprehensive versioning strategies:
 import functools
 import logging
 import re
+from collections.abc import Callable
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from fastapi.routing import APIRoute
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, HTTPException, Request, status
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +38,8 @@ class APIVersion(BaseModel):
     major: int
     minor: int
     patch: int = 0
-    pre_release: Optional[str] = None
-    build: Optional[str] = None
+    pre_release: str | None = None
+    build: str | None = None
 
     def __str__(self):
         version = f"{self.major}.{self.minor}.{self.patch}"
@@ -107,7 +107,7 @@ class VersionedEndpoint:
         handler: Callable,
         version: APIVersion,
         deprecated: bool = False,
-        sunset_date: Optional[datetime] = None,
+        sunset_date: datetime | None = None,
     ):
         self.path = path
         self.method = method
@@ -139,9 +139,9 @@ class VersionManager:
         self.strategy = strategy
         self.header_name = header_name
         self.query_param_name = query_param_name
-        self.versions: Dict[str, APIVersion] = {}
-        self.endpoints: List[VersionedEndpoint] = []
-        self.routers: Dict[str, APIRouter] = {}
+        self.versions: dict[str, APIVersion] = {}
+        self.endpoints: list[VersionedEndpoint] = []
+        self.routers: dict[str, APIRouter] = {}
 
     def register_version(self, version_string: str) -> APIVersion:
         """Register a new API version"""
@@ -199,7 +199,7 @@ class VersionManager:
 
         return self.default_version
 
-    def version_deprecated(self, sunset_date: Optional[datetime] = None, message: str = None):
+    def version_deprecated(self, sunset_date: datetime | None = None, message: str = None):
         """Decorator to mark an endpoint as deprecated"""
 
         def decorator(func):
@@ -259,10 +259,10 @@ class VersionManager:
 class VersionNegotiator:
     """Handles content negotiation for API versions"""
 
-    def __init__(self, supported_versions: List[str]):
+    def __init__(self, supported_versions: list[str]):
         self.supported_versions = [APIVersion.parse(v) for v in supported_versions]
 
-    def negotiate(self, accept_header: str) -> Optional[APIVersion]:
+    def negotiate(self, accept_header: str) -> APIVersion | None:
         """Negotiate the best version based on Accept header"""
         # Parse accept header for version preferences
         preferences = self._parse_accept_header(accept_header)
@@ -274,7 +274,7 @@ class VersionNegotiator:
 
         return None
 
-    def _parse_accept_header(self, accept_header: str) -> List[Tuple[APIVersion, float]]:
+    def _parse_accept_header(self, accept_header: str) -> list[tuple[APIVersion, float]]:
         """Parse Accept header for version preferences"""
         preferences = []
 

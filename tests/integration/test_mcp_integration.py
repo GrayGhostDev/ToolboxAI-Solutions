@@ -1,7 +1,8 @@
-import pytest_asyncio
+from unittest.mock import Mock, patch
 
 import pytest
-from unittest.mock import Mock, patch
+import pytest_asyncio
+
 
 @pytest.fixture
 def mock_db_connection():
@@ -22,6 +23,7 @@ Tests WebSocket server on port 9876 for context management and agent communicati
 import asyncio
 import os
 
+
 def make_json_serializable(obj):
     """Convert non-serializable objects to serializable format."""
     if hasattr(obj, '__dict__'):
@@ -36,11 +38,13 @@ def make_json_serializable(obj):
 import json
 import time
 from datetime import datetime
-from tests.fixtures.pusher_mocks import MockPusherService
-import httpx
-import requests
 from typing import Dict, List, Optional
+
+import httpx
 import pytest
+import requests
+
+from tests.fixtures.pusher_mocks import MockPusherService
 
 # Skip all tests in this module as they require external services
 pytestmark = pytest.mark.skipif(

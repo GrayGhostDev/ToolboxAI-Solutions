@@ -30,19 +30,17 @@ Usage:
 """
 
 import logging
+from collections.abc import Callable
 from functools import wraps
-from typing import List, Callable, Optional, Any
-from fastapi import HTTPException, status, Depends
 
-from database.models import User
-from apps.backend.core.deps import get_current_user
+from fastapi import HTTPException, status
+
 from apps.backend.core.security.rbac_manager import rbac_manager
-
 
 logger = logging.getLogger(__name__)
 
 
-def require_role(allowed_roles: List[str]):
+def require_role(allowed_roles: list[str]):
     """
     Decorator to require specific role(s) for endpoint access.
 
@@ -60,16 +58,16 @@ def require_role(allowed_roles: List[str]):
     Raises:
         HTTPException 403: If user doesn't have required role
     """
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args, **kwargs):
             # Extract user from kwargs
-            user = kwargs.get('user') or kwargs.get('current_user')
+            user = kwargs.get("user") or kwargs.get("current_user")
 
             if not user:
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Authentication required"
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required"
                 )
 
             # Check if user has any of the allowed roles
@@ -86,12 +84,13 @@ def require_role(allowed_roles: List[str]):
                 )
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail=f"Insufficient permissions. Required role: {', '.join(allowed_roles)}"
+                    detail=f"Insufficient permissions. Required role: {', '.join(allowed_roles)}",
                 )
 
             return await func(*args, **kwargs)
 
         return wrapper
+
     return decorator
 
 
@@ -117,16 +116,16 @@ def require_permission(permission: str):
     Raises:
         HTTPException 403: If user doesn't have required permission
     """
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args, **kwargs):
             # Extract user from kwargs
-            user = kwargs.get('user') or kwargs.get('current_user')
+            user = kwargs.get("user") or kwargs.get("current_user")
 
             if not user:
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Authentication required"
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required"
                 )
 
             # Check permission
@@ -137,17 +136,18 @@ def require_permission(permission: str):
                 )
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail=f"Insufficient permissions. Required: {permission}"
+                    detail=f"Insufficient permissions. Required: {permission}",
                 )
 
             logger.debug(f"Permission granted: {permission} for user {user.id}")
             return await func(*args, **kwargs)
 
         return wrapper
+
     return decorator
 
 
-def require_permissions(permissions: List[str], require_all: bool = True):
+def require_permissions(permissions: list[str], require_all: bool = True):
     """
     Decorator to require multiple permissions for endpoint access.
 
@@ -165,49 +165,43 @@ def require_permissions(permissions: List[str], require_all: bool = True):
     Raises:
         HTTPException 403: If user doesn't have required permissions
     """
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args, **kwargs):
-            user = kwargs.get('user') or kwargs.get('current_user')
+            user = kwargs.get("user") or kwargs.get("current_user")
 
             if not user:
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Authentication required"
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required"
                 )
 
             if require_all:
                 # User must have ALL permissions
                 for perm in permissions:
                     if not rbac_manager.has_permission(user, perm):
-                        logger.warning(
-                            f"Permission denied for user {user.id}. "
-                            f"Missing: {perm}"
-                        )
+                        logger.warning(f"Permission denied for user {user.id}. " f"Missing: {perm}")
                         raise HTTPException(
                             status_code=status.HTTP_403_FORBIDDEN,
-                            detail=f"Insufficient permissions. Missing: {perm}"
+                            detail=f"Insufficient permissions. Missing: {perm}",
                         )
             else:
                 # User needs ANY one permission
-                has_any = any(
-                    rbac_manager.has_permission(user, perm)
-                    for perm in permissions
-                )
+                has_any = any(rbac_manager.has_permission(user, perm) for perm in permissions)
 
                 if not has_any:
                     logger.warning(
-                        f"Permission denied for user {user.id}. "
-                        f"Required one of: {permissions}"
+                        f"Permission denied for user {user.id}. " f"Required one of: {permissions}"
                     )
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
-                        detail=f"Insufficient permissions. Required one of: {', '.join(permissions)}"
+                        detail=f"Insufficient permissions. Required one of: {', '.join(permissions)}",
                     )
 
             return await func(*args, **kwargs)
 
         return wrapper
+
     return decorator
 
 
@@ -239,16 +233,16 @@ def require_resource_access(resource_type: str, action: str):
         HTTPException 403: If user doesn't have access to resource
         HTTPException 404: If resource not found
     """
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args, **kwargs):
-            user = kwargs.get('user') or kwargs.get('current_user')
-            db = kwargs.get('db')
+            user = kwargs.get("user") or kwargs.get("current_user")
+            db = kwargs.get("db")
 
             if not user:
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Authentication required"
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required"
                 )
 
             # Extract resource ID from path parameters
@@ -258,7 +252,7 @@ def require_resource_access(resource_type: str, action: str):
 
             if not resource_id:
                 # Try alternative patterns
-                resource_id = kwargs.get('id') or kwargs.get('resource_id')
+                resource_id = kwargs.get("id") or kwargs.get("resource_id")
 
             # Check scope-based permissions
             access_scope = rbac_manager.get_accessible_resources(user, resource_type, action)
@@ -270,12 +264,10 @@ def require_resource_access(resource_type: str, action: str):
 
             if access_scope["scope"] == "none":
                 # No access at all
-                logger.warning(
-                    f"No access to {resource_type}:{action} for user {user.id}"
-                )
+                logger.warning(f"No access to {resource_type}:{action} for user {user.id}")
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail=f"Insufficient permissions for {resource_type}:{action}"
+                    detail=f"Insufficient permissions for {resource_type}:{action}",
                 )
 
             # For organization/own scope, we need to verify the resource
@@ -285,10 +277,10 @@ def require_resource_access(resource_type: str, action: str):
 
                 # Map resource types to models
                 model_map = {
-                    'content': models.EducationalContent,
-                    'agent': models.AgentInstance,
-                    'class': models.Class,
-                    'user': models.User,
+                    "content": models.EducationalContent,
+                    "agent": models.AgentInstance,
+                    "class": models.Class,
+                    "user": models.User,
                 }
 
                 model_class = model_map.get(resource_type)
@@ -298,12 +290,14 @@ def require_resource_access(resource_type: str, action: str):
                     if not resource:
                         raise HTTPException(
                             status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"{resource_type.capitalize()} not found"
+                            detail=f"{resource_type.capitalize()} not found",
                         )
 
                     # Check ownership for "own" scope
                     if access_scope["scope"] == "own":
-                        resource_owner_id = getattr(resource, 'user_id', None) or getattr(resource, 'created_by', None)
+                        resource_owner_id = getattr(resource, "user_id", None) or getattr(
+                            resource, "created_by", None
+                        )
                         if resource_owner_id != user.id:
                             logger.warning(
                                 f"Ownership check failed: user {user.id} attempting to access "
@@ -311,12 +305,12 @@ def require_resource_access(resource_type: str, action: str):
                             )
                             raise HTTPException(
                                 status_code=status.HTTP_403_FORBIDDEN,
-                                detail="You can only access your own resources"
+                                detail="You can only access your own resources",
                             )
 
                     # Check organization for "organization" scope
                     elif access_scope["scope"] == "organization":
-                        resource_org_id = getattr(resource, 'organization_id', None)
+                        resource_org_id = getattr(resource, "organization_id", None)
                         if resource_org_id != user.organization_id:
                             logger.warning(
                                 f"Organization check failed: user org {user.organization_id} "
@@ -324,7 +318,7 @@ def require_resource_access(resource_type: str, action: str):
                             )
                             raise HTTPException(
                                 status_code=status.HTTP_403_FORBIDDEN,
-                                detail="You can only access resources in your organization"
+                                detail="You can only access resources in your organization",
                             )
 
             logger.debug(
@@ -334,6 +328,7 @@ def require_resource_access(resource_type: str, action: str):
             return await func(*args, **kwargs)
 
         return wrapper
+
     return decorator
 
 
@@ -354,29 +349,28 @@ def require_organization_access():
     Raises:
         HTTPException 403: If user doesn't belong to an organization
     """
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args, **kwargs):
-            user = kwargs.get('user') or kwargs.get('current_user')
+            user = kwargs.get("user") or kwargs.get("current_user")
 
             if not user:
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Authentication required"
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required"
                 )
 
-            if not hasattr(user, 'organization_id') or user.organization_id is None:
-                logger.warning(
-                    f"Organization access denied for user {user.id}: no organization"
-                )
+            if not hasattr(user, "organization_id") or user.organization_id is None:
+                logger.warning(f"Organization access denied for user {user.id}: no organization")
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="User must belong to an organization"
+                    detail="User must belong to an organization",
                 )
 
             return await func(*args, **kwargs)
 
         return wrapper
+
     return decorator
 
 

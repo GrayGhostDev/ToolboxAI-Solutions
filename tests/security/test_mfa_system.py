@@ -1,28 +1,32 @@
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest_asyncio
+
 """
 MFA System Tests
 Phase 3 - Comprehensive MFA testing
 """
 
-import pytest
 import asyncio
-import secrets
-from unittest.mock import MagicMock, AsyncMock, patch
-import pyotp
-import json
 import hashlib
+import json
+import secrets
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pyotp
+import pytest
 
 from apps.backend.api.auth.mfa import (
-    MFAService,
-    MFAMethod,
     MFAConfig,
     MFAFeatureFlags,
-    MFARateLimitError
+    MFAMethod,
+    MFARateLimitError,
+    MFAService,
 )
+
 
 @pytest.fixture
 def mock_redis():

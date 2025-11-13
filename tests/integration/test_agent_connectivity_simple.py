@@ -10,11 +10,7 @@ Version: 1.0.0
 """
 
 import asyncio
-import json
-import uuid
-from datetime import datetime, timezone
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -27,6 +23,7 @@ try:
         trigger_agent_event,
         trigger_task_event,
     )
+
     SERVICES_AVAILABLE = True
 except ImportError as e:
     SERVICES_AVAILABLE = False
@@ -47,18 +44,20 @@ class TestAgentConnectivitySimple:
 
         # Verify agent types
         agent_types = [agent.agent_type for agent in agent_service.agents.values()]
-        expected_types = ['content', 'quiz', 'terrain', 'script', 'code_review']
+        expected_types = ["content", "quiz", "terrain", "script", "code_review"]
 
         for expected_type in expected_types:
             assert expected_type in agent_types
 
         # Test system metrics
         metrics = agent_service.get_system_metrics()
-        assert 'agents' in metrics
-        assert 'tasks' in metrics
-        assert 'system' in metrics
+        assert "agents" in metrics
+        assert "tasks" in metrics
+        assert "system" in metrics
 
-        print(f"✅ Agent service basic functionality - {len(agent_service.agents)} agents initialized")
+        print(
+            f"✅ Agent service basic functionality - {len(agent_service.agents)} agents initialized"
+        )
         return True
 
     async def test_agent_task_execution(self):
@@ -72,9 +71,9 @@ class TestAgentConnectivitySimple:
             task_data={
                 "subject": "Mathematics",
                 "grade_level": 5,
-                "objectives": ["Learn basic algebra"]
+                "objectives": ["Learn basic algebra"],
             },
-            user_id="test_user"
+            user_id="test_user",
         )
 
         assert content_result["success"] is True
@@ -88,32 +87,29 @@ class TestAgentConnectivitySimple:
                 "subject": "Science",
                 "objectives": ["Test photosynthesis knowledge"],
                 "num_questions": 3,
-                "difficulty": "medium"
+                "difficulty": "medium",
             },
-            user_id="test_user"
+            user_id="test_user",
         )
 
         assert quiz_result["success"] is True
         assert "task_id" in quiz_result
 
-        print(f"✅ Agent task execution - Content: {content_result['success']}, Quiz: {quiz_result['success']}")
+        print(
+            f"✅ Agent task execution - Content: {content_result['success']}, Quiz: {quiz_result['success']}"
+        )
         return True
 
     async def test_pusher_integration_mock(self):
         """Test Pusher integration with mocked client"""
 
         # Mock Pusher client
-        with patch('apps.backend.services.pusher.get_pusher_client') as mock_client:
+        with patch("apps.backend.services.pusher.get_pusher_client") as mock_client:
             mock_pusher = Mock()
             mock_client.return_value = mock_pusher
 
             # Test agent event triggering
-            await trigger_agent_event(
-                "agent_idle",
-                "test_agent_123",
-                {"test": "data"},
-                "test_user"
-            )
+            await trigger_agent_event("agent_idle", "test_agent_123", {"test": "data"}, "test_user")
 
             # Verify Pusher was called
             assert mock_pusher.trigger.called
@@ -124,7 +120,7 @@ class TestAgentConnectivitySimple:
                 "test_task_123",
                 "test_agent_123",
                 {"result": "success"},
-                "test_user"
+                "test_user",
             )
 
             # Verify multiple calls were made
@@ -139,17 +135,21 @@ class TestAgentConnectivitySimple:
 
         # Test key agents
         test_cases = [
-            ("content", "generate_content", {
-                "subject": "Mathematics",
-                "grade_level": 5,
-                "objectives": ["Learn fractions"]
-            }),
-            ("quiz", "generate_quiz", {
-                "subject": "Science",
-                "objectives": ["Test knowledge"],
-                "num_questions": 3,
-                "difficulty": "medium"
-            })
+            (
+                "content",
+                "generate_content",
+                {"subject": "Mathematics", "grade_level": 5, "objectives": ["Learn fractions"]},
+            ),
+            (
+                "quiz",
+                "generate_quiz",
+                {
+                    "subject": "Science",
+                    "objectives": ["Test knowledge"],
+                    "num_questions": 3,
+                    "difficulty": "medium",
+                },
+            ),
         ]
 
         quality_scores = []
@@ -160,7 +160,7 @@ class TestAgentConnectivitySimple:
                     agent_type=agent_type,
                     task_type=task_type,
                     task_data=task_data,
-                    user_id="test_quality"
+                    user_id="test_quality",
                 )
 
                 if result["success"] and result.get("result"):
@@ -168,7 +168,9 @@ class TestAgentConnectivitySimple:
                     quality_scores.append(quality_score)
 
                     # Individual agent quality check
-                    assert quality_score >= 0.85, f"Agent {agent_type} quality {quality_score:.2f} below 85%"
+                    assert (
+                        quality_score >= 0.85
+                    ), f"Agent {agent_type} quality {quality_score:.2f} below 85%"
 
             except Exception as e:
                 print(f"Quality test failed for {agent_type}: {e}")
@@ -188,9 +190,10 @@ class TestAgentConnectivitySimple:
         # Create multiple concurrent tasks
         tasks = [
             agent_service.execute_task(
-                "content", "generate_content",
+                "content",
+                "generate_content",
                 {"subject": f"Subject_{i}", "grade_level": 5, "objectives": ["Test objective"]},
-                f"user_{i}"
+                f"user_{i}",
             )
             for i in range(3)
         ]
@@ -202,7 +205,9 @@ class TestAgentConnectivitySimple:
         successful = sum(1 for r in results if not isinstance(r, Exception) and r.get("success"))
         success_rate = (successful / len(tasks)) * 100
 
-        assert success_rate >= 80, f"Concurrent execution success rate {success_rate:.1f}% below 80%"
+        assert (
+            success_rate >= 80
+        ), f"Concurrent execution success rate {success_rate:.1f}% below 80%"
 
         print(f"✅ Concurrent execution - {success_rate:.1f}% success rate")
         return True
@@ -213,10 +218,7 @@ class TestAgentConnectivitySimple:
 
         # Test invalid agent type
         result = await agent_service.execute_task(
-            agent_type="nonexistent",
-            task_type="test",
-            task_data={},
-            user_id="test_user"
+            agent_type="nonexistent", task_type="test", task_data={}, user_id="test_user"
         )
 
         assert result["success"] is False
@@ -224,7 +226,7 @@ class TestAgentConnectivitySimple:
 
         # Verify system still healthy after error
         metrics = agent_service.get_system_metrics()
-        assert metrics['system']['status'] in ['healthy', 'degraded']
+        assert metrics["system"]["status"] in ["healthy", "degraded"]
 
         print("✅ Error handling - System recovers gracefully")
         return True
@@ -236,9 +238,9 @@ async def test_complete_integration_coverage():
     Master test for complete agent connectivity integration.
     Tests all components and ensures 90%+ integration coverage.
     """
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("AGENT CONNECTIVITY INTEGRATION TEST (PUSHER-BASED)")
-    print("="*80)
+    print("=" * 80)
 
     test_instance = TestAgentConnectivitySimple()
 
@@ -270,17 +272,19 @@ async def test_complete_integration_coverage():
     # Calculate integration coverage
     coverage_percentage = (successful_tests / len(integration_tests)) * 100
 
-    print(f"\n" + "="*80)
+    print(f"\n" + "=" * 80)
     print("INTEGRATION COVERAGE REPORT")
-    print("="*80)
+    print("=" * 80)
     for test_name, success in test_results.items():
         status = "✅ PASS" if success else "❌ FAIL"
         print(f"{test_name:<35} {status}")
-    print("="*80)
+    print("=" * 80)
     print(f"Coverage: {coverage_percentage:.1f}% ({successful_tests}/{len(integration_tests)})")
 
     # Validate coverage threshold
-    assert coverage_percentage >= 90, f"Integration coverage {coverage_percentage:.1f}% below 90% threshold"
+    assert (
+        coverage_percentage >= 90
+    ), f"Integration coverage {coverage_percentage:.1f}% below 90% threshold"
 
     print(f"🎉 AGENT CONNECTIVITY INTEGRATION: PASSED - {coverage_percentage:.1f}% coverage")
 
@@ -288,7 +292,7 @@ async def test_complete_integration_coverage():
         "coverage_percentage": coverage_percentage,
         "successful_tests": successful_tests,
         "total_tests": len(integration_tests),
-        "test_results": test_results
+        "test_results": test_results,
     }
 
 

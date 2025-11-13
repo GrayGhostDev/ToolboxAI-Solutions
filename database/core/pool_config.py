@@ -5,17 +5,17 @@ Comprehensive configuration system for SQLAlchemy connection pooling with
 PostgreSQL 16+ optimizations and 2025 best practices.
 """
 
-import os
 import logging
-from typing import Dict, Any, Optional, List, Tuple
-from dataclasses import dataclass, field
-from enum import Enum
-from datetime import datetime, timedelta
+import os
 import threading
 import time
-import psutil
 from collections import deque
-import json
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any
+
+import psutil
 
 logger = logging.getLogger(__name__)
 
@@ -56,16 +56,16 @@ class PoolMetrics:
 
     avg_wait_time_ms: float = 0.0
     max_wait_time_ms: float = 0.0
-    min_wait_time_ms: float = float('inf')
+    min_wait_time_ms: float = float("inf")
 
-    connection_errors: List[str] = field(default_factory=list)
-    last_error_time: Optional[datetime] = None
+    connection_errors: list[str] = field(default_factory=list)
+    last_error_time: datetime | None = None
 
     pool_efficiency: float = 0.0
     throughput_per_second: float = 0.0
 
     # PostgreSQL specific metrics
-    pg_stat_activity: Dict[str, int] = field(default_factory=dict)
+    pg_stat_activity: dict[str, int] = field(default_factory=dict)
     pg_buffer_cache_hit_ratio: float = 0.0
     pg_deadlocks: int = 0
     pg_conflicts: int = 0
@@ -91,14 +91,13 @@ class PoolMetrics:
 
     def update_wait_time(self, wait_time_ms: float):
         """Update wait time statistics."""
-        self.avg_wait_time_ms = (
-            (self.avg_wait_time_ms * self.total_requests + wait_time_ms) /
-            (self.total_requests + 1)
+        self.avg_wait_time_ms = (self.avg_wait_time_ms * self.total_requests + wait_time_ms) / (
+            self.total_requests + 1
         )
         self.max_wait_time_ms = max(self.max_wait_time_ms, wait_time_ms)
         self.min_wait_time_ms = min(self.min_wait_time_ms, wait_time_ms)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert metrics to dictionary."""
         return {
             "connections": {
@@ -106,32 +105,34 @@ class PoolMetrics:
                 "active": self.active_connections,
                 "idle": self.idle_connections,
                 "pending": self.pending_connections,
-                "failed": self.failed_connections
+                "failed": self.failed_connections,
             },
             "requests": {
                 "total": self.total_requests,
                 "successful": self.successful_requests,
-                "failed": self.failed_requests
+                "failed": self.failed_requests,
             },
             "performance": {
                 "avg_wait_time_ms": self.avg_wait_time_ms,
                 "max_wait_time_ms": self.max_wait_time_ms,
                 "min_wait_time_ms": self.min_wait_time_ms,
                 "efficiency_percent": self.pool_efficiency,
-                "throughput_per_second": self.throughput_per_second
+                "throughput_per_second": self.throughput_per_second,
             },
             "postgresql": self.pg_stat_activity,
             "system": {
                 "cpu_percent": self.cpu_usage_percent,
                 "memory_mb": self.memory_usage_mb,
                 "disk_read_mb": self.disk_io_read_mb,
-                "disk_write_mb": self.disk_io_write_mb
+                "disk_write_mb": self.disk_io_write_mb,
             },
             "errors": {
                 "count": len(self.connection_errors),
-                "last_error_time": self.last_error_time.isoformat() if self.last_error_time else None,
-                "recent_errors": self.connection_errors[-5:]  # Last 5 errors
-            }
+                "last_error_time": (
+                    self.last_error_time.isoformat() if self.last_error_time else None
+                ),
+                "recent_errors": self.connection_errors[-5:],  # Last 5 errors
+            },
         }
 
 
@@ -165,20 +166,22 @@ class PoolConfig:
     use_lifo: bool = True  # Use LIFO for connection reuse (better cache)
 
     # Connection parameters
-    connect_args: Dict[str, Any] = field(default_factory=lambda: {
-        "server_settings": {
-            "application_name": "toolboxai",
-            "jit": "on",
-            "log_duration": "off"
-        },
-        "keepalives": 1,
-        "keepalives_idle": 30,
-        "keepalives_interval": 10,
-        "keepalives_count": 5,
-        "tcp_user_timeout": 30000,
-        "connect_timeout": 10,
-        "options": "-c statement_timeout=30000 -c lock_timeout=10000"
-    })
+    connect_args: dict[str, Any] = field(
+        default_factory=lambda: {
+            "server_settings": {
+                "application_name": "toolboxai",
+                "jit": "on",
+                "log_duration": "off",
+            },
+            "keepalives": 1,
+            "keepalives_idle": 30,
+            "keepalives_interval": 10,
+            "keepalives_count": 5,
+            "tcp_user_timeout": 30000,
+            "connect_timeout": 10,
+            "options": "-c statement_timeout=30000 -c lock_timeout=10000",
+        }
+    )
 
     # Retry configuration
     retry_on_disconnect: bool = True
@@ -230,7 +233,10 @@ class PoolConfig:
             self.enable_metrics = False
 
         # Validate pool settings
-        if self.pool_size + self.max_overflow > self.pg_max_connections - self.pg_superuser_reserved:
+        if (
+            self.pool_size + self.max_overflow
+            > self.pg_max_connections - self.pg_superuser_reserved
+        ):
             logger.warning(
                 f"Pool size ({self.pool_size} + {self.max_overflow}) exceeds "
                 f"available PostgreSQL connections ({self.pg_max_connections} - {self.pg_superuser_reserved})"
@@ -244,7 +250,7 @@ class PoolConfig:
         self.min_pool_size = min(self.min_pool_size, self.pool_size)
         self.max_pool_size = max(self.max_pool_size, self.pool_size + self.max_overflow)
 
-    def to_sqlalchemy_config(self) -> Dict[str, Any]:
+    def to_sqlalchemy_config(self) -> dict[str, Any]:
         """Convert to SQLAlchemy pool configuration."""
         config = {
             "pool_size": self.pool_size,
@@ -254,17 +260,18 @@ class PoolConfig:
             "pool_pre_ping": self.pool_pre_ping,
             "echo_pool": self.echo_pool,
             "use_lifo": self.use_lifo,
-            "connect_args": self.connect_args
+            "connect_args": self.connect_args,
         }
 
         # Add poolclass if not default
         if self.poolclass != "QueuePool":
             from sqlalchemy import pool
+
             config["poolclass"] = getattr(pool, self.poolclass)
 
         return config
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert configuration to dictionary."""
         return {
             "pool_size": self.pool_size,
@@ -274,27 +281,27 @@ class PoolConfig:
             "postgresql": {
                 "max_connections": self.pg_max_connections,
                 "statement_timeout": self.pg_statement_timeout,
-                "lock_timeout": self.pg_lock_timeout
+                "lock_timeout": self.pg_lock_timeout,
             },
             "auto_scaling": {
                 "enabled": self.auto_scale_enabled,
                 "min_size": self.min_pool_size,
-                "max_size": self.max_pool_size
+                "max_size": self.max_pool_size,
             },
             "circuit_breaker": {
                 "enabled": self.circuit_breaker_enabled,
-                "threshold": self.circuit_breaker_threshold
-            }
+                "threshold": self.circuit_breaker_threshold,
+            },
         }
 
-    def to_engine_kwargs(self) -> Dict[str, Any]:
+    def to_engine_kwargs(self) -> dict[str, Any]:
         """Generate SQLAlchemy 2.0 engine kwargs for sync connections."""
         # Build PostgreSQL options string
         pg_options = [
             f"statement_timeout={self.pg_statement_timeout}",
             f"lock_timeout={self.pg_lock_timeout}",
             f"idle_in_transaction_session_timeout={self.pg_idle_in_transaction_timeout}",
-            "application_name=toolboxai"
+            "application_name=toolboxai",
         ]
 
         # Update connect_args with options
@@ -310,13 +317,10 @@ class PoolConfig:
             "echo_pool": self.echo_pool,
             "use_lifo": self.use_lifo,
             "connect_args": connect_args,
-            "execution_options": {
-                "isolation_level": "READ COMMITTED",
-                "max_row_buffer": 10000
-            }
+            "execution_options": {"isolation_level": "READ COMMITTED", "max_row_buffer": 10000},
         }
 
-    def to_async_engine_kwargs(self) -> Dict[str, Any]:
+    def to_async_engine_kwargs(self) -> dict[str, Any]:
         """Generate SQLAlchemy 2.0 engine kwargs for async connections with asyncpg."""
         # Build server settings for asyncpg
         server_settings = {
@@ -324,7 +328,7 @@ class PoolConfig:
             "jit": self.jit,
             "statement_timeout": str(self.pg_statement_timeout),
             "lock_timeout": str(self.pg_lock_timeout),
-            "idle_in_transaction_session_timeout": str(self.pg_idle_in_transaction_timeout)
+            "idle_in_transaction_session_timeout": str(self.pg_idle_in_transaction_timeout),
         }
 
         # Asyncpg-specific connect args
@@ -335,7 +339,7 @@ class PoolConfig:
             "max_cached_statement_lifetime": 3600,
             "max_cacheable_statement_size": 1024,
             "min_size": self.min_pool_size,
-            "max_size": self.pool_size + self.max_overflow
+            "max_size": self.pool_size + self.max_overflow,
         }
 
         return {
@@ -347,7 +351,7 @@ class PoolConfig:
             "echo_pool": self.echo_pool,
             "use_lifo": self.use_lifo,
             "connect_args": async_connect_args,
-            "pool_use_lifo": self.use_lifo  # Async-specific parameter
+            "pool_use_lifo": self.use_lifo,  # Async-specific parameter
         }
 
 
@@ -356,9 +360,7 @@ class PoolConfigFactory:
 
     @staticmethod
     def create_config(
-        strategy: PoolStrategy = PoolStrategy.OPTIMIZED,
-        environment: Optional[str] = None,
-        **kwargs
+        strategy: PoolStrategy = PoolStrategy.OPTIMIZED, environment: str | None = None, **kwargs
     ) -> PoolConfig:
         """
         Create a pool configuration for the given strategy and environment.
@@ -375,37 +377,33 @@ class PoolConfigFactory:
 
         # Base configurations for each strategy
         configs = {
-            PoolStrategy.STATIC: {
-                "pool_size": 20,
-                "max_overflow": 0,
-                "auto_scale_enabled": False
-            },
+            PoolStrategy.STATIC: {"pool_size": 20, "max_overflow": 0, "auto_scale_enabled": False},
             PoolStrategy.DYNAMIC: {
                 "pool_size": 10,
                 "max_overflow": 20,
                 "auto_scale_enabled": True,
                 "scale_up_threshold": 0.7,
-                "scale_down_threshold": 0.3
+                "scale_down_threshold": 0.3,
             },
             PoolStrategy.BURST: {
                 "pool_size": 15,
                 "max_overflow": 50,
                 "auto_scale_enabled": False,
-                "pool_timeout": 5.0
+                "pool_timeout": 5.0,
             },
             PoolStrategy.OPTIMIZED: {
                 "pool_size": 20,
                 "max_overflow": 10,
                 "auto_scale_enabled": True,
                 "pool_pre_ping": True,
-                "use_lifo": True
+                "use_lifo": True,
             },
             PoolStrategy.MINIMAL: {
                 "pool_size": 2,
                 "max_overflow": 1,
                 "auto_scale_enabled": False,
-                "enable_metrics": False
-            }
+                "enable_metrics": False,
+            },
         }
 
         # Environment-specific adjustments
@@ -416,26 +414,26 @@ class PoolConfigFactory:
                 "pool_pre_ping": True,
                 "circuit_breaker_enabled": True,
                 "enable_metrics": True,
-                "retry_on_disconnect": True
+                "retry_on_disconnect": True,
             },
             "staging": {
                 "pool_size": 20,
                 "max_overflow": 10,
                 "pool_pre_ping": True,
-                "enable_metrics": True
+                "enable_metrics": True,
             },
             "development": {
                 "pool_size": 10,
                 "max_overflow": 5,
                 "echo_pool": False,
-                "enable_metrics": True
+                "enable_metrics": True,
             },
             "testing": {
                 "pool_size": 2,
                 "max_overflow": 1,
                 "enable_metrics": False,
-                "pool_timeout": 5.0
-            }
+                "pool_timeout": 5.0,
+            },
         }
 
         # Start with strategy config
@@ -467,8 +465,8 @@ class PoolConfigFactory:
             PoolConfig instance
         """
         # Extract environment and strategy from kwargs if present to avoid duplicates
-        environment = kwargs.pop('environment', None)
-        strategy = kwargs.pop('strategy', None)
+        environment = kwargs.pop("environment", None)
+        strategy = kwargs.pop("strategy", None)
 
         # Parse URL to determine appropriate settings
         if "localhost" in database_url or "127.0.0.1" in database_url:
@@ -480,9 +478,9 @@ class PoolConfigFactory:
             return PoolConfigFactory.create_config(
                 strategy=strategy,
                 environment=environment,
-                pool_size=kwargs.pop('pool_size', 15),
-                max_overflow=kwargs.pop('max_overflow', 10),
-                **kwargs
+                pool_size=kwargs.pop("pool_size", 15),
+                max_overflow=kwargs.pop("max_overflow", 10),
+                **kwargs,
             )
         elif "amazonaws.com" in database_url or "cloud.google.com" in database_url:
             # Cloud database - optimize for network latency
@@ -493,20 +491,18 @@ class PoolConfigFactory:
             return PoolConfigFactory.create_config(
                 strategy=strategy,
                 environment=environment,
-                pool_size=kwargs.pop('pool_size', 20),
-                max_overflow=kwargs.pop('max_overflow', 15),
-                pool_recycle=kwargs.pop('pool_recycle', 1800),  # Recycle more frequently
-                pool_pre_ping=kwargs.pop('pool_pre_ping', True),
-                **kwargs
+                pool_size=kwargs.pop("pool_size", 20),
+                max_overflow=kwargs.pop("max_overflow", 15),
+                pool_recycle=kwargs.pop("pool_recycle", 1800),  # Recycle more frequently
+                pool_pre_ping=kwargs.pop("pool_pre_ping", True),
+                **kwargs,
             )
         else:
             # Default configuration
             if not strategy:
                 strategy = PoolStrategy.OPTIMIZED
             return PoolConfigFactory.create_config(
-                strategy=strategy,
-                environment=environment,
-                **kwargs
+                strategy=strategy, environment=environment, **kwargs
             )
 
     @staticmethod
@@ -520,7 +516,7 @@ class PoolConfigFactory:
             pool_timeout=5.0,
             enable_metrics=False,
             auto_scale_enabled=False,
-            circuit_breaker_enabled=False
+            circuit_breaker_enabled=False,
         )
 
 
@@ -537,20 +533,22 @@ class PoolMonitor:
         self.metrics_history: deque = deque(maxlen=1440)  # 24 hours at 1-minute intervals
         self._lock = threading.Lock()
         self._monitoring = False
-        self._monitor_thread: Optional[threading.Thread] = None
+        self._monitor_thread: threading.Thread | None = None
 
         # Circuit breaker state
         self.circuit_breaker_failures = 0
         self.circuit_breaker_open = False
-        self.circuit_breaker_open_time: Optional[datetime] = None
+        self.circuit_breaker_open_time: datetime | None = None
 
         # Connection tracking
-        self.connection_states: Dict[int, ConnectionState] = {}
-        self.connection_start_times: Dict[int, datetime] = {}
+        self.connection_states: dict[int, ConnectionState] = {}
+        self.connection_start_times: dict[int, datetime] = {}
 
         logger.info(f"PoolMonitor initialized with strategy: {config.strategy.value}")
 
-    def calculate_optimal_size(self, concurrent_requests: int, avg_query_time: float) -> Dict[str, int]:
+    def calculate_optimal_size(
+        self, concurrent_requests: int, avg_query_time: float
+    ) -> dict[str, int]:
         """
         Calculate optimal pool size based on concurrent requests and average query time.
 
@@ -577,7 +575,7 @@ class PoolMonitor:
         return {
             "pool_size": pool_size,
             "max_overflow": max_overflow,
-            "total_connections": pool_size + max_overflow
+            "total_connections": pool_size + max_overflow,
         }
 
     def start_monitoring(self):
@@ -624,10 +622,7 @@ class PoolMonitor:
             self.metrics.calculate_efficiency()
 
             # Store snapshot
-            snapshot = {
-                "timestamp": datetime.now(),
-                "metrics": self.metrics.to_dict()
-            }
+            snapshot = {"timestamp": datetime.now(), "metrics": self.metrics.to_dict()}
             self.metrics_history.append(snapshot)
 
             self.metrics.last_update_time = datetime.now()
@@ -651,7 +646,11 @@ class PoolMonitor:
         if self.config.strategy != PoolStrategy.DYNAMIC:
             return
 
-        utilization = self.metrics.active_connections / self.config.pool_size if self.config.pool_size > 0 else 0
+        utilization = (
+            self.metrics.active_connections / self.config.pool_size
+            if self.config.pool_size > 0
+            else 0
+        )
 
         if utilization > self.config.scale_up_threshold:
             self.recommend_scale_up()
@@ -661,10 +660,7 @@ class PoolMonitor:
     def recommend_scale_up(self):
         """Recommend scaling up the pool."""
         current_size = self.config.pool_size
-        recommended_size = min(
-            int(current_size * 1.5),
-            self.config.max_pool_size
-        )
+        recommended_size = min(int(current_size * 1.5), self.config.max_pool_size)
 
         if recommended_size > current_size:
             logger.info(f"Recommend scaling pool from {current_size} to {recommended_size}")
@@ -674,10 +670,7 @@ class PoolMonitor:
     def recommend_scale_down(self):
         """Recommend scaling down the pool."""
         current_size = self.config.pool_size
-        recommended_size = max(
-            int(current_size * 0.7),
-            self.config.min_pool_size
-        )
+        recommended_size = max(int(current_size * 0.7), self.config.min_pool_size)
 
         if recommended_size < current_size:
             logger.info(f"Recommend scaling pool from {current_size} to {recommended_size}")
@@ -728,7 +721,9 @@ class PoolMonitor:
 
                 # Calculate connection duration
                 if conn_id in self.connection_start_times:
-                    duration = (datetime.now() - self.connection_start_times[conn_id]).total_seconds()
+                    duration = (
+                        datetime.now() - self.connection_start_times[conn_id]
+                    ).total_seconds()
                     del self.connection_start_times[conn_id]
 
     def record_connection_error(self, error: str):
@@ -743,12 +738,12 @@ class PoolMonitor:
             if len(self.metrics.connection_errors) > 100:
                 self.metrics.connection_errors = self.metrics.connection_errors[-100:]
 
-    def get_metrics_summary(self) -> Dict[str, Any]:
+    def get_metrics_summary(self) -> dict[str, Any]:
         """Get current metrics summary."""
         with self._lock:
             return self.metrics.to_dict()
 
-    def get_recommendations(self) -> List[str]:
+    def get_recommendations(self) -> list[str]:
         """Get optimization recommendations based on metrics."""
         recommendations = []
 
@@ -766,12 +761,14 @@ class PoolMonitor:
 
         # Check error rate
         if self.metrics.failed_connections > 10:
-            recommendations.append(
-                "High error rate. Check database connectivity and credentials"
-            )
+            recommendations.append("High error rate. Check database connectivity and credentials")
 
         # Check utilization
-        utilization = self.metrics.active_connections / self.config.pool_size if self.config.pool_size > 0 else 0
+        utilization = (
+            self.metrics.active_connections / self.config.pool_size
+            if self.config.pool_size > 0
+            else 0
+        )
         if utilization > 0.9:
             recommendations.append(
                 "High pool utilization. Consider increasing pool size or optimizing queries"
@@ -785,10 +782,10 @@ class PoolMonitor:
 
 
 def get_database_pool_config(
-    database_url: Optional[str] = None,
-    environment: Optional[str] = None,
-    strategy: Optional[PoolStrategy] = None,
-    **kwargs
+    database_url: str | None = None,
+    environment: str | None = None,
+    strategy: PoolStrategy | None = None,
+    **kwargs,
 ) -> PoolConfig:
     """
     Get database pool configuration based on context.
@@ -821,16 +818,11 @@ def get_database_pool_config(
     # Create configuration
     if database_url:
         config = PoolConfigFactory.create_from_database_url(
-            database_url,
-            environment=environment,
-            strategy=strategy,
-            **kwargs
+            database_url, environment=environment, strategy=strategy, **kwargs
         )
     else:
         config = PoolConfigFactory.create_config(
-            strategy=strategy,
-            environment=environment,
-            **kwargs
+            strategy=strategy, environment=environment, **kwargs
         )
 
     logger.info(f"Created pool config: {config.strategy.value} for {config.environment}")
@@ -840,8 +832,7 @@ def get_database_pool_config(
 # Convenience instances for common configurations
 DEFAULT_CONFIG = get_database_pool_config()
 PRODUCTION_CONFIG = PoolConfigFactory.create_config(
-    strategy=PoolStrategy.OPTIMIZED,
-    environment="production"
+    strategy=PoolStrategy.OPTIMIZED, environment="production"
 )
 TESTING_CONFIG = PoolConfigFactory.create_for_testing()
 
@@ -856,5 +847,5 @@ __all__ = [
     "get_database_pool_config",
     "DEFAULT_CONFIG",
     "PRODUCTION_CONFIG",
-    "TESTING_CONFIG"
+    "TESTING_CONFIG",
 ]

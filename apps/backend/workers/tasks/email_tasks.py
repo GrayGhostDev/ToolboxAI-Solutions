@@ -11,22 +11,20 @@ Features:
 - Bounce and complaint handling
 """
 
-import os
-import logging
 import json
-from typing import Dict, List, Any, Optional
-from datetime import datetime, timedelta
+import logging
+import os
+import smtplib
 from dataclasses import dataclass
+from datetime import datetime, timedelta
+from email import encoders
+from email.mime.base import MIMEBase
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from typing import Any
+
 from celery import shared_task
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from email.mime.base import MIMEBase
-from email import encoders
-
-from apps.backend.workers.celery_app import app
-from toolboxai_settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +32,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class EmailConfig:
     """Email configuration for different providers."""
+
     smtp_host: str
     smtp_port: int
     smtp_user: str
@@ -43,7 +42,7 @@ class EmailConfig:
     from_name: str = "ToolBoxAI"
 
 
-def get_email_config(organization_id: Optional[str] = None) -> EmailConfig:
+def get_email_config(organization_id: str | None = None) -> EmailConfig:
     """
     Get email configuration for tenant or default.
 
@@ -61,7 +60,7 @@ def get_email_config(organization_id: Optional[str] = None) -> EmailConfig:
         smtp_password=os.getenv("SENDGRID_API_KEY", ""),
         use_tls=os.getenv("SMTP_USE_TLS", "true").lower() == "true",
         from_email=os.getenv("FROM_EMAIL", "noreply@toolboxai.com"),
-        from_name=os.getenv("FROM_NAME", "ToolBoxAI")
+        from_name=os.getenv("FROM_NAME", "ToolBoxAI"),
     )
 
     # TODO: Add tenant-specific configuration lookup from database
@@ -80,29 +79,22 @@ def setup_jinja_environment() -> Environment:
     # Create template directory if it doesn't exist
     os.makedirs(template_dir, exist_ok=True)
 
-    return Environment(
-        loader=FileSystemLoader(template_dir),
-        autoescape=True
-    )
+    return Environment(loader=FileSystemLoader(template_dir), autoescape=True)
 
 
 @shared_task(
-    bind=True,
-    name="email_tasks.send_email",
-    queue="email",
-    max_retries=3,
-    default_retry_delay=60
+    bind=True, name="email_tasks.send_email", queue="email", max_retries=3, default_retry_delay=60
 )
 def send_email(
     self,
     to_email: str,
     subject: str,
     template_name: str,
-    template_context: Dict[str, Any],
-    organization_id: Optional[str] = None,
-    from_email: Optional[str] = None,
-    attachments: Optional[List[Dict[str, Any]]] = None
-) -> Dict[str, Any]:
+    template_context: dict[str, Any],
+    organization_id: str | None = None,
+    from_email: str | None = None,
+    attachments: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     """
     Send email using SMTP with template rendering.
 
@@ -146,14 +138,14 @@ def send_email(
             text_content = f"{subject}\n\nThis is an HTML email. Please enable HTML viewing in your email client."
 
         # Create message
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = subject
-        msg['From'] = from_email or f"{email_config.from_name} <{email_config.from_email}>"
-        msg['To'] = to_email
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = from_email or f"{email_config.from_name} <{email_config.from_email}>"
+        msg["To"] = to_email
 
         # Add text and HTML parts
-        text_part = MIMEText(text_content, 'plain', 'utf-8')
-        html_part = MIMEText(html_content, 'html', 'utf-8')
+        text_part = MIMEText(text_content, "plain", "utf-8")
+        html_part = MIMEText(html_content, "html", "utf-8")
 
         msg.attach(text_part)
         msg.attach(html_part)
@@ -161,12 +153,11 @@ def send_email(
         # Add attachments if provided
         if attachments:
             for attachment in attachments:
-                part = MIMEBase('application', 'octet-stream')
-                part.set_payload(attachment['content'])
+                part = MIMEBase("application", "octet-stream")
+                part.set_payload(attachment["content"])
                 encoders.encode_base64(part)
                 part.add_header(
-                    'Content-Disposition',
-                    f'attachment; filename= {attachment["filename"]}'
+                    "Content-Disposition", f'attachment; filename= {attachment["filename"]}'
                 )
                 msg.attach(part)
 
@@ -183,13 +174,13 @@ def send_email(
         logger.info(f"Email sent successfully to {to_email} using template {template_name}")
 
         return {
-            'status': 'sent',
-            'to_email': to_email,
-            'subject': subject,
-            'template_name': template_name,
-            'organization_id': organization_id,
-            'sent_at': datetime.utcnow().isoformat(),
-            'message_id': self.request.id
+            "status": "sent",
+            "to_email": to_email,
+            "subject": subject,
+            "template_name": template_name,
+            "organization_id": organization_id,
+            "sent_at": datetime.utcnow().isoformat(),
+            "message_id": self.request.id,
         }
 
     except Exception as exc:
@@ -198,33 +189,28 @@ def send_email(
         # Retry on transient errors
         if self.request.retries < self.max_retries:
             logger.info(f"Retrying email send (attempt {self.request.retries + 1})")
-            raise self.retry(exc=exc, countdown=60 * (2 ** self.request.retries))
+            raise self.retry(exc=exc, countdown=60 * (2**self.request.retries))
 
         return {
-            'status': 'failed',
-            'to_email': to_email,
-            'subject': subject,
-            'error': str(exc),
-            'failed_at': datetime.utcnow().isoformat(),
-            'final_attempt': True
+            "status": "failed",
+            "to_email": to_email,
+            "subject": subject,
+            "error": str(exc),
+            "failed_at": datetime.utcnow().isoformat(),
+            "final_attempt": True,
         }
 
 
-@shared_task(
-    bind=True,
-    name="email_tasks.send_bulk_emails",
-    queue="email",
-    max_retries=2
-)
+@shared_task(bind=True, name="email_tasks.send_bulk_emails", queue="email", max_retries=2)
 def send_bulk_emails(
     self,
-    email_list: List[Dict[str, Any]],
+    email_list: list[dict[str, Any]],
     subject: str,
     template_name: str,
-    common_context: Dict[str, Any],
-    organization_id: Optional[str] = None,
-    batch_size: int = 50
-) -> Dict[str, Any]:
+    common_context: dict[str, Any],
+    organization_id: str | None = None,
+    batch_size: int = 50,
+) -> dict[str, Any]:
     """
     Send bulk emails with batching and rate limiting.
 
@@ -248,21 +234,21 @@ def send_bulk_emails(
 
         # Process emails in batches
         for i in range(0, len(email_list), batch_size):
-            batch = email_list[i:i + batch_size]
+            batch = email_list[i : i + batch_size]
 
             # Create individual email tasks
             batch_tasks = []
             for email_data in batch:
                 # Merge common context with individual context
-                context = {**common_context, **email_data.get('context', {})}
+                context = {**common_context, **email_data.get("context", {})}
 
                 batch_tasks.append(
                     send_email.s(
-                        to_email=email_data['email'],
+                        to_email=email_data["email"],
                         subject=subject,
                         template_name=template_name,
                         template_context=context,
-                        organization_id=organization_id
+                        organization_id=organization_id,
                     )
                 )
 
@@ -275,7 +261,7 @@ def send_bulk_emails(
             results = batch_job.get(timeout=300)  # 5 minute timeout per batch
 
             for result in results:
-                if result.get('status') == 'sent':
+                if result.get("status") == "sent":
                     successful += 1
                 else:
                     failed += 1
@@ -283,12 +269,12 @@ def send_bulk_emails(
         logger.info(f"Bulk email completed: {successful} sent, {failed} failed")
 
         return {
-            'status': 'completed',
-            'total_emails': len(email_list),
-            'successful': successful,
-            'failed': failed,
-            'organization_id': organization_id,
-            'completed_at': datetime.utcnow().isoformat()
+            "status": "completed",
+            "total_emails": len(email_list),
+            "successful": successful,
+            "failed": failed,
+            "organization_id": organization_id,
+            "completed_at": datetime.utcnow().isoformat(),
         }
 
     except Exception as exc:
@@ -297,23 +283,11 @@ def send_bulk_emails(
         if self.request.retries < self.max_retries:
             raise self.retry(exc=exc, countdown=300)  # Retry after 5 minutes
 
-        return {
-            'status': 'failed',
-            'error': str(exc),
-            'failed_at': datetime.utcnow().isoformat()
-        }
+        return {"status": "failed", "error": str(exc), "failed_at": datetime.utcnow().isoformat()}
 
 
-@shared_task(
-    bind=True,
-    name="email_tasks.process_email_queue",
-    queue="email"
-)
-def process_email_queue(
-    self,
-    batch_size: int = 50,
-    max_retries: int = 3
-) -> Dict[str, Any]:
+@shared_task(bind=True, name="email_tasks.process_email_queue", queue="email")
+def process_email_queue(self, batch_size: int = 50, max_retries: int = 3) -> dict[str, Any]:
     """
     Process queued emails from database.
 
@@ -325,9 +299,10 @@ def process_email_queue(
         Dict with processing results
     """
     try:
+        from sqlalchemy import and_
+
         from apps.backend.core.database import SessionLocal
         from database.models import EmailQueue
-        from sqlalchemy import and_
 
         logger.info(f"Processing email queue with batch size {batch_size}")
 
@@ -336,35 +311,39 @@ def process_email_queue(
 
         with SessionLocal() as session:
             # Query for pending emails
-            pending_emails = session.query(EmailQueue).filter(
-                and_(
-                    EmailQueue.status == 'pending',
-                    EmailQueue.retry_count < max_retries
-                )
-            ).limit(batch_size).all()
+            pending_emails = (
+                session.query(EmailQueue)
+                .filter(and_(EmailQueue.status == "pending", EmailQueue.retry_count < max_retries))
+                .limit(batch_size)
+                .all()
+            )
 
             for email in pending_emails:
                 try:
                     # Send email
                     result = send_email.apply_async(
                         kwargs={
-                            'to_email': email.to_email,
-                            'subject': email.subject,
-                            'template_name': email.template_name,
-                            'template_context': json.loads(email.template_context) if isinstance(email.template_context, str) else email.template_context,
-                            'organization_id': email.organization_id,
+                            "to_email": email.to_email,
+                            "subject": email.subject,
+                            "template_name": email.template_name,
+                            "template_context": (
+                                json.loads(email.template_context)
+                                if isinstance(email.template_context, str)
+                                else email.template_context
+                            ),
+                            "organization_id": email.organization_id,
                         }
                     ).get(timeout=60)
 
-                    if result.get('status') == 'sent':
-                        email.status = 'sent'
+                    if result.get("status") == "sent":
+                        email.status = "sent"
                         email.sent_at = datetime.utcnow()
                         processed += 1
                     else:
                         email.retry_count += 1
-                        email.last_error = result.get('error', 'Unknown error')
+                        email.last_error = result.get("error", "Unknown error")
                         if email.retry_count >= max_retries:
-                            email.status = 'failed'
+                            email.status = "failed"
                         failed += 1
 
                 except Exception as e:
@@ -372,43 +351,34 @@ def process_email_queue(
                     email.retry_count += 1
                     email.last_error = str(e)
                     if email.retry_count >= max_retries:
-                        email.status = 'failed'
+                        email.status = "failed"
                     failed += 1
 
             session.commit()
 
         return {
-            'status': 'completed',
-            'processed': processed,
-            'failed': failed,
-            'batch_size': batch_size,
-            'processed_at': datetime.utcnow().isoformat()
+            "status": "completed",
+            "processed": processed,
+            "failed": failed,
+            "batch_size": batch_size,
+            "processed_at": datetime.utcnow().isoformat(),
         }
 
     except Exception as exc:
         logger.error(f"Email queue processing failed: {exc}")
-        return {
-            'status': 'failed',
-            'error': str(exc),
-            'failed_at': datetime.utcnow().isoformat()
-        }
+        return {"status": "failed", "error": str(exc), "failed_at": datetime.utcnow().isoformat()}
 
 
-@shared_task(
-    bind=True,
-    name="email_tasks.send_notification_email",
-    queue="email",
-    max_retries=3
-)
+@shared_task(bind=True, name="email_tasks.send_notification_email", queue="email", max_retries=3)
 def send_notification_email(
     self,
     user_id: str,
     notification_type: str,
     title: str,
     message: str,
-    action_url: Optional[str] = None,
-    organization_id: Optional[str] = None
-) -> Dict[str, Any]:
+    action_url: str | None = None,
+    organization_id: str | None = None,
+) -> dict[str, Any]:
     """
     Send notification email to user.
 
@@ -433,66 +403,59 @@ def send_notification_email(
             if not user or not user.email:
                 logger.error(f"User {user_id} not found or has no email")
                 return {
-                    'status': 'failed',
-                    'user_id': user_id,
-                    'error': 'User not found or has no email',
-                    'failed_at': datetime.utcnow().isoformat()
+                    "status": "failed",
+                    "user_id": user_id,
+                    "error": "User not found or has no email",
+                    "failed_at": datetime.utcnow().isoformat(),
                 }
 
             user_email = user.email
 
         # Template context
         context = {
-            'user_id': user_id,
-            'notification_type': notification_type,
-            'title': title,
-            'message': message,
-            'action_url': action_url,
-            'organization_id': organization_id,
-            'sent_at': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
+            "user_id": user_id,
+            "notification_type": notification_type,
+            "title": title,
+            "message": message,
+            "action_url": action_url,
+            "organization_id": organization_id,
+            "sent_at": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
         }
 
         # Send email using notification template
         result = send_email.apply_async(
             kwargs={
-                'to_email': user_email,
-                'subject': f"ToolBoxAI Notification: {title}",
-                'template_name': 'notification',
-                'template_context': context,
-                'organization_id': organization_id
+                "to_email": user_email,
+                "subject": f"ToolBoxAI Notification: {title}",
+                "template_name": "notification",
+                "template_context": context,
+                "organization_id": organization_id,
             }
         ).get(timeout=60)
 
         return {
-            'status': 'sent',
-            'user_id': user_id,
-            'email_result': result,
-            'sent_at': datetime.utcnow().isoformat()
+            "status": "sent",
+            "user_id": user_id,
+            "email_result": result,
+            "sent_at": datetime.utcnow().isoformat(),
         }
 
     except Exception as exc:
         logger.error(f"Failed to send notification email to user {user_id}: {exc}")
 
         if self.request.retries < self.max_retries:
-            raise self.retry(exc=exc, countdown=60 * (2 ** self.request.retries))
+            raise self.retry(exc=exc, countdown=60 * (2**self.request.retries))
 
         return {
-            'status': 'failed',
-            'user_id': user_id,
-            'error': str(exc),
-            'failed_at': datetime.utcnow().isoformat()
+            "status": "failed",
+            "user_id": user_id,
+            "error": str(exc),
+            "failed_at": datetime.utcnow().isoformat(),
         }
 
 
-@shared_task(
-    bind=True,
-    name="email_tasks.cleanup_email_logs",
-    queue="low_priority"
-)
-def cleanup_email_logs(
-    self,
-    retention_days: int = 30
-) -> Dict[str, Any]:
+@shared_task(bind=True, name="email_tasks.cleanup_email_logs", queue="low_priority")
+def cleanup_email_logs(self, retention_days: int = 30) -> dict[str, Any]:
     """
     Clean up old email logs and delivery records.
 
@@ -514,20 +477,16 @@ def cleanup_email_logs(
         logger.info(f"Email log cleanup completed for records older than {cutoff_date}")
 
         return {
-            'status': 'completed',
-            'cutoff_date': cutoff_date.isoformat(),
-            'retention_days': retention_days,
-            'records_deleted': 0,  # Placeholder
-            'cleaned_at': datetime.utcnow().isoformat()
+            "status": "completed",
+            "cutoff_date": cutoff_date.isoformat(),
+            "retention_days": retention_days,
+            "records_deleted": 0,  # Placeholder
+            "cleaned_at": datetime.utcnow().isoformat(),
         }
 
     except Exception as exc:
         logger.error(f"Email log cleanup failed: {exc}")
-        return {
-            'status': 'failed',
-            'error': str(exc),
-            'failed_at': datetime.utcnow().isoformat()
-        }
+        return {"status": "failed", "error": str(exc), "failed_at": datetime.utcnow().isoformat()}
 
 
 # Utility functions for email template management
@@ -586,11 +545,11 @@ This is an automated message from ToolBoxAI.
     txt_path = os.path.join(template_dir, "notification.txt")
 
     if not os.path.exists(html_path):
-        with open(html_path, 'w') as f:
+        with open(html_path, "w") as f:
             f.write(notification_html.strip())
 
     if not os.path.exists(txt_path):
-        with open(txt_path, 'w') as f:
+        with open(txt_path, "w") as f:
             f.write(notification_txt.strip())
 
 

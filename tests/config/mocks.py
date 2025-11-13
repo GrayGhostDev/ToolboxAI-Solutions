@@ -1,5 +1,7 @@
 """Common test mocks"""
-from unittest.mock import Mock, MagicMock, patch
+
+from unittest.mock import MagicMock
+
 
 def mock_redis_client():
     """Mock Redis client"""
@@ -10,6 +12,7 @@ def mock_redis_client():
     client.exists.return_value = False
     return client
 
+
 def mock_openai_client():
     """Mock OpenAI client"""
     client = MagicMock()
@@ -17,6 +20,7 @@ def mock_openai_client():
         choices=[MagicMock(message=MagicMock(content="Test response"))]
     )
     return client
+
 
 def mock_database_connection():
     """Mock database connection"""

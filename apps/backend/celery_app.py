@@ -13,28 +13,26 @@ import sys
 from pathlib import Path
 
 try:
-    import apps  # type: ignore
+    pass  # type: ignore
 except Exception:
     project_root = Path(__file__).resolve().parents[2]
     if str(project_root) not in sys.path:
         sys.path.insert(0, str(project_root))
 
+import logging
 import os
+import socket
+from datetime import timedelta
+from typing import Any
+
 from celery import Celery, Task
 from celery.signals import (
     setup_logging,
+    task_failure,
     worker_ready,
     worker_shutdown,
-    task_failure,
-    task_prerun,
-    task_postrun,
-    beat_init
 )
-from kombu import Queue, Exchange
-from datetime import timedelta
-import logging
-from typing import Any
-import socket
+from kombu import Exchange, Queue
 
 # Import settings from the shared configuration
 from toolboxai_settings import settings
@@ -69,7 +67,8 @@ class CeleryConfig:
     # Redis URL format: redis://:password@hostname:port/db_number
     broker_url = os.getenv("CELERY_BROKER_URL", settings.REDIS_URL or "redis://redis:6379/0")
     result_backend = os.getenv(
-        "CELERY_RESULT_BACKEND", settings.REDIS_URL or "redis://redis:6379/1"  # Use different DB for results
+        "CELERY_RESULT_BACKEND",
+        settings.REDIS_URL or "redis://redis:6379/1",  # Use different DB for results
     )
 
     # Redis-specific broker settings (Celery 5.4 recommendations)
@@ -80,18 +79,18 @@ class CeleryConfig:
 
     # Redis visibility timeout (must be larger than task ETA)
     broker_transport_options = {
-        'visibility_timeout': 43200,  # 12 hours
-        'fanout_prefix': True,
-        'fanout_patterns': True,
+        "visibility_timeout": 43200,  # 12 hours
+        "fanout_prefix": True,
+        "fanout_patterns": True,
         # Connection pool settings for redis-py >= 4.5.0
-        'socket_keepalive': True,
-        'socket_keepalive_options': {
+        "socket_keepalive": True,
+        "socket_keepalive_options": {
             1: 3,  # TCP_KEEPIDLE
             2: 3,  # TCP_KEEPINTVL
             3: 3,  # TCP_KEEPCNT
         },
-        'max_connections': 50,  # Connection pool size
-        'health_check_interval': 30,  # Health check every 30 seconds
+        "max_connections": 50,  # Connection pool size
+        "health_check_interval": 30,  # Health check every 30 seconds
     }
     broker_pool_limit = None  # Will use connection pool
 

@@ -4,23 +4,21 @@ Email Service Router
 Handles email sending, templates, and SendGrid webhook events.
 """
 
-import logging
-from typing import Dict, Any, Optional, List
+from typing import Any
 
-from fastapi import APIRouter, HTTPException, Request, Depends, Header
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
-from apps.backend.core.logging import logging_manager, log_audit
-from apps.backend.core.config import settings
-from apps.backend.models.schemas import User
 from apps.backend.api.auth.auth import get_current_user
+from apps.backend.core.config import settings
+from apps.backend.core.logging import log_audit, logging_manager
+from apps.backend.models.schemas import User
 from apps.backend.services.email import (
-    email_service,
-    EmailType,
-    EmailPriority,
-    EmailRecipient,
     EmailAttachment,
+    EmailPriority,
+    EmailType,
+    email_service,
 )
 
 logger = logging_manager.get_logger(__name__)
@@ -32,18 +30,18 @@ class SendEmailRequest(BaseModel):
     """Request model for sending an email"""
 
     to_email: EmailStr = Field(..., description="Recipient email address")
-    to_name: Optional[str] = Field(None, description="Recipient name")
+    to_name: str | None = Field(None, description="Recipient name")
     subject: str = Field(..., description="Email subject")
-    html_content: Optional[str] = Field(None, description="HTML email content")
-    text_content: Optional[str] = Field(None, description="Plain text email content")
-    template_id: Optional[str] = Field(None, description="SendGrid template ID")
-    template_data: Optional[Dict[str, Any]] = Field(None, description="Template variables")
+    html_content: str | None = Field(None, description="HTML email content")
+    text_content: str | None = Field(None, description="Plain text email content")
+    template_id: str | None = Field(None, description="SendGrid template ID")
+    template_data: dict[str, Any] | None = Field(None, description="Template variables")
     email_type: str = Field(EmailType.TRANSACTIONAL, description="Email type")
     priority: str = Field(EmailPriority.NORMAL, description="Email priority")
-    cc: Optional[List[EmailStr]] = Field(None, description="CC recipients")
-    bcc: Optional[List[EmailStr]] = Field(None, description="BCC recipients")
-    reply_to: Optional[EmailStr] = Field(None, description="Reply-to email address")
-    attachments: Optional[List[Dict[str, Any]]] = Field(None, description="Email attachments")
+    cc: list[EmailStr] | None = Field(None, description="CC recipients")
+    bcc: list[EmailStr] | None = Field(None, description="BCC recipients")
+    reply_to: EmailStr | None = Field(None, description="Reply-to email address")
+    attachments: list[dict[str, Any]] | None = Field(None, description="Email attachments")
 
 
 class WelcomeEmailRequest(BaseModel):
@@ -51,7 +49,7 @@ class WelcomeEmailRequest(BaseModel):
 
     user_email: EmailStr = Field(..., description="User's email address")
     user_name: str = Field(..., description="User's name")
-    additional_data: Optional[Dict[str, Any]] = Field(None, description="Additional template data")
+    additional_data: dict[str, Any] | None = Field(None, description="Additional template data")
 
 
 class PasswordResetEmailRequest(BaseModel):
@@ -60,7 +58,7 @@ class PasswordResetEmailRequest(BaseModel):
     user_email: EmailStr = Field(..., description="User's email address")
     user_name: str = Field(..., description="User's name")
     reset_token: str = Field(..., description="Password reset token")
-    reset_url: Optional[str] = Field(None, description="Custom reset URL")
+    reset_url: str | None = Field(None, description="Custom reset URL")
 
 
 class VerificationEmailRequest(BaseModel):
@@ -69,7 +67,7 @@ class VerificationEmailRequest(BaseModel):
     user_email: EmailStr = Field(..., description="User's email address")
     user_name: str = Field(..., description="User's name")
     verification_token: str = Field(..., description="Verification token")
-    verification_url: Optional[str] = Field(None, description="Custom verification URL")
+    verification_url: str | None = Field(None, description="Custom verification URL")
 
 
 class CreateTemplateRequest(BaseModel):
@@ -78,7 +76,7 @@ class CreateTemplateRequest(BaseModel):
     name: str = Field(..., description="Template name")
     subject: str = Field(..., description="Template subject")
     html_content: str = Field(..., description="HTML template content")
-    text_content: Optional[str] = Field(None, description="Plain text template content")
+    text_content: str | None = Field(None, description="Plain text template content")
     generation: str = Field("legacy", description="Template generation: legacy or dynamic")
 
 
@@ -101,9 +99,7 @@ async def send_email(
         # Check permissions - only admin and teacher can send emails
         user_role = getattr(current_user, "role", "student")
         if user_role not in ["admin", "teacher"]:
-            raise HTTPException(
-                status_code=403, detail="Only admins and teachers can send emails"
-            )
+            raise HTTPException(status_code=403, detail="Only admins and teachers can send emails")
 
         # Convert attachments if provided
         attachments = None
@@ -235,7 +231,10 @@ async def send_password_reset_email(
     """
     try:
         # Build reset URL
-        reset_url = request.reset_url or f"{settings.FRONTEND_URL}/reset-password?token={request.reset_token}"
+        reset_url = (
+            request.reset_url
+            or f"{settings.FRONTEND_URL}/reset-password?token={request.reset_token}"
+        )
 
         # Send password reset email
         result = await email_service.send_password_reset_email(
@@ -310,9 +309,7 @@ async def send_verification_email(
 
     except Exception as e:
         logger.error(f"Failed to send verification email: {e}")
-        raise HTTPException(
-            status_code=500, detail=f"Failed to send verification email: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to send verification email: {str(e)}")
 
 
 @router.post("/email/templates")

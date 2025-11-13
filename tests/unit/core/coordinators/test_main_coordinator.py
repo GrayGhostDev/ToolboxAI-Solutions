@@ -3,21 +3,20 @@ Unit tests for Main Coordinator - Master coordination hub
 Tests orchestration of agents, swarm, SPARC, and MCP subsystems
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch, Mock
-from datetime import datetime, timedelta
-from typing import Dict, Any
 import asyncio
+from datetime import datetime
+from unittest.mock import AsyncMock, patch
+
+import pytest
 from fastapi import HTTPException
 
 from core.coordinators.main_coordinator import (
-    MainCoordinator,
-    SystemHealth,
     ContentGenerationRequest,
     ContentGenerationResult,
+    MainCoordinator,
+    SystemHealth,
     create_main_coordinator,
 )
-
 
 # ============================================================================
 # Test Fixtures
@@ -40,9 +39,7 @@ def mock_resource_coordinator():
     coordinator = AsyncMock()
     coordinator.get_health = AsyncMock(return_value={"status": "healthy"})
     coordinator.get_metrics = AsyncMock(return_value={"cpu_usage": 45.2})
-    coordinator.get_utilization = AsyncMock(
-        return_value={"cpu": 0.45, "memory": 0.60, "gpu": 0.30}
-    )
+    coordinator.get_utilization = AsyncMock(return_value={"cpu": 0.45, "memory": 0.60, "gpu": 0.30})
     coordinator.allocate_resources = AsyncMock(return_value=True)
     coordinator.release_resources = AsyncMock(return_value=True)
     return coordinator
@@ -105,15 +102,11 @@ def mock_sparc_manager():
     manager.initialize = AsyncMock(return_value=None)
     manager.shutdown = AsyncMock(return_value=None)
     manager.get_health = AsyncMock(return_value={"status": "healthy"})
-    manager.initialize_context = AsyncMock(
-        return_value={"context_id": "ctx_123", "grade_level": 5}
-    )
+    manager.initialize_context = AsyncMock(return_value={"context_id": "ctx_123", "grade_level": 5})
     manager.evaluate_content = AsyncMock(
         return_value={"needs_adaptation": False, "quality_score": 85}
     )
-    manager.adapt_content = AsyncMock(
-        return_value=[{"adapted": True, "data": "adapted_content"}]
-    )
+    manager.adapt_content = AsyncMock(return_value=[{"adapted": True, "data": "adapted_content"}])
     return manager
 
 
@@ -400,9 +393,7 @@ class TestContentGenerationWorkflow:
             generation_time=1.5,
         )
 
-        cache_key = "Mathematics_5_" + str(
-            hash(tuple(["Learn addition", "Learn subtraction"]))
-        )
+        cache_key = "Mathematics_5_" + str(hash(tuple(["Learn addition", "Learn subtraction"])))
         from dataclasses import asdict
 
         main_coordinator.cache[cache_key] = asdict(cached_result)
@@ -442,15 +433,11 @@ class TestContentGenerationWorkflow:
         mock_resource_coordinator.release_resources.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_generate_content_error_handling(
-        self, main_coordinator, mock_error_coordinator
-    ):
+    async def test_generate_content_error_handling(self, main_coordinator, mock_error_coordinator):
         """Test error handling during content generation"""
         main_coordinator.is_initialized = True
         main_coordinator.agent_system = AsyncMock()
-        main_coordinator.agent_system.plan_content.side_effect = Exception(
-            "Planning failed"
-        )
+        main_coordinator.agent_system.plan_content.side_effect = Exception("Planning failed")
 
         result = await main_coordinator.generate_educational_content(
             subject="Math", grade_level=5, learning_objectives=["Test"]
@@ -582,9 +569,7 @@ class TestContentOrchestration:
         assert call_count == 3
 
     @pytest.mark.asyncio
-    async def test_assemble_final_content(
-        self, main_coordinator, sample_content_request
-    ):
+    async def test_assemble_final_content(self, main_coordinator, sample_content_request):
         """Test final content assembly from generation results"""
         content_plan = {"sections": ["Intro", "Main"]}
         generation_results = [
@@ -648,9 +633,7 @@ class TestHealthMonitoring:
         assert health.error_count == 0
 
     @pytest.mark.asyncio
-    async def test_get_health_status_degraded(
-        self, main_coordinator, mock_workflow_coordinator
-    ):
+    async def test_get_health_status_degraded(self, main_coordinator, mock_workflow_coordinator):
         """Test degraded health status"""
         mock_workflow_coordinator.get_health.return_value = {"status": "degraded"}
 
@@ -690,9 +673,7 @@ class TestHealthMonitoring:
         main_coordinator.is_initialized = True
         main_coordinator.health_check_interval = 0.1  # Fast for testing
 
-        with patch.object(
-            main_coordinator, "get_health_status"
-        ) as mock_get_health:
+        with patch.object(main_coordinator, "get_health_status") as mock_get_health:
             mock_get_health.return_value = SystemHealth(
                 status="healthy",
                 timestamp=datetime.now(),
@@ -716,9 +697,7 @@ class TestHealthMonitoring:
             assert mock_get_health.call_count >= 2
 
     @pytest.mark.asyncio
-    async def test_handle_health_degradation(
-        self, main_coordinator, mock_error_coordinator
-    ):
+    async def test_handle_health_degradation(self, main_coordinator, mock_error_coordinator):
         """Test handling of health degradation"""
         degraded_health = SystemHealth(
             status="degraded",
@@ -960,9 +939,7 @@ class TestFastAPIRoutes:
             )
 
             # Find health route
-            health_route = next(
-                r for r in main_coordinator.app.routes if r.path == "/health"
-            )
+            health_route = next(r for r in main_coordinator.app.routes if r.path == "/health")
             response = await health_route.endpoint()
 
             assert response["status"] == "healthy"
@@ -973,9 +950,7 @@ class TestFastAPIRoutes:
         main_coordinator.system_metrics["test_metric"] = 42.0
 
         # Find metrics route
-        metrics_route = next(
-            r for r in main_coordinator.app.routes if r.path == "/metrics"
-        )
+        metrics_route = next(r for r in main_coordinator.app.routes if r.path == "/metrics")
         response = await metrics_route.endpoint()
 
         assert "test_metric" in response
@@ -1048,9 +1023,7 @@ class TestShutdownAndCleanup:
     async def test_shutdown_handles_errors(self, main_coordinator):
         """Test shutdown handles subsystem errors gracefully"""
         main_coordinator.agent_system = AsyncMock()
-        main_coordinator.agent_system.shutdown.side_effect = Exception(
-            "Shutdown failed"
-        )
+        main_coordinator.agent_system.shutdown.side_effect = Exception("Shutdown failed")
 
         # Should not raise exception
         await main_coordinator.shutdown()
@@ -1071,9 +1044,7 @@ class TestConvenienceFunctions:
     async def test_create_main_coordinator(self):
         """Test create_main_coordinator factory function"""
         with patch.object(MainCoordinator, "initialize", new_callable=AsyncMock):
-            coordinator = await create_main_coordinator(
-                config={"max_concurrent_requests": 3}
-            )
+            coordinator = await create_main_coordinator(config={"max_concurrent_requests": 3})
 
             assert isinstance(coordinator, MainCoordinator)
             assert coordinator.max_concurrent_requests == 3

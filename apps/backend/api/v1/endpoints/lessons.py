@@ -3,13 +3,13 @@ Lessons API Endpoints for ToolboxAI Educational Platform
 Provides lesson management functionality for all user roles.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import Dict, Any, List, Optional
-from datetime import datetime, timedelta
 import logging
-from apps.backend.api.auth.auth import get_current_user
+from typing import Any
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
-from typing import Optional as Opt
+
+from apps.backend.api.auth.auth import get_current_user
 
 
 # User model for type hints
@@ -17,13 +17,13 @@ class User(BaseModel):
     id: str
     username: str
     role: str
-    email: Optional[str] = None
+    email: str | None = None
 
 
 logger = logging.getLogger(__name__)
 
 # In-memory storage for development (will be replaced with database)
-in_memory_lessons: List[Dict[str, Any]] = []
+in_memory_lessons: list[dict[str, Any]] = []
 
 # Create router for lessons endpoints
 lessons_router = APIRouter(prefix="/lessons", tags=["Lessons"])
@@ -35,11 +35,11 @@ router = lessons_router
 @lessons_router.get("")
 async def get_lessons(
     current_user: User = Depends(get_current_user),
-    class_id: Optional[int] = None,
-    subject: Optional[str] = None,
+    class_id: int | None = None,
+    subject: str | None = None,
     limit: int = Query(default=20, le=100),
     offset: int = Query(default=0, ge=0),
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Get lessons based on user role and filters."""
 
     role = current_user.role.lower()
@@ -264,7 +264,7 @@ async def get_lessons(
 @lessons_router.get("/{lesson_id}")
 async def get_lesson_details(
     lesson_id: int, current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get detailed information about a specific lesson."""
 
     role = current_user.role.lower()
@@ -334,8 +334,8 @@ async def get_lesson_details(
 
 @lessons_router.post("/")
 async def create_lesson(
-    lesson_data: Dict[str, Any], current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+    lesson_data: dict[str, Any], current_user: User = Depends(get_current_user)
+) -> dict[str, Any]:
     """Create a new lesson (teachers and admins only)."""
 
     role = current_user.role.lower()
@@ -383,8 +383,8 @@ async def create_lesson(
 
 @lessons_router.put("/{lesson_id}/progress")
 async def update_lesson_progress(
-    lesson_id: int, progress_data: Dict[str, Any], current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+    lesson_id: int, progress_data: dict[str, Any], current_user: User = Depends(get_current_user)
+) -> dict[str, Any]:
     """Update student's progress on a lesson."""
 
     if current_user.role.lower() != "student":
@@ -419,7 +419,7 @@ async def update_lesson_progress(
 @lessons_router.get("/{lesson_id}/statistics")
 async def get_lesson_statistics(
     lesson_id: int, current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get statistics for a lesson (teachers and admins only)."""
 
     role = current_user.role.lower()

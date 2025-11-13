@@ -6,11 +6,9 @@ vulnerabilities to ensure the application is protected against common attacks.
 
 import json
 import time
-from typing import Dict, List, Optional
 from urllib.parse import quote
 
 import pytest
-import requests
 from fastapi.testclient import TestClient
 
 from apps.backend.main import app
@@ -21,7 +19,7 @@ class OWASPSecurityTester:
 
     def __init__(self, client: TestClient):
         self.client = client
-        self.vulnerabilities: List[Dict] = []
+        self.vulnerabilities: list[dict] = []
 
     def report_vulnerability(
         self,
@@ -29,7 +27,7 @@ class OWASPSecurityTester:
         severity: str,
         description: str,
         endpoint: str,
-        payload: Optional[str] = None,
+        payload: str | None = None,
     ):
         """Record a discovered vulnerability."""
         self.vulnerabilities.append(
@@ -100,8 +98,10 @@ class TestBrokenAccessControl:
         response = security_tester.client.get(
             "/api/v1/content", headers={"Origin": "http://evil.com"}
         )
-        assert "Access-Control-Allow-Origin" not in response.headers or \
-               response.headers.get("Access-Control-Allow-Origin") != "http://evil.com"
+        assert (
+            "Access-Control-Allow-Origin" not in response.headers
+            or response.headers.get("Access-Control-Allow-Origin") != "http://evil.com"
+        )
 
 
 # ============================================
@@ -196,8 +196,9 @@ class TestInjection:
             if response.status_code == 201:
                 # Verify the payload is properly escaped
                 created_content = response.json()
-                assert payload not in str(created_content).replace("\\", ""), \
-                    f"XSS payload not escaped: {payload}"
+                assert payload not in str(created_content).replace(
+                    "\\", ""
+                ), f"XSS payload not escaped: {payload}"
 
     def test_should_prevent_command_injection(self, security_tester, auth_headers):
         """Test command injection prevention."""
@@ -215,8 +216,11 @@ class TestInjection:
                 headers=auth_headers,
             )
             # Should either reject or safely handle
-            assert response.status_code in [400, 403, 422], \
-                f"Command injection possible with: {payload}"
+            assert response.status_code in [
+                400,
+                403,
+                422,
+            ], f"Command injection possible with: {payload}"
 
 
 # ============================================
@@ -314,8 +318,7 @@ class TestSecurityMisconfiguration:
                 "/api/v1/auth/login",
                 json={"username": username, "password": password},
             )
-            assert response.status_code != 200, \
-                f"Default credentials work: {username}/{password}"
+            assert response.status_code != 200, f"Default credentials work: {username}/{password}"
 
 
 # ============================================
@@ -332,8 +335,10 @@ class TestVulnerableComponents:
         response = security_tester.client.get("/api/v1/health")
 
         # Check response headers
-        assert "Server" not in response.headers or \
-               "version" not in response.headers.get("Server", "").lower()
+        assert (
+            "Server" not in response.headers
+            or "version" not in response.headers.get("Server", "").lower()
+        )
         assert "X-Powered-By" not in response.headers
 
 
@@ -364,8 +369,7 @@ class TestAuthenticationFailures:
                     "password": password,
                 },
             )
-            assert response.status_code in [400, 422], \
-                f"Weak password accepted: {password}"
+            assert response.status_code in [400, 422], f"Weak password accepted: {password}"
 
     def test_should_prevent_user_enumeration(self, security_tester):
         """Test that user enumeration is prevented."""
@@ -426,8 +430,7 @@ def test_generate_security_report(security_tester):
     # Analyze vulnerabilities by severity
     for vuln in security_tester.vulnerabilities:
         severity = vuln["severity"]
-        report["severity_breakdown"][severity] = \
-            report["severity_breakdown"].get(severity, 0) + 1
+        report["severity_breakdown"][severity] = report["severity_breakdown"].get(severity, 0) + 1
 
     # Add recommendations
     if report["vulnerabilities_found"] > 0:

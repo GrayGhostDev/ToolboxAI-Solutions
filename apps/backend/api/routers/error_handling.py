@@ -5,18 +5,17 @@ FastAPI router for error handling agent swarm operations.
 """
 
 import logging
-from typing import Dict, Any, List, Optional
 from datetime import datetime
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
-from fastapi.responses import JSONResponse
+from typing import Any
+
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel, Field
-import json
 
 from core.agents.error_handling import (
     ErrorHandlingSwarmCoordinator,
+    ErrorPriority,
     ErrorState,
     ErrorType,
-    ErrorPriority,
 )
 from core.swarm.error_handling.error_handling_workflow import ErrorHandlingWorkflow
 
@@ -41,21 +40,21 @@ class ErrorReport(BaseModel):
 
     error_message: str = Field(description="Error message")
     error_type: str = Field(description="Type of error")
-    stack_trace: Optional[str] = Field(default=None, description="Stack trace")
-    file_path: Optional[str] = Field(default=None, description="File path where error occurred")
-    line_number: Optional[int] = Field(default=None, description="Line number")
-    priority: Optional[str] = Field(default="MEDIUM", description="Error priority")
-    affected_components: Optional[List[str]] = Field(default=[], description="Affected components")
-    context: Optional[Dict[str, Any]] = Field(default={}, description="Additional context")
+    stack_trace: str | None = Field(default=None, description="Stack trace")
+    file_path: str | None = Field(default=None, description="File path where error occurred")
+    line_number: int | None = Field(default=None, description="Line number")
+    priority: str | None = Field(default="MEDIUM", description="Error priority")
+    affected_components: list[str] | None = Field(default=[], description="Affected components")
+    context: dict[str, Any] | None = Field(default={}, description="Additional context")
 
 
 class SwarmRequest(BaseModel):
     """Model for swarm processing request"""
 
-    errors: List[ErrorReport] = Field(description="List of errors to process")
-    strategy: Optional[str] = Field(default="auto", description="Processing strategy")
+    errors: list[ErrorReport] = Field(description="List of errors to process")
+    strategy: str | None = Field(default="auto", description="Processing strategy")
     async_processing: bool = Field(default=True, description="Process asynchronously")
-    context: Optional[Dict[str, Any]] = Field(default={}, description="Processing context")
+    context: dict[str, Any] | None = Field(default={}, description="Processing context")
 
 
 class WorkflowStatus(BaseModel):
@@ -64,12 +63,12 @@ class WorkflowStatus(BaseModel):
     workflow_id: str = Field(description="Workflow identifier")
     status: str = Field(description="Current status")
     errors_processed: int = Field(description="Number of errors processed")
-    agents_active: List[str] = Field(description="Active agents")
+    agents_active: list[str] = Field(description="Active agents")
     progress_percentage: float = Field(description="Progress percentage")
-    estimated_completion: Optional[str] = Field(description="Estimated completion time")
+    estimated_completion: str | None = Field(description="Estimated completion time")
 
 
-@router.post("/report-error", response_model=Dict[str, Any])
+@router.post("/report-error", response_model=dict[str, Any])
 async def report_error(error_report: ErrorReport, background_tasks: BackgroundTasks):
     """
     Report a single error for processing.
@@ -116,7 +115,7 @@ async def report_error(error_report: ErrorReport, background_tasks: BackgroundTa
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/process-errors", response_model=Dict[str, Any])
+@router.post("/process-errors", response_model=dict[str, Any])
 async def process_errors(swarm_request: SwarmRequest, background_tasks: BackgroundTasks):
     """
     Process multiple errors using the swarm.
@@ -210,7 +209,7 @@ async def get_workflow_status(workflow_id: str):
     )
 
 
-@router.get("/patterns/analyze", response_model=Dict[str, Any])
+@router.get("/patterns/analyze", response_model=dict[str, Any])
 async def analyze_error_patterns(timeframe_days: int = 7):
     """
     Analyze error patterns over a timeframe.
@@ -238,7 +237,7 @@ async def analyze_error_patterns(timeframe_days: int = 7):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/predict-errors", response_model=Dict[str, Any])
+@router.post("/predict-errors", response_model=dict[str, Any])
 async def predict_errors(timeframe_hours: int = 24):
     """
     Predict future errors based on patterns.
@@ -268,7 +267,7 @@ async def predict_errors(timeframe_hours: int = 24):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/swarm/status", response_model=Dict[str, Any])
+@router.get("/swarm/status", response_model=dict[str, Any])
 async def get_swarm_status():
     """
     Get current status of the error handling swarm.
@@ -291,9 +290,9 @@ async def get_swarm_status():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/recovery/trigger", response_model=Dict[str, Any])
+@router.post("/recovery/trigger", response_model=dict[str, Any])
 async def trigger_recovery(
-    component: str, strategy: Optional[str] = None, background_tasks: BackgroundTasks = None
+    component: str, strategy: str | None = None, background_tasks: BackgroundTasks = None
 ):
     """
     Trigger recovery for a specific component.
@@ -350,7 +349,7 @@ async def trigger_recovery(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/metrics", response_model=Dict[str, Any])
+@router.get("/metrics", response_model=dict[str, Any])
 async def get_error_metrics():
     """
     Get comprehensive error handling metrics.
@@ -395,7 +394,7 @@ async def process_single_error(error_state: ErrorState):
 
 
 async def run_swarm_workflow(
-    workflow_id: str, error_states: List[ErrorState], context: Dict[str, Any]
+    workflow_id: str, error_states: list[ErrorState], context: dict[str, Any]
 ):
     """Run swarm workflow in the background"""
     try:

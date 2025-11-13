@@ -16,14 +16,15 @@ Created: 2025-09-21
 Version: 1.0.0
 """
 
-import os
 import logging
-from typing import Dict, Any, Optional
+import os
 from datetime import datetime, timezone
+from typing import Any
 
 try:
-    from supabase import create_client, Client
     from gotrue.errors import AuthApiError
+
+    from supabase import Client, create_client
 
     SUPABASE_AVAILABLE = True
 except ImportError:
@@ -68,7 +69,7 @@ class SupabaseConfig:
         """Get PostgreSQL connection URL for direct database access"""
         return f"postgresql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
 
-    def get_client_config(self) -> Dict[str, Any]:
+    def get_client_config(self) -> dict[str, Any]:
         """Get Supabase client configuration"""
         return {
             "url": self.url,
@@ -91,7 +92,7 @@ class SupabaseInitializer:
 
     def __init__(self, config: SupabaseConfig):
         self.config = config
-        self.client: Optional[Client] = None
+        self.client: Client | None = None
 
     async def initialize(self) -> bool:
         """Initialize Supabase client and verify connection"""
@@ -116,7 +117,7 @@ class SupabaseInitializer:
             logger.error(f"Failed to initialize Supabase client: {e}")
             return False
 
-    async def verify_tables(self) -> Dict[str, bool]:
+    async def verify_tables(self) -> dict[str, bool]:
         """Verify that required tables exist"""
         if not self.client:
             return {}
@@ -144,7 +145,7 @@ class SupabaseInitializer:
 
         return table_status
 
-    async def setup_realtime_subscriptions(self, callback_handlers: Dict[str, callable]):
+    async def setup_realtime_subscriptions(self, callback_handlers: dict[str, callable]):
         """Setup real-time subscriptions for agent system tables"""
         if not self.client or not self.config.enable_realtime:
             logger.info("Real-time subscriptions not enabled")
@@ -218,14 +219,14 @@ class SupabaseInitializer:
         except Exception as e:
             logger.error(f"Failed to initialize default data: {e}")
 
-    def get_client(self) -> Optional[Client]:
+    def get_client(self) -> Client | None:
         """Get the initialized Supabase client"""
         return self.client
 
 
 # Global instances
-_supabase_config: Optional[SupabaseConfig] = None
-_supabase_initializer: Optional[SupabaseInitializer] = None
+_supabase_config: SupabaseConfig | None = None
+_supabase_initializer: SupabaseInitializer | None = None
 
 
 def get_supabase_config() -> SupabaseConfig:
@@ -246,7 +247,7 @@ async def get_supabase_initializer() -> SupabaseInitializer:
     return _supabase_initializer
 
 
-async def initialize_supabase_for_agents() -> Dict[str, Any]:
+async def initialize_supabase_for_agents() -> dict[str, Any]:
     """
     Initialize Supabase for the agent system.
 
@@ -290,7 +291,7 @@ async def initialize_supabase_for_agents() -> Dict[str, Any]:
         }
 
 
-async def health_check_supabase() -> Dict[str, Any]:
+async def health_check_supabase() -> dict[str, Any]:
     """Perform health check on Supabase connection"""
     try:
         config = get_supabase_config()

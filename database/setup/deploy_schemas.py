@@ -5,17 +5,17 @@ Database Schema Deployment Script for ToolboxAI
 This script deploys all database schemas to the appropriate databases.
 """
 
-import os
 import sys
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from database.connection_manager import db_manager, get_session
 from sqlalchemy import text
+
+from database.connection_manager import db_manager, get_session
 
 
 class SchemaDeployer:

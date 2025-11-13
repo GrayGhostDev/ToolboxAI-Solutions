@@ -3,14 +3,14 @@ GraphQL Query resolvers
 """
 
 import uuid
-from typing import Optional, List, Dict, Any
+from typing import Any
 
 from ariadne import QueryType
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 
-from database.models import User, Course, Lesson, Quiz, Enrollment
 from apps.backend.core.config import settings
+from database.models import Course, Enrollment, Lesson, Quiz, User
 
 # Create Query type
 query = QueryType()
@@ -30,7 +30,7 @@ async def resolve_version(obj, info) -> str:
 
 # User resolvers
 @query.field("me")
-async def resolve_me(obj, info) -> Optional[User]:
+async def resolve_me(obj, info) -> User | None:
     """Get current authenticated user"""
 
     user = info.context.get("user")
@@ -41,7 +41,7 @@ async def resolve_me(obj, info) -> Optional[User]:
 
 
 @query.field("user")
-async def resolve_user(obj, info, id: str) -> Optional[User]:
+async def resolve_user(obj, info, id: str) -> User | None:
     """Get user by ID"""
 
     db = info.context["db"]
@@ -58,10 +58,10 @@ async def resolve_user(obj, info, id: str) -> Optional[User]:
 async def resolve_users(
     obj,
     info,
-    filter: Optional[Dict] = None,
-    sort: Optional[Dict] = None,
-    pagination: Optional[Dict] = None,
-) -> Dict[str, Any]:
+    filter: dict | None = None,
+    sort: dict | None = None,
+    pagination: dict | None = None,
+) -> dict[str, Any]:
     """List users with filtering and pagination"""
 
     db = info.context["db"]
@@ -119,7 +119,7 @@ async def resolve_users(
 
 # Course resolvers
 @query.field("course")
-async def resolve_course(obj, info, id: str) -> Optional[Course]:
+async def resolve_course(obj, info, id: str) -> Course | None:
     """Get course by ID"""
 
     loader = info.context["loaders"]["course"]
@@ -133,10 +133,10 @@ async def resolve_course(obj, info, id: str) -> Optional[Course]:
 async def resolve_courses(
     obj,
     info,
-    filter: Optional[Dict] = None,
-    sort: Optional[Dict] = None,
-    pagination: Optional[Dict] = None,
-) -> Dict[str, Any]:
+    filter: dict | None = None,
+    sort: dict | None = None,
+    pagination: dict | None = None,
+) -> dict[str, Any]:
     """List courses with filtering and pagination"""
 
     db = info.context["db"]
@@ -192,10 +192,10 @@ async def resolve_courses(
 async def resolve_enrolled_courses(
     obj,
     info,
-    studentId: Optional[str] = None,
-    status: Optional[str] = None,
-    pagination: Optional[Dict] = None,
-) -> Dict[str, Any]:
+    studentId: str | None = None,
+    status: str | None = None,
+    pagination: dict | None = None,
+) -> dict[str, Any]:
     """Get courses enrolled by a student"""
 
     db = info.context["db"]
@@ -239,7 +239,7 @@ async def resolve_enrolled_courses(
 
 # Lesson resolvers
 @query.field("lesson")
-async def resolve_lesson(obj, info, id: str) -> Optional[Lesson]:
+async def resolve_lesson(obj, info, id: str) -> Lesson | None:
     """Get lesson by ID"""
 
     loader = info.context["loaders"]["lesson"]
@@ -252,7 +252,7 @@ async def resolve_lesson(obj, info, id: str) -> Optional[Lesson]:
 @query.field("courseLessons")
 async def resolve_course_lessons(
     obj, info, courseId: str, includeHidden: bool = False
-) -> List[Lesson]:
+) -> list[Lesson]:
     """Get lessons for a course"""
 
     db = info.context["db"]
@@ -273,7 +273,7 @@ async def resolve_course_lessons(
 
 # Quiz resolvers
 @query.field("quiz")
-async def resolve_quiz(obj, info, id: str) -> Optional[Quiz]:
+async def resolve_quiz(obj, info, id: str) -> Quiz | None:
     """Get quiz by ID"""
 
     loader = info.context["loaders"]["quiz"]
@@ -288,10 +288,10 @@ async def resolve_course_quizzes(
     obj,
     info,
     courseId: str,
-    type: Optional[str] = None,
-    status: Optional[str] = None,
+    type: str | None = None,
+    status: str | None = None,
     includeHidden: bool = False,
-) -> List[Quiz]:
+) -> list[Quiz]:
     """Get quizzes for a course"""
 
     db = info.context["db"]

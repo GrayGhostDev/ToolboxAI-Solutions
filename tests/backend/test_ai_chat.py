@@ -1,36 +1,39 @@
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest_asyncio
+
 """Comprehensive Test Suite for AI Chat System
 
 Tests the AI chat communication system for Roblox educational assistant.
 Ensures >85% test pass rate with comprehensive coverage.
 """
 
-import pytest
 import asyncio
 import json
 from datetime import datetime
-from unittest.mock import Mock, MagicMock, patch, AsyncMock
-from fastapi.testclient import TestClient
-from fastapi import WebSocket
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import pytest
 import websocket
+from fastapi import WebSocket
+from fastapi.testclient import TestClient
 
 # Import the modules to test
 from apps.backend.api.v1.endpoints.ai_chat import (
-    router,
     ConversationState,
-    RobloxAssistantGraph,
-    IntentType,
-    MessageRole,
     ConversationStatus,
     CreateConversationRequest,
+    IntentType,
+    MessageRole,
+    RobloxAssistantGraph,
     SendMessageRequest,
     chat_manager,
     conversations,
-    messages
+    messages,
+    router,
 )
 
 # =============================================================================
@@ -47,7 +50,7 @@ def test_client(mock_user):
         return mock_user
 
     # Import after patching to ensure the override takes effect
-    from apps.backend.api.v1.endpoints.ai_chat import router, get_current_user
+    from apps.backend.api.v1.endpoints.ai_chat import get_current_user, router
 
     app = FastAPI()
     app.include_router(router, prefix="/api/v1")
@@ -576,6 +579,7 @@ async def test_roblox_content_generation_integration(self):
         """Test integration with Roblox content generation"""
         try:
             from apps.backend.api.v1.endpoints.ai_chat import generate_ai_response
+
             # Function exists and can be imported
             assert generate_ai_response is not None
             assert callable(generate_ai_response)
@@ -653,6 +657,7 @@ async def test_authentication_integration(self):
         # Test that we can import and use get_current_user
         try:
             from apps.backend.api.v1.endpoints.ai_chat import get_current_user
+
             # The function exists and can be imported
             assert get_current_user is not None
             assert callable(get_current_user)

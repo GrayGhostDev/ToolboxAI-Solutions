@@ -11,17 +11,17 @@ import json
 import logging
 import secrets
 import time
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple
-from dataclasses import dataclass, asdict
 
 import redis.asyncio as redis
 from pydantic import BaseModel, Field, validator
 
 from apps.backend.core.config import settings
-from apps.backend.services.supabase_service import SupabaseService
 from apps.backend.core.security.rate_limit_manager import get_rate_limit_manager
+from apps.backend.services.supabase_service import SupabaseService
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +100,7 @@ class APIKeyModel(BaseModel):
     revoked_at: Optional[datetime] = None
     revoked_reason: Optional[str] = None
 
-    @validator('scopes', pre=True)
+    @validator("scopes", pre=True)
     def validate_scopes(cls, v):
         """Ensure scopes are valid."""
         if isinstance(v, str):
@@ -129,7 +129,7 @@ class APIKeyManager:
     _instance = None
 
     def __init__(self):
-        self.supabase = SupabaseService() if hasattr(SupabaseService, '__init__') else None
+        self.supabase = SupabaseService() if hasattr(SupabaseService, "__init__") else None
         self.rate_limiter = get_rate_limit_manager()
         self.redis_client: Optional[redis.Redis] = None
 
@@ -165,21 +165,20 @@ class APIKeyManager:
         try:
             redis_url = settings.REDIS_URL
 
-            if redis_url and redis_url.startswith('rediss://'):
+            if redis_url and redis_url.startswith("rediss://"):
                 # Redis Cloud with TLS
                 cert_path = settings.REDIS_CLOUD_CA_CERT_PATH
                 self.redis_client = await redis.from_url(
                     redis_url,
                     decode_responses=True,
                     socket_connect_timeout=5,
-                    ssl_cert_reqs='required' if cert_path else None,
-                    ssl_ca_certs=cert_path if cert_path else None
+                    ssl_cert_reqs="required" if cert_path else None,
+                    ssl_ca_certs=cert_path if cert_path else None,
                 )
             else:
                 # Local Redis
                 self.redis_client = await redis.from_url(
-                    redis_url or "redis://localhost:6379/2",
-                    decode_responses=True
+                    redis_url or "redis://localhost:6379/2", decode_responses=True
                 )
 
             await self.redis_client.ping()
@@ -219,20 +218,20 @@ class APIKeyManager:
             Hashed key
         """
         # Use HMAC with a secret for additional security
-        secret = settings.JWT_SECRET_KEY.encode() if hasattr(settings, 'JWT_SECRET_KEY') else b"default_secret"
+        secret = (
+            settings.JWT_SECRET_KEY.encode()
+            if hasattr(settings, "JWT_SECRET_KEY")
+            else b"default_secret"
+        )
 
-        return hmac.new(
-            secret,
-            api_key.encode(),
-            hashlib.sha256
-        ).hexdigest()
+        return hmac.new(secret, api_key.encode(), hashlib.sha256).hexdigest()
 
     async def create_api_key(
         self,
         name: str,
         scopes: List[str],
         metadata: Optional[APIKeyMetadata] = None,
-        expires_in_days: Optional[int] = None
+        expires_in_days: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
         Create a new API key.
@@ -254,10 +253,10 @@ class APIKeyManager:
         api_key = APIKeyModel(
             key_id=key_id,
             key_hash=key_hash,
-            prefix=full_key[:len(self.key_prefix) + 8],
+            prefix=full_key[: len(self.key_prefix) + 8],
             name=name,
             scopes=scopes,
-            status=APIKeyStatus.ACTIVE
+            status=APIKeyStatus.ACTIVE,
         )
 
         # Add metadata if provided
@@ -278,7 +277,7 @@ class APIKeyManager:
         # Store in Supabase
         if self.supabase:
             try:
-                await self.supabase.table('api_keys').insert(api_key.dict()).execute()
+                await self.supabase.table("api_keys").insert(api_key.dict()).execute()
                 logger.info(f"Created API key: {api_key.key_id}")
             except Exception as e:
                 logger.error(f"Failed to store API key in Supabase: {e}")
@@ -289,9 +288,7 @@ class APIKeyManager:
             try:
                 cache_key = f"{self.cache_prefix_key}{key_hash}"
                 await self.redis_client.setex(
-                    cache_key,
-                    self.cache_ttl,
-                    json.dumps(api_key.dict(), default=str)
+                    cache_key, self.cache_ttl, json.dumps(api_key.dict(), default=str)
                 )
             except Exception as e:
                 logger.debug(f"Failed to cache API key: {e}")
@@ -306,8 +303,8 @@ class APIKeyManager:
             "rate_limits": {
                 "per_minute": api_key.rate_limit_per_minute,
                 "per_hour": api_key.rate_limit_per_hour,
-                "per_day": api_key.rate_limit_per_day
-            }
+                "per_day": api_key.rate_limit_per_day,
+            },
         }
 
     async def validate_api_key(
@@ -315,7 +312,7 @@ class APIKeyManager:
         api_key: str,
         required_scopes: Optional[List[str]] = None,
         request_ip: Optional[str] = None,
-        origin: Optional[str] = None
+        origin: Optional[str] = None,
     ) -> Tuple[bool, Optional[APIKeyModel]]:
         """
         Validate an API key.
@@ -339,7 +336,9 @@ class APIKeyManager:
             cached_key, cached_time = self._memory_cache[key_hash]
             if time.time() - cached_time < 60:  # 1 minute memory cache
                 self.cache_hits += 1
-                return await self._validate_key_model(cached_key, required_scopes, request_ip, origin)
+                return await self._validate_key_model(
+                    cached_key, required_scopes, request_ip, origin
+                )
 
         # Check Redis cache
         api_key_model = None
@@ -364,7 +363,12 @@ class APIKeyManager:
 
             if self.supabase:
                 try:
-                    result = await self.supabase.table('api_keys').select("*").eq('key_hash', key_hash).execute()
+                    result = (
+                        await self.supabase.table("api_keys")
+                        .select("*")
+                        .eq("key_hash", key_hash)
+                        .execute()
+                    )
 
                     if result.data and len(result.data) > 0:
                         api_key_model = APIKeyModel(**result.data[0])
@@ -381,12 +385,12 @@ class APIKeyManager:
                 # For development/testing, accept any key with the right prefix
                 if api_key.startswith(self.key_prefix):
                     api_key_model = APIKeyModel(
-                        key_id=api_key[len(self.key_prefix):len(self.key_prefix) + 8],
+                        key_id=api_key[len(self.key_prefix) : len(self.key_prefix) + 8],
                         key_hash=key_hash,
-                        prefix=api_key[:len(self.key_prefix) + 8],
+                        prefix=api_key[: len(self.key_prefix) + 8],
                         name="Development Key",
                         scopes=[s.value for s in APIKeyScope],
-                        status=APIKeyStatus.ACTIVE
+                        status=APIKeyStatus.ACTIVE,
                     )
 
         if not api_key_model:
@@ -401,7 +405,7 @@ class APIKeyManager:
         api_key: APIKeyModel,
         required_scopes: Optional[List[str]],
         request_ip: Optional[str],
-        origin: Optional[str]
+        origin: Optional[str],
     ) -> Tuple[bool, Optional[APIKeyModel]]:
         """
         Validate an API key model against requirements.
@@ -456,9 +460,7 @@ class APIKeyManager:
             try:
                 cache_key = f"{self.cache_prefix_key}{api_key.key_hash}"
                 await self.redis_client.setex(
-                    cache_key,
-                    self.cache_ttl,
-                    json.dumps(api_key.dict(), default=str)
+                    cache_key, self.cache_ttl, json.dumps(api_key.dict(), default=str)
                 )
             except Exception as e:
                 logger.debug(f"Failed to cache API key: {e}")
@@ -488,7 +490,9 @@ class APIKeyManager:
             try:
                 usage_key = f"{self.cache_prefix_usage}{api_key.key_id}"
                 await self.redis_client.hincrby(usage_key, "total_requests", 1)
-                await self.redis_client.hset(usage_key, "last_used_at", api_key.last_used_at.isoformat())
+                await self.redis_client.hset(
+                    usage_key, "last_used_at", api_key.last_used_at.isoformat()
+                )
 
                 if request_ip:
                     await self.redis_client.hset(usage_key, "last_used_ip", request_ip)
@@ -506,11 +510,13 @@ class APIKeyManager:
         """Sync usage statistics to database."""
         if self.supabase:
             try:
-                await self.supabase.table('api_keys').update({
-                    "total_requests": api_key.total_requests,
-                    "last_used_at": api_key.last_used_at.isoformat(),
-                    "last_used_ip": api_key.last_used_ip
-                }).eq('key_id', api_key.key_id).execute()
+                await self.supabase.table("api_keys").update(
+                    {
+                        "total_requests": api_key.total_requests,
+                        "last_used_at": api_key.last_used_at.isoformat(),
+                        "last_used_ip": api_key.last_used_ip,
+                    }
+                ).eq("key_id", api_key.key_id).execute()
             except Exception as e:
                 logger.error(f"Failed to sync usage to database: {e}")
 
@@ -518,9 +524,9 @@ class APIKeyManager:
         """Update key status in database."""
         if self.supabase:
             try:
-                await self.supabase.table('api_keys').update({
-                    "status": api_key.status.value
-                }).eq('key_id', api_key.key_id).execute()
+                await self.supabase.table("api_keys").update({"status": api_key.status.value}).eq(
+                    "key_id", api_key.key_id
+                ).execute()
             except Exception as e:
                 logger.error(f"Failed to update key status: {e}")
 
@@ -538,11 +544,13 @@ class APIKeyManager:
         try:
             # Update in database
             if self.supabase:
-                await self.supabase.table('api_keys').update({
-                    "status": APIKeyStatus.REVOKED.value,
-                    "revoked_at": datetime.now(timezone.utc).isoformat(),
-                    "revoked_reason": reason
-                }).eq('key_id', key_id).execute()
+                await self.supabase.table("api_keys").update(
+                    {
+                        "status": APIKeyStatus.REVOKED.value,
+                        "revoked_at": datetime.now(timezone.utc).isoformat(),
+                        "revoked_reason": reason,
+                    }
+                ).eq("key_id", key_id).execute()
 
             # Clear from caches
             if self.redis_client:
@@ -587,7 +595,9 @@ class APIKeyManager:
         try:
             # Fetch existing key
             if self.supabase:
-                result = await self.supabase.table('api_keys').select("*").eq('key_id', key_id).execute()
+                result = (
+                    await self.supabase.table("api_keys").select("*").eq("key_id", key_id).execute()
+                )
 
                 if result.data and len(result.data) > 0:
                     old_key = APIKeyModel(**result.data[0])
@@ -603,7 +613,7 @@ class APIKeyManager:
                         contact_email=old_key.contact_email,
                         ip_whitelist=old_key.ip_whitelist,
                         allowed_origins=old_key.allowed_origins,
-                        rate_limit_override=old_key.rate_limit_per_minute
+                        rate_limit_override=old_key.rate_limit_per_minute,
                     )
 
                     # Calculate remaining days if key had expiration
@@ -617,7 +627,7 @@ class APIKeyManager:
                         name=metadata.name,
                         scopes=old_key.scopes,
                         metadata=metadata,
-                        expires_in_days=expires_in_days
+                        expires_in_days=expires_in_days,
                     )
 
             return None
@@ -627,9 +637,7 @@ class APIKeyManager:
             return None
 
     async def check_rate_limit(
-        self,
-        api_key: APIKeyModel,
-        source: str = "api"
+        self, api_key: APIKeyModel, source: str = "api"
     ) -> Tuple[bool, Optional[int]]:
         """
         Check rate limit for an API key.
@@ -649,7 +657,7 @@ class APIKeyManager:
             identifier=identifier,
             max_requests=api_key.rate_limit_per_minute,
             window_seconds=60,
-            source=source
+            source=source,
         )
 
         if not allowed:
@@ -660,7 +668,7 @@ class APIKeyManager:
             identifier=f"{identifier}:hourly",
             max_requests=api_key.rate_limit_per_hour,
             window_seconds=3600,
-            source=source
+            source=source,
         )
 
         if not allowed:
@@ -671,15 +679,13 @@ class APIKeyManager:
             identifier=f"{identifier}:daily",
             max_requests=api_key.rate_limit_per_day,
             window_seconds=86400,
-            source=source
+            source=source,
         )
 
         return allowed, retry_after
 
     async def list_api_keys(
-        self,
-        organization: Optional[str] = None,
-        status: Optional[APIKeyStatus] = None
+        self, organization: Optional[str] = None, status: Optional[APIKeyStatus] = None
     ) -> List[Dict[str, Any]]:
         """
         List API keys with optional filters.
@@ -693,13 +699,13 @@ class APIKeyManager:
         """
         try:
             if self.supabase:
-                query = self.supabase.table('api_keys').select("*")
+                query = self.supabase.table("api_keys").select("*")
 
                 if organization:
-                    query = query.eq('organization', organization)
+                    query = query.eq("organization", organization)
 
                 if status:
-                    query = query.eq('status', status.value)
+                    query = query.eq("status", status.value)
 
                 result = await query.execute()
 
@@ -707,18 +713,24 @@ class APIKeyManager:
                 summaries = []
                 for data in result.data:
                     api_key = APIKeyModel(**data)
-                    summaries.append({
-                        "key_id": api_key.key_id,
-                        "prefix": api_key.prefix,
-                        "name": api_key.name,
-                        "organization": api_key.organization,
-                        "status": api_key.status,
-                        "scopes": api_key.scopes,
-                        "total_requests": api_key.total_requests,
-                        "last_used_at": api_key.last_used_at.isoformat() if api_key.last_used_at else None,
-                        "created_at": api_key.created_at.isoformat(),
-                        "expires_at": api_key.expires_at.isoformat() if api_key.expires_at else None
-                    })
+                    summaries.append(
+                        {
+                            "key_id": api_key.key_id,
+                            "prefix": api_key.prefix,
+                            "name": api_key.name,
+                            "organization": api_key.organization,
+                            "status": api_key.status,
+                            "scopes": api_key.scopes,
+                            "total_requests": api_key.total_requests,
+                            "last_used_at": (
+                                api_key.last_used_at.isoformat() if api_key.last_used_at else None
+                            ),
+                            "created_at": api_key.created_at.isoformat(),
+                            "expires_at": (
+                                api_key.expires_at.isoformat() if api_key.expires_at else None
+                            ),
+                        }
+                    )
 
                 return summaries
 
@@ -741,7 +753,7 @@ class APIKeyManager:
             "failed_validations": self.failed_validations,
             "validation_failure_rate": validation_failure_rate,
             "memory_cache_size": len(self._memory_cache),
-            "memory_cache_max_size": self._memory_cache_max_size
+            "memory_cache_max_size": self._memory_cache_max_size,
         }
 
     def export_prometheus_metrics(self) -> str:
@@ -752,23 +764,18 @@ class APIKeyManager:
             "# HELP api_key_validations_total Total API key validations",
             "# TYPE api_key_validations_total counter",
             f"api_key_validations_total {metrics['total_validations']}",
-
             "# HELP api_key_cache_hits_total Cache hits for API key validation",
             "# TYPE api_key_cache_hits_total counter",
             f"api_key_cache_hits_total {metrics['cache_hits']}",
-
             "# HELP api_key_cache_misses_total Cache misses for API key validation",
             "# TYPE api_key_cache_misses_total counter",
             f"api_key_cache_misses_total {metrics['cache_misses']}",
-
             "# HELP api_key_validation_failures_total Failed API key validations",
             "# TYPE api_key_validation_failures_total counter",
             f"api_key_validation_failures_total {metrics['failed_validations']}",
-
             "# HELP api_key_cache_hit_rate API key cache hit rate",
             "# TYPE api_key_cache_hit_rate gauge",
             f"api_key_cache_hit_rate {metrics['cache_hit_rate']}",
-
             "# HELP api_key_memory_cache_size Current memory cache size",
             "# TYPE api_key_memory_cache_size gauge",
             f"api_key_memory_cache_size {metrics['memory_cache_size']}",

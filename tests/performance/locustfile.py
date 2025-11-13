@@ -1,12 +1,15 @@
 """Load testing with Locust for Pusher migration validation"""
-from locust import HttpUser, task, between
-import time
-import json
+
 import random
 import string
+import time
+
+from locust import HttpUser, between, task
+
 
 class PusherMigrationLoadTest(HttpUser):
     """Load test comparing WebSocket to Pusher performance"""
+
     wait_time = between(0.5, 2)
 
     def on_start(self):
@@ -15,10 +18,9 @@ class PusherMigrationLoadTest(HttpUser):
         username = f"test_user_{''.join(random.choices(string.ascii_lowercase, k=5))}"
 
         # Authenticate
-        response = self.client.post("/api/v1/auth/login", json={
-            "username": username,
-            "password": "test_password"
-        })
+        response = self.client.post(
+            "/api/v1/auth/login", json={"username": username, "password": "test_password"}
+        )
 
         if response.status_code == 200:
             self.token = response.json().get("access_token")
@@ -32,11 +34,14 @@ class PusherMigrationLoadTest(HttpUser):
     def test_pusher_trigger(self):
         """Test Pusher event triggering"""
         start_time = time.time()
-        response = self.client.post("/api/v1/realtime/trigger", json={
-            "channel": "test-channel",
-            "event": "load-test",
-            "data": {"timestamp": start_time, "user": "locust"}
-        })
+        response = self.client.post(
+            "/api/v1/realtime/trigger",
+            json={
+                "channel": "test-channel",
+                "event": "load-test",
+                "data": {"timestamp": start_time, "user": "locust"},
+            },
+        )
 
         total_time = time.time() - start_time
 
@@ -46,16 +51,15 @@ class PusherMigrationLoadTest(HttpUser):
                 name="/api/v1/realtime/trigger",
                 response_time=total_time * 1000,
                 response_length=len(response.content),
-                response=response
+                response=response,
             )
 
     @task(2)
     def test_legacy_websocket_fallback(self):
         """Test legacy WebSocket endpoint (should show deprecation)"""
-        response = self.client.get("/ws/native", headers={
-            "Upgrade": "websocket",
-            "Connection": "Upgrade"
-        })
+        response = self.client.get(
+            "/ws/native", headers={"Upgrade": "websocket", "Connection": "Upgrade"}
+        )
 
         # Should get deprecation warning
         assert response.headers.get("X-Deprecated") == "true"
@@ -63,11 +67,10 @@ class PusherMigrationLoadTest(HttpUser):
     @task(3)
     def test_content_generation_pusher(self):
         """Test content generation with Pusher updates"""
-        response = self.client.post("/api/v1/content/generate", json={
-            "title": "Test Lesson",
-            "subject": "Mathematics",
-            "grade_level": 5
-        })
+        response = self.client.post(
+            "/api/v1/content/generate",
+            json={"title": "Test Lesson", "subject": "Mathematics", "grade_level": 5},
+        )
 
         if response.status_code == 200:
             content_id = response.json().get("content_id")
@@ -77,10 +80,13 @@ class PusherMigrationLoadTest(HttpUser):
     @task(1)
     def test_pusher_auth_endpoint(self):
         """Test Pusher authentication endpoint performance"""
-        response = self.client.post("/pusher/auth", data={
-            "socket_id": f"test.socket.{int(time.time())}",
-            "channel_name": "private-test-channel"
-        })
+        response = self.client.post(
+            "/pusher/auth",
+            data={
+                "socket_id": f"test.socket.{int(time.time())}",
+                "channel_name": "private-test-channel",
+            },
+        )
 
         # Log performance metrics
         if response.status_code in [200, 401]:
@@ -93,7 +99,7 @@ class PusherMigrationLoadTest(HttpUser):
             "/api/v1/dashboard/student",
             "/api/v1/dashboard/teacher",
             "/api/v1/gamification/achievements",
-            "/api/v1/analytics/progress"
+            "/api/v1/analytics/progress",
         ]
 
         endpoint = random.choice(endpoints)
@@ -102,20 +108,25 @@ class PusherMigrationLoadTest(HttpUser):
         # These endpoints should work even without proper auth
         # They might return 401 but should not fail completely
 
+
 class RobloxIntegrationLoadTest(HttpUser):
     """Load test for Roblox integration with Pusher"""
+
     wait_time = between(1, 3)
 
     @task
     def test_roblox_environment_sync(self):
         """Test Roblox environment synchronization via Pusher"""
-        response = self.client.post("/api/v1/roblox-integration/sync", json={
-            "environment_id": "math_world_123",
-            "player_data": {
-                "user_id": f"player_{int(time.time())}",
-                "position": {"x": 100, "y": 50, "z": 200}
-            }
-        })
+        response = self.client.post(
+            "/api/v1/roblox-integration/sync",
+            json={
+                "environment_id": "math_world_123",
+                "player_data": {
+                    "user_id": f"player_{int(time.time())}",
+                    "position": {"x": 100, "y": 50, "z": 200},
+                },
+            },
+        )
 
         # Should trigger Pusher event to roblox-sync channel
 
@@ -123,26 +134,34 @@ class RobloxIntegrationLoadTest(HttpUser):
     def test_plugin_communication(self):
         """Test Roblox plugin communication via Pusher"""
         plugin_id = f"plugin_{random.randint(1000, 9999)}"
-        response = self.client.post(f"/api/v1/roblox-integration/plugin/{plugin_id}/message", json={
-            "event": "script_update",
-            "data": {"script_content": "print('Hello from load test')"}
-        })
+        response = self.client.post(
+            f"/api/v1/roblox-integration/plugin/{plugin_id}/message",
+            json={
+                "event": "script_update",
+                "data": {"script_content": "print('Hello from load test')"},
+            },
+        )
+
 
 class AgentSystemLoadTest(HttpUser):
     """Load test for AI agent system with Pusher notifications"""
+
     wait_time = between(2, 5)
 
     @task
     def test_agent_orchestration(self):
         """Test agent system with Pusher status updates"""
-        response = self.client.post("/api/v1/agents/execute", json={
-            "agent_type": "content_generation",
-            "task": {
-                "title": "Load Test Content",
-                "subject": "Science",
-                "difficulty": "beginner"
-            }
-        })
+        response = self.client.post(
+            "/api/v1/agents/execute",
+            json={
+                "agent_type": "content_generation",
+                "task": {
+                    "title": "Load Test Content",
+                    "subject": "Science",
+                    "difficulty": "beginner",
+                },
+            },
+        )
 
         if response.status_code == 200:
             task_id = response.json().get("task_id")
@@ -151,16 +170,17 @@ class AgentSystemLoadTest(HttpUser):
     @task
     def test_quiz_generation(self):
         """Test quiz generation with real-time progress updates"""
-        response = self.client.post("/api/v1/quizzes/generate", json={
-            "topic": "Basic Mathematics",
-            "questions": 5,
-            "difficulty": "easy"
-        })
+        response = self.client.post(
+            "/api/v1/quizzes/generate",
+            json={"topic": "Basic Mathematics", "questions": 5, "difficulty": "easy"},
+        )
 
         # Should trigger content-generation channel events
 
+
 class ComprehensiveSystemTest(HttpUser):
     """Comprehensive system load test"""
+
     wait_time = between(0.5, 4)
 
     @task(10)
@@ -172,13 +192,13 @@ class ComprehensiveSystemTest(HttpUser):
     @task(8)
     def test_pusher_webhook(self):
         """Test Pusher webhook processing"""
-        response = self.client.post("/pusher/webhook", json={
-            "time_ms": int(time.time() * 1000),
-            "events": [{
-                "name": "channel_occupied",
-                "channel": "test-channel"
-            }]
-        })
+        response = self.client.post(
+            "/pusher/webhook",
+            json={
+                "time_ms": int(time.time() * 1000),
+                "events": [{"name": "channel_occupied", "channel": "test-channel"}],
+            },
+        )
 
     @task(3)
     def test_analytics_realtime(self):

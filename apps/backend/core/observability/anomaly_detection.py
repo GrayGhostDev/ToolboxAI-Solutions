@@ -6,25 +6,24 @@ and traffic patterns with real-time alerting capabilities.
 """
 
 import asyncio
-import time
 import logging
-import math
 import statistics
-from typing import Dict, Any, Optional, List, Callable, Tuple, Union
+import threading
+import time
+from collections import defaultdict, deque
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from collections import deque, defaultdict
+from datetime import datetime
 from enum import Enum
 from functools import wraps
-import threading
-import json
-from concurrent.futures import ThreadPoolExecutor
+from typing import Any
 
 import numpy as np
 
 # Optional scientific computing dependencies
 try:
     from scipy import stats
+
     SCIPY_AVAILABLE = True
 except ImportError:
     SCIPY_AVAILABLE = False
@@ -33,13 +32,14 @@ except ImportError:
 try:
     from sklearn.cluster import DBSCAN
     from sklearn.preprocessing import StandardScaler
+
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False
     DBSCAN = None
     StandardScaler = None
 
-from .correlation import get_correlation_context, correlation_manager
+from .correlation import get_correlation_context
 
 logger = logging.getLogger(__name__)
 
@@ -84,12 +84,12 @@ class AnomalyAlert:
     expected_value: float
     threshold: float
     confidence: float
-    correlation_id: Optional[str] = None
-    trace_id: Optional[str] = None
+    correlation_id: str | None = None
+    trace_id: str | None = None
     detected_at: datetime = field(default_factory=datetime.utcnow)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert alert to dictionary"""
         return {
             "id": self.id,
@@ -115,7 +115,7 @@ class MetricDataPoint:
 
     timestamp: float
     value: float
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class TimeSeriesBuffer:
@@ -127,7 +127,7 @@ class TimeSeriesBuffer:
         self._data: deque = deque(maxlen=max_size)
         self._lock = threading.RLock()
 
-    def add(self, value: float, metadata: Optional[Dict[str, Any]] = None):
+    def add(self, value: float, metadata: dict[str, Any] | None = None):
         """Add a data point"""
         with self._lock:
             self._data.append(
@@ -143,18 +143,18 @@ class TimeSeriesBuffer:
         while self._data and self._data[0].timestamp < cutoff_time:
             self._data.popleft()
 
-    def get_recent(self, seconds: int) -> List[MetricDataPoint]:
+    def get_recent(self, seconds: int) -> list[MetricDataPoint]:
         """Get data points from the last N seconds"""
         with self._lock:
             cutoff_time = time.time() - seconds
             return [dp for dp in self._data if dp.timestamp >= cutoff_time]
 
-    def get_all(self) -> List[MetricDataPoint]:
+    def get_all(self) -> list[MetricDataPoint]:
         """Get all data points"""
         with self._lock:
             return list(self._data)
 
-    def get_values(self, seconds: Optional[int] = None) -> List[float]:
+    def get_values(self, seconds: int | None = None) -> list[float]:
         """Get just the values"""
         if seconds:
             data_points = self.get_recent(seconds)
@@ -162,7 +162,7 @@ class TimeSeriesBuffer:
             data_points = self.get_all()
         return [dp.value for dp in data_points]
 
-    def get_timestamps(self, seconds: Optional[int] = None) -> List[float]:
+    def get_timestamps(self, seconds: int | None = None) -> list[float]:
         """Get just the timestamps"""
         if seconds:
             data_points = self.get_recent(seconds)
@@ -180,7 +180,7 @@ class StatisticalDetector:
     """Statistical anomaly detection algorithms"""
 
     @staticmethod
-    def z_score_detection(values: List[float], threshold: float = 3.0) -> Tuple[bool, float]:
+    def z_score_detection(values: list[float], threshold: float = 3.0) -> tuple[bool, float]:
         """Z-score based anomaly detection"""
         if len(values) < 3:
             return False, 0.0
@@ -202,8 +202,8 @@ class StatisticalDetector:
 
     @staticmethod
     def modified_z_score_detection(
-        values: List[float], threshold: float = 3.5
-    ) -> Tuple[bool, float]:
+        values: list[float], threshold: float = 3.5
+    ) -> tuple[bool, float]:
         """Modified Z-score using median absolute deviation"""
         if len(values) < 3:
             return False, 0.0
@@ -227,8 +227,8 @@ class StatisticalDetector:
 
     @staticmethod
     def interquartile_range_detection(
-        values: List[float], factor: float = 1.5
-    ) -> Tuple[bool, float]:
+        values: list[float], factor: float = 1.5
+    ) -> tuple[bool, float]:
         """IQR-based anomaly detection"""
         if len(values) < 5:
             return False, 0.0
@@ -261,8 +261,8 @@ class StatisticalDetector:
 
     @staticmethod
     def exponential_smoothing_detection(
-        values: List[float], alpha: float = 0.3, threshold: float = 2.0
-    ) -> Tuple[bool, float]:
+        values: list[float], alpha: float = 0.3, threshold: float = 2.0
+    ) -> tuple[bool, float]:
         """Exponential smoothing based detection"""
         if len(values) < 3:
             return False, 0.0
@@ -298,8 +298,8 @@ class PatternDetector:
 
     @staticmethod
     def sudden_change_detection(
-        values: List[float], min_change_ratio: float = 2.0
-    ) -> Tuple[bool, float]:
+        values: list[float], min_change_ratio: float = 2.0
+    ) -> tuple[bool, float]:
         """Detect sudden changes in values"""
         if len(values) < 2:
             return False, 0.0
@@ -322,7 +322,7 @@ class PatternDetector:
             return False, 0.0
 
     @staticmethod
-    def trend_anomaly_detection(values: List[float], timestamps: List[float]) -> Tuple[bool, float]:
+    def trend_anomaly_detection(values: list[float], timestamps: list[float]) -> tuple[bool, float]:
         """Detect anomalies in trends"""
         if len(values) < 5:
             return False, 0.0
@@ -384,8 +384,8 @@ class PatternDetector:
 class AnomalyDetectionEngine:
     """Main anomaly detection engine"""
 
-    def __init__(self, alert_callback: Optional[Callable[[AnomalyAlert], None]] = None):
-        self.metrics: Dict[str, TimeSeriesBuffer] = defaultdict(lambda: TimeSeriesBuffer())
+    def __init__(self, alert_callback: Callable[[AnomalyAlert], None] | None = None):
+        self.metrics: dict[str, TimeSeriesBuffer] = defaultdict(lambda: TimeSeriesBuffer())
         self.alert_callback = alert_callback
         self.detection_config = {
             "latency": {
@@ -404,12 +404,10 @@ class AnomalyDetectionEngine:
                 "detection_methods": ["iqr", "trend_anomaly"],
             },
         }
-        self._alert_history: Dict[str, datetime] = {}
+        self._alert_history: dict[str, datetime] = {}
         self._alert_cooldown = 300  # 5 minutes
 
-    def record_metric(
-        self, metric_name: str, value: float, metadata: Optional[Dict[str, Any]] = None
-    ):
+    def record_metric(self, metric_name: str, value: float, metadata: dict[str, Any] | None = None):
         """Record a metric value"""
         self.metrics[metric_name].add(value, metadata)
 
@@ -458,8 +456,8 @@ class AnomalyDetectionEngine:
             return "latency"  # default
 
     async def _run_detection_method(
-        self, method: str, values: List[float], buffer: TimeSeriesBuffer
-    ) -> Tuple[bool, float]:
+        self, method: str, values: list[float], buffer: TimeSeriesBuffer
+    ) -> tuple[bool, float]:
         """Run a specific detection method"""
         try:
             if method == "z_score":
@@ -486,7 +484,7 @@ class AnomalyDetectionEngine:
         self,
         metric_name: str,
         current_value: float,
-        anomalies: List[Tuple[str, float]],
+        anomalies: list[tuple[str, float]],
         category: str,
     ):
         """Create and emit anomaly alert"""
@@ -585,7 +583,7 @@ class AnomalyDetectionEngine:
         }
         return type_mapping.get(category, AnomalyType.UNUSUAL_PATTERN)
 
-    def get_metric_summary(self, metric_name: str, seconds: int = 300) -> Dict[str, Any]:
+    def get_metric_summary(self, metric_name: str, seconds: int = 300) -> dict[str, Any]:
         """Get summary statistics for a metric"""
         buffer = self.metrics[metric_name]
         values = buffer.get_values(seconds)
@@ -607,7 +605,7 @@ class AnomalyDetectionEngine:
         except Exception as e:
             return {"error": f"Error calculating statistics: {e}"}
 
-    def get_all_metrics_summary(self) -> Dict[str, Any]:
+    def get_all_metrics_summary(self) -> dict[str, Any]:
         """Get summary for all metrics"""
         summary = {}
         for metric_name in self.metrics:
@@ -619,7 +617,7 @@ class AlertManager:
     """Manages anomaly alerts and notifications"""
 
     def __init__(self):
-        self.alert_handlers: List[Callable[[AnomalyAlert], None]] = []
+        self.alert_handlers: list[Callable[[AnomalyAlert], None]] = []
         self.alert_history: deque = deque(maxlen=1000)
 
     def register_alert_handler(self, handler: Callable[[AnomalyAlert], None]):
@@ -641,7 +639,7 @@ class AlertManager:
             except Exception as e:
                 logger.error(f"Error calling alert handler: {e}")
 
-    def get_recent_alerts(self, limit: int = 50) -> List[AnomalyAlert]:
+    def get_recent_alerts(self, limit: int = 50) -> list[AnomalyAlert]:
         """Get recent alerts"""
         return list(self.alert_history)[-limit:]
 
@@ -694,7 +692,7 @@ def track_errors(metric_name: str):
                 result = await func(*args, **kwargs)
                 anomaly_engine.record_metric(f"{metric_name}_success", 1)
                 return result
-            except Exception as e:
+            except Exception:
                 anomaly_engine.record_metric(f"{metric_name}_error", 1)
                 raise
 
@@ -704,7 +702,7 @@ def track_errors(metric_name: str):
                 result = func(*args, **kwargs)
                 anomaly_engine.record_metric(f"{metric_name}_success", 1)
                 return result
-            except Exception as e:
+            except Exception:
                 anomaly_engine.record_metric(f"{metric_name}_error", 1)
                 raise
 

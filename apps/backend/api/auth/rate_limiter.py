@@ -4,20 +4,23 @@ Phase 3 Implementation - Adaptive rate limiting for authentication endpoints
 """
 
 import asyncio
-import time
 import hashlib
 import json
-from typing import Dict, Optional, Tuple, List
+import logging
+import time
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
+from typing import Dict, List, Optional, Tuple
+
 import redis.asyncio as redis
-from dataclasses import dataclass, asdict
-import logging
 
 logger = logging.getLogger(__name__)
 
+
 class RateLimitType(Enum):
     """Types of rate limits"""
+
     LOGIN = "login"
     MFA = "mfa"
     OAUTH = "oauth"
@@ -26,9 +29,11 @@ class RateLimitType(Enum):
     TOKEN_REFRESH = "token_refresh"
     API_KEY = "api_key"
 
+
 @dataclass
 class RateLimitConfig:
     """Configuration for rate limiting"""
+
     requests_per_minute: int = 10
     requests_per_hour: int = 100
     requests_per_day: int = 1000
@@ -39,11 +44,14 @@ class RateLimitConfig:
     ip_based: bool = True
     user_based: bool = True
 
+
 class RateLimitException(Exception):
     """Rate limit exceeded exception"""
+
     def __init__(self, message: str, retry_after: int = None):
         super().__init__(message)
         self.retry_after = retry_after
+
 
 class AuthRateLimiter:
     """
@@ -66,7 +74,7 @@ class AuthRateLimiter:
             burst_size=3,
             lockout_duration=1800,  # 30 minutes
             progressive_delay=True,
-            adaptive_threshold=True
+            adaptive_threshold=True,
         ),
         RateLimitType.MFA: RateLimitConfig(
             requests_per_minute=3,
@@ -74,39 +82,32 @@ class AuthRateLimiter:
             requests_per_day=50,
             burst_size=2,
             lockout_duration=3600,  # 1 hour
-            progressive_delay=True
+            progressive_delay=True,
         ),
         RateLimitType.OAUTH: RateLimitConfig(
-            requests_per_minute=10,
-            requests_per_hour=100,
-            requests_per_day=1000,
-            burst_size=5
+            requests_per_minute=10, requests_per_hour=100, requests_per_day=1000, burst_size=5
         ),
         RateLimitType.PASSWORD_RESET: RateLimitConfig(
             requests_per_minute=2,
             requests_per_hour=5,
             requests_per_day=10,
             lockout_duration=7200,  # 2 hours
-            progressive_delay=True
+            progressive_delay=True,
         ),
         RateLimitType.REGISTRATION: RateLimitConfig(
-            requests_per_minute=2,
-            requests_per_hour=10,
-            requests_per_day=20
+            requests_per_minute=2, requests_per_hour=10, requests_per_day=20
         ),
         RateLimitType.TOKEN_REFRESH: RateLimitConfig(
-            requests_per_minute=10,
-            requests_per_hour=200,
-            requests_per_day=2000
+            requests_per_minute=10, requests_per_hour=200, requests_per_day=2000
         ),
         RateLimitType.API_KEY: RateLimitConfig(
-            requests_per_minute=100,
-            requests_per_hour=5000,
-            requests_per_day=50000
-        )
+            requests_per_minute=100, requests_per_hour=5000, requests_per_day=50000
+        ),
     }
 
-    def __init__(self, redis_client: redis.Redis, configs: Dict[RateLimitType, RateLimitConfig] = None):
+    def __init__(
+        self, redis_client: redis.Redis, configs: Dict[RateLimitType, RateLimitConfig] = None
+    ):
         self.redis = redis_client
         self.configs = configs or self.DEFAULT_CONFIGS
         self.suspicious_ips: set = set()
@@ -117,7 +118,7 @@ class AuthRateLimiter:
         limit_type: RateLimitType,
         identifier: str,
         ip_address: Optional[str] = None,
-        user_id: Optional[str] = None
+        user_id: Optional[str] = None,
     ) -> Tuple[bool, Optional[int]]:
         """
         Check if request is within rate limits
@@ -141,18 +142,46 @@ class AuthRateLimiter:
         checks = []
 
         if config.ip_based and ip_address:
-            checks.extend([
-                self._check_window(f"rate:{limit_type.value}:ip:{ip_address}:min", 60, config.requests_per_minute),
-                self._check_window(f"rate:{limit_type.value}:ip:{ip_address}:hour", 3600, config.requests_per_hour),
-                self._check_window(f"rate:{limit_type.value}:ip:{ip_address}:day", 86400, config.requests_per_day)
-            ])
+            checks.extend(
+                [
+                    self._check_window(
+                        f"rate:{limit_type.value}:ip:{ip_address}:min",
+                        60,
+                        config.requests_per_minute,
+                    ),
+                    self._check_window(
+                        f"rate:{limit_type.value}:ip:{ip_address}:hour",
+                        3600,
+                        config.requests_per_hour,
+                    ),
+                    self._check_window(
+                        f"rate:{limit_type.value}:ip:{ip_address}:day",
+                        86400,
+                        config.requests_per_day,
+                    ),
+                ]
+            )
 
         if config.user_based and user_id:
-            checks.extend([
-                self._check_window(f"rate:{limit_type.value}:user:{user_id}:min", 60, config.requests_per_minute),
-                self._check_window(f"rate:{limit_type.value}:user:{user_id}:hour", 3600, config.requests_per_hour),
-                self._check_window(f"rate:{limit_type.value}:user:{user_id}:day", 86400, config.requests_per_day)
-            ])
+            checks.extend(
+                [
+                    self._check_window(
+                        f"rate:{limit_type.value}:user:{user_id}:min",
+                        60,
+                        config.requests_per_minute,
+                    ),
+                    self._check_window(
+                        f"rate:{limit_type.value}:user:{user_id}:hour",
+                        3600,
+                        config.requests_per_hour,
+                    ),
+                    self._check_window(
+                        f"rate:{limit_type.value}:user:{user_id}:day",
+                        86400,
+                        config.requests_per_day,
+                    ),
+                ]
+            )
 
         # Execute all checks
         results = await asyncio.gather(*checks)
@@ -162,9 +191,7 @@ class AuthRateLimiter:
             if not allowed:
                 # Apply progressive delay if enabled
                 if config.progressive_delay:
-                    retry_after = await self._apply_progressive_delay(
-                        identifier, retry_after
-                    )
+                    retry_after = await self._apply_progressive_delay(identifier, retry_after)
 
                 # Check for suspicious patterns
                 if ip_address:
@@ -180,10 +207,7 @@ class AuthRateLimiter:
         return True, None
 
     async def _check_window(
-        self,
-        key: str,
-        window_seconds: int,
-        max_requests: int
+        self, key: str, window_seconds: int, max_requests: int
     ) -> Tuple[bool, Optional[int]]:
         """Check rate limit for a specific time window"""
 
@@ -245,12 +269,7 @@ class AuthRateLimiter:
 
         # Save state
         await self.redis.setex(
-            key,
-            300,  # 5 minutes TTL
-            json.dumps({
-                "tokens": tokens,
-                "last_update": now
-            })
+            key, 300, json.dumps({"tokens": tokens, "last_update": now})  # 5 minutes TTL
         )
 
         return True
@@ -268,11 +287,7 @@ class AuthRateLimiter:
         ttl = await self.redis.ttl(lockout_key)
         return max(0, ttl)
 
-    async def _apply_progressive_delay(
-        self,
-        identifier: str,
-        base_retry_after: int
-    ) -> int:
+    async def _apply_progressive_delay(self, identifier: str, base_retry_after: int) -> int:
         """Apply progressive delay based on failure count"""
 
         failure_key = f"failures:{identifier}"
@@ -286,11 +301,7 @@ class AuthRateLimiter:
 
         return base_retry_after * delay_multiplier
 
-    async def _check_suspicious_activity(
-        self,
-        ip_address: str,
-        limit_type: RateLimitType
-    ):
+    async def _check_suspicious_activity(self, ip_address: str, limit_type: RateLimitType):
         """Check for suspicious patterns and apply lockout if needed"""
 
         # Track failed attempts
@@ -306,7 +317,7 @@ class AuthRateLimiter:
                 "failed_mfa": 0,
                 "rapid_requests": 0,
                 "different_users": set(),
-                "start_time": time.time()
+                "start_time": time.time(),
             }
 
         # Update activity based on limit type
@@ -321,10 +332,10 @@ class AuthRateLimiter:
 
         # Detect suspicious patterns
         suspicious_score = (
-            activity["failed_logins"] * 2 +
-            activity["failed_mfa"] * 3 +
-            activity["rapid_requests"] +
-            len(activity.get("different_users", []))
+            activity["failed_logins"] * 2
+            + activity["failed_mfa"] * 3
+            + activity["rapid_requests"]
+            + len(activity.get("different_users", []))
         )
 
         # Apply lockout if suspicious
@@ -339,11 +350,7 @@ class AuthRateLimiter:
 
         # Save activity
         activity["different_users"] = list(activity.get("different_users", set()))
-        await self.redis.setex(
-            pattern_key,
-            600,  # 10 minutes TTL
-            json.dumps(activity)
-        )
+        await self.redis.setex(pattern_key, 600, json.dumps(activity))  # 10 minutes TTL
 
     async def _apply_lockout(self, ip_address: str, duration: int):
         """Apply lockout to an IP address"""
@@ -355,11 +362,9 @@ class AuthRateLimiter:
         event_key = f"lockout_events:{datetime.utcnow().strftime('%Y%m%d')}"
         await self.redis.rpush(
             event_key,
-            json.dumps({
-                "ip": ip_address,
-                "timestamp": datetime.utcnow().isoformat(),
-                "duration": duration
-            })
+            json.dumps(
+                {"ip": ip_address, "timestamp": datetime.utcnow().isoformat(), "duration": duration}
+            ),
         )
         await self.redis.expire(event_key, 86400 * 7)  # Keep for 7 days
 
@@ -368,7 +373,7 @@ class AuthRateLimiter:
         limit_type: RateLimitType,
         identifier: str,
         ip_address: Optional[str] = None,
-        user_id: Optional[str] = None
+        user_id: Optional[str] = None,
     ):
         """Record successful authentication to adjust thresholds"""
 
@@ -385,11 +390,7 @@ class AuthRateLimiter:
         await self.redis.incr(success_key)
         await self.redis.expire(success_key, 86400 * 30)  # Keep for 30 days
 
-    async def get_rate_limit_status(
-        self,
-        limit_type: RateLimitType,
-        identifier: str
-    ) -> Dict:
+    async def get_rate_limit_status(self, limit_type: RateLimitType, identifier: str) -> Dict:
         """Get current rate limit status for monitoring"""
 
         config = self.configs.get(limit_type, self.DEFAULT_CONFIGS[RateLimitType.LOGIN])
@@ -400,9 +401,9 @@ class AuthRateLimiter:
             "limits": {
                 "per_minute": config.requests_per_minute,
                 "per_hour": config.requests_per_hour,
-                "per_day": config.requests_per_day
+                "per_day": config.requests_per_day,
             },
-            "current_usage": {}
+            "current_usage": {},
         }
 
         # Get current usage
@@ -446,7 +447,7 @@ class AuthRateLimiter:
             "lockouts_today": 0,
             "success_rates": {},
             "suspicious_ips": len(self.suspicious_ips),
-            "trusted_ips": len(self.trusted_ips)
+            "trusted_ips": len(self.trusted_ips),
         }
 
         # Count lockout events
@@ -461,8 +462,10 @@ class AuthRateLimiter:
 
         return metrics
 
+
 # Dependency injection helper
 _rate_limiter: Optional[AuthRateLimiter] = None
+
 
 def get_rate_limiter(redis_client: redis.Redis = None) -> AuthRateLimiter:
     """Get rate limiter instance"""
@@ -476,10 +479,10 @@ def get_rate_limiter(redis_client: redis.Redis = None) -> AuthRateLimiter:
 
     return _rate_limiter
 
+
 # FastAPI dependency
 async def check_auth_rate_limit(
-    request,  # FastAPI Request object
-    rate_limiter: AuthRateLimiter = None
+    request, rate_limiter: AuthRateLimiter = None  # FastAPI Request object
 ):
     """
     FastAPI dependency to check rate limits
@@ -516,10 +519,7 @@ async def check_auth_rate_limit(
     # Check rate limit
     identifier = ip_address or user_id or "unknown"
     allowed, retry_after = await rate_limiter.check_rate_limit(
-        limit_type,
-        identifier,
-        ip_address,
-        user_id
+        limit_type, identifier, ip_address, user_id
     )
 
     if not allowed:
@@ -528,5 +528,5 @@ async def check_auth_rate_limit(
         raise HTTPException(
             status_code=429,
             detail="Rate limit exceeded",
-            headers={"Retry-After": str(retry_after)} if retry_after else None
+            headers={"Retry-After": str(retry_after)} if retry_after else None,
         )

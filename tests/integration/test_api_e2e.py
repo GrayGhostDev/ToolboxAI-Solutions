@@ -1,8 +1,10 @@
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest_asyncio
+
 """
 End-to-End API Integration Tests
 
@@ -14,24 +16,25 @@ Comprehensive tests that cover complete API workflows including:
 - Rate limiting
 """
 
-import pytest
 import asyncio
 import json
-from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
+from typing import Any, Dict, Optional
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from httpx import AsyncClient
+import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from httpx import AsyncClient
+
+# Assessment model may not exist yet
+from apps.backend.api.auth.auth import create_access_token, hash_password
 
 # Import the main app
 from apps.backend.main import app
 
 # Import models and schemas
-from database.models import User, Content
-# Assessment model may not exist yet
-from apps.backend.api.auth.auth import create_access_token, hash_password
+from database.models import Content, User
 
 
 class TestAPIEndToEnd:
@@ -308,6 +311,7 @@ class TestDatabaseIntegration:
 async def test_transaction_rollback(self):
         """Test transaction rollback on error"""
         from sqlalchemy.ext.asyncio import AsyncSession
+
         from database.connection import get_async_session
 
         with patch('database.connection.AsyncSession') as mock_session_class:
@@ -348,7 +352,7 @@ async def test_jwt_flow(self):
         from apps.backend.api.auth.auth import (
             create_access_token,
             create_refresh_token,
-            decode_token
+            decode_token,
         )
 
         # Create tokens

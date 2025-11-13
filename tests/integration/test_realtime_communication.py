@@ -1,4 +1,5 @@
 import pytest_asyncio
+
 #!/usr/bin/env python3
 """
 WebSocket + Pusher Real-time Communication Integration Tests
@@ -16,11 +17,12 @@ import json
 import os
 import time
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 from unittest.mock import AsyncMock, Mock, patch
 
 import httpx
 import pytest
+
 from tests.fixtures.pusher_mocks import MockPusherService
 from tests.fixtures.pusher_test_utils import ConnectionClosedError, ConnectionClosedOK
 
@@ -50,8 +52,9 @@ async def realtime_client():
 @pytest.fixture
 def auth_headers():
     """Authentication headers for API requests"""
-    import jwt
     from datetime import timedelta
+
+    import jwt
 
     payload = {
         "sub": "realtime_test_user",

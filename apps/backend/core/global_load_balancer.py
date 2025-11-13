@@ -11,18 +11,17 @@ Provides intelligent global traffic distribution with:
 
 import asyncio
 import json
-import time
+import logging
 import math
-from enum import Enum
-from typing import Dict, List, Optional, Set, Any, Tuple
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-import logging
-from ipaddress import ip_address, ip_network
-import httpx
+from enum import Enum
+
 import aiodns
 import geoip2.database
 import geoip2.errors
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +87,7 @@ class EndpointHealth:
     consecutive_failures: int = 0
     consecutive_successes: int = 0
     availability: float = 100.0  # Percentage
-    response_times: List[float] = field(default_factory=list)
+    response_times: list[float] = field(default_factory=list)
 
 
 @dataclass
@@ -96,10 +95,10 @@ class TrafficPolicy:
     """Traffic distribution policy"""
 
     policy_type: RoutingPolicy
-    endpoints: List[str]
-    weights: Optional[Dict[str, int]] = None
-    failover_order: Optional[List[str]] = None
-    cost_per_request: Optional[Dict[str, float]] = None
+    endpoints: list[str]
+    weights: dict[str, int] | None = None
+    failover_order: list[str] | None = None
+    cost_per_request: dict[str, float] | None = None
     max_endpoints: int = 4
 
 
@@ -109,9 +108,9 @@ class GeographicLocation:
 
     latitude: float
     longitude: float
-    city: Optional[str] = None
-    country: Optional[str] = None
-    continent: Optional[str] = None
+    city: str | None = None
+    country: str | None = None
+    continent: str | None = None
 
 
 @dataclass
@@ -121,7 +120,7 @@ class Region:
     code: RegionCode
     name: str
     location: GeographicLocation
-    endpoints: List[str]
+    endpoints: list[str]
     capacity: int  # Max requests per second
     current_load: int = 0
     cost_per_million: float = 1.0  # Cost per million requests
@@ -133,7 +132,7 @@ class GlobalMetrics:
     """Global load balancer metrics"""
 
     total_requests: int = 0
-    requests_by_region: Dict[str, int] = field(default_factory=dict)
+    requests_by_region: dict[str, int] = field(default_factory=dict)
     average_latency_ms: float = 0
     failovers: int = 0
     errors: int = 0
@@ -152,7 +151,7 @@ class GeoIPResolver:
             logger.warning("GeoIP database not available: %s", e)
             self.reader = None
 
-    def get_location(self, ip: str) -> Optional[GeographicLocation]:
+    def get_location(self, ip: str) -> GeographicLocation | None:
         """Get geographic location for IP address"""
         if not self.reader:
             return None
@@ -195,7 +194,7 @@ class LatencyProber:
         return float("inf")
 
     @staticmethod
-    async def measure_all(endpoints: List[str]) -> Dict[str, float]:
+    async def measure_all(endpoints: list[str]) -> dict[str, float]:
         """Measure latency to all endpoints"""
         tasks = [LatencyProber.measure_latency(endpoint) for endpoint in endpoints]
         results = await asyncio.gather(*tasks)
@@ -207,7 +206,7 @@ class GlobalLoadBalancer:
 
     def __init__(
         self,
-        regions: List[Region],
+        regions: list[Region],
         policy: TrafficPolicy,
         health_check_config: HealthCheck,
         enable_geo_routing: bool = True,
@@ -222,7 +221,7 @@ class GlobalLoadBalancer:
         self.dns_ttl = dns_ttl
 
         # Health tracking
-        self.endpoint_health: Dict[str, EndpointHealth] = {}
+        self.endpoint_health: dict[str, EndpointHealth] = {}
         for region in regions:
             for endpoint in region.endpoints:
                 self.endpoint_health[endpoint] = EndpointHealth(
@@ -242,10 +241,10 @@ class GlobalLoadBalancer:
         self.dns_resolver = aiodns.DNSResolver()
 
         # Background tasks
-        self.tasks: List[asyncio.Task] = []
+        self.tasks: list[asyncio.Task] = []
 
         # Routing cache
-        self.routing_cache: Dict[str, Tuple[List[str], datetime]] = {}
+        self.routing_cache: dict[str, tuple[list[str], datetime]] = {}
         self.cache_ttl = 60  # seconds
 
     async def start(self):
@@ -272,7 +271,7 @@ class GlobalLoadBalancer:
 
         logger.info("Global load balancer stopped")
 
-    async def route(self, client_ip: str, path: str = "/", method: str = "GET") -> List[str]:
+    async def route(self, client_ip: str, path: str = "/", method: str = "GET") -> list[str]:
         """Route request to optimal endpoints"""
         start_time = time.time()
 
@@ -321,11 +320,11 @@ class GlobalLoadBalancer:
 
         return selected_endpoints
 
-    def _get_healthy_endpoints(self) -> List[str]:
+    def _get_healthy_endpoints(self) -> list[str]:
         """Get list of healthy endpoints"""
         return [endpoint for endpoint, health in self.endpoint_health.items() if health.healthy]
 
-    def _get_endpoint_region(self, endpoint: str) -> Optional[RegionCode]:
+    def _get_endpoint_region(self, endpoint: str) -> RegionCode | None:
         """Get region for an endpoint"""
         for health in self.endpoint_health.values():
             if health.endpoint == endpoint:
@@ -333,8 +332,8 @@ class GlobalLoadBalancer:
         return None
 
     async def _apply_routing_policy(
-        self, endpoints: List[str], client_location: Optional[GeographicLocation]
-    ) -> List[str]:
+        self, endpoints: list[str], client_location: GeographicLocation | None
+    ) -> list[str]:
         """Apply routing policy to select endpoints"""
 
         if self.policy.policy_type == RoutingPolicy.GEOPROXIMITY:
@@ -358,8 +357,8 @@ class GlobalLoadBalancer:
         return endpoints[:1]  # Default to first endpoint
 
     async def _route_geoproximity(
-        self, endpoints: List[str], client_location: Optional[GeographicLocation]
-    ) -> List[str]:
+        self, endpoints: list[str], client_location: GeographicLocation | None
+    ) -> list[str]:
         """Route based on geographic proximity"""
         if not client_location:
             # Fallback to latency-based routing
@@ -385,7 +384,7 @@ class GlobalLoadBalancer:
         # Return closest endpoints
         return sorted_endpoints[: self.policy.max_endpoints]
 
-    async def _route_latency(self, endpoints: List[str]) -> List[str]:
+    async def _route_latency(self, endpoints: list[str]) -> list[str]:
         """Route based on measured latency"""
         # Measure latency to all endpoints
         latencies = await self.prober.measure_all(endpoints)
@@ -396,7 +395,7 @@ class GlobalLoadBalancer:
         # Return lowest latency endpoints
         return sorted_endpoints[: self.policy.max_endpoints]
 
-    def _route_weighted(self, endpoints: List[str]) -> List[str]:
+    def _route_weighted(self, endpoints: list[str]) -> list[str]:
         """Route based on configured weights"""
         if not self.policy.weights:
             return endpoints[: self.policy.max_endpoints]
@@ -423,7 +422,7 @@ class GlobalLoadBalancer:
 
         return weighted_endpoints
 
-    def _route_cost_optimized(self, endpoints: List[str]) -> List[str]:
+    def _route_cost_optimized(self, endpoints: list[str]) -> list[str]:
         """Route to minimize cost while maintaining performance"""
         if not self.policy.cost_per_request:
             return endpoints[: self.policy.max_endpoints]
@@ -445,7 +444,7 @@ class GlobalLoadBalancer:
 
         return sorted_endpoints[: self.policy.max_endpoints]
 
-    def _route_failover(self, endpoints: List[str]) -> List[str]:
+    def _route_failover(self, endpoints: list[str]) -> list[str]:
         """Route with failover priority"""
         if not self.policy.failover_order:
             return endpoints[:1]
@@ -704,7 +703,7 @@ class DNSRouter:
     def __init__(self, load_balancer: GlobalLoadBalancer):
         self.load_balancer = load_balancer
 
-    async def resolve(self, hostname: str, client_ip: str) -> List[str]:
+    async def resolve(self, hostname: str, client_ip: str) -> list[str]:
         """Resolve hostname to IP addresses based on routing policy"""
         # Get optimal endpoints for client
         endpoints = await self.load_balancer.route(client_ip)

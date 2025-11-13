@@ -1,16 +1,18 @@
+from unittest.mock import Mock, patch
 
 import pytest
-from unittest.mock import Mock, patch
+
 
 @pytest.fixture
 def mock_db_connection():
     """Mock database connection for tests"""
-    with patch('psycopg2.connect') as mock_connect:
+    with patch("psycopg2.connect") as mock_connect:
         mock_conn = Mock()
         mock_cursor = Mock()
         mock_conn.cursor.return_value = mock_cursor
         mock_connect.return_value = mock_conn
         yield mock_conn
+
 
 #!/usr/bin/env python3
 """
@@ -20,18 +22,16 @@ This script tests all database connections, schemas, and integrations
 to ensure everything is working correctly.
 """
 
-import os
 import sys
-import asyncio
 from pathlib import Path
-from typing import Dict, Any, List
+
 from sqlalchemy import text
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from database.connection_manager import db_manager, health_check, get_session, get_async_session
+from database.connection_manager import db_manager, get_session, health_check
 
 
 class DatabaseIntegrationTest:

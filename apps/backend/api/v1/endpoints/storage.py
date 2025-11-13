@@ -25,49 +25,49 @@ from uuid import UUID
 
 from fastapi import (
     APIRouter,
+    BackgroundTasks,
     Depends,
     File,
     Form,
     HTTPException,
+    Query,
     Request,
     UploadFile,
     status,
-    BackgroundTasks,
-    Query
 )
-from fastapi.responses import StreamingResponse, RedirectResponse
+from fastapi.responses import RedirectResponse, StreamingResponse
 from pydantic import BaseModel, Field, validator
 
 from apps.backend.api.auth.auth import get_current_user
 from apps.backend.dependencies.tenant import (
-    require_tenant_member,
+    TenantContext,
     get_current_tenant,
-    TenantContext
+    require_tenant_member,
 )
 from apps.backend.models.schemas import User
 from apps.backend.services.storage.storage_service import (
-    StorageService,
-    UploadOptions,
+    AccessDeniedError,
     DownloadOptions,
-    ListOptions,
-    UploadResult,
+    DownloadPermission,
     DownloadResult,
     FileInfo,
-    UploadProgress,
-    UploadStatus,
-    DownloadPermission,
-    StorageError,
-    QuotaExceededError,
     FileNotFoundError,
-    AccessDeniedError
+    ListOptions,
+    QuotaExceededError,
+    StorageError,
+    StorageService,
+    UploadOptions,
+    UploadProgress,
+    UploadResult,
+    UploadStatus,
 )
 from apps.backend.workers.tasks.storage_tasks import (
-    virus_scan_file,
-    process_image,
     calculate_storage_usage,
-    send_quota_alerts
+    process_image,
+    send_quota_alerts,
+    virus_scan_file,
 )
-from database.models.storage import File, FileShare, StorageQuota, FileAccessLog
+from database.models.storage import File, FileAccessLog, FileShare, StorageQuota
 
 logger = logging.getLogger(__name__)
 
@@ -678,8 +678,8 @@ async def create_share_link(
             )
 
         # Create share link (this would create a database record in production)
-        from uuid import uuid4
         import secrets
+        from uuid import uuid4
 
         share_id = uuid4()
         share_token = secrets.token_urlsafe(32)

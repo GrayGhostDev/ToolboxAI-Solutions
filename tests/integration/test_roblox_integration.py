@@ -1,4 +1,5 @@
 import pytest_asyncio
+
 """
 Integration Tests for Roblox Platform Integration
 
@@ -18,6 +19,7 @@ if str(project_root) not in sys.path:
 import asyncio
 import os
 
+
 def make_json_serializable(obj):
     """Convert non-serializable objects to serializable format."""
     if hasattr(obj, '__dict__'):
@@ -30,25 +32,23 @@ def make_json_serializable(obj):
         return str(obj)
 
 import json
-import pytest
-from tests.fixtures.agents import mock_llm
-import aiohttp
-from typing import Dict, Any, List
-from unittest.mock import Mock, AsyncMock, patch
-
-from tests.fixtures.pusher_mocks import MockPusherService
 from datetime import datetime, timezone
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
+
+import aiohttp
+import pytest
 from fastapi.testclient import TestClient
+
+from apps.backend.core.security.rate_limit_manager import clear_all_rate_limits, set_testing_mode
 
 # Import the correct modules
 from apps.backend.main import app as fastapi_app
-from apps.backend.roblox_server import roblox_server, RobloxServer
-from core.agents.terrain_agent import TerrainAgent
+from apps.backend.roblox_server import RobloxServer, roblox_server
 from core.agents.script_agent import ScriptAgent
-from apps.backend.core.security.rate_limit_manager import (
-    clear_all_rate_limits,
-    set_testing_mode
-)
+from core.agents.terrain_agent import TerrainAgent
+from tests.fixtures.agents import mock_llm
+from tests.fixtures.pusher_mocks import MockPusherService
 
 # Skip all tests in this module as they require external services
 pytestmark = pytest.mark.skipif(
@@ -414,7 +414,7 @@ async def test_progress_sync(self):
         """Test progress synchronization between Roblox and server"""
         # Mock HTTP responses directly
         from unittest.mock import AsyncMock, MagicMock
-        
+
         # Mock progress sync response
         class MockResponse:
             def __init__(self, status, json_data):
@@ -502,7 +502,7 @@ class TestRobloxAPIIntegration:
 async def test_place_publishing(self):
         """Test publishing educational content to Roblox place"""
         from unittest.mock import AsyncMock
-        
+
         # Generate content package
         content_package = {
             "place_id": "1234567890",
@@ -547,7 +547,7 @@ async def test_place_publishing(self):
 async def test_asset_upload(self):
         """Test uploading educational assets to Roblox"""
         from unittest.mock import AsyncMock
-        
+
         # Upload educational asset
         asset_data = {
             "asset_type": "Model",
@@ -590,7 +590,7 @@ async def test_asset_upload(self):
 async def test_user_authentication(self):
         """Test Roblox user authentication and verification"""
         from unittest.mock import AsyncMock
-        
+
         # Verify Roblox user
         auth_data = {
             "roblox_user_id": "987654321",

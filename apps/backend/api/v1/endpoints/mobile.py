@@ -5,21 +5,23 @@ Provides optimized endpoints and functionality for mobile applications.
 Includes push notifications, offline sync, and mobile-specific optimizations.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, Header
-from fastapi.responses import JSONResponse
-from typing import Dict, List, Optional, Any, Union
-from datetime import datetime, timedelta
-from pydantic import BaseModel, Field
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_
-from apps.backend.core.deps import get_async_db as get_db
-from database.models import User, Content, Quiz, UserProgress, Notification
-from apps.backend.api.auth.auth import get_current_user, create_access_token
-from apps.backend.core.cache import cache_result
+import asyncio
 import hashlib
 import json
-import asyncio
+from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any
+
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
+from sqlalchemy import and_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from apps.backend.api.auth.auth import create_access_token, get_current_user
+from apps.backend.core.cache import cache_result
+from apps.backend.core.deps import get_async_db as get_db
+from database.models import Content, UserProgress
 
 router = APIRouter(prefix="/api/mobile", tags=["mobile"])
 
@@ -45,10 +47,10 @@ class DeviceRegistration(BaseModel):
 
     device_id: str
     device_type: DeviceType
-    push_token: Optional[str] = None
+    push_token: str | None = None
     app_version: str
     os_version: str
-    timezone: Optional[str] = "UTC"
+    timezone: str | None = "UTC"
 
 
 class OfflineSyncRequest(BaseModel):
@@ -56,20 +58,20 @@ class OfflineSyncRequest(BaseModel):
 
     device_id: str
     last_sync: datetime
-    local_changes: List[Dict[str, Any]]
+    local_changes: list[dict[str, Any]]
     sync_direction: SyncDirection = SyncDirection.BIDIRECTIONAL
 
 
 class PushNotificationRequest(BaseModel):
     """Push notification request model"""
 
-    user_ids: Optional[List[str]] = None
-    device_ids: Optional[List[str]] = None
+    user_ids: list[str] | None = None
+    device_ids: list[str] | None = None
     title: str
     message: str
-    data: Optional[Dict[str, Any]] = None
+    data: dict[str, Any] | None = None
     priority: str = Field(default="normal", regex="^(low|normal|high|urgent)$")
-    schedule_time: Optional[datetime] = None
+    schedule_time: datetime | None = None
 
 
 class MobileContentResponse(BaseModel):
@@ -83,7 +85,7 @@ class MobileContentResponse(BaseModel):
     offline_available: bool
     download_size: int
     last_updated: datetime
-    thumbnail_url: Optional[str] = None
+    thumbnail_url: str | None = None
 
 
 class MobileProgressUpdate(BaseModel):
@@ -101,7 +103,7 @@ class MobileOptimizer:
     """Utilities for mobile optimization"""
 
     @staticmethod
-    def compress_response(data: Dict[str, Any], quality: str = "medium") -> Dict[str, Any]:
+    def compress_response(data: dict[str, Any], quality: str = "medium") -> dict[str, Any]:
         """
         Compress response data for mobile bandwidth optimization
 
@@ -128,13 +130,13 @@ class MobileOptimizer:
             return data
 
     @staticmethod
-    def generate_cache_key(endpoint: str, params: Dict[str, Any], user_id: str) -> str:
+    def generate_cache_key(endpoint: str, params: dict[str, Any], user_id: str) -> str:
         """Generate cache key for mobile requests"""
         key_data = f"{endpoint}:{user_id}:{json.dumps(params, sort_keys=True)}"
         return hashlib.md5(key_data.encode()).hexdigest()
 
     @staticmethod
-    def calculate_content_size(content: Dict[str, Any]) -> int:
+    def calculate_content_size(content: dict[str, Any]) -> int:
         """Calculate approximate download size in bytes"""
         return len(json.dumps(content).encode("utf-8"))
 
@@ -155,7 +157,7 @@ class PushNotificationService:
         device_type: DeviceType,
         title: str,
         message: str,
-        data: Optional[Dict[str, Any]] = None,
+        data: dict[str, Any] | None = None,
     ) -> bool:
         """
         Send push notification to device
@@ -176,7 +178,7 @@ class PushNotificationService:
         return False
 
     async def _send_apns(
-        self, token: str, title: str, message: str, data: Optional[Dict[str, Any]]
+        self, token: str, title: str, message: str, data: dict[str, Any] | None
     ) -> bool:
         """Send notification via Apple Push Notification Service"""
         # Implementation would use APNS library
@@ -184,7 +186,7 @@ class PushNotificationService:
         return True
 
     async def _send_fcm(
-        self, token: str, title: str, message: str, data: Optional[Dict[str, Any]]
+        self, token: str, title: str, message: str, data: dict[str, Any] | None
     ) -> bool:
         """Send notification via Firebase Cloud Messaging"""
         # Implementation would use FCM library
@@ -203,9 +205,9 @@ class OfflineSyncManager:
         user_id: str,
         device_id: str,
         last_sync: datetime,
-        local_changes: List[Dict[str, Any]],
+        local_changes: list[dict[str, Any]],
         direction: SyncDirection,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Synchronize offline data
 
@@ -249,8 +251,8 @@ class OfflineSyncManager:
         return result
 
     async def _process_local_change(
-        self, user_id: str, change: Dict[str, Any], last_sync: datetime
-    ) -> Optional[Dict[str, Any]]:
+        self, user_id: str, change: dict[str, Any], last_sync: datetime
+    ) -> dict[str, Any] | None:
         """Process a local change from mobile device"""
         # Check for conflicts
         entity_type = change.get("type")
@@ -274,7 +276,7 @@ class OfflineSyncManager:
         await self._apply_change(user_id, change)
         return None
 
-    async def _get_server_updates(self, user_id: str, since: datetime) -> List[Dict[str, Any]]:
+    async def _get_server_updates(self, user_id: str, since: datetime) -> list[dict[str, Any]]:
         """Get updates from server since last sync"""
         updates = []
 
@@ -316,19 +318,17 @@ class OfflineSyncManager:
 
         return updates
 
-    async def _get_server_version(
-        self, entity_type: str, entity_id: str
-    ) -> Optional[Dict[str, Any]]:
+    async def _get_server_version(self, entity_type: str, entity_id: str) -> dict[str, Any] | None:
         """Get server version of an entity"""
         # Implementation would fetch entity from database
         return None
 
-    async def _apply_change(self, user_id: str, change: Dict[str, Any]):
+    async def _apply_change(self, user_id: str, change: dict[str, Any]):
         """Apply a change to the server database"""
         # Implementation would update database
         pass
 
-    async def _record_sync_event(self, user_id: str, device_id: str, result: Dict[str, Any]):
+    async def _record_sync_event(self, user_id: str, device_id: str, result: dict[str, Any]):
         """Record synchronization event for audit"""
         # Implementation would log sync event
         pass
@@ -400,7 +400,7 @@ async def get_mobile_content_list(
     offline_only: bool = False,
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
-) -> List[MobileContentResponse]:
+) -> list[MobileContentResponse]:
     """
     Get optimized content list for mobile devices
 
@@ -474,7 +474,7 @@ async def sync_offline_data(
 
 @router.post("/progress/batch-update")
 async def batch_update_progress(
-    updates: List[MobileProgressUpdate],
+    updates: list[MobileProgressUpdate],
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
@@ -610,7 +610,7 @@ async def download_content_for_offline(
 
 @router.get("/network-status")
 async def check_network_optimization(
-    user_agent: Optional[str] = Header(None), accept_encoding: Optional[str] = Header(None)
+    user_agent: str | None = Header(None), accept_encoding: str | None = Header(None)
 ):
     """
     Check network status and recommend optimization settings
@@ -678,7 +678,7 @@ async def get_data_usage_stats(
 
 
 async def send_scheduled_notification(
-    device_tokens: List[str], notification: PushNotificationRequest, scheduled_time: datetime
+    device_tokens: list[str], notification: PushNotificationRequest, scheduled_time: datetime
 ):
     """Background task to send scheduled notifications"""
     # Wait until scheduled time

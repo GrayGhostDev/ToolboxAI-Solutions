@@ -9,14 +9,14 @@ Created: 2025-01-27
 Version: 1.0.0
 """
 
-import asyncio
 import logging
-import magic
 import mimetypes
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any
+
+import magic
 
 logger = logging.getLogger(__name__)
 
@@ -24,15 +24,16 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ValidationResult:
     """Result of file validation"""
-    is_valid: bool
-    errors: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
-    detected_mime_type: Optional[str] = None
-    file_category: Optional[str] = None
-    sanitized_filename: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    is_valid: bool
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    detected_mime_type: str | None = None
+    file_category: str | None = None
+    sanitized_filename: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization"""
         return {
             "is_valid": self.is_valid,
@@ -41,7 +42,7 @@ class ValidationResult:
             "detected_mime_type": self.detected_mime_type,
             "file_category": self.file_category,
             "sanitized_filename": self.sanitized_filename,
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
 
@@ -73,7 +74,7 @@ class FileValidator:
                 "text/html",
                 "text/markdown",
                 "application/json",
-                "text/csv"
+                "text/csv",
             },
             "student_submission": {
                 "application/pdf",
@@ -84,14 +85,14 @@ class FileValidator:
                 "image/png",
                 "image/gif",
                 "application/zip",
-                "text/csv"
+                "text/csv",
             },
             "assessment": {
                 "application/pdf",
                 "application/json",
                 "text/csv",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                "text/plain"
+                "text/plain",
             },
             "media_resource": {
                 "image/jpeg",
@@ -105,14 +106,9 @@ class FileValidator:
                 "audio/mpeg",
                 "audio/wav",
                 "audio/ogg",
-                "application/pdf"
+                "application/pdf",
             },
-            "avatar": {
-                "image/jpeg",
-                "image/png",
-                "image/gif",
-                "image/webp"
-            },
+            "avatar": {"image/jpeg", "image/png", "image/gif", "image/webp"},
             "administrative": {
                 "application/pdf",
                 "application/msword",
@@ -120,17 +116,15 @@ class FileValidator:
                 "application/vnd.ms-excel",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 "text/csv",
-                "text/plain"
+                "text/plain",
             },
-            "temporary": {
-                "*"  # Allow all types for temporary files
-            },
+            "temporary": {"*"},  # Allow all types for temporary files
             "report": {
                 "application/pdf",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 "text/csv",
-                "application/json"
-            }
+                "application/json",
+            },
         }
 
         # File size limits by category (in MB)
@@ -142,18 +136,38 @@ class FileValidator:
             "avatar": 10,
             "administrative": 100,
             "temporary": 1000,
-            "report": 50
+            "report": 50,
         }
 
         # Dangerous file extensions
         self.dangerous_extensions = {
-            ".exe", ".bat", ".cmd", ".com", ".pif", ".scr", ".vbs", ".js",
-            ".jar", ".app", ".deb", ".pkg", ".dmg", ".sh", ".bash", ".ps1",
-            ".msi", ".dll", ".so", ".dylib", ".php", ".asp", ".jsp"
+            ".exe",
+            ".bat",
+            ".cmd",
+            ".com",
+            ".pif",
+            ".scr",
+            ".vbs",
+            ".js",
+            ".jar",
+            ".app",
+            ".deb",
+            ".pkg",
+            ".dmg",
+            ".sh",
+            ".bash",
+            ".ps1",
+            ".msi",
+            ".dll",
+            ".so",
+            ".dylib",
+            ".php",
+            ".asp",
+            ".jsp",
         }
 
         # Safe filename pattern
-        self.safe_filename_pattern = re.compile(r'^[a-zA-Z0-9._\-\s()]+$')
+        self.safe_filename_pattern = re.compile(r"^[a-zA-Z0-9._\-\s()]+$")
 
         # Maximum filename length
         self.max_filename_length = 255
@@ -162,10 +176,10 @@ class FileValidator:
 
     async def validate_file(
         self,
-        file_data: Union[bytes, str],
+        file_data: bytes | str,
         filename: str,
         file_category: str = "media_resource",
-        additional_checks: Optional[Dict[str, Any]] = None
+        additional_checks: dict[str, Any] | None = None,
     ) -> ValidationResult:
         """
         Validate a file comprehensively.
@@ -185,7 +199,7 @@ class FileValidator:
         try:
             # Get file data if path provided
             if isinstance(file_data, str):
-                with open(file_data, 'rb') as f:
+                with open(file_data, "rb") as f:
                     file_data = f.read()
 
             # Basic checks
@@ -248,18 +262,15 @@ class FileValidator:
             result.warnings.append("Filename contains unsafe characters and will be sanitized")
 
         # Hidden file check
-        if filename.startswith('.'):
+        if filename.startswith("."):
             result.warnings.append("Hidden file detected")
 
         # Multiple extensions check
-        if filename.count('.') > 2:
+        if filename.count(".") > 2:
             result.warnings.append("Multiple file extensions detected")
 
     async def _validate_file_size(
-        self,
-        file_data: bytes,
-        file_category: str,
-        result: ValidationResult
+        self, file_data: bytes, file_category: str, result: ValidationResult
     ) -> None:
         """Validate file size against category limits"""
         file_size_mb = len(file_data) / (1024 * 1024)
@@ -279,11 +290,7 @@ class FileValidator:
         result.metadata["file_size_mb"] = file_size_mb
 
     async def _validate_mime_type(
-        self,
-        file_data: bytes,
-        filename: str,
-        file_category: str,
-        result: ValidationResult
+        self, file_data: bytes, filename: str, file_category: str, result: ValidationResult
     ) -> None:
         """Validate MIME type using magic bytes and filename"""
         try:
@@ -298,9 +305,7 @@ class FileValidator:
             allowed_types = self.mime_type_categories.get(file_category, set())
 
             if "*" not in allowed_types and detected_mime not in allowed_types:
-                result.errors.append(
-                    f"MIME type not allowed for {file_category}: {detected_mime}"
-                )
+                result.errors.append(f"MIME type not allowed for {file_category}: {detected_mime}")
 
             # Check for MIME type mismatch
             if filename_mime and filename_mime != detected_mime:
@@ -317,10 +322,7 @@ class FileValidator:
             result.warnings.append("Could not detect MIME type")
 
     async def _validate_content(
-        self,
-        file_data: bytes,
-        filename: str,
-        result: ValidationResult
+        self, file_data: bytes, filename: str, result: ValidationResult
     ) -> None:
         """Validate file content and structure"""
         try:
@@ -346,10 +348,7 @@ class FileValidator:
             result.warnings.append(f"Content validation error: {str(e)}")
 
     async def _validate_security(
-        self,
-        file_data: bytes,
-        filename: str,
-        result: ValidationResult
+        self, file_data: bytes, filename: str, result: ValidationResult
     ) -> None:
         """Security-focused validation"""
         # Check for embedded executables
@@ -358,18 +357,20 @@ class FileValidator:
 
         # Check for suspicious patterns
         suspicious_patterns = [
-            b'<script',
-            b'javascript:',
-            b'vbscript:',
-            b'onload=',
-            b'onerror=',
-            b'eval(',
-            b'exec('
+            b"<script",
+            b"javascript:",
+            b"vbscript:",
+            b"onload=",
+            b"onerror=",
+            b"eval(",
+            b"exec(",
         ]
 
         for pattern in suspicious_patterns:
             if pattern in file_data.lower():
-                result.warnings.append(f"Suspicious pattern detected: {pattern.decode('utf-8', errors='ignore')}")
+                result.warnings.append(
+                    f"Suspicious pattern detected: {pattern.decode('utf-8', errors='ignore')}"
+                )
 
         # Check file size vs content ratio for zip bombs
         if self._is_archive_file(filename):
@@ -381,7 +382,7 @@ class FileValidator:
         filename: str,
         file_category: str,
         result: ValidationResult,
-        additional_checks: Dict[str, Any]
+        additional_checks: dict[str, Any],
     ) -> None:
         """Educational platform-specific validation rules"""
 
@@ -404,7 +405,9 @@ class FileValidator:
 
         # Administrative document checks
         if file_category == "administrative":
-            if additional_checks.get("require_signature") and not self._has_digital_signature(file_data):
+            if additional_checks.get("require_signature") and not self._has_digital_signature(
+                file_data
+            ):
                 result.warnings.append("Administrative document may require digital signature")
 
     def _validate_magic_numbers(self, file_data: bytes, result: ValidationResult) -> bool:
@@ -414,13 +417,13 @@ class FileValidator:
 
         # Common file signatures
         signatures = {
-            b'\x89PNG': 'image/png',
-            b'\xFF\xD8\xFF': 'image/jpeg',
-            b'GIF8': 'image/gif',
-            b'%PDF': 'application/pdf',
-            b'PK\x03\x04': 'application/zip',
-            b'\xD0\xCF\x11\xE0': 'application/msword',
-            b'RIFF': 'video/avi'
+            b"\x89PNG": "image/png",
+            b"\xff\xd8\xff": "image/jpeg",
+            b"GIF8": "image/gif",
+            b"%PDF": "application/pdf",
+            b"PK\x03\x04": "application/zip",
+            b"\xd0\xcf\x11\xe0": "application/msword",
+            b"RIFF": "video/avi",
         }
 
         header = file_data[:8]
@@ -436,7 +439,7 @@ class FileValidator:
         """Validate text file encoding"""
         try:
             # Try common encodings
-            for encoding in ['utf-8', 'latin1', 'cp1252']:
+            for encoding in ["utf-8", "latin1", "cp1252"]:
                 try:
                     file_data.decode(encoding)
                     result.metadata["text_encoding"] = encoding
@@ -452,8 +455,9 @@ class FileValidator:
     async def _validate_image_content(self, file_data: bytes, result: ValidationResult) -> None:
         """Validate image file content"""
         try:
-            from PIL import Image
             import io
+
+            from PIL import Image
 
             # Try to open and validate image
             with Image.open(io.BytesIO(file_data)) as img:
@@ -475,24 +479,24 @@ class FileValidator:
     async def _validate_document_content(self, file_data: bytes, result: ValidationResult) -> None:
         """Validate document file content"""
         # Basic document validation
-        if file_data.startswith(b'%PDF'):
+        if file_data.startswith(b"%PDF"):
             await self._validate_pdf_content(file_data, result)
-        elif b'Microsoft Office' in file_data or b'word/' in file_data:
+        elif b"Microsoft Office" in file_data or b"word/" in file_data:
             await self._validate_office_content(file_data, result)
 
     async def _validate_pdf_content(self, file_data: bytes, result: ValidationResult) -> None:
         """Validate PDF file content"""
         try:
             # Check for PDF structure
-            if b'%%EOF' not in file_data:
+            if b"%%EOF" not in file_data:
                 result.warnings.append("PDF file may be corrupted")
 
             # Check for JavaScript (security concern)
-            if b'/JavaScript' in file_data or b'/JS' in file_data:
+            if b"/JavaScript" in file_data or b"/JS" in file_data:
                 result.warnings.append("PDF contains JavaScript")
 
             # Check for forms
-            if b'/AcroForm' in file_data:
+            if b"/AcroForm" in file_data:
                 result.metadata["has_forms"] = True
 
         except Exception as e:
@@ -502,11 +506,11 @@ class FileValidator:
         """Validate Microsoft Office document content"""
         try:
             # Check for macros (security concern)
-            if b'vba' in file_data.lower() or b'macro' in file_data.lower():
+            if b"vba" in file_data.lower() or b"macro" in file_data.lower():
                 result.warnings.append("Document may contain macros")
 
             # Check for external links
-            if b'http://' in file_data or b'https://' in file_data:
+            if b"http://" in file_data or b"https://" in file_data:
                 result.warnings.append("Document contains external links")
 
         except Exception as e:
@@ -515,8 +519,9 @@ class FileValidator:
     async def _validate_avatar_image(self, file_data: bytes, result: ValidationResult) -> None:
         """Validate avatar image requirements"""
         try:
-            from PIL import Image
             import io
+
+            from PIL import Image
 
             with Image.open(io.BytesIO(file_data)) as img:
                 width, height = img.size
@@ -539,15 +544,15 @@ class FileValidator:
     def _contains_executable_content(self, file_data: bytes) -> bool:
         """Check for embedded executable content"""
         # Check for PE headers (Windows executables)
-        if b'MZ' in file_data[:100] and b'PE\x00\x00' in file_data:
+        if b"MZ" in file_data[:100] and b"PE\x00\x00" in file_data:
             return True
 
         # Check for ELF headers (Linux executables)
-        if file_data.startswith(b'\x7fELF'):
+        if file_data.startswith(b"\x7fELF"):
             return True
 
         # Check for Mach-O headers (macOS executables)
-        if file_data.startswith(b'\xfe\xed\xfa\xce') or file_data.startswith(b'\xce\xfa\xed\xfe'):
+        if file_data.startswith(b"\xfe\xed\xfa\xce") or file_data.startswith(b"\xce\xfa\xed\xfe"):
             return True
 
         return False
@@ -555,11 +560,11 @@ class FileValidator:
     async def _check_compression_ratio(self, file_data: bytes, result: ValidationResult) -> None:
         """Check compression ratio to detect zip bombs"""
         try:
-            import zipfile
             import io
+            import zipfile
 
-            if file_data.startswith(b'PK'):  # ZIP file
-                with zipfile.ZipFile(io.BytesIO(file_data), 'r') as zf:
+            if file_data.startswith(b"PK"):  # ZIP file
+                with zipfile.ZipFile(io.BytesIO(file_data), "r") as zf:
                     compressed_size = len(file_data)
                     uncompressed_size = sum(info.file_size for info in zf.infolist())
 
@@ -576,32 +581,32 @@ class FileValidator:
 
     def _is_text_file(self, filename: str) -> bool:
         """Check if file is a text file"""
-        text_extensions = {'.txt', '.md', '.csv', '.json', '.xml', '.html', '.css', '.js'}
+        text_extensions = {".txt", ".md", ".csv", ".json", ".xml", ".html", ".css", ".js"}
         return Path(filename).suffix.lower() in text_extensions
 
     def _is_image_file(self, filename: str) -> bool:
         """Check if file is an image"""
-        image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.tiff'}
+        image_extensions = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp", ".tiff"}
         return Path(filename).suffix.lower() in image_extensions
 
     def _is_document_file(self, filename: str) -> bool:
         """Check if file is a document"""
-        doc_extensions = {'.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx'}
+        doc_extensions = {".pdf", ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx"}
         return Path(filename).suffix.lower() in doc_extensions
 
     def _is_archive_file(self, filename: str) -> bool:
         """Check if file is an archive"""
-        archive_extensions = {'.zip', '.rar', '.7z', '.tar', '.gz', '.bz2'}
+        archive_extensions = {".zip", ".rar", ".7z", ".tar", ".gz", ".bz2"}
         return Path(filename).suffix.lower() in archive_extensions
 
     def _has_digital_signature(self, file_data: bytes) -> bool:
         """Check if document has digital signature"""
         # Simple check for signature indicators in PDF
-        if b'/Sig' in file_data or b'/signature' in file_data.lower():
+        if b"/Sig" in file_data or b"/signature" in file_data.lower():
             return True
 
         # Check for Office document signatures
-        if b'signature' in file_data.lower() or b'cert' in file_data.lower():
+        if b"signature" in file_data.lower() or b"cert" in file_data.lower():
             return True
 
         return False
@@ -614,13 +619,13 @@ class FileValidator:
         suffix = path.suffix.lower()
 
         # Remove or replace unsafe characters
-        safe_stem = re.sub(r'[^\w\-_\.]', '_', stem)
+        safe_stem = re.sub(r"[^\w\-_\.]", "_", stem)
 
         # Remove multiple underscores
-        safe_stem = re.sub(r'_+', '_', safe_stem)
+        safe_stem = re.sub(r"_+", "_", safe_stem)
 
         # Remove leading/trailing underscores
-        safe_stem = safe_stem.strip('_')
+        safe_stem = safe_stem.strip("_")
 
         # Ensure not empty
         if not safe_stem:
@@ -638,7 +643,7 @@ class FileValidator:
         mime_type, _ = mimetypes.guess_type(filename)
         return mime_type or "application/octet-stream"
 
-    def get_allowed_extensions(self, file_category: str) -> Set[str]:
+    def get_allowed_extensions(self, file_category: str) -> set[str]:
         """Get allowed file extensions for a category"""
         allowed_types = self.mime_type_categories.get(file_category, set())
         extensions = set()

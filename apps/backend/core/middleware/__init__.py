@@ -5,10 +5,11 @@ Centralized registration and configuration of all FastAPI middleware.
 """
 
 import logging
+
 from fastapi import FastAPI
 
-from apps.backend.core.logging import logging_manager
 from apps.backend.core.config import settings
+from apps.backend.core.logging import logging_manager
 
 logger = logging_manager.get_logger(__name__)
 
@@ -28,7 +29,7 @@ def register_middleware(app: FastAPI) -> None:
         _register_compression_middleware(app)
         _register_versioning_middleware(app)
         # _register_security_middleware(app)  # Disable for now - config issues
-        _register_cors_middleware(app)       # Enabled - required for frontend communication
+        _register_cors_middleware(app)  # Enabled - required for frontend communication
         _register_trust_middleware(app)
         _register_logging_middleware(app)
         # _register_resilience_middleware(app)  # Disable for now - dependency issues
@@ -72,7 +73,10 @@ def _register_logging_middleware(app: FastAPI) -> None:
 def _register_cors_middleware(app: FastAPI) -> None:
     """Register CORS middleware"""
     try:
-        from apps.backend.core.security.cors import SecureCORSConfig, CORSMiddlewareWithLogging
+        from apps.backend.core.security.cors import (
+            CORSMiddlewareWithLogging,
+            SecureCORSConfig,
+        )
 
         # Configure CORS origins based on environment
         allowed_origins = None  # Use environment defaults for development
@@ -107,16 +111,16 @@ def _register_cors_middleware(app: FastAPI) -> None:
 def _register_security_middleware(app: FastAPI) -> None:
     """Register security middleware"""
     try:
-        from apps.backend.core.security.middleware import SecurityMiddleware
-        from apps.backend.core.security.headers import (
-            SecurityHeadersMiddleware,
-            SecurityHeadersConfig,
-        )
         from apps.backend.core.rate_limiter import (
             RateLimitConfig,
-            RateLimitStrategy,
             RateLimitScope,
+            RateLimitStrategy,
         )
+        from apps.backend.core.security.headers import (
+            SecurityHeadersConfig,
+            SecurityHeadersMiddleware,
+        )
+        from apps.backend.core.security.middleware import SecurityMiddleware
 
         # Security middleware
         app.add_middleware(
@@ -155,8 +159,8 @@ def _register_versioning_middleware(app: FastAPI) -> None:
     """Register API versioning middleware"""
     try:
         from apps.backend.core.versioning import (
-            VersionStrategy,
             APIVersionMiddleware,
+            VersionStrategy,
             create_version_manager,
         )
 
@@ -174,7 +178,10 @@ def _register_versioning_middleware(app: FastAPI) -> None:
 def _register_compression_middleware(app: FastAPI) -> None:
     """Register compression middleware"""
     try:
-        from apps.backend.core.security.compression import CompressionMiddleware, CompressionConfig
+        from apps.backend.core.security.compression import (
+            CompressionConfig,
+            CompressionMiddleware,
+        )
 
         app.add_middleware(
             CompressionMiddleware,
@@ -212,15 +219,15 @@ def _register_resilience_middleware(app: FastAPI) -> None:
     """Register resilience middleware (circuit breakers, retries, etc.)"""
     try:
         from apps.backend.api.middleware.resilience import (
+            BulkheadMiddleware,
             ResilienceMiddleware,
             RetryMiddleware,
-            BulkheadMiddleware,
         )
         from apps.backend.core.rate_limiter import (
-            RateLimitMiddleware,
             RateLimitConfig,
-            RateLimitStrategy,
+            RateLimitMiddleware,
             RateLimitScope,
+            RateLimitStrategy,
         )
 
         # Resilience middleware
@@ -269,8 +276,8 @@ def _register_resilience_middleware(app: FastAPI) -> None:
 def _register_metrics_middleware(app: FastAPI) -> None:
     """Register metrics and monitoring middleware"""
     try:
-        from prometheus_fastapi_instrumentator import Instrumentator
         from prometheus_client import CollectorRegistry
+        from prometheus_fastapi_instrumentator import Instrumentator
 
         # Create instrumentator for metrics collection
         instrumentator = Instrumentator(

@@ -9,15 +9,15 @@ Features:
 - Integration with external SIEM systems
 """
 
-import asyncio
+import hashlib
 import json
 import logging
-import hashlib
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
 from enum import Enum
-from dataclasses import dataclass, asdict
 from pathlib import Path
+from typing import Any
+
 import aiofiles
 import redis.asyncio as redis
 
@@ -86,21 +86,21 @@ class SecurityEvent:
     event_type: SecurityEventType
     severity: SecurityLevel
     timestamp: datetime
-    source_ip: Optional[str] = None
-    user_id: Optional[str] = None
-    user_email: Optional[str] = None
-    session_id: Optional[str] = None
-    endpoint: Optional[str] = None
-    method: Optional[str] = None
-    user_agent: Optional[str] = None
-    details: Dict[str, Any] = None
-    threat_indicators: List[str] = None
-    compliance_tags: List[str] = None
-    geo_location: Optional[Dict[str, str]] = None
-    response_status: Optional[int] = None
-    response_time_ms: Optional[float] = None
+    source_ip: str | None = None
+    user_id: str | None = None
+    user_email: str | None = None
+    session_id: str | None = None
+    endpoint: str | None = None
+    method: str | None = None
+    user_agent: str | None = None
+    details: dict[str, Any] = None
+    threat_indicators: list[str] = None
+    compliance_tags: list[str] = None
+    geo_location: dict[str, str] | None = None
+    response_status: int | None = None
+    response_time_ms: float | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization"""
         data = asdict(self)
         data["event_type"] = self.event_type.value
@@ -265,7 +265,7 @@ class SecurityAuditSystem:
         for pattern in patterns_detected:
             await self._generate_alert(event, pattern)
 
-    async def _check_brute_force_pattern(self, event: SecurityEvent) -> Optional[str]:
+    async def _check_brute_force_pattern(self, event: SecurityEvent) -> str | None:
         """Check for brute force attack patterns"""
 
         if not event.source_ip:
@@ -282,7 +282,7 @@ class SecurityAuditSystem:
 
         return None
 
-    async def _check_account_enumeration(self, event: SecurityEvent) -> Optional[str]:
+    async def _check_account_enumeration(self, event: SecurityEvent) -> str | None:
         """Check for account enumeration patterns"""
 
         if not event.source_ip:
@@ -303,7 +303,7 @@ class SecurityAuditSystem:
 
         return None
 
-    async def _check_privilege_escalation_pattern(self, event: SecurityEvent) -> Optional[str]:
+    async def _check_privilege_escalation_pattern(self, event: SecurityEvent) -> str | None:
         """Check for privilege escalation patterns"""
 
         if not event.user_id:
@@ -362,7 +362,7 @@ class SecurityAuditSystem:
         else:
             return "Investigate and monitor for additional suspicious activity"
 
-    async def get_security_metrics(self, days: int = 7) -> Dict[str, Any]:
+    async def get_security_metrics(self, days: int = 7) -> dict[str, Any]:
         """Get security metrics for dashboard"""
 
         end_time = datetime.utcnow()
@@ -417,12 +417,12 @@ class SecurityAuditSystem:
 
         return f"alert_{uuid.uuid4().hex[:12]}"
 
-    async def _get_geo_location(self, ip: str) -> Dict[str, str]:
+    async def _get_geo_location(self, ip: str) -> dict[str, str]:
         """Get geo-location for IP address (placeholder)"""
         # In production, integrate with GeoIP service
         return {"country": "unknown", "city": "unknown", "region": "unknown"}
 
-    async def _detect_threat_indicators(self, event: SecurityEvent) -> List[str]:
+    async def _detect_threat_indicators(self, event: SecurityEvent) -> list[str]:
         """Detect threat indicators in event"""
         indicators = []
 
@@ -443,7 +443,7 @@ class SecurityAuditSystem:
 
         return indicators
 
-    def _get_compliance_tags(self, event: SecurityEvent) -> List[str]:
+    def _get_compliance_tags(self, event: SecurityEvent) -> list[str]:
         """Get compliance tags for event"""
         tags = []
 
@@ -498,7 +498,7 @@ class SecurityAuditSystem:
 
 
 # Global audit system instance
-_audit_system: Optional[SecurityAuditSystem] = None
+_audit_system: SecurityAuditSystem | None = None
 
 
 def get_audit_system(redis_client: redis.Redis = None) -> SecurityAuditSystem:
@@ -519,7 +519,7 @@ async def log_login_attempt(
     success: bool,
     ip_address: str,
     user_agent: str = None,
-    details: Dict[str, Any] = None,
+    details: dict[str, Any] = None,
 ):
     """Log login attempt"""
     audit_system = get_audit_system()
@@ -545,7 +545,7 @@ async def log_access_attempt(
     granted: bool,
     ip_address: str,
     status_code: int = None,
-    details: Dict[str, Any] = None,
+    details: dict[str, Any] = None,
 ):
     """Log access attempt"""
     audit_system = get_audit_system()
@@ -572,7 +572,7 @@ async def log_security_violation(
     ip_address: str,
     user_id: str = None,
     endpoint: str = None,
-    details: Dict[str, Any] = None,
+    details: dict[str, Any] = None,
 ):
     """Log security violation"""
     audit_system = get_audit_system()

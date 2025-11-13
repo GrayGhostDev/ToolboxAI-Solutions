@@ -5,22 +5,20 @@ Tests cover AI-powered content creation, lesson management,
 assessment generation, and Roblox integration endpoints.
 """
 
+from datetime import datetime
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import datetime
-import asyncio
 
-from tests.api.conftest import Content, User
+from tests.api.conftest import Content
 
 
 class TestContentGenerationEndpoints:
     """Test suite for AI-powered content generation."""
 
     @pytest.mark.asyncio
-    async def test_generate_lesson_content(
-        self, test_client: AsyncClient, teacher_headers: dict
-    ):
+    async def test_generate_lesson_content(self, test_client: AsyncClient, teacher_headers: dict):
         """Test generating lesson content with AI."""
         response = await test_client.post(
             "/api/v1/content/generate/lesson",
@@ -30,11 +28,11 @@ class TestContentGenerationEndpoints:
                 "grade_level": "9th",
                 "learning_objectives": [
                     "Understand the process of photosynthesis",
-                    "Identify key components involved"
+                    "Identify key components involved",
                 ],
-                "duration_minutes": 45
+                "duration_minutes": 45,
             },
-            headers=teacher_headers
+            headers=teacher_headers,
         )
 
         assert response.status_code in [200, 201, 404, 503]
@@ -46,9 +44,7 @@ class TestContentGenerationEndpoints:
                 assert data["status"] in ["pending", "processing", "completed"]
 
     @pytest.mark.asyncio
-    async def test_generate_quiz(
-        self, test_client: AsyncClient, teacher_headers: dict
-    ):
+    async def test_generate_quiz(self, test_client: AsyncClient, teacher_headers: dict):
         """Test generating quiz questions with AI."""
         response = await test_client.post(
             "/api/v1/content/generate/quiz",
@@ -56,9 +52,9 @@ class TestContentGenerationEndpoints:
                 "topic": "World War II",
                 "num_questions": 10,
                 "question_types": ["multiple_choice", "true_false"],
-                "difficulty": "medium"
+                "difficulty": "medium",
             },
-            headers=teacher_headers
+            headers=teacher_headers,
         )
 
         assert response.status_code in [200, 201, 404, 503]
@@ -71,9 +67,7 @@ class TestContentGenerationEndpoints:
                     assert "options" in question or "answer" in question
 
     @pytest.mark.asyncio
-    async def test_generate_roblox_script(
-        self, test_client: AsyncClient, teacher_headers: dict
-    ):
+    async def test_generate_roblox_script(self, test_client: AsyncClient, teacher_headers: dict):
         """Test generating Roblox Luau scripts."""
         response = await test_client.post(
             "/api/v1/content/generate/roblox-script",
@@ -81,9 +75,9 @@ class TestContentGenerationEndpoints:
                 "script_type": "interactive_lesson",
                 "topic": "Solar System",
                 "features": ["3d_models", "quiz_integration", "leaderboard"],
-                "target_age": 12
+                "target_age": 12,
             },
-            headers=teacher_headers
+            headers=teacher_headers,
         )
 
         assert response.status_code in [200, 201, 404, 503]
@@ -94,9 +88,7 @@ class TestContentGenerationEndpoints:
                 assert "--" in data["script"]  # Luau comment syntax
 
     @pytest.mark.asyncio
-    async def test_generate_assessment(
-        self, test_client: AsyncClient, teacher_headers: dict
-    ):
+    async def test_generate_assessment(self, test_client: AsyncClient, teacher_headers: dict):
         """Test generating comprehensive assessments."""
         response = await test_client.post(
             "/api/v1/content/generate/assessment",
@@ -105,9 +97,9 @@ class TestContentGenerationEndpoints:
                 "topics": ["Algebra", "Geometry", "Trigonometry"],
                 "duration_minutes": 90,
                 "points_total": 100,
-                "include_rubric": True
+                "include_rubric": True,
             },
-            headers=teacher_headers
+            headers=teacher_headers,
         )
 
         assert response.status_code in [200, 201, 404, 503]
@@ -124,30 +116,21 @@ class TestContentGenerationEndpoints:
         """Test content generation with streaming response."""
         response = await test_client.post(
             "/api/v1/content/generate/stream",
-            json={
-                "prompt": "Create a lesson about the water cycle",
-                "stream": True
-            },
-            headers=teacher_headers
+            json={"prompt": "Create a lesson about the water cycle", "stream": True},
+            headers=teacher_headers,
         )
 
         assert response.status_code in [200, 404, 501]
         # If streaming is implemented, response will be chunked
 
     @pytest.mark.asyncio
-    async def test_content_generation_status(
-        self, test_client: AsyncClient, teacher_headers: dict
-    ):
+    async def test_content_generation_status(self, test_client: AsyncClient, teacher_headers: dict):
         """Test checking content generation status."""
         # First, initiate generation
         gen_response = await test_client.post(
             "/api/v1/content/generate/lesson",
-            json={
-                "title": "Test Lesson",
-                "subject": "Science",
-                "grade_level": "7th"
-            },
-            headers=teacher_headers
+            json={"title": "Test Lesson", "subject": "Science", "grade_level": "7th"},
+            headers=teacher_headers,
         )
 
         if gen_response.status_code in [200, 201] and "id" in gen_response.json():
@@ -155,8 +138,7 @@ class TestContentGenerationEndpoints:
 
             # Check status
             status_response = await test_client.get(
-                f"/api/v1/content/generate/status/{task_id}",
-                headers=teacher_headers
+                f"/api/v1/content/generate/status/{task_id}", headers=teacher_headers
             )
 
             assert status_response.status_code in [200, 404]
@@ -166,19 +148,13 @@ class TestContentGenerationEndpoints:
                 assert data["status"] in ["pending", "processing", "completed", "failed"]
 
     @pytest.mark.asyncio
-    async def test_cancel_content_generation(
-        self, test_client: AsyncClient, teacher_headers: dict
-    ):
+    async def test_cancel_content_generation(self, test_client: AsyncClient, teacher_headers: dict):
         """Test canceling ongoing content generation."""
         # First, initiate generation
         gen_response = await test_client.post(
             "/api/v1/content/generate/lesson",
-            json={
-                "title": "Test Lesson to Cancel",
-                "subject": "Math",
-                "grade_level": "8th"
-            },
-            headers=teacher_headers
+            json={"title": "Test Lesson to Cancel", "subject": "Math", "grade_level": "8th"},
+            headers=teacher_headers,
         )
 
         if gen_response.status_code in [200, 201] and "id" in gen_response.json():
@@ -186,8 +162,7 @@ class TestContentGenerationEndpoints:
 
             # Cancel generation
             cancel_response = await test_client.delete(
-                f"/api/v1/content/generate/{task_id}",
-                headers=teacher_headers
+                f"/api/v1/content/generate/{task_id}", headers=teacher_headers
             )
 
             assert cancel_response.status_code in [200, 204, 404]
@@ -197,9 +172,7 @@ class TestContentManagementEndpoints:
     """Test suite for content CRUD operations."""
 
     @pytest.mark.asyncio
-    async def test_create_content(
-        self, test_client: AsyncClient, teacher_headers: dict
-    ):
+    async def test_create_content(self, test_client: AsyncClient, teacher_headers: dict):
         """Test creating content manually."""
         response = await test_client.post(
             "/api/v1/content",
@@ -210,9 +183,9 @@ class TestContentManagementEndpoints:
                 "subject": "History",
                 "grade_level": "10th",
                 "content_body": "Content details here...",
-                "tags": ["history", "manual", "test"]
+                "tags": ["history", "manual", "test"],
             },
-            headers=teacher_headers
+            headers=teacher_headers,
         )
 
         assert response.status_code in [200, 201, 404]
@@ -229,10 +202,7 @@ class TestContentManagementEndpoints:
         # Create test content
         content = await create_test_content(test_session)
 
-        response = await test_client.get(
-            f"/api/v1/content/{content.id}",
-            headers=auth_headers
-        )
+        response = await test_client.get(f"/api/v1/content/{content.id}", headers=auth_headers)
 
         assert response.status_code in [200, 404]
         if response.status_code == 200:
@@ -241,14 +211,9 @@ class TestContentManagementEndpoints:
             assert data["title"] == content.title
 
     @pytest.mark.asyncio
-    async def test_list_content(
-        self, test_client: AsyncClient, auth_headers: dict
-    ):
+    async def test_list_content(self, test_client: AsyncClient, auth_headers: dict):
         """Test listing all content with pagination."""
-        response = await test_client.get(
-            "/api/v1/content?page=1&limit=10",
-            headers=auth_headers
-        )
+        response = await test_client.get("/api/v1/content?page=1&limit=10", headers=auth_headers)
 
         assert response.status_code in [200, 404]
         if response.status_code == 200:
@@ -259,13 +224,10 @@ class TestContentManagementEndpoints:
                 assert len(data["items"]) <= 10
 
     @pytest.mark.asyncio
-    async def test_filter_content_by_subject(
-        self, test_client: AsyncClient, auth_headers: dict
-    ):
+    async def test_filter_content_by_subject(self, test_client: AsyncClient, auth_headers: dict):
         """Test filtering content by subject."""
         response = await test_client.get(
-            "/api/v1/content?subject=Mathematics",
-            headers=auth_headers
+            "/api/v1/content?subject=Mathematics", headers=auth_headers
         )
 
         assert response.status_code in [200, 404]
@@ -277,13 +239,10 @@ class TestContentManagementEndpoints:
                     assert content["subject"] == "Mathematics"
 
     @pytest.mark.asyncio
-    async def test_search_content(
-        self, test_client: AsyncClient, auth_headers: dict
-    ):
+    async def test_search_content(self, test_client: AsyncClient, auth_headers: dict):
         """Test searching content by keyword."""
         response = await test_client.get(
-            "/api/v1/content/search?q=photosynthesis",
-            headers=auth_headers
+            "/api/v1/content/search?q=photosynthesis", headers=auth_headers
         )
 
         assert response.status_code in [200, 404]
@@ -307,11 +266,8 @@ class TestContentManagementEndpoints:
 
         response = await test_client.patch(
             f"/api/v1/content/{content.id}",
-            json={
-                "title": "Updated Title",
-                "description": "Updated description"
-            },
-            headers=teacher_headers
+            json={"title": "Updated Title", "description": "Updated description"},
+            headers=teacher_headers,
         )
 
         assert response.status_code in [200, 403, 404]
@@ -329,8 +285,7 @@ class TestContentManagementEndpoints:
         content = await create_test_content(test_session)
 
         response = await test_client.delete(
-            f"/api/v1/content/{content.id}",
-            headers=teacher_headers
+            f"/api/v1/content/{content.id}", headers=teacher_headers
         )
 
         assert response.status_code in [200, 204, 403, 404]
@@ -338,8 +293,7 @@ class TestContentManagementEndpoints:
         # Verify deletion
         if response.status_code in [200, 204]:
             get_response = await test_client.get(
-                f"/api/v1/content/{content.id}",
-                headers=teacher_headers
+                f"/api/v1/content/{content.id}", headers=teacher_headers
             )
             assert get_response.status_code == 404
 
@@ -352,8 +306,7 @@ class TestContentManagementEndpoints:
         content = await create_test_content(test_session)
 
         response = await test_client.post(
-            f"/api/v1/content/{content.id}/duplicate",
-            headers=teacher_headers
+            f"/api/v1/content/{content.id}/duplicate", headers=teacher_headers
         )
 
         assert response.status_code in [200, 201, 404, 501]
@@ -371,8 +324,7 @@ class TestContentManagementEndpoints:
         content = await create_test_content(test_session)
 
         response = await test_client.post(
-            f"/api/v1/content/{content.id}/publish",
-            headers=teacher_headers
+            f"/api/v1/content/{content.id}/publish", headers=teacher_headers
         )
 
         assert response.status_code in [200, 404, 501]
@@ -389,8 +341,7 @@ class TestContentManagementEndpoints:
         content = await create_test_content(test_session)
 
         response = await test_client.post(
-            f"/api/v1/content/{content.id}/archive",
-            headers=teacher_headers
+            f"/api/v1/content/{content.id}/archive", headers=teacher_headers
         )
 
         assert response.status_code in [200, 404, 501]
@@ -412,11 +363,8 @@ class TestRobloxIntegrationEndpoints:
 
         response = await test_client.post(
             f"/api/v1/roblox/sync/content/{content.id}",
-            json={
-                "universe_id": "123456789",
-                "place_id": "987654321"
-            },
-            headers=teacher_headers
+            json={"universe_id": "123456789", "place_id": "987654321"},
+            headers=teacher_headers,
         )
 
         assert response.status_code in [200, 201, 404, 503]
@@ -425,14 +373,9 @@ class TestRobloxIntegrationEndpoints:
             assert "sync_status" in data or "status" in data
 
     @pytest.mark.asyncio
-    async def test_get_roblox_sync_status(
-        self, test_client: AsyncClient, teacher_headers: dict
-    ):
+    async def test_get_roblox_sync_status(self, test_client: AsyncClient, teacher_headers: dict):
         """Test getting Roblox sync status."""
-        response = await test_client.get(
-            "/api/v1/roblox/sync/status/123",
-            headers=teacher_headers
-        )
+        response = await test_client.get("/api/v1/roblox/sync/status/123", headers=teacher_headers)
 
         assert response.status_code in [200, 404]
         if response.status_code == 200:
@@ -441,9 +384,7 @@ class TestRobloxIntegrationEndpoints:
             assert data["status"] in ["pending", "syncing", "completed", "failed"]
 
     @pytest.mark.asyncio
-    async def test_validate_roblox_script(
-        self, test_client: AsyncClient, teacher_headers: dict
-    ):
+    async def test_validate_roblox_script(self, test_client: AsyncClient, teacher_headers: dict):
         """Test validating Roblox Luau script."""
         response = await test_client.post(
             "/api/v1/roblox/validate",
@@ -455,7 +396,7 @@ class TestRobloxIntegrationEndpoints:
                 game.Players.PlayerAdded:Connect(onPlayerJoined)
                 """
             },
-            headers=teacher_headers
+            headers=teacher_headers,
         )
 
         assert response.status_code in [200, 404, 501]
@@ -466,13 +407,10 @@ class TestRobloxIntegrationEndpoints:
                 assert "errors" in data
 
     @pytest.mark.asyncio
-    async def test_get_roblox_analytics(
-        self, test_client: AsyncClient, teacher_headers: dict
-    ):
+    async def test_get_roblox_analytics(self, test_client: AsyncClient, teacher_headers: dict):
         """Test getting Roblox game analytics."""
         response = await test_client.get(
-            "/api/v1/roblox/analytics?universe_id=123456789",
-            headers=teacher_headers
+            "/api/v1/roblox/analytics?universe_id=123456789", headers=teacher_headers
         )
 
         assert response.status_code in [200, 404, 503]
@@ -488,7 +426,7 @@ async def create_test_content(session: AsyncSession, title: str = "Test Content"
         title=title,
         description="Test description",
         content_type="lesson",
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
     )
     session.add(content)
     await session.commit()

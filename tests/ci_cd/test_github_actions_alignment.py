@@ -1,16 +1,20 @@
 """Test alignment with GitHub Actions CI/CD pipeline"""
-import yaml
+
 import json
-from pathlib import Path
 import subprocess
-import os
+from pathlib import Path
+
+import yaml
+
 
 class TestCICDAlignment:
     """Ensure local tests match CI/CD pipeline"""
 
     def test_github_actions_exist(self):
         """Test required GitHub Actions workflows exist"""
-        workflows_dir = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.github/workflows")
+        workflows_dir = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.github/workflows"
+        )
 
         # Check if workflows directory exists
         assert workflows_dir.exists(), ".github/workflows directory not found"
@@ -24,7 +28,7 @@ class TestCICDAlignment:
         # Check for common workflow patterns
         workflow_contents = {}
         for workflow_file in workflow_files:
-            with open(workflow_file, 'r') as f:
+            with open(workflow_file) as f:
                 try:
                     workflow_contents[workflow_file.name] = yaml.safe_load(f.read())
                 except yaml.YAMLError:
@@ -38,9 +42,9 @@ class TestCICDAlignment:
         # Check for essential workflow components
         essential_components = [
             "python",  # Python testing
-            "node",    # Node.js testing
-            "test",    # Testing step
-            "build"    # Build step
+            "node",  # Node.js testing
+            "test",  # Testing step
+            "build",  # Build step
         ]
 
         for component in essential_components:
@@ -52,7 +56,7 @@ class TestCICDAlignment:
             "bandit": ["bandit", "--version"],
             "safety": ["safety", "--version"],
             "trivy": ["trivy", "--version"],
-            "gitleaks": ["gitleaks", "version"]
+            "gitleaks": ["gitleaks", "version"],
         }
 
         missing_tools = []
@@ -71,9 +75,11 @@ class TestCICDAlignment:
 
     def test_test_coverage_configuration(self):
         """Test coverage configuration matches CI requirements"""
-        pytest_ini = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/pytest.ini")
+        pytest_ini = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/pytest.ini"
+        )
 
-        with open(pytest_ini, 'r') as f:
+        with open(pytest_ini) as f:
             content = f.read()
 
         # Check for pytest configuration
@@ -87,8 +93,10 @@ class TestCICDAlignment:
             assert marker in content, f"Missing marker: {marker}"
 
         # Check if coverage is configured
-        requirements_path = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/requirements.txt")
-        with open(requirements_path, 'r') as f:
+        requirements_path = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/requirements.txt"
+        )
+        with open(requirements_path) as f:
             requirements = f.read()
 
         # Should have coverage tools
@@ -98,14 +106,18 @@ class TestCICDAlignment:
 
     def test_dependabot_configuration(self):
         """Test Dependabot configuration if it exists"""
-        dependabot_config = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.github/dependabot.yml")
+        dependabot_config = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.github/dependabot.yml"
+        )
 
         if not dependabot_config.exists():
             # Check for alternative location
-            dependabot_config = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.github/dependabot.yaml")
+            dependabot_config = Path(
+                "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.github/dependabot.yaml"
+            )
 
         if dependabot_config.exists():
-            with open(dependabot_config, 'r') as f:
+            with open(dependabot_config) as f:
                 config = yaml.safe_load(f)
 
             # Check ecosystems if dependabot is configured
@@ -119,8 +131,11 @@ class TestCICDAlignment:
                 # Check update schedule
                 for update in config["updates"]:
                     assert "schedule" in update, "Missing schedule in Dependabot update"
-                    assert update["schedule"]["interval"] in ["daily", "weekly", "monthly"], \
-                        "Invalid schedule interval"
+                    assert update["schedule"]["interval"] in [
+                        "daily",
+                        "weekly",
+                        "monthly",
+                    ], "Invalid schedule interval"
         else:
             print("Warning: No Dependabot configuration found")
 
@@ -128,7 +143,9 @@ class TestCICDAlignment:
         """Test GitHub Secrets requirements are documented"""
         # Check if there's documentation about required secrets
         docs_dir = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/docs")
-        readme_file = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/README.md")
+        readme_file = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/README.md"
+        )
 
         # Look for secret documentation
         secret_docs_found = False
@@ -139,10 +156,12 @@ class TestCICDAlignment:
 
         for doc_file in files_to_check:
             if doc_file.exists():
-                with open(doc_file, 'r') as f:
+                with open(doc_file) as f:
                     content = f.read().lower()
 
-                if any(keyword in content for keyword in ["secrets", "environment variables", "ci/cd"]):
+                if any(
+                    keyword in content for keyword in ["secrets", "environment variables", "ci/cd"]
+                ):
                     secret_docs_found = True
                     break
 
@@ -151,7 +170,9 @@ class TestCICDAlignment:
 
     def test_workflow_python_version_matrix(self):
         """Test Python version matrix in workflows"""
-        workflows_dir = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.github/workflows")
+        workflows_dir = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.github/workflows"
+        )
 
         if not workflows_dir.exists():
             return  # Skip if no workflows
@@ -160,24 +181,28 @@ class TestCICDAlignment:
 
         python_versions_found = []
         for workflow_file in workflow_files:
-            with open(workflow_file, 'r') as f:
+            with open(workflow_file) as f:
                 content = f.read()
 
             # Look for Python version specifications
             if "python-version" in content:
                 # Extract Python versions (basic pattern matching)
                 import re
+
                 versions = re.findall(r"['\"]?(3\.\d+)['\"]?", content)
                 python_versions_found.extend(versions)
 
         if python_versions_found:
             # Should test multiple Python versions or at least the current one
-            assert "3.12" in python_versions_found or "3.11" in python_versions_found, \
-                "Should test with Python 3.11 or 3.12"
+            assert (
+                "3.12" in python_versions_found or "3.11" in python_versions_found
+            ), "Should test with Python 3.11 or 3.12"
 
     def test_workflow_node_version_matrix(self):
         """Test Node.js version matrix in workflows"""
-        workflows_dir = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.github/workflows")
+        workflows_dir = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.github/workflows"
+        )
 
         if not workflows_dir.exists():
             return  # Skip if no workflows
@@ -186,24 +211,28 @@ class TestCICDAlignment:
 
         node_versions_found = []
         for workflow_file in workflow_files:
-            with open(workflow_file, 'r') as f:
+            with open(workflow_file) as f:
                 content = f.read()
 
             # Look for Node version specifications
             if "node-version" in content:
                 # Extract Node versions
                 import re
+
                 versions = re.findall(r"['\"]?(\d+)['\"]?", content)
                 node_versions_found.extend(versions)
 
         if node_versions_found:
             # Should test with Node 22 or compatible
-            assert "22" in node_versions_found or "20" in node_versions_found, \
-                "Should test with Node 20 or 22"
+            assert (
+                "22" in node_versions_found or "20" in node_versions_found
+            ), "Should test with Node 20 or 22"
 
     def test_docker_compose_in_ci(self):
         """Test Docker Compose usage in CI workflows"""
-        workflows_dir = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.github/workflows")
+        workflows_dir = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.github/workflows"
+        )
 
         if not workflows_dir.exists():
             return  # Skip if no workflows
@@ -212,13 +241,16 @@ class TestCICDAlignment:
 
         docker_usage_found = False
         for workflow_file in workflow_files:
-            with open(workflow_file, 'r') as f:
+            with open(workflow_file) as f:
                 content = f.read()
 
             # Look for Docker usage patterns
             docker_patterns = [
-                "docker-compose", "docker compose",
-                "services:", "postgresql", "redis"
+                "docker-compose",
+                "docker compose",
+                "services:",
+                "postgresql",
+                "redis",
             ]
 
             if any(pattern in content for pattern in docker_patterns):
@@ -230,7 +262,9 @@ class TestCICDAlignment:
 
     def test_environment_variable_security(self):
         """Test environment variable security practices"""
-        workflows_dir = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.github/workflows")
+        workflows_dir = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.github/workflows"
+        )
 
         if not workflows_dir.exists():
             return  # Skip if no workflows
@@ -238,15 +272,13 @@ class TestCICDAlignment:
         workflow_files = list(workflows_dir.glob("*.yml")) + list(workflows_dir.glob("*.yaml"))
 
         for workflow_file in workflow_files:
-            with open(workflow_file, 'r') as f:
+            with open(workflow_file) as f:
                 content = f.read()
 
             # Check that sensitive values use secrets
-            sensitive_patterns = [
-                "api_key", "secret", "password", "token"
-            ]
+            sensitive_patterns = ["api_key", "secret", "password", "token"]
 
-            lines = content.split('\n')
+            lines = content.split("\n")
             for i, line in enumerate(lines):
                 line_lower = line.lower()
 
@@ -254,22 +286,30 @@ class TestCICDAlignment:
                 for pattern in sensitive_patterns:
                     if pattern in line_lower and ":" in line:
                         # Skip comments
-                        if line.strip().startswith('#'):
+                        if line.strip().startswith("#"):
                             continue
 
                         # If it's setting an env var with sensitive data
-                        if f"{pattern}" in line_lower and not line.strip().startswith('#'):
+                        if f"{pattern}" in line_lower and not line.strip().startswith("#"):
                             # Should use secrets or be a placeholder
-                            if not ("secrets." in line or "your_" in line.lower() or "test_" in line.lower()):
-                                print(f"Warning: Potential hardcoded secret in {workflow_file.name}:{i+1}")
+                            if not (
+                                "secrets." in line
+                                or "your_" in line.lower()
+                                or "test_" in line.lower()
+                            ):
+                                print(
+                                    f"Warning: Potential hardcoded secret in {workflow_file.name}:{i+1}"
+                                )
 
     def test_test_command_alignment(self):
         """Test that test commands in CI match local test setup"""
         # Check package.json test scripts
-        package_json = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/package.json")
+        package_json = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/package.json"
+        )
 
         if package_json.exists():
-            with open(package_json, 'r') as f:
+            with open(package_json) as f:
                 package = json.load(f)
 
             # Should have test scripts
@@ -287,10 +327,12 @@ class TestCICDAlignment:
     def test_build_command_alignment(self):
         """Test that build commands in CI match local build setup"""
         # Check package.json build scripts
-        package_json = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/package.json")
+        package_json = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard/package.json"
+        )
 
         if package_json.exists():
-            with open(package_json, 'r') as f:
+            with open(package_json) as f:
                 package = json.load(f)
 
             # Should have build scripts
@@ -303,9 +345,11 @@ class TestCICDAlignment:
             assert "build" in scripts, "Missing build script"
 
         # Check if there's a Makefile
-        makefile = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/Makefile")
+        makefile = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/Makefile"
+        )
         if makefile.exists():
-            with open(makefile, 'r') as f:
+            with open(makefile) as f:
                 content = f.read()
 
             # Should have common targets
@@ -317,11 +361,13 @@ class TestCICDAlignment:
     def test_linting_consistency(self):
         """Test linting configuration consistency"""
         # Check if ESLint config exists
-        dashboard_dir = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard")
+        dashboard_dir = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard"
+        )
         eslint_configs = [
             dashboard_dir / ".eslintrc.js",
             dashboard_dir / ".eslintrc.json",
-            dashboard_dir / "eslint.config.js"
+            dashboard_dir / "eslint.config.js",
         ]
 
         eslint_config_exists = any(config.exists() for config in eslint_configs)
@@ -330,7 +376,7 @@ class TestCICDAlignment:
             # Check package.json has lint script
             package_json = dashboard_dir / "package.json"
             if package_json.exists():
-                with open(package_json, 'r') as f:
+                with open(package_json) as f:
                     package = json.load(f)
 
                 scripts = package.get("scripts", {})
@@ -348,7 +394,7 @@ class TestCICDAlignment:
             root_dir / ".prettierrc.json",
             dashboard_dir / ".prettierrc",
             dashboard_dir / ".prettierrc.js",
-            dashboard_dir / ".prettierrc.json"
+            dashboard_dir / ".prettierrc.json",
         ]
 
         prettier_config_exists = any(config.exists() for config in prettier_configs)
@@ -357,7 +403,7 @@ class TestCICDAlignment:
             # Check package.json has format script
             package_json = dashboard_dir / "package.json"
             if package_json.exists():
-                with open(package_json, 'r') as f:
+                with open(package_json) as f:
                     package = json.load(f)
 
                 scripts = package.get("scripts", {})

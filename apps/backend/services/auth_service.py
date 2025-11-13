@@ -6,10 +6,10 @@ Business logic for authentication and authorization operations.
 
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Dict, Any, List
+from typing import Any, Dict, List, Optional
 
-from apps.backend.core.logging import logging_manager
 from apps.backend.core.config import settings
+from apps.backend.core.logging import logging_manager
 from apps.backend.models.schemas import User
 
 logger = logging_manager.get_logger(__name__)
@@ -19,7 +19,7 @@ class AuthService:
     """Authentication service for handling user authentication and authorization"""
 
     def __init__(self):
-        self.token_expire_minutes = getattr(settings, 'TOKEN_EXPIRE_MINUTES', 30)
+        self.token_expire_minutes = getattr(settings, "TOKEN_EXPIRE_MINUTES", 30)
 
     async def authenticate_user(self, username: str, password: str) -> Optional[User]:
         """
@@ -41,7 +41,7 @@ class AuthService:
                     username=username,
                     email=f"{username}@example.com",
                     role="student",
-                    is_active=True
+                    is_active=True,
                 )
             return None
 
@@ -67,7 +67,7 @@ class AuthService:
                 username=f"user_{user_id}",
                 email=f"user_{user_id}@example.com",
                 role="student",
-                is_active=True
+                is_active=True,
             )
 
         except Exception as e:
@@ -121,7 +121,7 @@ class AuthService:
                 "sub": user.id,
                 "username": user.username,
                 "role": user.role,
-                "exp": datetime.now(timezone.utc) + timedelta(minutes=self.token_expire_minutes)
+                "exp": datetime.now(timezone.utc) + timedelta(minutes=self.token_expire_minutes),
             }
 
             # Generate token
@@ -135,8 +135,8 @@ class AuthService:
                     "id": user.id,
                     "username": user.username,
                     "email": user.email,
-                    "role": user.role
-                }
+                    "role": user.role,
+                },
             }
 
         except Exception as e:
@@ -213,11 +213,7 @@ class AuthService:
             return False
 
     async def check_resource_access(
-        self,
-        user: User,
-        resource_type: str,
-        resource_id: str,
-        action: str = "read"
+        self, user: User, resource_type: str, resource_id: str, action: str = "read"
     ) -> bool:
         """
         Check if user can access a specific resource
@@ -281,14 +277,16 @@ class AuthService:
                 "content_generated": 25,
                 "lessons_completed": 10,
                 "assessments_taken": 8,
-                "total_time_spent": 3600  # seconds
+                "total_time_spent": 3600,  # seconds
             }
 
         except Exception as e:
             logger.error(f"Failed to get user stats for {user_id}: {e}")
             return {}
 
-    async def update_user_activity(self, user_id: str, activity_type: str, metadata: Dict[str, Any]) -> bool:
+    async def update_user_activity(
+        self, user_id: str, activity_type: str, metadata: Dict[str, Any]
+    ) -> bool:
         """
         Update user activity log
 
@@ -308,8 +306,8 @@ class AuthService:
                 extra_fields={
                     "user_id": user_id,
                     "activity_type": activity_type,
-                    "metadata": metadata
-                }
+                    "metadata": metadata,
+                },
             )
             return True
 

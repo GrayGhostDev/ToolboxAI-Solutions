@@ -6,18 +6,17 @@ Multi-agent orchestration for complex integration workflows
 Coordinates multiple agents and external platforms to execute
 complex integration workflows that span multiple systems.
 """
-import logging
+
 import asyncio
-from typing import Dict, List, Any, Optional, Callable
+import logging
+from collections.abc import Callable
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from dataclasses import dataclass, field
+from typing import Any
 
 from apps.backend.core.agents.integration import (
     IntegrationAgent,
-    IntegrationPlatform,
-    IntegrationEvent,
-    IntegrationStatus
 )
 
 logger = logging.getLogger(__name__)
@@ -25,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 class WorkflowStatus(Enum):
     """Status codes for orchestration workflows"""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -41,17 +41,18 @@ class WorkflowStep:
     Represents a single operation to be executed as part of
     a larger workflow orchestration.
     """
+
     step_id: str
     name: str
     agent_type: str
     operation: str
-    params: Dict[str, Any] = field(default_factory=dict)
-    dependencies: List[str] = field(default_factory=list)
+    params: dict[str, Any] = field(default_factory=dict)
+    dependencies: list[str] = field(default_factory=list)
     status: WorkflowStatus = WorkflowStatus.PENDING
-    result: Optional[Dict[str, Any]] = None
-    error: Optional[str] = None
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    result: dict[str, Any] | None = None
+    error: str | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
 
     def can_execute(self, completed_steps: set) -> bool:
         """Check if all dependencies are satisfied"""
@@ -62,7 +63,7 @@ class WorkflowStep:
         self.status = WorkflowStatus.RUNNING
         self.started_at = datetime.utcnow()
 
-    def mark_completed(self, result: Dict[str, Any]):
+    def mark_completed(self, result: dict[str, Any]):
         """Mark step as completed"""
         self.status = WorkflowStatus.COMPLETED
         self.result = result
@@ -83,32 +84,33 @@ class Workflow:
     Defines a multi-step integration workflow with dependencies,
     execution order, and rollback capabilities.
     """
+
     workflow_id: str
     name: str
     description: str
-    steps: List[WorkflowStep] = field(default_factory=list)
+    steps: list[WorkflowStep] = field(default_factory=list)
     status: WorkflowStatus = WorkflowStatus.PENDING
     created_at: datetime = field(default_factory=datetime.utcnow)
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def add_step(self, step: WorkflowStep):
         """Add a step to the workflow"""
         self.steps.append(step)
 
-    def get_executable_steps(self, completed_steps: set) -> List[WorkflowStep]:
+    def get_executable_steps(self, completed_steps: set) -> list[WorkflowStep]:
         """Get steps that are ready to execute"""
         return [
-            step for step in self.steps
+            step
+            for step in self.steps
             if step.status == WorkflowStatus.PENDING and step.can_execute(completed_steps)
         ]
 
     def is_complete(self) -> bool:
         """Check if workflow is complete"""
         return all(
-            step.status in (WorkflowStatus.COMPLETED, WorkflowStatus.FAILED)
-            for step in self.steps
+            step.status in (WorkflowStatus.COMPLETED, WorkflowStatus.FAILED) for step in self.steps
         )
 
     def has_failures(self) -> bool:
@@ -135,9 +137,9 @@ class IntegrationCoordinator:
     def __init__(self):
         """Initialize integration coordinator"""
         self.integration_agent = IntegrationAgent()
-        self.workflows: Dict[str, Workflow] = {}
-        self.agents: Dict[str, Any] = {}
-        self.event_handlers: Dict[str, List[Callable]] = {}
+        self.workflows: dict[str, Workflow] = {}
+        self.agents: dict[str, Any] = {}
+        self.event_handlers: dict[str, list[Callable]] = {}
 
         logger.info("IntegrationCoordinator initialized")
 
@@ -152,7 +154,7 @@ class IntegrationCoordinator:
         self.agents[agent_type] = agent
         logger.info(f"Registered agent: {agent_type}")
 
-    def register_platform(self, platform_name: str, config: Optional[Dict] = None):
+    def register_platform(self, platform_name: str, config: dict | None = None):
         """
         Register an external platform
 
@@ -164,10 +166,7 @@ class IntegrationCoordinator:
         logger.info(f"Registered platform: {platform_name}")
 
     def create_workflow(
-        self,
-        name: str,
-        description: str,
-        workflow_id: Optional[str] = None
+        self, name: str, description: str, workflow_id: str | None = None
     ) -> Workflow:
         """
         Create a new integration workflow
@@ -183,11 +182,7 @@ class IntegrationCoordinator:
         if not workflow_id:
             workflow_id = f"workflow_{int(datetime.utcnow().timestamp())}"
 
-        workflow = Workflow(
-            workflow_id=workflow_id,
-            name=name,
-            description=description
-        )
+        workflow = Workflow(workflow_id=workflow_id, name=name, description=description)
 
         self.workflows[workflow_id] = workflow
         logger.info(f"Created workflow: {workflow_id} - {name}")
@@ -201,8 +196,8 @@ class IntegrationCoordinator:
         name: str,
         agent_type: str,
         operation: str,
-        params: Optional[Dict] = None,
-        dependencies: Optional[List[str]] = None
+        params: dict | None = None,
+        dependencies: list[str] | None = None,
     ) -> WorkflowStep:
         """
         Add a step to a workflow
@@ -229,7 +224,7 @@ class IntegrationCoordinator:
             agent_type=agent_type,
             operation=operation,
             params=params or {},
-            dependencies=dependencies or []
+            dependencies=dependencies or [],
         )
 
         workflow.add_step(step)
@@ -237,7 +232,7 @@ class IntegrationCoordinator:
 
         return step
 
-    async def execute_workflow(self, workflow_id: str) -> Dict[str, Any]:
+    async def execute_workflow(self, workflow_id: str) -> dict[str, Any]:
         """
         Execute an integration workflow
 
@@ -272,10 +267,7 @@ class IntegrationCoordinator:
                     break
 
                 # Execute steps in parallel where possible
-                tasks = [
-                    self._execute_step(workflow_id, step)
-                    for step in executable_steps
-                ]
+                tasks = [self._execute_step(workflow_id, step) for step in executable_steps]
 
                 results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -307,7 +299,7 @@ class IntegrationCoordinator:
             logger.error(f"Workflow {workflow_id} execution failed: {e}")
             raise
 
-    async def _execute_step(self, workflow_id: str, step: WorkflowStep) -> Dict[str, Any]:
+    async def _execute_step(self, workflow_id: str, step: WorkflowStep) -> dict[str, Any]:
         """
         Execute a single workflow step
 
@@ -335,8 +327,7 @@ class IntegrationCoordinator:
             elif step.agent_type == "integration":
                 # Handle integration agent operations
                 result = await self.integration_agent.integrate(
-                    step.params.get("platform", "default"),
-                    step.params
+                    step.params.get("platform", "default"), step.params
                 )
             else:
                 raise ValueError(
@@ -349,7 +340,7 @@ class IntegrationCoordinator:
             logger.error(f"Step {step.step_id} execution error: {e}")
             raise
 
-    def _get_workflow_results(self, workflow: Workflow) -> Dict[str, Any]:
+    def _get_workflow_results(self, workflow: Workflow) -> dict[str, Any]:
         """
         Compile workflow execution results
 
@@ -381,22 +372,20 @@ class IntegrationCoordinator:
                         (step.completed_at - step.started_at).total_seconds()
                         if step.started_at and step.completed_at
                         else None
-                    )
+                    ),
                 }
                 for step in workflow.steps
             ],
             "total_steps": len(workflow.steps),
             "completed_steps": sum(
-                1 for step in workflow.steps
-                if step.status == WorkflowStatus.COMPLETED
+                1 for step in workflow.steps if step.status == WorkflowStatus.COMPLETED
             ),
             "failed_steps": sum(
-                1 for step in workflow.steps
-                if step.status == WorkflowStatus.FAILED
-            )
+                1 for step in workflow.steps if step.status == WorkflowStatus.FAILED
+            ),
         }
 
-    def get_workflow_status(self, workflow_id: str) -> Dict[str, Any]:
+    def get_workflow_status(self, workflow_id: str) -> dict[str, Any]:
         """
         Get current status of a workflow
 
@@ -412,7 +401,7 @@ class IntegrationCoordinator:
 
         return self._get_workflow_results(workflow)
 
-    def list_workflows(self) -> List[Dict[str, Any]]:
+    def list_workflows(self) -> list[dict[str, Any]]:
         """
         List all workflows
 
@@ -425,10 +414,10 @@ class IntegrationCoordinator:
                 "name": wf.name,
                 "status": wf.status.value,
                 "steps": len(wf.steps),
-                "created_at": wf.created_at.isoformat()
+                "created_at": wf.created_at.isoformat(),
             }
             for wf in self.workflows.values()
         ]
 
 
-__all__ = ['IntegrationCoordinator', 'Workflow', 'WorkflowStep', 'WorkflowStatus']
+__all__ = ["IntegrationCoordinator", "Workflow", "WorkflowStep", "WorkflowStatus"]

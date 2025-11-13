@@ -5,18 +5,16 @@ Provides helper functions for testing FastAPI applications with proper
 dependency injection, authentication, and database mocking.
 """
 
+from typing import Any
+from unittest.mock import AsyncMock, Mock
+
 import pytest
-from unittest.mock import Mock, AsyncMock
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
-from fastapi import Depends, HTTPException
-from typing import Optional, Dict, Any
 
 
 def create_mock_user(
-    user_id: str = "test_user_123",
-    email: str = "test@example.com",
-    role: str = "student",
-    **kwargs
+    user_id: str = "test_user_123", email: str = "test@example.com", role: str = "student", **kwargs
 ) -> Mock:
     """
     Create a mock user object for testing
@@ -100,9 +98,7 @@ def override_dependency(app, dependency_func, mock_value):
 
 
 def create_authenticated_test_client(
-    app,
-    user_role: str = "student",
-    user_attributes: Optional[Dict[str, Any]] = None
+    app, user_role: str = "student", user_attributes: dict[str, Any] | None = None
 ) -> tuple[TestClient, Mock]:
     """
     Create a test client with an authenticated user
@@ -133,27 +129,21 @@ def create_authenticated_test_client(
 def create_admin_test_client(app) -> tuple[TestClient, Mock]:
     """Create test client with admin user"""
     return create_authenticated_test_client(
-        app,
-        user_role="admin",
-        user_attributes={"permissions": ["admin_access"]}
+        app, user_role="admin", user_attributes={"permissions": ["admin_access"]}
     )
 
 
 def create_teacher_test_client(app) -> tuple[TestClient, Mock]:
     """Create test client with teacher user"""
     return create_authenticated_test_client(
-        app,
-        user_role="teacher",
-        user_attributes={"class_ids": ["class_1", "class_2"]}
+        app, user_role="teacher", user_attributes={"class_ids": ["class_1", "class_2"]}
     )
 
 
 def create_student_test_client(app) -> tuple[TestClient, Mock]:
     """Create test client with student user"""
     return create_authenticated_test_client(
-        app,
-        user_role="student",
-        user_attributes={"class_ids": ["class_1"]}
+        app, user_role="student", user_attributes={"class_ids": ["class_1"]}
     )
 
 
@@ -196,7 +186,7 @@ class MockRoleChecker:
         if current_user.role != self.required_role:
             raise HTTPException(
                 status_code=403,
-                detail=f"Insufficient permissions. Required role: {self.required_role}"
+                detail=f"Insufficient permissions. Required role: {self.required_role}",
             )
 
 

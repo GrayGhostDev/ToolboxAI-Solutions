@@ -3,37 +3,33 @@ Workflow Orchestrator for coordinating agents and MCP integration
 """
 
 import logging
-from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime
-import asyncio
-import uuid
 from enum import Enum
+from typing import Any
 
+from .content_validation import ContentValidationSystem
+from .conversation_flow import ConversationFlowManager
 from .models import (
+    AgentTrigger,
+    ContentGenerationPlan,
+    ContentType,
     ConversationContext,
     WorkflowStep,
-    ContentGenerationPlan,
-    AgentTrigger,
-    ContentType,
-    ConversationStage,
-    ValidationResult,
 )
-from .conversation_flow import ConversationFlowManager
-from .content_validation import ContentValidationSystem
 
 logger = logging.getLogger(__name__)
 
 # Import agent types with fallback for missing modules
 try:
     from core.agents import (
-        SupervisorAgent,
         ContentAgent,
-        QuizAgent,
-        TerrainAgent,
-        ScriptAgent,
-        ReviewAgent,
-        TestingAgent,
         Orchestrator,
+        QuizAgent,
+        ReviewAgent,
+        ScriptAgent,
+        SupervisorAgent,
+        TerrainAgent,
+        TestingAgent,
     )
 except ImportError as e:
     logger.warning(f"Could not import all agents: {e}")
@@ -109,7 +105,7 @@ class WorkflowOrchestrator:
         self.mcp_connections = {}
 
         # Active workflows
-        self.active_workflows: Dict[str, ContentGenerationPlan] = {}
+        self.active_workflows: dict[str, ContentGenerationPlan] = {}
 
         # Agent capabilities mapping
         self.agent_capabilities = self._define_agent_capabilities()
@@ -117,7 +113,7 @@ class WorkflowOrchestrator:
         # Workflow templates
         self.workflow_templates = self._define_workflow_templates()
 
-    def _initialize_agents(self) -> Dict[AgentType, Any]:
+    def _initialize_agents(self) -> dict[AgentType, Any]:
         """Initialize all available agents"""
         return {
             AgentType.SUPERVISOR: SupervisorAgent(),
@@ -130,7 +126,7 @@ class WorkflowOrchestrator:
             # Additional specialized agents would be initialized here
         }
 
-    def _define_agent_capabilities(self) -> Dict[AgentType, List[str]]:
+    def _define_agent_capabilities(self) -> dict[AgentType, list[str]]:
         """Define capabilities of each agent type"""
         return {
             AgentType.SUPERVISOR: [
@@ -226,7 +222,7 @@ class WorkflowOrchestrator:
             ],
         }
 
-    def _define_workflow_templates(self) -> Dict[ContentType, List[WorkflowStep]]:
+    def _define_workflow_templates(self) -> dict[ContentType, list[WorkflowStep]]:
         """Define workflow templates for different content types"""
         return {
             ContentType.LESSON: [
@@ -442,8 +438,8 @@ class WorkflowOrchestrator:
         return plan
 
     async def execute_workflow(
-        self, plan_id: str, progress_callback: Optional[callable] = None
-    ) -> Dict[str, Any]:
+        self, plan_id: str, progress_callback: callable | None = None
+    ) -> dict[str, Any]:
         """Execute a workflow plan with progress tracking"""
 
         plan = self.active_workflows.get(plan_id)
@@ -513,8 +509,8 @@ class WorkflowOrchestrator:
         return results
 
     async def _execute_workflow_step(
-        self, step: WorkflowStep, plan: ContentGenerationPlan, current_results: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, step: WorkflowStep, plan: ContentGenerationPlan, current_results: dict[str, Any]
+    ) -> dict[str, Any]:
         """Execute a single workflow step"""
 
         try:
@@ -550,8 +546,8 @@ class WorkflowOrchestrator:
             return {"success": False, "error": str(e), "critical": False}
 
     def _prepare_step_input(
-        self, step: WorkflowStep, plan: ContentGenerationPlan, current_results: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, step: WorkflowStep, plan: ContentGenerationPlan, current_results: dict[str, Any]
+    ) -> dict[str, Any]:
         """Prepare input data for a workflow step"""
 
         input_data = {
@@ -578,8 +574,8 @@ class WorkflowOrchestrator:
         return input_data
 
     async def _fallback_agent_execution(
-        self, agent: Any, input_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, agent: Any, input_data: dict[str, Any]
+    ) -> dict[str, Any]:
         """Fallback execution for agents without execute_task method"""
 
         # This would be implemented based on the actual agent interfaces
@@ -593,8 +589,8 @@ class WorkflowOrchestrator:
         }
 
     async def _calculate_final_metrics(
-        self, plan: ContentGenerationPlan, results: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, plan: ContentGenerationPlan, results: dict[str, Any]
+    ) -> dict[str, Any]:
         """Calculate final quality metrics for the workflow"""
 
         # This would implement sophisticated quality calculation
@@ -608,7 +604,7 @@ class WorkflowOrchestrator:
             "overall_score": 0.86,
         }
 
-    async def get_workflow_status(self, plan_id: str) -> Optional[Dict[str, Any]]:
+    async def get_workflow_status(self, plan_id: str) -> dict[str, Any] | None:
         """Get current status of a workflow"""
 
         plan = self.active_workflows.get(plan_id)
@@ -638,16 +634,16 @@ class WorkflowOrchestrator:
 
         return False
 
-    async def get_agent_capabilities(self, agent_type: AgentType) -> List[str]:
+    async def get_agent_capabilities(self, agent_type: AgentType) -> list[str]:
         """Get capabilities of a specific agent type"""
         return self.agent_capabilities.get(agent_type, [])
 
-    async def get_available_agents(self) -> List[AgentType]:
+    async def get_available_agents(self) -> list[AgentType]:
         """Get list of available agent types"""
         return list(self.agents.keys())
 
     async def create_agent_trigger(
-        self, agent_name: str, trigger_type: str, trigger_data: Dict[str, Any], priority: int = 1
+        self, agent_name: str, trigger_type: str, trigger_data: dict[str, Any], priority: int = 1
     ) -> AgentTrigger:
         """Create a trigger for agent activation"""
 
@@ -690,7 +686,7 @@ class WorkflowOrchestrator:
         # Implementation would depend on specific agent requirements
         pass
 
-    def get_active_workflows(self) -> List[str]:
+    def get_active_workflows(self) -> list[str]:
         """Get list of active workflow plan IDs"""
         return list(self.active_workflows.keys())
 

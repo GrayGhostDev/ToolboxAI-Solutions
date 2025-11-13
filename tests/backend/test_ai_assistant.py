@@ -1,15 +1,15 @@
-import pytest_asyncio
+
 #!/usr/bin/env python3
 """Test AI Assistant with OpenAI fallback for Roblox educational content generation"""
 
 import asyncio
+
 import httpx
-import json
-from typing import AsyncGenerator
 
 # Configuration
 API_BASE_URL = "http://127.0.0.1:8009"
 AUTH_TOKEN = "dev-token"
+
 
 @pytest.mark.asyncio
 async def test_conversation_flow():
@@ -21,7 +21,7 @@ async def test_conversation_flow():
         response = await client.post(
             f"{API_BASE_URL}/api/v1/ai-chat/conversations",
             headers={"Authorization": f"Bearer {AUTH_TOKEN}"},
-            json={"title": "Solar System Simulation"}
+            json={"title": "Solar System Simulation"},
         )
         if response.status_code != 201:
             print(f"Failed to create conversation: {response.text}")
@@ -37,7 +37,7 @@ async def test_conversation_flow():
             "Can you help me design an interactive environment where students can explore planets?",
             "I'd like to add quizzes about each planet",
             "Puzzle",  # Test that it understands this in context of quizzes
-            "Can you generate the Lua script for the main solar system controller?"
+            "Can you generate the Lua script for the main solar system controller?",
         ]
 
         for i, message in enumerate(test_messages, 1):
@@ -48,13 +48,10 @@ async def test_conversation_flow():
                 f"{API_BASE_URL}/api/v1/ai-chat/generate",
                 headers={
                     "Authorization": f"Bearer {AUTH_TOKEN}",
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 },
-                json={
-                    "conversation_id": conv_id,
-                    "message": message
-                },
-                timeout=30.0
+                json={"conversation_id": conv_id, "message": message},
+                timeout=30.0,
             )
 
             if response.status_code == 200:
@@ -75,7 +72,7 @@ async def test_conversation_flow():
         print("\n4. Testing conversation memory...")
         response = await client.get(
             f"{API_BASE_URL}/api/v1/ai-chat/conversations/{conv_id}",
-            headers={"Authorization": f"Bearer {AUTH_TOKEN}"}
+            headers={"Authorization": f"Bearer {AUTH_TOKEN}"},
         )
 
         if response.status_code == 200:
@@ -85,6 +82,7 @@ async def test_conversation_flow():
             print(f"   Memory context retained: {'Yes' if message_count > 0 else 'No'}")
         else:
             print(f"   Could not retrieve conversation: {response.status_code}")
+
 
 @pytest.mark.asyncio
 async def test_streaming_response():
@@ -96,7 +94,7 @@ async def test_streaming_response():
         response = await client.post(
             f"{API_BASE_URL}/api/v1/ai-chat/conversations",
             headers={"Authorization": f"Bearer {AUTH_TOKEN}"},
-            json={"title": "Streaming Test"}
+            json={"title": "Streaming Test"},
         )
 
         if response.status_code != 201:
@@ -110,15 +108,12 @@ async def test_streaming_response():
         async with client.stream(
             "POST",
             f"{API_BASE_URL}/api/v1/ai-chat/generate",
-            headers={
-                "Authorization": f"Bearer {AUTH_TOKEN}",
-                "Content-Type": "application/json"
-            },
+            headers={"Authorization": f"Bearer {AUTH_TOKEN}", "Content-Type": "application/json"},
             json={
                 "conversation_id": conv_id,
-                "message": "Generate a simple Lua script for a Roblox part that changes color"
+                "message": "Generate a simple Lua script for a Roblox part that changes color",
             },
-            timeout=30.0
+            timeout=30.0,
         ) as response:
             if response.status_code == 200:
                 print("   Streaming response received:")
@@ -134,6 +129,7 @@ async def test_streaming_response():
             else:
                 print(f"   Streaming failed: {response.status_code}")
 
+
 @pytest.mark.asyncio
 async def test_roblox_content_generation():
     """Test Roblox-specific content generation"""
@@ -144,7 +140,7 @@ async def test_roblox_content_generation():
         response = await client.post(
             f"{API_BASE_URL}/api/v1/ai-chat/conversations",
             headers={"Authorization": f"Bearer {AUTH_TOKEN}"},
-            json={"title": "Roblox Content Test"}
+            json={"title": "Roblox Content Test"},
         )
 
         if response.status_code != 201:
@@ -157,7 +153,7 @@ async def test_roblox_content_generation():
         roblox_requests = [
             "Create a Roblox script for a quiz system with multiple choice questions",
             "Design a 3D educational environment for teaching about gravity",
-            "Generate puzzle-based assessments for math concepts"
+            "Generate puzzle-based assessments for math concepts",
         ]
 
         for request in roblox_requests:
@@ -166,19 +162,17 @@ async def test_roblox_content_generation():
                 f"{API_BASE_URL}/api/v1/ai-chat/generate",
                 headers={
                     "Authorization": f"Bearer {AUTH_TOKEN}",
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 },
-                json={
-                    "conversation_id": conv_id,
-                    "message": request
-                },
-                timeout=30.0
+                json={"conversation_id": conv_id, "message": request},
+                timeout=30.0,
             )
 
             if response.status_code == 200:
                 print("   ✓ Response generated successfully")
             else:
                 print(f"   ✗ Failed: {response.status_code}")
+
 
 async def main():
     """Run all tests"""
@@ -204,7 +198,9 @@ async def main():
     except Exception as e:
         print(f"\n❌ Test suite failed: {e}")
         import traceback
+
         traceback.print_exc()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

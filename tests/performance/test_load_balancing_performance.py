@@ -11,43 +11,39 @@ Comprehensive tests for validating load balancing performance:
 """
 
 import asyncio
-import time
 import random
-from typing import List, Dict, Any
-from datetime import datetime, timedelta
 import statistics
-import pytest
-import httpx
-from locust import HttpUser, task, between, events
-from locust.env import Environment
-from locust.stats import stats_printer, stats_history
-from locust.log import setup_logging
+import time
+
 import aioredis
-import psutil
 import numpy as np
+import pytest
+from apps.backend.core.websocket_cluster import WebSocketCluster
+from database.replica_router import ConsistencyLevel, ReplicaRouter
+from locust import HttpUser, between, task
+from locust.env import Environment
+from locust.log import setup_logging
 
 from apps.backend.core.circuit_breaker import (
     CircuitBreaker,
     CircuitBreakerConfig,
-    get_circuit_breaker
 )
-from apps.backend.core.rate_limiter import RateLimiter, RateLimitConfig
-from database.replica_router import ReplicaRouter, ConsistencyLevel
-from apps.backend.core.websocket_cluster import WebSocketCluster
-from apps.backend.core.edge_cache import EdgeCache, CacheTier
+from apps.backend.core.edge_cache import CacheTier, EdgeCache
 from apps.backend.core.global_load_balancer import (
+    GeographicLocation,
     GlobalLoadBalancer,
+    HealthCheck,
     Region,
     RegionCode,
-    GeographicLocation,
-    TrafficPolicy,
     RoutingPolicy,
-    HealthCheck
+    TrafficPolicy,
 )
+from apps.backend.core.rate_limiter import RateLimitConfig, RateLimiter
 
 
 class LoadBalancingUser(HttpUser):
     """Simulated user for load testing"""
+
     wait_time = between(0.5, 2)
 
     def on_start(self):
@@ -59,8 +55,7 @@ class LoadBalancingUser(HttpUser):
     def read_operation(self):
         """Simulate read operations"""
         response = self.client.get(
-            "/api/v1/content/list",
-            headers={"X-Session-ID": self.session_id}
+            "/api/v1/content/list", headers={"X-Session-ID": self.session_id}
         )
 
     @task(5)
@@ -69,25 +64,21 @@ class LoadBalancingUser(HttpUser):
         response = self.client.post(
             "/api/v1/content/create",
             json={"title": "Test", "content": "Content"},
-            headers={"X-Session-ID": self.session_id}
+            headers={"X-Session-ID": self.session_id},
         )
 
     @task(3)
     def cached_operation(self):
         """Simulate cached requests"""
         response = self.client.get(
-            "/api/v1/static/resource",
-            headers={"X-Session-ID": self.session_id}
+            "/api/v1/static/resource", headers={"X-Session-ID": self.session_id}
         )
 
     @task(1)
     def websocket_operation(self):
         """Simulate WebSocket connections"""
         # In real test, would establish WebSocket connection
-        response = self.client.get(
-            "/ws/connect",
-            headers={"X-Session-ID": self.session_id}
-        )
+        response = self.client.get("/ws/connect", headers={"X-Session-ID": self.session_id})
 
 
 class TestCircuitBreakerPerformance:
@@ -97,10 +88,7 @@ class TestCircuitBreakerPerformance:
     async def test_circuit_breaker_under_load(self):
         """Test circuit breaker behavior under high load"""
         config = CircuitBreakerConfig(
-            failure_threshold=10,
-            success_threshold=5,
-            reset_timeout=5.0,
-            timeout=1.0
+            failure_threshold=10, success_threshold=5, reset_timeout=5.0, timeout=1.0
         )
         breaker = CircuitBreaker("test_service", config)
 
@@ -117,6 +105,7 @@ class TestCircuitBreakerPerformance:
         # Run 1000 operations
         tasks = []
         for _ in range(1000):
+
             async def single_operation():
                 start = time.time()
                 try:
@@ -164,10 +153,7 @@ class TestRateLimiterPerformance:
         """Test rate limiter accuracy under concurrent load"""
         redis_client = await aioredis.from_url("redis://localhost:6379/15")
 
-        config = RateLimitConfig(
-            requests_per_second=100,
-            burst_size=10
-        )
+        config = RateLimitConfig(requests_per_second=100, burst_size=10)
         limiter = RateLimiter(redis_client, config)
 
         # Track results
@@ -228,7 +214,7 @@ class TestDatabaseReplicaPerformance:
         replica_urls = [
             "postgresql://user:pass@replica1:5432/db",
             "postgresql://user:pass@replica2:5432/db",
-            "postgresql://user:pass@replica3:5432/db"
+            "postgresql://user:pass@replica3:5432/db",
         ]
 
         router = ReplicaRouter(primary_url, replica_urls)
@@ -239,12 +225,14 @@ class TestDatabaseReplicaPerformance:
 
         # Simulate 1000 queries
         for _ in range(1000):
-            consistency = random.choice([
-                ConsistencyLevel.EVENTUAL,
-                ConsistencyLevel.EVENTUAL,  # Weight towards eventual
-                ConsistencyLevel.BOUNDED_STALENESS,
-                ConsistencyLevel.STRONG
-            ])
+            consistency = random.choice(
+                [
+                    ConsistencyLevel.EVENTUAL,
+                    ConsistencyLevel.EVENTUAL,  # Weight towards eventual
+                    ConsistencyLevel.BOUNDED_STALENESS,
+                    ConsistencyLevel.STRONG,
+                ]
+            )
 
             # Mock the routing decision tracking
             replica = router._select_replica(consistency)
@@ -266,7 +254,9 @@ class TestDatabaseReplicaPerformance:
             print(f"  {replica}: {count} ({percentage:.1f}%)")
 
         # Assert reasonable distribution
-        assert primary_percentage < 30, "Primary should handle less than 30% with eventual consistency"
+        assert (
+            primary_percentage < 30
+        ), "Primary should handle less than 30% with eventual consistency"
 
         # Check replica balance (should be relatively even)
         if routing_stats["replicas"]:
@@ -286,10 +276,7 @@ class TestEdgeCachePerformance:
     @pytest.mark.asyncio
     async def test_cache_hit_rate(self):
         """Test cache hit rate and latency improvement"""
-        cache = EdgeCache(
-            redis_url="redis://localhost:6379",
-            default_ttl=300
-        )
+        cache = EdgeCache(redis_url="redis://localhost:6379", default_ttl=300)
         await cache.initialize()
 
         # Warm up cache with common requests
@@ -334,7 +321,7 @@ class TestEdgeCachePerformance:
             print(f"  Miss latency P95: {np.percentile(miss_latencies, 95):.2f}ms")
 
         # Performance assertions
-        assert edge_metrics['hit_rate'] > 40, "Hit rate should be > 40%"
+        assert edge_metrics["hit_rate"] > 40, "Hit rate should be > 40%"
         if hit_latencies:
             assert statistics.median(hit_latencies) < 10, "Cache hit latency should be < 10ms"
 
@@ -354,7 +341,7 @@ class TestWebSocketClusterPerformance:
                 node_id=f"node_{i}",
                 redis_url="redis://localhost:6379",
                 hostname=f"server{i}",
-                port=8000 + i
+                port=8000 + i,
             )
             await node.start()
             nodes.append(node)
@@ -411,40 +398,31 @@ class TestGlobalLoadBalancerPerformance:
                 name="US East",
                 location=GeographicLocation(40.7128, -74.0060),  # New York
                 endpoints=["us-east-1.example.com"],
-                capacity=10000
+                capacity=10000,
             ),
             Region(
                 code=RegionCode.EU_WEST_1,
                 name="EU West",
                 location=GeographicLocation(53.3498, -6.2603),  # Dublin
                 endpoints=["eu-west-1.example.com"],
-                capacity=10000
+                capacity=10000,
             ),
             Region(
                 code=RegionCode.AP_SOUTH_1,
                 name="AP South",
                 location=GeographicLocation(19.0760, 72.8777),  # Mumbai
                 endpoints=["ap-south-1.example.com"],
-                capacity=10000
-            )
+                capacity=10000,
+            ),
         ]
 
         policy = TrafficPolicy(
-            policy_type=RoutingPolicy.GEOPROXIMITY,
-            endpoints=[r.endpoints[0] for r in regions]
+            policy_type=RoutingPolicy.GEOPROXIMITY, endpoints=[r.endpoints[0] for r in regions]
         )
 
-        health_check = HealthCheck(
-            endpoint="health",
-            type="http",
-            interval=30
-        )
+        health_check = HealthCheck(endpoint="health", type="http", interval=30)
 
-        lb = GlobalLoadBalancer(
-            regions=regions,
-            policy=policy,
-            health_check_config=health_check
-        )
+        lb = GlobalLoadBalancer(regions=regions, policy=policy, health_check_config=health_check)
 
         await lb.start()
 
@@ -452,7 +430,7 @@ class TestGlobalLoadBalancerPerformance:
         test_locations = [
             ("1.2.3.4", "US"),  # US IP
             ("185.2.3.4", "EU"),  # EU IP
-            ("103.2.3.4", "AP")  # Asia IP
+            ("103.2.3.4", "AP"),  # Asia IP
         ]
 
         routing_results = []
@@ -483,19 +461,16 @@ class TestEndToEndPerformance:
     @pytest.mark.integration
     async def test_full_stack_performance(self):
         """Test complete load balancing stack under realistic load"""
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("FULL STACK LOAD BALANCING PERFORMANCE TEST")
-        print("="*60)
+        print("=" * 60)
 
         # Initialize all components
         components_initialized = []
 
         try:
             # 1. Circuit Breaker
-            cb_config = CircuitBreakerConfig(
-                failure_threshold=10,
-                reset_timeout=5.0
-            )
+            cb_config = CircuitBreakerConfig(failure_threshold=10, reset_timeout=5.0)
             circuit_breaker = CircuitBreaker("api", cb_config)
             components_initialized.append("Circuit Breaker")
 
@@ -508,7 +483,7 @@ class TestEndToEndPerformance:
             # 3. Database Replica Router
             replica_router = ReplicaRouter(
                 "postgresql://primary:5432/db",
-                ["postgresql://replica1:5432/db", "postgresql://replica2:5432/db"]
+                ["postgresql://replica1:5432/db", "postgresql://replica2:5432/db"],
             )
             await replica_router.start()
             components_initialized.append("Replica Router")
@@ -637,13 +612,13 @@ class TestEndToEndPerformance:
         finally:
             # Clean up
             print("\nCleaning up...")
-            if 'replica_router' in locals():
+            if "replica_router" in locals():
                 await replica_router.stop()
-            if 'edge_cache' in locals():
+            if "edge_cache" in locals():
                 await edge_cache.close()
-            if 'ws_cluster' in locals():
+            if "ws_cluster" in locals():
                 await ws_cluster.stop()
-            if 'redis_client' in locals():
+            if "redis_client" in locals():
                 await redis_client.close()
 
 

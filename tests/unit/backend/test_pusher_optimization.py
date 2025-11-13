@@ -8,22 +8,26 @@ Target: >95% code coverage for Pusher optimization components.
 """
 
 import asyncio
-import pytest
 import time
-from datetime import datetime, timezone, timedelta
-from unittest.mock import Mock, patch, AsyncMock, MagicMock, call
-from typing import Any, Dict, List
-from collections import defaultdict, deque
+from collections import defaultdict
+from datetime import datetime, timezone
+from unittest.mock import AsyncMock, Mock, patch
 
-import pusher
+import pytest
 from pusher.errors import PusherError
 
 from apps.backend.services.pusher_optimized import (
-    PusherEvent, PusherStats, ConnectionPool, EventBatcher,
-    ChannelManager, RateLimiter, OptimizedPusherService,
-    get_optimized_pusher_service, trigger_optimized,
-    authenticate_optimized, get_pusher_health,
-    _optimized_pusher_service
+    ChannelManager,
+    ConnectionPool,
+    EventBatcher,
+    OptimizedPusherService,
+    PusherEvent,
+    PusherStats,
+    RateLimiter,
+    authenticate_optimized,
+    get_optimized_pusher_service,
+    get_pusher_health,
+    trigger_optimized,
 )
 
 
@@ -37,7 +41,7 @@ class TestPusherEvent:
             channel="test-channel",
             event="test-event",
             data={"message": "hello"},
-            socket_id="socket123"
+            socket_id="socket123",
         )
 
         assert event.channel == "test-channel"
@@ -48,11 +52,7 @@ class TestPusherEvent:
 
     def test_pusher_event_without_socket_id(self):
         """Test PusherEvent creation without socket_id."""
-        event = PusherEvent(
-            channel="test-channel",
-            event="test-event",
-            data={"message": "hello"}
-        )
+        event = PusherEvent(channel="test-channel", event="test-event", data={"message": "hello"})
 
         assert event.socket_id is None
         assert event.channel == "test-channel"
@@ -73,10 +73,7 @@ class TestPusherEvent:
     def test_to_dict_conversion(self):
         """Test PusherEvent to dictionary conversion."""
         event = PusherEvent(
-            channel="test-channel",
-            event="test-event",
-            data={"key": "value"},
-            socket_id="socket123"
+            channel="test-channel", event="test-event", data={"key": "value"}, socket_id="socket123"
         )
 
         event_dict = event.to_dict()
@@ -85,7 +82,7 @@ class TestPusherEvent:
             "channel": "test-channel",
             "event": "test-event",
             "data": {"key": "value"},
-            "socket_id": "socket123"
+            "socket_id": "socket123",
         }
 
         assert event_dict == expected
@@ -166,7 +163,7 @@ class TestPusherStats:
         stats.record_event(success=True, latency=0.02)
         stats.record_event(success=False, latency=0.03)
 
-        assert stats.success_rate == 2/3  # 2 successful out of 3 total
+        assert stats.success_rate == 2 / 3  # 2 successful out of 3 total
 
     def test_success_rate_no_events(self):
         """Test success rate with no events."""
@@ -217,7 +214,7 @@ class TestConnectionPool:
     @pytest.fixture
     def mock_settings(self):
         """Mock Pusher settings."""
-        with patch('apps.backend.services.pusher_optimized.settings') as mock:
+        with patch("apps.backend.services.pusher_optimized.settings") as mock:
             mock.PUSHER_APP_ID = "test_app_id"
             mock.PUSHER_KEY = "test_key"
             mock.PUSHER_SECRET = "test_secret"
@@ -230,7 +227,7 @@ class TestConnectionPool:
         """Create connection pool instance."""
         return ConnectionPool(pool_size=3)
 
-    @patch('pusher.Pusher')
+    @patch("pusher.Pusher")
     async def test_initialize_success(self, mock_pusher_class, connection_pool, mock_settings):
         """Test successful connection pool initialization."""
         mock_clients = [Mock() for _ in range(3)]
@@ -252,7 +249,7 @@ class TestConnectionPool:
         assert call_args["ssl"] is True
         assert call_args["timeout"] == 10
 
-    @patch('pusher.Pusher')
+    @patch("pusher.Pusher")
     async def test_initialize_error(self, mock_pusher_class, connection_pool, mock_settings):
         """Test initialization with connection error."""
         mock_pusher_class.side_effect = Exception("Pusher connection failed")
@@ -264,7 +261,7 @@ class TestConnectionPool:
 
     async def test_double_initialization_prevention(self, connection_pool, mock_settings):
         """Test that double initialization is prevented."""
-        with patch('pusher.Pusher') as mock_pusher:
+        with patch("pusher.Pusher") as mock_pusher:
             mock_pusher.return_value = Mock()
 
             # First initialization
@@ -334,7 +331,7 @@ class TestEventBatcher:
         events = [
             PusherEvent("channel1", "event1", {"data": "test1"}),
             PusherEvent("channel1", "event2", {"data": "test2"}),
-            PusherEvent("channel2", "event3", {"data": "test3"})
+            PusherEvent("channel2", "event3", {"data": "test3"}),
         ]
 
         # Add events one by one
@@ -361,7 +358,7 @@ class TestEventBatcher:
         events = [
             PusherEvent("channel1", "event1", {"data": "test1"}),
             PusherEvent("channel1", "event2", {"data": "test2"}),
-            PusherEvent("channel2", "event3", {"data": "test3"})
+            PusherEvent("channel2", "event3", {"data": "test3"}),
         ]
 
         # Add events
@@ -381,6 +378,7 @@ class TestEventBatcher:
 
     async def test_concurrent_access(self, batcher):
         """Test concurrent access to batcher."""
+
         async def add_events(channel_prefix, count):
             for i in range(count):
                 event = PusherEvent(f"{channel_prefix}-{i}", "event", {"data": i})
@@ -388,9 +386,7 @@ class TestEventBatcher:
 
         # Add events concurrently
         await asyncio.gather(
-            add_events("channel1", 5),
-            add_events("channel2", 3),
-            add_events("channel3", 2)
+            add_events("channel1", 5), add_events("channel2", 3), add_events("channel3", 2)
         )
 
         batches = await batcher.get_batches()
@@ -412,12 +408,12 @@ class TestChannelManager:
         """Create channel manager with mock cache."""
         manager = ChannelManager()
         # Mock the cache import
-        with patch('apps.backend.services.pusher_optimized.cache', mock_cache):
+        with patch("apps.backend.services.pusher_optimized.cache", mock_cache):
             yield manager
 
     async def test_register_channel(self, channel_manager, mock_cache):
         """Test registering a channel."""
-        with patch('apps.backend.services.pusher_optimized.cache', mock_cache):
+        with patch("apps.backend.services.pusher_optimized.cache", mock_cache):
             await channel_manager.register_channel("test-channel")
 
             assert "test-channel" in channel_manager.active_channels
@@ -426,7 +422,7 @@ class TestChannelManager:
 
     async def test_record_event(self, channel_manager, mock_cache):
         """Test recording event for a channel."""
-        with patch('apps.backend.services.pusher_optimized.cache', mock_cache):
+        with patch("apps.backend.services.pusher_optimized.cache", mock_cache):
             await channel_manager.record_event("test-channel")
 
             assert "test-channel" in channel_manager.active_channels
@@ -437,7 +433,7 @@ class TestChannelManager:
         cached_info = {"active": True, "registered_at": "2023-01-01T00:00:00Z"}
         mock_cache.get.return_value = cached_info
 
-        with patch('apps.backend.services.pusher_optimized.cache', mock_cache):
+        with patch("apps.backend.services.pusher_optimized.cache", mock_cache):
             info = await channel_manager.get_channel_info("test-channel")
 
             assert info == cached_info
@@ -447,7 +443,7 @@ class TestChannelManager:
         """Test getting channel information when not cached."""
         mock_cache.get.return_value = None
 
-        with patch('apps.backend.services.pusher_optimized.cache', mock_cache):
+        with patch("apps.backend.services.pusher_optimized.cache", mock_cache):
             info = await channel_manager.get_channel_info("test-channel")
 
             assert info is None
@@ -523,6 +519,7 @@ class TestRateLimiter:
 
     async def test_concurrent_acquire(self, rate_limiter):
         """Test concurrent rate limit acquisition."""
+
         async def try_acquire():
             return await rate_limiter.acquire()
 
@@ -541,7 +538,7 @@ class TestOptimizedPusherService:
     @pytest.fixture
     def mock_settings(self):
         """Mock Pusher settings."""
-        with patch('apps.backend.services.pusher_optimized.settings') as mock:
+        with patch("apps.backend.services.pusher_optimized.settings") as mock:
             mock.PUSHER_APP_ID = "test_app_id"
             mock.PUSHER_KEY = "test_key"
             mock.PUSHER_SECRET = "test_secret"
@@ -554,7 +551,7 @@ class TestOptimizedPusherService:
         """Create OptimizedPusherService instance."""
         return OptimizedPusherService()
 
-    @patch('apps.backend.services.pusher_optimized.ConnectionPool')
+    @patch("apps.backend.services.pusher_optimized.ConnectionPool")
     async def test_initialize_success(self, mock_pool_class, service, mock_settings):
         """Test successful service initialization."""
         mock_pool = AsyncMock()
@@ -579,10 +576,7 @@ class TestOptimizedPusherService:
         service.rate_limiter.wait_for_slot = AsyncMock()
 
         result = await service.trigger_event(
-            "test-channel",
-            "test-event",
-            {"message": "hello"},
-            immediate=True
+            "test-channel", "test-event", {"message": "hello"}, immediate=True
         )
 
         assert result is True
@@ -596,10 +590,7 @@ class TestOptimizedPusherService:
         service.event_batcher.add_event.return_value = False  # No flush needed
 
         result = await service.trigger_event(
-            "test-channel",
-            "test-event",
-            {"message": "hello"},
-            immediate=False
+            "test-channel", "test-event", {"message": "hello"}, immediate=False
         )
 
         assert result is True
@@ -621,12 +612,9 @@ class TestOptimizedPusherService:
         mock_client = Mock()
         service.connection_pool.get_client.return_value = mock_client
 
-        with patch.object(service, '_send_batched_events') as mock_send_batches:
+        with patch.object(service, "_send_batched_events") as mock_send_batches:
             result = await service.trigger_event(
-                "test-channel",
-                "test-event",
-                {"message": "hello"},
-                immediate=False
+                "test-channel", "test-event", {"message": "hello"}, immediate=False
             )
 
             assert result is True
@@ -705,7 +693,7 @@ class TestOptimizedPusherService:
         # Create test batch
         events = [
             PusherEvent("test-channel", "event1", {"data": "test1"}),
-            PusherEvent("test-channel", "event2", {"data": "test2"})
+            PusherEvent("test-channel", "event2", {"data": "test2"}),
         ]
         batches = {"test-channel": events}
 
@@ -723,7 +711,7 @@ class TestOptimizedPusherService:
 
         service.stats = Mock()
 
-        with patch('apps.backend.services.pusher_optimized.cache', mock_cache):
+        with patch("apps.backend.services.pusher_optimized.cache", mock_cache):
             result = await service.authenticate_channel("socket123", "private-channel")
 
             assert result == cached_auth
@@ -743,7 +731,7 @@ class TestOptimizedPusherService:
         mock_client.authenticate.return_value = auth_data
         service.connection_pool.get_client.return_value = mock_client
 
-        with patch('apps.backend.services.pusher_optimized.cache', mock_cache):
+        with patch("apps.backend.services.pusher_optimized.cache", mock_cache):
             result = await service.authenticate_channel("socket123", "private-channel")
 
             assert result == auth_data
@@ -764,7 +752,7 @@ class TestOptimizedPusherService:
         mock_client.authenticate.return_value = auth_data
         service.connection_pool.get_client.return_value = mock_client
 
-        with patch('apps.backend.services.pusher_optimized.cache', mock_cache):
+        with patch("apps.backend.services.pusher_optimized.cache", mock_cache):
             result = await service.authenticate_channel(
                 "socket123", "presence-channel", user_id="user123", user_info={"name": "Test"}
             )
@@ -774,7 +762,7 @@ class TestOptimizedPusherService:
             mock_client.authenticate.assert_called_with(
                 channel="presence-channel",
                 socket_id="socket123",
-                custom_data={"user_id": "user123", "user_info": {"name": "Test"}}
+                custom_data={"user_id": "user123", "user_info": {"name": "Test"}},
             )
 
     async def test_authenticate_presence_channel_no_user_id(self, service):
@@ -804,7 +792,7 @@ class TestOptimizedPusherService:
         service.connection_pool.get_client.return_value = mock_client
 
         mock_cache = AsyncMock()
-        with patch('apps.backend.services.pusher_optimized.cache', mock_cache):
+        with patch("apps.backend.services.pusher_optimized.cache", mock_cache):
             result = await service.get_channel_info("test-channel")
 
             assert result == api_info
@@ -876,7 +864,7 @@ class TestGlobalServiceFunctions:
         global _optimized_pusher_service
         _optimized_pusher_service = None
 
-        with patch('apps.backend.services.pusher_optimized.OptimizedPusherService') as mock_class:
+        with patch("apps.backend.services.pusher_optimized.OptimizedPusherService") as mock_class:
             mock_instance = AsyncMock()
             mock_class.return_value = mock_instance
 
@@ -891,7 +879,9 @@ class TestGlobalServiceFunctions:
 
     async def test_trigger_optimized(self):
         """Test trigger_optimized convenience function."""
-        with patch('apps.backend.services.pusher_optimized.get_optimized_pusher_service') as mock_get_service:
+        with patch(
+            "apps.backend.services.pusher_optimized.get_optimized_pusher_service"
+        ) as mock_get_service:
             mock_service = AsyncMock()
             mock_service.trigger_event.return_value = True
             mock_get_service.return_value = mock_service
@@ -901,7 +891,7 @@ class TestGlobalServiceFunctions:
                 "test-event",
                 {"message": "hello"},
                 socket_id="socket123",
-                immediate=True
+                immediate=True,
             )
 
             assert result is True
@@ -911,17 +901,16 @@ class TestGlobalServiceFunctions:
 
     async def test_authenticate_optimized(self):
         """Test authenticate_optimized convenience function."""
-        with patch('apps.backend.services.pusher_optimized.get_optimized_pusher_service') as mock_get_service:
+        with patch(
+            "apps.backend.services.pusher_optimized.get_optimized_pusher_service"
+        ) as mock_get_service:
             mock_service = AsyncMock()
             auth_data = {"auth": "token123"}
             mock_service.authenticate_channel.return_value = auth_data
             mock_get_service.return_value = mock_service
 
             result = await authenticate_optimized(
-                "socket123",
-                "private-channel",
-                user_id="user456",
-                user_info={"name": "Test User"}
+                "socket123", "private-channel", user_id="user456", user_info={"name": "Test User"}
             )
 
             assert result == auth_data
@@ -931,11 +920,13 @@ class TestGlobalServiceFunctions:
 
     async def test_get_pusher_health_success(self):
         """Test successful Pusher health check."""
-        with patch('apps.backend.services.pusher_optimized.get_optimized_pusher_service') as mock_get_service:
+        with patch(
+            "apps.backend.services.pusher_optimized.get_optimized_pusher_service"
+        ) as mock_get_service:
             mock_service = AsyncMock()
             mock_service.get_performance_stats.return_value = {
                 "pusher_stats": {"events_sent": 100},
-                "channel_stats": {"active_channels": 5}
+                "channel_stats": {"active_channels": 5},
             }
             mock_get_service.return_value = mock_service
 
@@ -947,7 +938,9 @@ class TestGlobalServiceFunctions:
 
     async def test_get_pusher_health_error(self):
         """Test Pusher health check with error."""
-        with patch('apps.backend.services.pusher_optimized.get_optimized_pusher_service') as mock_get_service:
+        with patch(
+            "apps.backend.services.pusher_optimized.get_optimized_pusher_service"
+        ) as mock_get_service:
             mock_get_service.side_effect = Exception("Pusher service error")
 
             health = await get_pusher_health()
@@ -964,14 +957,14 @@ class TestPusherOptimizationIntegration:
     @pytest.fixture
     def mock_pusher_setup(self):
         """Setup mock Pusher environment for integration testing."""
-        with patch('apps.backend.services.pusher_optimized.settings') as mock_settings:
+        with patch("apps.backend.services.pusher_optimized.settings") as mock_settings:
             mock_settings.PUSHER_APP_ID = "test_app_id"
             mock_settings.PUSHER_KEY = "test_key"
             mock_settings.PUSHER_SECRET = "test_secret"
             mock_settings.PUSHER_CLUSTER = "us2"
             mock_settings.PUSHER_SSL = True
 
-            with patch('pusher.Pusher') as mock_pusher_class:
+            with patch("pusher.Pusher") as mock_pusher_class:
                 mock_clients = []
 
                 def create_mock_client(*args, **kwargs):
@@ -988,7 +981,7 @@ class TestPusherOptimizationIntegration:
                 yield {
                     "settings": mock_settings,
                     "pusher_class": mock_pusher_class,
-                    "clients": mock_clients
+                    "clients": mock_clients,
                 }
 
     async def test_full_optimization_workflow(self, mock_pusher_setup):
@@ -1003,9 +996,7 @@ class TestPusherOptimizationIntegration:
 
         # Test event triggering
         result = await service.trigger_event(
-            "test-channel",
-            "test-event",
-            {"message": "hello world"}
+            "test-channel", "test-event", {"message": "hello world"}
         )
 
         assert result is True
@@ -1032,10 +1023,7 @@ class TestPusherOptimizationIntegration:
         await service.initialize()
 
         # Add multiple events that should be batched
-        events_to_send = [
-            ("channel1", "event1", {"data": f"message {i}"})
-            for i in range(5)
-        ]
+        events_to_send = [("channel1", "event1", {"data": f"message {i}"}) for i in range(5)]
 
         # Send events rapidly (should trigger batching)
         tasks = []
@@ -1069,10 +1057,7 @@ class TestPusherOptimizationIntegration:
 
         # Attempt to send event
         result = await service.trigger_event(
-            "test-channel",
-            "test-event",
-            {"data": "test"},
-            immediate=True
+            "test-channel", "test-event", {"data": "test"}, immediate=True
         )
 
         assert result is False

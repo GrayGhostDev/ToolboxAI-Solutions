@@ -6,13 +6,12 @@ Connects to Roblox Studio via Rojo API for environment creation
 import asyncio
 import json
 import logging
-import os
-import subprocess
 import tempfile
 from pathlib import Path
-from typing import Dict, List, Optional, Any
-import aiohttp
+from typing import Any
+
 import aiofiles
+import aiohttp
 
 from apps.backend.core.config import settings
 
@@ -32,7 +31,7 @@ class RojoAPIService:
         self.rojo_port = getattr(settings, "ROJO_PORT", 34872)
         self.rojo_host = getattr(settings, "ROJO_HOST", "localhost")
         self.base_url = f"http://{self.rojo_host}:{self.rojo_port}"
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.session: aiohttp.ClientSession | None = None
 
     async def __aenter__(self):
         """Async context manager entry"""
@@ -62,7 +61,7 @@ class RojoAPIService:
             logger.error(f"Rojo connection error: {e}")
             return False
 
-    async def get_rojo_info(self) -> Dict[str, Any]:
+    async def get_rojo_info(self) -> dict[str, Any]:
         """Get Rojo server information"""
         try:
             if not self.session:
@@ -79,7 +78,7 @@ class RojoAPIService:
 
     async def create_environment_from_description(
         self, description: str, environment_name: str, user_id: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create a Roblox environment from natural language description
 
@@ -121,7 +120,7 @@ class RojoAPIService:
             logger.error(f"Environment creation failed: {e}")
             return {"success": False, "error": str(e), "environment_name": environment_name}
 
-    async def _parse_environment_description(self, description: str) -> Dict[str, Any]:
+    async def _parse_environment_description(self, description: str) -> dict[str, Any]:
         """Parse natural language description into structured components"""
         # This would integrate with AI/ML service for natural language processing
         # For now, we'll create a basic parser
@@ -171,8 +170,8 @@ class RojoAPIService:
         return components
 
     async def _generate_rojo_structure(
-        self, components: Dict[str, Any], environment_name: str, user_id: str
-    ) -> Dict[str, Any]:
+        self, components: dict[str, Any], environment_name: str, user_id: str
+    ) -> dict[str, Any]:
         """Generate Rojo project structure from parsed components"""
 
         project_structure = {
@@ -224,7 +223,7 @@ class RojoAPIService:
         return project_structure
 
     async def _create_project_directory(
-        self, project_structure: Dict[str, Any], environment_name: str, user_id: str
+        self, project_structure: dict[str, Any], environment_name: str, user_id: str
     ) -> Path:
         """Create temporary project directory with Rojo structure"""
 
@@ -277,7 +276,7 @@ return EnvironmentConfig
         logger.info(f"Created project directory: {temp_dir}")
         return temp_dir
 
-    async def _sync_to_roblox_studio(self, project_path: Path) -> Dict[str, Any]:
+    async def _sync_to_roblox_studio(self, project_path: Path) -> dict[str, Any]:
         """Sync the project to Roblox Studio via Rojo"""
         try:
             # Check if Rojo is running
@@ -304,7 +303,7 @@ return EnvironmentConfig
             logger.error(f"Sync to Roblox Studio failed: {e}")
             return {"success": False, "error": str(e)}
 
-    async def _build_rojo_project(self, project_path: Path) -> Dict[str, Any]:
+    async def _build_rojo_project(self, project_path: Path) -> dict[str, Any]:
         """Build Rojo project"""
         try:
             # Run rojo build command
@@ -331,7 +330,7 @@ return EnvironmentConfig
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def _sync_project(self, project_path: Path) -> Dict[str, Any]:
+    async def _sync_project(self, project_path: Path) -> dict[str, Any]:
         """Sync project to Roblox Studio"""
         try:
             # Run rojo serve command in background
@@ -363,7 +362,7 @@ return EnvironmentConfig
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def get_environment_status(self, environment_name: str) -> Dict[str, Any]:
+    async def get_environment_status(self, environment_name: str) -> dict[str, Any]:
         """Get status of a created environment"""
         try:
             if not self.session:

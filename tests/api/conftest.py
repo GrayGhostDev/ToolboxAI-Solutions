@@ -8,32 +8,35 @@ and authentication helpers.
 
 import asyncio
 import os
-from typing import AsyncGenerator, Generator, Dict, Any
+from collections.abc import AsyncGenerator, Generator
 from datetime import datetime, timedelta
+from typing import Any
+
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.orm import sessionmaker
 from fastapi import FastAPI
-from jose import jwt
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 # Set testing environment
 os.environ["TESTING"] = "true"
 os.environ["SKIP_LIFESPAN"] = "true"
 
-from apps.backend.core.app_factory import create_test_app
-from apps.backend.core.auth import UnifiedAuthService
+from sqlalchemy import Boolean, Column, DateTime, Integer, String
 
 # Import models directly from SQLAlchemy since database.models has issues
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from sqlalchemy.sql import func
+
+from apps.backend.core.app_factory import create_test_app
+from apps.backend.core.auth import UnifiedAuthService
 
 Base = declarative_base()
 
+
 class User(Base):
     """Test user model."""
+
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True)
@@ -44,8 +47,10 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+
 class Content(Base):
     """Test content model."""
+
     __tablename__ = "contents"
 
     id = Column(Integer, primary_key=True)
@@ -53,6 +58,7 @@ class Content(Base):
     description = Column(String)
     content_type = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
 
 async def get_async_session():
     """Placeholder for session getter."""
@@ -74,11 +80,7 @@ def event_loop() -> Generator:
 @pytest_asyncio.fixture
 async def test_db_engine():
     """Create test database engine."""
-    engine = create_async_engine(
-        TEST_DATABASE_URL,
-        echo=False,
-        future=True
-    )
+    engine = create_async_engine(TEST_DATABASE_URL, echo=False, future=True)
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -95,9 +97,7 @@ async def test_db_engine():
 async def test_session(test_db_engine) -> AsyncGenerator[AsyncSession, None]:
     """Create test database session."""
     async_session_maker = async_sessionmaker(
-        test_db_engine,
-        class_=AsyncSession,
-        expire_on_commit=False
+        test_db_engine, class_=AsyncSession, expire_on_commit=False
     )
 
     async with async_session_maker() as session:
@@ -143,7 +143,7 @@ async def test_user(test_session: AsyncSession, auth_service: UnifiedAuthService
         hashed_password=hashed_password,
         role="student",
         is_active=True,
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
     )
 
     test_session.add(user)
@@ -164,7 +164,7 @@ async def admin_user(test_session: AsyncSession, auth_service: UnifiedAuthServic
         hashed_password=hashed_password,
         role="admin",
         is_active=True,
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
     )
 
     test_session.add(user)
@@ -185,7 +185,7 @@ async def teacher_user(test_session: AsyncSession, auth_service: UnifiedAuthServ
         hashed_password=hashed_password,
         role="teacher",
         is_active=True,
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
     )
 
     test_session.add(user)
@@ -196,56 +196,53 @@ async def teacher_user(test_session: AsyncSession, auth_service: UnifiedAuthServ
 
 
 @pytest.fixture
-def auth_headers(test_user: User, auth_service: UnifiedAuthService) -> Dict[str, str]:
+def auth_headers(test_user: User, auth_service: UnifiedAuthService) -> dict[str, str]:
     """Generate authentication headers for test user."""
     token = auth_service.create_access_token(
         user_id=str(test_user.id),
         username=test_user.username,
         role=test_user.role,
-        email=test_user.email
+        email=test_user.email,
     )
     return {"Authorization": f"Bearer {token}"}
 
 
 @pytest.fixture
-def admin_headers(admin_user: User, auth_service: UnifiedAuthService) -> Dict[str, str]:
+def admin_headers(admin_user: User, auth_service: UnifiedAuthService) -> dict[str, str]:
     """Generate authentication headers for admin user."""
     token = auth_service.create_access_token(
         user_id=str(admin_user.id),
         username=admin_user.username,
         role=admin_user.role,
-        email=admin_user.email
+        email=admin_user.email,
     )
     return {"Authorization": f"Bearer {token}"}
 
 
 @pytest.fixture
-def teacher_headers(teacher_user: User, auth_service: UnifiedAuthService) -> Dict[str, str]:
+def teacher_headers(teacher_user: User, auth_service: UnifiedAuthService) -> dict[str, str]:
     """Generate authentication headers for teacher user."""
     token = auth_service.create_access_token(
         user_id=str(teacher_user.id),
         username=teacher_user.username,
         role=teacher_user.role,
-        email=teacher_user.email
+        email=teacher_user.email,
     )
     return {"Authorization": f"Bearer {token}"}
 
 
 @pytest.fixture
-def expired_token_headers(auth_service: UnifiedAuthService) -> Dict[str, str]:
+def expired_token_headers(auth_service: UnifiedAuthService) -> dict[str, str]:
     """Generate expired authentication headers."""
     # Create token that expired 1 hour ago
     expired_token = auth_service.create_access_token(
-        user_id="123",
-        username="expireduser",
-        role="student",
-        expires_delta=timedelta(hours=-1)
+        user_id="123", username="expireduser", role="student", expires_delta=timedelta(hours=-1)
     )
     return {"Authorization": f"Bearer {expired_token}"}
 
 
 @pytest.fixture
-def invalid_token_headers() -> Dict[str, str]:
+def invalid_token_headers() -> dict[str, str]:
     """Generate invalid authentication headers."""
     return {"Authorization": "Bearer invalid_token_here"}
 
@@ -259,7 +256,7 @@ async def create_test_content(session: AsyncSession, title: str = "Test Content"
         title=title,
         description="Test description",
         content_type="lesson",
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
     )
     session.add(content)
     await session.commit()
@@ -267,7 +264,9 @@ async def create_test_content(session: AsyncSession, title: str = "Test Content"
     return content
 
 
-async def create_test_class(session: AsyncSession, teacher_id: int, name: str = "Test Class") -> Any:
+async def create_test_class(
+    session: AsyncSession, teacher_id: int, name: str = "Test Class"
+) -> Any:
     """Helper to create test class."""
     from database.models import Class
 
@@ -275,7 +274,7 @@ async def create_test_class(session: AsyncSession, teacher_id: int, name: str = 
         name=name,
         teacher_id=teacher_id,
         description="Test class description",
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
     )
     session.add(test_class)
     await session.commit()

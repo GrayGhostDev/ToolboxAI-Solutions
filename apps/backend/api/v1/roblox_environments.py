@@ -6,19 +6,19 @@ the AI agent service for generation and deployment.
 """
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.core.auth import get_current_user
-from database import get_db
-from apps.backend.models.schemas import User
-from apps.backend.services.roblox.ai_agent import roblox_ai_agent
-from apps.backend.services.pusher import trigger_event as pusher_trigger
 from apps.backend.models.database import RobloxEnvironment
-from sqlalchemy import select, and_
+from apps.backend.models.schemas import User
+from apps.backend.services.pusher import trigger_event as pusher_trigger
+from apps.backend.services.roblox.ai_agent import roblox_ai_agent
+from database import get_db
 
 router = APIRouter()
 
@@ -28,8 +28,8 @@ class RobloxEnvironmentAPI:
 
     @staticmethod
     async def create_environment(
-        environment_data: Dict[str, Any], user: User, db: AsyncSession
-    ) -> Dict[str, Any]:
+        environment_data: dict[str, Any], user: User, db: AsyncSession
+    ) -> dict[str, Any]:
         """Create a new Roblox environment"""
         try:
             # Generate IDs
@@ -63,7 +63,7 @@ class RobloxEnvironmentAPI:
             )
 
     @staticmethod
-    async def get_user_environments(user: User, db: AsyncSession) -> List[Dict[str, Any]]:
+    async def get_user_environments(user: User, db: AsyncSession) -> list[dict[str, Any]]:
         """Get all environments for a user"""
         try:
             result = await db.execute(
@@ -100,7 +100,7 @@ class RobloxEnvironmentAPI:
     @staticmethod
     async def generate_environment(
         environment_id: str, user: User, db: AsyncSession
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """Start environment generation"""
         try:
             # Get environment from database
@@ -142,7 +142,7 @@ class RobloxEnvironmentAPI:
     @staticmethod
     async def deploy_environment(
         environment_id: str, user: User, db: AsyncSession
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """Deploy environment to Roblox"""
         try:
             # Get environment
@@ -189,7 +189,7 @@ class RobloxEnvironmentAPI:
     @staticmethod
     async def delete_environment(
         environment_id: str, user: User, db: AsyncSession
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """Delete an environment"""
         try:
             # Get environment
@@ -241,7 +241,7 @@ async def get_environments(
 
 @router.post("/environments")
 async def create_environment(
-    environment_data: Dict[str, Any],
+    environment_data: dict[str, Any],
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):

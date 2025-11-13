@@ -1,11 +1,11 @@
 """Content-related test data factories."""
 
+
 import factory
 from factory import fuzzy
 from faker import Faker
-from typing import List, Dict, Any
-from .base_factory import DictFactory, AsyncMixin
-import json
+
+from .base_factory import AsyncMixin, DictFactory
 
 fake = Faker()
 
@@ -16,10 +16,18 @@ class ContentFactory(DictFactory, AsyncMixin):
     id = factory.LazyFunction(lambda: fake.uuid4())
     title = factory.LazyFunction(lambda: fake.catch_phrase())
     description = factory.LazyFunction(lambda: fake.text(max_nb_chars=500))
-    subject = fuzzy.FuzzyChoice([
-        "Mathematics", "Science", "English", "History",
-        "Geography", "Computer Science", "Art", "Music"
-    ])
+    subject = fuzzy.FuzzyChoice(
+        [
+            "Mathematics",
+            "Science",
+            "English",
+            "History",
+            "Geography",
+            "Computer Science",
+            "Art",
+            "Music",
+        ]
+    )
     grade_level = factory.LazyFunction(lambda: fake.random_int(1, 12))
     difficulty = fuzzy.FuzzyChoice(["beginner", "intermediate", "advanced"])
 
@@ -50,9 +58,7 @@ class ContentFactory(DictFactory, AsyncMixin):
     )
 
     # Tags and keywords
-    tags = factory.LazyFunction(
-        lambda: fake.words(nb=fake.random_int(3, 10))
-    )
+    tags = factory.LazyFunction(lambda: fake.words(nb=fake.random_int(3, 10)))
 
     # Metadata
     author_id = factory.LazyFunction(lambda: fake.uuid4())
@@ -92,7 +98,7 @@ class ContentFactory(DictFactory, AsyncMixin):
                     "levels": [
                         {"level": i, "description": fake.sentence(), "points": i}
                         for i in range(1, 5)
-                    ]
+                    ],
                 }
                 for _ in range(fake.random_int(3, 6))
             ],
@@ -119,7 +125,9 @@ class QuizFactory(DictFactory):
         questions = []
 
         for i in range(num_questions):
-            question_type = fake.random_element(["multiple_choice", "true_false", "short_answer", "essay"])
+            question_type = fake.random_element(
+                ["multiple_choice", "true_false", "short_answer", "essay"]
+            )
 
             if question_type == "multiple_choice":
                 options = [fake.sentence() for _ in range(4)]
@@ -161,7 +169,7 @@ class QuizFactory(DictFactory):
                         "content": fake.random_int(1, 10),
                         "organization": fake.random_int(1, 10),
                         "grammar": fake.random_int(1, 5),
-                    }
+                    },
                 }
 
             questions.append(question)
@@ -200,7 +208,9 @@ class AssessmentFactory(DictFactory):
         answers = []
 
         for i in range(num_questions):
-            answer_type = fake.random_element(["multiple_choice", "true_false", "short_answer", "essay"])
+            answer_type = fake.random_element(
+                ["multiple_choice", "true_false", "short_answer", "essay"]
+            )
 
             if answer_type == "multiple_choice":
                 answer = {
@@ -255,4 +265,6 @@ class AssessmentFactory(DictFactory):
 
     # Teacher review
     teacher_reviewed = factory.LazyFunction(lambda: fake.boolean())
-    teacher_comments = factory.LazyFunction(lambda: fake.text(max_nb_chars=500) if fake.boolean() else None)
+    teacher_comments = factory.LazyFunction(
+        lambda: fake.text(max_nb_chars=500) if fake.boolean() else None
+    )

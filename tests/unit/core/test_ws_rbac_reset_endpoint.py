@@ -1,4 +1,3 @@
-import pytest_asyncio
 import sys
 from pathlib import Path
 
@@ -9,8 +8,9 @@ if str(project_root) not in sys.path:
 
 
 import pytest
-from apps.backend.main import reset_ws_rbac
+
 from apps.backend.api.auth.auth import User
+from apps.backend.main import reset_ws_rbac
 
 
 @pytest.mark.asyncio(loop_scope="function")
@@ -20,4 +20,3 @@ async def test_reset_ws_rbac_endpoint():
     result = await reset_ws_rbac(current_user=admin)
     assert result["status"] == "ok"
     assert isinstance(result.get("effective_required_roles"), dict)
-

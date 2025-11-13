@@ -4,10 +4,9 @@ These are placeholder/fallback agent classes used when the core agents are not a
 """
 
 import logging
-from typing import Any, Dict, List, Optional
 
 from langchain_core.chat_history import InMemoryChatMessageHistory
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import HumanMessage
 
 # Use LCEL compatibility layer for LangChain 0.3.26+
 try:

@@ -5,14 +5,15 @@ Provides sync database fixtures for integration tests.
 """
 
 import os
+
 import pytest
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session, sessionmaker
 
 # Database URL for testing
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://dbuser_4qnrmosa:13y70agAhh2LSyjLw3LYtF1kRPra0qnNhdQcng6YNb0lMz5h@localhost:5434/toolboxai_6rmgje4u"
+    "postgresql://dbuser_4qnrmosa:13y70agAhh2LSyjLw3LYtF1kRPra0qnNhdQcng6YNb0lMz5h@localhost:5434/toolboxai_6rmgje4u",
 )
 
 

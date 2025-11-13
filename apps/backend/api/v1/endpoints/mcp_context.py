@@ -10,20 +10,19 @@ This provides the same MCP functionality without maintaining a separate WebSocke
 """
 
 import json
-import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
+from datetime import datetime
+from typing import Any
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, Depends, Query
-from pydantic import BaseModel, Field
 import redis.asyncio as redis
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
 
-from apps.backend.core.config import settings
-from apps.backend.models.schemas import User
 from apps.backend.api.auth.auth import get_current_user
-from apps.backend.services.pusher import trigger_event
+from apps.backend.core.config import settings
 from apps.backend.core.logging import logging_manager
+from apps.backend.models.schemas import User
+from apps.backend.services.pusher import trigger_event
 
 logger = logging_manager.get_logger(__name__)
 
@@ -33,47 +32,46 @@ router = APIRouter(prefix="/mcp", tags=["MCP Context"])
 # Pydantic Models
 class ContextEntry(BaseModel):
     """Agent context entry"""
+
     id: str = Field(default_factory=lambda: str(uuid4()))
     agent_id: str
-    content: Dict[str, Any]
+    content: dict[str, Any]
     tokens: int = 0
     priority: int = 1  # 1=low, 2=medium, 3=high
     source: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class ContextUpdate(BaseModel):
     """Context update request"""
+
     agent_id: str
-    content: Dict[str, Any]
+    content: dict[str, Any]
     source: str
     priority: int = Field(default=1, ge=1, le=3)
-    tokens: Optional[int] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    tokens: int | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class ContextQuery(BaseModel):
     """Context query filters"""
-    agent_id: Optional[str] = None
-    source: Optional[str] = None
+
+    agent_id: str | None = None
+    source: str | None = None
     min_priority: int = Field(default=1, ge=1, le=3)
     limit: int = Field(default=100, le=1000)
 
 
 # Redis client (lazy initialization)
-_redis_client: Optional[redis.Redis] = None
+_redis_client: redis.Redis | None = None
 
 
 async def get_redis() -> redis.Redis:
     """Get Redis client (singleton)"""
     global _redis_client
     if _redis_client is None:
-        _redis_client = redis.from_url(
-            settings.REDIS_URL,
-            encoding="utf-8",
-            decode_responses=True
-        )
+        _redis_client = redis.from_url(settings.REDIS_URL, encoding="utf-8", decode_responses=True)
     return _redis_client
 
 
@@ -93,10 +91,7 @@ def _get_token_count_key(agent_id: str) -> str:
 
 
 @router.post("/context", response_model=ContextEntry)
-async def add_context(
-    update: ContextUpdate,
-    current_user: User = Depends(get_current_user)
-):
+async def add_context(update: ContextUpdate, current_user: User = Depends(get_current_user)):
     """
     Add context entry for an agent
 
@@ -115,17 +110,13 @@ async def add_context(
             metadata={
                 **update.metadata,
                 "user_id": current_user.id,
-                "created_at": datetime.utcnow().isoformat()
-            }
+                "created_at": datetime.utcnow().isoformat(),
+            },
         )
 
         # Store in Redis with 1-hour TTL
         context_key = _get_context_key(entry.agent_id, entry.id)
-        await redis_client.setex(
-            context_key,
-            3600,  # 1 hour TTL
-            json.dumps(entry.dict())
-        )
+        await redis_client.setex(context_key, 3600, json.dumps(entry.dict()))  # 1 hour TTL
 
         # Add to agent's index
         index_key = _get_agent_index_key(entry.agent_id)
@@ -146,8 +137,8 @@ async def add_context(
                 "source": entry.source,
                 "priority": entry.priority,
                 "tokens": entry.tokens,
-                "timestamp": entry.timestamp.isoformat()
-            }
+                "timestamp": entry.timestamp.isoformat(),
+            },
         )
 
         logger.info(f"Added context entry {entry.id} for agent {entry.agent_id}")
@@ -161,11 +152,11 @@ async def add_context(
 
 @router.get("/context")
 async def get_context(
-    agent_id: Optional[str] = Query(None),
-    source: Optional[str] = Query(None),
+    agent_id: str | None = Query(None),
+    source: str | None = Query(None),
     min_priority: int = Query(1, ge=1, le=3),
     limit: int = Query(100, le=1000),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Retrieve context entries
@@ -213,19 +204,14 @@ async def get_context(
         contexts.sort(
             key=lambda x: (
                 -x.get("priority", 1),
-                -datetime.fromisoformat(x.get("timestamp", "2000-01-01T00:00:00"))
-                    .timestamp()
+                -datetime.fromisoformat(x.get("timestamp", "2000-01-01T00:00:00")).timestamp(),
             )
         )
 
         # Apply limit
         contexts = contexts[:limit]
 
-        return {
-            "status": "success",
-            "count": len(contexts),
-            "contexts": contexts
-        }
+        return {"status": "success", "count": len(contexts), "contexts": contexts}
 
     except Exception as e:
         logger.error(f"Failed to get context: {e}")
@@ -233,10 +219,7 @@ async def get_context(
 
 
 @router.delete("/context/{agent_id}")
-async def clear_context(
-    agent_id: str,
-    current_user: User = Depends(get_current_user)
-):
+async def clear_context(agent_id: str, current_user: User = Depends(get_current_user)):
     """
     Clear all context for an agent
     """
@@ -263,16 +246,12 @@ async def clear_context(
         trigger_event(
             channel=f"agent-{agent_id}",
             event="context.cleared",
-            data={"agent_id": agent_id, "deleted_count": deleted_count}
+            data={"agent_id": agent_id, "deleted_count": deleted_count},
         )
 
         logger.info(f"Cleared {deleted_count} context entries for agent {agent_id}")
 
-        return {
-            "status": "success",
-            "agent_id": agent_id,
-            "deleted_count": deleted_count
-        }
+        return {"status": "success", "agent_id": agent_id, "deleted_count": deleted_count}
 
     except Exception as e:
         logger.error(f"Failed to clear context: {e}")
@@ -284,7 +263,7 @@ async def set_priority(
     agent_id: str,
     entry_id: str,
     priority: int = Query(..., ge=1, le=3),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Update priority of a context entry
@@ -310,11 +289,7 @@ async def set_priority(
         trigger_event(
             channel=f"agent-{agent_id}",
             event="context.priority_updated",
-            data={
-                "entry_id": entry_id,
-                "old_priority": old_priority,
-                "new_priority": priority
-            }
+            data={"entry_id": entry_id, "old_priority": old_priority, "new_priority": priority},
         )
 
         logger.info(f"Updated priority for {entry_id}: {old_priority} → {priority}")
@@ -323,7 +298,7 @@ async def set_priority(
             "status": "success",
             "entry_id": entry_id,
             "old_priority": old_priority,
-            "new_priority": priority
+            "new_priority": priority,
         }
 
     except HTTPException:
@@ -366,24 +341,18 @@ async def get_mcp_status(current_user: User = Depends(get_current_user)):
         return {
             "status": "healthy",
             "implementation": "pusher_redis_hybrid",
-            "agents": {
-                "count": agent_count,
-                "active": agent_count  # All with contexts are active
-            },
+            "agents": {"count": agent_count, "active": agent_count},  # All with contexts are active
             "context": {
                 "total_entries": total_contexts,
                 "total_tokens": total_tokens,
                 "token_limit": 128000,  # GPT-4 context limit
-                "utilization": round(total_tokens / 128000 * 100, 2)
+                "utilization": round(total_tokens / 128000 * 100, 2),
             },
-            "redis": {
-                "used_memory": redis_info.get("used_memory_human"),
-                "connected": True
-            },
+            "redis": {"used_memory": redis_info.get("used_memory_human"), "connected": True},
             "pusher": {
                 "enabled": bool(settings.PUSHER_APP_ID),
-                "channels_active": agent_count  # One channel per agent
-            }
+                "channels_active": agent_count,  # One channel per agent
+            },
         }
 
     except Exception as e:

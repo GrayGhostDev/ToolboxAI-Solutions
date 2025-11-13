@@ -11,10 +11,10 @@ Implements comprehensive security headers following OWASP recommendations:
 - Permissions-Policy
 """
 
-from fastapi import Request, Response
-from starlette.middleware.base import BaseHTTPMiddleware
-from typing import Dict, Optional
 import logging
+
+from fastapi import Request
+from starlette.middleware.base import BaseHTTPMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -29,10 +29,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         app,
         *,
         hsts_max_age: int = 31536000,  # 1 year
-        csp_policy: Optional[str] = None,
+        csp_policy: str | None = None,
         enable_hsts: bool = True,
         enable_xss_protection: bool = True,
-        custom_headers: Optional[Dict[str, str]] = None,
+        custom_headers: dict[str, str] | None = None,
     ):
         super().__init__(app)
         self.hsts_max_age = hsts_max_age
@@ -65,7 +65,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         return response
 
-    def _get_security_headers(self, request: Request) -> Dict[str, str]:
+    def _get_security_headers(self, request: Request) -> dict[str, str]:
         """
         Generate security headers based on request context
         """
@@ -178,8 +178,8 @@ class SecurityHeadersConfig:
         hsts_max_age: int = 31536000,
         enable_hsts: bool = True,
         enable_xss_protection: bool = True,
-        custom_csp: Optional[str] = None,
-        custom_headers: Optional[Dict[str, str]] = None,
+        custom_csp: str | None = None,
+        custom_headers: dict[str, str] | None = None,
     ):
         self.environment = environment
         self.hsts_max_age = hsts_max_age

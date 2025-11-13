@@ -14,7 +14,7 @@ async FastAPI handlers or background tasks.
 import logging
 import secrets
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -50,13 +50,13 @@ class TenantProvisioner:
     async def provision_tenant(
         self,
         organization_id: UUID,
-        admin_email: Optional[str] = None,
-        admin_username: Optional[str] = None,
-        admin_password: Optional[str] = None,
+        admin_email: str | None = None,
+        admin_username: str | None = None,
+        admin_password: str | None = None,
         create_admin: bool = True,
         initialize_defaults: bool = True,
-        send_welcome_email: bool = True
-    ) -> Dict[str, Any]:
+        send_welcome_email: bool = True,
+    ) -> dict[str, Any]:
         """
         Provision a new tenant with complete setup.
 
@@ -95,7 +95,7 @@ class TenantProvisioner:
             return {
                 "status": "already_provisioned",
                 "organization_id": str(organization_id),
-                "message": "Organization is already provisioned and active"
+                "message": "Organization is already provisioned and active",
             }
 
         result = {
@@ -104,17 +104,14 @@ class TenantProvisioner:
             "admin_user_id": None,
             "admin_password": None,
             "steps_completed": [],
-            "errors": []
+            "errors": [],
         }
 
         # Step 1: Create admin user
         if create_admin:
             try:
                 admin_result = await self._create_admin_user(
-                    org,
-                    email=admin_email,
-                    username=admin_username,
-                    password=admin_password
+                    org, email=admin_email, username=admin_username, password=admin_password
                 )
                 result["admin_user_id"] = str(admin_result["user_id"])
                 result["admin_password"] = admin_result.get("password")  # Only if auto-generated
@@ -150,7 +147,9 @@ class TenantProvisioner:
         try:
             org.is_verified = True
             if org.status == OrganizationStatus.PENDING:
-                org.status = OrganizationStatus.TRIAL if org.trial_expires_at else OrganizationStatus.ACTIVE
+                org.status = (
+                    OrganizationStatus.TRIAL if org.trial_expires_at else OrganizationStatus.ACTIVE
+                )
             org.updated_at = datetime.utcnow()
             await self.session.commit()
             result["steps_completed"].append("organization_verified")
@@ -188,10 +187,10 @@ class TenantProvisioner:
     async def _create_admin_user(
         self,
         org: Organization,
-        email: Optional[str] = None,
-        username: Optional[str] = None,
-        password: Optional[str] = None
-    ) -> Dict[str, Any]:
+        email: str | None = None,
+        username: str | None = None,
+        password: str | None = None,
+    ) -> dict[str, Any]:
         """
         Create admin user for organization.
 
@@ -222,6 +221,7 @@ class TenantProvisioner:
         # Create admin user
         # Hash password
         from passlib.context import CryptContext
+
         pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         hashed_password = pwd_context.hash(password)
 
@@ -253,11 +253,7 @@ class TenantProvisioner:
 
         logger.info(f"Created admin user {admin_user.id} for organization {org.id}")
 
-        result = {
-            "user_id": admin_user.id,
-            "email": admin_email,
-            "username": username
-        }
+        result = {"user_id": admin_user.id, "email": admin_email, "username": username}
 
         # Only return password if it was auto-generated
         if password_was_generated:
@@ -312,7 +308,7 @@ class TenantProvisioner:
                 "custom_branding",
                 "gamification",
                 "parent_portal",
-                "mobile_app"
+                "mobile_app",
             ],
             "enterprise": [
                 "ai_chat",
@@ -326,7 +322,7 @@ class TenantProvisioner:
                 "parent_portal",
                 "mobile_app",
                 "gamification",
-                "live_classes"
+                "live_classes",
             ],
             "education": [
                 "ai_chat",
@@ -336,8 +332,8 @@ class TenantProvisioner:
                 "gamification",
                 "parent_portal",
                 "mobile_app",
-                "live_classes"
-            ]
+                "live_classes",
+            ],
         }
 
         tier_value = org.subscription_tier.value
@@ -349,9 +345,7 @@ class TenantProvisioner:
         logger.debug(f"Configured {len(default_features)} features for org: {org.id}")
 
     async def _send_welcome_email(
-        self,
-        org: Organization,
-        admin_user_id: Optional[str] = None
+        self, org: Organization, admin_user_id: str | None = None
     ) -> None:
         """
         Send welcome email to organization admin.
@@ -374,11 +368,8 @@ class TenantProvisioner:
         logger.info(f"Welcome email would be sent to: {org.email} (not implemented yet)")
 
     async def deprovision_tenant(
-        self,
-        organization_id: UUID,
-        delete_data: bool = False,
-        backup_data: bool = True
-    ) -> Dict[str, Any]:
+        self, organization_id: UUID, delete_data: bool = False, backup_data: bool = True
+    ) -> dict[str, Any]:
         """
         Deprovision a tenant (soft delete or hard delete with backup).
 
@@ -400,7 +391,7 @@ class TenantProvisioner:
             "status": "success",
             "organization_id": str(organization_id),
             "steps_completed": [],
-            "errors": []
+            "errors": [],
         }
 
         # Step 1: Backup data if requested
@@ -435,5 +426,9 @@ class TenantProvisioner:
             logger.error(error_msg, exc_info=True)
             result["errors"].append(error_msg)
 
-        result["message"] = "Tenant deprovisioned successfully" if not result["errors"] else "Deprovisioning completed with errors"
+        result["message"] = (
+            "Tenant deprovisioned successfully"
+            if not result["errors"]
+            else "Deprovisioning completed with errors"
+        )
         return result

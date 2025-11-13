@@ -5,19 +5,19 @@ Tests JWT token creation, validation, and management.
 Aligned with actual jwt_handler.py implementation (2025-10-11).
 """
 
-import pytest
 from datetime import datetime, timedelta, timezone
-from unittest.mock import Mock, patch
+
 import jwt as pyjwt
+import pytest
 from fastapi import HTTPException
 
 from apps.backend.core.security.jwt_handler import (
+    ALGORITHM,
+    SECRET_KEY,
+    Token,
+    TokenData,
     create_access_token,
     verify_token,
-    TokenData,
-    Token,
-    SECRET_KEY,
-    ALGORITHM,
 )
 
 
@@ -53,11 +53,7 @@ class TestJWTTokenCreation:
 
     def test_create_access_token_includes_claims(self):
         """Test that created token includes all claims."""
-        data = {
-            "sub": "user123",
-            "role": "teacher",
-            "user_id": 456
-        }
+        data = {"sub": "user123", "role": "teacher", "user_id": 456}
 
         token = create_access_token(data)
 
@@ -111,10 +107,7 @@ class TestJWTTokenVerification:
         """Test that verifying expired token raises HTTPException."""
         data = {"sub": "user123"}
         # Create token with negative expiration (already expired)
-        expired_token = create_access_token(
-            data,
-            expires_delta=timedelta(seconds=-10)
-        )
+        expired_token = create_access_token(data, expires_delta=timedelta(seconds=-10))
 
         with pytest.raises(HTTPException) as exc_info:
             verify_token(expired_token)
@@ -147,10 +140,7 @@ class TestJWTTokenVerification:
     def test_verify_token_without_subject_fails(self):
         """Test that token without subject fails validation."""
         # Create token manually without 'sub' claim
-        payload = {
-            "user_id": 123,
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1)
-        }
+        payload = {"user_id": 123, "exp": datetime.now(timezone.utc) + timedelta(hours=1)}
         token = pyjwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
         with pytest.raises(HTTPException) as exc_info:
@@ -166,7 +156,7 @@ class TestJWTTokenVerification:
         wrong_secret_token = pyjwt.encode(
             {**data, "exp": datetime.now(timezone.utc) + timedelta(hours=1)},
             "wrong_secret_key",
-            algorithm=ALGORITHM
+            algorithm=ALGORITHM,
         )
 
         with pytest.raises(HTTPException) as exc_info:
@@ -250,6 +240,7 @@ class TestJWTTokenSecurity:
         token1 = create_access_token(data)
         # Wait a moment to ensure different timestamp (JWT uses second precision)
         import time
+
         time.sleep(1.1)
         token2 = create_access_token(data)
 
@@ -269,10 +260,7 @@ class TestJWTTokenSecurity:
         """Test that expired tokens cannot be used."""
         data = {"sub": "user123"}
         # Create an already-expired token (negative delta)
-        token = create_access_token(
-            data,
-            expires_delta=timedelta(seconds=-5)
-        )
+        token = create_access_token(data, expires_delta=timedelta(seconds=-5))
 
         # Token should be expired immediately
         with pytest.raises(HTTPException) as exc_info:
@@ -377,7 +365,7 @@ class TestTokenDataModel:
             username="user123",
             user_id=456,
             role="teacher",
-            exp=datetime.now(timezone.utc) + timedelta(hours=1)
+            exp=datetime.now(timezone.utc) + timedelta(hours=1),
         )
 
         assert token_data.username == "user123"
@@ -412,11 +400,7 @@ class TestTokenModel:
 
     def test_token_model_creation(self):
         """Test creating Token response model."""
-        token = Token(
-            access_token="sample.jwt.token",
-            expires_in=3600,
-            role="teacher"
-        )
+        token = Token(access_token="sample.jwt.token", expires_in=3600, role="teacher")
 
         assert token.access_token == "sample.jwt.token"
         assert token.token_type == "bearer"
@@ -425,10 +409,7 @@ class TestTokenModel:
 
     def test_token_model_default_token_type(self):
         """Test that token_type defaults to 'bearer'."""
-        token = Token(
-            access_token="sample.jwt.token",
-            expires_in=3600
-        )
+        token = Token(access_token="sample.jwt.token", expires_in=3600)
 
         assert token.token_type == "bearer"
 

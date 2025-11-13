@@ -3,11 +3,11 @@ Feature Flag Management System for Phase 1 Implementation
 Provides centralized control for GPT-5 migration and OAuth 2.1 compliance rollout
 """
 
-import os
-import json
 import logging
-from typing import Dict, Any, Optional
+import os
 from enum import Enum
+from typing import Any
+
 import redis
 from redis.exceptions import RedisError
 
@@ -67,7 +67,7 @@ class FeatureFlagManager:
             flag.value: os.getenv(f"FF_{flag.value.upper()}") for flag in FeatureFlag
         }
 
-    def is_enabled(self, flag: FeatureFlag, user_id: Optional[str] = None) -> bool:
+    def is_enabled(self, flag: FeatureFlag, user_id: str | None = None) -> bool:
         """
         Check if a feature flag is enabled
 
@@ -106,7 +106,7 @@ class FeatureFlagManager:
         # Return default value
         return self.default_flags.get(flag.value, False)
 
-    def set_flag(self, flag: FeatureFlag, enabled: bool, user_id: Optional[str] = None):
+    def set_flag(self, flag: FeatureFlag, enabled: bool, user_id: str | None = None):
         """
         Set a feature flag value
 
@@ -132,7 +132,7 @@ class FeatureFlagManager:
             logger.error(f"Error setting flag {flag.value}: {e}")
             return False
 
-    def get_all_flags(self, user_id: Optional[str] = None) -> Dict[str, bool]:
+    def get_all_flags(self, user_id: str | None = None) -> dict[str, bool]:
         """Get the status of all feature flags"""
         return {flag.value: self.is_enabled(flag, user_id) for flag in FeatureFlag}
 
@@ -208,7 +208,7 @@ class FeatureFlagManager:
             logger.error(f"Error resetting flags: {e}")
             return False
 
-    def health_check(self) -> Dict[str, Any]:
+    def health_check(self) -> dict[str, Any]:
         """Check the health of the feature flag system"""
         health = {
             "redis_available": self.redis_available,

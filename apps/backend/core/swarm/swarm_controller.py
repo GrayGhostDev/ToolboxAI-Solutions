@@ -7,8 +7,9 @@ Pattern References:
 - Ant Colony Optimization (ACO)
 - Bee Algorithm
 """
+
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ class SwarmController:
         self.agents.append(agent)
         logger.info(f"Agent added to swarm. Total agents: {len(self.agents)}")
 
-    async def execute_swarm_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute_swarm_task(self, task: dict[str, Any]) -> dict[str, Any]:
         """
         Execute task using swarm intelligence
 
@@ -54,7 +55,7 @@ class SwarmController:
         results = []
         for i, agent in enumerate(self.agents):
             try:
-                if hasattr(agent, 'execute'):
+                if hasattr(agent, "execute"):
                     result = await agent.execute(task)
                     results.append(result)
             except Exception as e:
@@ -67,10 +68,10 @@ class SwarmController:
             "status": "completed",
             "swarm_size": len(self.agents),
             "results": results,
-            "consensus": consensus
+            "consensus": consensus,
         }
 
-    def _compute_consensus(self, results: List[Dict]) -> Dict[str, Any]:
+    def _compute_consensus(self, results: list[dict]) -> dict[str, Any]:
         """Compute swarm consensus from individual results"""
         # Simple consensus: majority voting or averaging
         logger.info(f"Computing consensus from {len(results)} results")
@@ -78,8 +79,8 @@ class SwarmController:
         return {
             "method": "simple_majority",
             "result_count": len(results),
-            "status": "consensus_reached"
+            "status": "consensus_reached",
         }
 
 
-__all__ = ['SwarmController']
+__all__ = ["SwarmController"]

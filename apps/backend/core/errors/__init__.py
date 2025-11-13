@@ -9,27 +9,23 @@ Provides comprehensive error handling for the application with:
 """
 
 # Import from the new error handler module
-from .error_handler import (
-    # Error types
+from .error_handler import (  # Error types; Error models; Handler; FastAPI exception handlers
     ApplicationError,
     AuthenticationError,
     AuthorizationError,
-    ConflictError,
     ConfigurationError,
+    ConflictError,
     DatabaseError,
+    ErrorCategory,
+    ErrorDetail,
+    ErrorHandler,
+    ErrorResponse,
+    ErrorSeverity,
     ExternalServiceError,
     NotFoundError,
     RateLimitError,
     ValidationError,
-    # Error models
-    ErrorCategory,
-    ErrorDetail,
-    ErrorResponse,
-    ErrorSeverity,
-    # Handler
-    ErrorHandler,
     get_error_handler,
-    # FastAPI exception handlers
     handle_application_error,
     handle_generic_exception,
     handle_http_exception,
@@ -38,15 +34,15 @@ from .error_handler import (
 
 # Import from the middleware module (existing functionality)
 from .middleware import (
+    AppValidationError,
+    ErrorAggregator,
+    ErrorContext,
     ErrorHandlingMiddleware,
     ErrorLevel,
-    ErrorContext,
     ErrorMetrics,
     ErrorRecoveryStrategy,
-    ErrorAggregator,
-    create_error_handling_middleware,
-    AppValidationError,
     ResourceNotFoundError,
+    create_error_handling_middleware,
 )
 
 __all__ = [

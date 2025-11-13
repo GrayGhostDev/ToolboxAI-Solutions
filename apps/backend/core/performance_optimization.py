@@ -4,16 +4,18 @@ Coordinates all performance optimizations including caching, database pooling,
 and Pusher optimization to achieve target P95 latency of <150ms.
 """
 
-import asyncio
 import logging
-from typing import Dict, Any, Optional
-from datetime import datetime
 from contextlib import asynccontextmanager
+from datetime import datetime
+from typing import Any
 
-from apps.backend.core.cache import initialize_cache, cache, get_cache_health
-from apps.backend.core.db_optimization import initialize_db_optimization, optimizer, get_db_health
-from apps.backend.services.pusher_optimized import get_optimized_pusher_service, get_pusher_health
+from apps.backend.core.cache import get_cache_health, initialize_cache
 from apps.backend.core.config import settings
+from apps.backend.core.db_optimization import get_db_health, initialize_db_optimization
+from apps.backend.services.pusher_optimized import (
+    get_optimized_pusher_service,
+    get_pusher_health,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -23,14 +25,14 @@ class PerformanceOptimizationManager:
 
     def __init__(self):
         self.initialized = False
-        self.initialization_time: Optional[datetime] = None
+        self.initialization_time: datetime | None = None
         self.services_status = {
             "cache": {"status": "not_initialized", "error": None},
             "database": {"status": "not_initialized", "error": None},
             "pusher": {"status": "not_initialized", "error": None},
         }
 
-    async def initialize_all_optimizations(self) -> Dict[str, Any]:
+    async def initialize_all_optimizations(self) -> dict[str, Any]:
         """Initialize all performance optimization systems"""
 
         if self.initialized:
@@ -121,7 +123,7 @@ class PerformanceOptimizationManager:
 
         return summary
 
-    async def get_comprehensive_health_status(self) -> Dict[str, Any]:
+    async def get_comprehensive_health_status(self) -> dict[str, Any]:
         """Get comprehensive health status of all optimization systems"""
 
         health_checks = {}
@@ -157,7 +159,7 @@ class PerformanceOptimizationManager:
             "timestamp": datetime.now().isoformat(),
         }
 
-    async def get_performance_metrics(self) -> Dict[str, Any]:
+    async def get_performance_metrics(self) -> dict[str, Any]:
         """Get performance metrics from all optimization systems"""
 
         metrics = {
@@ -192,7 +194,7 @@ class PerformanceOptimizationManager:
 
         return metrics
 
-    async def warm_caches(self) -> Dict[str, Any]:
+    async def warm_caches(self) -> dict[str, Any]:
         """Warm all caches for better performance"""
 
         if not self.initialized:
@@ -246,7 +248,7 @@ class PerformanceOptimizationManager:
 
         # Warm API response cache
         try:
-            from apps.backend.core.cache import cache, CacheConfig
+            from apps.backend.core.cache import CacheConfig, cache
 
             # Pre-cache some common API responses
             common_responses = [
@@ -281,7 +283,7 @@ class PerformanceOptimizationManager:
 
 
 # Global performance manager instance
-_performance_manager: Optional[PerformanceOptimizationManager] = None
+_performance_manager: PerformanceOptimizationManager | None = None
 
 
 def get_performance_manager() -> PerformanceOptimizationManager:
@@ -315,25 +317,25 @@ async def performance_optimization_context():
 
 
 # Convenience functions for common operations
-async def initialize_performance_optimizations() -> Dict[str, Any]:
+async def initialize_performance_optimizations() -> dict[str, Any]:
     """Initialize all performance optimizations"""
     manager = get_performance_manager()
     return await manager.initialize_all_optimizations()
 
 
-async def get_optimization_health() -> Dict[str, Any]:
+async def get_optimization_health() -> dict[str, Any]:
     """Get optimization system health status"""
     manager = get_performance_manager()
     return await manager.get_comprehensive_health_status()
 
 
-async def get_optimization_metrics() -> Dict[str, Any]:
+async def get_optimization_metrics() -> dict[str, Any]:
     """Get optimization performance metrics"""
     manager = get_performance_manager()
     return await manager.get_performance_metrics()
 
 
-async def warm_all_caches() -> Dict[str, Any]:
+async def warm_all_caches() -> dict[str, Any]:
     """Warm all caches for better performance"""
     manager = get_performance_manager()
     return await manager.warm_caches()
@@ -360,7 +362,7 @@ def create_performance_middleware():
 
 
 # Health check endpoint data
-async def get_optimization_status_for_health_check() -> Dict[str, Any]:
+async def get_optimization_status_for_health_check() -> dict[str, Any]:
     """Get optimization status for health check endpoints"""
 
     manager = get_performance_manager()

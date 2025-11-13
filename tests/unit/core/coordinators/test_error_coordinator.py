@@ -3,24 +3,20 @@ Unit tests for Error Coordinator - Centralized error handling and recovery syste
 Tests error management, automatic recovery, alerting, and pattern analysis
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch, Mock, call
-from datetime import datetime, timedelta
-from typing import Dict, Any
 import asyncio
+from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from core.coordinators.error_coordinator import (
+    AlertRule,
     ErrorCoordinator,
     ErrorRecord,
-    RecoveryStrategy,
-    AlertRule,
     ErrorSeverity,
-    RecoveryStatus,
-    RecoveryError,
-    AlertError,
+    RecoveryStrategy,
     create_error_coordinator,
 )
-
 
 # ============================================================================
 # Test Fixtures
@@ -232,9 +228,7 @@ class TestErrorHandling:
         await error_coordinator.handle_error(
             "connection_error", "Connection timeout", {}, "database"
         )
-        await error_coordinator.handle_error(
-            "validation_error", "Invalid input", {}, "api"
-        )
+        await error_coordinator.handle_error("validation_error", "Invalid input", {}, "api")
 
         assert error_coordinator.error_counts["connection_error"] == 2
         assert error_coordinator.error_counts["validation_error"] == 1
@@ -333,18 +327,14 @@ class TestComponentErrorStatistics:
         self, error_coordinator, sample_error_record
     ):
         """Test total error count updates"""
-        await error_coordinator._update_component_error_stats(
-            "database", sample_error_record
-        )
+        await error_coordinator._update_component_error_stats("database", sample_error_record)
 
         stats = error_coordinator.component_error_stats["database"]
         assert stats["total_errors"] == 1
         assert stats["last_error_time"] == sample_error_record.timestamp
 
     @pytest.mark.asyncio
-    async def test_update_component_error_stats_recent_errors(
-        self, error_coordinator
-    ):
+    async def test_update_component_error_stats_recent_errors(self, error_coordinator):
         """Test recent error count calculation"""
         # Add errors to history
         error1 = ErrorRecord(
@@ -401,9 +391,7 @@ class TestComponentErrorStatistics:
         assert stats["error_rate"] > 0
 
     @pytest.mark.asyncio
-    async def test_update_component_error_stats_mean_time_between_errors(
-        self, error_coordinator
-    ):
+    async def test_update_component_error_stats_mean_time_between_errors(self, error_coordinator):
         """Test mean time between errors calculation"""
         # Create errors with known time differences
         error1 = ErrorRecord(
@@ -492,9 +480,7 @@ class TestRecoverySystem:
             mock_execute.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_attempt_recovery_successful(
-        self, error_coordinator, sample_error_record
-    ):
+    async def test_attempt_recovery_successful(self, error_coordinator, sample_error_record):
         """Test successful recovery updates error record"""
         with patch.object(
             error_coordinator,
@@ -502,18 +488,14 @@ class TestRecoverySystem:
             new_callable=AsyncMock,
             return_value=True,
         ):
-            with patch.object(
-                error_coordinator, "_publish_recovery_event", new_callable=AsyncMock
-            ):
+            with patch.object(error_coordinator, "_publish_recovery_event", new_callable=AsyncMock):
                 await error_coordinator._attempt_recovery(sample_error_record)
 
                 assert sample_error_record.resolved is True
                 assert sample_error_record.resolution_time is not None
 
     @pytest.mark.asyncio
-    async def test_attempt_recovery_failed(
-        self, error_coordinator, sample_error_record
-    ):
+    async def test_attempt_recovery_failed(self, error_coordinator, sample_error_record):
         """Test failed recovery marks for manual intervention"""
         with patch.object(
             error_coordinator,
@@ -600,9 +582,7 @@ class TestRecoveryFunctions:
         mock_client = AsyncMock()
         mock_client.reconnect = AsyncMock(return_value=True)
 
-        with patch(
-            "core.coordinators.error_coordinator.MCPClient", return_value=mock_client
-        ):
+        with patch("core.coordinators.error_coordinator.MCPClient", return_value=mock_client):
             success = await error_coordinator._recover_connection(error_record, 0)
 
             assert success is True
@@ -725,9 +705,7 @@ class TestAlertSystem:
     """Test alert and notification system"""
 
     @pytest.mark.asyncio
-    async def test_check_alert_rules_triggers_alert(
-        self, error_coordinator, sample_error_record
-    ):
+    async def test_check_alert_rules_triggers_alert(self, error_coordinator, sample_error_record):
         """Test alert rules trigger when conditions met"""
         # Create alert rule that should trigger
         alert_rule = AlertRule(
@@ -751,9 +729,7 @@ class TestAlertSystem:
             mock_trigger.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_check_alert_rules_disabled_rule(
-        self, error_coordinator, sample_error_record
-    ):
+    async def test_check_alert_rules_disabled_rule(self, error_coordinator, sample_error_record):
         """Test disabled alert rules don't trigger"""
         alert_rule = AlertRule(
             rule_id="disabled_rule",
@@ -807,15 +783,11 @@ class TestAlertSystem:
         context = {"error_rate": 0.15, "severity": 3}
 
         # Test greater than
-        result = error_coordinator._evaluate_condition_safely(
-            "error_rate > 0.1", context
-        )
+        result = error_coordinator._evaluate_condition_safely("error_rate > 0.1", context)
         assert result is True
 
         # Test less than
-        result = error_coordinator._evaluate_condition_safely(
-            "error_rate < 0.2", context
-        )
+        result = error_coordinator._evaluate_condition_safely("error_rate < 0.2", context)
         assert result is True
 
         # Test equality
@@ -843,9 +815,7 @@ class TestAlertSystem:
         assert result is True
 
         # Test NOT (unary operator)
-        result = error_coordinator._evaluate_condition_safely(
-            "not (error_rate > 0.5)", context
-        )
+        result = error_coordinator._evaluate_condition_safely("not (error_rate > 0.5)", context)
         assert result is True
 
     def test_evaluate_condition_safely_arithmetic(self, error_coordinator):
@@ -866,9 +836,7 @@ class TestAlertSystem:
         context = {"error_rate": 0.15}
 
         with pytest.raises(ValueError):
-            error_coordinator._evaluate_condition_safely(
-                "import os; os.system('ls')", context
-            )
+            error_coordinator._evaluate_condition_safely("import os; os.system('ls')", context)
 
     @pytest.mark.asyncio
     async def test_trigger_alert_notification_cooldown(self, error_coordinator):
@@ -989,9 +957,7 @@ class TestPatternAnalysis:
         assert analysis["hourly_distribution"][14] == 3
 
     @pytest.mark.asyncio
-    async def test_analyze_error_patterns_component_distribution(
-        self, error_coordinator
-    ):
+    async def test_analyze_error_patterns_component_distribution(self, error_coordinator):
         """Test component error distribution analysis"""
         # Add errors to different components
         for component in ["db", "db", "db", "api", "api", "cache"]:
@@ -1014,9 +980,7 @@ class TestPatternAnalysis:
         assert analysis["component_distribution"]["cache"] == 1
 
     @pytest.mark.asyncio
-    async def test_analyze_error_patterns_error_type_frequency(
-        self, error_coordinator
-    ):
+    async def test_analyze_error_patterns_error_type_frequency(self, error_coordinator):
         """Test error type frequency analysis"""
         # Add various error types
         types = ["conn_err", "conn_err", "val_err", "auth_err", "auth_err", "auth_err"]
@@ -1076,9 +1040,7 @@ class TestPatternAnalysis:
         assert any("High error rate" in insight for insight in insights)
 
     @pytest.mark.asyncio
-    async def test_generate_error_insights_component_concentration(
-        self, error_coordinator
-    ):
+    async def test_generate_error_insights_component_concentration(self, error_coordinator):
         """Test insights generated for component error concentration"""
         # Add many errors to single component
         for i in range(50):
@@ -1167,9 +1129,7 @@ class TestErrorSummaryAndMetrics:
     async def test_get_metrics_includes_all_data(self, error_coordinator):
         """Test get_metrics includes comprehensive data"""
         # Add some test data
-        await error_coordinator.handle_error(
-            "test_error", "Test message", {}, "test_component"
-        )
+        await error_coordinator.handle_error("test_error", "Test message", {}, "test_component")
 
         metrics = await error_coordinator.get_metrics()
 
@@ -1308,9 +1268,7 @@ class TestShutdown:
     async def test_shutdown_handles_errors_gracefully(self, error_coordinator):
         """Test shutdown handles errors during cleanup"""
         error_coordinator.pattern_analyzer_task = AsyncMock()
-        error_coordinator.pattern_analyzer_task.cancel.side_effect = Exception(
-            "Cancel failed"
-        )
+        error_coordinator.pattern_analyzer_task.cancel.side_effect = Exception("Cancel failed")
         error_coordinator.is_initialized = True
 
         # Should not raise exception
@@ -1332,9 +1290,7 @@ class TestConvenienceFunctions:
     async def test_create_error_coordinator(self):
         """Test create_error_coordinator factory function"""
         with patch.object(ErrorCoordinator, "initialize", new_callable=AsyncMock):
-            coordinator = await create_error_coordinator(
-                config={"max_error_history": 500}
-            )
+            coordinator = await create_error_coordinator(config={"max_error_history": 500})
 
             assert isinstance(coordinator, ErrorCoordinator)
             assert coordinator.max_error_history == 500

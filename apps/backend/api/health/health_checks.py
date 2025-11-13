@@ -3,22 +3,24 @@ Health Check Endpoints - Production Monitoring
 Enhanced with comprehensive system health monitoring
 """
 
-from fastapi import APIRouter, status, HTTPException, Depends
-from fastapi.responses import Response
-from typing import Dict, List, Optional
-import psycopg2
-import redis
+import asyncio
+import os
+import socket
+import time
+from datetime import datetime, timezone
+
 import aiohttp
 import psutil
-import time
-import os
-import asyncio
-import socket
-import ssl
-from datetime import datetime, timezone
-from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
 import pusher
-import requests
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import Response
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    Counter,
+    Gauge,
+    Histogram,
+    generate_latest,
+)
 
 # Import database manager and settings
 try:
@@ -47,7 +49,7 @@ system_metrics = {
 
 
 @router.get("/health")
-async def health_check() -> Dict:
+async def health_check() -> dict:
     """Basic health check with system metrics"""
     start_time = time.time()
 
@@ -100,7 +102,7 @@ async def health_check() -> Dict:
 
 
 @router.get("/health/live")
-async def liveness_probe() -> Dict:
+async def liveness_probe() -> dict:
     """Kubernetes liveness probe - minimal check"""
     return {
         "status": "alive",
@@ -110,7 +112,7 @@ async def liveness_probe() -> Dict:
 
 
 @router.get("/health/ready")
-async def readiness_probe() -> Dict:
+async def readiness_probe() -> dict:
     """Kubernetes readiness probe - comprehensive checks"""
     start_time = time.time()
 
@@ -151,7 +153,7 @@ async def readiness_probe() -> Dict:
 
 
 @router.get("/health/deep")
-async def deep_health_check() -> Dict:
+async def deep_health_check() -> dict:
     """Comprehensive health check for monitoring systems"""
     start_time = time.time()
 
@@ -213,7 +215,7 @@ async def metrics_endpoint():
 
 
 # Health check helper functions
-async def check_database() -> Dict:
+async def check_database() -> dict:
     """Check database connectivity"""
     try:
         if db_manager:
@@ -239,7 +241,7 @@ async def check_database() -> Dict:
         return {"healthy": False, "error": str(e)}
 
 
-async def check_redis() -> Dict:
+async def check_redis() -> dict:
     """Check Redis connectivity"""
     try:
         if get_redis_client:
@@ -281,7 +283,7 @@ async def check_redis() -> Dict:
         return {"healthy": False, "error": str(e)}
 
 
-async def check_external_apis() -> Dict:
+async def check_external_apis() -> dict:
     """Check external API availability"""
     try:
         checks = {}
@@ -358,7 +360,7 @@ async def check_external_apis() -> Dict:
         return {"healthy": False, "error": str(e)}
 
 
-async def check_disk_space() -> Dict:
+async def check_disk_space() -> dict:
     """Check available disk space"""
     try:
         disk = psutil.disk_usage("/")
@@ -376,7 +378,7 @@ async def check_disk_space() -> Dict:
         return {"healthy": False, "error": str(e)}
 
 
-async def check_memory() -> Dict:
+async def check_memory() -> dict:
     """Check memory usage"""
     try:
         memory = psutil.virtual_memory()
@@ -393,7 +395,7 @@ async def check_memory() -> Dict:
         return {"healthy": False, "error": str(e)}
 
 
-async def check_cpu_load() -> Dict:
+async def check_cpu_load() -> dict:
     """Check CPU load"""
     try:
         cpu_percent = psutil.cpu_percent(interval=1)
@@ -414,7 +416,7 @@ async def check_cpu_load() -> Dict:
 
 
 # Detailed health check functions for deep health check
-async def check_database_detailed() -> Dict:
+async def check_database_detailed() -> dict:
     """Detailed database health check"""
     try:
         if db_manager:
@@ -426,7 +428,7 @@ async def check_database_detailed() -> Dict:
         return {"database": {"healthy": False, "error": str(e)}}
 
 
-async def check_redis_detailed() -> Dict:
+async def check_redis_detailed() -> dict:
     """Detailed Redis health check"""
     try:
         return {"redis": await check_redis()}
@@ -434,7 +436,7 @@ async def check_redis_detailed() -> Dict:
         return {"redis": {"healthy": False, "error": str(e)}}
 
 
-async def check_system_resources() -> Dict:
+async def check_system_resources() -> dict:
     """Check system resources"""
     try:
         disk = await check_disk_space()
@@ -453,7 +455,7 @@ async def check_system_resources() -> Dict:
         return {"system_resources": {"healthy": False, "error": str(e)}}
 
 
-async def check_application_health() -> Dict:
+async def check_application_health() -> dict:
     """Check application-specific health"""
     try:
         # Check if all critical services are running
@@ -469,7 +471,7 @@ async def check_application_health() -> Dict:
         return {"application": {"healthy": False, "error": str(e)}}
 
 
-async def check_agent_orchestration() -> Dict:
+async def check_agent_orchestration() -> dict:
     """Check agent orchestration system health"""
     try:
         checks = {}
@@ -524,7 +526,7 @@ async def check_agent_orchestration() -> Dict:
         return {"agent_orchestration": {"healthy": False, "error": str(e)}}
 
 
-async def check_realtime_services() -> Dict:
+async def check_realtime_services() -> dict:
     """Check real-time services (Pusher, WebSocket)"""
     try:
         checks = {}
@@ -574,7 +576,7 @@ async def check_realtime_services() -> Dict:
         return {"realtime_services": {"healthy": False, "error": str(e)}}
 
 
-async def check_roblox_integration() -> Dict:
+async def check_roblox_integration() -> dict:
     """Check Roblox integration services"""
     try:
         checks = {}

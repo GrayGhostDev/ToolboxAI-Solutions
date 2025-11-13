@@ -5,24 +5,25 @@ Provides dedicated API endpoints for the dashboard frontend on port 8001.
 Integrates with the main FastAPI server and provides dashboard-specific functionality.
 """
 
-import asyncio
-import json
 import logging
 import time
-import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Any
+from typing import Any
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from apps.backend.api.auth.auth import (
+    authenticate_user,
+    create_user_token,
+    get_current_user,
+)
 from apps.backend.core.config import settings
-from apps.backend.api.auth.auth import get_current_user, create_user_token, authenticate_user
-from apps.backend.models.schemas import User, BaseResponse
+from apps.backend.models.schemas import User
 
 logger = logging.getLogger(__name__)
 
@@ -41,8 +42,8 @@ class DashboardUser(BaseModel):
     username: str
     email: str
     role: str
-    last_active: Optional[datetime] = None
-    grade_level: Optional[int] = None
+    last_active: datetime | None = None
+    grade_level: int | None = None
 
 
 class LoginRequest(BaseModel):
@@ -376,7 +377,7 @@ async def get_dashboard_settings(current_user: User = Depends(get_current_user))
 
 @dashboard_app.post("/api/v1/dashboard/settings")
 async def update_dashboard_settings(
-    settings_data: Dict[str, Any], current_user: User = Depends(get_current_user)
+    settings_data: dict[str, Any], current_user: User = Depends(get_current_user)
 ):
     """Update dashboard settings"""
     try:

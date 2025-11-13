@@ -3,26 +3,22 @@ Enhanced Conversation Flow Manager with LCEL Chains
 Integrates 8-stage conversation flow with Roblox environment generation
 """
 
-from typing import Dict, Any, Optional, List
-from datetime import datetime
-from enum import Enum
-from pydantic import BaseModel, Field
 import logging
+from datetime import datetime
+from typing import Any
 
-from core.langchain_compat import (
-    get_chat_model,
-    create_chain_template,
-    SystemMessage,
-    HumanMessage,
-    AIMessage,
-    ChatPromptTemplate,
-    StrOutputParser,
-    JsonOutputParser,
-)
-from apps.backend.services.pusher_realtime import pusher_service
-from apps.backend.services.roblox.rojo_manager import rojo_manager, RojoProjectConfig
-from apps.backend.services.roblox.open_cloud import open_cloud_client
+from pydantic import BaseModel, Field
+
 from apps.backend.core.prompts.conversation_flow import ConversationStage
+from apps.backend.services.pusher_realtime import pusher_service
+from apps.backend.services.roblox.rojo_manager import RojoProjectConfig, rojo_manager
+from core.langchain_compat import (
+    ChatPromptTemplate,
+    HumanMessage,
+    JsonOutputParser,
+    SystemMessage,
+    get_chat_model,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -31,13 +27,13 @@ class RobloxEnvironmentData(BaseModel):
     """Data for Roblox environment generation"""
 
     terrain_type: str = Field(default="natural", description="Type of terrain")
-    buildings: List[Dict[str, Any]] = Field(default_factory=list)
-    interactive_objects: List[Dict[str, Any]] = Field(default_factory=list)
-    npcs: List[Dict[str, Any]] = Field(default_factory=list)
-    quizzes: List[Dict[str, Any]] = Field(default_factory=list)
-    lighting: Dict[str, Any] = Field(default_factory=dict)
-    atmosphere: Dict[str, Any] = Field(default_factory=dict)
-    game_mechanics: List[str] = Field(default_factory=list)
+    buildings: list[dict[str, Any]] = Field(default_factory=list)
+    interactive_objects: list[dict[str, Any]] = Field(default_factory=list)
+    npcs: list[dict[str, Any]] = Field(default_factory=list)
+    quizzes: list[dict[str, Any]] = Field(default_factory=list)
+    lighting: dict[str, Any] = Field(default_factory=dict)
+    atmosphere: dict[str, Any] = Field(default_factory=dict)
+    game_mechanics: list[str] = Field(default_factory=list)
 
 
 class ConversationContext(BaseModel):
@@ -46,9 +42,9 @@ class ConversationContext(BaseModel):
     session_id: str
     user_id: str
     current_stage: ConversationStage
-    stage_data: Dict[ConversationStage, Dict[str, Any]] = Field(default_factory=dict)
+    stage_data: dict[ConversationStage, dict[str, Any]] = Field(default_factory=dict)
     roblox_data: RobloxEnvironmentData = Field(default_factory=RobloxEnvironmentData)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -61,7 +57,7 @@ class StageChain:
         self.llm = get_chat_model(temperature=0.7)
         self.output_parser = JsonOutputParser()
 
-    async def process(self, context: ConversationContext, user_input: str) -> Dict[str, Any]:
+    async def process(self, context: ConversationContext, user_input: str) -> dict[str, Any]:
         """Process user input for this stage"""
         raise NotImplementedError
 
@@ -83,7 +79,7 @@ class GreetingChain(StageChain, output_key="output"):
         )
         self.chain = self.prompt | self.llm | self.output_parser
 
-    async def process(self, context: ConversationContext, user_input: str) -> Dict[str, Any]:
+    async def process(self, context: ConversationContext, user_input: str) -> dict[str, Any]:
         result = await self.chain.ainvoke({"user_input": user_input})
 
         # Extract subject and intent
@@ -118,7 +114,7 @@ class DiscoveryChain(StageChain, output_key="output"):
         )
         self.chain = self.prompt | self.llm | self.output_parser
 
-    async def process(self, context: ConversationContext, user_input: str) -> Dict[str, Any]:
+    async def process(self, context: ConversationContext, user_input: str) -> dict[str, Any]:
         result = await self.chain.ainvoke(
             {
                 "context": str(context.stage_data.get(ConversationStage.GREETING, {})),
@@ -163,7 +159,7 @@ class RequirementsChain(StageChain, output_key="output"):
         )
         self.chain = self.prompt | self.llm | self.output_parser
 
-    async def process(self, context: ConversationContext, user_input: str) -> Dict[str, Any]:
+    async def process(self, context: ConversationContext, user_input: str) -> dict[str, Any]:
         objectives = context.stage_data.get(ConversationStage.DISCOVERY, {})
         result = await self.chain.ainvoke({"objectives": str(objectives), "user_input": user_input})
 
@@ -206,7 +202,7 @@ class PersonalizationChain(StageChain, output_key="output"):
         )
         self.chain = self.prompt | self.llm | self.output_parser
 
-    async def process(self, context: ConversationContext, user_input: str) -> Dict[str, Any]:
+    async def process(self, context: ConversationContext, user_input: str) -> dict[str, Any]:
         requirements = context.stage_data.get(ConversationStage.REQUIREMENTS, {})
         result = await self.chain.ainvoke(
             {"requirements": str(requirements), "user_input": user_input}
@@ -255,7 +251,7 @@ class ContentDesignChain(StageChain, output_key="output"):
         )
         self.chain = self.prompt | self.llm | self.output_parser
 
-    async def process(self, context: ConversationContext, user_input: str) -> Dict[str, Any]:
+    async def process(self, context: ConversationContext, user_input: str) -> dict[str, Any]:
         full_context = {stage.value: data for stage, data in context.stage_data.items()}
         result = await self.chain.ainvoke({"context": str(full_context), "user_input": user_input})
 
@@ -309,7 +305,7 @@ class UniquenessChain(StageChain, output_key="output"):
         )
         self.chain = self.prompt | self.llm | self.output_parser
 
-    async def process(self, context: ConversationContext, user_input: str) -> Dict[str, Any]:
+    async def process(self, context: ConversationContext, user_input: str) -> dict[str, Any]:
         content = context.stage_data.get(ConversationStage.CONTENT_DESIGN, {})
         result = await self.chain.ainvoke({"content": str(content), "user_input": user_input})
 
@@ -352,7 +348,7 @@ class ValidationChain(StageChain, output_key="output"):
         )
         self.chain = self.prompt | self.llm | self.output_parser
 
-    async def process(self, context: ConversationContext, user_input: str) -> Dict[str, Any]:
+    async def process(self, context: ConversationContext, user_input: str) -> dict[str, Any]:
         full_design = {
             "stages": {stage.value: data for stage, data in context.stage_data.items()},
             "roblox_data": context.roblox_data.dict(),
@@ -389,7 +385,7 @@ class EnhancedConversationFlowManager:
             ConversationStage.UNIQUENESS_ENHANCEMENT: UniquenessChain(),
             ConversationStage.VALIDATION: ValidationChain(),
         }
-        self.contexts: Dict[str, ConversationContext] = {}
+        self.contexts: dict[str, ConversationContext] = {}
 
     async def start_conversation(self, user_id: str, session_id: str) -> ConversationContext:
         """Start a new conversation"""
@@ -408,7 +404,7 @@ class EnhancedConversationFlowManager:
         logger.info(f"Started conversation {session_id} for user {user_id}")
         return context
 
-    async def process_input(self, session_id: str, user_input: str) -> Dict[str, Any]:
+    async def process_input(self, session_id: str, user_input: str) -> dict[str, Any]:
         """Process user input for current stage"""
         if session_id not in self.contexts:
             raise ValueError(f"Session {session_id} not found")
@@ -471,7 +467,7 @@ class EnhancedConversationFlowManager:
 
         return context
 
-    async def generate_roblox_environment(self, session_id: str) -> Dict[str, Any]:
+    async def generate_roblox_environment(self, session_id: str) -> dict[str, Any]:
         """Generate Roblox environment from conversation data"""
         if session_id not in self.contexts:
             raise ValueError(f"Session {session_id} not found")
@@ -521,7 +517,7 @@ class EnhancedConversationFlowManager:
             "files_generated": len(scripts),
         }
 
-    def _get_next_stage(self, current: ConversationStage) -> Optional[ConversationStage]:
+    def _get_next_stage(self, current: ConversationStage) -> ConversationStage | None:
         """Get next stage in conversation flow"""
         stage_order = [
             ConversationStage.GREETING,
@@ -580,7 +576,7 @@ class EnhancedConversationFlowManager:
             },
         )
 
-    def _generate_lua_scripts(self, context: ConversationContext) -> Dict[str, str]:
+    def _generate_lua_scripts(self, context: ConversationContext) -> dict[str, str]:
         """Generate Lua scripts from conversation context"""
         scripts = {}
 
@@ -607,7 +603,7 @@ class EnhancedConversationFlowManager:
 
         return scripts
 
-    def _generate_quiz_script(self, quizzes: List[Dict]) -> str:
+    def _generate_quiz_script(self, quizzes: list[dict]) -> str:
         """Generate quiz system Lua script"""
         return f"""-- Quiz System
 local QuizSystem = {{}}
@@ -640,7 +636,7 @@ end
 return QuizSystem
 """
 
-    def _generate_npc_script(self, npcs: List[Dict]) -> str:
+    def _generate_npc_script(self, npcs: list[dict]) -> str:
         """Generate NPC dialogue Lua script"""
         return f"""-- NPC Dialogue System
 local NPCDialogue = {{}}

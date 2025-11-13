@@ -6,19 +6,19 @@ with comprehensive security features including session invalidation.
 """
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
+from apps.backend.api.auth.auth import get_current_user, redis_client
 from apps.backend.api.auth.password_management import (
     PasswordChangeRequest,
     PasswordResetRequest,
     get_password_service,
-    PasswordChangeService,
 )
-from apps.backend.api.auth.auth import get_current_user, redis_client
-from apps.backend.core.security.session_manager import get_session_manager, initialize_session_manager
+from apps.backend.core.security.session_manager import (
+    initialize_session_manager,
+)
 from apps.backend.models.schemas import User
 from apps.backend.services.database import get_db_session, update_user_password
 
@@ -41,12 +41,12 @@ session_manager = initialize_session_manager(redis_client=redis_client)
 password_service = get_password_service(session_manager=session_manager, redis_client=redis_client)
 
 
-@router.post("/change", response_model=Dict[str, Any])
+@router.post("/change", response_model=dict[str, Any])
 async def change_password(
     request: Request,
     password_request: PasswordChangeRequest,
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Change the current user's password.
 
@@ -82,7 +82,7 @@ async def change_password(
         user_agent = request.headers.get("User-Agent")
 
         # Verify current password
-        from apps.backend.api.auth.auth import verify_password, get_user_from_db
+        from apps.backend.api.auth.auth import get_user_from_db, verify_password
 
         # Get user from database with current password hash
         user_data = await get_user_from_db(current_user.username)
@@ -134,12 +134,12 @@ async def change_password(
         )
 
 
-@router.post("/reset", response_model=Dict[str, Any])
+@router.post("/reset", response_model=dict[str, Any])
 async def reset_user_password(
     request: Request,
     reset_request: PasswordResetRequest,
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Reset a user's password (Admin only).
 
@@ -201,8 +201,8 @@ async def reset_user_password(
         )
 
 
-@router.get("/strength-requirements", response_model=Dict[str, Any])
-async def get_password_requirements() -> Dict[str, Any]:
+@router.get("/strength-requirements", response_model=dict[str, Any])
+async def get_password_requirements() -> dict[str, Any]:
     """
     Get password strength requirements.
 
@@ -234,10 +234,10 @@ async def get_password_requirements() -> Dict[str, Any]:
     }
 
 
-@router.post("/validate", response_model=Dict[str, Any])
+@router.post("/validate", response_model=dict[str, Any])
 async def validate_password_strength(
-    password: str, username: Optional[str] = None, current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+    password: str, username: str | None = None, current_user: User = Depends(get_current_user)
+) -> dict[str, Any]:
     """
     Validate password strength without changing it.
 
@@ -272,8 +272,8 @@ async def validate_password_strength(
     }
 
 
-@router.get("/sessions", response_model=Dict[str, Any])
-async def get_active_sessions(current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+@router.get("/sessions", response_model=dict[str, Any])
+async def get_active_sessions(current_user: User = Depends(get_current_user)) -> dict[str, Any]:
     """
     Get all active sessions for the current user.
 
@@ -308,8 +308,8 @@ async def get_active_sessions(current_user: User = Depends(get_current_user)) ->
     }
 
 
-@router.post("/logout-all", response_model=Dict[str, Any])
-async def logout_all_sessions(current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+@router.post("/logout-all", response_model=dict[str, Any])
+async def logout_all_sessions(current_user: User = Depends(get_current_user)) -> dict[str, Any]:
     """
     Logout from all devices.
 

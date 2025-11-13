@@ -5,16 +5,16 @@ Manages Rojo 7.5.1 servers and project synchronization with Roblox Studio
 
 import asyncio
 import json
+import logging
 import os
 import shutil
-import subprocess
-from pathlib import Path
-from typing import Dict, List, Optional, Any
 from datetime import datetime
-import aiohttp
+from pathlib import Path
+from typing import Any
+
 import aiofiles
+import aiohttp
 from pydantic import BaseModel, Field
-import logging
 
 from apps.backend.core.config import settings
 
@@ -32,18 +32,18 @@ class RojoProject(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     user_id: str
-    session_id: Optional[str] = None
-    process_pid: Optional[int] = None
+    session_id: str | None = None
+    process_pid: int | None = None
 
 
 class RojoProjectConfig(BaseModel):
     """Rojo project.json configuration"""
 
     name: str
-    tree: Dict[str, Any]
-    serve_port: Optional[int] = None
-    serve_address: Optional[str] = Field(default="127.0.0.1")
-    glob_ignore_paths: Optional[List[str]] = Field(
+    tree: dict[str, Any]
+    serve_port: int | None = None
+    serve_address: str | None = Field(default="127.0.0.1")
+    glob_ignore_paths: list[str] | None = Field(
         default_factory=lambda: ["**/node_modules", "**/.git", "**/*.lock"]
     )
 
@@ -52,11 +52,11 @@ class RojoSyncStatus(BaseModel):
     """Rojo synchronization status"""
 
     connected: bool
-    session_id: Optional[str] = None
-    project_name: Optional[str] = None
+    session_id: str | None = None
+    project_name: str | None = None
     client_count: int = Field(default=0)
-    last_sync: Optional[datetime] = None
-    errors: List[str] = Field(default_factory=list)
+    last_sync: datetime | None = None
+    errors: list[str] = Field(default_factory=list)
 
 
 class EnhancedRojoManager:
@@ -72,9 +72,9 @@ class EnhancedRojoManager:
         self.max_projects = getattr(settings, "MAX_ROJO_PROJECTS", 10)
         self.projects_dir = Path(getattr(settings, "ROJO_PROJECTS_DIR", "/tmp/rojo_projects"))
         self.rojo_binary = "rojo"  # Assumes rojo is in PATH via aftman
-        self.active_projects: Dict[str, RojoProject] = {}
-        self.port_allocations: Dict[int, str] = {}  # port -> project_id
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.active_projects: dict[str, RojoProject] = {}
+        self.port_allocations: dict[int, str] = {}  # port -> project_id
+        self.session: aiohttp.ClientSession | None = None
 
         # Create projects directory
         self.projects_dir.mkdir(parents=True, exist_ok=True)
@@ -97,7 +97,7 @@ class EnhancedRojoManager:
         if self.session:
             await self.session.close()
 
-    def _allocate_port(self) -> Optional[int]:
+    def _allocate_port(self) -> int | None:
         """
         Allocate an available port for a new Rojo server
 
@@ -201,7 +201,7 @@ class EnhancedRojoManager:
 
         return project
 
-    async def _create_source_structure(self, project_path: Path, tree: Dict[str, Any]):
+    async def _create_source_structure(self, project_path: Path, tree: dict[str, Any]):
         """
         Create source directory structure based on Rojo tree
 
@@ -377,7 +377,7 @@ class EnhancedRojoManager:
         except Exception as e:
             return RojoSyncStatus(connected=False, errors=[str(e)])
 
-    async def build_project(self, project_id: str, output_path: Optional[Path] = None) -> Path:
+    async def build_project(self, project_id: str, output_path: Path | None = None) -> Path:
         """
         Build Rojo project to .rbxl or .rbxm file
 
@@ -453,7 +453,7 @@ class EnhancedRojoManager:
         logger.info(f"Deleted project {project_id}")
         return True
 
-    async def list_projects(self, user_id: Optional[str] = None) -> List[RojoProject]:
+    async def list_projects(self, user_id: str | None = None) -> list[RojoProject]:
         """
         List all projects or projects for a specific user
 
@@ -470,7 +470,7 @@ class EnhancedRojoManager:
 
         return projects
 
-    async def get_project(self, project_id: str) -> Optional[RojoProject]:
+    async def get_project(self, project_id: str) -> RojoProject | None:
         """
         Get a specific project
 
@@ -482,7 +482,7 @@ class EnhancedRojoManager:
         """
         return self.active_projects.get(project_id)
 
-    async def update_project_files(self, project_id: str, files: Dict[str, str]) -> bool:
+    async def update_project_files(self, project_id: str, files: dict[str, str]) -> bool:
         """
         Update files in a project
 
@@ -514,7 +514,7 @@ class EnhancedRojoManager:
             logger.error(f"Error updating project files: {e}")
             return False
 
-    async def get_project_files(self, project_id: str) -> Dict[str, str]:
+    async def get_project_files(self, project_id: str) -> dict[str, str]:
         """
         Get all Lua files from a project
 
@@ -533,7 +533,7 @@ class EnhancedRojoManager:
         try:
             for lua_file in project.path.rglob("*.lua"):
                 relative_path = lua_file.relative_to(project.path)
-                async with aiofiles.open(lua_file, "r") as f:
+                async with aiofiles.open(lua_file) as f:
                     content = await f.read()
                 files[str(relative_path)] = content
 

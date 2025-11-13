@@ -1,17 +1,18 @@
-import pytest_asyncio
+from unittest.mock import Mock, patch
 
 import pytest
-from unittest.mock import Mock, patch
+
 
 @pytest.fixture
 def mock_db_connection():
     """Mock database connection for tests"""
-    with patch('psycopg2.connect') as mock_connect:
+    with patch("psycopg2.connect") as mock_connect:
         mock_conn = Mock()
         mock_cursor = Mock()
         mock_conn.cursor.return_value = mock_cursor
         mock_connect.return_value = mock_conn
         yield mock_conn
+
 
 import sys
 from pathlib import Path
@@ -22,27 +23,27 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 
-
 def make_json_serializable(obj):
     """Convert non-serializable objects to serializable format."""
-    if hasattr(obj, '__dict__'):
+    if hasattr(obj, "__dict__"):
         return obj.__dict__
-    elif hasattr(obj, 'to_dict'):
+    elif hasattr(obj, "to_dict"):
         return obj.to_dict()
-    elif hasattr(obj, '_asdict'):
+    elif hasattr(obj, "_asdict"):
         return obj._asdict()
     else:
         return str(obj)
 
-import json
-import pytest
-from unittest.mock import AsyncMock
-from tests.fixtures.pusher_test_utils import WebSocketState
 
-from tests.fixtures.pusher_test_utils import WebSocketManager
+import json
+from unittest.mock import AsyncMock
+
+import pytest
+
 from apps.backend.core.config import settings
-from apps.backend.services.rate_limit_manager import get_rate_limit_manager
 from apps.backend.core.security.rate_limit_manager import RateLimitMode
+from apps.backend.services.rate_limit_manager import get_rate_limit_manager
+from tests.fixtures.pusher_test_utils import WebSocketManager, WebSocketState
 
 
 @pytest.mark.asyncio(loop_scope="function")
@@ -61,7 +62,13 @@ async def test_rbac_override_via_settings():
         client_id = await manager.connect(ws, client_id="c1", user_id="u1", user_role="student")
 
         # student tries user_message => should be forbidden now
-        await manager.handle_message(client_id, json.dumps({"type": "user_message", "target_user": "u2", "data": {}}, default=make_json_serializable))
+        await manager.handle_message(
+            client_id,
+            json.dumps(
+                {"type": "user_message", "target_user": "u2", "data": {}},
+                default=make_json_serializable,
+            ),
+        )
         assert ws.send_text.called
         msg = json.loads(ws.send_text.call_args[0][0])
         assert msg["type"] == "error"
@@ -96,9 +103,13 @@ async def test_ws_rate_limit_override(monkeypatch):
         client_id = await manager.connect(ws, client_id="c2", user_id="u2", user_role="student")
 
         # First ping passes
-        await manager.handle_message(client_id, json.dumps({"type": "ping"}, default=make_json_serializable))
+        await manager.handle_message(
+            client_id, json.dumps({"type": "ping"}, default=make_json_serializable)
+        )
         # Second ping within window should be rate-limited under WS limit
-        await manager.handle_message(client_id, json.dumps({"type": "ping"}, default=make_json_serializable))
+        await manager.handle_message(
+            client_id, json.dumps({"type": "ping"}, default=make_json_serializable)
+        )
 
         assert ws.send_text.called
         last = json.loads(ws.send_text.call_args[0][0])

@@ -16,10 +16,10 @@ import json
 import logging
 import os
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Header, Request, status
+from fastapi import APIRouter, Header, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -37,12 +37,12 @@ class StripeEvent(BaseModel):
 
     id: str
     object: str
-    api_version: Optional[str] = None
+    api_version: str | None = None
     created: int
-    data: Dict[str, Any]
+    data: dict[str, Any]
     livemode: bool
     pending_webhooks: int
-    request: Optional[Dict[str, Any]] = None
+    request: dict[str, Any] | None = None
     type: str
 
 
@@ -51,11 +51,11 @@ class WebhookResponse(BaseModel):
 
     status: str = Field(default="success")
     message: str
-    event_id: Optional[str] = None
-    processed_at: Optional[str] = None
+    event_id: str | None = None
+    processed_at: str | None = None
 
 
-def extract_organization_id(stripe_object: Dict[str, Any]) -> Optional[UUID]:
+def extract_organization_id(stripe_object: dict[str, Any]) -> UUID | None:
     """
     Extract organization_id from Stripe object metadata.
 
@@ -135,7 +135,7 @@ def verify_stripe_signature(payload: bytes, signature: str, secret: str) -> bool
 
 @router.post("/webhooks", response_model=WebhookResponse)
 async def handle_stripe_webhook(
-    request: Request, stripe_signature: Optional[str] = Header(None, alias="Stripe-Signature")
+    request: Request, stripe_signature: str | None = Header(None, alias="Stripe-Signature")
 ):
     """
     Main Stripe webhook handler endpoint

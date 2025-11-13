@@ -5,17 +5,14 @@ Background tasks for email sending and notifications
 """
 
 import asyncio
-from typing import Dict, List, Any, Optional
 from datetime import datetime
+from typing import Any
+
 from celery import shared_task
 from celery.utils.log import get_task_logger
-from sqlalchemy import select
-from sqlalchemy.orm import Session
 
-from apps.backend.core.database import get_db
-from apps.backend.core.config import settings
 from apps.backend.services.email import email_service
-from apps.backend.services.email.queue import email_queue, EmailPriority
+from apps.backend.services.email.queue import EmailPriority, email_queue
 
 logger = get_task_logger(__name__)
 
@@ -28,7 +25,7 @@ logger = get_task_logger(__name__)
     queue="email",
     priority=5,
 )
-def send_pending_emails(self, batch_size: int = 50) -> Dict[str, Any]:
+def send_pending_emails(self, batch_size: int = 50) -> dict[str, Any]:
     """
     Process and send pending emails from queue
 
@@ -72,6 +69,7 @@ def send_pending_emails(self, batch_size: int = 50) -> Dict[str, Any]:
 
                         # Parse and process job
                         from apps.backend.services.email.queue import EmailJob
+
                         job = EmailJob.parse_raw(job_data)
 
                         await email_queue._process_email_job(job)
@@ -87,7 +85,7 @@ def send_pending_emails(self, batch_size: int = 50) -> Dict[str, Any]:
             return {
                 "emails_processed": emails_processed,
                 "emails_sent": emails_sent,
-                "emails_failed": emails_failed
+                "emails_failed": emails_failed,
             }
 
         finally:
@@ -100,11 +98,7 @@ def send_pending_emails(self, batch_size: int = 50) -> Dict[str, Any]:
         # Run async queue processing
         result = asyncio.run(process_queue_batch())
 
-        return {
-            "status": "success",
-            **result,
-            "timestamp": datetime.utcnow().isoformat()
-        }
+        return {"status": "success", **result, "timestamp": datetime.utcnow().isoformat()}
 
     except Exception as e:
         logger.error(f"Failed to process pending emails: {e}")
@@ -124,9 +118,9 @@ def send_email(
     to_email: str,
     subject: str,
     body: str,
-    html_body: Optional[str] = None,
-    attachments: Optional[List[Dict]] = None
-) -> Dict[str, Any]:
+    html_body: str | None = None,
+    attachments: list[dict] | None = None,
+) -> dict[str, Any]:
     """
     Send a single email
 
@@ -144,13 +138,15 @@ def send_email(
         logger.info(f"Sending email to {to_email}: {subject}")
 
         # Call async email service from sync Celery task
-        result = asyncio.run(email_service.send_email(
-            to_emails=to_email,
-            subject=subject,
-            text_content=body,
-            html_content=html_body,
-            attachments=attachments if attachments else None
-        ))
+        result = asyncio.run(
+            email_service.send_email(
+                to_emails=to_email,
+                subject=subject,
+                text_content=body,
+                html_content=html_body,
+                attachments=attachments if attachments else None,
+            )
+        )
 
         return {
             "status": "success" if result.get("success") else "failed",
@@ -158,7 +154,7 @@ def send_email(
             "subject": subject,
             "sent_at": datetime.utcnow().isoformat(),
             "message_id": result.get("message_id"),
-            "result": result
+            "result": result,
         }
 
     except Exception as e:
@@ -175,12 +171,8 @@ def send_email(
     priority=3,
 )
 def send_bulk_emails(
-    self,
-    recipients: List[str],
-    subject: str,
-    body: str,
-    html_body: Optional[str] = None
-) -> Dict[str, Any]:
+    self, recipients: list[str], subject: str, body: str, html_body: str | None = None
+) -> dict[str, Any]:
     """
     Send bulk emails to multiple recipients
 
@@ -202,12 +194,14 @@ def send_bulk_emails(
         # Process each recipient
         for recipient in recipients:
             try:
-                result = asyncio.run(email_service.send_email(
-                    to_emails=recipient,
-                    subject=subject,
-                    text_content=body,
-                    html_content=html_body
-                ))
+                result = asyncio.run(
+                    email_service.send_email(
+                        to_emails=recipient,
+                        subject=subject,
+                        text_content=body,
+                        html_content=html_body,
+                    )
+                )
 
                 if result.get("success"):
                     sent_count += 1
@@ -225,7 +219,7 @@ def send_bulk_emails(
             "total_recipients": len(recipients),
             "sent": sent_count,
             "failed": failed_count,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     except Exception as e:

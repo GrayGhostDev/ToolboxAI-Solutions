@@ -6,9 +6,9 @@ Creates a Checkout session to keep PCI scope at SAQ A. Do not handle card data i
 
 from __future__ import annotations
 
-import os
 import logging
-from typing import Any, Dict, Optional
+import os
+from typing import Any
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -34,7 +34,7 @@ class CheckoutSessionRequest(BaseModel):
 
 
 @router.post("/checkout-session")
-async def create_checkout_session(payload: CheckoutSessionRequest) -> Dict[str, Any]:
+async def create_checkout_session(payload: CheckoutSessionRequest) -> dict[str, Any]:
     if not STRIPE_AVAILABLE:
         raise HTTPException(status_code=503, detail="Stripe SDK not available")
 

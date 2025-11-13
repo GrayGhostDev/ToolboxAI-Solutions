@@ -3,23 +3,22 @@ GDPR Compliance Manager
 Implements GDPR requirements including right to erasure, data portability, and consent management
 """
 
+import hashlib
+import io
 import json
 import logging
-import asyncio
-from typing import Dict, List, Optional, Any, Set
+import zipfile
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from dataclasses import dataclass, field
-import hashlib
-import zipfile
-import io
-from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
 class ConsentType(str, Enum):
     """Types of consent that can be granted"""
+
     ESSENTIAL = "essential"  # Required for service
     ANALYTICS = "analytics"
     MARKETING = "marketing"
@@ -32,6 +31,7 @@ class ConsentType(str, Enum):
 
 class RequestType(str, Enum):
     """GDPR request types"""
+
     ACCESS = "access"  # Right to access
     RECTIFICATION = "rectification"  # Right to rectification
     ERASURE = "erasure"  # Right to be forgotten
@@ -42,6 +42,7 @@ class RequestType(str, Enum):
 
 class RequestStatus(str, Enum):
     """Status of GDPR requests"""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -52,36 +53,41 @@ class RequestStatus(str, Enum):
 @dataclass
 class ConsentRecord:
     """Record of user consent"""
+
     user_id: str
     consent_type: ConsentType
     granted: bool
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    ip_address: Optional[str] = None
-    user_agent: Optional[str] = None
+    ip_address: str | None = None
+    user_agent: str | None = None
     purpose: str = ""
-    expiry: Optional[datetime] = None
+    expiry: datetime | None = None
     version: int = 1
 
 
 @dataclass
 class GDPRRequest:
     """GDPR data request"""
+
     request_id: str
     user_id: str
     request_type: RequestType
     status: RequestStatus
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    completed_at: Optional[datetime] = None
-    deadline: datetime = field(default_factory=lambda: datetime.now(timezone.utc) + timedelta(days=30))
-    processor: Optional[str] = None
+    completed_at: datetime | None = None
+    deadline: datetime = field(
+        default_factory=lambda: datetime.now(timezone.utc) + timedelta(days=30)
+    )
+    processor: str | None = None
     notes: str = ""
-    verification_token: Optional[str] = None
-    data: Dict[str, Any] = field(default_factory=dict)
+    verification_token: str | None = None
+    data: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class DataRetentionPolicy:
     """Data retention policy configuration"""
+
     data_category: str
     retention_days: int
     legal_basis: str
@@ -104,8 +110,8 @@ class GDPRComplianceManager:
 
     def __init__(self):
         """Initialize GDPR Compliance Manager"""
-        self.consent_records: Dict[str, List[ConsentRecord]] = {}
-        self.gdpr_requests: Dict[str, GDPRRequest] = {}
+        self.consent_records: dict[str, list[ConsentRecord]] = {}
+        self.gdpr_requests: dict[str, GDPRRequest] = {}
         self.retention_policies = self._init_retention_policies()
 
         # PII field mappings for data operations
@@ -116,10 +122,10 @@ class GDPRComplianceManager:
             "address": "address",
             "date_of_birth": "birthdate",
             "ip_address": "ip",
-            "user_agent": "device_info"
+            "user_agent": "device_info",
         }
 
-    def _init_retention_policies(self) -> Dict[str, DataRetentionPolicy]:
+    def _init_retention_policies(self) -> dict[str, DataRetentionPolicy]:
         """Initialize default data retention policies"""
         return {
             "user_profile": DataRetentionPolicy(
@@ -127,40 +133,40 @@ class GDPRComplianceManager:
                 retention_days=365 * 3,  # 3 years
                 legal_basis="Legitimate interest for service improvement",
                 auto_delete=False,
-                anonymize_instead=True
+                anonymize_instead=True,
             ),
             "activity_logs": DataRetentionPolicy(
                 data_category="activity_logs",
                 retention_days=90,
                 legal_basis="Security and fraud prevention",
-                auto_delete=True
+                auto_delete=True,
             ),
             "analytics": DataRetentionPolicy(
                 data_category="analytics",
                 retention_days=365,
                 legal_basis="Legitimate interest for analytics",
                 auto_delete=False,
-                anonymize_instead=True
+                anonymize_instead=True,
             ),
             "marketing": DataRetentionPolicy(
                 data_category="marketing",
                 retention_days=180,
                 legal_basis="Consent-based marketing",
-                auto_delete=True
+                auto_delete=True,
             ),
             "financial": DataRetentionPolicy(
                 data_category="financial",
                 retention_days=365 * 7,  # 7 years for tax purposes
                 legal_basis="Legal obligation",
-                auto_delete=False
+                auto_delete=False,
             ),
             "educational_content": DataRetentionPolicy(
                 data_category="educational_content",
                 retention_days=365 * 2,  # 2 years
                 legal_basis="Contractual necessity",
                 auto_delete=False,
-                anonymize_instead=True
-            )
+                anonymize_instead=True,
+            ),
         }
 
     async def record_consent(
@@ -169,9 +175,9 @@ class GDPRComplianceManager:
         consent_type: ConsentType,
         granted: bool,
         purpose: str,
-        ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None,
-        duration_days: int = 365
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+        duration_days: int = 365,
     ) -> ConsentRecord:
         """
         Record user consent
@@ -197,7 +203,7 @@ class GDPRComplianceManager:
                 purpose=purpose,
                 ip_address=ip_address,
                 user_agent=user_agent,
-                expiry=datetime.now(timezone.utc) + timedelta(days=duration_days)
+                expiry=datetime.now(timezone.utc) + timedelta(days=duration_days),
             )
 
             # Store consent record
@@ -215,11 +221,7 @@ class GDPRComplianceManager:
             logger.error(f"Failed to record consent: {e}")
             raise
 
-    async def check_consent(
-        self,
-        user_id: str,
-        consent_type: ConsentType
-    ) -> bool:
+    async def check_consent(self, user_id: str, consent_type: ConsentType) -> bool:
         """
         Check if user has given consent
 
@@ -235,10 +237,7 @@ class GDPRComplianceManager:
 
         # Get latest consent for this type
         user_consents = self.consent_records[user_id]
-        relevant_consents = [
-            c for c in user_consents
-            if c.consent_type == consent_type
-        ]
+        relevant_consents = [c for c in user_consents if c.consent_type == consent_type]
 
         if not relevant_consents:
             return consent_type == ConsentType.ESSENTIAL
@@ -252,11 +251,7 @@ class GDPRComplianceManager:
 
         return latest.granted
 
-    async def process_erasure_request(
-        self,
-        user_id: str,
-        verification_token: str
-    ) -> GDPRRequest:
+    async def process_erasure_request(self, user_id: str, verification_token: str) -> GDPRRequest:
         """
         Process right to erasure (right to be forgotten)
 
@@ -274,7 +269,7 @@ class GDPRComplianceManager:
                 user_id=user_id,
                 request_type=RequestType.ERASURE,
                 status=RequestStatus.PENDING,
-                verification_token=verification_token
+                verification_token=verification_token,
             )
 
             self.gdpr_requests[request.request_id] = request
@@ -308,7 +303,7 @@ class GDPRComplianceManager:
                 "activity_logs": False,
                 "analytics": False,
                 "content": False,
-                "backups": False
+                "backups": False,
             }
 
             # 1. Delete user profile data
@@ -347,10 +342,8 @@ class GDPRComplianceManager:
             raise
 
     async def process_portability_request(
-        self,
-        user_id: str,
-        format: str = "json"
-    ) -> Dict[str, Any]:
+        self, user_id: str, format: str = "json"
+    ) -> dict[str, Any]:
         """
         Process data portability request
 
@@ -367,7 +360,7 @@ class GDPRComplianceManager:
                 request_id=self._generate_request_id(),
                 user_id=user_id,
                 request_type=RequestType.PORTABILITY,
-                status=RequestStatus.IN_PROGRESS
+                status=RequestStatus.IN_PROGRESS,
             )
 
             self.gdpr_requests[request.request_id] = request
@@ -401,7 +394,7 @@ class GDPRComplianceManager:
             request.status = RequestStatus.REJECTED
             raise
 
-    async def _collect_user_data(self, user_id: str) -> Dict[str, Any]:
+    async def _collect_user_data(self, user_id: str) -> dict[str, Any]:
         """
         Collect all user data for export
 
@@ -426,15 +419,15 @@ class GDPRComplianceManager:
                     "type": c.consent_type.value,
                     "granted": c.granted,
                     "timestamp": c.timestamp.isoformat(),
-                    "purpose": c.purpose
+                    "purpose": c.purpose,
                 }
                 for c in self.consent_records.get(user_id, [])
-            ]
+            ],
         }
 
         return user_data
 
-    async def process_retention_policies(self) -> Dict[str, int]:
+    async def process_retention_policies(self) -> dict[str, int]:
         """
         Process data retention policies and delete expired data
 
@@ -462,7 +455,7 @@ class GDPRComplianceManager:
 
         return deletion_counts
 
-    def get_consent_history(self, user_id: str) -> List[Dict]:
+    def get_consent_history(self, user_id: str) -> list[dict]:
         """
         Get consent history for user
 
@@ -482,12 +475,12 @@ class GDPRComplianceManager:
                 "timestamp": c.timestamp.isoformat(),
                 "purpose": c.purpose,
                 "expiry": c.expiry.isoformat() if c.expiry else None,
-                "version": c.version
+                "version": c.version,
             }
             for c in self.consent_records[user_id]
         ]
 
-    def get_request_status(self, request_id: str) -> Optional[GDPRRequest]:
+    def get_request_status(self, request_id: str) -> GDPRRequest | None:
         """
         Get status of GDPR request
 
@@ -499,7 +492,7 @@ class GDPRComplianceManager:
         """
         return self.gdpr_requests.get(request_id)
 
-    async def verify_compliance(self, user_id: str) -> Dict[str, Any]:
+    async def verify_compliance(self, user_id: str) -> dict[str, Any]:
         """
         Verify GDPR compliance for a user
 
@@ -515,7 +508,7 @@ class GDPRComplianceManager:
             "consents": {},
             "data_categories": {},
             "pending_requests": [],
-            "compliance_score": 100
+            "compliance_score": 100,
         }
 
         # Check consents
@@ -525,15 +518,17 @@ class GDPRComplianceManager:
 
         # Check pending requests
         user_requests = [
-            r for r in self.gdpr_requests.values()
-            if r.user_id == user_id and r.status in [RequestStatus.PENDING, RequestStatus.IN_PROGRESS]
+            r
+            for r in self.gdpr_requests.values()
+            if r.user_id == user_id
+            and r.status in [RequestStatus.PENDING, RequestStatus.IN_PROGRESS]
         ]
         report["pending_requests"] = [
             {
                 "request_id": r.request_id,
                 "type": r.request_type.value,
                 "status": r.status.value,
-                "deadline": r.deadline.isoformat()
+                "deadline": r.deadline.isoformat(),
             }
             for r in user_requests
         ]
@@ -543,7 +538,7 @@ class GDPRComplianceManager:
             report["data_categories"][category] = {
                 "retention_days": policy.retention_days,
                 "legal_basis": policy.legal_basis,
-                "compliant": True  # Would check actual data age
+                "compliant": True,  # Would check actual data age
             }
 
         # Calculate compliance score
@@ -551,15 +546,13 @@ class GDPRComplianceManager:
             report["compliance_score"] -= 50
 
         missing_consents = sum(
-            1 for consent_type, granted in report["consents"].items()
+            1
+            for consent_type, granted in report["consents"].items()
             if not granted and consent_type != ConsentType.ESSENTIAL.value
         )
         report["compliance_score"] -= missing_consents * 5
 
-        overdue_requests = sum(
-            1 for r in user_requests
-            if r.deadline < datetime.now(timezone.utc)
-        )
+        overdue_requests = sum(1 for r in user_requests if r.deadline < datetime.now(timezone.utc))
         report["compliance_score"] -= overdue_requests * 20
 
         report["compliance_score"] = max(0, report["compliance_score"])
@@ -570,6 +563,7 @@ class GDPRComplianceManager:
     def _generate_request_id(self) -> str:
         """Generate unique request ID"""
         import uuid
+
         return f"GDPR-{uuid.uuid4().hex[:8].upper()}"
 
     async def _delete_user_data(self, user_id: str) -> bool:
@@ -611,11 +605,11 @@ class GDPRComplianceManager:
         # In production, interface with database
         return 0
 
-    def _format_json_export(self, data: Dict) -> str:
+    def _format_json_export(self, data: dict) -> str:
         """Format data as JSON"""
         return json.dumps(data, indent=2, default=str)
 
-    def _format_csv_export(self, data: Dict) -> str:
+    def _format_csv_export(self, data: dict) -> str:
         """Format data as CSV"""
         import csv
         import io
@@ -636,17 +630,12 @@ class GDPRComplianceManager:
 
         return output.getvalue()
 
-    async def _create_data_package(
-        self,
-        user_id: str,
-        data: Any,
-        format: str
-    ) -> Dict[str, Any]:
+    async def _create_data_package(self, user_id: str, data: Any, format: str) -> dict[str, Any]:
         """Create downloadable data package"""
         # Create ZIP archive with data
         zip_buffer = io.BytesIO()
 
-        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
             # Add main data file
             if format == "json":
                 zip_file.writestr(f"user_data_{user_id}.json", data)
@@ -658,7 +647,7 @@ class GDPRComplianceManager:
                 "export_date": datetime.now(timezone.utc).isoformat(),
                 "user_id": user_id,
                 "format": format,
-                "gdpr_request": True
+                "gdpr_request": True,
             }
             zip_file.writestr("metadata.json", json.dumps(metadata, indent=2))
 
@@ -681,7 +670,7 @@ For questions, contact: privacy@toolboxai.com
             "filename": f"gdpr_export_{user_id}_{datetime.now().strftime('%Y%m%d')}.zip",
             "content": zip_buffer.getvalue(),
             "mime_type": "application/zip",
-            "size": zip_buffer.tell()
+            "size": zip_buffer.tell(),
         }
 
     def _audit_consent(self, consent: ConsentRecord, action: str):
@@ -691,17 +680,17 @@ For questions, contact: privacy@toolboxai.com
             "action": action,
             "user_id": consent.user_id,
             "consent_type": consent.consent_type.value,
-            "granted": consent.granted
+            "granted": consent.granted,
         }
         logger.info(f"Consent audit: {json.dumps(audit)}")
 
-    def _audit_erasure(self, user_id: str, results: Dict):
+    def _audit_erasure(self, user_id: str, results: dict):
         """Audit erasure operation"""
         audit = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "action": "data_erasure",
             "user_id": user_id,
-            "results": results
+            "results": results,
         }
         logger.info(f"Erasure audit: {json.dumps(audit)}")
 
@@ -711,13 +700,13 @@ For questions, contact: privacy@toolboxai.com
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "action": "data_export",
             "user_id": user_id,
-            "format": format
+            "format": format,
         }
         logger.info(f"Portability audit: {json.dumps(audit)}")
 
 
 # Singleton instance
-_gdpr_manager: Optional[GDPRComplianceManager] = None
+_gdpr_manager: GDPRComplianceManager | None = None
 
 
 def get_gdpr_manager() -> GDPRComplianceManager:

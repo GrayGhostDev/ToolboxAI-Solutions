@@ -4,24 +4,23 @@ API v1 route registration
 
 from fastapi import APIRouter, FastAPI
 
-from apps.backend.core.logging import logging_manager
-
 # Import endpoint modules
 from apps.backend.api.v1.endpoints import (
-    auth,
-    agents,
-    content,
-    pusher,
-    websocket,
-    health,
     admin,
+    agents,
     analytics,
+    auth,
+    content,
+    health,
     lms,
     plugins,
+    pusher,
     roblox,
     terminal,
     users,
+    websocket,
 )
+from apps.backend.core.logging import logging_manager
 
 # Initialize logger
 logger = logging_manager.get_logger(__name__)

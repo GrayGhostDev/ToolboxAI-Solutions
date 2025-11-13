@@ -15,10 +15,10 @@ Version: 1.0.0
 Standards: pytest-asyncio, Python 3.12, 2025 Implementation Standards
 """
 
+from uuid import uuid4
+
 import pytest
 from httpx import AsyncClient
-from uuid import uuid4
-from unittest.mock import Mock, patch, AsyncMock
 
 
 class TestUserProfileEndpoints:
@@ -70,10 +70,7 @@ class TestUserProfileEndpoints:
         auth_headers: dict,
     ):
         """Test successful profile update"""
-        update_data = {
-            "display_name": "Updated Test Name",
-            "bio": "This is my updated bio text"
-        }
+        update_data = {"display_name": "Updated Test Name", "bio": "This is my updated bio text"}
 
         response = await async_client.patch(
             "/api/v1/users/me/profile",
@@ -93,10 +90,7 @@ class TestUserProfileEndpoints:
         auth_headers: dict,
     ):
         """Test profile update with invalid data types"""
-        invalid_data = {
-            "display_name": 12345,  # Should be string
-            "bio": None
-        }
+        invalid_data = {"display_name": 12345, "bio": None}  # Should be string
 
         response = await async_client.patch(
             "/api/v1/users/me/profile",
@@ -113,10 +107,7 @@ class TestUserProfileEndpoints:
         auth_headers: dict,
     ):
         """Test profile update with empty strings"""
-        update_data = {
-            "display_name": "",
-            "bio": ""
-        }
+        update_data = {"display_name": "", "bio": ""}
 
         response = await async_client.patch(
             "/api/v1/users/me/profile",
@@ -272,7 +263,7 @@ class TestUserCreationEndpoints:
             "username": f"newuser{uuid4().hex[:8]}",
             "password": "SecurePassword123!",
             "display_name": "New Test User",
-            "role": "student"
+            "role": "student",
         }
 
         response = await async_client.post(
@@ -463,7 +454,7 @@ class TestUserPreferencesEndpoints:
             "theme": "dark",
             "language": "en",
             "notifications_enabled": True,
-            "timezone": "UTC"
+            "timezone": "UTC",
         }
 
         response = await async_client.patch(
@@ -500,7 +491,7 @@ class TestUserPreferencesEndpoints:
         settings_data = {
             "email_notifications": True,
             "push_notifications": False,
-            "digest_frequency": "daily"
+            "digest_frequency": "daily",
         }
 
         response = await async_client.patch(
@@ -525,7 +516,7 @@ class TestPasswordManagement:
         password_data = {
             "current_password": "OldPassword123!",
             "new_password": "NewPassword456!",
-            "confirm_password": "NewPassword456!"
+            "confirm_password": "NewPassword456!",
         }
 
         response = await async_client.post(
@@ -546,7 +537,7 @@ class TestPasswordManagement:
         password_data = {
             "current_password": "OldPassword123!",
             "new_password": "NewPassword456!",
-            "confirm_password": "DifferentPassword789!"
+            "confirm_password": "DifferentPassword789!",
         }
 
         response = await async_client.post(
@@ -567,7 +558,7 @@ class TestPasswordManagement:
         password_data = {
             "current_password": "WrongPassword123!",
             "new_password": "NewPassword456!",
-            "confirm_password": "NewPassword456!"
+            "confirm_password": "NewPassword456!",
         }
 
         response = await async_client.post(

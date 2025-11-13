@@ -15,20 +15,18 @@ Features:
 - Graceful degradation when metrics fail
 """
 
-import time
 import asyncio
 import logging
-from typing import Callable, Optional, Dict, Any, Set
-from urllib.parse import urlparse
+import time
+from collections.abc import Callable
+from typing import Any
 
-from fastapi import FastAPI, Request, Response, HTTPException
+from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
-import uvloop  # For high-performance event loop
 
 from apps.backend.core.metrics import metrics
-from apps.backend.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +43,7 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
         self,
         app: ASGIApp,
         metrics_path: str = "/metrics",
-        skip_paths: Optional[Set[str]] = None,
+        skip_paths: set[str] | None = None,
         enable_request_size_tracking: bool = True,
         enable_response_size_tracking: bool = True,
         high_cardinality_limit: int = 1000,
@@ -165,8 +163,8 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
         handler: str,
         start_time: float,
         response: Response,
-        request_size: Optional[int],
-        error_type: Optional[str],
+        request_size: int | None,
+        error_type: str | None,
     ):
         """Record comprehensive request metrics"""
 
@@ -279,7 +277,7 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
 
         return "unknown_handler"
 
-    async def _get_request_size(self, request: Request) -> Optional[int]:
+    async def _get_request_size(self, request: Request) -> int | None:
         """Get request size in bytes with minimal overhead"""
         try:
             # Check Content-Length header first (most efficient)
@@ -299,7 +297,7 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
             logger.debug(f"Request size calculation error: {e}")
             return None
 
-    async def _get_response_size(self, response: Response) -> Optional[int]:
+    async def _get_response_size(self, response: Response) -> int | None:
         """Get response size in bytes with minimal overhead"""
         try:
             # Check Content-Length header first
@@ -350,7 +348,7 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
         self._rate_limit_cache[client_ip] = recent_requests + [current_time]
         return True
 
-    def get_middleware_stats(self) -> Dict[str, Any]:
+    def get_middleware_stats(self) -> dict[str, Any]:
         """Get middleware performance statistics"""
         return {
             "metrics_enabled": self._metrics_enabled,
@@ -370,7 +368,7 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
 
 
 def setup_prometheus_middleware(
-    app: FastAPI, metrics_path: str = "/metrics", skip_paths: Optional[Set[str]] = None, **kwargs
+    app: FastAPI, metrics_path: str = "/metrics", skip_paths: set[str] | None = None, **kwargs
 ) -> PrometheusMiddleware:
     """
     Setup Prometheus middleware for FastAPI application
@@ -463,7 +461,7 @@ class OptimizedPrometheusMiddleware(PrometheusMiddleware):
             except Exception as e:
                 logger.error(f"Batch processor error: {e}")
 
-    async def _process_batched_metric(self, metric_data: Dict[str, Any]):
+    async def _process_batched_metric(self, metric_data: dict[str, Any]):
         """Process individual metric from batch"""
         try:
             # Extract metric data and record

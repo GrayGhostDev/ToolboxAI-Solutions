@@ -9,7 +9,6 @@ Created: 2025-01-27
 Version: 1.0.0
 """
 
-import asyncio
 import hashlib
 import hmac
 import logging
@@ -17,26 +16,25 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
-from urllib.parse import urlencode, urlparse, parse_qs
-from uuid import UUID
-
-import aiohttp
+from typing import Any
+from urllib.parse import urlencode, urlparse
 
 logger = logging.getLogger(__name__)
 
 
 class CacheLevel(str, Enum):
     """CDN cache levels"""
+
     NO_CACHE = "no-cache"
-    SHORT = "short"      # 5 minutes
-    MEDIUM = "medium"    # 1 hour
-    LONG = "long"        # 24 hours
+    SHORT = "short"  # 5 minutes
+    MEDIUM = "medium"  # 1 hour
+    LONG = "long"  # 24 hours
     PERMANENT = "permanent"  # 30 days
 
 
 class ImageFormat(str, Enum):
     """Supported image formats for transformation"""
+
     AUTO = "auto"
     JPEG = "jpeg"
     PNG = "png"
@@ -46,6 +44,7 @@ class ImageFormat(str, Enum):
 
 class ResizeMode(str, Enum):
     """Image resize modes"""
+
     FIT = "fit"
     FILL = "fill"
     CROP = "crop"
@@ -55,50 +54,51 @@ class ResizeMode(str, Enum):
 @dataclass
 class ImageTransformation:
     """Image transformation parameters"""
-    width: Optional[int] = None
-    height: Optional[int] = None
-    quality: Optional[int] = None
-    format: Optional[ImageFormat] = None
+
+    width: int | None = None
+    height: int | None = None
+    quality: int | None = None
+    format: ImageFormat | None = None
     resize_mode: ResizeMode = ResizeMode.FIT
     crop_gravity: str = "center"
-    blur: Optional[int] = None
-    sharpen: Optional[int] = None
-    brightness: Optional[int] = None
-    contrast: Optional[int] = None
-    saturation: Optional[int] = None
-    rotate: Optional[int] = None
-    background_color: Optional[str] = None
+    blur: int | None = None
+    sharpen: int | None = None
+    brightness: int | None = None
+    contrast: int | None = None
+    saturation: int | None = None
+    rotate: int | None = None
+    background_color: str | None = None
 
-    def to_params(self) -> Dict[str, str]:
+    def to_params(self) -> dict[str, str]:
         """Convert to URL parameters"""
         params = {}
 
         if self.width:
-            params['w'] = str(self.width)
+            params["w"] = str(self.width)
         if self.height:
-            params['h'] = str(self.height)
+            params["h"] = str(self.height)
         if self.quality:
-            params['q'] = str(self.quality)
+            params["q"] = str(self.quality)
         if self.format and self.format != ImageFormat.AUTO:
-            params['f'] = self.format.value
+            params["f"] = self.format.value
         if self.resize_mode != ResizeMode.FIT:
-            params['fit'] = self.resize_mode.value
+            params["fit"] = self.resize_mode.value
         if self.crop_gravity != "center":
-            params['g'] = self.crop_gravity
+            params["g"] = self.crop_gravity
         if self.blur:
-            params['blur'] = str(self.blur)
+            params["blur"] = str(self.blur)
         if self.sharpen:
-            params['sharpen'] = str(self.sharpen)
+            params["sharpen"] = str(self.sharpen)
         if self.brightness:
-            params['brightness'] = str(self.brightness)
+            params["brightness"] = str(self.brightness)
         if self.contrast:
-            params['contrast'] = str(self.contrast)
+            params["contrast"] = str(self.contrast)
         if self.saturation:
-            params['saturation'] = str(self.saturation)
+            params["saturation"] = str(self.saturation)
         if self.rotate:
-            params['r'] = str(self.rotate)
+            params["r"] = str(self.rotate)
         if self.background_color:
-            params['bg'] = self.background_color
+            params["bg"] = self.background_color
 
         return params
 
@@ -106,35 +106,39 @@ class ImageTransformation:
 @dataclass
 class CDNConfiguration:
     """CDN configuration settings"""
+
     base_url: str
-    signing_key: Optional[str] = None
+    signing_key: str | None = None
     default_cache_level: CacheLevel = CacheLevel.MEDIUM
     enable_compression: bool = True
     enable_webp_conversion: bool = True
     enable_avif_conversion: bool = False
-    max_age_seconds: Dict[CacheLevel, int] = field(default_factory=lambda: {
-        CacheLevel.NO_CACHE: 0,
-        CacheLevel.SHORT: 300,
-        CacheLevel.MEDIUM: 3600,
-        CacheLevel.LONG: 86400,
-        CacheLevel.PERMANENT: 2592000
-    })
-    regions: List[str] = field(default_factory=lambda: ["us-east-1", "eu-west-1"])
-    custom_headers: Dict[str, str] = field(default_factory=dict)
+    max_age_seconds: dict[CacheLevel, int] = field(
+        default_factory=lambda: {
+            CacheLevel.NO_CACHE: 0,
+            CacheLevel.SHORT: 300,
+            CacheLevel.MEDIUM: 3600,
+            CacheLevel.LONG: 86400,
+            CacheLevel.PERMANENT: 2592000,
+        }
+    )
+    regions: list[str] = field(default_factory=lambda: ["us-east-1", "eu-west-1"])
+    custom_headers: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
 class CDNStats:
     """CDN performance statistics"""
+
     total_requests: int = 0
     cache_hits: int = 0
     cache_misses: int = 0
     bandwidth_bytes: int = 0
     avg_response_time_ms: float = 0.0
     error_count: int = 0
-    top_countries: List[Dict[str, Any]] = field(default_factory=list)
-    popular_files: List[Dict[str, Any]] = field(default_factory=list)
-    transformation_usage: Dict[str, int] = field(default_factory=dict)
+    top_countries: list[dict[str, Any]] = field(default_factory=list)
+    popular_files: list[dict[str, Any]] = field(default_factory=list)
+    transformation_usage: dict[str, int] = field(default_factory=dict)
 
     @property
     def cache_hit_ratio(self) -> float:
@@ -152,7 +156,7 @@ class CDNStats:
         """Get bandwidth in GB"""
         return self.bandwidth_bytes / (1024 * 1024 * 1024)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization"""
         return {
             "total_requests": self.total_requests,
@@ -166,7 +170,7 @@ class CDNStats:
             "error_count": self.error_count,
             "top_countries": self.top_countries,
             "popular_files": self.popular_files,
-            "transformation_usage": self.transformation_usage
+            "transformation_usage": self.transformation_usage,
         }
 
 
@@ -191,27 +195,35 @@ class CDNManager:
             config: CDN configuration
         """
         self.config = config
-        self._stats_cache: Dict[str, CDNStats] = {}
-        self._url_cache: Dict[str, Tuple[str, datetime]] = {}
+        self._stats_cache: dict[str, CDNStats] = {}
+        self._url_cache: dict[str, tuple[str, datetime]] = {}
 
         # Educational content-specific optimizations
         self.educational_presets = {
             "avatar": ImageTransformation(
-                width=150, height=150, quality=85,
-                format=ImageFormat.WEBP, resize_mode=ResizeMode.CROP
+                width=150,
+                height=150,
+                quality=85,
+                format=ImageFormat.WEBP,
+                resize_mode=ResizeMode.CROP,
             ),
             "thumbnail": ImageTransformation(
-                width=300, height=200, quality=80,
-                format=ImageFormat.WEBP, resize_mode=ResizeMode.FIT
+                width=300,
+                height=200,
+                quality=80,
+                format=ImageFormat.WEBP,
+                resize_mode=ResizeMode.FIT,
             ),
             "document_preview": ImageTransformation(
-                width=800, height=600, quality=75,
-                format=ImageFormat.WEBP, resize_mode=ResizeMode.FIT
+                width=800,
+                height=600,
+                quality=75,
+                format=ImageFormat.WEBP,
+                resize_mode=ResizeMode.FIT,
             ),
             "mobile_optimized": ImageTransformation(
-                width=480, quality=70,
-                format=ImageFormat.WEBP, resize_mode=ResizeMode.FIT
-            )
+                width=480, quality=70, format=ImageFormat.WEBP, resize_mode=ResizeMode.FIT
+            ),
         }
 
         logger.info(f"CDNManager initialized with base URL: {config.base_url}")
@@ -219,10 +231,10 @@ class CDNManager:
     async def get_optimized_url(
         self,
         storage_path: str,
-        transformation: Optional[ImageTransformation] = None,
-        cache_level: Optional[CacheLevel] = None,
+        transformation: ImageTransformation | None = None,
+        cache_level: CacheLevel | None = None,
         expires_in: int = 3600,
-        organization_id: Optional[str] = None
+        organization_id: str | None = None,
     ) -> str:
         """
         Get optimized CDN URL with transformations.
@@ -256,15 +268,15 @@ class CDNManager:
             # Add cache control
             cache_level = cache_level or self.config.default_cache_level
             if cache_level != CacheLevel.NO_CACHE:
-                params['cache'] = str(self.config.max_age_seconds[cache_level])
+                params["cache"] = str(self.config.max_age_seconds[cache_level])
 
             # Add organization context
             if organization_id:
-                params['org'] = organization_id
+                params["org"] = organization_id
 
             # Add compression hints
             if self.config.enable_compression:
-                params['compress'] = '1'
+                params["compress"] = "1"
 
             # Build URL with parameters
             if params:
@@ -291,8 +303,8 @@ class CDNManager:
         self,
         storage_path: str,
         preset_name: str,
-        cache_level: Optional[CacheLevel] = None,
-        organization_id: Optional[str] = None
+        cache_level: CacheLevel | None = None,
+        organization_id: str | None = None,
     ) -> str:
         """
         Get CDN URL with predefined transformation preset.
@@ -318,10 +330,10 @@ class CDNManager:
     async def get_responsive_urls(
         self,
         storage_path: str,
-        breakpoints: Optional[List[int]] = None,
-        cache_level: Optional[CacheLevel] = None,
-        organization_id: Optional[str] = None
-    ) -> Dict[str, str]:
+        breakpoints: list[int] | None = None,
+        cache_level: CacheLevel | None = None,
+        organization_id: str | None = None,
+    ) -> dict[str, str]:
         """
         Generate responsive image URLs for different screen sizes.
 
@@ -339,10 +351,7 @@ class CDNManager:
 
         for width in breakpoints:
             transformation = ImageTransformation(
-                width=width,
-                quality=80,
-                format=ImageFormat.WEBP,
-                resize_mode=ResizeMode.FIT
+                width=width, quality=80, format=ImageFormat.WEBP, resize_mode=ResizeMode.FIT
             )
 
             url = await self.get_optimized_url(
@@ -355,9 +364,7 @@ class CDNManager:
         return responsive_urls
 
     async def invalidate_cache(
-        self,
-        storage_paths: List[str],
-        organization_id: Optional[str] = None
+        self, storage_paths: list[str], organization_id: str | None = None
     ) -> bool:
         """
         Invalidate CDN cache for specified files.
@@ -372,10 +379,7 @@ class CDNManager:
         try:
             # Clear local cache
             for storage_path in storage_paths:
-                keys_to_remove = [
-                    key for key in self._url_cache.keys()
-                    if storage_path in key
-                ]
+                keys_to_remove = [key for key in self._url_cache.keys() if storage_path in key]
                 for key in keys_to_remove:
                     del self._url_cache[key]
 
@@ -394,8 +398,8 @@ class CDNManager:
     async def get_cdn_stats(
         self,
         organization_id: str,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
     ) -> CDNStats:
         """
         Get CDN performance statistics.
@@ -432,10 +436,7 @@ class CDNManager:
             return CDNStats()
 
     async def optimize_delivery(
-        self,
-        storage_path: str,
-        user_context: Dict[str, Any],
-        organization_id: Optional[str] = None
+        self, storage_path: str, user_context: dict[str, Any], organization_id: str | None = None
     ) -> str:
         """
         Optimize content delivery based on user context.
@@ -464,26 +465,20 @@ class CDNManager:
                     width=480,
                     quality=70 if connection_speed == "slow" else 80,
                     format=ImageFormat.WEBP,
-                    resize_mode=ResizeMode.FIT
+                    resize_mode=ResizeMode.FIT,
                 )
                 cache_level = CacheLevel.LONG
 
             elif device_type == "tablet":
                 # Tablet optimization
                 transformation = ImageTransformation(
-                    width=768,
-                    quality=80,
-                    format=ImageFormat.WEBP,
-                    resize_mode=ResizeMode.FIT
+                    width=768, quality=80, format=ImageFormat.WEBP, resize_mode=ResizeMode.FIT
                 )
 
             elif connection_speed == "slow":
                 # Low bandwidth optimization
                 transformation = ImageTransformation(
-                    width=800,
-                    quality=60,
-                    format=ImageFormat.WEBP,
-                    resize_mode=ResizeMode.FIT
+                    width=800, quality=60, format=ImageFormat.WEBP, resize_mode=ResizeMode.FIT
                 )
 
             # Get optimized URL
@@ -507,10 +502,7 @@ class CDNManager:
         """
         try:
             # Clear local caches
-            keys_to_remove = [
-                key for key in self._url_cache.keys()
-                if organization_id in key
-            ]
+            keys_to_remove = [key for key in self._url_cache.keys() if organization_id in key]
             for key in keys_to_remove:
                 del self._url_cache[key]
 
@@ -531,8 +523,8 @@ class CDNManager:
     def _generate_cache_key(
         self,
         storage_path: str,
-        transformation: Optional[ImageTransformation],
-        cache_level: Optional[CacheLevel]
+        transformation: ImageTransformation | None,
+        cache_level: CacheLevel | None,
     ) -> str:
         """Generate cache key for URL caching"""
         key_parts = [storage_path]
@@ -563,9 +555,7 @@ class CDNManager:
 
             # Generate HMAC signature
             signature = hmac.new(
-                self.config.signing_key.encode(),
-                payload.encode(),
-                hashlib.sha256
+                self.config.signing_key.encode(), payload.encode(), hashlib.sha256
             ).hexdigest()
 
             # Add signature to URL
@@ -577,9 +567,7 @@ class CDNManager:
             return url
 
     async def _send_invalidation_request(
-        self,
-        storage_paths: List[str],
-        organization_id: Optional[str]
+        self, storage_paths: list[str], organization_id: str | None
     ) -> bool:
         """Send cache invalidation request to CDN provider"""
         try:
@@ -589,7 +577,7 @@ class CDNManager:
             invalidation_data = {
                 "files": storage_paths,
                 "organization_id": organization_id,
-                "timestamp": time.time()
+                "timestamp": time.time(),
             }
 
             # Mock implementation
@@ -612,10 +600,7 @@ class CDNManager:
             return False
 
     async def _fetch_cdn_statistics(
-        self,
-        organization_id: str,
-        start_date: datetime,
-        end_date: datetime
+        self, organization_id: str, start_date: datetime, end_date: datetime
     ) -> CDNStats:
         """Fetch statistics from CDN provider"""
         try:
@@ -642,8 +627,8 @@ class CDNManager:
                     "avatar": 3000,
                     "thumbnail": 2500,
                     "mobile_optimized": 2000,
-                    "document_preview": 1500
-                }
+                    "document_preview": 1500,
+                },
             )
 
             return stats
@@ -654,29 +639,33 @@ class CDNManager:
 
     def is_image_file(self, storage_path: str) -> bool:
         """Check if file is an image that can be transformed"""
-        image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff', '.svg'}
-        file_ext = storage_path.lower().split('.')[-1] if '.' in storage_path else ''
-        return f'.{file_ext}' in image_extensions
+        image_extensions = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".tiff", ".svg"}
+        file_ext = storage_path.lower().split(".")[-1] if "." in storage_path else ""
+        return f".{file_ext}" in image_extensions
 
-    def get_cache_headers(self, cache_level: CacheLevel) -> Dict[str, str]:
+    def get_cache_headers(self, cache_level: CacheLevel) -> dict[str, str]:
         """Get appropriate cache headers for the given cache level"""
         max_age = self.config.max_age_seconds[cache_level]
 
         headers = {}
 
         if cache_level == CacheLevel.NO_CACHE:
-            headers.update({
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-                'Pragma': 'no-cache',
-                'Expires': '0'
-            })
+            headers.update(
+                {
+                    "Cache-Control": "no-cache, no-store, must-revalidate",
+                    "Pragma": "no-cache",
+                    "Expires": "0",
+                }
+            )
         else:
-            headers.update({
-                'Cache-Control': f'public, max-age={max_age}',
-                'Expires': (datetime.utcnow() + timedelta(seconds=max_age)).strftime(
-                    '%a, %d %b %Y %H:%M:%S GMT'
-                )
-            })
+            headers.update(
+                {
+                    "Cache-Control": f"public, max-age={max_age}",
+                    "Expires": (datetime.utcnow() + timedelta(seconds=max_age)).strftime(
+                        "%a, %d %b %Y %H:%M:%S GMT"
+                    ),
+                }
+            )
 
         # Add custom headers
         headers.update(self.config.custom_headers)

@@ -1,4 +1,5 @@
 import pytest_asyncio
+
 """
 Agent System Performance Tests
 Tests for AI agent execution times, memory usage, and scaling
@@ -14,13 +15,14 @@ if str(project_root) not in sys.path:
 
 
 import asyncio
-import time
-import pytest
-import statistics
-from typing import List, Dict, Any
 import json
-import psutil
 import os
+import statistics
+import time
+from typing import Any, Dict, List
+
+import psutil
+import pytest
 
 # Skip all tests in this module as they require external services
 pytestmark = pytest.mark.skip(reason="Performance tests require external services - run with --run-performance")

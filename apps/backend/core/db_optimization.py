@@ -5,36 +5,22 @@ and provides prepared statement patterns for frequent queries.
 Target: Reduce database latency from ~50ms to <30ms
 """
 
-import asyncio
-import logging
 import hashlib
+import logging
 import time
-from typing import Any, Dict, List, Optional, Tuple, Union, Callable
-from datetime import datetime, timedelta
-from functools import wraps
 from contextlib import asynccontextmanager
+from functools import wraps
+from typing import Any
 
-import asyncpg
 from sqlalchemy import (
     text,
-    select,
-    MetaData,
-    Table,
-    Column,
-    Integer,
-    String,
-    DateTime,
-    Boolean,
-    Text,
 )
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.engine.events import event
-from sqlalchemy.pool import QueuePool, NullPool
-from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.dialects import postgresql
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import QueuePool
 
+from apps.backend.core.cache import CacheConfig, CacheKey, cache
 from apps.backend.core.config import settings
-from apps.backend.core.cache import cache, CacheConfig, CacheKey
 
 logger = logging.getLogger(__name__)
 
@@ -116,7 +102,7 @@ class QueryStats:
         total_requests = self.cache_hits + self.cache_misses
         return self.cache_hits / total_requests if total_requests > 0 else 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "query_count": self.query_count,
             "total_time": self.total_time,
@@ -235,7 +221,7 @@ class QueryCache:
     def __init__(self):
         self.cache = cache
 
-    def _generate_query_key(self, query: str, params: Tuple = None) -> str:
+    def _generate_query_key(self, query: str, params: tuple = None) -> str:
         """Generate cache key for query and parameters"""
         # Normalize query (remove extra whitespace, convert to lowercase)
         normalized_query = " ".join(query.lower().split())
@@ -249,7 +235,7 @@ class QueryCache:
 
         return CacheKey.generate(CacheConfig.PREFIX_QUERY, query_hash)
 
-    async def get_cached_result(self, query: str, params: Tuple = None) -> Optional[Any]:
+    async def get_cached_result(self, query: str, params: tuple = None) -> Any | None:
         """Get cached query result"""
         cache_key = self._generate_query_key(query, params)
         result = await self.cache.get(cache_key)
@@ -260,7 +246,7 @@ class QueryCache:
         return result
 
     async def cache_result(
-        self, query: str, params: Tuple, result: Any, ttl: int = CacheConfig.MEDIUM_TTL
+        self, query: str, params: tuple, result: Any, ttl: int = CacheConfig.MEDIUM_TTL
     ):
         """Cache query result"""
         cache_key = self._generate_query_key(query, params)
@@ -331,7 +317,7 @@ class PreparedStatements:
             return self.statements[name]
         return None
 
-    def get_usage_stats(self) -> Dict[str, int]:
+    def get_usage_stats(self) -> dict[str, int]:
         """Get usage statistics for prepared statements"""
         return self._usage_count.copy()
 
@@ -416,8 +402,8 @@ class DatabaseOptimizer:
 
     async def execute_optimized_query(
         self,
-        query: Union[str, Any],
-        params: Dict[str, Any] = None,
+        query: str | Any,
+        params: dict[str, Any] = None,
         cache_ttl: int = CacheConfig.MEDIUM_TTL,
         use_cache: bool = True,
     ) -> Any:
@@ -468,7 +454,7 @@ class DatabaseOptimizer:
         return data
 
     async def execute_prepared_statement(
-        self, statement_name: str, params: Dict[str, Any] = None
+        self, statement_name: str, params: dict[str, Any] = None
     ) -> Any:
         """Execute prepared statement"""
 
@@ -483,7 +469,7 @@ class DatabaseOptimizer:
             use_cache=True,
         )
 
-    async def warm_query_cache(self, queries: List[Tuple[str, Dict[str, Any]]]):
+    async def warm_query_cache(self, queries: list[tuple[str, dict[str, Any]]]):
         """Pre-warm query cache with common queries"""
         logger.info(f"Warming query cache with {len(queries)} queries")
 
@@ -495,7 +481,7 @@ class DatabaseOptimizer:
 
         logger.info("Query cache warming completed")
 
-    async def get_connection_pool_stats(self) -> Dict[str, Any]:
+    async def get_connection_pool_stats(self) -> dict[str, Any]:
         """Get connection pool statistics"""
         if not self.engine.engine:
             return {"status": "not_initialized"}
@@ -511,11 +497,11 @@ class DatabaseOptimizer:
             "invalid_connections": pool.invalidated(),
         }
 
-    def get_query_stats(self) -> Dict[str, Any]:
+    def get_query_stats(self) -> dict[str, Any]:
         """Get query performance statistics"""
         return _query_stats.to_dict()
 
-    def get_prepared_statement_stats(self) -> Dict[str, Any]:
+    def get_prepared_statement_stats(self) -> dict[str, Any]:
         """Get prepared statement usage statistics"""
         return {
             "registered_statements": len(_prepared_statements.statements),
@@ -529,7 +515,7 @@ optimizer = DatabaseOptimizer()
 
 
 # Convenience functions for common patterns
-async def get_user_dashboard_optimized(user_id: int, role: str) -> Optional[Dict[str, Any]]:
+async def get_user_dashboard_optimized(user_id: int, role: str) -> dict[str, Any] | None:
     """Optimized dashboard data retrieval"""
 
     # Try to get from cache first
@@ -575,7 +561,7 @@ async def initialize_db_optimization():
         raise
 
 
-async def get_db_health() -> Dict[str, Any]:
+async def get_db_health() -> dict[str, Any]:
     """Get database health and performance metrics"""
     try:
         pool_stats = await optimizer.get_connection_pool_stats()

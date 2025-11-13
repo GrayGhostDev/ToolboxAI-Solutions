@@ -10,14 +10,13 @@ import logging
 import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Optional, Any
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field, validator
-from sqlalchemy.orm import Session
 
-from apps.backend.api.auth.auth import get_current_user, AuthorizationError
-from apps.backend.core.deps import get_current_organization_id
+from apps.backend.api.auth.auth import get_current_user
+
 
 # Mock implementations for organization functions (to be replaced with real implementation)
 def get_current_organization():
@@ -25,35 +24,31 @@ def get_current_organization():
     # This is a dependency that should return Optional[str]
     return Depends(lambda: None)
 
+
 def get_current_user_with_organization():
     """Returns user with organization context"""
     # Mock implementation
     return Depends(get_current_user)
 
+
 def require_organization_role(role: str):
     """Requires user to have specific role in organization"""
+
     # Mock implementation - returns a dependency checker function
     async def role_checker(current_user: User = Depends(get_current_user)) -> User:
         # In production, verify user has required role in organization
         return current_user
+
     return role_checker
+
 
 def create_organization_token(user_id: str, organization_id: str) -> str:
     """Creates JWT token with organization context"""
     # Mock implementation
     return "mock_token_with_org_context"
+
+
 from apps.backend.models.schemas import User
-from apps.backend.middleware.tenant import (
-    get_tenant_context,
-    require_tenant_context,
-    TenantContext
-)
-from database.models.tenant import (
-    Organization,
-    OrganizationStatus,
-    SubscriptionTier,
-    OrganizationInvitation
-)
 
 # Database session dependency would be imported here
 # from apps.backend.database.session import get_db
@@ -65,62 +60,67 @@ router = APIRouter()
 
 # === REQUEST/RESPONSE MODELS ===
 
+
 class OrganizationCreateRequest(BaseModel):
     """Request model for creating a new organization"""
+
     name: str = Field(..., min_length=2, max_length=200, description="Organization name")
     slug: str = Field(..., min_length=2, max_length=100, description="URL-friendly identifier")
-    display_name: Optional[str] = Field(None, max_length=250, description="Display name")
-    description: Optional[str] = Field(None, description="Organization description")
-    website: Optional[str] = Field(None, max_length=500, description="Organization website")
-    email: Optional[str] = Field(None, max_length=255, description="Contact email")
-    phone: Optional[str] = Field(None, max_length=50, description="Contact phone")
+    display_name: str | None = Field(None, max_length=250, description="Display name")
+    description: str | None = Field(None, description="Organization description")
+    website: str | None = Field(None, max_length=500, description="Organization website")
+    email: str | None = Field(None, max_length=255, description="Contact email")
+    phone: str | None = Field(None, max_length=50, description="Contact phone")
     organization_type: str = Field("education", description="Organization type")
-    industry: Optional[str] = Field(None, max_length=100, description="Industry")
-    size_category: Optional[str] = Field(None, max_length=50, description="Organization size")
+    industry: str | None = Field(None, max_length=100, description="Industry")
+    size_category: str | None = Field(None, max_length=50, description="Organization size")
     timezone: str = Field("UTC", max_length=100, description="Organization timezone")
     locale: str = Field("en-US", max_length=10, description="Organization locale")
 
-    @validator('slug')
+    @validator("slug")
     def validate_slug(cls, v):
         """Validate slug format"""
         import re
-        if not re.match(r'^[a-z0-9-]+$', v):
-            raise ValueError('Slug must contain only lowercase letters, numbers, and hyphens')
+
+        if not re.match(r"^[a-z0-9-]+$", v):
+            raise ValueError("Slug must contain only lowercase letters, numbers, and hyphens")
         return v
 
 
 class OrganizationUpdateRequest(BaseModel):
     """Request model for updating an organization"""
-    name: Optional[str] = Field(None, min_length=2, max_length=200)
-    display_name: Optional[str] = Field(None, max_length=250)
-    description: Optional[str] = Field(None)
-    website: Optional[str] = Field(None, max_length=500)
-    email: Optional[str] = Field(None, max_length=255)
-    phone: Optional[str] = Field(None, max_length=50)
-    timezone: Optional[str] = Field(None, max_length=100)
-    locale: Optional[str] = Field(None, max_length=10)
+
+    name: str | None = Field(None, min_length=2, max_length=200)
+    display_name: str | None = Field(None, max_length=250)
+    description: str | None = Field(None)
+    website: str | None = Field(None, max_length=500)
+    email: str | None = Field(None, max_length=255)
+    phone: str | None = Field(None, max_length=50)
+    timezone: str | None = Field(None, max_length=100)
+    locale: str | None = Field(None, max_length=10)
 
 
 class OrganizationResponse(BaseModel):
     """Response model for organization data"""
+
     id: str
     name: str
     slug: str
-    display_name: Optional[str]
-    description: Optional[str]
-    website: Optional[str]
-    email: Optional[str]
+    display_name: str | None
+    description: str | None
+    website: str | None
+    email: str | None
     organization_type: str
     subscription_tier: str
     status: str
     is_active: bool
     is_trial: bool
-    trial_days_remaining: Optional[int]
-    usage_percentage: Dict[str, float]
-    settings: Dict[str, Any]
-    features: List[str]
+    trial_days_remaining: int | None
+    usage_percentage: dict[str, float]
+    settings: dict[str, Any]
+    features: list[str]
     created_at: datetime
-    updated_at: Optional[datetime]
+    updated_at: datetime | None
 
     class Config:
         from_attributes = True
@@ -128,13 +128,14 @@ class OrganizationResponse(BaseModel):
 
 class OrganizationMemberResponse(BaseModel):
     """Response model for organization member"""
+
     id: str
     username: str
     email: str
     role: str
     organization_role: str
     joined_at: datetime
-    last_active: Optional[datetime]
+    last_active: datetime | None
     is_active: bool
 
     class Config:
@@ -143,11 +144,12 @@ class OrganizationMemberResponse(BaseModel):
 
 class InvitationCreateRequest(BaseModel):
     """Request model for creating organization invitations"""
+
     email: str = Field(..., max_length=255, description="Email address to invite")
     role: str = Field("member", description="Role to assign (admin, manager, teacher, member)")
-    invitation_message: Optional[str] = Field(None, description="Custom invitation message")
+    invitation_message: str | None = Field(None, description="Custom invitation message")
 
-    @validator('role')
+    @validator("role")
     def validate_role(cls, v):
         """Validate role value"""
         allowed_roles = ["admin", "manager", "teacher", "member"]
@@ -158,6 +160,7 @@ class InvitationCreateRequest(BaseModel):
 
 class InvitationResponse(BaseModel):
     """Response model for organization invitation"""
+
     id: str
     email: str
     role: str
@@ -175,13 +178,16 @@ class InvitationResponse(BaseModel):
 
 class SubscriptionUpdateRequest(BaseModel):
     """Request model for updating subscription"""
-    subscription_tier: str = Field(..., description="New subscription tier")
-    max_users: Optional[int] = Field(None, gt=0, description="Maximum users")
-    max_classes: Optional[int] = Field(None, ge=0, description="Maximum classes")
-    max_storage_gb: Optional[float] = Field(None, ge=0, description="Maximum storage in GB")
-    max_api_calls_per_month: Optional[int] = Field(None, gt=0, description="Maximum API calls per month")
 
-    @validator('subscription_tier')
+    subscription_tier: str = Field(..., description="New subscription tier")
+    max_users: int | None = Field(None, gt=0, description="Maximum users")
+    max_classes: int | None = Field(None, ge=0, description="Maximum classes")
+    max_storage_gb: float | None = Field(None, ge=0, description="Maximum storage in GB")
+    max_api_calls_per_month: int | None = Field(
+        None, gt=0, description="Maximum API calls per month"
+    )
+
+    @validator("subscription_tier")
     def validate_subscription_tier(cls, v):
         """Validate subscription tier"""
         allowed_tiers = ["free", "basic", "professional", "enterprise", "education"]
@@ -192,32 +198,42 @@ class SubscriptionUpdateRequest(BaseModel):
 
 # === HELPER FUNCTIONS ===
 
+
 def get_mock_db_session():
     """Mock database session for development. Replace with real DB session."""
+
     class MockSession:
         def query(self, model):
             return MockQuery()
+
         def add(self, obj):
             pass
+
         def commit(self):
             pass
+
         def refresh(self, obj):
             pass
+
         def close(self):
             pass
 
     class MockQuery:
         def filter(self, *args):
             return self
+
         def first(self):
             return None
+
         def all(self):
             return []
 
     return MockSession()
 
 
-def create_mock_organization(request: OrganizationCreateRequest, user_id: str) -> OrganizationResponse:
+def create_mock_organization(
+    request: OrganizationCreateRequest, user_id: str
+) -> OrganizationResponse:
     """Create a mock organization for development"""
     org_id = str(uuid.uuid4())
 
@@ -240,21 +256,22 @@ def create_mock_organization(request: OrganizationCreateRequest, user_id: str) -
             "classes": 0.0,
             "storage": 0.0,
             "api_calls": 0.0,
-            "roblox_sessions": 0.0
+            "roblox_sessions": 0.0,
         },
         settings={},
         features=["basic_content_generation", "basic_analytics"],
         created_at=datetime.now(timezone.utc),
-        updated_at=None
+        updated_at=None,
     )
 
 
 # === API ENDPOINTS ===
 
+
 @router.get("/current", response_model=OrganizationResponse)
 async def get_current_organization_info(
     current_user: User = Depends(get_current_user),
-    organization_id: Optional[str] = Depends(get_current_organization),
+    organization_id: str | None = Depends(get_current_organization),
     # db: Session = Depends(get_db)  # Uncomment when DB is available
 ):
     """
@@ -266,8 +283,7 @@ async def get_current_organization_info(
     """
     if not organization_id:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No organization context found in token"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="No organization context found in token"
         )
 
     # Mock implementation - replace with real database query
@@ -303,22 +319,18 @@ async def get_current_organization_info(
                 "classes": 40.0,
                 "storage": 15.0,
                 "api_calls": 30.0,
-                "roblox_sessions": 20.0
+                "roblox_sessions": 20.0,
             },
-            settings={
-                "auto_backup": True,
-                "email_notifications": True,
-                "api_rate_limit": 1000
-            },
+            settings={"auto_backup": True, "email_notifications": True, "api_rate_limit": 1000},
             features=[
                 "content_generation",
                 "advanced_analytics",
                 "custom_branding",
                 "api_access",
-                "priority_support"
+                "priority_support",
             ],
             created_at=datetime.now(timezone.utc) - timedelta(days=30),
-            updated_at=datetime.now(timezone.utc) - timedelta(days=1)
+            updated_at=datetime.now(timezone.utc) - timedelta(days=1),
         )
 
     return OrganizationResponse.from_orm(organization)
@@ -354,8 +366,8 @@ async def create_organization(
         extra={
             "organization_id": organization.id,
             "user_id": current_user.id,
-            "organization_name": organization.name
-        }
+            "organization_name": organization.name,
+        },
     )
 
     return organization
@@ -404,12 +416,12 @@ async def get_organization(
                 "classes": 30.0,
                 "storage": 45.0,
                 "api_calls": 75.0,
-                "roblox_sessions": 25.0
+                "roblox_sessions": 25.0,
             },
             settings={},
             features=["content_generation", "basic_analytics"],
             created_at=datetime.now(timezone.utc) - timedelta(days=60),
-            updated_at=datetime.now(timezone.utc) - timedelta(days=5)
+            updated_at=datetime.now(timezone.utc) - timedelta(days=5),
         )
 
     return OrganizationResponse.from_orm(organization)
@@ -438,10 +450,7 @@ async def update_organization(
     organization = None  # Mock result
 
     if not organization:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Organization not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
 
     # Update fields (mock implementation)
     logger.info(
@@ -449,8 +458,8 @@ async def update_organization(
         extra={
             "organization_id": organization_id,
             "user_id": current_user.id,
-            "updated_fields": request.dict(exclude_unset=True)
-        }
+            "updated_fields": request.dict(exclude_unset=True),
+        },
     )
 
     # Return updated organization (mock)
@@ -473,16 +482,16 @@ async def update_organization(
             "classes": 30.0,
             "storage": 45.0,
             "api_calls": 75.0,
-            "roblox_sessions": 25.0
+            "roblox_sessions": 25.0,
         },
         settings={},
         features=["content_generation", "advanced_analytics"],
         created_at=datetime.now(timezone.utc) - timedelta(days=60),
-        updated_at=datetime.now(timezone.utc)
+        updated_at=datetime.now(timezone.utc),
     )
 
 
-@router.get("/{organization_id}/members", response_model=List[OrganizationMemberResponse])
+@router.get("/{organization_id}/members", response_model=list[OrganizationMemberResponse])
 async def get_organization_members(
     organization_id: str,
     current_user: User = Depends(require_organization_role("member")),
@@ -513,7 +522,7 @@ async def get_organization_members(
             organization_role="admin",
             joined_at=datetime.now(timezone.utc) - timedelta(days=30),
             last_active=datetime.now(timezone.utc) - timedelta(hours=2),
-            is_active=True
+            is_active=True,
         ),
         OrganizationMemberResponse(
             id=str(uuid.uuid4()),
@@ -523,7 +532,7 @@ async def get_organization_members(
             organization_role="teacher",
             joined_at=datetime.now(timezone.utc) - timedelta(days=20),
             last_active=datetime.now(timezone.utc) - timedelta(hours=1),
-            is_active=True
+            is_active=True,
         ),
         OrganizationMemberResponse(
             id=str(uuid.uuid4()),
@@ -533,11 +542,11 @@ async def get_organization_members(
             organization_role="member",
             joined_at=datetime.now(timezone.utc) - timedelta(days=10),
             last_active=datetime.now(timezone.utc) - timedelta(minutes=30),
-            is_active=True
-        )
+            is_active=True,
+        ),
     ]
 
-    return mock_members[offset:offset + limit]
+    return mock_members[offset : offset + limit]
 
 
 @router.post("/{organization_id}/invite", response_model=InvitationResponse)
@@ -575,8 +584,8 @@ async def create_invitation(
             "invitation_id": invitation_id,
             "invited_email": request.email,
             "invited_by": current_user.id,
-            "role": request.role
-        }
+            "role": request.role,
+        },
     )
 
     # In production, save to database and send email
@@ -592,7 +601,7 @@ async def create_invitation(
         is_expired=False,
         is_valid=True,
         invited_by_id=current_user.id,
-        created_at=datetime.now(timezone.utc)
+        created_at=datetime.now(timezone.utc),
     )
 
 
@@ -620,10 +629,7 @@ async def update_subscription(
     organization = None  # Mock result
 
     if not organization:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Organization not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
 
     # Update subscription (mock implementation)
     logger.info(
@@ -632,8 +638,8 @@ async def update_subscription(
             "organization_id": organization_id,
             "user_id": current_user.id,
             "new_tier": request.subscription_tier,
-            "updated_limits": request.dict(exclude_unset=True)
-        }
+            "updated_limits": request.dict(exclude_unset=True),
+        },
     )
 
     # Return updated organization (mock)
@@ -656,12 +662,12 @@ async def update_subscription(
             "classes": 25.0,
             "storage": 30.0,
             "api_calls": 50.0,
-            "roblox_sessions": 15.0
+            "roblox_sessions": 15.0,
         },
         settings={},
         features=["content_generation", "advanced_analytics", "api_access"],
         created_at=datetime.now(timezone.utc) - timedelta(days=60),
-        updated_at=datetime.now(timezone.utc)
+        updated_at=datetime.now(timezone.utc),
     )
 
 
@@ -681,7 +687,7 @@ async def remove_organization_member(
     if user_id == current_user.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot remove yourself from the organization"
+            detail="Cannot remove yourself from the organization",
         )
 
     # In production, implement member removal logic
@@ -690,14 +696,15 @@ async def remove_organization_member(
         extra={
             "organization_id": organization_id,
             "removed_user_id": user_id,
-            "removed_by": current_user.id
-        }
+            "removed_by": current_user.id,
+        },
     )
 
     return {"message": "Member removed successfully"}
 
 
 # === UTILITY ENDPOINTS ===
+
 
 @router.get("/{organization_id}/usage")
 async def get_organization_usage(
@@ -720,14 +727,10 @@ async def get_organization_usage(
             "classes": {"current": 8, "limit": 20, "percentage": 40.0},
             "storage_gb": {"current": 2.5, "limit": 10.0, "percentage": 25.0},
             "api_calls": {"current": 7500, "limit": 10000, "percentage": 75.0},
-            "roblox_sessions": {"current": 3, "limit": 15, "percentage": 20.0}
+            "roblox_sessions": {"current": 3, "limit": 15, "percentage": 20.0},
         },
-        "trends": {
-            "users_growth": "+20%",
-            "api_calls_growth": "+15%",
-            "storage_growth": "+5%"
-        },
-        "generated_at": datetime.now(timezone.utc)
+        "trends": {"users_growth": "+20%", "api_calls_growth": "+15%", "storage_growth": "+5%"},
+        "generated_at": datetime.now(timezone.utc),
     }
 
     return mock_usage
@@ -751,20 +754,20 @@ async def get_organization_features(
             "advanced_analytics",
             "custom_branding",
             "api_access",
-            "priority_support"
+            "priority_support",
         ],
         "available_upgrades": [
             "white_label_solution",
             "dedicated_support",
             "custom_integrations",
-            "advanced_security"
+            "advanced_security",
         ],
         "feature_limits": {
             "content_generation_per_month": 1000,
             "api_calls_per_minute": 100,
             "storage_gb": 50,
-            "concurrent_sessions": 25
-        }
+            "concurrent_sessions": 25,
+        },
     }
 
     return mock_features

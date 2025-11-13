@@ -4,15 +4,13 @@ This file contains the full implementations of all agent classes with their TODO
 """
 
 import asyncio
-import json
 import logging
-from typing import Any, Dict, List, Optional
-from langchain_core.chat_history import InMemoryChatMessageHistory
-from langchain_core.messages import HumanMessage, AIMessage
-from langchain_openai import ChatOpenAI
+import uuid
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
-import uuid
+
+from langchain_core.messages import HumanMessage
+from langchain_openai import ChatOpenAI
 
 logger = logging.getLogger(__name__)
 
@@ -1276,8 +1274,9 @@ class MainCoordinator:
 
 def get_llm():
     """Get the LLM instance for agent implementations"""
-    from langchain_openai import ChatOpenAI
     import os
+
+    from langchain_openai import ChatOpenAI
 
     return ChatOpenAI(
         model="gpt-4-turbo-preview",

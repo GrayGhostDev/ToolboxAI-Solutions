@@ -1,6 +1,7 @@
 """MCP Server - Model Context Protocol Server Implementation"""
+
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -37,16 +38,12 @@ class MCPServer:
         self.is_running = False
         logger.info("MCP Server stopped")
 
-    async def handle_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_request(self, request: dict[str, Any]) -> dict[str, Any]:
         """Handle MCP protocol request"""
         request_type = request.get("type", "unknown")
         logger.info(f"Handling MCP request: {request_type}")
 
-        return {
-            "status": "success",
-            "type": request_type,
-            "response": "MCP request processed"
-        }
+        return {"status": "success", "type": request_type, "response": "MCP request processed"}
 
 
-__all__ = ['MCPServer']
+__all__ = ["MCPServer"]

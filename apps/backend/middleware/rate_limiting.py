@@ -21,21 +21,23 @@ Standards: Python 3.12, FastAPI async
 import logging
 import time
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
 from enum import Enum
-from typing import Callable, Optional, Dict
-from fastapi import Request, Response, HTTPException, status
-from starlock.middleware.base import BaseHTTPMiddleware
+
+from fastapi import HTTPException, Request, Response, status
 from starlette.types import ASGIApp
+from starlock.middleware.base import BaseHTTPMiddleware
 
 logger = logging.getLogger(__name__)
 
 
 # === Rate Limit Configuration ===
 
+
 class RateLimitStrategy(str, Enum):
     """Rate limiting strategy"""
+
     FIXED_WINDOW = "fixed_window"
     SLIDING_WINDOW = "sliding_window"
     TOKEN_BUCKET = "token_bucket"
@@ -44,8 +46,9 @@ class RateLimitStrategy(str, Enum):
 @dataclass
 class RateLimitConfig:
     """Rate limit configuration"""
+
     requests: int  # Number of requests allowed
-    window: int    # Time window in seconds
+    window: int  # Time window in seconds
     strategy: RateLimitStrategy = RateLimitStrategy.FIXED_WINDOW
 
 
@@ -55,17 +58,13 @@ DEFAULT_RATE_LIMITS = {
     # Authentication endpoints
     "/api/v1/auth/login": RateLimitConfig(requests=5, window=60),
     "/api/v1/auth/register": RateLimitConfig(requests=3, window=3600),
-
     # Upload endpoints
     "/api/v1/uploads/file": RateLimitConfig(requests=100, window=3600),
     "/api/v1/uploads/multipart": RateLimitConfig(requests=20, window=3600),
-
     # Bulk operations
     "/api/v1/users/notifications/bulk": RateLimitConfig(requests=10, window=60),
-
     # Export endpoints
     "/api/v1/analytics/export": RateLimitConfig(requests=20, window=3600),
-
     # Default for all other endpoints
     "default": RateLimitConfig(requests=1000, window=3600),
 }
@@ -81,6 +80,7 @@ TIER_MULTIPLIERS = {
 
 # === Rate Limit Store ===
 
+
 class RateLimitStore:
     """
     In-memory rate limit store.
@@ -89,7 +89,7 @@ class RateLimitStore:
     """
 
     def __init__(self):
-        self.requests: Dict[str, list] = defaultdict(list)
+        self.requests: dict[str, list] = defaultdict(list)
 
     def record_request(self, key: str, timestamp: float):
         """Record a request"""
@@ -98,10 +98,7 @@ class RateLimitStore:
     def get_request_count(self, key: str, window_start: float) -> int:
         """Get number of requests since window start"""
         # Clean old requests
-        self.requests[key] = [
-            ts for ts in self.requests[key]
-            if ts > window_start
-        ]
+        self.requests[key] = [ts for ts in self.requests[key] if ts > window_start]
         return len(self.requests[key])
 
     def clear_key(self, key: str):
@@ -116,6 +113,7 @@ _rate_limit_store = RateLimitStore()
 
 # === Rate Limiting Middleware ===
 
+
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """
     Rate limiting middleware with support for multiple strategies.
@@ -124,7 +122,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     def __init__(
         self,
         app: ASGIApp,
-        rate_limits: Dict[str, RateLimitConfig] = None,
+        rate_limits: dict[str, RateLimitConfig] = None,
         enabled: bool = True,
     ):
         super().__init__(app)
@@ -174,9 +172,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             oldest_request = min(self.store.requests[rate_limit_key])
             retry_after = int(oldest_request + config.window - current_time) + 1
 
-            logger.warning(
-                f"Rate limit exceeded for {rate_limit_key} on {request.url.path}"
-            )
+            logger.warning(f"Rate limit exceeded for {rate_limit_key} on {request.url.path}")
 
             # Return 429 Too Many Requests
             raise HTTPException(
@@ -192,7 +188,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                     "X-RateLimit-Remaining": "0",
                     "X-RateLimit-Reset": str(int(oldest_request + config.window)),
                     "Retry-After": str(retry_after),
-                }
+                },
             )
 
         # Record this request
@@ -255,8 +251,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         client_ip = request.client.host if request.client else "unknown"
         return f"ip:{client_ip}"
 
-    def _apply_tier_multiplier(self, request: Request,
-                               config: RateLimitConfig) -> int:
+    def _apply_tier_multiplier(self, request: Request, config: RateLimitConfig) -> int:
         """
         Apply tier-based multiplier to rate limit.
 
@@ -283,10 +278,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
 # === Rate Limit Decorator ===
 
+
 def rate_limit(
-    requests: int,
-    window: int,
-    strategy: RateLimitStrategy = RateLimitStrategy.FIXED_WINDOW
+    requests: int, window: int, strategy: RateLimitStrategy = RateLimitStrategy.FIXED_WINDOW
 ):
     """
     Decorator for applying custom rate limits to specific endpoints.
@@ -305,12 +299,11 @@ def rate_limit(
     Returns:
         Decorator function
     """
+
     def decorator(func):
         # Store rate limit config in function metadata
         func._rate_limit_config = RateLimitConfig(
-            requests=requests,
-            window=window,
-            strategy=strategy
+            requests=requests, window=window, strategy=strategy
         )
         return func
 
@@ -318,6 +311,7 @@ def rate_limit(
 
 
 # === IP Whitelist/Blacklist ===
+
 
 class IPFilterMiddleware(BaseHTTPMiddleware):
     """
@@ -329,8 +323,8 @@ class IPFilterMiddleware(BaseHTTPMiddleware):
     def __init__(
         self,
         app: ASGIApp,
-        whitelist: Optional[list[str]] = None,
-        blacklist: Optional[list[str]] = None,
+        whitelist: list[str] | None = None,
+        blacklist: list[str] | None = None,
     ):
         super().__init__(app)
         self.whitelist = set(whitelist or [])
@@ -355,25 +349,20 @@ class IPFilterMiddleware(BaseHTTPMiddleware):
         # Check blacklist
         if client_ip in self.blacklist:
             logger.warning(f"Blocked request from blacklisted IP: {client_ip}")
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied"
-            )
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
 
         # Check whitelist (if configured)
         if self.whitelist and client_ip not in self.whitelist:
             logger.warning(f"Blocked request from non-whitelisted IP: {client_ip}")
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied"
-            )
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
 
         return await call_next(request)
 
 
 # === Utilities ===
 
-def clear_rate_limits(key: Optional[str] = None):
+
+def clear_rate_limits(key: str | None = None):
     """
     Clear rate limits.
 

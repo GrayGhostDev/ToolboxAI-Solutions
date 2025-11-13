@@ -7,16 +7,16 @@ Background tasks for cleaning up old data, files, and sessions
 import os
 import shutil
 from datetime import datetime, timedelta
-from typing import Dict, List, Any
+from typing import Any
+
+import redis
 from celery import shared_task
 from celery.utils.log import get_task_logger
-import redis
-from sqlalchemy import select, delete
-from sqlalchemy.orm import Session
+from sqlalchemy import delete
 
-from apps.backend.core.database import get_db
 from apps.backend.core.config import settings
-from database.models import User, Session as DBSession
+from apps.backend.core.database import get_db
+from database.models import Session as DBSession
 
 logger = get_task_logger(__name__)
 
@@ -29,7 +29,7 @@ logger = get_task_logger(__name__)
     queue="maintenance",
     priority=1,
 )
-def cleanup_old_files(self, directory: str = "/tmp/toolboxai", days_old: int = 7) -> Dict[str, Any]:
+def cleanup_old_files(self, directory: str = "/tmp/toolboxai", days_old: int = 7) -> dict[str, Any]:
     """
     Clean up temporary files older than specified days
 
@@ -103,7 +103,7 @@ def cleanup_old_files(self, directory: str = "/tmp/toolboxai", days_old: int = 7
     queue="maintenance",
     priority=2,
 )
-def cleanup_expired_sessions(self, hours_old: int = 24) -> Dict[str, Any]:
+def cleanup_expired_sessions(self, hours_old: int = 24) -> dict[str, Any]:
     """
     Clean up expired database sessions and Redis session keys
 
@@ -177,7 +177,7 @@ def cleanup_expired_sessions(self, hours_old: int = 24) -> Dict[str, Any]:
     queue="maintenance",
     priority=1,
 )
-def cleanup_temp_storage(self) -> Dict[str, Any]:
+def cleanup_temp_storage(self) -> dict[str, Any]:
     """
     Clean up various temporary storage locations
 

@@ -2,19 +2,20 @@
 GraphQL context management for request-scoped dependencies
 """
 
-from typing import Any, Dict, Optional
-from fastapi import Request, Depends
+from typing import Any
+
+from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.database_service import get_async_session
-from apps.backend.api.auth.auth import get_current_user_optional
 from apps.backend.core.config import settings
+from database.database_service import get_async_session
+
 from .dataloaders import create_loaders
 
 
 async def get_context(
     request: Request, db: AsyncSession = Depends(get_async_session)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Create GraphQL context with request-scoped dependencies
 

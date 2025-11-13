@@ -4,21 +4,20 @@ Unit Tests for RBAC Middleware
 Tests automatic permission enforcement at the middleware level.
 """
 
-import pytest
-from unittest.mock import Mock, AsyncMock, patch, call
-from uuid import uuid4
 import time
+from unittest.mock import Mock, patch
+from uuid import uuid4
 
-from starlette.middleware.base import BaseHTTPMiddleware
+import pytest
+from starlette import status
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-from starlette import status
 
-from apps.backend.core.security.rbac_middleware import (
-    RBACMiddleware,
-    OrganizationScopingMiddleware
-)
 from apps.backend.core.security.rbac_manager import Role
+from apps.backend.core.security.rbac_middleware import (
+    OrganizationScopingMiddleware,
+    RBACMiddleware,
+)
 
 
 @pytest.fixture
@@ -32,12 +31,7 @@ def mock_app():
 @pytest.fixture
 def mock_admin_user_dict():
     """Create mock admin user dictionary."""
-    return {
-        "id": 1,
-        "email": "admin@example.com",
-        "role": Role.ADMIN,
-        "organization_id": uuid4()
-    }
+    return {"id": 1, "email": "admin@example.com", "role": Role.ADMIN, "organization_id": uuid4()}
 
 
 @pytest.fixture
@@ -47,7 +41,7 @@ def mock_teacher_user_dict():
         "id": 2,
         "email": "teacher@example.com",
         "role": Role.TEACHER,
-        "organization_id": uuid4()
+        "organization_id": uuid4(),
     }
 
 
@@ -58,7 +52,7 @@ def mock_student_user_dict():
         "id": 3,
         "email": "student@example.com",
         "role": Role.STUDENT,
-        "organization_id": uuid4()
+        "organization_id": uuid4(),
     }
 
 
@@ -75,8 +69,10 @@ def mock_request():
 @pytest.fixture
 def mock_call_next():
     """Create mock call_next function."""
+
     async def call_next(request):
         return JSONResponse({"message": "success"})
+
     return call_next
 
 
@@ -106,7 +102,7 @@ class TestRBACMiddlewareInitialization:
 
         assert len(middleware.bypass_patterns) > 0
         # Check pattern objects are compiled regex
-        assert all(hasattr(p, 'match') for p in middleware.bypass_patterns)
+        assert all(hasattr(p, "match") for p in middleware.bypass_patterns)
 
     def test_method_action_map_configured(self, mock_app):
         """Test that method-to-action mapping is configured."""
@@ -254,9 +250,9 @@ class TestPermissionChecking:
 
         # Teacher should pass these
         test_cases = [
-            ("/api/v1/content", "GET"),    # read:organization
-            ("/api/v1/content", "POST"),   # create:organization
-            ("/api/v1/agents", "GET"),     # read:organization
+            ("/api/v1/content", "GET"),  # read:organization
+            ("/api/v1/content", "POST"),  # create:organization
+            ("/api/v1/agents", "GET"),  # read:organization
         ]
 
         for path, method in test_cases:
@@ -276,9 +272,9 @@ class TestPermissionChecking:
 
         # Teacher should fail these (require :all scope)
         test_cases = [
-            ("/api/v1/users", "POST"),      # user:create:all
-            ("/api/v1/users/123", "DELETE"), # user:delete:all
-            ("/api/v1/system/config", "POST"), # system:configure
+            ("/api/v1/users", "POST"),  # user:create:all
+            ("/api/v1/users/123", "DELETE"),  # user:delete:all
+            ("/api/v1/system/config", "POST"),  # system:configure
         ]
 
         for path, method in test_cases:
@@ -286,8 +282,9 @@ class TestPermissionChecking:
             mock_request.method = method
 
             response = await middleware.dispatch(mock_request, mock_call_next)
-            assert response.status_code == status.HTTP_403_FORBIDDEN, \
-                f"Teacher should fail for {method} {path}"
+            assert (
+                response.status_code == status.HTTP_403_FORBIDDEN
+            ), f"Teacher should fail for {method} {path}"
 
     @pytest.mark.asyncio
     async def test_student_passes_read_checks(
@@ -379,7 +376,7 @@ class TestAuditLogging:
         mock_request.method = "GET"
         mock_request.state.user = mock_admin_user_dict
 
-        with patch('apps.backend.core.security.rbac_middleware.logger') as mock_logger:
+        with patch("apps.backend.core.security.rbac_middleware.logger") as mock_logger:
             response = await middleware.dispatch(mock_request, mock_call_next)
 
             # Check that INFO log was called for successful access
@@ -398,7 +395,7 @@ class TestAuditLogging:
         mock_request.method = "POST"  # Student can't create
         mock_request.state.user = mock_student_user_dict
 
-        with patch('apps.backend.core.security.rbac_middleware.logger') as mock_logger:
+        with patch("apps.backend.core.security.rbac_middleware.logger") as mock_logger:
             response = await middleware.dispatch(mock_request, mock_call_next)
 
             # Check that WARNING log was called for denied access
@@ -414,7 +411,7 @@ class TestAuditLogging:
         mock_request.method = "GET"
         mock_request.state.user = mock_admin_user_dict
 
-        with patch('apps.backend.core.security.rbac_middleware.logger') as mock_logger:
+        with patch("apps.backend.core.security.rbac_middleware.logger") as mock_logger:
             response = await middleware.dispatch(mock_request, mock_call_next)
 
             # Check that duration is logged
@@ -435,7 +432,7 @@ class TestAuditLogging:
             method="GET",
             permission="test:read",
             granted=True,
-            duration_ms=10.5
+            duration_ms=10.5,
         )
 
 
@@ -454,17 +451,22 @@ class TestRequestStateModification:
 
         # Track what gets set on request.state
         state_attrs = {}
+
         def track_setattr(obj, name, value):
             state_attrs[name] = value
             object.__setattr__(obj, name, value)
 
         original_setattr = mock_request.state.__setattr__
-        mock_request.state.__setattr__ = lambda name, value: track_setattr(mock_request.state, name, value)
+        mock_request.state.__setattr__ = lambda name, value: track_setattr(
+            mock_request.state, name, value
+        )
 
         response = await middleware.dispatch(mock_request, mock_call_next)
 
         # Check that granted_permission was set
-        assert "granted_permission" in state_attrs or hasattr(mock_request.state, "granted_permission")
+        assert "granted_permission" in state_attrs or hasattr(
+            mock_request.state, "granted_permission"
+        )
 
 
 class TestOrganizationScopingMiddleware:
@@ -484,16 +486,14 @@ class TestOrganizationScopingMiddleware:
         assert mock_request.state.organization_id == mock_teacher_user_dict["organization_id"]
 
     @pytest.mark.asyncio
-    async def test_handles_user_without_organization(
-        self, mock_app, mock_request, mock_call_next
-    ):
+    async def test_handles_user_without_organization(self, mock_app, mock_request, mock_call_next):
         """Test handling of user without organization."""
         middleware = OrganizationScopingMiddleware(mock_app)
         mock_request.state.user = {
             "id": 99,
             "email": "test@example.com",
             "role": Role.GUEST,
-            "organization_id": None
+            "organization_id": None,
         }
 
         # Should not raise error, just not set organization_id
@@ -515,9 +515,7 @@ class TestMiddlewareErrorHandling:
     """Test middleware error handling and edge cases."""
 
     @pytest.mark.asyncio
-    async def test_handles_malformed_user_object(
-        self, mock_app, mock_request, mock_call_next
-    ):
+    async def test_handles_malformed_user_object(self, mock_app, mock_request, mock_call_next):
         """Test handling of malformed user object."""
         middleware = RBACMiddleware(mock_app)
         mock_request.url.path = "/api/v1/content"
@@ -568,9 +566,7 @@ class TestPerformance:
         assert duration < 0.01, f"Middleware took {duration*1000:.2f}ms"
 
     @pytest.mark.asyncio
-    async def test_bypass_check_is_fast(
-        self, mock_app, mock_request, mock_call_next
-    ):
+    async def test_bypass_check_is_fast(self, mock_app, mock_request, mock_call_next):
         """Test that bypass checking is performant."""
         middleware = RBACMiddleware(mock_app)
         mock_request.url.path = "/api/health"

@@ -15,25 +15,25 @@ Tests cover:
 """
 
 import json
-import time
 import uuid
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
+
 import pytest
 
 # Import the module under test
 from core.coordinators.task_registry import (
-    TaskState,
-    TaskRegistry,
-    KEY_PREFIX,
     CLAIM_TTL_SEC,
     HEARTBEAT_TTL_SEC,
-    MAX_RETRIES
+    KEY_PREFIX,
+    MAX_RETRIES,
+    TaskRegistry,
+    TaskState,
 )
-
 
 # ============================================================================
 # Test Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def mock_redis():
@@ -81,6 +81,7 @@ def task_registry(mock_redis_adapter):
 # Test TaskState Enum
 # ============================================================================
 
+
 class TestTaskStateEnum:
     """Test TaskState enum"""
 
@@ -110,6 +111,7 @@ class TestTaskStateEnum:
 # Test TaskRegistry Initialization
 # ============================================================================
 
+
 class TestTaskRegistryInitialization:
     """Test TaskRegistry initialization"""
 
@@ -121,7 +123,7 @@ class TestTaskRegistryInitialization:
 
     def test_initialization_without_adapter(self):
         """Test initialization creates default Redis adapter"""
-        with patch('core.coordinators.task_registry.RedisAdapter') as mock_adapter_class:
+        with patch("core.coordinators.task_registry.RedisAdapter") as mock_adapter_class:
             mock_adapter_instance = Mock()
             mock_adapter_class.return_value = mock_adapter_instance
 
@@ -134,6 +136,7 @@ class TestTaskRegistryInitialization:
 # ============================================================================
 # Test Key Generation Methods
 # ============================================================================
+
 
 class TestKeyGenerationMethods:
     """Test Redis key generation methods"""
@@ -196,6 +199,7 @@ class TestKeyGenerationMethods:
 # Test Task Enqueueing
 # ============================================================================
 
+
 class TestTaskEnqueue:
     """Test task enqueueing"""
 
@@ -203,7 +207,7 @@ class TestTaskEnqueue:
         """Test basic task enqueueing"""
         payload = {"type": "test_task", "data": "test_data"}
 
-        with patch('time.time', return_value=1000.0):
+        with patch("time.time", return_value=1000.0):
             tid = task_registry.enqueue(payload)
 
         assert tid is not None
@@ -215,7 +219,7 @@ class TestTaskEnqueue:
         payload = {"type": "high_priority"}
         priority = 10.0
 
-        with patch('time.time', return_value=1000.0):
+        with patch("time.time", return_value=1000.0):
             tid = task_registry.enqueue(payload, priority=priority)
 
         assert tid is not None
@@ -233,17 +237,19 @@ class TestTaskEnqueue:
         """Test enqueueing generates UUID when no idempotency key"""
         payload = {"type": "task"}
 
-        with patch('uuid.uuid4', return_value=uuid.UUID('12345678-1234-5678-1234-567812345678')):
+        with patch("uuid.uuid4", return_value=uuid.UUID("12345678-1234-5678-1234-567812345678")):
             tid = task_registry.enqueue(payload)
 
-        assert tid == '12345678-1234-5678-1234-567812345678'
+        assert tid == "12345678-1234-5678-1234-567812345678"
 
     def test_enqueue_task_structure(self, task_registry):
         """Test enqueued task has correct structure"""
         payload = {"type": "test"}
 
-        with patch('time.time', return_value=1234.5):
-            with patch('uuid.uuid4', return_value=uuid.UUID('12345678-1234-5678-1234-567812345678')):
+        with patch("time.time", return_value=1234.5):
+            with patch(
+                "uuid.uuid4", return_value=uuid.UUID("12345678-1234-5678-1234-567812345678")
+            ):
                 tid = task_registry.enqueue(payload, priority=5.0)
 
         # Verify pipeline calls
@@ -254,20 +260,20 @@ class TestTaskEnqueue:
         call_args = pipeline.set.call_args_list[0]
         task_data = json.loads(call_args[0][1])
 
-        assert task_data['id'] == '12345678-1234-5678-1234-567812345678'
-        assert task_data['state'] == TaskState.QUEUED.value
-        assert task_data['priority'] == 5.0
-        assert task_data['created_at'] == 1234.5
-        assert task_data['updated_at'] == 1234.5
-        assert task_data['retries'] == 0
-        assert task_data['claimed_by'] == ""
-        assert task_data['payload'] == payload
+        assert task_data["id"] == "12345678-1234-5678-1234-567812345678"
+        assert task_data["state"] == TaskState.QUEUED.value
+        assert task_data["priority"] == 5.0
+        assert task_data["created_at"] == 1234.5
+        assert task_data["updated_at"] == 1234.5
+        assert task_data["retries"] == 0
+        assert task_data["claimed_by"] == ""
+        assert task_data["payload"] == payload
 
     def test_enqueue_adds_to_state_zset(self, task_registry):
         """Test enqueueing adds task to state zset"""
         payload = {"type": "test"}
 
-        with patch('time.time', return_value=1000.0):
+        with patch("time.time", return_value=1000.0):
             tid = task_registry.enqueue(payload)
 
         pipeline = task_registry.r.r.pipeline.return_value
@@ -277,6 +283,7 @@ class TestTaskEnqueue:
 # ============================================================================
 # Test Task Claiming
 # ============================================================================
+
 
 class TestTaskClaim:
     """Test task claiming"""
@@ -300,20 +307,20 @@ class TestTaskClaim:
             "updated_at": 1000.0,
             "retries": 0,
             "claimed_by": "",
-            "payload": {"type": "test"}
+            "payload": {"type": "test"},
         }
 
         mock_redis.zrange.return_value = [tid.encode()]
         mock_redis.get.return_value = json.dumps(task_data).encode()
         mock_redis.set.return_value = True  # Lock acquired
 
-        with patch('time.time', return_value=2000.0):
+        with patch("time.time", return_value=2000.0):
             result = task_registry.claim("worker-1")
 
         assert result is not None
-        assert result['id'] == tid
-        assert result['state'] == TaskState.CLAIMED.value
-        assert result['claimed_by'] == "worker-1"
+        assert result["id"] == tid
+        assert result["state"] == TaskState.CLAIMED.value
+        assert result["claimed_by"] == "worker-1"
 
     def test_claim_with_capability_matching(self, task_registry, mock_redis):
         """Test claiming with capability matching"""
@@ -321,7 +328,7 @@ class TestTaskClaim:
         task_data = {
             "id": tid,
             "state": TaskState.QUEUED.value,
-            "payload": {"capability": "python"}
+            "payload": {"capability": "python"},
         }
 
         mock_redis.zrange.return_value = [tid.encode()]
@@ -338,7 +345,7 @@ class TestTaskClaim:
         task_data = {
             "id": tid,
             "state": TaskState.QUEUED.value,
-            "payload": {"capability": "python"}
+            "payload": {"capability": "python"},
         }
 
         mock_redis.zrange.return_value = [tid.encode()]
@@ -351,11 +358,7 @@ class TestTaskClaim:
     def test_claim_wildcard_capability(self, task_registry, mock_redis):
         """Test claiming accepts wildcard capability"""
         tid = "task-wild"
-        task_data = {
-            "id": tid,
-            "state": TaskState.QUEUED.value,
-            "payload": {"capability": "*"}
-        }
+        task_data = {"id": tid, "state": TaskState.QUEUED.value, "payload": {"capability": "*"}}
 
         mock_redis.zrange.return_value = [tid.encode()]
         mock_redis.get.return_value = json.dumps(task_data).encode()
@@ -368,11 +371,7 @@ class TestTaskClaim:
     def test_claim_lock_acquisition_failure(self, task_registry, mock_redis):
         """Test claiming fails if lock cannot be acquired"""
         tid = "task-locked"
-        task_data = {
-            "id": tid,
-            "state": TaskState.QUEUED.value,
-            "payload": {}
-        }
+        task_data = {"id": tid, "state": TaskState.QUEUED.value, "payload": {}}
 
         mock_redis.zrange.return_value = [tid.encode()]
         mock_redis.get.return_value = json.dumps(task_data).encode()
@@ -397,11 +396,7 @@ class TestTaskClaim:
     def test_claim_sets_lock_with_ttl(self, task_registry, mock_redis):
         """Test claiming sets lock with TTL"""
         tid = "task-ttl"
-        task_data = {
-            "id": tid,
-            "state": TaskState.QUEUED.value,
-            "payload": {}
-        }
+        task_data = {"id": tid, "state": TaskState.QUEUED.value, "payload": {}}
 
         mock_redis.zrange.return_value = [tid.encode()]
         mock_redis.get.return_value = json.dumps(task_data).encode()
@@ -410,14 +405,14 @@ class TestTaskClaim:
         task_registry.claim("worker-1")
 
         # Verify lock set with NX and TTL
-        lock_call = [call for call in mock_redis.set.call_args_list
-                     if 'lock' in str(call)]
+        lock_call = [call for call in mock_redis.set.call_args_list if "lock" in str(call)]
         assert len(lock_call) > 0
 
 
 # ============================================================================
 # Test Worker Heartbeat
 # ============================================================================
+
 
 class TestWorkerHeartbeat:
     """Test worker heartbeat functionality"""
@@ -427,7 +422,7 @@ class TestWorkerHeartbeat:
         worker_id = "worker-1"
         tasks = ["task-1", "task-2"]
 
-        with patch('time.time', return_value=5000):
+        with patch("time.time", return_value=5000):
             task_registry.heartbeat(worker_id, tasks)
 
         pipeline = task_registry.r.r.pipeline.return_value
@@ -475,7 +470,7 @@ class TestWorkerHeartbeat:
         """Test heartbeat sets TTL on worker key"""
         worker_id = "worker-1"
 
-        with patch('time.time', return_value=3000):
+        with patch("time.time", return_value=3000):
             task_registry.heartbeat(worker_id, [])
 
         pipeline = task_registry.r.r.pipeline.return_value
@@ -488,28 +483,25 @@ class TestWorkerHeartbeat:
 # Test Task State Transitions
 # ============================================================================
 
+
 class TestTaskStateTransitions:
     """Test task state transition methods"""
 
     def test_start_task(self, task_registry, mock_redis):
         """Test starting a task"""
         tid = "task-start"
-        task_data = {
-            "id": tid,
-            "state": TaskState.CLAIMED.value,
-            "updated_at": 1000.0
-        }
+        task_data = {"id": tid, "state": TaskState.CLAIMED.value, "updated_at": 1000.0}
 
         mock_redis.get.return_value = json.dumps(task_data).encode()
 
-        with patch('time.time', return_value=2000.0):
+        with patch("time.time", return_value=2000.0):
             task_registry.start(tid)
 
         # Verify task state updated to IN_PROGRESS
         set_call = mock_redis.set.call_args_list[-1]
         updated_task = json.loads(set_call[0][1])
-        assert updated_task['state'] == TaskState.IN_PROGRESS.value
-        assert updated_task['updated_at'] == 2000.0
+        assert updated_task["state"] == TaskState.IN_PROGRESS.value
+        assert updated_task["updated_at"] == 2000.0
 
     def test_start_nonexistent_task(self, task_registry, mock_redis):
         """Test starting nonexistent task does nothing"""
@@ -522,15 +514,11 @@ class TestTaskStateTransitions:
     def test_complete_task(self, task_registry, mock_redis):
         """Test completing a task"""
         tid = "task-complete"
-        task_data = {
-            "id": tid,
-            "state": TaskState.IN_PROGRESS.value,
-            "updated_at": 1000.0
-        }
+        task_data = {"id": tid, "state": TaskState.IN_PROGRESS.value, "updated_at": 1000.0}
 
         mock_redis.get.return_value = json.dumps(task_data).encode()
 
-        with patch('time.time', return_value=3000.0):
+        with patch("time.time", return_value=3000.0):
             task_registry.complete(tid)
 
         pipeline = task_registry.r.r.pipeline.return_value
@@ -555,11 +543,7 @@ class TestTaskStateTransitions:
     def test_fail_task_with_requeue(self, task_registry, mock_redis):
         """Test failing task with requeue"""
         tid = "task-fail"
-        task_data = {
-            "id": tid,
-            "state": TaskState.IN_PROGRESS.value,
-            "retries": 0
-        }
+        task_data = {"id": tid, "state": TaskState.IN_PROGRESS.value, "retries": 0}
 
         mock_redis.get.return_value = json.dumps(task_data).encode()
 
@@ -568,35 +552,27 @@ class TestTaskStateTransitions:
         # Should increment retries
         set_call = mock_redis.set.call_args_list[0]
         updated_task = json.loads(set_call[0][1])
-        assert updated_task['retries'] == 1
+        assert updated_task["retries"] == 1
 
     def test_fail_task_without_requeue(self, task_registry, mock_redis):
         """Test failing task without requeue"""
         tid = "task-no-requeue"
-        task_data = {
-            "id": tid,
-            "state": TaskState.IN_PROGRESS.value,
-            "retries": 0
-        }
+        task_data = {"id": tid, "state": TaskState.IN_PROGRESS.value, "retries": 0}
 
         mock_redis.get.return_value = json.dumps(task_data).encode()
 
-        with patch('time.time', return_value=4000.0):
+        with patch("time.time", return_value=4000.0):
             task_registry.fail(tid, requeue=False)
 
         # Should mark as FAILED
         set_calls = mock_redis.set.call_args_list
         final_task = json.loads(set_calls[-1][0][1])
-        assert final_task['state'] == TaskState.FAILED.value
+        assert final_task["state"] == TaskState.FAILED.value
 
     def test_fail_task_max_retries_exceeded(self, task_registry, mock_redis):
         """Test failing task when max retries exceeded"""
         tid = "task-max-retries"
-        task_data = {
-            "id": tid,
-            "state": TaskState.IN_PROGRESS.value,
-            "retries": MAX_RETRIES
-        }
+        task_data = {"id": tid, "state": TaskState.IN_PROGRESS.value, "retries": MAX_RETRIES}
 
         mock_redis.get.return_value = json.dumps(task_data).encode()
 
@@ -605,7 +581,7 @@ class TestTaskStateTransitions:
         # Should mark as FAILED, not requeue
         set_calls = mock_redis.set.call_args_list
         final_task = json.loads(set_calls[-1][0][1])
-        assert final_task['state'] == TaskState.FAILED.value
+        assert final_task["state"] == TaskState.FAILED.value
 
     def test_requeue_task(self, task_registry, mock_redis):
         """Test requeuing a task"""
@@ -614,12 +590,12 @@ class TestTaskStateTransitions:
             "id": tid,
             "state": TaskState.FAILED.value,
             "claimed_by": "worker-1",
-            "updated_at": 1000.0
+            "updated_at": 1000.0,
         }
 
         mock_redis.get.return_value = json.dumps(task_data).encode()
 
-        with patch('time.time', return_value=5000.0):
+        with patch("time.time", return_value=5000.0):
             task_registry.requeue(tid)
 
         pipeline = task_registry.r.r.pipeline.return_value
@@ -631,11 +607,7 @@ class TestTaskStateTransitions:
     def test_requeue_clears_claimed_by(self, task_registry, mock_redis):
         """Test requeue clears claimed_by field"""
         tid = "task-clear"
-        task_data = {
-            "id": tid,
-            "state": TaskState.FAILED.value,
-            "claimed_by": "worker-1"
-        }
+        task_data = {"id": tid, "state": TaskState.FAILED.value, "claimed_by": "worker-1"}
 
         mock_redis.get.return_value = json.dumps(task_data).encode()
 
@@ -644,13 +616,14 @@ class TestTaskStateTransitions:
         pipeline = task_registry.r.r.pipeline.return_value
         set_call = pipeline.set.call_args_list[0]
         updated_task = json.loads(set_call[0][1])
-        assert updated_task['claimed_by'] == ""
-        assert updated_task['state'] == TaskState.QUEUED.value
+        assert updated_task["claimed_by"] == ""
+        assert updated_task["state"] == TaskState.QUEUED.value
 
 
 # ============================================================================
 # Test Queue Statistics
 # ============================================================================
+
 
 class TestQueueStatistics:
     """Test queue statistics"""
@@ -683,7 +656,7 @@ class TestQueueStatistics:
             TaskState.FAILED.value: 2,
             TaskState.NEEDS_REVIEW.value: 0,
             TaskState.NEEDS_FIX.value: 0,
-            TaskState.BLOCKED.value: 0
+            TaskState.BLOCKED.value: 0,
         }
 
         def zcard_side_effect(key):
@@ -702,6 +675,7 @@ class TestQueueStatistics:
 # Test Worker Listing
 # ============================================================================
 
+
 class TestWorkerListing:
     """Test worker listing"""
 
@@ -717,7 +691,7 @@ class TestWorkerListing:
         """Test listing active workers"""
         worker_keys = [
             f"{KEY_PREFIX}:worker:hb:worker-1".encode(),
-            f"{KEY_PREFIX}:worker:hb:worker-2".encode()
+            f"{KEY_PREFIX}:worker:hb:worker-2".encode(),
         ]
         mock_redis.keys.return_value = worker_keys
 
@@ -731,12 +705,12 @@ class TestWorkerListing:
 
         mock_redis.get.side_effect = get_side_effect
 
-        with patch('time.time', return_value=5020):
+        with patch("time.time", return_value=5020):
             workers = task_registry.list_workers()
 
         assert len(workers) == 2
-        assert any(w['worker_id'] == 'worker-1' for w in workers)
-        assert any(w['worker_id'] == 'worker-2' for w in workers)
+        assert any(w["worker_id"] == "worker-1" for w in workers)
+        assert any(w["worker_id"] == "worker-2" for w in workers)
 
     def test_list_workers_calculates_age(self, task_registry, mock_redis):
         """Test worker listing calculates age correctly"""
@@ -744,12 +718,12 @@ class TestWorkerListing:
         mock_redis.keys.return_value = [worker_key]
         mock_redis.get.return_value = b"4000"
 
-        with patch('time.time', return_value=5000):
+        with patch("time.time", return_value=5000):
             workers = task_registry.list_workers()
 
-        assert workers[0]['worker_id'] == 'worker-1'
-        assert workers[0]['last_seen'] == 4000
-        assert workers[0]['age'] == 1000
+        assert workers[0]["worker_id"] == "worker-1"
+        assert workers[0]["last_seen"] == 4000
+        assert workers[0]["age"] == 1000
 
     def test_list_workers_handles_missing_timestamp(self, task_registry, mock_redis):
         """Test worker listing handles missing timestamp"""
@@ -759,7 +733,7 @@ class TestWorkerListing:
 
         workers = task_registry.list_workers()
 
-        assert workers[0]['last_seen'] == 0
+        assert workers[0]["last_seen"] == 0
 
     def test_list_workers_handles_invalid_timestamp(self, task_registry, mock_redis):
         """Test worker listing handles invalid timestamp"""
@@ -770,12 +744,13 @@ class TestWorkerListing:
         workers = task_registry.list_workers()
 
         # Should default to 0
-        assert workers[0]['last_seen'] == 0
+        assert workers[0]["last_seen"] == 0
 
 
 # ============================================================================
 # Test Edge Cases and Error Handling
 # ============================================================================
+
 
 class TestEdgeCases:
     """Test edge cases and error handling"""
@@ -800,11 +775,8 @@ class TestEdgeCases:
         """Test enqueueing task with complex payload"""
         payload = {
             "type": "complex",
-            "nested": {
-                "data": [1, 2, 3],
-                "more": {"deep": "value"}
-            },
-            "array": ["a", "b", "c"]
+            "nested": {"data": [1, 2, 3], "more": {"deep": "value"}},
+            "array": ["a", "b", "c"],
         }
 
         tid = task_registry.enqueue(payload)
@@ -834,6 +806,7 @@ class TestEdgeCases:
 # Test Environment Variables
 # ============================================================================
 
+
 class TestEnvironmentVariables:
     """Test environment variable configuration"""
 
@@ -858,6 +831,7 @@ class TestEnvironmentVariables:
 # Test Task Lifecycle Integration
 # ============================================================================
 
+
 class TestTaskLifecycleIntegration:
     """Test complete task lifecycle"""
 
@@ -869,11 +843,7 @@ class TestTaskLifecycleIntegration:
 
         # 2. Claim
         mock_redis.zrange.return_value = [tid.encode()]
-        task_data = {
-            "id": tid,
-            "state": TaskState.QUEUED.value,
-            "payload": payload
-        }
+        task_data = {"id": tid, "state": TaskState.QUEUED.value, "payload": payload}
         mock_redis.get.return_value = json.dumps(task_data).encode()
         mock_redis.set.return_value = True
 
@@ -897,7 +867,7 @@ class TestTaskLifecycleIntegration:
             "id": tid,
             "state": TaskState.IN_PROGRESS.value,
             "retries": 0,
-            "payload": payload
+            "payload": payload,
         }
         mock_redis.get.return_value = json.dumps(task_data).encode()
 

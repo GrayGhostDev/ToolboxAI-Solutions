@@ -7,6 +7,7 @@ Tests the SendGrid integration by sending a simple test email
 import os
 import sys
 from datetime import datetime
+
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -14,6 +15,7 @@ load_dotenv()
 
 # Add project to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 
 def test_sendgrid_basic():
     """Test basic SendGrid email sending with minimal code"""
@@ -26,23 +28,23 @@ def test_sendgrid_basic():
     from sendgrid.helpers.mail import Mail
 
     # Get API key from environment
-    api_key = os.getenv('SENDGRID_API_KEY')
+    api_key = os.getenv("SENDGRID_API_KEY")
 
     if not api_key:
         print("❌ ERROR: SENDGRID_API_KEY not found in environment")
         return False
 
-    if not api_key.startswith('SG.'):
+    if not api_key.startswith("SG."):
         print("⚠️  WARNING: API key format may be invalid (should start with 'SG.')")
 
     print(f"✓ API Key loaded: {api_key[:20]}...")
 
     # Create message
     message = Mail(
-        from_email='noreply@toolboxai.com',
-        to_emails='test@example.com',  # This can be any email for testing
+        from_email="noreply@toolboxai.com",
+        to_emails="test@example.com",  # This can be any email for testing
         subject=f'SendGrid Test Email - {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}',
-        html_content='<strong>Hello from SendGrid!</strong><br><br>This is a test email sent via the SendGrid Python SDK.<br><br>If you received this, the integration is working correctly!'
+        html_content="<strong>Hello from SendGrid!</strong><br><br>This is a test email sent via the SendGrid Python SDK.<br><br>If you received this, the integration is working correctly!",
     )
 
     try:
@@ -66,7 +68,7 @@ def test_sendgrid_basic():
 
     except Exception as e:
         print(f"\n❌ ERROR: Failed to send email: {str(e)}")
-        if hasattr(e, 'body'):
+        if hasattr(e, "body"):
             print(f"   Error details: {e.body}")
         return False
 
@@ -79,8 +81,9 @@ def test_sendgrid_with_service():
 
     try:
         # Import our service
-        from apps.backend.services.email.sendgrid import SendGridEmailService
         import asyncio
+
+        from apps.backend.services.email.sendgrid import SendGridEmailService
 
         # Create service instance
         service = SendGridEmailService()
@@ -94,17 +97,17 @@ def test_sendgrid_with_service():
         # Test sending an email
         async def send_test():
             result = await service.send_email(
-                to_emails='test@example.com',
+                to_emails="test@example.com",
                 subject=f'Service Test - {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}',
-                html_content='<h2>Service Test Email</h2><p>This email was sent using the SendGridEmailService implementation.</p>',
-                text_content='Service Test Email\n\nThis email was sent using the SendGridEmailService implementation.'
+                html_content="<h2>Service Test Email</h2><p>This email was sent using the SendGridEmailService implementation.</p>",
+                text_content="Service Test Email\n\nThis email was sent using the SendGridEmailService implementation.",
             )
             return result
 
         print("\n📧 Sending email through service...")
         result = asyncio.run(send_test())
 
-        if result['success']:
+        if result["success"]:
             print(f"✅ SUCCESS: Email sent via service!")
             print(f"  - Message ID: {result.get('message_id')}")
             print(f"  - Status Code: {result.get('status_code')}")
@@ -117,6 +120,7 @@ def test_sendgrid_with_service():
     except Exception as e:
         print(f"❌ ERROR in service test: {str(e)}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -128,8 +132,8 @@ def check_eu_residency():
     print("=" * 60)
 
     # Check for EU-specific configuration
-    eu_api_key = os.getenv('SENDGRID_EU_API_KEY')
-    eu_enabled = os.getenv('SENDGRID_EU_RESIDENCY', 'false').lower() == 'true'
+    eu_api_key = os.getenv("SENDGRID_EU_API_KEY")
+    eu_enabled = os.getenv("SENDGRID_EU_RESIDENCY", "false").lower() == "true"
 
     if eu_api_key or eu_enabled:
         print("✓ EU Data Residency configuration detected")
@@ -155,6 +159,7 @@ def main():
 
     try:
         import sendgrid
+
         print(f"✓ sendgrid package installed (version {sendgrid.__version__})")
     except ImportError:
         print("❌ sendgrid package not installed")
@@ -163,6 +168,7 @@ def main():
 
     try:
         import python_http_client
+
         print(f"✓ python_http_client package installed")
     except ImportError:
         print("❌ python_http_client package not installed")

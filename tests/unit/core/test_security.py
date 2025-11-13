@@ -1,4 +1,5 @@
 import pytest_asyncio
+
 """
 Comprehensive Security Test Suite
 Tests all security implementations
@@ -13,23 +14,25 @@ if str(project_root) not in sys.path:
 
 
 
-import pytest
-import jwt
-import json
 import asyncio
-from datetime import datetime, timedelta
-from fastapi.testclient import TestClient
-from unittest.mock import Mock, patch, AsyncMock
-import redis
-import time
+import json
 import os
+import time
+from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, Mock, patch
+
+import jwt
+import pytest
+import redis
+from fastapi.testclient import TestClient
 
 # Set test secret key
 os.environ["JWT_SECRET_KEY"] = "test-secret-key-for-testing-only-32-chars-minimum-length"
 
+from apps.backend.api.auth.auth_secure import CSRFProtection, RateLimiter, SecureAuth
 from apps.backend.main import app
-from apps.backend.api.auth.auth_secure import SecureAuth, RateLimiter, CSRFProtection
-from tests.fixtures.pusher_test_utils import WebSocketManager, WebSocketHandler
+from tests.fixtures.pusher_test_utils import WebSocketHandler, WebSocketManager
+
 
 class TestAuthentication:
     """Test authentication security"""
@@ -219,8 +222,9 @@ async def test_websocket_rate_limiting(self, connection_manager):
         )
         
         # Test with a lower limit to make the test more reliable
-        from apps.backend.core.security.rate_limit_manager import get_rate_limit_manager
         from unittest.mock import patch
+
+        from apps.backend.core.security.rate_limit_manager import get_rate_limit_manager
         
         rlm = get_rate_limit_manager()
         

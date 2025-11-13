@@ -8,9 +8,10 @@ for FastAPI applications with proper security practices.
 import os
 import secrets
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Dict, Any
+from typing import Any
+
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from pydantic import BaseModel
 
@@ -28,10 +29,10 @@ security = HTTPBearer()
 class TokenData(BaseModel):
     """Token payload data model"""
 
-    username: Optional[str] = None
-    user_id: Optional[int] = None
-    role: Optional[str] = None
-    exp: Optional[datetime] = None
+    username: str | None = None
+    user_id: int | None = None
+    role: str | None = None
+    exp: datetime | None = None
 
 
 class Token(BaseModel):
@@ -40,10 +41,10 @@ class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
     expires_in: int
-    role: Optional[str] = None
+    role: str | None = None
 
 
-def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = None) -> str:
     """
     Create a JWT access token with guaranteed uniqueness.
 
@@ -69,11 +70,13 @@ def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta]
 
     # Add standard JWT claims for uniqueness and tracking
     now = datetime.now(timezone.utc)
-    to_encode.update({
-        "exp": expire,
-        "iat": now.timestamp(),  # Issued at with microsecond precision
-        "jti": secrets.token_urlsafe(16),  # Unique JWT ID (nonce)
-    })
+    to_encode.update(
+        {
+            "exp": expire,
+            "iat": now.timestamp(),  # Issued at with microsecond precision
+            "jti": secrets.token_urlsafe(16),  # Unique JWT ID (nonce)
+        }
+    )
 
     # Encode the token
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
@@ -142,8 +145,8 @@ async def get_current_user(
 
 
 async def get_current_user_optional(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
-) -> Optional[TokenData]:
+    credentials: HTTPAuthorizationCredentials | None = Depends(HTTPBearer(auto_error=False)),
+) -> TokenData | None:
     """
     FastAPI dependency to get current user optionally
     Returns None if no authentication is provided

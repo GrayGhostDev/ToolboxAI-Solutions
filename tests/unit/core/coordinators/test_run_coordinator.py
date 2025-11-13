@@ -13,20 +13,20 @@ Tests cover:
 - Edge cases and validation
 """
 
-import json
 from datetime import datetime
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import AsyncMock
+
 import pytest
-from fastapi.testclient import TestClient
 from fastapi import WebSocket
+from fastapi.testclient import TestClient
 
 # Import the module under test
 from core.coordinators import run_coordinator
 
-
 # ============================================================================
 # Test Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def client():
@@ -51,6 +51,7 @@ def mock_websocket():
 # ============================================================================
 # Test Application Initialization
 # ============================================================================
+
 
 class TestApplicationInitialization:
     """Test FastAPI application initialization"""
@@ -79,6 +80,7 @@ class TestApplicationInitialization:
 # ============================================================================
 # Test Health Check Endpoint
 # ============================================================================
+
 
 class TestHealthCheckEndpoint:
     """Test health check endpoint"""
@@ -146,6 +148,7 @@ class TestHealthCheckEndpoint:
 # Test Agent Registration
 # ============================================================================
 
+
 class TestAgentRegistration:
     """Test agent registration endpoint"""
 
@@ -154,7 +157,7 @@ class TestAgentRegistration:
         agent_data = {
             "agent_id": "agent-123",
             "name": "Test Agent",
-            "capabilities": ["python", "javascript"]
+            "capabilities": ["python", "javascript"],
         }
 
         response = client.post("/agents/register", json=agent_data)
@@ -225,7 +228,7 @@ class TestAgentRegistration:
             "agent_id": "agent-full",
             "name": "Full Agent",
             "capabilities": ["skill1", "skill2"],
-            "metadata": {"key": "value"}
+            "metadata": {"key": "value"},
         }
 
         client.post("/agents/register", json=agent_data)
@@ -239,6 +242,7 @@ class TestAgentRegistration:
 # ============================================================================
 # Test Task Assignment
 # ============================================================================
+
 
 class TestTaskAssignment:
     """Test task assignment endpoint"""
@@ -336,7 +340,7 @@ class TestTaskAssignment:
         task_data = {
             "action": "complex",
             "params": {"key1": "value1", "key2": 123},
-            "priority": "high"
+            "priority": "high",
         }
         response = client.post("/agents/agent-8/task", json=task_data)
         data = response.json()
@@ -347,6 +351,7 @@ class TestTaskAssignment:
 # ============================================================================
 # Test Agent Listing
 # ============================================================================
+
 
 class TestAgentListing:
     """Test agent listing endpoint"""
@@ -361,10 +366,7 @@ class TestAgentListing:
 
     def test_list_agents_with_one_agent(self, client):
         """Test listing agents with one registered"""
-        run_coordinator.agents["agent-1"] = {
-            "agent_id": "agent-1",
-            "name": "Test Agent"
-        }
+        run_coordinator.agents["agent-1"] = {"agent_id": "agent-1", "name": "Test Agent"}
 
         response = client.get("/agents")
         data = response.json()
@@ -389,7 +391,7 @@ class TestAgentListing:
             "agent_id": "agent-full",
             "name": "Full Agent",
             "status": "active",
-            "capabilities": ["python"]
+            "capabilities": ["python"],
         }
 
         response = client.get("/agents")
@@ -406,6 +408,7 @@ class TestAgentListing:
 # Test Task Listing
 # ============================================================================
 
+
 class TestTaskListing:
     """Test task listing endpoint"""
 
@@ -419,11 +422,9 @@ class TestTaskListing:
 
     def test_list_tasks_with_one_task(self, client):
         """Test listing tasks with one active"""
-        run_coordinator.active_tasks.append({
-            "task_id": "task-1",
-            "agent_id": "agent-1",
-            "status": "assigned"
-        })
+        run_coordinator.active_tasks.append(
+            {"task_id": "task-1", "agent_id": "agent-1", "status": "assigned"}
+        )
 
         response = client.get("/tasks")
         data = response.json()
@@ -444,13 +445,15 @@ class TestTaskListing:
 
     def test_list_tasks_returns_all_fields(self, client):
         """Test listing returns all task fields"""
-        run_coordinator.active_tasks.append({
-            "task_id": "task-full",
-            "agent_id": "agent-1",
-            "data": {"action": "process"},
-            "created_at": "2025-10-10T10:00:00",
-            "status": "assigned"
-        })
+        run_coordinator.active_tasks.append(
+            {
+                "task_id": "task-full",
+                "agent_id": "agent-1",
+                "data": {"action": "process"},
+                "created_at": "2025-10-10T10:00:00",
+                "status": "assigned",
+            }
+        )
 
         response = client.get("/tasks")
         data = response.json()
@@ -464,6 +467,7 @@ class TestTaskListing:
 # ============================================================================
 # Test WebSocket Communication
 # ============================================================================
+
 
 class TestWebSocketCommunication:
     """Test WebSocket agent communication"""
@@ -481,7 +485,7 @@ class TestWebSocketCommunication:
         # Simulate one message then disconnect
         mock_websocket.receive_json.side_effect = [
             {"type": "status", "data": "ready"},
-            Exception("disconnect")
+            Exception("disconnect"),
         ]
 
         try:
@@ -495,10 +499,7 @@ class TestWebSocketCommunication:
     async def test_websocket_sends_ack(self, mock_websocket):
         """Test WebSocket sends acknowledgment"""
         # Simulate one message then disconnect
-        mock_websocket.receive_json.side_effect = [
-            {"type": "heartbeat"},
-            Exception("disconnect")
-        ]
+        mock_websocket.receive_json.side_effect = [{"type": "heartbeat"}, Exception("disconnect")]
 
         try:
             await run_coordinator.agent_websocket(mock_websocket, "agent-3")
@@ -510,10 +511,7 @@ class TestWebSocketCommunication:
     @pytest.mark.asyncio
     async def test_websocket_ack_includes_agent_id(self, mock_websocket):
         """Test WebSocket ack includes agent_id"""
-        mock_websocket.receive_json.side_effect = [
-            {"type": "ping"},
-            Exception("disconnect")
-        ]
+        mock_websocket.receive_json.side_effect = [{"type": "ping"}, Exception("disconnect")]
 
         try:
             await run_coordinator.agent_websocket(mock_websocket, "agent-4")
@@ -529,10 +527,7 @@ class TestWebSocketCommunication:
     @pytest.mark.asyncio
     async def test_websocket_ack_includes_timestamp(self, mock_websocket):
         """Test WebSocket ack includes timestamp"""
-        mock_websocket.receive_json.side_effect = [
-            {"type": "message"},
-            Exception("disconnect")
-        ]
+        mock_websocket.receive_json.side_effect = [{"type": "message"}, Exception("disconnect")]
 
         try:
             await run_coordinator.agent_websocket(mock_websocket, "agent-5")
@@ -554,12 +549,7 @@ class TestWebSocketCommunication:
     @pytest.mark.asyncio
     async def test_websocket_continuous_communication(self, mock_websocket):
         """Test WebSocket handles continuous communication"""
-        messages = [
-            {"type": "msg1"},
-            {"type": "msg2"},
-            {"type": "msg3"},
-            Exception("disconnect")
-        ]
+        messages = [{"type": "msg1"}, {"type": "msg2"}, {"type": "msg3"}, Exception("disconnect")]
         mock_websocket.receive_json.side_effect = messages
 
         try:
@@ -574,6 +564,7 @@ class TestWebSocketCommunication:
 # ============================================================================
 # Test Edge Cases and Error Handling
 # ============================================================================
+
 
 class TestEdgeCases:
     """Test edge cases and error handling"""
@@ -621,6 +612,7 @@ class TestEdgeCases:
 # ============================================================================
 # Test Global State Management
 # ============================================================================
+
 
 class TestGlobalStateManagement:
     """Test global state management"""

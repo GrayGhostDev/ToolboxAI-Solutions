@@ -9,9 +9,10 @@ Version: 1.0.0
 Standards: pytest-async, Python 3.12
 """
 
+from uuid import uuid4
+
 import pytest
 from httpx import AsyncClient
-from uuid import uuid4
 
 
 class TestUserPreferences:
@@ -391,9 +392,7 @@ class TestUserNotifications:
         auth_headers: dict,
     ):
         """Test marking multiple notifications as read"""
-        payload = {
-            "notification_ids": [str(uuid4()) for _ in range(5)]
-        }
+        payload = {"notification_ids": [str(uuid4()) for _ in range(5)]}
 
         response = await async_client.post(
             "/api/v1/users/notifications/mark-read",
@@ -440,9 +439,7 @@ class TestUserNotifications:
         auth_headers: dict,
     ):
         """Test archiving notifications"""
-        payload = {
-            "notification_ids": [str(uuid4()) for _ in range(3)]
-        }
+        payload = {"notification_ids": [str(uuid4()) for _ in range(3)]}
 
         response = await async_client.post(
             "/api/v1/users/notifications/archive",

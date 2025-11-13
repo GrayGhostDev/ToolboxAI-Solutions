@@ -21,21 +21,16 @@ Standards: Python 3.12, FastAPI async, Pydantic v2
 import logging
 from datetime import datetime
 from enum import Enum
-from typing import Annotated, Optional, Any
+from typing import Annotated, Any, Optional
 from uuid import UUID
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    status,
-)
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.api.auth.auth import get_current_user
 from apps.backend.core.deps import get_async_db
-from apps.backend.middleware.tenant import get_tenant_context, TenantContext
+from apps.backend.middleware.tenant import TenantContext, get_tenant_context
 from apps.backend.models.schemas import User
 
 logger = logging.getLogger(__name__)

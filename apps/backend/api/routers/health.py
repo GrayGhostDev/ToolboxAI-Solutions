@@ -4,17 +4,16 @@ Health and System Status Router
 Handles health checks, system status, and monitoring endpoints.
 """
 
-import logging
 import time
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional
+from typing import Any
 
-from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from apps.backend.core.logging import logging_manager
 from apps.backend.core.config import settings
-from apps.backend.models.schemas import HealthCheck, BaseResponse
+from apps.backend.core.logging import logging_manager
+from apps.backend.models.schemas import BaseResponse, HealthCheck
 
 logger = logging_manager.get_logger(__name__)
 
@@ -244,7 +243,6 @@ async def reset_circuit_breaker(breaker_name: str) -> JSONResponse:
         JSONResponse: Reset operation result
     """
     try:
-        from apps.backend.core.circuit_breaker import get_all_circuit_breakers_status
 
         # For now, return success - implement actual reset logic when circuit breaker is enhanced
         return JSONResponse(
@@ -343,7 +341,7 @@ async def get_sentry_status() -> JSONResponse:
         )
 
 
-async def _check_all_services() -> Dict[str, Dict[str, Any]]:
+async def _check_all_services() -> dict[str, dict[str, Any]]:
     """
     Check status of all services
 
@@ -370,10 +368,9 @@ async def _check_all_services() -> Dict[str, Dict[str, Any]]:
     return services
 
 
-async def _check_database() -> Dict[str, Any]:
+async def _check_database() -> dict[str, Any]:
     """Check database connectivity"""
     try:
-        from apps.backend.services.database import db_service
 
         # Basic database check - implement actual connectivity test
         return {
@@ -389,7 +386,7 @@ async def _check_database() -> Dict[str, Any]:
         }
 
 
-async def _check_redis() -> Dict[str, Any]:
+async def _check_redis() -> dict[str, Any]:
     """Check Redis connectivity"""
     try:
         if hasattr(settings, "REDIS_URL") and settings.REDIS_URL:
@@ -412,7 +409,7 @@ async def _check_redis() -> Dict[str, Any]:
         }
 
 
-async def _check_pusher() -> Dict[str, Any]:
+async def _check_pusher() -> dict[str, Any]:
     """Check Pusher service"""
     try:
         from apps.backend.services.pusher_realtime import get_pusher_status
@@ -431,7 +428,7 @@ async def _check_pusher() -> Dict[str, Any]:
         }
 
 
-async def _check_agents() -> Dict[str, Any]:
+async def _check_agents() -> dict[str, Any]:
     """Check agent systems"""
     try:
         from apps.backend.agents.agent import get_agent_health
@@ -450,7 +447,7 @@ async def _check_agents() -> Dict[str, Any]:
         }
 
 
-async def _check_supabase() -> Dict[str, Any]:
+async def _check_supabase() -> dict[str, Any]:
     """Check Supabase connectivity"""
     try:
         from apps.backend.core.supabase_config import health_check_supabase

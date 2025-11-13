@@ -5,11 +5,11 @@ Direct bcrypt implementation that avoids passlib compatibility issues
 while following OWASP recommendations.
 """
 
-import bcrypt
-import hashlib
 import base64
+import hashlib
 import logging
-from typing import Optional
+
+import bcrypt
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ class BcryptHandler:
     - Salt generation
     """
 
-    def __init__(self, rounds: int = 12, pepper: Optional[str] = None):
+    def __init__(self, rounds: int = 12, pepper: str | None = None):
         """
         Initialize BCrypt handler
 

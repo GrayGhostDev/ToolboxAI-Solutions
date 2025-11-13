@@ -5,12 +5,9 @@ features using Playwright. Migrated from WebSocket to Pusher patterns.
 """
 
 import asyncio
-import json
-import time
-from typing import Any, Dict, List, Optional
 
 import pytest
-from playwright.async_api import Page, WebSocket, async_playwright
+from playwright.async_api import Page, async_playwright
 
 
 @pytest.mark.e2e
@@ -50,8 +47,8 @@ class TestPusherConnections:
             )
 
             # Verify Pusher connection established
-            assert pusher_status['connected'], f"Pusher not connected: {pusher_status['state']}"
-            assert pusher_status.get('socket_id'), "No socket ID assigned"
+            assert pusher_status["connected"], f"Pusher not connected: {pusher_status['state']}"
+            assert pusher_status.get("socket_id"), "No socket ID assigned"
 
             # Test Pusher messaging by checking subscribed channels
             channels = await page.evaluate(
@@ -78,8 +75,7 @@ class TestPusherConnections:
 
             # Track connection state changes
             await page.expose_function(
-                "trackStateChange",
-                lambda state: print(f"Pusher state changed: {state}")
+                "trackStateChange", lambda state: print(f"Pusher state changed: {state}")
             )
 
             await page.goto("http://localhost:5179")
@@ -114,7 +110,11 @@ class TestPusherConnections:
             offline_state = await page.evaluate(
                 """() => window.pusher ? window.pusher.connection.state : 'not initialized'"""
             )
-            assert offline_state in ["unavailable", "disconnected", "connecting"], f"Unexpected offline state: {offline_state}"
+            assert offline_state in [
+                "unavailable",
+                "disconnected",
+                "connecting",
+            ], f"Unexpected offline state: {offline_state}"
 
             # Restore network
             await context.set_offline(False)
@@ -146,12 +146,10 @@ class TestPusherConnections:
             page2_events = []
 
             await page1.expose_function(
-                "recordPage1Event",
-                lambda event: page1_events.append(event)
+                "recordPage1Event", lambda event: page1_events.append(event)
             )
             await page2.expose_function(
-                "recordPage2Event",
-                lambda event: page2_events.append(event)
+                "recordPage2Event", lambda event: page2_events.append(event)
             )
 
             # Navigate both pages
@@ -288,9 +286,7 @@ class TestPusherIntegration:
             # Verify expected channels are subscribed
             expected_channels = ["dashboard-updates", "content-generation"]
             for channel in expected_channels:
-                channel_info = next(
-                    (c for c in subscribed_channels if c["name"] == channel), None
-                )
+                channel_info = next((c for c in subscribed_channels if c["name"] == channel), None)
                 assert channel_info, f"Channel {channel} not found"
                 assert channel_info["subscribed"], f"Channel {channel} not subscribed"
 
@@ -307,8 +303,7 @@ class TestPusherIntegration:
             events_received = []
 
             await page.expose_function(
-                "recordPusherEvent",
-                lambda event: events_received.append(event)
+                "recordPusherEvent", lambda event: events_received.append(event)
             )
 
             await page.goto("http://localhost:5179")
@@ -395,12 +390,16 @@ class TestPusherLoadTesting:
                 connection_states.append(pusher_state)
 
                 # Verify user connected
-                assert pusher_state['state'] == 'connected', f"User {i} Pusher not connected: {pusher_state['state']}"
-                assert pusher_state.get('socket_id'), f"User {i} has no socket ID"
+                assert (
+                    pusher_state["state"] == "connected"
+                ), f"User {i} Pusher not connected: {pusher_state['state']}"
+                assert pusher_state.get("socket_id"), f"User {i} has no socket ID"
                 print(f"User {i}: Connected with {pusher_state.get('channels', 0)} channels")
 
             # Verify all users have unique socket IDs
-            socket_ids = [state.get('socket_id') for state in connection_states if state.get('socket_id')]
+            socket_ids = [
+                state.get("socket_id") for state in connection_states if state.get("socket_id")
+            ]
             assert len(socket_ids) == len(set(socket_ids)), "Duplicate socket IDs detected"
 
             # Clean up
@@ -420,8 +419,7 @@ class TestPusherLoadTesting:
             # Track received events
             events_received = []
             await page.expose_function(
-                "recordPusherEvent",
-                lambda event: events_received.append(event)
+                "recordPusherEvent", lambda event: events_received.append(event)
             )
 
             await page.goto("http://localhost:5179")
@@ -483,7 +481,9 @@ class TestPusherLoadTesting:
             # Verify events were handled
             print(f"Received {len(events_received)} Pusher events")
             assert len(events_received) > 0, "No Pusher events received during burst test"
-            assert len(events_received) >= 50, f"Expected at least 50 events, got {len(events_received)}"
+            assert (
+                len(events_received) >= 50
+            ), f"Expected at least 50 events, got {len(events_received)}"
 
             await browser.close()
 
@@ -495,12 +495,8 @@ class TestPusherLoadTesting:
 
 def pytest_configure(config):
     """Configure pytest for Playwright tests."""
-    config.addinivalue_line(
-        "markers", "e2e: End-to-end tests using Playwright"
-    )
-    config.addinivalue_line(
-        "markers", "slow: Slow tests that may take longer to execute"
-    )
+    config.addinivalue_line("markers", "e2e: End-to-end tests using Playwright")
+    config.addinivalue_line("markers", "slow: Slow tests that may take longer to execute")
 
 
 @pytest.fixture(scope="session")

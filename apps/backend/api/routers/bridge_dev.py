@@ -5,10 +5,11 @@ These endpoints provide a minimal local bridge for the Studio plugin during deve
 In production, a dedicated bridge service should implement these with proper auth and Pusher relay.
 """
 
+from datetime import datetime
+from typing import Any
+
 from fastapi import APIRouter, Body
 from pydantic import BaseModel
-from typing import Dict, Any, List, Optional
-from datetime import datetime
 
 router = APIRouter(tags=["Dev Bridge"])
 
@@ -18,15 +19,15 @@ class Message(BaseModel):
     timestamp: float
     plugin_id: str
     studio_id: str
-    data: Dict[str, Any]
+    data: dict[str, Any]
 
 
-_SESSIONS: Dict[str, Dict[str, Any]] = {}
-_QUEUES: Dict[str, List[Message]] = {}
+_SESSIONS: dict[str, dict[str, Any]] = {}
+_QUEUES: dict[str, list[Message]] = {}
 
 
 @router.post("/register_plugin")
-def register_plugin(payload: Dict[str, Any] = Body(...)):
+def register_plugin(payload: dict[str, Any] = Body(...)):
     studio_id = payload.get("studio_id") or "studio"
     session_id = f"session_{int(datetime.utcnow().timestamp())}"
     _SESSIONS[session_id] = {
@@ -38,7 +39,7 @@ def register_plugin(payload: Dict[str, Any] = Body(...)):
 
 
 @router.post("/unregister_plugin")
-def unregister_plugin(payload: Dict[str, Any] = Body(...)):
+def unregister_plugin(payload: dict[str, Any] = Body(...)):
     session_id = payload.get("session_id")
     _SESSIONS.pop(session_id, None)
     _QUEUES.pop(session_id, None)
@@ -53,7 +54,7 @@ def plugin_send_message(msg: Message):
 
 
 @router.post("/plugin/messages")
-def plugin_messages(payload: Dict[str, Any] = Body(...)):
+def plugin_messages(payload: dict[str, Any] = Body(...)):
     plugin_id = payload.get("plugin_id")
     messages = _QUEUES.get(plugin_id, [])
     _QUEUES[plugin_id] = []
@@ -69,4 +70,3 @@ def pusher_status():
         "channel": "toolboxai-dev",
         "since": datetime.utcnow().isoformat() + "Z",
     }
-

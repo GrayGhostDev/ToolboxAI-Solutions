@@ -6,16 +6,15 @@ Handles WebSocket message routing and agent communication.
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from apps.backend.core.config import settings
 from apps.backend.api.auth.auth import get_current_user
 from apps.backend.models.schemas import User
-from apps.backend.services.roblox.ai_agent import roblox_ai_agent
 from apps.backend.services.pusher_realtime import get_pusher_service
+from apps.backend.services.roblox.ai_agent import roblox_ai_agent
 
 pusher_service = get_pusher_service()
 
@@ -28,7 +27,7 @@ router = APIRouter(prefix="/roblox-ai", tags=["roblox-ai"])
 class ChatMessageRequest(BaseModel):
     conversation_id: str = Field(..., description="Unique conversation identifier")
     message: str = Field(..., min_length=1, max_length=2000, description="User message")
-    context: Optional[Dict[str, Any]] = Field(default=None, description="Additional context")
+    context: dict[str, Any] | None = Field(default=None, description="Additional context")
 
 
 class ChatMessageResponse(BaseModel):
@@ -39,7 +38,7 @@ class ChatMessageResponse(BaseModel):
 
 class GenerateEnvironmentRequest(BaseModel):
     conversation_id: str = Field(..., description="Conversation identifier")
-    spec: Dict[str, Any] = Field(..., description="Environment specification")
+    spec: dict[str, Any] = Field(..., description="Environment specification")
 
 
 class GenerateEnvironmentResponse(BaseModel):
@@ -50,7 +49,7 @@ class GenerateEnvironmentResponse(BaseModel):
 
 class ConversationStatusResponse(BaseModel):
     conversation_id: str
-    spec: Dict[str, Any]
+    spec: dict[str, Any]
     missing_fields: list[str]
     ready_for_generation: bool
 
@@ -171,7 +170,7 @@ async def clear_conversation(conversation_id: str, current_user: User = Depends(
 
 
 @router.post("/webhook/pusher")
-async def handle_pusher_webhook(request_data: Dict[str, Any]):
+async def handle_pusher_webhook(request_data: dict[str, Any]):
     """
     Handle Pusher webhook events for agent chat
     """

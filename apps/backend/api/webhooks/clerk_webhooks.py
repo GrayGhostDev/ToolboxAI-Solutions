@@ -3,13 +3,14 @@ Clerk Webhook Handler for ToolboxAI (2025)
 Handles user lifecycle events from Clerk
 """
 
-import os
-import logging
 import hashlib
 import hmac
-from typing import Dict, Any
+import logging
+import os
 from datetime import datetime
-from fastapi import APIRouter, Request, HTTPException, status
+from typing import Any
+
+from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,7 @@ router = APIRouter(
 class ClerkWebhookEvent(BaseModel):
     """Clerk webhook event model"""
 
-    data: Dict[str, Any]
+    data: dict[str, Any]
     object: str
     type: str
     timestamp: int
@@ -120,7 +121,7 @@ async def handle_clerk_webhook(request: Request):
         )
 
 
-async def handle_user_created(user_data: Dict[str, Any]):
+async def handle_user_created(user_data: dict[str, Any]):
     """
     Handle new user creation from Clerk
 
@@ -128,8 +129,8 @@ async def handle_user_created(user_data: Dict[str, Any]):
         user_data: User data from Clerk
     """
     try:
-        from database.models import User
         from database.connection import get_session
+        from database.models import User
 
         user_id = user_data.get("id")
         email = user_data.get("email_addresses", [{}])[0].get("email_address")
@@ -142,6 +143,7 @@ async def handle_user_created(user_data: Dict[str, Any]):
         async with get_session() as session:
             # Check if user already exists using SQLAlchemy ORM
             from sqlalchemy import select
+
             stmt = select(User).where(User.clerk_id == user_id)
             result = await session.execute(stmt)
             existing_user = result.scalar_one_or_none()
@@ -178,7 +180,7 @@ async def handle_user_created(user_data: Dict[str, Any]):
         raise
 
 
-async def handle_user_updated(user_data: Dict[str, Any]):
+async def handle_user_updated(user_data: dict[str, Any]):
     """
     Handle user update from Clerk
 
@@ -192,7 +194,8 @@ async def handle_user_updated(user_data: Dict[str, Any]):
 
         async with get_session() as session:
             # Update user in local database using SQLAlchemy ORM
-            from sqlalchemy import select, update
+            from sqlalchemy import select
+
             from database.models import User
 
             # Get user
@@ -220,7 +223,7 @@ async def handle_user_updated(user_data: Dict[str, Any]):
         raise
 
 
-async def handle_user_deleted(user_data: Dict[str, Any]):
+async def handle_user_deleted(user_data: dict[str, Any]):
     """
     Handle user deletion from Clerk
 
@@ -235,6 +238,7 @@ async def handle_user_deleted(user_data: Dict[str, Any]):
         async with get_session() as session:
             # Soft delete user in local database using SQLAlchemy ORM
             from sqlalchemy import select
+
             from database.models import User
 
             # Get user
@@ -255,7 +259,7 @@ async def handle_user_deleted(user_data: Dict[str, Any]):
         raise
 
 
-async def handle_session_created(session_data: Dict[str, Any]):
+async def handle_session_created(session_data: dict[str, Any]):
     """
     Handle new session creation (user login)
 
@@ -270,8 +274,9 @@ async def handle_session_created(session_data: Dict[str, Any]):
         logger.info(f"User {user_id} logged in with session {session_id}")
 
         # Update last_login timestamp in database using SQLAlchemy ORM
-        from database.connection import get_session
         from sqlalchemy import select
+
+        from database.connection import get_session
         from database.models import User
 
         async with get_session() as session:
@@ -291,7 +296,7 @@ async def handle_session_created(session_data: Dict[str, Any]):
         logger.error(f"Failed to handle session creation: {e}")
 
 
-async def handle_session_ended(session_data: Dict[str, Any]):
+async def handle_session_ended(session_data: dict[str, Any]):
     """
     Handle session end (user logout)
 
@@ -309,7 +314,7 @@ async def handle_session_ended(session_data: Dict[str, Any]):
         logger.error(f"Failed to handle session end: {e}")
 
 
-async def handle_organization_created(org_data: Dict[str, Any]):
+async def handle_organization_created(org_data: dict[str, Any]):
     """
     Handle new organization creation
 
@@ -328,7 +333,7 @@ async def handle_organization_created(org_data: Dict[str, Any]):
         logger.error(f"Failed to handle organization creation: {e}")
 
 
-async def handle_organization_member_created(member_data: Dict[str, Any]):
+async def handle_organization_member_created(member_data: dict[str, Any]):
     """
     Handle user joining organization
 

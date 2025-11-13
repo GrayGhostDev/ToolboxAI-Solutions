@@ -4,17 +4,16 @@ Implements intelligent caching strategies to reduce database load and API respon
 Target: Reduce P95 latency from 185ms to <150ms
 """
 
-import json
-import logging
 import asyncio
-from typing import Any, Dict, Optional, List, Callable, Union, TypeVar, Type
-from datetime import datetime, timedelta
 import hashlib
+import logging
 import pickle
-from functools import wraps
-import redis.asyncio as redis
-from contextlib import asynccontextmanager
 import time
+from collections.abc import Callable
+from functools import wraps
+from typing import Any, TypeVar, Union
+
+import redis.asyncio as redis
 
 from apps.backend.core.config import settings
 
@@ -22,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 # Type hints
 T = TypeVar("T")
-CacheValue = Union[str, bytes, Dict[str, Any], List[Any], int, float]
+CacheValue = Union[str, bytes, dict[str, Any], list[Any], int, float]
 
 
 class CacheConfig:
@@ -56,8 +55,8 @@ class RedisConnectionManager:
     """Manages Redis connection pool with optimized settings"""
 
     def __init__(self):
-        self.pool: Optional[redis.ConnectionPool] = None
-        self.client: Optional[redis.Redis] = None
+        self.pool: redis.ConnectionPool | None = None
+        self.client: redis.Redis | None = None
         self._lock = asyncio.Lock()
 
     async def initialize(self):
@@ -280,7 +279,7 @@ class CacheStats:
         total = self.hits + self.misses
         return (self.total_time / total) if total > 0 else 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "hits": self.hits,
             "misses": self.misses,
@@ -302,7 +301,7 @@ class RedisCache:
         """Get Redis client"""
         return await _connection_manager.get_client()
 
-    async def get(self, key: str) -> Optional[Any]:
+    async def get(self, key: str) -> Any | None:
         """Get value from cache"""
         start_time = time.time()
 
@@ -368,7 +367,7 @@ class RedisCache:
             logger.error(f"Cache delete pattern error for {pattern}: {e}")
             return 0
 
-    async def mget(self, keys: List[str]) -> List[Optional[Any]]:
+    async def mget(self, keys: list[str]) -> list[Any | None]:
         """Get multiple values from cache"""
         try:
             client = await self.get_client()
@@ -388,7 +387,7 @@ class RedisCache:
             logger.error(f"Cache mget error: {e}")
             return [None] * len(keys)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get cache performance statistics"""
         return self.stats.to_dict()
 
@@ -398,7 +397,7 @@ _cache = RedisCache()
 
 
 def cached(
-    key_func: Optional[Callable[..., str]] = None,
+    key_func: Callable[..., str] | None = None,
     ttl: int = CacheConfig.DEFAULT_TTL,
     prefix: str = CacheConfig.PREFIX_API,
 ):
@@ -503,19 +502,19 @@ invalidator = CacheInvalidator(_cache)
 
 
 # Convenience functions for common operations
-async def get_cached_dashboard(user_id: int, role: str) -> Optional[Dict[str, Any]]:
+async def get_cached_dashboard(user_id: int, role: str) -> dict[str, Any] | None:
     """Get cached dashboard data"""
     cache_key = CacheKey.user_dashboard(user_id, role)
     return await cache.get(cache_key)
 
 
-async def cache_dashboard(user_id: int, role: str, data: Dict[str, Any]):
+async def cache_dashboard(user_id: int, role: str, data: dict[str, Any]):
     """Cache dashboard data"""
     cache_key = CacheKey.user_dashboard(user_id, role)
     await cache.set(cache_key, data, CacheConfig.MEDIUM_TTL)
 
 
-async def get_cache_health() -> Dict[str, Any]:
+async def get_cache_health() -> dict[str, Any]:
     """Get cache system health metrics"""
     try:
         client = await _connection_manager.get_client()

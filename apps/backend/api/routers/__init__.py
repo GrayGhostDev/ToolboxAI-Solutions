@@ -5,6 +5,7 @@ Centralized registration of all FastAPI routers and endpoints.
 """
 
 import logging
+
 from fastapi import FastAPI
 
 from apps.backend.core.logging import logging_manager
@@ -56,6 +57,7 @@ def _register_core_routers(app: FastAPI) -> None:
         # Educational Platform - Courses Router (NEW)
         try:
             from apps.backend.api.routers.courses import router as courses_router
+
             app.include_router(courses_router)
             logger.info("✅ Courses API endpoints loaded successfully at /api/v1/courses")
         except ImportError as e:
@@ -84,8 +86,15 @@ def _register_core_routers(app: FastAPI) -> None:
         # Development bridge router (plugin polling + pusher status)
         try:
             import os
-            if os.getenv("BRIDGE_DEV_ENABLED", "false").lower() == "true" or os.getenv("ENVIRONMENT", "development").lower() == "development":
-                from apps.backend.api.routers.bridge_dev import router as bridge_dev_router
+
+            if (
+                os.getenv("BRIDGE_DEV_ENABLED", "false").lower() == "true"
+                or os.getenv("ENVIRONMENT", "development").lower() == "development"
+            ):
+                from apps.backend.api.routers.bridge_dev import (
+                    router as bridge_dev_router,
+                )
+
                 app.include_router(bridge_dev_router)
                 logger.info("Development bridge endpoints loaded at root (dev only)")
             else:
@@ -122,8 +131,12 @@ def _register_core_routers(app: FastAPI) -> None:
 
         # Legacy health check routers (fallback)
         try:
-            from apps.backend.api.health.health_checks import router as health_checks_router
-            from apps.backend.api.health.integrations import router as integrations_router
+            from apps.backend.api.health.health_checks import (
+                router as health_checks_router,
+            )
+            from apps.backend.api.health.integrations import (
+                router as integrations_router,
+            )
 
             app.include_router(health_checks_router, prefix="/api/v1")
             app.include_router(integrations_router, prefix="/api/v1")
@@ -133,9 +146,13 @@ def _register_core_routers(app: FastAPI) -> None:
 
         # Legacy Pusher authentication endpoints (fallback)
         try:
-            from apps.backend.api.v1.endpoints.pusher_auth import router as pusher_auth_router
             from apps.backend.api.v1.endpoints.pusher_auth import realtime_router
-            from apps.backend.api.v1.pusher_endpoints import router as pusher_replacement_router
+            from apps.backend.api.v1.endpoints.pusher_auth import (
+                router as pusher_auth_router,
+            )
+            from apps.backend.api.v1.pusher_endpoints import (
+                router as pusher_replacement_router,
+            )
 
             app.include_router(pusher_auth_router, prefix="/api/v1")
             app.include_router(realtime_router, prefix="/api/v1")
@@ -159,7 +176,6 @@ def _register_v1_routers(app: FastAPI) -> None:
         # User management routers
         ("apps.backend.api.v1.endpoints.auth", "auth_router", "/api/v1"),
         ("apps.backend.api.v1.endpoints.users", "router", "/api/v1"),
-
         # Background tasks and Celery management
         ("apps.backend.api.v1.endpoints.tasks", "router", "/api/v1"),
         # User profile endpoints
@@ -221,7 +237,9 @@ def _register_webhook_routers(app: FastAPI) -> None:
     try:
         # Clerk webhooks
         try:
-            from apps.backend.api.webhooks.clerk_webhooks import router as clerk_webhook_router
+            from apps.backend.api.webhooks.clerk_webhooks import (
+                router as clerk_webhook_router,
+            )
 
             app.include_router(clerk_webhook_router)
             logger.info("Clerk webhook endpoints loaded successfully")
@@ -230,7 +248,9 @@ def _register_webhook_routers(app: FastAPI) -> None:
 
         # Stripe webhooks
         try:
-            from apps.backend.api.v1.endpoints.stripe_webhook import router as stripe_router
+            from apps.backend.api.v1.endpoints.stripe_webhook import (
+                router as stripe_router,
+            )
 
             app.include_router(stripe_router)
             logger.info("Stripe webhook endpoints loaded successfully")
@@ -257,10 +277,10 @@ def _register_legacy_routers(app: FastAPI) -> None:
         try:
             from apps.backend.api.v1.endpoints.analytics import (
                 analytics_router,
-                gamification_router,
                 compliance_router,
-                users_router,
+                gamification_router,
                 schools_router,
+                users_router,
             )
 
             app.include_router(analytics_router)

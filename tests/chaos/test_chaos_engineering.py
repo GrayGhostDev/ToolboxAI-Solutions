@@ -8,46 +8,42 @@ Based on modern chaos engineering principles and production best practices for 2
 """
 
 import asyncio
-import pytest
-import time
+import json
+import logging
 import random
 import threading
-import logging
-import psutil
-import signal
-import os
-import subprocess
-import tempfile
-from typing import Dict, List, Optional, Any, Callable
+import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from unittest.mock import Mock, patch, AsyncMock, MagicMock
-from datetime import datetime, timedelta
-from pathlib import Path
-import json
+from datetime import datetime
+from typing import Any
+from unittest.mock import AsyncMock, patch
+
 import httpx
-import websockets
+import psutil
+import pytest
 import redis.asyncio as redis_async
-from contextlib import asynccontextmanager
+from apps.backend.services.websocket_handler import WebSocketHandler
 
 # Import system components
-from apps.backend.core.circuit_breaker import CircuitBreaker, CircuitBreakerConfig, CircuitBreakerState
-from apps.backend.core.security.rate_limit_manager import RateLimitManager, RateLimitConfig
-from apps.backend.core.global_load_balancer import GlobalLoadBalancer, RoutingPolicy, RegionCode
-from apps.backend.services.websocket_handler import WebSocketHandler
-from apps.backend.services.pusher import PusherService
+from apps.backend.core.circuit_breaker import (
+    CircuitBreaker,
+    CircuitBreakerConfig,
+    CircuitBreakerState,
+)
+from apps.backend.core.global_load_balancer import GlobalLoadBalancer
+from apps.backend.core.security.rate_limit_manager import (
+    RateLimitConfig,
+    RateLimitManager,
+)
 
 # Test utilities
-from tests.fixtures.async_helpers import AsyncTestCase
 from tests.fixtures.cleanup import TestCleanupManager
 
 logger = logging.getLogger(__name__)
 
 # Chaos testing markers
-pytestmark = [
-    pytest.mark.chaos,
-    pytest.mark.integration,
-    pytest.mark.slow
-]
+pytestmark = [pytest.mark.chaos, pytest.mark.integration, pytest.mark.slow]
 
 
 @dataclass
@@ -84,10 +80,10 @@ class FailureScenario:
     description: str
     inject_failure: Callable
     validate_behavior: Callable
-    cleanup: Optional[Callable] = None
+    cleanup: Callable | None = None
     expected_recovery_time: int = 30
     severity: str = "medium"  # low, medium, high, critical
-    prerequisites: List[str] = field(default_factory=list)
+    prerequisites: list[str] = field(default_factory=list)
 
 
 class ChaosTestOrchestrator:
@@ -95,10 +91,10 @@ class ChaosTestOrchestrator:
 
     def __init__(self, config: ChaosTestConfig):
         self.config = config
-        self.active_failures: Dict[str, Any] = {}
-        self.test_start_time: Optional[datetime] = None
+        self.active_failures: dict[str, Any] = {}
+        self.test_start_time: datetime | None = None
         self.emergency_stop_triggered = False
-        self.system_health_baseline: Dict[str, Any] = {}
+        self.system_health_baseline: dict[str, Any] = {}
         self.cleanup_manager = TestCleanupManager()
 
     async def setup_test_environment(self):
@@ -130,10 +126,10 @@ class ChaosTestOrchestrator:
         """Setup isolated service instances for testing"""
         # Create isolated Redis instance for testing
         self.test_redis = await redis_async.Redis(
-            host='localhost',
+            host="localhost",
             port=6380,  # Different port for isolation
             db=15,  # Use test database
-            decode_responses=True
+            decode_responses=True,
         )
 
         # Setup isolated rate limiter
@@ -143,14 +139,14 @@ class ChaosTestOrchestrator:
         # Setup test circuit breakers
         self.test_circuit_breakers = {}
 
-    async def _get_system_health(self) -> Dict[str, Any]:
+    async def _get_system_health(self) -> dict[str, Any]:
         """Get current system health metrics"""
         return {
             "cpu_percent": psutil.cpu_percent(interval=1),
             "memory_percent": psutil.virtual_memory().percent,
-            "disk_usage": psutil.disk_usage('/').percent,
+            "disk_usage": psutil.disk_usage("/").percent,
             "network_connections": len(psutil.net_connections()),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     async def _wait_for_system_recovery(self):
@@ -169,7 +165,7 @@ class ChaosTestOrchestrator:
 
         logger.warning("System did not fully recover within timeout")
 
-    def _is_system_healthy(self, health_metrics: Dict[str, Any]) -> bool:
+    def _is_system_healthy(self, health_metrics: dict[str, Any]) -> bool:
         """Check if system is in healthy state"""
         baseline = self.system_health_baseline
 
@@ -204,20 +200,18 @@ async def chaos_orchestrator():
 @pytest.fixture
 def mock_external_services():
     """Mock external dependencies for isolated testing"""
-    with patch('httpx.AsyncClient') as mock_client, \
-         patch('redis.asyncio.Redis') as mock_redis, \
-         patch('websockets.connect') as mock_websocket:
+    with (
+        patch("httpx.AsyncClient") as mock_client,
+        patch("redis.asyncio.Redis") as mock_redis,
+        patch("websockets.connect") as mock_websocket,
+    ):
 
         # Configure mocks to simulate various failure modes
         mock_client.return_value.get = AsyncMock()
         mock_redis.return_value.get = AsyncMock()
         mock_websocket.return_value = AsyncMock()
 
-        yield {
-            'http_client': mock_client,
-            'redis': mock_redis,
-            'websocket': mock_websocket
-        }
+        yield {"http_client": mock_client, "redis": mock_redis, "websocket": mock_websocket}
 
 
 class TestNetworkPartitionSimulation:
@@ -230,7 +224,7 @@ class TestNetworkPartitionSimulation:
         async def inject_network_partition():
             """Simulate network partition between services"""
             # Block traffic between backend and database
-            with patch('asyncpg.connect') as mock_connect:
+            with patch("asyncpg.connect") as mock_connect:
                 mock_connect.side_effect = asyncio.TimeoutError("Network partition simulated")
                 await asyncio.sleep(10)  # Hold partition for 10 seconds
 
@@ -269,7 +263,9 @@ class TestNetworkPartitionSimulation:
             region_1_health = {"status": "primary", "region": "us-east-1"}
             region_2_health = {"status": "primary", "region": "us-west-2"}
 
-            with patch('apps.backend.core.global_load_balancer.GlobalLoadBalancer.get_region_health') as mock_health:
+            with patch(
+                "apps.backend.core.global_load_balancer.GlobalLoadBalancer.get_region_health"
+            ) as mock_health:
                 mock_health.side_effect = [region_1_health, region_2_health]
                 await asyncio.sleep(5)
 
@@ -282,7 +278,9 @@ class TestNetworkPartitionSimulation:
             active_regions = await load_balancer.get_active_regions()
             primary_regions = [r for r in active_regions if r.get("status") == "primary"]
 
-            assert len(primary_regions) <= 1, "Split-brain not resolved - multiple primaries detected"
+            assert (
+                len(primary_regions) <= 1
+            ), "Split-brain not resolved - multiple primaries detected"
 
         await inject_split_brain()
         await validate_conflict_resolution()
@@ -308,7 +306,7 @@ class TestServiceFailureInjection:
                 crashed_services.append(service)
 
                 # Simulate service crash
-                with patch(f'apps.backend.services.{service}.is_healthy', return_value=False):
+                with patch(f"apps.backend.services.{service}.is_healthy", return_value=False):
                     await asyncio.sleep(5)
 
         async def validate_failover_behavior():
@@ -476,6 +474,7 @@ class TestResourceExhaustion:
 
         async def exhaust_connection_pool():
             """Create many concurrent connections"""
+
             async def create_connection():
                 # Mock connection that stays open
                 connection = AsyncMock()
@@ -527,7 +526,7 @@ class TestDatabaseFailoverSimulation:
 
         async def inject_primary_db_failure():
             """Simulate primary database failure"""
-            with patch('asyncpg.connect') as mock_connect:
+            with patch("asyncpg.connect") as mock_connect:
                 # First few calls succeed (primary), then fail
                 mock_connect.side_effect = [
                     AsyncMock(),  # Initial connection succeeds
@@ -546,7 +545,9 @@ class TestDatabaseFailoverSimulation:
         async def validate_replica_takeover():
             """Validate that read replicas take over"""
             # Mock database service should switch to replica
-            with patch('apps.backend.services.database.DatabaseService.get_read_connection') as mock_read:
+            with patch(
+                "apps.backend.services.database.DatabaseService.get_read_connection"
+            ) as mock_read:
                 mock_read.return_value = AsyncMock()
 
                 # Operations should succeed using replica
@@ -555,7 +556,9 @@ class TestDatabaseFailoverSimulation:
 
         async def validate_write_protection():
             """Validate that writes are protected during failover"""
-            with patch('apps.backend.services.database.DatabaseService.get_write_connection') as mock_write:
+            with patch(
+                "apps.backend.services.database.DatabaseService.get_write_connection"
+            ) as mock_write:
                 mock_write.side_effect = ConnectionError("Primary database down")
 
                 # Write operations should be queued or rejected gracefully
@@ -576,14 +579,14 @@ class TestDatabaseFailoverSimulation:
         async def inject_split_brain():
             """Create split-brain condition in database cluster"""
             # Simulate two nodes thinking they're primary
-            with patch('apps.backend.services.database.check_primary_status') as mock_primary:
+            with patch("apps.backend.services.database.check_primary_status") as mock_primary:
                 mock_primary.side_effect = [True, True]  # Both think they're primary
                 await asyncio.sleep(2)
 
         async def validate_write_conflict_resolution():
             """Validate that write conflicts are resolved"""
             # System should detect split-brain and elect single primary
-            with patch('apps.backend.services.database.resolve_split_brain') as mock_resolve:
+            with patch("apps.backend.services.database.resolve_split_brain") as mock_resolve:
                 mock_resolve.return_value = "node_1"  # Elect node_1 as primary
 
                 # Only one node should accept writes
@@ -623,7 +626,7 @@ class TestCachePoisoning:
         async def inject_cache_corruption():
             """Corrupt cache entries"""
             # Mock Redis with corrupted data
-            with patch('redis.asyncio.Redis.get') as mock_get:
+            with patch("redis.asyncio.Redis.get") as mock_get:
                 mock_get.side_effect = [
                     b"corrupted_json_data{invalid",  # Corrupted JSON
                     None,  # Cache miss
@@ -639,11 +642,11 @@ class TestCachePoisoning:
 
         async def validate_fallback_behavior():
             """Validate fallback to database when cache is corrupted"""
-            with patch('apps.backend.services.cache.CacheService.get') as mock_cache:
+            with patch("apps.backend.services.cache.CacheService.get") as mock_cache:
                 mock_cache.side_effect = json.JSONDecodeError("Invalid JSON", "", 0)
 
                 # Should fallback to database
-                with patch('apps.backend.services.database.DatabaseService.get') as mock_db:
+                with patch("apps.backend.services.database.DatabaseService.get") as mock_db:
                     mock_db.return_value = {"id": 123, "data": "from_db"}
 
                     result = await self._get_data_with_cache("test_key")
@@ -652,7 +655,7 @@ class TestCachePoisoning:
         async def validate_cache_recovery():
             """Validate that cache recovers from corruption"""
             # Cache should be marked as unhealthy and bypassed
-            with patch('apps.backend.services.cache.CacheService.is_healthy', return_value=False):
+            with patch("apps.backend.services.cache.CacheService.is_healthy", return_value=False):
                 # All requests should bypass cache
                 result = await self._get_data_with_cache("test_key")
                 assert result is not None  # Should still work without cache
@@ -671,10 +674,10 @@ class TestCachePoisoning:
                 "user_id": 123,
                 "role": "admin",  # Privilege escalation attempt
                 "permissions": ["read", "write", "delete", "admin"],
-                "injected": True
+                "injected": True,
             }
 
-            with patch('redis.asyncio.Redis.get') as mock_get:
+            with patch("redis.asyncio.Redis.get") as mock_get:
                 mock_get.return_value = json.dumps(poisoned_data).encode()
 
                 # Try to retrieve poisoned data
@@ -684,7 +687,7 @@ class TestCachePoisoning:
         async def validate_data_validation():
             """Validate that poisoned data is detected and rejected"""
             # Cache service should validate data integrity
-            with patch('apps.backend.services.cache.validate_cache_data') as mock_validate:
+            with patch("apps.backend.services.cache.validate_cache_data") as mock_validate:
                 mock_validate.return_value = False  # Data fails validation
 
                 # Should reject poisoned data and fallback to source
@@ -795,8 +798,8 @@ class TestRateLimitStressTesting:
 
         async def simulate_system_stress():
             """Simulate high system load"""
-            with patch('psutil.cpu_percent', return_value=90.0):
-                with patch('psutil.virtual_memory') as mock_memory:
+            with patch("psutil.cpu_percent", return_value=90.0):
+                with patch("psutil.virtual_memory") as mock_memory:
                     mock_memory.return_value.percent = 85.0
 
                     # Rate limiter should adapt to high load
@@ -828,6 +831,7 @@ class TestWebSocketMassDisconnection:
 
         async def create_websocket_storm():
             """Create many concurrent WebSocket connections"""
+
             async def mock_websocket_connection():
                 # Mock WebSocket connection
                 ws_mock = AsyncMock()
@@ -910,7 +914,9 @@ class TestRegionFailureSimulation:
             """Simulate complete region failure"""
             failed_region = "us-east-1"
 
-            with patch('apps.backend.core.global_load_balancer.GlobalLoadBalancer.check_region_health') as mock_health:
+            with patch(
+                "apps.backend.core.global_load_balancer.GlobalLoadBalancer.check_region_health"
+            ) as mock_health:
                 # Mark region as unhealthy
                 def health_check(region):
                     if region == failed_region:
@@ -951,7 +957,7 @@ class TestRegionFailureSimulation:
             region_data["us-west-2"]["user_123"]["version"] = 2
 
             # Data should be consistent after recovery
-            with patch('apps.backend.services.replication.sync_regions') as mock_sync:
+            with patch("apps.backend.services.replication.sync_regions") as mock_sync:
                 mock_sync.return_value = True
 
                 # Verify data consistency
@@ -970,11 +976,12 @@ class TestLatencyInjection:
 
         async def inject_network_latency():
             """Add artificial network delays"""
+
             async def slow_network_call(*args, **kwargs):
                 await asyncio.sleep(2.0)  # 2 second delay
                 return {"data": "delayed_response"}
 
-            with patch('httpx.AsyncClient.get', side_effect=slow_network_call):
+            with patch("httpx.AsyncClient.get", side_effect=slow_network_call):
                 # Test circuit breaker with timeout
                 config = CircuitBreakerConfig(timeout=1.0)  # 1 second timeout
                 breaker = CircuitBreaker("slow_service", config)
@@ -1008,11 +1015,12 @@ class TestLatencyInjection:
             nonlocal current_latency
 
             for _ in range(10):
+
                 async def latent_call(*args, **kwargs):
                     await asyncio.sleep(current_latency)
                     return {"latency": current_latency}
 
-                with patch('httpx.AsyncClient.get', side_effect=latent_call):
+                with patch("httpx.AsyncClient.get", side_effect=latent_call):
                     # Test adaptive timeouts
                     result = await self._adaptive_network_call()
                     assert result is not None
@@ -1044,16 +1052,12 @@ async def test_comprehensive_chaos_scenario(chaos_orchestrator):
         tasks = [
             # Network issues
             asyncio.create_task(simulate_network_partition()),
-
             # Resource exhaustion
             asyncio.create_task(simulate_cpu_stress()),
-
             # Database issues
             asyncio.create_task(simulate_database_slowdown()),
-
             # Cache corruption
             asyncio.create_task(simulate_cache_corruption()),
-
             # Rate limiting stress
             asyncio.create_task(simulate_traffic_spike()),
         ]
@@ -1096,21 +1100,26 @@ async def simulate_network_partition():
     """Simulate network partition"""
     await asyncio.sleep(10)
 
+
 async def simulate_cpu_stress():
     """Simulate CPU stress"""
     await asyncio.sleep(10)
+
 
 async def simulate_database_slowdown():
     """Simulate database performance issues"""
     await asyncio.sleep(10)
 
+
 async def simulate_cache_corruption():
     """Simulate cache corruption"""
     await asyncio.sleep(10)
 
+
 async def simulate_traffic_spike():
     """Simulate traffic spike"""
     await asyncio.sleep(10)
+
 
 async def check_authentication_service():
     """Check if authentication service is responsive"""
@@ -1118,11 +1127,13 @@ async def check_authentication_service():
     await asyncio.sleep(0.1)
     return True
 
+
 async def check_health_endpoint():
     """Check if health endpoint is responsive"""
     # Mock health check
     await asyncio.sleep(0.1)
     return True
+
 
 async def check_basic_api_functionality():
     """Check if basic API functionality works"""
@@ -1133,11 +1144,14 @@ async def check_basic_api_functionality():
 
 if __name__ == "__main__":
     # Run chaos tests with proper configuration
-    pytest.main([
-        __file__,
-        "-v",
-        "--tb=short",
-        "-m", "chaos",
-        "--maxfail=5",
-        "--timeout=600"  # 10 minute timeout for chaos tests
-    ])
+    pytest.main(
+        [
+            __file__,
+            "-v",
+            "--tb=short",
+            "-m",
+            "chaos",
+            "--maxfail=5",
+            "--timeout=600",  # 10 minute timeout for chaos tests
+        ]
+    )

@@ -1,7 +1,8 @@
-import pytest_asyncio
+from unittest.mock import Mock, patch
 
 import pytest
-from unittest.mock import Mock, patch
+import pytest_asyncio
+
 
 @pytest.fixture
 def mock_db_connection():
@@ -21,6 +22,7 @@ Tests all endpoints, authentication, WebSocket connections, and integrations.
 
 import asyncio
 
+
 def make_json_serializable(obj):
     """Convert non-serializable objects to serializable format."""
     if hasattr(obj, '__dict__'):
@@ -37,11 +39,13 @@ import logging
 import os
 import sys
 import time
-from typing import Dict, List, Optional, Any
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
+
 from tests.fixtures.agents import mock_llm
-from unittest.mock import Mock, patch, AsyncMock
 
 # Skip all tests in this module as they require external services
 pytestmark = pytest.mark.skipif(
@@ -518,9 +522,9 @@ async def test_agent_system(self, mock_llm):
         
         try:
             # Import agent modules
-            from core.agents.supervisor import SupervisorAgent
             from core.agents.content_agent import ContentAgent
             from core.agents.quiz_agent import QuizAgent
+            from core.agents.supervisor import SupervisorAgent
             
             self.results.add_pass("Agent imports")
             
@@ -541,11 +545,11 @@ async def test_sparc_framework(self, mock_llm):
         logger.info("\n⚡ Testing SPARC Framework...")
         
         try:
-            from core.sparc.state_manager import StateManager
-            from core.sparc.policy_engine import PolicyEngine
             from core.sparc.action_executor import ActionExecutor
-            from core.sparc.reward_calculator import RewardCalculator
             from core.sparc.context_tracker import ContextTracker
+            from core.sparc.policy_engine import PolicyEngine
+            from core.sparc.reward_calculator import RewardCalculator
+            from core.sparc.state_manager import StateManager
             
             self.results.add_pass("SPARC imports")
             
@@ -567,8 +571,8 @@ async def test_swarm_intelligence(self, mock_llm):
         
         try:
             from core.swarm.swarm_controller import SwarmController
-            from core.swarm.worker_pool import WorkerPool
             from core.swarm.task_distributor import TaskDistributor
+            from core.swarm.worker_pool import WorkerPool
             
             self.results.add_pass("Swarm imports")
             
@@ -623,8 +627,9 @@ async def test_performance(self):
         """Test performance metrics"""
         logger.info("\n⚡ Testing Performance...")
         
-        import httpx
         import statistics
+
+        import httpx
         
         try:
             async with httpx.AsyncClient() as client:

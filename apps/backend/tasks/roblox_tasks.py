@@ -9,10 +9,10 @@ import os
 import subprocess
 import tempfile
 from datetime import datetime
-from typing import Dict, List, Any, Optional
+from typing import Any
+
 from celery import shared_task
 from celery.utils.log import get_task_logger
-import httpx
 
 from apps.backend.core.config import settings
 from apps.backend.services.pusher import pusher_service as pusher_client
@@ -30,8 +30,8 @@ logger = get_task_logger(__name__)
     priority=4,
 )
 def sync_roblox_environment(
-    self, universe_id: str, place_id: Optional[str] = None, sync_type: str = "incremental"
-) -> Dict[str, Any]:
+    self, universe_id: str, place_id: str | None = None, sync_type: str = "incremental"
+) -> dict[str, Any]:
     """
     Sync educational content with Roblox environment
 
@@ -77,7 +77,7 @@ def sync_roblox_environment(
                             filepath = os.path.join(root, file)
                             try:
                                 # Read script content
-                                with open(filepath, "r") as f:
+                                with open(filepath) as f:
                                     script_content = f.read()
 
                                 # Determine script type from path
@@ -236,7 +236,7 @@ def sync_roblox_environment(
 )
 def deploy_to_roblox(
     self, project_path: str, universe_id: str, deployment_type: str = "production"
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Deploy complete project to Roblox using Rojo
 
@@ -349,7 +349,7 @@ def deploy_to_roblox(
     queue="roblox",
     priority=2,
 )
-def validate_roblox_assets(self, asset_ids: List[str]) -> Dict[str, Any]:
+def validate_roblox_assets(self, asset_ids: list[str]) -> dict[str, Any]:
     """
     Validate Roblox assets for compliance and quality
 

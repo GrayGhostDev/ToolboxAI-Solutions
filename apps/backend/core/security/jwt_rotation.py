@@ -4,14 +4,14 @@ Implements secure key rotation, refresh tokens, and grace periods
 """
 
 import json
-import secrets
 import logging
-from typing import Dict, Optional, Tuple, Any
+import secrets
 from datetime import datetime, timedelta, timezone
+from typing import Any
+
 import redis.asyncio as redis
 from jose import JWTError, jwt
 from pydantic import BaseModel, Field
-import hashlib
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class TokenPayload(BaseModel):
     jti: str  # JWT ID (for revocation)
     kid: str  # Key ID (for rotation)
     type: str = "access"  # Token type: access or refresh
-    scope: Optional[str] = None
+    scope: str | None = None
 
 
 class JWTRotationManager:
@@ -51,7 +51,7 @@ class JWTRotationManager:
         algorithm: str = "HS256",
     ):
         self.redis_url = redis_url
-        self.redis_client: Optional[redis.Redis] = None
+        self.redis_client: redis.Redis | None = None
         self.key_rotation_interval = key_rotation_interval
         self.key_grace_period = key_grace_period
         self.access_token_expire = access_token_expire
@@ -137,7 +137,7 @@ class JWTRotationManager:
             logger.error(f"Key rotation failed: {e}")
             raise
 
-    async def get_active_key(self) -> Optional[JWTKeyPair]:
+    async def get_active_key(self) -> JWTKeyPair | None:
         """Get currently active signing key"""
         try:
             active_kid = await self.redis_client.get(f"{self.key_prefix}active")
@@ -153,7 +153,7 @@ class JWTRotationManager:
             logger.error(f"Failed to get active key: {e}")
             return None
 
-    async def get_key_by_id(self, kid: str) -> Optional[JWTKeyPair]:
+    async def get_key_by_id(self, kid: str) -> JWTKeyPair | None:
         """Get key by ID (for validation of tokens with old keys)"""
         try:
             key_data = await self.redis_client.get(f"{self.key_prefix}{kid}")
@@ -164,7 +164,7 @@ class JWTRotationManager:
             logger.error(f"Failed to get key {kid}: {e}")
             return None
 
-    async def create_token_pair(self, user_id: str, scope: Optional[str] = None) -> Tuple[str, str]:
+    async def create_token_pair(self, user_id: str, scope: str | None = None) -> tuple[str, str]:
         """Create access and refresh token pair"""
         active_key = await self.get_active_key()
         if not active_key:
@@ -216,7 +216,7 @@ class JWTRotationManager:
 
         return access_token, refresh_token
 
-    async def verify_token(self, token: str) -> Optional[TokenPayload]:
+    async def verify_token(self, token: str) -> TokenPayload | None:
         """Verify and decode token"""
         try:
             # Decode without verification to get kid
@@ -262,7 +262,7 @@ class JWTRotationManager:
             logger.error(f"Unexpected error verifying token: {e}")
             return None
 
-    async def refresh_access_token(self, refresh_token: str) -> Optional[Tuple[str, str]]:
+    async def refresh_access_token(self, refresh_token: str) -> tuple[str, str] | None:
         """Generate new access token from refresh token"""
         payload = await self.verify_token(refresh_token)
 
@@ -321,7 +321,7 @@ class JWTRotationManager:
         logger.info(f"Revoked all tokens for user {user_id}")
         return count
 
-    async def get_key_info(self) -> Dict[str, Any]:
+    async def get_key_info(self) -> dict[str, Any]:
         """Get information about current keys"""
         active_key = await self.get_active_key()
 
@@ -341,7 +341,7 @@ class JWTRotationManager:
 
 
 # Singleton instance
-_jwt_manager: Optional[JWTRotationManager] = None
+_jwt_manager: JWTRotationManager | None = None
 
 
 async def get_jwt_manager() -> JWTRotationManager:

@@ -11,9 +11,7 @@ import logging
 import tempfile
 import zipfile
 from pathlib import Path
-from typing import Dict, Any, Optional, List, Union
-import subprocess
-import os
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +76,7 @@ class DesignFileConverter:
             ".txt": self._read_text_file,
         }
 
-    async def process_design_file(self, file_path: Union[str, Path]) -> Dict[str, Any]:
+    async def process_design_file(self, file_path: str | Path) -> dict[str, Any]:
         """Process any design file and return readable content"""
         file_path = Path(file_path)
 
@@ -117,9 +115,7 @@ class DesignFileConverter:
             logger.error(f"Error processing {file_path}: {e}")
             return {"success": False, "error": str(e), "content": None}
 
-    async def scan_design_folder(
-        self, folder_path: Optional[Union[str, Path]] = None
-    ) -> Dict[str, Any]:
+    async def scan_design_folder(self, folder_path: str | Path | None = None) -> dict[str, Any]:
         """Scan entire design folder and process all supported files"""
         if folder_path is None:
             folder_path = self.design_root
@@ -273,7 +269,7 @@ class DesignFileConverter:
         try:
             content = f"3D Object File: {file_path.name}\n"
 
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 lines = f.readlines()
 
             # Count different elements
@@ -391,7 +387,7 @@ class DesignFileConverter:
     async def _read_text_file(self, file_path: Path) -> str:
         """Read text files directly"""
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 content = f.read()
 
             # Limit content size to prevent JSON encoding issues

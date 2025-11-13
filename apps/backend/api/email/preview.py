@@ -3,14 +3,13 @@ Email Preview API
 Provides endpoints for previewing and testing email templates
 """
 
-import json
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.responses import HTMLResponse, JSONResponse
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr
 
 from apps.backend.config import settings
 from apps.backend.services.email import email_service
@@ -23,31 +22,34 @@ router = APIRouter(prefix="/email", tags=["Email"])
 
 class EmailPreviewRequest(BaseModel):
     """Request model for email preview"""
+
     template_name: str
-    template_data: Optional[Dict[str, Any]] = None
+    template_data: dict[str, Any] | None = None
     use_sample_data: bool = True
 
 
 class EmailTestRequest(BaseModel):
     """Request model for sending test email"""
+
     to_email: EmailStr
     template_name: str
-    template_data: Optional[Dict[str, Any]] = None
+    template_data: dict[str, Any] | None = None
     use_sample_data: bool = True
 
 
 class EmailQueueRequest(BaseModel):
     """Request model for queuing emails"""
-    to_email: Union[EmailStr, List[EmailStr]]
+
+    to_email: Union[EmailStr, list[EmailStr]]
     subject: str
-    template_name: Optional[str] = None
-    template_data: Optional[Dict[str, Any]] = None
-    html_content: Optional[str] = None
-    text_content: Optional[str] = None
+    template_name: str | None = None
+    template_data: dict[str, Any] | None = None
+    html_content: str | None = None
+    text_content: str | None = None
     priority: EmailPriority = EmailPriority.NORMAL
-    scheduled_for: Optional[datetime] = None
+    scheduled_for: datetime | None = None
     max_retries: int = 3
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: dict[str, Any] | None = None
 
 
 # Sample data for different email templates
@@ -60,10 +62,10 @@ SAMPLE_DATA = {
         "features": [
             {"title": "AI-Powered Learning", "description": "Personalized content recommendations"},
             {"title": "Real-time Collaboration", "description": "Work together with classmates"},
-            {"title": "Progress Tracking", "description": "Monitor your learning journey"}
+            {"title": "Progress Tracking", "description": "Monitor your learning journey"},
         ],
         "support_email": "support@toolboxai.com",
-        "unsubscribe_url": "https://app.toolboxai.com/unsubscribe"
+        "unsubscribe_url": "https://app.toolboxai.com/unsubscribe",
     },
     "password_reset": {
         "user_name": "John Doe",
@@ -71,7 +73,7 @@ SAMPLE_DATA = {
         "reset_url": "https://app.toolboxai.com/reset-password?token=sample-token",
         "support_email": "support@toolboxai.com",
         "app_url": "https://app.toolboxai.com",
-        "current_year": datetime.utcnow().year
+        "current_year": datetime.utcnow().year,
     },
     "payment_confirmation": {
         "app_name": "ToolboxAI",
@@ -86,9 +88,7 @@ SAMPLE_DATA = {
         "billing_email": "billing@toolboxai.com",
         "support_email": "support@toolboxai.com",
         "app_url": "https://app.toolboxai.com",
-        "items": [
-            {"description": "Monthly Subscription", "amount": "49.99"}
-        ]
+        "items": [{"description": "Monthly Subscription", "amount": "49.99"}],
     },
     "subscription_renewal": {
         "app_name": "ToolboxAI",
@@ -103,13 +103,21 @@ SAMPLE_DATA = {
         "app_url": "https://app.toolboxai.com",
         "unsubscribe_url": "https://app.toolboxai.com/unsubscribe",
         "benefits": [
-            {"icon": "🚀", "title": "Unlimited Access", "description": "All premium features included"},
+            {
+                "icon": "🚀",
+                "title": "Unlimited Access",
+                "description": "All premium features included",
+            },
             {"icon": "🛡️", "title": "Priority Support", "description": "24/7 dedicated assistance"},
-            {"icon": "📊", "title": "Advanced Analytics", "description": "Detailed insights and reports"}
+            {
+                "icon": "📊",
+                "title": "Advanced Analytics",
+                "description": "Detailed insights and reports",
+            },
         ],
         "discount_available": True,
         "discount_percentage": "20",
-        "apply_discount_url": "https://app.toolboxai.com/apply-discount"
+        "apply_discount_url": "https://app.toolboxai.com/apply-discount",
     },
     "course_enrollment": {
         "app_name": "ToolboxAI",
@@ -132,25 +140,25 @@ SAMPLE_DATA = {
             {
                 "title": "Introduction to AI",
                 "description": "Fundamentals of artificial intelligence",
-                "duration": "2 hours"
+                "duration": "2 hours",
             },
             {
                 "title": "AI in Modern Education",
                 "description": "How AI transforms learning",
-                "duration": "3 hours"
+                "duration": "3 hours",
             },
             {
                 "title": "Practical Applications",
                 "description": "Hands-on AI tools for educators",
-                "duration": "4 hours"
+                "duration": "4 hours",
             },
             {
                 "title": "Final Project",
                 "description": "Build your AI-powered lesson",
-                "duration": "5 hours"
-            }
-        ]
-    }
+                "duration": "5 hours",
+            },
+        ],
+    },
 }
 
 
@@ -178,14 +186,13 @@ async def preview_email_template(request: EmailPreviewRequest):
 
         # Render template
         html_content = await email_service.render_template(
-            template_name=request.template_name,
-            template_data=template_data
+            template_name=request.template_name, template_data=template_data
         )
 
         if not html_content:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Template '{request.template_name}' not found"
+                detail=f"Template '{request.template_name}' not found",
             )
 
         # Add preview banner at top
@@ -197,7 +204,7 @@ async def preview_email_template(request: EmailPreviewRequest):
         </div>
         """.format(
             template_name=request.template_name,
-            timestamp=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+            timestamp=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
         )
 
         # Inject banner at beginning of body tag
@@ -211,7 +218,7 @@ async def preview_email_template(request: EmailPreviewRequest):
         logger.error(f"Error previewing email template: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to preview template: {str(e)}"
+            detail=f"Failed to preview template: {str(e)}",
         )
 
 
@@ -231,7 +238,7 @@ async def send_test_email(request: EmailTestRequest):
         if not is_test_email_allowed(request.to_email):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Test emails can only be sent to verified test addresses"
+                detail="Test emails can only be sent to verified test addresses",
             )
 
         # Get template data
@@ -251,7 +258,7 @@ async def send_test_email(request: EmailTestRequest):
             to_email=request.to_email,
             subject=template_data["subject"],
             template_name=request.template_name,
-            template_data=template_data
+            template_data=template_data,
         )
 
         return JSONResponse(
@@ -260,7 +267,7 @@ async def send_test_email(request: EmailTestRequest):
                 "message": "Test email sent successfully",
                 "to": request.to_email,
                 "template": request.template_name,
-                "message_id": result.get("message_id")
+                "message_id": result.get("message_id"),
             }
         )
 
@@ -270,7 +277,7 @@ async def send_test_email(request: EmailTestRequest):
         logger.error(f"Error sending test email: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to send test email: {str(e)}"
+            detail=f"Failed to send test email: {str(e)}",
         )
 
 
@@ -301,28 +308,28 @@ async def list_available_templates():
         {
             "name": "welcome",
             "description": "Welcome email for new users",
-            "variables": list(SAMPLE_DATA.get("welcome", {}).keys())
+            "variables": list(SAMPLE_DATA.get("welcome", {}).keys()),
         },
         {
             "name": "password_reset",
             "description": "Password reset request email",
-            "variables": list(SAMPLE_DATA.get("password_reset", {}).keys())
+            "variables": list(SAMPLE_DATA.get("password_reset", {}).keys()),
         },
         {
             "name": "payment_confirmation",
             "description": "Payment confirmation receipt",
-            "variables": list(SAMPLE_DATA.get("payment_confirmation", {}).keys())
+            "variables": list(SAMPLE_DATA.get("payment_confirmation", {}).keys()),
         },
         {
             "name": "subscription_renewal",
             "description": "Subscription renewal notice",
-            "variables": list(SAMPLE_DATA.get("subscription_renewal", {}).keys())
+            "variables": list(SAMPLE_DATA.get("subscription_renewal", {}).keys()),
         },
         {
             "name": "course_enrollment",
             "description": "Course enrollment confirmation",
-            "variables": list(SAMPLE_DATA.get("course_enrollment", {}).keys())
-        }
+            "variables": list(SAMPLE_DATA.get("course_enrollment", {}).keys()),
+        },
     ]
 
     return JSONResponse(content={"templates": templates})
@@ -344,15 +351,10 @@ async def get_template_sample_data(template_name: str):
     if not sample_data:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No sample data found for template '{template_name}'"
+            detail=f"No sample data found for template '{template_name}'",
         )
 
-    return JSONResponse(
-        content={
-            "template_name": template_name,
-            "sample_data": sample_data
-        }
-    )
+    return JSONResponse(content={"template_name": template_name, "sample_data": sample_data})
 
 
 @router.post("/queue")
@@ -378,7 +380,7 @@ async def queue_email(request: EmailQueueRequest):
             priority=request.priority,
             scheduled_for=request.scheduled_for,
             max_retries=request.max_retries,
-            metadata=request.metadata
+            metadata=request.metadata,
         )
 
         return JSONResponse(
@@ -386,7 +388,9 @@ async def queue_email(request: EmailQueueRequest):
                 "status": "success",
                 "job_id": job_id,
                 "priority": request.priority,
-                "scheduled_for": request.scheduled_for.isoformat() if request.scheduled_for else None
+                "scheduled_for": (
+                    request.scheduled_for.isoformat() if request.scheduled_for else None
+                ),
             }
         )
 
@@ -394,7 +398,7 @@ async def queue_email(request: EmailQueueRequest):
         logger.error(f"Error queuing email: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to queue email: {str(e)}"
+            detail=f"Failed to queue email: {str(e)}",
         )
 
 
@@ -413,7 +417,7 @@ async def get_queue_metrics():
             content={
                 "status": "success",
                 "metrics": metrics,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
         )
 
@@ -421,7 +425,7 @@ async def get_queue_metrics():
         logger.error(f"Error getting queue metrics: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve queue metrics"
+            detail="Failed to retrieve queue metrics",
         )
 
 
@@ -445,7 +449,7 @@ async def reprocess_dead_letter_queue(
             content={
                 "status": "success",
                 "reprocessed": count,
-                "message": f"Reprocessed {count} emails from dead letter queue"
+                "message": f"Reprocessed {count} emails from dead letter queue",
             }
         )
 
@@ -453,7 +457,7 @@ async def reprocess_dead_letter_queue(
         logger.error(f"Error reprocessing dead letter queue: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to reprocess dead letter queue"
+            detail="Failed to reprocess dead letter queue",
         )
 
 
@@ -471,18 +475,13 @@ async def check_suppression_status(email: EmailStr):
     try:
         is_suppressed = await email_queue.is_suppressed(email)
 
-        return JSONResponse(
-            content={
-                "email": email,
-                "suppressed": is_suppressed
-            }
-        )
+        return JSONResponse(content={"email": email, "suppressed": is_suppressed})
 
     except Exception as e:
         logger.error(f"Error checking suppression status: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to check suppression status"
+            detail="Failed to check suppression status",
         )
 
 
@@ -511,8 +510,7 @@ async def validate_template(request: EmailPreviewRequest):
                 template_data = request.template_data or {}
 
             html_content = await email_service.render_template(
-                template_name=request.template_name,
-                template_data=template_data
+                template_name=request.template_name, template_data=template_data
             )
 
             if not html_content:
@@ -525,7 +523,8 @@ async def validate_template(request: EmailPreviewRequest):
         if html_content:
             # Check for missing variables (look for {{ }} patterns)
             import re
-            missing_vars = re.findall(r'\{\{[^}]+\}\}', html_content)
+
+            missing_vars = re.findall(r"\{\{[^}]+\}\}", html_content)
             if missing_vars:
                 warnings.append(f"Unresolved variables found: {missing_vars}")
 
@@ -542,7 +541,7 @@ async def validate_template(request: EmailPreviewRequest):
                 "valid": len(errors) == 0,
                 "errors": errors,
                 "warnings": warnings,
-                "template_name": request.template_name
+                "template_name": request.template_name,
             }
         )
 
@@ -550,5 +549,5 @@ async def validate_template(request: EmailPreviewRequest):
         logger.error(f"Error validating template: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to validate template: {str(e)}"
+            detail=f"Failed to validate template: {str(e)}",
         )

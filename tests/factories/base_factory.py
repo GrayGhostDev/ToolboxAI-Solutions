@@ -1,10 +1,10 @@
 """Base factory configuration for test data generation."""
 
+import uuid
+from datetime import datetime, timezone
+
 import factory
 from faker import Faker
-from typing import Any, Dict, Optional
-from datetime import datetime, timezone
-import uuid
 
 fake = Faker()
 

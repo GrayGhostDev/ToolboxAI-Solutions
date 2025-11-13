@@ -12,7 +12,12 @@ from typing import TYPE_CHECKING
 
 # Import from the main roblox_server module
 if TYPE_CHECKING:
-    from roblox_server import RobloxServer, RobloxMessage, RobloxContentRequest, roblox_server
+    from roblox_server import (
+        RobloxContentRequest,
+        RobloxMessage,
+        RobloxServer,
+        roblox_server,
+    )
 
 
 # For runtime imports

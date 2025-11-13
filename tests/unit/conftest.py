@@ -4,10 +4,12 @@ Minimal conftest for unit tests - avoids loading the full FastAPI app.
 This configuration is optimized for fast unit test execution without
 initializing the complete application stack.
 """
+
 import os
 import sys
-import pytest
 from pathlib import Path
+
+import pytest
 
 # Add project root to path - calculate from tests/unit/conftest.py
 project_root = Path(__file__).parent.parent.parent
@@ -29,6 +31,7 @@ os.environ["SKIP_HEAVY_IMPORTS"] = "true"
 # Disable full app initialization
 os.environ["PYTEST_UNIT_TESTS"] = "true"
 
+
 @pytest.fixture(scope="session", autouse=True)
 def test_environment():
     """Set up minimal test environment"""
@@ -37,5 +40,6 @@ def test_environment():
     if str(project_root) not in sys.path:
         sys.path.insert(0, str(project_root))
     yield
+
 
 # No other fixtures needed - unit tests define their own minimal fixtures

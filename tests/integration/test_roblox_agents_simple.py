@@ -4,16 +4,23 @@ Simple integration tests for Roblox AI Agent Suite
 Tests basic functionality of the Roblox agents.
 """
 
+from unittest.mock import Mock
+
 import pytest
-from unittest.mock import Mock, patch
 
 
 def test_roblox_agents_import():
     """Test that all Roblox agents can be imported"""
     try:
-        from core.agents.roblox.roblox_content_generation_agent import RobloxContentGenerationAgent
-        from core.agents.roblox.roblox_script_optimization_agent import RobloxScriptOptimizationAgent
-        from core.agents.roblox.roblox_security_validation_agent import RobloxSecurityValidationAgent
+        from core.agents.roblox.roblox_content_generation_agent import (
+            RobloxContentGenerationAgent,
+        )
+        from core.agents.roblox.roblox_script_optimization_agent import (
+            RobloxScriptOptimizationAgent,
+        )
+        from core.agents.roblox.roblox_security_validation_agent import (
+            RobloxSecurityValidationAgent,
+        )
 
         assert RobloxContentGenerationAgent is not None
         assert RobloxScriptOptimizationAgent is not None
@@ -25,7 +32,9 @@ def test_roblox_agents_import():
 
 def test_content_generation_agent_creation():
     """Test creating a content generation agent"""
-    from core.agents.roblox.roblox_content_generation_agent import RobloxContentGenerationAgent
+    from core.agents.roblox.roblox_content_generation_agent import (
+        RobloxContentGenerationAgent,
+    )
 
     mock_llm = Mock()
     agent = RobloxContentGenerationAgent(llm=mock_llm)
@@ -37,8 +46,8 @@ def test_content_generation_agent_creation():
 def test_optimization_agent_creation():
     """Test creating an optimization agent"""
     from core.agents.roblox.roblox_script_optimization_agent import (
+        OptimizationLevel,
         RobloxScriptOptimizationAgent,
-        OptimizationLevel
     )
 
     mock_llm = Mock()
@@ -51,7 +60,9 @@ def test_optimization_agent_creation():
 
 def test_security_agent_creation():
     """Test creating a security validation agent"""
-    from core.agents.roblox.roblox_security_validation_agent import RobloxSecurityValidationAgent
+    from core.agents.roblox.roblox_security_validation_agent import (
+        RobloxSecurityValidationAgent,
+    )
 
     mock_llm = Mock()
     agent = RobloxSecurityValidationAgent(llm=mock_llm)
@@ -63,7 +74,9 @@ def test_security_agent_creation():
 
 def test_optimization_agent_analyze_performance():
     """Test performance analysis functionality"""
-    from core.agents.roblox.roblox_script_optimization_agent import RobloxScriptOptimizationAgent
+    from core.agents.roblox.roblox_script_optimization_agent import (
+        RobloxScriptOptimizationAgent,
+    )
 
     mock_llm = Mock()
     agent = RobloxScriptOptimizationAgent(llm=mock_llm)
@@ -83,7 +96,9 @@ def test_optimization_agent_analyze_performance():
 
 def test_security_agent_detect_vulnerabilities():
     """Test vulnerability detection functionality"""
-    from core.agents.roblox.roblox_security_validation_agent import RobloxSecurityValidationAgent
+    from core.agents.roblox.roblox_security_validation_agent import (
+        RobloxSecurityValidationAgent,
+    )
 
     mock_llm = Mock()
     agent = RobloxSecurityValidationAgent(llm=mock_llm)
@@ -107,7 +122,9 @@ def test_security_agent_detect_vulnerabilities():
 
 def test_security_report_generation():
     """Test security report generation"""
-    from core.agents.roblox.roblox_security_validation_agent import RobloxSecurityValidationAgent
+    from core.agents.roblox.roblox_security_validation_agent import (
+        RobloxSecurityValidationAgent,
+    )
 
     mock_llm = Mock()
     agent = RobloxSecurityValidationAgent(llm=mock_llm)
@@ -124,10 +141,10 @@ def test_security_report_generation():
     report = agent.validate_script(test_script, "ServerScript")
 
     assert report is not None
-    assert hasattr(report, 'risk_score')
-    assert hasattr(report, 'vulnerabilities')
-    assert hasattr(report, 'compliance_status')
-    assert hasattr(report, 'recommendations')
+    assert hasattr(report, "risk_score")
+    assert hasattr(report, "vulnerabilities")
+    assert hasattr(report, "compliance_status")
+    assert hasattr(report, "recommendations")
 
     # Safe script should have low risk score
     assert report.risk_score < 5.0
@@ -136,8 +153,8 @@ def test_security_report_generation():
 def test_optimization_result_generation():
     """Test optimization result generation"""
     from core.agents.roblox.roblox_script_optimization_agent import (
+        OptimizationLevel,
         RobloxScriptOptimizationAgent,
-        OptimizationLevel
     )
 
     mock_llm = Mock()
@@ -153,17 +170,21 @@ def test_optimization_result_generation():
     result = agent.optimize_script(test_script, OptimizationLevel.CONSERVATIVE)
 
     assert result is not None
-    assert hasattr(result, 'original_code')
-    assert hasattr(result, 'optimized_code')
-    assert hasattr(result, 'issues_found')
-    assert hasattr(result, 'metrics')
+    assert hasattr(result, "original_code")
+    assert hasattr(result, "optimized_code")
+    assert hasattr(result, "issues_found")
+    assert hasattr(result, "metrics")
     assert result.optimization_level == OptimizationLevel.CONSERVATIVE
 
 
 def test_agent_integration_pipeline():
     """Test integration between multiple agents"""
-    from core.agents.roblox.roblox_script_optimization_agent import RobloxScriptOptimizationAgent
-    from core.agents.roblox.roblox_security_validation_agent import RobloxSecurityValidationAgent
+    from core.agents.roblox.roblox_script_optimization_agent import (
+        RobloxScriptOptimizationAgent,
+    )
+    from core.agents.roblox.roblox_security_validation_agent import (
+        RobloxSecurityValidationAgent,
+    )
 
     mock_llm = Mock()
     mock_llm.predict.return_value = "-- Generated educational content"

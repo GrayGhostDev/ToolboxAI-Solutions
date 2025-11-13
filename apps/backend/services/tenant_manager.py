@@ -20,13 +20,13 @@ or leaking implementation details.
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import func, select
-from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.orm import Session
 
 from apps.backend.core.database import SessionLocal
@@ -89,10 +89,10 @@ class TenantManager:
         name: str,
         slug: str,
         *,
-        created_by_id: Optional[UUID] = None,
+        created_by_id: UUID | None = None,
         subscription_tier: SubscriptionTier = SubscriptionTier.FREE,
-        description: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        description: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> Organization:
         """Create a new organization/tenant."""
 
@@ -152,11 +152,11 @@ class TenantManager:
     def list_organizations(
         self,
         *,
-        status: Optional[OrganizationStatus] = None,
-        subscription_tier: Optional[SubscriptionTier] = None,
+        status: OrganizationStatus | None = None,
+        subscription_tier: SubscriptionTier | None = None,
         limit: int = 100,
         offset: int = 0,
-    ) -> List[Organization]:
+    ) -> list[Organization]:
         with self._session() as session:
             query = select(Organization)
             if status is not None:
@@ -223,7 +223,9 @@ class TenantManager:
             user.organization_role = role
             if activate and hasattr(user, "status"):
                 try:
-                    from database.models.user_modern import UserStatus as ModernUserStatus
+                    from database.models.user_modern import (
+                        UserStatus as ModernUserStatus,
+                    )
 
                     user.status = ModernUserStatus.ACTIVE
                 except Exception:
@@ -255,7 +257,9 @@ class TenantManager:
 
             session.add(user)
 
-    def list_members(self, organization_id: UUID, *, limit: int = 100, offset: int = 0) -> List[User]:
+    def list_members(
+        self, organization_id: UUID, *, limit: int = 100, offset: int = 0
+    ) -> list[User]:
         with self._session() as session:
             query = (
                 select(User)
@@ -278,9 +282,9 @@ class TenantManager:
         email: str,
         *,
         role: str = "member",
-        invited_by_id: Optional[UUID] = None,
+        invited_by_id: UUID | None = None,
         expires_in_days: int = 7,
-        message: Optional[str] = None,
+        message: str | None = None,
     ) -> OrganizationInvitation:
         with self._session() as session:
             organization = session.get(Organization, organization_id)
@@ -308,10 +312,14 @@ class TenantManager:
             )
             return invitation
 
-    def mark_invitation_accepted(self, invitation_token: str, accepted_by: UUID) -> OrganizationInvitation:
+    def mark_invitation_accepted(
+        self, invitation_token: str, accepted_by: UUID
+    ) -> OrganizationInvitation:
         with self._session() as session:
             invitation = session.execute(
-                select(OrganizationInvitation).where(OrganizationInvitation.invitation_token == invitation_token)
+                select(OrganizationInvitation).where(
+                    OrganizationInvitation.invitation_token == invitation_token
+                )
             ).scalar_one_or_none()
 
             if invitation is None:
@@ -341,7 +349,7 @@ class TenantManager:
         api_calls_count: int,
         roblox_sessions_count: int,
         log_type: str = "daily",
-        usage_data: Optional[Dict[str, Any]] = None,
+        usage_data: dict[str, Any] | None = None,
     ) -> OrganizationUsageLog:
         with self._session() as session:
             organization = session.get(Organization, organization_id)
@@ -367,17 +375,23 @@ class TenantManager:
             session.expunge(usage_log)
             return usage_log
 
-    def get_recent_usage(self, organization_id: UUID, *, days: int = 30) -> List[OrganizationUsageLog]:
+    def get_recent_usage(
+        self, organization_id: UUID, *, days: int = 30
+    ) -> list[OrganizationUsageLog]:
         cutoff = datetime.now(timezone.utc) - timedelta(days=days)
         with self._session() as session:
-            logs = session.execute(
-                select(OrganizationUsageLog)
-                .where(
-                    OrganizationUsageLog.organization_id == organization_id,
-                    OrganizationUsageLog.log_date >= cutoff,
+            logs = (
+                session.execute(
+                    select(OrganizationUsageLog)
+                    .where(
+                        OrganizationUsageLog.organization_id == organization_id,
+                        OrganizationUsageLog.log_date >= cutoff,
+                    )
+                    .order_by(OrganizationUsageLog.log_date.desc())
                 )
-                .order_by(OrganizationUsageLog.log_date.desc())
-            ).scalars().all()
+                .scalars()
+                .all()
+            )
 
             for entry in logs:
                 session.expunge(entry)
@@ -395,7 +409,7 @@ class TenantManager:
             return int(count or 0)
 
 
-_tenant_manager_singleton: Optional[TenantManager] = None
+_tenant_manager_singleton: TenantManager | None = None
 
 
 def get_tenant_manager() -> TenantManager:

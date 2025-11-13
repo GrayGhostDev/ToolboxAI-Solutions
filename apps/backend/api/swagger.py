@@ -7,9 +7,11 @@ Uses the generated OpenAPI specification for comprehensive API exploration.
 
 import json
 from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import HTMLResponse
+
 
 def setup_swagger(app: FastAPI) -> None:
     """
@@ -27,7 +29,7 @@ def setup_swagger(app: FastAPI) -> None:
         # Load our generated OpenAPI spec as base
         openapi_file = Path(__file__).parent.parent.parent.parent / "openapi.json"
         if openapi_file.exists():
-            with open(openapi_file, 'r') as f:
+            with open(openapi_file) as f:
                 base_schema = json.load(f)
         else:
             # Fallback to auto-generated schema
@@ -71,14 +73,14 @@ def setup_swagger(app: FastAPI) -> None:
                 "type": "http",
                 "scheme": "bearer",
                 "bearerFormat": "JWT",
-                "description": "Enter your JWT token obtained from /api/v1/auth/login"
+                "description": "Enter your JWT token obtained from /api/v1/auth/login",
             },
             "ApiKeyAuth": {
                 "type": "apiKey",
                 "in": "header",
                 "name": "X-API-Key",
-                "description": "API key for service-to-service authentication"
-            }
+                "description": "API key for service-to-service authentication",
+            },
         }
 
         # Tag descriptions for better organization
@@ -104,7 +106,8 @@ def setup_swagger(app: FastAPI) -> None:
     # Custom Swagger UI configuration
     @app.get("/docs", include_in_schema=False)
     async def custom_swagger_ui_html():
-        return HTMLResponse(content=f"""
+        return HTMLResponse(
+            content=f"""
         <!DOCTYPE html>
         <html>
         <head>
@@ -181,12 +184,14 @@ def setup_swagger(app: FastAPI) -> None:
             </script>
         </body>
         </html>
-        """)
+        """
+        )
 
     # Redoc alternative documentation
     @app.get("/redoc", include_in_schema=False)
     async def redoc_html():
-        return HTMLResponse(content=f"""
+        return HTMLResponse(
+            content=f"""
         <!DOCTYPE html>
         <html>
         <head>
@@ -205,7 +210,8 @@ def setup_swagger(app: FastAPI) -> None:
             <script src="https://cdn.jsdelivr.net/npm/redoc@latest/bundles/redoc.standalone.js"></script>
         </body>
         </html>
-        """)
+        """
+        )
 
     # Health check for API documentation
     @app.get("/docs/health", tags=["System"])
@@ -213,9 +219,5 @@ def setup_swagger(app: FastAPI) -> None:
         """Check if API documentation is accessible"""
         return {
             "status": "healthy",
-            "documentation": {
-                "swagger": "/docs",
-                "redoc": "/redoc",
-                "openapi": "/openapi.json"
-            }
+            "documentation": {"swagger": "/docs", "redoc": "/redoc", "openapi": "/openapi.json"},
         }

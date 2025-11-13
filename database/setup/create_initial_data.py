@@ -5,17 +5,16 @@ Create Initial Data Script for ToolboxAI
 This script creates initial test data for all databases.
 """
 
-import os
 import sys
 from pathlib import Path
-from typing import List, Dict, Any
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from database.connection_manager import get_session
 from sqlalchemy import text
+
+from database.connection_manager import get_session
 
 
 def create_initial_data():

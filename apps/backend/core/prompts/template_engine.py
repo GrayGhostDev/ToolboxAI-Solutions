@@ -3,23 +3,16 @@ Prompt Template Engine for generating dynamic, personalized prompts
 """
 
 import logging
-from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime
-import re
-import json
-from jinja2 import Template, Environment, BaseLoader
-from langchain_core.prompts import PromptTemplate as LangChainPromptTemplate
+from typing import Any
+
+from jinja2 import BaseLoader, Environment
 
 from .models import (
-    PromptTemplate,
     ConversationContext,
-    PromptResponse,
-    UserProfile,
-    ContentRequirements,
-    PersonalizationData,
-    UniquenessEnhancement,
     ConversationStage,
-    ContentType,
+    PromptResponse,
+    PromptTemplate,
 )
 
 logger = logging.getLogger(__name__)
@@ -32,7 +25,7 @@ class PromptTemplateEngine:
     """
 
     def __init__(self):
-        self.templates: Dict[str, PromptTemplate] = {}
+        self.templates: dict[str, PromptTemplate] = {}
         self.jinja_env = Environment(loader=BaseLoader())
         self._load_default_templates()
 
@@ -393,11 +386,11 @@ This is going to be an unforgettable learning experience for your students! 🌟
             priority=9,
         )
 
-    def get_template(self, template_id: str) -> Optional[PromptTemplate]:
+    def get_template(self, template_id: str) -> PromptTemplate | None:
         """Get a specific template by ID"""
         return self.templates.get(template_id)
 
-    def get_templates_by_stage(self, stage: ConversationStage) -> List[PromptTemplate]:
+    def get_templates_by_stage(self, stage: ConversationStage) -> list[PromptTemplate]:
         """Get all templates for a specific conversation stage"""
         return [t for t in self.templates.values() if t.stage == stage and t.is_active]
 
@@ -405,7 +398,7 @@ This is going to be an unforgettable learning experience for your students! 🌟
         self,
         template_id: str,
         context: ConversationContext,
-        additional_vars: Optional[Dict[str, Any]] = None,
+        additional_vars: dict[str, Any] | None = None,
     ) -> PromptResponse:
         """Generate a personalized prompt using a template"""
 
@@ -441,8 +434,8 @@ This is going to be an unforgettable learning experience for your students! 🌟
         self,
         template: PromptTemplate,
         context: ConversationContext,
-        additional_vars: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        additional_vars: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Prepare variables for template rendering"""
 
         variables = {}
@@ -529,7 +522,7 @@ This is going to be an unforgettable learning experience for your students! 🌟
 
     def _validate_generated_content(
         self, content: str, template: PromptTemplate
-    ) -> Dict[str, bool]:
+    ) -> dict[str, bool]:
         """Validate the generated content against template rules"""
         results = {}
 
@@ -558,7 +551,7 @@ This is going to be an unforgettable learning experience for your students! 🌟
         self,
         context: ConversationContext,
         template: PromptTemplate,
-        validation_results: Dict[str, bool],
+        validation_results: dict[str, bool],
     ) -> float:
         """Calculate confidence score for the generated prompt"""
 
@@ -590,7 +583,7 @@ This is going to be an unforgettable learning experience for your students! 🌟
 
     def _generate_next_questions(
         self, template: PromptTemplate, context: ConversationContext
-    ) -> List[str]:
+    ) -> list[str]:
         """Generate follow-up questions based on template and context"""
         questions = []
 
@@ -626,7 +619,7 @@ This is going to be an unforgettable learning experience for your students! 🌟
 
     def _generate_suggested_actions(
         self, template: PromptTemplate, context: ConversationContext
-    ) -> List[str]:
+    ) -> list[str]:
         """Generate suggested actions based on template and context"""
         actions = []
 
@@ -659,7 +652,7 @@ This is going to be an unforgettable learning experience for your students! 🌟
 
     def _generate_agent_triggers(
         self, template: PromptTemplate, context: ConversationContext
-    ) -> List[str]:
+    ) -> list[str]:
         """Generate agent triggers based on template and context"""
         triggers = []
 
@@ -681,7 +674,7 @@ This is going to be an unforgettable learning experience for your students! 🌟
         name: str,
         stage: ConversationStage,
         template_text: str,
-        variables: List[str] = None,
+        variables: list[str] = None,
         **kwargs,
     ) -> PromptTemplate:
         """Create a custom prompt template"""
@@ -708,10 +701,10 @@ This is going to be an unforgettable learning experience for your students! 🌟
         """Deactivate a template"""
         return self.update_template(template_id, is_active=False)
 
-    def get_all_templates(self) -> List[PromptTemplate]:
+    def get_all_templates(self) -> list[PromptTemplate]:
         """Get all available templates"""
         return list(self.templates.values())
 
-    def get_templates_by_priority(self, min_priority: int = 1) -> List[PromptTemplate]:
+    def get_templates_by_priority(self, min_priority: int = 1) -> list[PromptTemplate]:
         """Get templates with minimum priority"""
         return [t for t in self.templates.values() if t.priority >= min_priority and t.is_active]

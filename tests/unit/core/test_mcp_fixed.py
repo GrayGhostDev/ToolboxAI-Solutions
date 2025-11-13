@@ -1,10 +1,13 @@
 import pytest_asyncio
+
 """
 Unit tests for MCP (Model Context Protocol) components - Fixed Version.
 """
 
-import pytest
 import asyncio
+
+import pytest
+
 
 def make_json_serializable(obj):
     """Convert non-serializable objects to serializable format."""
@@ -18,21 +21,23 @@ def make_json_serializable(obj):
         return str(obj)
 
 import json
-import tempfile
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from datetime import datetime, timezone
-from tests.fixtures.pusher_mocks import MockPusherService
-import sqlite3
-import aiosqlite
-import sys
 import os
+import sqlite3
+import sys
+import tempfile
+from datetime import datetime, timezone
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import aiosqlite
+
+from tests.fixtures.pusher_mocks import MockPusherService
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from core.mcp.server import MCPServer, ContextEntry, AuthenticatedClient
 from core.mcp.context_manager import ContextManager
 from core.mcp.memory_store import MemoryStore
+from core.mcp.server import AuthenticatedClient, ContextEntry, MCPServer
 
 
 # Test fixtures

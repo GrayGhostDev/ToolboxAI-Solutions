@@ -5,11 +5,11 @@ Provides REST API endpoints for processing design files and scanning the design 
 """
 
 import logging
-from typing import Dict, Any, Optional, List
-from fastapi import APIRouter, HTTPException, Query, Path as PathParam
+from typing import Any
+
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
-from apps.backend.services.design_file_converter import design_file_converter
 from apps.backend.services.design_folder_scanner import design_folder_scanner
 
 logger = logging.getLogger(__name__)
@@ -28,31 +28,31 @@ class DesignFileProcessResponse(BaseModel):
     file_path: str
     file_name: str
     file_type: str
-    content: Optional[str] = None
-    relative_path: Optional[str] = None
-    error: Optional[str] = None
+    content: str | None = None
+    relative_path: str | None = None
+    error: str | None = None
 
 
 class DesignFolderScanResponse(BaseModel):
     success: bool
     design_root: str
-    summary: Dict[str, Any]
-    categories: Dict[str, List[Dict[str, Any]]]
-    folder_structure: Dict[str, Any]
-    file_contents: Optional[List[Dict[str, Any]]] = None
-    error: Optional[str] = None
+    summary: dict[str, Any]
+    categories: dict[str, list[dict[str, Any]]]
+    folder_structure: dict[str, Any]
+    file_contents: list[dict[str, Any]] | None = None
+    error: str | None = None
 
 
 class DesignFileSearchRequest(BaseModel):
     query: str
-    category: Optional[str] = None
+    category: str | None = None
 
 
 class DesignFileSearchResponse(BaseModel):
     success: bool
     query: str
-    category: Optional[str]
-    results: List[Dict[str, Any]]
+    category: str | None
+    results: list[dict[str, Any]]
     total_results: int
 
 
@@ -90,7 +90,7 @@ async def process_design_file(request: DesignFileProcessRequest):
 @router.get("/scan-folder", response_model=DesignFolderScanResponse)
 async def scan_design_folder(
     include_content: bool = Query(True, description="Include file contents in response"),
-    folder_path: Optional[str] = Query(
+    folder_path: str | None = Query(
         None, description="Specific folder to scan (relative to design root)"
     ),
 ):

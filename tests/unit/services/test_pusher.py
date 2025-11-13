@@ -5,28 +5,28 @@ Tests Pusher Channels integration for real-time messaging, event triggering,
 channel authentication, webhook validation, and agent-specific events.
 """
 
-import pytest
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
 from datetime import datetime
-import json
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 from apps.backend.services.pusher import (
+    AGENT_CHANNELS,
+    AGENT_EVENTS,
     PusherService,
     PusherUnavailable,
-    get_pusher_service,
-    get_pusher_client,
-    trigger_event,
     authenticate_channel,
-    verify_webhook,
-    trigger_agent_event,
-    trigger_task_event,
-    trigger_metrics_update,
-    trigger_health_update,
-    trigger_agent_status_change,
     get_agent_channels,
     get_agent_events,
-    AGENT_CHANNELS,
-    AGENT_EVENTS
+    get_pusher_client,
+    get_pusher_service,
+    trigger_agent_event,
+    trigger_agent_status_change,
+    trigger_event,
+    trigger_health_update,
+    trigger_metrics_update,
+    trigger_task_event,
+    verify_webhook,
 )
 
 
@@ -47,7 +47,7 @@ def mock_pusher_client():
 @pytest.fixture
 def mock_settings():
     """Mock settings with Pusher configuration"""
-    with patch('apps.backend.services.pusher.settings') as mock:
+    with patch("apps.backend.services.pusher.settings") as mock:
         mock.PUSHER_ENABLED = True
         mock.PUSHER_APP_ID = "test_app_id"
         mock.PUSHER_KEY = "test_key"
@@ -63,15 +63,11 @@ class TestPusherServiceInitialization:
 
     def test_pusher_service_construction(self, mock_settings):
         """Test Pusher service construction with configuration"""
-        with patch('apps.backend.services.pusher.pusher') as mock_pusher_module:
+        with patch("apps.backend.services.pusher.pusher") as mock_pusher_module:
             mock_pusher_module.Pusher = Mock()
 
             service = PusherService(
-                app_id="app_123",
-                key="key_456",
-                secret="secret_789",
-                cluster="us3",
-                ssl=True
+                app_id="app_123", key="key_456", secret="secret_789", cluster="us3", ssl=True
             )
 
         assert service.app_id == "app_123"
@@ -82,14 +78,14 @@ class TestPusherServiceInitialization:
 
     def test_pusher_service_without_pusher_package(self):
         """Test service when pusher package not installed"""
-        with patch('apps.backend.services.pusher.pusher', None):
+        with patch("apps.backend.services.pusher.pusher", None):
             service = PusherService("app", "key", "secret")
 
         assert service.client is None
 
     def test_pusher_service_initialization_failure(self):
         """Test service when client initialization fails"""
-        with patch('apps.backend.services.pusher.pusher') as mock_pusher_module:
+        with patch("apps.backend.services.pusher.pusher") as mock_pusher_module:
             mock_pusher_module.Pusher = Mock(side_effect=ValueError("Invalid credentials"))
 
             service = PusherService("app", "key", "secret")
@@ -117,10 +113,7 @@ class TestEventTriggering:
         service = PusherService("app", "key", "secret")
         service.client = mock_pusher_client
 
-        data = {
-            "message": "Test",
-            "timestamp": datetime(2025, 1, 1, 12, 0, 0)
-        }
+        data = {"message": "Test", "timestamp": datetime(2025, 1, 1, 12, 0, 0)}
 
         service.trigger("test-channel", "test-event", data)
 
@@ -146,7 +139,9 @@ class TestEventTriggering:
         class UnserializableObject:
             pass
 
-        with patch('apps.backend.services.pusher.json.dumps', side_effect=TypeError("Not serializable")):
+        with patch(
+            "apps.backend.services.pusher.json.dumps", side_effect=TypeError("Not serializable")
+        ):
             service.trigger("channel", "event", {"obj": UnserializableObject()})
 
         # Should still trigger with fallback data
@@ -159,7 +154,7 @@ class TestEventTriggering:
 
         events = [
             {"channel": "ch1", "event": "ev1", "data": {}},
-            {"channel": "ch2", "event": "ev2", "data": {}}
+            {"channel": "ch2", "event": "ev2", "data": {}},
         ]
 
         result = service.trigger_batch(events)
@@ -194,8 +189,7 @@ class TestChannelAuthentication:
 
         assert "auth" in result
         mock_pusher_client.authenticate.assert_called_once_with(
-            channel="private-channel",
-            socket_id="socket_123"
+            channel="private-channel", socket_id="socket_123"
         )
 
     def test_authenticate_presence_channel(self, mock_pusher_client):
@@ -209,9 +203,7 @@ class TestChannelAuthentication:
 
         assert "auth" in result
         mock_pusher_client.authenticate.assert_called_once_with(
-            channel="presence-chat",
-            socket_id="socket_456",
-            custom_data=user_data
+            channel="presence-chat", socket_id="socket_456", custom_data=user_data
         )
 
     def test_authenticate_without_client(self):
@@ -312,7 +304,7 @@ class TestGlobalFunctions:
 
     def test_get_pusher_service(self, mock_settings):
         """Test getting Pusher service instance"""
-        with patch('apps.backend.services.pusher.pusher') as mock_pusher:
+        with patch("apps.backend.services.pusher.pusher") as mock_pusher:
             mock_pusher.Pusher = Mock()
 
             service = get_pusher_service()
@@ -322,7 +314,7 @@ class TestGlobalFunctions:
 
     def test_get_pusher_service_unavailable(self):
         """Test getting service when Pusher unavailable"""
-        with patch('apps.backend.services.pusher.settings') as mock_settings:
+        with patch("apps.backend.services.pusher.settings") as mock_settings:
             mock_settings.PUSHER_ENABLED = False
 
             with pytest.raises(PusherUnavailable):
@@ -330,7 +322,7 @@ class TestGlobalFunctions:
 
     def test_get_pusher_client(self, mock_settings):
         """Test getting raw Pusher client"""
-        with patch('apps.backend.services.pusher.pusher') as mock_pusher:
+        with patch("apps.backend.services.pusher.pusher") as mock_pusher:
             mock_client = Mock()
             mock_pusher.Pusher = Mock(return_value=mock_client)
 
@@ -340,7 +332,7 @@ class TestGlobalFunctions:
 
     def test_trigger_event_function(self, mock_settings):
         """Test trigger_event helper function"""
-        with patch('apps.backend.services.pusher.pusher') as mock_pusher:
+        with patch("apps.backend.services.pusher.pusher") as mock_pusher:
             mock_client = Mock()
             mock_pusher.Pusher = Mock(return_value=mock_client)
 
@@ -352,7 +344,7 @@ class TestGlobalFunctions:
 
     def test_authenticate_channel_private(self, mock_settings):
         """Test authenticate_channel for private channel"""
-        with patch('apps.backend.services.pusher.pusher') as mock_pusher:
+        with patch("apps.backend.services.pusher.pusher") as mock_pusher:
             mock_client = Mock()
             mock_client.authenticate = Mock(return_value={"auth": "token"})
             mock_pusher.Pusher = Mock(return_value=mock_client)
@@ -363,23 +355,20 @@ class TestGlobalFunctions:
 
     def test_authenticate_channel_presence(self, mock_settings):
         """Test authenticate_channel for presence channel"""
-        with patch('apps.backend.services.pusher.pusher') as mock_pusher:
+        with patch("apps.backend.services.pusher.pusher") as mock_pusher:
             mock_client = Mock()
             mock_client.authenticate = Mock(return_value={"auth": "token", "channel_data": "{}"})
             mock_pusher.Pusher = Mock(return_value=mock_client)
 
             result = authenticate_channel(
-                "socket_456",
-                "presence-chat",
-                user_id="user_123",
-                user_info={"name": "Test"}
+                "socket_456", "presence-chat", user_id="user_123", user_info={"name": "Test"}
             )
 
         assert "auth" in result
 
     def test_verify_webhook_valid(self, mock_settings):
         """Test webhook verification with valid signature"""
-        with patch('apps.backend.services.pusher.pusher') as mock_pusher:
+        with patch("apps.backend.services.pusher.pusher") as mock_pusher:
             mock_webhook = Mock()
             mock_webhook.validate = Mock(return_value={"events": []})
             mock_pusher.Webhook = Mock(return_value=mock_webhook)
@@ -390,7 +379,7 @@ class TestGlobalFunctions:
 
     def test_verify_webhook_invalid(self, mock_settings):
         """Test webhook verification with invalid signature"""
-        with patch('apps.backend.services.pusher.pusher') as mock_pusher:
+        with patch("apps.backend.services.pusher.pusher") as mock_pusher:
             mock_webhook = Mock()
             mock_webhook.validate = Mock(side_effect=Exception("Invalid signature"))
             mock_pusher.Webhook = Mock(return_value=mock_webhook)
@@ -407,7 +396,7 @@ class TestAgentEvents:
     @pytest.mark.asyncio
     async def test_trigger_agent_event(self, mock_settings):
         """Test triggering agent event"""
-        with patch('apps.backend.services.pusher.trigger_event') as mock_trigger:
+        with patch("apps.backend.services.pusher.trigger_event") as mock_trigger:
             await trigger_agent_event("agent_started", "agent_123", {"status": "idle"}, "user_456")
 
             # Should trigger on two channels
@@ -416,20 +405,18 @@ class TestAgentEvents:
     @pytest.mark.asyncio
     async def test_trigger_agent_event_error_handling(self, mock_settings):
         """Test agent event error handling"""
-        with patch('apps.backend.services.pusher.trigger_event', side_effect=Exception("Pusher error")):
+        with patch(
+            "apps.backend.services.pusher.trigger_event", side_effect=Exception("Pusher error")
+        ):
             # Should not raise exception
             await trigger_agent_event("agent_error", "agent_123", {})
 
     @pytest.mark.asyncio
     async def test_trigger_task_event(self, mock_settings):
         """Test triggering task event"""
-        with patch('apps.backend.services.pusher.trigger_event') as mock_trigger:
+        with patch("apps.backend.services.pusher.trigger_event") as mock_trigger:
             await trigger_task_event(
-                "task_created",
-                "task_789",
-                "agent_123",
-                {"description": "Test task"},
-                "user_456"
+                "task_created", "task_789", "agent_123", {"description": "Test task"}, "user_456"
             )
 
             # Should trigger on agent-tasks, agent-specific, and user-specific channels
@@ -438,7 +425,7 @@ class TestAgentEvents:
     @pytest.mark.asyncio
     async def test_trigger_task_event_without_user(self, mock_settings):
         """Test triggering task event without user"""
-        with patch('apps.backend.services.pusher.trigger_event') as mock_trigger:
+        with patch("apps.backend.services.pusher.trigger_event") as mock_trigger:
             await trigger_task_event("task_started", "task_999", "agent_456", {})
 
             # Should trigger on 2 channels (no user channel)
@@ -447,12 +434,8 @@ class TestAgentEvents:
     @pytest.mark.asyncio
     async def test_trigger_metrics_update(self, mock_settings):
         """Test triggering metrics update"""
-        with patch('apps.backend.services.pusher.trigger_event') as mock_trigger:
-            metrics = {
-                "success_rate": 95.5,
-                "error_rate": 4.5,
-                "throughput": 100
-            }
+        with patch("apps.backend.services.pusher.trigger_event") as mock_trigger:
+            metrics = {"success_rate": 95.5, "error_rate": 4.5, "throughput": 100}
 
             await trigger_metrics_update(metrics, "agent_123")
 
@@ -462,7 +445,7 @@ class TestAgentEvents:
     @pytest.mark.asyncio
     async def test_trigger_metrics_update_system_wide(self, mock_settings):
         """Test triggering system-wide metrics update"""
-        with patch('apps.backend.services.pusher.trigger_event') as mock_trigger:
+        with patch("apps.backend.services.pusher.trigger_event") as mock_trigger:
             await trigger_metrics_update({"system_metric": 100})
 
             # Should trigger only on metrics channel
@@ -471,12 +454,8 @@ class TestAgentEvents:
     @pytest.mark.asyncio
     async def test_trigger_health_update(self, mock_settings):
         """Test triggering health update"""
-        with patch('apps.backend.services.pusher.trigger_event') as mock_trigger:
-            health_data = {
-                "status": "healthy",
-                "uptime": 99.9,
-                "active_agents": 5
-            }
+        with patch("apps.backend.services.pusher.trigger_event") as mock_trigger:
+            health_data = {"status": "healthy", "uptime": 99.9, "active_agents": 5}
 
             await trigger_health_update(health_data)
 
@@ -487,7 +466,9 @@ class TestAgentEvents:
     @pytest.mark.asyncio
     async def test_trigger_agent_status_change(self, mock_settings):
         """Test triggering agent status change"""
-        with patch('apps.backend.services.pusher.trigger_agent_event', new_callable=AsyncMock) as mock_trigger:
+        with patch(
+            "apps.backend.services.pusher.trigger_agent_event", new_callable=AsyncMock
+        ) as mock_trigger:
             await trigger_agent_status_change("agent_123", "idle", "busy", {"task_id": "task_999"})
 
             mock_trigger.assert_awaited_once()
@@ -497,7 +478,9 @@ class TestAgentEvents:
     @pytest.mark.asyncio
     async def test_trigger_agent_status_change_to_offline(self, mock_settings):
         """Test agent status change to offline"""
-        with patch('apps.backend.services.pusher.trigger_agent_event', new_callable=AsyncMock) as mock_trigger:
+        with patch(
+            "apps.backend.services.pusher.trigger_agent_event", new_callable=AsyncMock
+        ) as mock_trigger:
             await trigger_agent_status_change("agent_456", "busy", "offline")
 
             call_args = mock_trigger.call_args

@@ -5,25 +5,23 @@ Provides repository pattern implementations for multi-tenant operations
 with proper tenant isolation and context management.
 """
 
-from typing import Optional, List, Dict, Any, Type, TypeVar, Generic
-from uuid import UUID
-from datetime import datetime, timedelta
 import logging
+from datetime import timedelta
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
+from uuid import UUID
 
+from sqlalchemy import and_, delete, func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session
-from sqlalchemy import select, update, delete, func, and_, or_
-from sqlalchemy.exc import IntegrityError, NoResultFound
 
-from database.models.base import TenantBaseModel, TenantContext, TenantAwareQuery
-from database.models.tenant import Organization, OrganizationInvitation, OrganizationUsageLog
+from database.models.base import TenantBaseModel
 from database.models.models import User  # Import existing User model
-
+from database.models.tenant import Organization, OrganizationUsageLog
 
 logger = logging.getLogger(__name__)
 
 # Type variable for generic repository
-T = TypeVar('T', bound=TenantBaseModel)
+T = TypeVar("T", bound=TenantBaseModel)
 
 
 class TenantRepository(Generic[T]):
@@ -42,8 +40,7 @@ class TenantRepository(Generic[T]):
         """Get a record by ID with tenant isolation"""
         query = select(self.model_class).where(
             and_(
-                self.model_class.id == id,
-                self.model_class.organization_id == self.organization_id
+                self.model_class.id == id, self.model_class.organization_id == self.organization_id
             )
         )
 
@@ -58,7 +55,7 @@ class TenantRepository(Generic[T]):
         limit: Optional[int] = None,
         offset: Optional[int] = None,
         include_deleted: bool = False,
-        order_by: Optional[str] = None
+        order_by: Optional[str] = None,
     ) -> List[T]:
         """Get all records for the current tenant"""
         query = select(self.model_class).where(
@@ -84,10 +81,10 @@ class TenantRepository(Generic[T]):
     async def create(self, **kwargs) -> T:
         """Create a new record with tenant isolation"""
         # Ensure organization_id is set
-        kwargs['organization_id'] = self.organization_id
+        kwargs["organization_id"] = self.organization_id
 
         # Set audit fields if available
-        kwargs.setdefault('created_at', func.now())
+        kwargs.setdefault("created_at", func.now())
 
         instance = self.model_class(**kwargs)
         self.session.add(instance)
@@ -145,8 +142,7 @@ class TenantRepository(Generic[T]):
         """Hard delete a record with tenant isolation"""
         query = delete(self.model_class).where(
             and_(
-                self.model_class.id == id,
-                self.model_class.organization_id == self.organization_id
+                self.model_class.id == id, self.model_class.organization_id == self.organization_id
             )
         )
 
@@ -211,14 +207,15 @@ class OrganizationRepository:
     async def create(self, **kwargs) -> Organization:
         """Create a new organization"""
         # Generate API key if not provided
-        if 'api_key' not in kwargs:
+        if "api_key" not in kwargs:
             import secrets
-            kwargs['api_key'] = f"org_{secrets.token_urlsafe(32)}"
+
+            kwargs["api_key"] = f"org_{secrets.token_urlsafe(32)}"
 
         # Set trial period if not provided
-        if 'trial_started_at' not in kwargs:
-            kwargs['trial_started_at'] = func.now()
-            kwargs['trial_expires_at'] = func.now() + timedelta(days=30)
+        if "trial_started_at" not in kwargs:
+            kwargs["trial_started_at"] = func.now()
+            kwargs["trial_expires_at"] = func.now() + timedelta(days=30)
 
         org = Organization(**kwargs)
         self.session.add(org)
@@ -253,11 +250,11 @@ class OrganizationRepository:
         if not org:
             return False
 
-        if metric == 'users':
+        if metric == "users":
             return org.can_add_user()
-        elif metric == 'classes':
+        elif metric == "classes":
             return org.can_add_class()
-        elif metric == 'storage':
+        elif metric == "storage":
             return org.can_use_storage(additional)
         else:
             return True
@@ -269,23 +266,23 @@ class OrganizationRepository:
             return {}
 
         return {
-            'current_usage': {
-                'users': org.current_users,
-                'classes': org.current_classes,
-                'storage_gb': org.current_storage_gb,
-                'api_calls': org.current_api_calls_this_month,
-                'roblox_sessions': org.current_roblox_sessions
+            "current_usage": {
+                "users": org.current_users,
+                "classes": org.current_classes,
+                "storage_gb": org.current_storage_gb,
+                "api_calls": org.current_api_calls_this_month,
+                "roblox_sessions": org.current_roblox_sessions,
             },
-            'limits': {
-                'users': org.max_users,
-                'classes': org.max_classes,
-                'storage_gb': org.max_storage_gb,
-                'api_calls': org.max_api_calls_per_month,
-                'roblox_sessions': org.max_roblox_sessions
+            "limits": {
+                "users": org.max_users,
+                "classes": org.max_classes,
+                "storage_gb": org.max_storage_gb,
+                "api_calls": org.max_api_calls_per_month,
+                "roblox_sessions": org.max_roblox_sessions,
             },
-            'usage_percentage': org.usage_percentage,
-            'subscription_tier': org.subscription_tier.value,
-            'status': org.status.value
+            "usage_percentage": org.usage_percentage,
+            "subscription_tier": org.subscription_tier.value,
+            "status": org.status.value,
         }
 
     async def log_usage(self, org_id: UUID, log_type: str = "daily") -> OrganizationUsageLog:
@@ -299,7 +296,7 @@ class OrganizationRepository:
             and_(
                 User.organization_id == org_id,
                 User.is_active == True,
-                User.last_login > func.now() - timedelta(days=1)
+                User.last_login > func.now() - timedelta(days=1),
             )
         )
         active_users_result = await self.session.execute(active_users_query)
@@ -315,16 +312,16 @@ class OrganizationRepository:
             active_users_count=active_users_count,
             log_type=log_type,
             usage_data={
-                'subscription_tier': org.subscription_tier.value,
-                'status': org.status.value,
-                'limits': {
-                    'users': org.max_users,
-                    'classes': org.max_classes,
-                    'storage_gb': org.max_storage_gb,
-                    'api_calls': org.max_api_calls_per_month,
-                    'roblox_sessions': org.max_roblox_sessions
-                }
-            }
+                "subscription_tier": org.subscription_tier.value,
+                "status": org.status.value,
+                "limits": {
+                    "users": org.max_users,
+                    "classes": org.max_classes,
+                    "storage_gb": org.max_storage_gb,
+                    "api_calls": org.max_api_calls_per_month,
+                    "roblox_sessions": org.max_roblox_sessions,
+                },
+            },
         )
 
         self.session.add(usage_log)
@@ -348,15 +345,13 @@ class TenantContextManager:
     async def __aenter__(self):
         # Set tenant context in PostgreSQL session
         await self.session.execute(
-            select(func.set_config('app.current_organization_id', str(self.organization_id), True))
+            select(func.set_config("app.current_organization_id", str(self.organization_id), True))
         )
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         # Clear tenant context
-        await self.session.execute(
-            select(func.set_config('app.current_organization_id', '', True))
-        )
+        await self.session.execute(select(func.set_config("app.current_organization_id", "", True)))
 
     def get_repository(self, model_class: Type[T]) -> TenantRepository[T]:
         """Get a tenant-aware repository for the specified model"""

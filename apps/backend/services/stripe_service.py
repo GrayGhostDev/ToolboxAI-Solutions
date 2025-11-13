@@ -13,31 +13,22 @@ Multi-Tenant Security:
 @updated 2025-10-11 - Added multi-tenant organization filtering
 """
 
-import stripe
-from stripe.error import (
-    StripeError,
-    CardError,
-    InvalidRequestError,
-    AuthenticationError,
-    APIConnectionError,
-    RateLimitError,
-    SignatureVerificationError,
-)
-import logging
-import asyncio
-from typing import Optional, Dict, Any, List, Tuple
-from datetime import datetime, timedelta, timezone
-from decimal import Decimal
-import json
 import hashlib
-import hmac
+import logging
+from datetime import datetime
+from typing import Any
 from uuid import UUID
 
+import stripe
+from sqlalchemy import text
+from stripe.error import (
+    SignatureVerificationError,
+    StripeError,
+)
+
+from apps.backend.core.cache import CacheConfig, CacheKey, cache
 from apps.backend.core.config import settings
-from apps.backend.core.cache import cache, CacheConfig, CacheKey
 from database.connection import get_db
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, text
 
 logger = logging.getLogger(__name__)
 
@@ -123,10 +114,10 @@ class StripeService:
         self,
         user_id: str,
         email: str,
-        name: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        payment_method_id: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        name: str | None = None,
+        metadata: dict[str, Any] | None = None,
+        payment_method_id: str | None = None,
+    ) -> dict[str, Any]:
         """
         Create a new Stripe customer
 
@@ -184,7 +175,7 @@ class StripeService:
             logger.error(f"Unexpected error creating customer: {e}")
             raise
 
-    async def get_customer(self, customer_id: str) -> Optional[Dict[str, Any]]:
+    async def get_customer(self, customer_id: str) -> dict[str, Any] | None:
         """
         Retrieve a Stripe customer
 
@@ -212,7 +203,7 @@ class StripeService:
             logger.error(f"Stripe error retrieving customer: {e}")
             return None
 
-    async def update_customer(self, customer_id: str, **kwargs) -> Dict[str, Any]:
+    async def update_customer(self, customer_id: str, **kwargs) -> dict[str, Any]:
         """
         Update a Stripe customer
 
@@ -243,10 +234,10 @@ class StripeService:
         customer_id: str,
         price_id: str,
         trial_days: int = 14,
-        metadata: Optional[Dict[str, Any]] = None,
-        coupon: Optional[str] = None,
+        metadata: dict[str, Any] | None = None,
+        coupon: str | None = None,
         payment_behavior: str = "default_incomplete",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create a subscription for a customer
 
@@ -308,8 +299,8 @@ class StripeService:
             raise
 
     async def cancel_subscription(
-        self, subscription_id: str, immediately: bool = False, reason: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, subscription_id: str, immediately: bool = False, reason: str | None = None
+    ) -> dict[str, Any]:
         """
         Cancel a subscription
 
@@ -341,10 +332,10 @@ class StripeService:
     async def update_subscription(
         self,
         subscription_id: str,
-        price_id: Optional[str] = None,
-        quantity: Optional[int] = None,
+        price_id: str | None = None,
+        quantity: int | None = None,
         proration_behavior: str = "create_prorations",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Update a subscription (upgrade/downgrade)
 
@@ -388,7 +379,7 @@ class StripeService:
     # Payment Methods
     async def attach_payment_method(
         self, payment_method_id: str, customer_id: str, set_as_default: bool = True
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Attach a payment method to a customer
 
@@ -419,7 +410,7 @@ class StripeService:
 
     async def list_payment_methods(
         self, customer_id: str, type: str = "card"
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         List payment methods for a customer
 
@@ -444,12 +435,12 @@ class StripeService:
         self,
         amount: int,
         currency: str = "usd",
-        customer_id: Optional[str] = None,
-        payment_method_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        description: Optional[str] = None,
+        customer_id: str | None = None,
+        payment_method_id: str | None = None,
+        metadata: dict[str, Any] | None = None,
+        description: str | None = None,
         confirm: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create a payment intent for one-time payment
 
@@ -501,16 +492,16 @@ class StripeService:
     # Checkout Sessions
     async def create_checkout_session(
         self,
-        customer_id: Optional[str] = None,
-        price_id: Optional[str] = None,
-        line_items: Optional[List[Dict]] = None,
+        customer_id: str | None = None,
+        price_id: str | None = None,
+        line_items: list[dict] | None = None,
         mode: str = "payment",
         success_url: str = None,
         cancel_url: str = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
         allow_promotion_codes: bool = True,
-        trial_period_days: Optional[int] = None,
-    ) -> Dict[str, Any]:
+        trial_period_days: int | None = None,
+    ) -> dict[str, Any]:
         """
         Create a Stripe Checkout session
 
@@ -570,8 +561,8 @@ class StripeService:
 
     # Invoices
     async def get_invoices(
-        self, customer_id: str, limit: int = 10, starting_after: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+        self, customer_id: str, limit: int = 10, starting_after: str | None = None
+    ) -> list[dict[str, Any]]:
         """
         Get invoices for a customer
 
@@ -610,7 +601,7 @@ class StripeService:
             return []
 
     # Webhook Handling
-    async def handle_webhook(self, payload: bytes, signature: str) -> Tuple[bool, Dict[str, Any]]:
+    async def handle_webhook(self, payload: bytes, signature: str) -> tuple[bool, dict[str, Any]]:
         """
         Handle Stripe webhook events
 
@@ -680,8 +671,8 @@ class StripeService:
 
     # Webhook Event Handlers
     async def _handle_customer_created(
-        self, event: Dict, organization_id: Optional[UUID] = None
-    ) -> Dict[str, Any]:
+        self, event: dict, organization_id: UUID | None = None
+    ) -> dict[str, Any]:
         """
         Handle customer.created webhook
 
@@ -695,7 +686,9 @@ class StripeService:
         if user_id and organization_id:
             async for session in get_db():
                 # Set RLS context
-                await session.execute(text(f"SET app.current_organization_id = '{organization_id}'"))
+                await session.execute(
+                    text(f"SET app.current_organization_id = '{organization_id}'")
+                )
                 # Update user with Stripe customer ID
                 # This assumes you have a User model with stripe_customer_id field
                 pass
@@ -703,8 +696,8 @@ class StripeService:
         return {"status": "processed", "customer_id": customer["id"]}
 
     async def _handle_subscription_created(
-        self, event: Dict, organization_id: Optional[UUID] = None
-    ) -> Dict[str, Any]:
+        self, event: dict, organization_id: UUID | None = None
+    ) -> dict[str, Any]:
         """
         Handle customer.subscription.created webhook
 
@@ -720,7 +713,9 @@ class StripeService:
         if organization_id:
             async for session in get_db():
                 # Set RLS context
-                await session.execute(text(f"SET app.current_organization_id = '{organization_id}'"))
+                await session.execute(
+                    text(f"SET app.current_organization_id = '{organization_id}'")
+                )
                 # Update subscription record with organization filter
                 # Your database update logic here
                 pass
@@ -731,8 +726,8 @@ class StripeService:
         return {"status": "processed", "subscription_id": subscription["id"]}
 
     async def _handle_subscription_updated(
-        self, event: Dict, organization_id: Optional[UUID] = None
-    ) -> Dict[str, Any]:
+        self, event: dict, organization_id: UUID | None = None
+    ) -> dict[str, Any]:
         """
         Handle customer.subscription.updated webhook
 
@@ -746,7 +741,9 @@ class StripeService:
         if organization_id:
             async for session in get_db():
                 # Set RLS context
-                await session.execute(text(f"SET app.current_organization_id = '{organization_id}'"))
+                await session.execute(
+                    text(f"SET app.current_organization_id = '{organization_id}'")
+                )
 
                 # Check what changed
                 if "status" in previous:
@@ -765,8 +762,8 @@ class StripeService:
         return {"status": "processed", "subscription_id": subscription["id"]}
 
     async def _handle_subscription_deleted(
-        self, event: Dict, organization_id: Optional[UUID] = None
-    ) -> Dict[str, Any]:
+        self, event: dict, organization_id: UUID | None = None
+    ) -> dict[str, Any]:
         """
         Handle customer.subscription.deleted webhook
 
@@ -782,7 +779,9 @@ class StripeService:
         if organization_id:
             async for session in get_db():
                 # Set RLS context
-                await session.execute(text(f"SET app.current_organization_id = '{organization_id}'"))
+                await session.execute(
+                    text(f"SET app.current_organization_id = '{organization_id}'")
+                )
                 # Update subscription record with organization filter
                 # Your database update logic here
                 pass
@@ -792,7 +791,7 @@ class StripeService:
 
         return {"status": "processed", "subscription_id": subscription["id"]}
 
-    async def _handle_subscription_trial_ending(self, event: Dict) -> Dict[str, Any]:
+    async def _handle_subscription_trial_ending(self, event: dict) -> dict[str, Any]:
         """Handle customer.subscription.trial_will_end webhook"""
         subscription = event["data"]["object"]
 
@@ -802,8 +801,8 @@ class StripeService:
         return {"status": "processed", "subscription_id": subscription["id"]}
 
     async def _handle_payment_succeeded(
-        self, event: Dict, organization_id: Optional[UUID] = None
-    ) -> Dict[str, Any]:
+        self, event: dict, organization_id: UUID | None = None
+    ) -> dict[str, Any]:
         """
         Handle payment_intent.succeeded webhook
 
@@ -816,7 +815,9 @@ class StripeService:
         if organization_id:
             async for session in get_db():
                 # Set RLS context
-                await session.execute(text(f"SET app.current_organization_id = '{organization_id}'"))
+                await session.execute(
+                    text(f"SET app.current_organization_id = '{organization_id}'")
+                )
                 # Update payment record in database with organization filter
                 # Your database update logic here
                 pass
@@ -828,8 +829,8 @@ class StripeService:
         return {"status": "processed", "payment_intent_id": payment_intent["id"]}
 
     async def _handle_payment_failed(
-        self, event: Dict, organization_id: Optional[UUID] = None
-    ) -> Dict[str, Any]:
+        self, event: dict, organization_id: UUID | None = None
+    ) -> dict[str, Any]:
         """
         Handle payment_intent.payment_failed webhook
 
@@ -842,7 +843,9 @@ class StripeService:
         if organization_id:
             async for session in get_db():
                 # Set RLS context
-                await session.execute(text(f"SET app.current_organization_id = '{organization_id}'"))
+                await session.execute(
+                    text(f"SET app.current_organization_id = '{organization_id}'")
+                )
                 # Update payment record in database with organization filter
                 # Your database update logic here
                 pass
@@ -855,7 +858,7 @@ class StripeService:
 
         return {"status": "processed", "payment_intent_id": payment_intent["id"]}
 
-    async def _handle_invoice_paid(self, event: Dict) -> Dict[str, Any]:
+    async def _handle_invoice_paid(self, event: dict) -> dict[str, Any]:
         """Handle invoice.paid webhook"""
         invoice = event["data"]["object"]
 
@@ -864,7 +867,7 @@ class StripeService:
 
         return {"status": "processed", "invoice_id": invoice["id"]}
 
-    async def _handle_invoice_payment_failed(self, event: Dict) -> Dict[str, Any]:
+    async def _handle_invoice_payment_failed(self, event: dict) -> dict[str, Any]:
         """Handle invoice.payment_failed webhook"""
         invoice = event["data"]["object"]
 
@@ -876,7 +879,7 @@ class StripeService:
 
         return {"status": "processed", "invoice_id": invoice["id"]}
 
-    async def _handle_invoice_upcoming(self, event: Dict) -> Dict[str, Any]:
+    async def _handle_invoice_upcoming(self, event: dict) -> dict[str, Any]:
         """Handle invoice.upcoming webhook"""
         invoice = event["data"]["object"]
 
@@ -886,8 +889,8 @@ class StripeService:
         return {"status": "processed", "invoice_id": invoice["id"]}
 
     async def _handle_checkout_completed(
-        self, event: Dict, organization_id: Optional[UUID] = None
-    ) -> Dict[str, Any]:
+        self, event: dict, organization_id: UUID | None = None
+    ) -> dict[str, Any]:
         """
         Handle checkout.session.completed webhook
 
@@ -917,7 +920,7 @@ class StripeService:
 
         return {"status": "processed", "session_id": session["id"]}
 
-    async def _handle_checkout_expired(self, event: Dict) -> Dict[str, Any]:
+    async def _handle_checkout_expired(self, event: dict) -> dict[str, Any]:
         """Handle checkout.session.expired webhook"""
         session = event["data"]["object"]
 
@@ -926,17 +929,17 @@ class StripeService:
 
         return {"status": "processed", "session_id": session["id"]}
 
-    async def _handle_customer_updated(self, event: Dict) -> Dict[str, Any]:
+    async def _handle_customer_updated(self, event: dict) -> dict[str, Any]:
         """Handle customer.updated webhook"""
         customer = event["data"]["object"]
         return {"status": "processed", "customer_id": customer["id"]}
 
-    async def _handle_customer_deleted(self, event: Dict) -> Dict[str, Any]:
+    async def _handle_customer_deleted(self, event: dict) -> dict[str, Any]:
         """Handle customer.deleted webhook"""
         customer = event["data"]["object"]
         return {"status": "processed", "customer_id": customer["id"]}
 
-    async def _handle_payment_method_attached(self, event: Dict) -> Dict[str, Any]:
+    async def _handle_payment_method_attached(self, event: dict) -> dict[str, Any]:
         """Handle payment_method.attached webhook"""
         payment_method = event["data"]["object"]
         return {"status": "processed", "payment_method_id": payment_method["id"]}
@@ -946,8 +949,8 @@ class StripeService:
         self,
         start_date: datetime,
         end_date: datetime,
-        organization_id: Optional[UUID] = None,
-    ) -> Dict[str, Any]:
+        organization_id: UUID | None = None,
+    ) -> dict[str, Any]:
         """
         Get revenue metrics for a date range
 
@@ -974,9 +977,7 @@ class StripeService:
             if organization_id:
                 org_id_str = str(organization_id)
                 charges.data = [
-                    c
-                    for c in charges.data
-                    if c.metadata.get("organization_id") == org_id_str
+                    c for c in charges.data if c.metadata.get("organization_id") == org_id_str
                 ]
 
             total_revenue = sum(c.amount for c in charges.data if c.paid) / 100
@@ -989,9 +990,7 @@ class StripeService:
             if organization_id:
                 org_id_str = str(organization_id)
                 subscriptions.data = [
-                    s
-                    for s in subscriptions.data
-                    if s.metadata.get("organization_id") == org_id_str
+                    s for s in subscriptions.data if s.metadata.get("organization_id") == org_id_str
                 ]
 
             active_subscriptions = [s for s in subscriptions.data if s.status == "active"]
@@ -1022,10 +1021,8 @@ class StripeService:
             return {}
 
     async def retry_payment_intent(
-        self,
-        payment_intent_id: str,
-        payment_method_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, payment_intent_id: str, payment_method_id: str | None = None
+    ) -> dict[str, Any]:
         """
         Retry a failed payment intent
         Following 2025 Stripe best practices for payment recovery
@@ -1045,14 +1042,13 @@ class StripeService:
                 return {
                     "success": True,
                     "status": payment_intent.status,
-                    "payment_intent": payment_intent.to_dict()
+                    "payment_intent": payment_intent.to_dict(),
                 }
 
             # Update payment method if provided
             if payment_method_id:
                 payment_intent = stripe.PaymentIntent.modify(
-                    payment_intent_id,
-                    payment_method=payment_method_id
+                    payment_intent_id, payment_method=payment_method_id
                 )
 
             # Confirm the payment intent again
@@ -1064,32 +1060,31 @@ class StripeService:
                 return {
                     "success": False,
                     "status": "requires_payment_method",
-                    "error": "Payment method required"
+                    "error": "Payment method required",
                 }
 
-            logger.info(f"Retried payment intent: {payment_intent_id}, status: {payment_intent.status}")
+            logger.info(
+                f"Retried payment intent: {payment_intent_id}, status: {payment_intent.status}"
+            )
             return {
                 "success": payment_intent.status == "succeeded",
                 "status": payment_intent.status,
-                "payment_intent": payment_intent.to_dict()
+                "payment_intent": payment_intent.to_dict(),
             }
 
         except StripeError as e:
             logger.error(f"Stripe error retrying payment: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     # Refunds
     async def create_refund(
         self,
-        charge_id: Optional[str] = None,
-        payment_intent_id: Optional[str] = None,
-        amount: Optional[int] = None,
+        charge_id: str | None = None,
+        payment_intent_id: str | None = None,
+        amount: int | None = None,
         reason: str = "requested_by_customer",
-        metadata: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         Create a refund
 

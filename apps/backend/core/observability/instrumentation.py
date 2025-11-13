@@ -5,31 +5,26 @@ Integrates OpenTelemetry with all custom load balancing components
 to provide comprehensive distributed tracing.
 """
 
-import asyncio
-import time
 import logging
-from typing import Dict, Any, Optional, List, Callable
+import time
+from collections.abc import Callable
 from functools import wraps
-from contextlib import asynccontextmanager
+from typing import Any
 
+from apps.backend.core.websocket_cluster import WebSocketCluster, get_websocket_cluster
+from database.replica_router import get_replica_router
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.base import BaseHTTPMiddleware
-from opentelemetry import trace, baggage, context
-from opentelemetry.trace import Span, StatusCode, Status
-from opentelemetry.semconv.trace import SpanAttributes
+from opentelemetry import baggage, context, trace
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.semconv.trace import SpanAttributes
+from opentelemetry.trace import Span, Status, StatusCode
 
+from apps.backend.core.circuit_breaker import get_circuit_breaker
 from apps.backend.core.observability.telemetry import (
-    TelemetryManager,
     LoadBalancerInstrumentor,
-    get_telemetry,
+    TelemetryManager,
 )
-from apps.backend.core.circuit_breaker import CircuitBreaker, get_circuit_breaker
-from apps.backend.core.rate_limiter import RateLimiter
-from database.replica_router import ReplicaRouter, get_replica_router
-from apps.backend.core.edge_cache import EdgeCache
-from apps.backend.core.websocket_cluster import WebSocketCluster, get_websocket_cluster
-from apps.backend.core.global_load_balancer import GlobalLoadBalancer
 
 logger = logging.getLogger(__name__)
 
@@ -320,7 +315,7 @@ class ComponentInstrumentor:
         original_send = cluster.send_message
 
         @wraps(original_send)
-        async def traced_send(connection_id: str, message: Dict[str, Any]):
+        async def traced_send(connection_id: str, message: dict[str, Any]):
             async with self.telemetry.trace_async_operation(
                 "websocket.send_message",
                 attributes={
@@ -351,7 +346,7 @@ class TraceContextPropagator:
     def __init__(self, telemetry: TelemetryManager):
         self.telemetry = telemetry
 
-    def inject_to_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
+    def inject_to_message(self, message: dict[str, Any]) -> dict[str, Any]:
         """Inject trace context into message"""
 
         headers = {}
@@ -360,7 +355,7 @@ class TraceContextPropagator:
         message["_trace_context"] = headers
         return message
 
-    def extract_from_message(self, message: Dict[str, Any]) -> context.Context:
+    def extract_from_message(self, message: dict[str, Any]) -> context.Context:
         """Extract trace context from message"""
 
         if "_trace_context" in message:
@@ -369,8 +364,8 @@ class TraceContextPropagator:
         return context.get_current()
 
     async def propagate_to_service(
-        self, service_url: str, headers: Dict[str, str] = None
-    ) -> Dict[str, str]:
+        self, service_url: str, headers: dict[str, str] = None
+    ) -> dict[str, str]:
         """Propagate trace context to another service"""
 
         if headers is None:
@@ -396,7 +391,7 @@ class PerformanceProfiler:
 
     def __init__(self, telemetry: TelemetryManager):
         self.telemetry = telemetry
-        self.profile_spans: Dict[str, List[Dict]] = {}
+        self.profile_spans: dict[str, list[dict]] = {}
 
     def profile_endpoint(self, pattern: str = None):
         """Decorator for profiling FastAPI endpoints"""
@@ -470,7 +465,7 @@ class PerformanceProfiler:
 
                         return result
 
-                    except Exception as e:
+                    except Exception:
                         profiler.disable()
                         tracemalloc.stop()
                         raise
@@ -479,7 +474,7 @@ class PerformanceProfiler:
 
         return decorator
 
-    def get_profile_report(self, endpoint: str = None) -> Dict[str, Any]:
+    def get_profile_report(self, endpoint: str = None) -> dict[str, Any]:
         """Get profiling report"""
 
         if endpoint:

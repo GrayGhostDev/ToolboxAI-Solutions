@@ -9,8 +9,8 @@ Central configuration for all Pusher-related tests including:
 """
 
 import os
-from typing import Dict, Any, List
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -69,21 +69,9 @@ if os.getenv("PERFORMANCE_TEST") == "true":
 
 # Test channel configurations
 CHANNEL_CONFIGS = {
-    "public": {
-        "prefix": "",
-        "auth_required": False,
-        "presence": False
-    },
-    "private": {
-        "prefix": "private-",
-        "auth_required": True,
-        "presence": False
-    },
-    "presence": {
-        "prefix": "presence-",
-        "auth_required": True,
-        "presence": True
-    }
+    "public": {"prefix": "", "auth_required": False, "presence": False},
+    "private": {"prefix": "private-", "auth_required": True, "presence": False},
+    "presence": {"prefix": "presence-", "auth_required": True, "presence": True},
 }
 
 # Test message templates
@@ -95,8 +83,8 @@ MESSAGE_TEMPLATES = {
             "stage": "generating",
             "percentage": 50,
             "message": "Generating content...",
-            "estimatedTimeRemaining": 30
-        }
+            "estimatedTimeRemaining": 30,
+        },
     },
     "content_complete": {
         "type": "content_complete",
@@ -107,9 +95,9 @@ MESSAGE_TEMPLATES = {
                 "scripts": ["script1.lua", "script2.lua"],
                 "terrain": {"type": "hills"},
                 "assets": ["tree", "rock"],
-                "quiz": {"questions": []}
-            }
-        }
+                "quiz": {"questions": []},
+            },
+        },
     },
     "system_notification": {
         "type": "system_notification",
@@ -119,8 +107,8 @@ MESSAGE_TEMPLATES = {
             "title": "Test Notification",
             "message": "This is a test notification",
             "timestamp": None,  # Will be set dynamically
-            "dismissible": True
-        }
+            "dismissible": True,
+        },
     },
     "user_message": {
         "type": "user_message",
@@ -129,17 +117,17 @@ MESSAGE_TEMPLATES = {
             "userId": "user-{user_id}",
             "userName": "Test User {user_id}",
             "content": "Hello from user {user_id}!",
-            "timestamp": None  # Will be set dynamically
-        }
+            "timestamp": None,  # Will be set dynamically
+        },
     },
     "analytics_update": {
         "type": "analytics_update",
         "payload": {
             "metric": "user_activity",
             "value": 100,
-            "timestamp": None  # Will be set dynamically
-        }
-    }
+            "timestamp": None,  # Will be set dynamically
+        },
+    },
 }
 
 # Performance test scenarios
@@ -148,30 +136,31 @@ PERFORMANCE_SCENARIOS = {
         "concurrent_connections": 10,
         "messages_per_second": 10,
         "duration_seconds": 60,
-        "channels_per_connection": 5
+        "channels_per_connection": 5,
     },
     "medium_load": {
         "concurrent_connections": 100,
         "messages_per_second": 100,
         "duration_seconds": 300,
-        "channels_per_connection": 10
+        "channels_per_connection": 10,
     },
     "heavy_load": {
         "concurrent_connections": 500,
         "messages_per_second": 500,
         "duration_seconds": 600,
-        "channels_per_connection": 20
+        "channels_per_connection": 20,
     },
     "stress_test": {
         "concurrent_connections": 1000,
         "messages_per_second": 1000,
         "duration_seconds": 300,
-        "channels_per_connection": 50
-    }
+        "channels_per_connection": 50,
+    },
 }
 
+
 # Test user data generators
-def generate_test_user(user_id: int) -> Dict[str, Any]:
+def generate_test_user(user_id: int) -> dict[str, Any]:
     """Generate test user data"""
     return {
         "id": f"test-user-{user_id}",
@@ -179,22 +168,25 @@ def generate_test_user(user_id: int) -> Dict[str, Any]:
         "email": f"user{user_id}@test.com",
         "role": "student" if user_id % 2 == 0 else "teacher",
         "avatar": f"avatar{user_id}.png",
-        "status": "online"
+        "status": "online",
     }
 
-def generate_test_classroom(classroom_id: int, member_count: int = 10) -> Dict[str, Any]:
+
+def generate_test_classroom(classroom_id: int, member_count: int = 10) -> dict[str, Any]:
     """Generate test classroom data"""
     return {
         "id": f"classroom-{classroom_id}",
         "name": f"Test Classroom {classroom_id}",
         "members": [generate_test_user(i) for i in range(member_count)],
         "teacher": generate_test_user(0),  # First user is teacher
-        "created_at": "2024-01-01T00:00:00Z"
+        "created_at": "2024-01-01T00:00:00Z",
     }
 
-def generate_test_message(message_id: int, user_id: int = 1) -> Dict[str, Any]:
+
+def generate_test_message(message_id: int, user_id: int = 1) -> dict[str, Any]:
     """Generate test message"""
     import time
+
     template = MESSAGE_TEMPLATES["user_message"].copy()
     template["payload"]["id"] = template["payload"]["id"].format(id=message_id)
     template["payload"]["userId"] = template["payload"]["userId"].format(user_id=user_id)
@@ -203,9 +195,11 @@ def generate_test_message(message_id: int, user_id: int = 1) -> Dict[str, Any]:
     template["payload"]["timestamp"] = int(time.time() * 1000)
     return template
 
-def generate_bulk_messages(count: int, template_name: str = "user_message") -> List[Dict[str, Any]]:
+
+def generate_bulk_messages(count: int, template_name: str = "user_message") -> list[dict[str, Any]]:
     """Generate bulk test messages"""
     import time
+
     messages = []
 
     for i in range(count):
@@ -224,6 +218,7 @@ def generate_bulk_messages(count: int, template_name: str = "user_message") -> L
 
     return messages
 
+
 # Browser test configurations
 BROWSER_CONFIG = {
     "headless": True,
@@ -236,8 +231,8 @@ BROWSER_CONFIG = {
         "--disable-gpu",
         "--disable-background-timer-throttling",
         "--disable-backgrounding-occluded-windows",
-        "--disable-renderer-backgrounding"
-    ]
+        "--disable-renderer-backgrounding",
+    ],
 }
 
 # E2E test selectors
@@ -246,12 +241,10 @@ SELECTORS = {
     "login_email": "[data-testid=email-input]",
     "login_password": "[data-testid=password-input]",
     "login_button": "[data-testid=login-button]",
-
     # Dashboard
     "dashboard_container": "[data-testid=dashboard-container]",
     "connection_status": "[data-testid=connection-status]",
     "reconnection_indicator": "[data-testid=reconnection-indicator]",
-
     # Content Generation
     "generate_button": "[data-testid=generate-button]",
     "progress_container": "[data-testid=progress-container]",
@@ -259,7 +252,6 @@ SELECTORS = {
     "stage_message": "[data-testid=stage-message]",
     "generation_complete": "[data-testid=generation-complete]",
     "content_preview": "[data-testid=content-preview]",
-
     # Collaboration
     "collaboration_workspace": "[data-testid=collaboration-workspace]",
     "presence_members": "[data-testid=presence-members]",
@@ -268,17 +260,15 @@ SELECTORS = {
     "collaboration_input": "[data-testid=collaboration-input]",
     "send_message_button": "[data-testid=send-message-button]",
     "message_item": "[data-testid=message-item]",
-
     # Notifications
     "system_notification": "[data-testid=system-notification]",
     "notification_title": "[data-testid=notification-title]",
     "dismiss_notification": "[data-testid=dismiss-notification]",
-
     # Analytics
     "analytics_dashboard": "[data-testid=analytics-dashboard]",
     "user_activity_chart": "[data-testid=user-activity-chart]",
     "content_generation_chart": "[data-testid=content-generation-chart]",
-    "system_metrics_chart": "[data-testid=system-metrics-chart]"
+    "system_metrics_chart": "[data-testid=system-metrics-chart]",
 }
 
 # Test environment variables
@@ -290,7 +280,7 @@ TEST_ENV_VARS = {
     "VITE_PUSHER_CLUSTER": TEST_CONFIG.pusher_cluster,
     "VITE_PUSHER_AUTH_ENDPOINT": TEST_CONFIG.pusher_auth_endpoint,
     "VITE_ENABLE_WEBSOCKET": "true",
-    "TEST_MODE": "true"
+    "TEST_MODE": "true",
 }
 
 # Mock configurations
@@ -301,14 +291,14 @@ MOCK_CONFIGS = {
         "default_latency_ms": 50,
         "error_rate": 0.0,
         "max_connections": 10000,
-        "max_channels": 1000
+        "max_channels": 1000,
     },
     "api_client": {
         "base_url": TEST_CONFIG.backend_url,
         "timeout_ms": 5000,
         "retry_attempts": 2,
-        "mock_responses": True
-    }
+        "mock_responses": True,
+    },
 }
 
 # Export configuration for external use
@@ -324,5 +314,5 @@ __all__ = [
     "generate_test_user",
     "generate_test_classroom",
     "generate_test_message",
-    "generate_bulk_messages"
+    "generate_bulk_messages",
 ]

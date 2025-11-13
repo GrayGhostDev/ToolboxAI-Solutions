@@ -12,54 +12,37 @@ import asyncio
 import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from tests.fixtures.agents import mock_llm
 import pytest_asyncio
 
 # Integration tests are now enabled by default since we've fixed the issues
 # To skip, set SKIP_INTEGRATION_TESTS=1
 pytestmark = pytest.mark.skipif(
-    os.environ.get('SKIP_INTEGRATION_TESTS'),
-    reason="Integration tests manually disabled. Remove SKIP_INTEGRATION_TESTS to enable"
+    os.environ.get("SKIP_INTEGRATION_TESTS"),
+    reason="Integration tests manually disabled. Remove SKIP_INTEGRATION_TESTS to enable",
 )
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from core.agents.content_agent import ContentAgent
+
 # Import all components
 from core.agents.orchestrator import Orchestrator
-from core.agents.supervisor import SupervisorAgent
-from core.agents.content_agent import ContentAgent
 from core.agents.quiz_agent import QuizAgent
-from core.agents.terrain_agent import TerrainAgent
-from core.agents.script_agent import ScriptAgent
 from core.agents.review_agent import ReviewAgent
-
-from core.sparc.state_manager import StateManager
-from core.sparc.policy_engine import PolicyEngine
-from core.sparc.action_executor import ActionExecutor
-from core.sparc.reward_calculator import RewardCalculator
-from core.sparc.context_tracker import ContextTracker
-
-from core.swarm.swarm_controller import SwarmController
-from core.swarm.worker_pool import WorkerPool
-from core.swarm.task_distributor import TaskDistributor, Task, TaskPriority
-from core.swarm.consensus_engine import ConsensusEngine
-from core.swarm.load_balancer import LoadBalancer
-
-from core.mcp.server import MCPServer
-from core.mcp.context_manager import ContextManager
-from core.mcp.memory_store import MemoryStore
-
+from core.agents.supervisor import SupervisorAgent
 from core.coordinators.main_coordinator import MainCoordinator
 from core.coordinators.resource_coordinator import ResourceCoordinator
 from core.coordinators.sync_coordinator import SyncCoordinator
-from core.coordinators.error_coordinator import ErrorCoordinator
-
-from apps.backend.tools import ALL_TOOLS
+from core.mcp.server import MCPServer
+from core.sparc.state_manager import StateManager
+from core.swarm.consensus_engine import ConsensusEngine
+from core.swarm.swarm_controller import SwarmController
+from core.swarm.task_distributor import TaskPriority
 
 
 @pytest.mark.integration
@@ -70,59 +53,59 @@ class TestAgentSystemIntegration:
     async def setup_system(self):
         """Set up the complete agent system for testing."""
         # Mock environment variables
-        os.environ['OPENAI_API_KEY'] = 'test-key'
-        os.environ['DATABASE_URL'] = 'postgresql://test:test@localhost/test'
+        os.environ["OPENAI_API_KEY"] = "test-key"
+        os.environ["DATABASE_URL"] = "postgresql://test:test@localhost/test"
 
         # Initialize components
-        components: Dict[str, Any] = {}
+        components: dict[str, Any] = {}
 
         # Mock LLM responses
-        with patch('core.agents.base_agent.from langchain_openai import ChatOpenAI') as MockLLM:
+        with patch("core.agents.base_agent.from langchain_openai import ChatOpenAI") as MockLLM:
             mock_llm = MockLLM.return_value
             mock_llm.invoke = AsyncMock(return_value=MagicMock(content="Test response"))
 
             # Initialize orchestrator
-            components['orchestrator'] = Orchestrator()
-            components['supervisor'] = SupervisorAgent()
+            components["orchestrator"] = Orchestrator()
+            components["supervisor"] = SupervisorAgent()
 
             # Initialize SPARC
-            components['sparc'] = StateManager()
+            components["sparc"] = StateManager()
 
             # Initialize Swarm components
-            from core.swarm.swarm_controller import SwarmConfig
-            from core.swarm.worker_pool import WorkerPool
-            from core.swarm.task_distributor import TaskDistributor
             from core.swarm.consensus_engine import ConsensusEngine
             from core.swarm.load_balancer import LoadBalancer
+            from core.swarm.swarm_controller import SwarmConfig
+            from core.swarm.task_distributor import TaskDistributor
+            from core.swarm.worker_pool import WorkerPool
 
             swarm_config = SwarmConfig()
             worker_pool = WorkerPool(
                 max_workers=swarm_config.max_workers,
                 min_workers=swarm_config.min_workers,
-                specializations=swarm_config.worker_specializations
+                specializations=swarm_config.worker_specializations,
             )
             task_distributor = TaskDistributor()
             consensus_engine = ConsensusEngine(threshold=swarm_config.consensus_threshold)
             load_balancer = LoadBalancer(strategy=swarm_config.load_balancing_strategy)
 
-            components['swarm'] = SwarmController(
+            components["swarm"] = SwarmController(
                 config=swarm_config,
                 worker_pool=worker_pool,
                 task_distributor=task_distributor,
                 consensus_engine=consensus_engine,
-                load_balancer=load_balancer
+                load_balancer=load_balancer,
             )
 
             # Initialize MCP
-            components['mcp'] = MCPServer()
+            components["mcp"] = MCPServer()
 
             # Initialize Coordinator
-            components['coordinator'] = MainCoordinator()
+            components["coordinator"] = MainCoordinator()
 
         yield components
 
         # Cleanup
-        if components['mcp']:
+        if components["mcp"]:
             # Close MCP server if running
             pass
 
@@ -139,25 +122,26 @@ class TestAgentSystemIntegration:
             "learning_objectives": [
                 "Understand food chains",
                 "Identify ecosystem components",
-                "Explain energy transfer"
+                "Explain energy transfer",
             ],
             "duration": 45,
             "environment_type": "forest",
             "include_quiz": True,
             "include_terrain": True,
-            "include_gamification": True
+            "include_gamification": True,
         }
 
         # Mock agent responses
-        with patch.object(system['orchestrator'], 'generate_environment') as mock_generate:
+        with patch.object(system["orchestrator"], "generate_environment") as mock_generate:
             from core.agents.orchestrator import OrchestrationResult
+
             mock_generate.return_value = OrchestrationResult(
                 success=True,
                 content={
                     "lesson": {
                         "title": "Ecosystem Exploration",
                         "content": "Educational content about ecosystems",
-                        "objectives_met": True
+                        "objectives_met": True,
                     }
                 },
                 quiz={
@@ -166,28 +150,18 @@ class TestAgentSystemIntegration:
                             "question": "What is a food chain?",
                             "type": "multiple_choice",
                             "options": ["A", "B", "C", "D"],
-                            "correct_answer": "A"
+                            "correct_answer": "A",
                         }
                     ]
                 },
-                terrain={
-                    "script": "-- Lua terrain generation script",
-                    "environment": "forest"
-                },
-                scripts={
-                    "main_script": "-- Game logic script",
-                    "ui_script": "-- UI script"
-                },
-                review={
-                    "approved": True,
-                    "quality_score": 92,
-                    "suggestions": []
-                },
-                execution_time=2.5
+                terrain={"script": "-- Lua terrain generation script", "environment": "forest"},
+                scripts={"main_script": "-- Game logic script", "ui_script": "-- UI script"},
+                review={"approved": True, "quality_score": 92, "suggestions": []},
+                execution_time=2.5,
             )
 
             # Execute workflow
-            result = await system['orchestrator'].generate_environment(**request)
+            result = await system["orchestrator"].generate_environment(**request)
 
             # Verify results
             assert result is not None
@@ -203,18 +177,18 @@ class TestAgentSystemIntegration:
     async def test_sparc_framework_integration(self, setup_system):
         """Test SPARC framework integration with agents."""
         system = setup_system
-        sparc = system['sparc']
+        sparc = system["sparc"]
 
         # Initialize SPARC state
         initial_state = {
             "environment": "classroom",
             "student_count": 25,
             "lesson_progress": 0,
-            "engagement_level": 0.7
+            "engagement_level": 0.7,
         }
 
         # Mock SPARC cycle
-        with patch.object(sparc, 'update_state') as mock_observe:
+        with patch.object(sparc, "update_state") as mock_observe:
             mock_observe.return_value = initial_state
 
             # Run SPARC cycle
@@ -227,7 +201,7 @@ class TestAgentSystemIntegration:
     async def test_swarm_parallel_execution(self, setup_system):
         """Test swarm intelligence parallel task execution."""
         system = setup_system
-        swarm = system['swarm']
+        swarm = system["swarm"]
 
         # Initialize the swarm to make it active
         await swarm.initialize()
@@ -237,7 +211,7 @@ class TestAgentSystemIntegration:
             {"type": "content", "id": "task1", "data": {"subject": "Math"}},
             {"type": "quiz", "id": "task2", "data": {"num_questions": 5}},
             {"type": "terrain", "id": "task3", "data": {"environment": "space"}},
-            {"type": "script", "id": "task4", "data": {"script_type": "ui"}}
+            {"type": "script", "id": "task4", "data": {"script_type": "ui"}},
         ]
 
         # Execute tasks using real implementation
@@ -246,7 +220,7 @@ class TestAgentSystemIntegration:
             task_id = await swarm.submit_task(
                 task_type=task_data["type"],
                 task_data=task_data["data"],
-                priority=TaskPriority.NORMAL
+                priority=TaskPriority.NORMAL,
             )
             results.append(task_id)
 
@@ -258,19 +232,19 @@ class TestAgentSystemIntegration:
     async def test_mcp_context_management(self, setup_system):
         """Test MCP context management across agents."""
         system = setup_system
-        mcp = system['mcp']
+        mcp = system["mcp"]
 
         # Create context
         context = {
             "session_id": "test-session",
             "user": {"id": "user123", "role": "educator"},
             "current_lesson": {"id": "lesson456", "subject": "Science"},
-            "history": []
+            "history": [],
         }
 
         # Mock MCP operations
-        with patch.object(mcp, '_handle_update_context') as mock_update:
-            with patch.object(mcp, '_handle_query_context') as mock_query:
+        with patch.object(mcp, "_handle_update_context") as mock_update:
+            with patch.object(mcp, "_handle_query_context") as mock_query:
                 mock_query.return_value = context
 
                 # Update context
@@ -285,31 +259,21 @@ class TestAgentSystemIntegration:
     async def test_coordinator_orchestration(self, setup_system):
         """Test main coordinator orchestrating all components."""
         system = setup_system
-        coordinator = system['coordinator']
+        coordinator = system["coordinator"]
 
         # Create a complex request requiring coordination
         request = {
             "action": "generate_complete_lesson",
-            "parameters": {
-                "subject": "History",
-                "topic": "Ancient Rome",
-                "include_all": True
-            }
+            "parameters": {"subject": "History", "topic": "Ancient Rome", "include_all": True},
         }
 
         # Mock coordinator methods
-        with patch.object(coordinator, 'generate_educational_content') as mock_coordinate:
+        with patch.object(coordinator, "generate_educational_content") as mock_coordinate:
             mock_coordinate.return_value = {
                 "status": "success",
-                "components_generated": [
-                    "lesson", "quiz", "terrain", "scripts", "gamification"
-                ],
+                "components_generated": ["lesson", "quiz", "terrain", "scripts", "gamification"],
                 "time_taken": 5.2,
-                "resources_used": {
-                    "cpu": 0.75,
-                    "memory": 0.60,
-                    "api_calls": 12
-                }
+                "resources_used": {"cpu": 0.75, "memory": 0.60, "api_calls": 12},
             }
 
             # Execute coordination
@@ -327,12 +291,13 @@ class TestAgentSystemIntegration:
         system = setup_system
 
         # Simulate failures and recovery
-        with patch.object(system['supervisor'], 'delegate_complex_task') as mock_route:
+        with patch.object(system["supervisor"], "delegate_complex_task") as mock_route:
             # First call fails, second succeeds
             from core.agents.base_agent import TaskResult
+
             mock_route.side_effect = [
                 Exception("Agent temporarily unavailable"),
-                TaskResult(output="content", success=True)  # Successful routing after retry
+                TaskResult(output="content", success=True),  # Successful routing after retry
             ]
 
             # Test retry logic
@@ -340,7 +305,9 @@ class TestAgentSystemIntegration:
             result = None
             for attempt in range(max_retries):
                 try:
-                    result = await system['supervisor'].delegate_complex_task("generate_content", {})
+                    result = await system["supervisor"].delegate_complex_task(
+                        "generate_content", {}
+                    )
                     break
                 except Exception as e:
                     if attempt == max_retries - 1:
@@ -358,13 +325,14 @@ class TestAgentSystemIntegration:
         agent_responses = [
             {"agent": "content", "score": 0.85, "result": "Content A"},
             {"agent": "content_backup", "score": 0.82, "result": "Content B"},
-            {"agent": "content_tertiary", "score": 0.88, "result": "Content C"}
+            {"agent": "content_tertiary", "score": 0.88, "result": "Content C"},
         ]
 
         # Mock consensus engine
         consensus = ConsensusEngine()
-        with patch.object(consensus, 'evaluate_result') as mock_evaluate:
+        with patch.object(consensus, "evaluate_result") as mock_evaluate:
             from core.swarm.consensus_engine import ConsensusResult, ConsensusType
+
             mock_result = ConsensusResult(
                 consensus_id="test_consensus",
                 consensus_type=ConsensusType.QUALITY_VALIDATION,
@@ -372,7 +340,7 @@ class TestAgentSystemIntegration:
                 confidence=0.92,
                 agreement_level=0.85,
                 participating_voters=3,
-                total_votes=3
+                total_votes=3,
             )
             mock_evaluate.return_value = mock_result
 
@@ -390,11 +358,11 @@ class TestAgentSystemIntegration:
         resource_coordinator = ResourceCoordinator()
 
         # Mock resource monitoring
-        with patch.object(resource_coordinator, 'optimize_resource_allocation') as mock_optimize:
+        with patch.object(resource_coordinator, "optimize_resource_allocation") as mock_optimize:
             mock_optimize.return_value = {
                 "cpu_allocation": {"agents": 0.4, "swarm": 0.3, "mcp": 0.1, "other": 0.2},
                 "memory_allocation": {"agents": 0.5, "swarm": 0.2, "mcp": 0.15, "other": 0.15},
-                "optimizations_applied": ["cache_enabled", "parallel_processing", "lazy_loading"]
+                "optimizations_applied": ["cache_enabled", "parallel_processing", "lazy_loading"],
             }
 
             # Optimize resources
@@ -422,12 +390,12 @@ class TestAgentSystemIntegration:
                 "adaptive_quizzing": True,
                 "collaborative_activities": True,
                 "gamification": True,
-                "accessibility": True
-            }
+                "accessibility": True,
+            },
         }
 
         # Mock complete workflow
-        with patch('apps.backend.main.get_content') as mock_generate:
+        with patch("apps.backend.main.get_content") as mock_generate:
             mock_generate.return_value = {
                 "experience_id": "exp_123",
                 "status": "generated",
@@ -436,15 +404,15 @@ class TestAgentSystemIntegration:
                     "environment": {"id": "env_789", "type": "3d_forest"},
                     "quiz": {"id": "quiz_012", "adaptive": True},
                     "activities": ["food_chain_builder", "ecosystem_simulator"],
-                    "gamification": {"points": 100, "badges": ["explorer", "scientist"]}
+                    "gamification": {"points": 100, "badges": ["explorer", "scientist"]},
                 },
                 "estimated_completion_time": 45,
                 "accessibility_features": ["screen_reader", "subtitles", "high_contrast"],
                 "quality_metrics": {
                     "educational_value": 0.95,
                     "engagement_score": 0.92,
-                    "technical_quality": 0.94
-                }
+                    "technical_quality": 0.94,
+                },
             }
 
             # Generate experience
@@ -471,12 +439,13 @@ class TestAgentCommunication:
         content_agent = ContentAgent()
 
         # Mock communication
-        with patch.object(supervisor, 'delegate_complex_task') as mock_delegate:
+        with patch.object(supervisor, "delegate_complex_task") as mock_delegate:
             from core.agents.base_agent import TaskResult
+
             mock_delegate.return_value = TaskResult(
                 success=True,
                 output={"lesson": "Generated lesson"},
-                metadata={"agent": "content", "task_id": "task_123"}
+                metadata={"agent": "content", "task_id": "task_123"},
             )
 
             # Delegate task
@@ -491,11 +460,7 @@ class TestAgentCommunication:
     async def test_agent_pipeline_flow(self):
         """Test data flow through agent pipeline."""
         # Create pipeline: Content -> Quiz -> Review
-        pipeline = [
-            ContentAgent(),
-            QuizAgent(),
-            ReviewAgent()
-        ]
+        pipeline = [ContentAgent(), QuizAgent(), ReviewAgent()]
 
         # Initial data
         data = {"subject": "Science", "topic": "Atoms"}
@@ -503,33 +468,34 @@ class TestAgentCommunication:
         # Mock pipeline execution
         for i, agent in enumerate(pipeline):
             if i == 0:  # Content agent
-                with patch.object(agent, 'generate_lesson_plan') as mock_process:
+                with patch.object(agent, "generate_lesson_plan") as mock_process:
                     mock_process.return_value = {**data, "content": "Lesson content"}
                     data = await agent.generate_lesson_plan(
                         subject=data["subject"],
                         grade_level=7,
-                        learning_objectives=["Understand atoms"]
+                        learning_objectives=["Understand atoms"],
                     )
             elif i == 1:  # Quiz agent
-                with patch.object(agent, '_generate_quiz') as mock_process:
+                with patch.object(agent, "_generate_quiz") as mock_process:
                     mock_process.return_value = {**data, "quiz": {"questions": []}}
                     data = await agent._generate_quiz(
                         content=data.get("content", ""),
                         subject=data["subject"],
                         topic=data["topic"],
-                        num_questions=5
+                        num_questions=5,
                     )
             else:  # Review agent
-                with patch.object(agent, '_process_task') as mock_process:
+                with patch.object(agent, "_process_task") as mock_process:
                     mock_process.return_value = {
                         "review": {"severity": "low", "findings": []},
                         "improvements": [],
                         "refactored_code": None,
                         "summary": "Code review completed",
                         "metrics": {"lines": 10, "complexity": 1},
-                        "approved": True
+                        "approved": True,
                     }
                     from core.agents.base_agent import AgentState
+
                     state = AgentState(
                         task="review_code",
                         context={"code": "test code", "language": "lua"},
@@ -540,7 +506,7 @@ class TestAgentCommunication:
                         error=None,
                         timestamp="2025-01-01T00:00:00Z",
                         iterations=0,
-                        max_iterations=10
+                        max_iterations=10,
                     )
                     result = await agent._process_task(state)
                     data = {**data, **result}
@@ -560,11 +526,11 @@ class TestAgentCommunication:
             "session_id": "session_456",
             "current_task": "generating_content",
             "agents_active": ["content", "quiz", "terrain"],
-            "progress": 0.5
+            "progress": 0.5,
         }
 
         # Mock synchronization
-        with patch.object(sync_coordinator, 'sync_component') as mock_sync:
+        with patch.object(sync_coordinator, "sync_component") as mock_sync:
             mock_sync.return_value = True
 
             # Sync state across agents
@@ -586,18 +552,14 @@ class TestSystemPerformance:
         orchestrator = Orchestrator()
 
         # Create multiple requests
-        requests = [
-            {"id": i, "subject": f"Subject{i}", "grade_level": 5+i}
-            for i in range(10)
-        ]
+        requests = [{"id": i, "subject": f"Subject{i}", "grade_level": 5 + i} for i in range(10)]
 
         # Mock fast processing
-        with patch.object(orchestrator, 'generate_environment') as mock_gen:
+        with patch.object(orchestrator, "generate_environment") as mock_gen:
             from core.agents.orchestrator import OrchestrationResult
+
             mock_gen.return_value = OrchestrationResult(
-                success=True,
-                content={"status": "completed"},
-                execution_time=0.1
+                success=True, content={"status": "completed"}, execution_time=0.1
             )
 
             # Process concurrently
@@ -617,8 +579,9 @@ class TestSystemPerformance:
     @pytest.mark.performance
     async def test_memory_efficiency(self):
         """Test memory efficiency of the system."""
-        import psutil
         import os
+
+        import psutil
 
         process = psutil.Process(os.getpid())
         initial_memory = process.memory_info().rss / 1024 / 1024  # MB
@@ -626,12 +589,11 @@ class TestSystemPerformance:
         # Run multiple agent operations
         orchestrator = Orchestrator()
 
-        with patch.object(orchestrator, 'generate_environment') as mock_gen:
+        with patch.object(orchestrator, "generate_environment") as mock_gen:
             from core.agents.orchestrator import OrchestrationResult
+
             mock_gen.return_value = OrchestrationResult(
-                success=True,
-                content={"data": "x" * 1000},  # Small response
-                execution_time=0.0
+                success=True, content={"data": "x" * 1000}, execution_time=0.0  # Small response
             )
 
             # Generate many experiences
@@ -651,18 +613,19 @@ class TestSystemPerformance:
         """Test response time under heavy load."""
         import time
 
-        # Initialize Swarm components
-        from core.swarm.swarm_controller import SwarmConfig
-        from core.swarm.worker_pool import WorkerPool
-        from core.swarm.task_distributor import TaskDistributor
         from core.swarm.consensus_engine import ConsensusEngine
         from core.swarm.load_balancer import LoadBalancer
+
+        # Initialize Swarm components
+        from core.swarm.swarm_controller import SwarmConfig
+        from core.swarm.task_distributor import TaskDistributor
+        from core.swarm.worker_pool import WorkerPool
 
         swarm_config = SwarmConfig()
         worker_pool = WorkerPool(
             max_workers=swarm_config.max_workers,
             min_workers=swarm_config.min_workers,
-            specializations=swarm_config.worker_specializations
+            specializations=swarm_config.worker_specializations,
         )
         task_distributor = TaskDistributor()
         consensus_engine = ConsensusEngine(threshold=swarm_config.consensus_threshold)
@@ -673,18 +636,15 @@ class TestSystemPerformance:
             worker_pool=worker_pool,
             task_distributor=task_distributor,
             consensus_engine=consensus_engine,
-            load_balancer=load_balancer
+            load_balancer=load_balancer,
         )
 
         # Create heavy load
-        heavy_tasks = [
-            {"id": i, "complexity": "high", "data": "x" * 10000}
-            for i in range(50)
-        ]
+        heavy_tasks = [{"id": i, "complexity": "high", "data": "x" * 10000} for i in range(50)]
 
         # Mock processing
-        with patch.object(swarm, 'submit_task') as mock_submit:
-            from core.swarm.task_distributor import Task, TaskStatus
+        with patch.object(swarm, "submit_task") as mock_submit:
+
             mock_submit.return_value = "task_123"
 
             # Measure response time
@@ -692,9 +652,7 @@ class TestSystemPerformance:
             task_ids = []
             for task_data in heavy_tasks:
                 task_id = await swarm.submit_task(
-                    task_type="test_task",
-                    task_data=task_data,
-                    priority=TaskPriority.NORMAL
+                    task_type="test_task", task_data=task_data, priority=TaskPriority.NORMAL
                 )
                 task_ids.append(task_id)
             end = time.time()

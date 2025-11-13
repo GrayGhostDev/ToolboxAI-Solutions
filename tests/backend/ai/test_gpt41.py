@@ -1,40 +1,43 @@
 import pytest_asyncio
+
 """
 GPT-4.1 Migration Tests - Phase 4
 Comprehensive tests for GPT-4.1 migration implementation
 """
 
-import pytest
 import asyncio
 import json
+import os
+import sys
 import time
 from datetime import datetime, timedelta
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-import sys
-import os
+import pytest
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
 from apps.backend.api.ai.gpt_migration import (
+    MODEL_REGISTRY,
     GPT41MigrationClient,
-    GPTModel,
     GPT41MigrationConfig,
+    GPTModel,
     ModelSelector,
     PromptOptimizer,
-    MODEL_REGISTRY
 )
 from apps.backend.api.ai.model_config import (
     GPT41ConfigManager,
-    GPT41ModelConfig,
     GPT41FeatureFlags,
-    MigrationPhase
+    GPT41ModelConfig,
+    MigrationPhase,
 )
 from apps.backend.api.ai.prompt_optimizer import (
     GPT41PromptOptimizer,
     OptimizationType,
-    optimize_prompt
+    optimize_prompt,
 )
+
 
 # Test fixtures
 @pytest.fixture

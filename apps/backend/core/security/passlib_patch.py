@@ -36,7 +36,6 @@ def patch_passlib_bcrypt():
 
             # The original function tests with a 254-char password
             # We need to limit it to 72 bytes for bcrypt compatibility
-
             # Create the test secret (truncated to 72 bytes)
             secret = b("0123456789" * 20)[:72]  # Originally 254 chars, now 72 bytes
 

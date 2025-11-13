@@ -16,16 +16,16 @@ Features:
 
 import asyncio
 import logging
-import time
 import threading
+import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 from uuid import uuid4
 
 import redis
+
 from toolboxai_settings import settings
 
 settings = settings
@@ -48,8 +48,8 @@ class RateLimitConfig:
     requests_per_minute: int = 100
     burst_limit: int = 200
     window_seconds: int = 60
-    exclude_paths: Set[str] = field(default_factory=lambda: {"/health", "/metrics"})
-    by_endpoint: Dict[str, int] = field(default_factory=dict)
+    exclude_paths: set[str] = field(default_factory=lambda: {"/health", "/metrics"})
+    by_endpoint: dict[str, int] = field(default_factory=dict)
     mode: RateLimitMode = RateLimitMode.PRODUCTION
 
 
@@ -73,7 +73,7 @@ class RateLimitManager:
         return cls._instance
 
     def __init__(
-        self, config: Optional[RateLimitConfig] = None, redis_client: Optional[redis.Redis] = None
+        self, config: RateLimitConfig | None = None, redis_client: redis.Redis | None = None
     ):
         # Prevent re-initialization of singleton
         if hasattr(self, "_initialized"):
@@ -84,13 +84,13 @@ class RateLimitManager:
         self._lock = threading.RLock()
 
         # Storage backends
-        self.local_buckets: Dict[str, deque] = defaultdict(deque)
-        self.auth_memory_store: Dict[str, Any] = {}
-        self.flask_rate_limits: Dict[str, List[float]] = defaultdict(list)
-        self.middleware_buckets: Dict[str, deque] = defaultdict(deque)
+        self.local_buckets: dict[str, deque] = defaultdict(deque)
+        self.auth_memory_store: dict[str, Any] = {}
+        self.flask_rate_limits: dict[str, list[float]] = defaultdict(list)
+        self.middleware_buckets: dict[str, deque] = defaultdict(deque)
 
         # Cleanup task
-        self.cleanup_task: Optional[asyncio.Task] = None
+        self.cleanup_task: asyncio.Task | None = None
         self._cleanup_running = False
 
         # Testing support
@@ -101,7 +101,7 @@ class RateLimitManager:
 
     @classmethod
     def get_instance(
-        cls, config: Optional[RateLimitConfig] = None, redis_client: Optional[redis.Redis] = None
+        cls, config: RateLimitConfig | None = None, redis_client: redis.Redis | None = None
     ):
         """Get the singleton instance"""
         if cls._instance is None or not hasattr(cls._instance, "_initialized"):
@@ -146,10 +146,10 @@ class RateLimitManager:
         self,
         identifier: str,
         endpoint: str = "",
-        max_requests: Optional[int] = None,
-        window_seconds: Optional[int] = None,
+        max_requests: int | None = None,
+        window_seconds: int | None = None,
         source: str = "default",
-    ) -> Tuple[bool, int]:
+    ) -> tuple[bool, int]:
         """
         Check if request is within rate limit
 
@@ -188,7 +188,7 @@ class RateLimitManager:
 
     async def _check_redis_limit(
         self, identifier: str, limit: int, window: int
-    ) -> Tuple[bool, int]:
+    ) -> tuple[bool, int]:
         """Check rate limit using Redis backend"""
         key = f"rate_limit:{identifier}"
         now = time.time()
@@ -226,7 +226,7 @@ class RateLimitManager:
 
     def _check_local_limit(
         self, identifier: str, limit: int, window: int, source: str
-    ) -> Tuple[bool, int]:
+    ) -> tuple[bool, int]:
         """Check rate limit using local memory"""
         with self._lock:
             now = time.time()
@@ -315,7 +315,7 @@ class RateLimitManager:
                 except Exception as e:
                     logger.error(f"Failed to clear Redis limits for {identifier}: {e}")
 
-    def get_limit_status(self, identifier: str) -> Dict[str, Any]:
+    def get_limit_status(self, identifier: str) -> dict[str, Any]:
         """Get current rate limit status for an identifier"""
         with self._lock:
             status = {

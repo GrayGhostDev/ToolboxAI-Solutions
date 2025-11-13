@@ -7,20 +7,15 @@ Phase 1 Week 1: Authentication & user management endpoint tests
 Phase B: Converted to TestClient pattern
 """
 
-import pytest
 from datetime import datetime, timedelta
-from uuid import uuid4
-from unittest.mock import AsyncMock, Mock, patch
 
-from fastapi import FastAPI, HTTPException, status
+import pytest
+from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
 # Import router and models
 from apps.backend.api.v1.endpoints.compliance import (
     router,
-    ComplianceStatus,
-    ComplianceReport,
-    AuditLog,
 )
 from apps.backend.core.security.jwt_handler import create_access_token
 from tests.utils import APITestHelper
@@ -277,8 +272,7 @@ class TestGenerateComplianceReport:
         response = client.post("/compliance/reports")
 
         data = APITestHelper.assert_success_response(
-            response,
-            expected_status=status.HTTP_201_CREATED
+            response, expected_status=status.HTTP_201_CREATED
         )
 
         assert "report_id" in data
@@ -292,8 +286,7 @@ class TestGenerateComplianceReport:
         response = client.post(f"/compliance/reports?school_id={school_id}")
 
         data = APITestHelper.assert_success_response(
-            response,
-            expected_status=status.HTTP_201_CREATED
+            response, expected_status=status.HTTP_201_CREATED
         )
 
         assert data["school_id"] == school_id
@@ -303,8 +296,7 @@ class TestGenerateComplianceReport:
         response = client.post("/compliance/reports")
 
         data = APITestHelper.assert_success_response(
-            response,
-            expected_status=status.HTTP_201_CREATED
+            response, expected_status=status.HTTP_201_CREATED
         )
 
         # School ID is optional
@@ -325,8 +317,7 @@ class TestGenerateComplianceReport:
         response = client.post("/compliance/reports")
 
         data = APITestHelper.assert_success_response(
-            response,
-            expected_status=status.HTTP_201_CREATED
+            response, expected_status=status.HTTP_201_CREATED
         )
 
         categories = [c["category"] for c in data["categories"]]
@@ -339,8 +330,7 @@ class TestGenerateComplianceReport:
         response = client.post("/compliance/reports")
 
         data = APITestHelper.assert_success_response(
-            response,
-            expected_status=status.HTTP_201_CREATED
+            response, expected_status=status.HTTP_201_CREATED
         )
 
         assert data["overall_compliant"] is True
@@ -598,9 +588,7 @@ class TestGetComplianceRequirements:
         response = client.get("/compliance/requirements/UNKNOWN")
 
         APITestHelper.assert_error_response(
-            response,
-            expected_status=status.HTTP_404_NOT_FOUND,
-            expected_detail="not found"
+            response, expected_status=status.HTTP_404_NOT_FOUND, expected_detail="not found"
         )
 
     def test_get_compliance_requirements_case_insensitive(self, client):

@@ -3,9 +3,8 @@ Enhanced CORS Security Configuration for ToolBoxAI Solutions
 Replaces wildcard CORS with environment-specific allowed origins
 """
 
-import os
 import logging
-from typing import List
+import os
 from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
@@ -30,21 +29,21 @@ class CORSConfig:
         self._allowed_headers = None
 
     @property
-    def allowed_origins(self) -> List[str]:
+    def allowed_origins(self) -> list[str]:
         """Get allowed origins based on environment"""
         if self._allowed_origins is None:
             self._allowed_origins = self._get_allowed_origins()
         return self._allowed_origins
 
     @property
-    def allowed_methods(self) -> List[str]:
+    def allowed_methods(self) -> list[str]:
         """Get allowed HTTP methods"""
         if self._allowed_methods is None:
             self._allowed_methods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
         return self._allowed_methods
 
     @property
-    def allowed_headers(self) -> List[str]:
+    def allowed_headers(self) -> list[str]:
         """Get allowed headers"""
         if self._allowed_headers is None:
             self._allowed_headers = [
@@ -59,7 +58,7 @@ class CORSConfig:
             ]
         return self._allowed_headers
 
-    def _get_allowed_origins(self) -> List[str]:
+    def _get_allowed_origins(self) -> list[str]:
         """
         Get allowed origins based on environment
         NEVER use wildcards in production

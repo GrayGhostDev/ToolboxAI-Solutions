@@ -1,19 +1,20 @@
 """Performance testing for Pusher migration"""
+
 import asyncio
-import time
-import statistics
-from typing import List, Dict
-import pytest
-import httpx
-import os
 import json
-from concurrent.futures import ThreadPoolExecutor
-from unittest.mock import Mock, patch
+import os
+import statistics
+import time
+from unittest.mock import Mock
+
+import httpx
+import pytest
 
 # Mock Pusher for testing when not available
 try:
     from pusher import Pusher
 except ImportError:
+
     class Pusher:
         def __init__(self, **kwargs):
             self.config = kwargs
@@ -22,6 +23,7 @@ except ImportError:
             # Simulate network latency
             time.sleep(0.01 + (len(json.dumps(data)) / 10000))  # Simulate based on data size
             return {"status": "ok"}
+
 
 class TestPusherPerformance:
     """Performance testing for Pusher vs WebSocket"""
@@ -33,7 +35,7 @@ class TestPusherPerformance:
             key=os.getenv("PUSHER_KEY", "test_key"),
             secret=os.getenv("PUSHER_SECRET", "test_secret"),
             cluster=os.getenv("PUSHER_CLUSTER", "us2"),
-            ssl=True
+            ssl=True,
         )
 
     @pytest.fixture
@@ -52,13 +54,9 @@ class TestPusherPerformance:
 
             try:
                 result = pusher_client.trigger(
-                    'test-channel',
-                    'latency-test',
-                    {
-                        'timestamp': start,
-                        'sequence': i,
-                        'test_data': 'x' * 100  # Small payload
-                    }
+                    "test-channel",
+                    "latency-test",
+                    {"timestamp": start, "sequence": i, "test_data": "x" * 100},  # Small payload
                 )
 
                 latency = (time.perf_counter() - start) * 1000  # Convert to ms
@@ -74,10 +72,14 @@ class TestPusherPerformance:
 
         # Calculate statistics
         avg_latency = statistics.mean(latencies)
-        p95_latency = statistics.quantiles(latencies, n=20)[18] if len(latencies) >= 20 else max(latencies)
+        p95_latency = (
+            statistics.quantiles(latencies, n=20)[18] if len(latencies) >= 20 else max(latencies)
+        )
         max_latency = max(latencies)
 
-        print(f"Pusher Latency - Avg: {avg_latency:.2f}ms, P95: {p95_latency:.2f}ms, Max: {max_latency:.2f}ms")
+        print(
+            f"Pusher Latency - Avg: {avg_latency:.2f}ms, P95: {p95_latency:.2f}ms, Max: {max_latency:.2f}ms"
+        )
 
         # Assert performance requirements (relaxed for testing)
         assert avg_latency < 200, f"Average latency too high: {avg_latency:.2f}ms"
@@ -99,28 +101,25 @@ class TestPusherPerformance:
 
                 result = pusher_client.trigger(
                     channel_name,
-                    'connection-test',
-                    {
-                        'connection_id': conn_id,
-                        'timestamp': time.time()
-                    }
+                    "connection-test",
+                    {"connection_id": conn_id, "timestamp": time.time()},
                 )
 
                 elapsed = time.perf_counter() - start
-                return {'success': True, 'time': elapsed}
+                return {"success": True, "time": elapsed}
             except Exception as e:
-                return {'success': False, 'error': str(e)}
+                return {"success": False, "error": str(e)}
 
         # Create connections concurrently
         tasks = [create_connection(i) for i in range(num_connections)]
         results = await asyncio.gather(*tasks)
 
         # Calculate success rate
-        successful = [r for r in results if r['success']]
+        successful = [r for r in results if r["success"]]
         success_rate = len(successful) / len(results) * 100
 
         if successful:
-            avg_time = statistics.mean([r['time'] for r in successful])
+            avg_time = statistics.mean([r["time"] for r in successful])
             print(f"Concurrent Connections - Success: {success_rate}%, Avg Time: {avg_time:.3f}s")
 
         assert success_rate >= 80, f"Success rate too low: {success_rate}%"
@@ -136,13 +135,13 @@ class TestPusherPerformance:
         while time.perf_counter() - start_time < duration:
             try:
                 pusher_client.trigger(
-                    'throughput-test',
-                    'message',
+                    "throughput-test",
+                    "message",
                     {
-                        'seq': messages_sent,
-                        'timestamp': time.time(),
-                        'data': 'x' * 50  # Small payload
-                    }
+                        "seq": messages_sent,
+                        "timestamp": time.time(),
+                        "data": "x" * 50,  # Small payload
+                    },
                 )
                 messages_sent += 1
             except Exception as e:
@@ -152,9 +151,13 @@ class TestPusherPerformance:
         elapsed = time.perf_counter() - start_time
         throughput = messages_sent / elapsed
 
-        print(f"Message Throughput: {throughput:.0f} msgs/sec ({messages_sent} messages in {elapsed:.1f}s)")
+        print(
+            f"Message Throughput: {throughput:.0f} msgs/sec ({messages_sent} messages in {elapsed:.1f}s)"
+        )
 
-        assert throughput >= 10, f"Throughput too low: {throughput:.0f} msgs/sec"  # Relaxed threshold
+        assert (
+            throughput >= 10
+        ), f"Throughput too low: {throughput:.0f} msgs/sec"  # Relaxed threshold
 
     @pytest.mark.asyncio
     @pytest.mark.performance
@@ -170,10 +173,7 @@ class TestPusherPerformance:
                     # Authenticate for private channel
                     response = await client.post(
                         "/api/v1/pusher/auth",
-                        json={
-                            "channel": f"private-perf-test-{i}",
-                            "socket_id": f"test.{i}"
-                        }
+                        json={"channel": f"private-perf-test-{i}", "socket_id": f"test.{i}"},
                     )
 
                     subscription_time = (time.perf_counter() - start) * 1000
@@ -203,21 +203,13 @@ class TestPusherPerformance:
 
         for size in message_sizes:
             latencies = []
-            payload = {
-                'data': 'x' * size,
-                'timestamp': time.time(),
-                'size': size
-            }
+            payload = {"data": "x" * size, "timestamp": time.time(), "size": size}
 
             for i in range(10):  # Test each size 10 times
                 start = time.perf_counter()
 
                 try:
-                    pusher_client.trigger(
-                        'large-message-test',
-                        'large-message',
-                        payload
-                    )
+                    pusher_client.trigger("large-message-test", "large-message", payload)
 
                     latency = (time.perf_counter() - start) * 1000
                     latencies.append(latency)
@@ -237,11 +229,12 @@ class TestPusherPerformance:
             sizes = sorted(results.keys())
             for i in range(1, len(sizes)):
                 current_size = sizes[i]
-                prev_size = sizes[i-1]
+                prev_size = sizes[i - 1]
 
                 # Larger messages should not be more than 3x slower
-                assert results[current_size] <= results[prev_size] * 3, \
-                    f"Performance degradation too severe: {current_size}B took {results[current_size]:.2f}ms vs {prev_size}B took {results[prev_size]:.2f}ms"
+                assert (
+                    results[current_size] <= results[prev_size] * 3
+                ), f"Performance degradation too severe: {current_size}B took {results[current_size]:.2f}ms vs {prev_size}B took {results[prev_size]:.2f}ms"
 
     @pytest.mark.performance
     def test_pusher_vs_websocket_benchmark(self):
@@ -255,7 +248,7 @@ class TestPusherPerformance:
         # Test Pusher
         for _ in range(50):
             start = time.perf_counter()
-            mock_pusher.trigger('test', 'event', {'data': 'test'})
+            mock_pusher.trigger("test", "event", {"data": "test"})
             # Simulate network latency
             time.sleep(0.01)
             pusher_times.append((time.perf_counter() - start) * 1000)
@@ -294,12 +287,8 @@ class TestPusherPerformance:
                 try:
                     pusher_client.trigger(
                         channel_name,
-                        'scale-test',
-                        {
-                            'channel_id': channel_id,
-                            'message_id': msg_id,
-                            'timestamp': time.time()
-                        }
+                        "scale-test",
+                        {"channel_id": channel_id, "message_id": msg_id, "timestamp": time.time()},
                     )
 
                     times.append((time.perf_counter() - start) * 1000)
@@ -307,9 +296,9 @@ class TestPusherPerformance:
                     print(f"Error in channel {channel_id}, message {msg_id}: {e}")
 
             return {
-                'channel_id': channel_id,
-                'avg_time': statistics.mean(times) if times else float('inf'),
-                'success_count': len(times)
+                "channel_id": channel_id,
+                "avg_time": statistics.mean(times) if times else float("inf"),
+                "success_count": len(times),
             }
 
         # Send messages to all channels concurrently
@@ -317,13 +306,15 @@ class TestPusherPerformance:
         results = await asyncio.gather(*tasks)
 
         # Analyze results
-        successful_channels = [r for r in results if r['success_count'] > 0]
+        successful_channels = [r for r in results if r["success_count"] > 0]
 
         if successful_channels:
-            overall_avg = statistics.mean([r['avg_time'] for r in successful_channels])
+            overall_avg = statistics.mean([r["avg_time"] for r in successful_channels])
             success_rate = len(successful_channels) / num_channels * 100
 
-            print(f"Channel Scaling - {num_channels} channels, avg: {overall_avg:.2f}ms, success: {success_rate:.1f}%")
+            print(
+                f"Channel Scaling - {num_channels} channels, avg: {overall_avg:.2f}ms, success: {success_rate:.1f}%"
+            )
 
             assert success_rate >= 80, f"Channel scaling success rate too low: {success_rate}%"
             assert overall_avg < 500, f"Channel scaling average time too high: {overall_avg:.2f}ms"
@@ -334,9 +325,9 @@ class TestPusherPerformance:
         """Test performance during error conditions"""
         # Test with various error scenarios
         error_scenarios = [
-            {'channel': '', 'event': 'test', 'data': {}},  # Empty channel
-            {'channel': 'test', 'event': '', 'data': {}},  # Empty event
-            {'channel': 'test', 'event': 'test', 'data': 'x' * 100000},  # Oversized data
+            {"channel": "", "event": "test", "data": {}},  # Empty channel
+            {"channel": "test", "event": "", "data": {}},  # Empty event
+            {"channel": "test", "event": "test", "data": "x" * 100000},  # Oversized data
         ]
 
         recovery_times = []
@@ -345,18 +336,14 @@ class TestPusherPerformance:
             start = time.perf_counter()
 
             try:
-                pusher_client.trigger(
-                    scenario['channel'],
-                    scenario['event'],
-                    scenario['data']
-                )
+                pusher_client.trigger(scenario["channel"], scenario["event"], scenario["data"])
             except Exception:
                 # Expected to fail - measure recovery time
                 pass
 
             # Try a normal message after error
             try:
-                pusher_client.trigger('recovery-test', 'normal-message', {'seq': i})
+                pusher_client.trigger("recovery-test", "normal-message", {"seq": i})
                 recovery_time = (time.perf_counter() - start) * 1000
                 recovery_times.append(recovery_time)
             except Exception as e:
@@ -374,25 +361,25 @@ class TestPusherPerformance:
         # Test configuration parameters
         config_tests = [
             {
-                'name': 'SSL enabled',
-                'check': lambda: os.getenv('PUSHER_SSL', 'true').lower() == 'true',
-                'message': 'SSL should be enabled for security'
+                "name": "SSL enabled",
+                "check": lambda: os.getenv("PUSHER_SSL", "true").lower() == "true",
+                "message": "SSL should be enabled for security",
             },
             {
-                'name': 'Cluster specified',
-                'check': lambda: os.getenv('PUSHER_CLUSTER', '') != '',
-                'message': 'Cluster should be specified for optimal routing'
+                "name": "Cluster specified",
+                "check": lambda: os.getenv("PUSHER_CLUSTER", "") != "",
+                "message": "Cluster should be specified for optimal routing",
             },
             {
-                'name': 'App ID present',
-                'check': lambda: os.getenv('PUSHER_APP_ID', '') != '',
-                'message': 'App ID is required'
-            }
+                "name": "App ID present",
+                "check": lambda: os.getenv("PUSHER_APP_ID", "") != "",
+                "message": "App ID is required",
+            },
         ]
 
         for test in config_tests:
             try:
-                assert test['check'](), test['message']
+                assert test["check"](), test["message"]
                 print(f"✓ {test['name']} - OK")
             except AssertionError as e:
                 print(f"⚠ {test['name']} - {e}")
@@ -410,7 +397,7 @@ class TestPusherPerformance:
                 key=f"test_key_{i}",
                 secret=f"test_secret_{i}",
                 cluster="us2",
-                ssl=True
+                ssl=True,
             )
 
             instantiation_time = (time.perf_counter() - start) * 1000

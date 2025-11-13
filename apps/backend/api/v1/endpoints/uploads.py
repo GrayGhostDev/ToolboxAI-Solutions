@@ -18,22 +18,19 @@ Version: 1.0.0
 Standards: Python 3.12, FastAPI async, Pydantic v2
 """
 
-import asyncio
 import logging
 from datetime import datetime
-from typing import Annotated, Optional
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import (
     APIRouter,
+    BackgroundTasks,
     Depends,
     File,
     Form,
     HTTPException,
     UploadFile,
-    BackgroundTasks,
-    WebSocket,
-    WebSocketDisconnect,
     status,
 )
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -41,15 +38,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.api.auth.auth import get_current_user
 from apps.backend.core.deps import get_async_db
-from apps.backend.middleware.tenant import get_tenant_context, TenantContext
+from apps.backend.middleware.tenant import TenantContext, get_tenant_context
 from apps.backend.models.schemas import User
 from apps.backend.services.storage.storage_service import (
-    StorageService,
-    UploadOptions,
-    UploadResult,
-    UploadStatus,
     DownloadPermission,
     QuotaExceededError,
+    StorageService,
+    UploadOptions,
+    UploadStatus,
     ValidationError,
 )
 
@@ -64,20 +60,21 @@ router = APIRouter(
 
 # === Pydantic v2 Models ===
 
+
 class SingleFileUploadRequest(BaseModel):
     """Request model for single file upload with Pydantic v2"""
 
     model_config = ConfigDict(from_attributes=True)
 
-    title: Optional[str] = Field(None, max_length=200)
-    description: Optional[str] = Field(None, max_length=1000)
+    title: str | None = Field(None, max_length=200)
+    description: str | None = Field(None, max_length=1000)
     category: str = Field(default="media_resource")
     tags: list[str] = Field(default_factory=list)
     virus_scan: bool = Field(default=True)
     generate_thumbnails: bool = Field(default=True)
     optimize_images: bool = Field(default=True)
     download_permission: DownloadPermission = Field(default=DownloadPermission.ORGANIZATION)
-    retention_days: Optional[int] = Field(None, ge=1, le=3650)
+    retention_days: int | None = Field(None, ge=1, le=3650)
 
     @field_validator("category")
     @classmethod
@@ -109,8 +106,8 @@ class FileUploadResponse(BaseModel):
     file_size: int
     mime_type: str
     storage_path: str
-    cdn_url: Optional[str] = None
-    thumbnail_url: Optional[str] = None
+    cdn_url: str | None = None
+    thumbnail_url: str | None = None
     status: UploadStatus
     created_at: datetime
     warnings: list[str] = Field(default_factory=list)
@@ -126,8 +123,8 @@ class MultipartUploadInitRequest(BaseModel):
     mime_type: str = Field(..., min_length=1)
     part_size: int = Field(default=5 * 1024 * 1024, ge=5 * 1024 * 1024)  # Min 5MB
     category: str = Field(default="media_resource")
-    title: Optional[str] = None
-    description: Optional[str] = None
+    title: str | None = None
+    description: str | None = None
 
 
 class MultipartUploadInitResponse(BaseModel):
@@ -148,7 +145,7 @@ class MultipartUploadPartRequest(BaseModel):
 
     upload_id: str
     part_number: int = Field(..., ge=1)
-    checksum: Optional[str] = None
+    checksum: str | None = None
 
 
 class MultipartUploadPartResponse(BaseModel):
@@ -169,8 +166,7 @@ class MultipartUploadCompleteRequest(BaseModel):
 
     upload_id: str
     parts: list[dict[str, int | str]] = Field(
-        ...,
-        description="List of parts with part_number and etag"
+        ..., description="List of parts with part_number and etag"
     )
 
 
@@ -184,12 +180,13 @@ class UploadStatusResponse(BaseModel):
     progress_percentage: float
     bytes_uploaded: int
     total_bytes: int
-    error_message: Optional[str] = None
+    error_message: str | None = None
     created_at: datetime
     updated_at: datetime
 
 
 # === Dependency Injection ===
+
 
 async def get_storage_service(
     session: Annotated[AsyncSession, Depends(get_async_db)],
@@ -219,6 +216,7 @@ async def get_storage_service(
 
 # === API Endpoints ===
 
+
 @router.post(
     "/file",
     response_model=FileUploadResponse,
@@ -230,8 +228,8 @@ async def upload_single_file(
     file: Annotated[UploadFile, File(description="File to upload")],
     storage: Annotated[StorageService, Depends(get_storage_service)],
     background_tasks: BackgroundTasks,
-    title: Annotated[Optional[str], Form()] = None,
-    description: Annotated[Optional[str], Form()] = None,
+    title: Annotated[str | None, Form()] = None,
+    description: Annotated[str | None, Form()] = None,
     category: Annotated[str, Form()] = "media_resource",
     virus_scan: Annotated[bool, Form()] = True,
     generate_thumbnails: Annotated[bool, Form()] = True,
@@ -262,14 +260,13 @@ async def upload_single_file(
         # Validate file size (100MB limit for single upload)
         if not file.size:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="File size cannot be determined"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="File size cannot be determined"
             )
 
         if file.size > 100 * 1024 * 1024:  # 100MB
             raise HTTPException(
                 status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                detail="File too large. Use multipart upload for files >100MB"
+                detail="File too large. Use multipart upload for files >100MB",
             )
 
         # Read file content
@@ -286,8 +283,7 @@ async def upload_single_file(
 
         # Upload file
         logger.info(
-            f"Uploading file: {file.filename}, "
-            f"size: {file.size}, type: {file.content_type}"
+            f"Uploading file: {file.filename}, " f"size: {file.size}, type: {file.content_type}"
         )
 
         result = await storage.upload_file(
@@ -298,11 +294,7 @@ async def upload_single_file(
 
         # Schedule background tasks
         if virus_scan:
-            background_tasks.add_task(
-                _schedule_virus_scan,
-                result.file_id,
-                storage.organization_id
-            )
+            background_tasks.add_task(_schedule_virus_scan, result.file_id, storage.organization_id)
 
         logger.info(f"File uploaded successfully: {result.file_id}")
 
@@ -322,21 +314,15 @@ async def upload_single_file(
 
     except QuotaExceededError as e:
         logger.warning(f"Quota exceeded: {e.message}")
-        raise HTTPException(
-            status_code=status.HTTP_507_INSUFFICIENT_STORAGE,
-            detail=e.message
-        )
+        raise HTTPException(status_code=status.HTTP_507_INSUFFICIENT_STORAGE, detail=e.message)
     except ValidationError as e:
         logger.warning(f"Validation error: {e.message}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=e.message
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except Exception as e:
         logger.error(f"Upload failed: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Upload failed. Please try again."
+            detail="Upload failed. Please try again.",
         )
 
 
@@ -377,9 +363,10 @@ async def initialize_multipart_upload(
         )
 
         # Initialize multipart upload session in Redis for state tracking
-        from uuid import uuid4
-        from datetime import timedelta
         import json
+        from datetime import timedelta
+        from uuid import uuid4
+
         from apps.backend.core.cache import cache
 
         upload_id = str(uuid4())
@@ -400,11 +387,7 @@ async def initialize_multipart_upload(
         }
 
         # Cache for 24 hours
-        await cache.set(
-            f"multipart_upload:{upload_id}",
-            json.dumps(upload_metadata),
-            expire=86400
-        )
+        await cache.set(f"multipart_upload:{upload_id}", json.dumps(upload_metadata), expire=86400)
 
         return MultipartUploadInitResponse(
             upload_id=upload_id,
@@ -417,7 +400,7 @@ async def initialize_multipart_upload(
         logger.error(f"Multipart init failed: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to initialize multipart upload"
+            detail="Failed to initialize multipart upload",
         )
 
 
@@ -452,13 +435,13 @@ async def upload_multipart_part(
         file_content = await file.read()
 
         logger.info(
-            f"Uploading part {part_number} for upload {upload_id}, "
-            f"size: {len(file_content)}"
+            f"Uploading part {part_number} for upload {upload_id}, " f"size: {len(file_content)}"
         )
 
         # Store part in temporary storage and update metadata
         import hashlib
         import json
+
         from apps.backend.core.cache import cache
 
         # Calculate ETag for the part
@@ -470,8 +453,7 @@ async def upload_multipart_part(
 
         if not metadata_json:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Upload session not found or expired"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Upload session not found or expired"
             )
 
         metadata = json.loads(metadata_json)
@@ -484,12 +466,14 @@ async def upload_multipart_part(
         if "uploaded_parts" not in metadata:
             metadata["uploaded_parts"] = []
 
-        metadata["uploaded_parts"].append({
-            "part_number": part_number,
-            "etag": etag,
-            "size": len(file_content),
-            "uploaded_at": datetime.utcnow().isoformat()
-        })
+        metadata["uploaded_parts"].append(
+            {
+                "part_number": part_number,
+                "etag": etag,
+                "size": len(file_content),
+                "uploaded_at": datetime.utcnow().isoformat(),
+            }
+        )
 
         # Save updated metadata
         await cache.set(metadata_key, json.dumps(metadata), expire=86400)
@@ -506,8 +490,7 @@ async def upload_multipart_part(
     except Exception as e:
         logger.error(f"Part upload failed: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Part upload failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Part upload failed"
         )
 
 
@@ -541,14 +524,14 @@ async def complete_multipart_upload(
     """
     try:
         logger.info(
-            f"Completing multipart upload {request.upload_id}, "
-            f"parts: {len(request.parts)}"
+            f"Completing multipart upload {request.upload_id}, " f"parts: {len(request.parts)}"
         )
 
         # Complete multipart upload by combining all parts
-        from uuid import uuid4
         import json
         from io import BytesIO
+        from uuid import uuid4
+
         from apps.backend.core.cache import cache
 
         # Get upload metadata
@@ -557,8 +540,7 @@ async def complete_multipart_upload(
 
         if not metadata_json:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Upload session not found or expired"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Upload session not found or expired"
             )
 
         metadata = json.loads(metadata_json)
@@ -570,7 +552,7 @@ async def complete_multipart_upload(
         if len(uploaded_parts) != expected_parts:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Missing parts: expected {expected_parts}, got {len(uploaded_parts)}"
+                detail=f"Missing parts: expected {expected_parts}, got {len(uploaded_parts)}",
             )
 
         # Combine all parts
@@ -584,7 +566,7 @@ async def complete_multipart_upload(
             if not part_data:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Part {part['part_number']} data not found"
+                    detail=f"Part {part['part_number']} data not found",
                 )
 
             combined_data.write(part_data if isinstance(part_data, bytes) else part_data.encode())
@@ -607,7 +589,7 @@ async def complete_multipart_upload(
             filename=metadata["filename"],
             file_stream=combined_data,
             content_type=metadata["mime_type"],
-            options=upload_options
+            options=upload_options,
         )
 
         # Clean up temporary parts from cache
@@ -619,7 +601,9 @@ async def complete_multipart_upload(
 
         # Schedule virus scan if enabled
         if upload_options.virus_scan:
-            background_tasks.add_task(_schedule_virus_scan, file_id, metadata.get("organization_id"))
+            background_tasks.add_task(
+                _schedule_virus_scan, file_id, metadata.get("organization_id")
+            )
 
         logger.info(f"Multipart upload {request.upload_id} completed: {file_id}")
 
@@ -640,7 +624,7 @@ async def complete_multipart_upload(
         logger.error(f"Multipart completion failed: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to complete multipart upload"
+            detail="Failed to complete multipart upload",
         )
 
 
@@ -672,18 +656,14 @@ async def delete_uploaded_file(
         success = await storage.delete_file(file_id, permanent=permanent)
 
         if not success:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="File not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
 
         logger.info(f"File deleted: {file_id}")
 
     except Exception as e:
         logger.error(f"Delete failed: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete file"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete file"
         )
 
 
@@ -714,10 +694,7 @@ async def get_upload_status(
         progress = storage.get_upload_progress(file_id)
 
         if not progress:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Upload not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Upload not found")
 
         return UploadStatusResponse(
             upload_id=progress.upload_id,
@@ -735,14 +712,14 @@ async def get_upload_status(
     except Exception as e:
         logger.error(f"Status check failed: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get upload status"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get upload status"
         )
 
 
 # === Background Tasks ===
 
-async def _schedule_virus_scan(file_id: UUID, organization_id: Optional[str]) -> None:
+
+async def _schedule_virus_scan(file_id: UUID, organization_id: str | None) -> None:
     """
     Schedule virus scan as background task.
 

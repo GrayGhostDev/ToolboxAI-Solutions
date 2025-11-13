@@ -16,28 +16,28 @@ Tests the organizations.py endpoints which provide:
 Total: 10 endpoints to test
 """
 
-import pytest
-from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import datetime, timezone
+from unittest.mock import MagicMock
 from uuid import uuid4
 
+import pytest
 from fastapi import HTTPException
 
 from apps.backend.api.v1.endpoints.organizations import (
-    get_current_organization_info,
-    create_organization,
-    get_organization,
-    update_organization,
-    get_organization_members,
-    create_invitation,
-    update_subscription,
-    remove_organization_member,
-    get_organization_usage,
-    get_organization_features,
+    InvitationCreateRequest,
     OrganizationCreateRequest,
     OrganizationUpdateRequest,
-    InvitationCreateRequest,
     SubscriptionUpdateRequest,
+    create_invitation,
+    create_organization,
+    get_current_organization_info,
+    get_organization,
+    get_organization_features,
+    get_organization_members,
+    get_organization_usage,
+    remove_organization_member,
+    update_organization,
+    update_subscription,
 )
 
 
@@ -57,8 +57,7 @@ class TestGetCurrentOrganization:
         organization_id = str(uuid4())
 
         response = await get_current_organization_info(
-            current_user=mock_user,
-            organization_id=organization_id
+            current_user=mock_user, organization_id=organization_id
         )
 
         assert response.id == organization_id
@@ -72,10 +71,7 @@ class TestGetCurrentOrganization:
     async def test_get_current_organization_no_context(self, mock_user):
         """Test error when no organization context found."""
         with pytest.raises(HTTPException) as exc_info:
-            await get_current_organization_info(
-                current_user=mock_user,
-                organization_id=None
-            )
+            await get_current_organization_info(current_user=mock_user, organization_id=None)
 
         assert exc_info.value.status_code == 400
         assert "No organization context found" in str(exc_info.value.detail)
@@ -86,15 +82,22 @@ class TestGetCurrentOrganization:
         organization_id = str(uuid4())
 
         response = await get_current_organization_info(
-            current_user=mock_user,
-            organization_id=organization_id
+            current_user=mock_user, organization_id=organization_id
         )
 
         # Verify required fields
         required_fields = [
-            "id", "name", "slug", "subscription_tier", "status",
-            "is_active", "is_trial", "usage_percentage", "settings",
-            "features", "created_at"
+            "id",
+            "name",
+            "slug",
+            "subscription_tier",
+            "status",
+            "is_active",
+            "is_trial",
+            "usage_percentage",
+            "settings",
+            "features",
+            "created_at",
         ]
 
         for field in required_fields:
@@ -127,16 +130,13 @@ class TestCreateOrganization:
             email="contact@testorg.com",
             organization_type="education",
             timezone="America/New_York",
-            locale="en-US"
+            locale="en-US",
         )
 
     @pytest.mark.asyncio
     async def test_create_organization_success(self, mock_user, valid_org_request):
         """Test successful organization creation."""
-        response = await create_organization(
-            request=valid_org_request,
-            current_user=mock_user
-        )
+        response = await create_organization(request=valid_org_request, current_user=mock_user)
 
         assert response.name == valid_org_request.name
         assert response.slug == valid_org_request.slug
@@ -149,15 +149,9 @@ class TestCreateOrganization:
     @pytest.mark.asyncio
     async def test_create_organization_with_minimal_fields(self, mock_user):
         """Test organization creation with only required fields."""
-        request = OrganizationCreateRequest(
-            name="Minimal Org",
-            slug="minimal-org"
-        )
+        request = OrganizationCreateRequest(name="Minimal Org", slug="minimal-org")
 
-        response = await create_organization(
-            request=request,
-            current_user=mock_user
-        )
+        response = await create_organization(request=request, current_user=mock_user)
 
         assert response.name == "Minimal Org"
         assert response.slug == "minimal-org"
@@ -166,25 +160,16 @@ class TestCreateOrganization:
     def test_slug_validation(self):
         """Test slug format validation."""
         # Valid slug
-        valid_request = OrganizationCreateRequest(
-            name="Test",
-            slug="test-org-123"
-        )
+        valid_request = OrganizationCreateRequest(name="Test", slug="test-org-123")
         assert valid_request.slug == "test-org-123"
 
         # Invalid slug with uppercase
         with pytest.raises(ValueError):
-            OrganizationCreateRequest(
-                name="Test",
-                slug="Test-Org"
-            )
+            OrganizationCreateRequest(name="Test", slug="Test-Org")
 
         # Invalid slug with special characters
         with pytest.raises(ValueError):
-            OrganizationCreateRequest(
-                name="Test",
-                slug="test_org!"
-            )
+            OrganizationCreateRequest(name="Test", slug="test_org!")
 
 
 class TestGetOrganization:
@@ -201,10 +186,7 @@ class TestGetOrganization:
         """Test successful organization retrieval."""
         organization_id = str(uuid4())
 
-        response = await get_organization(
-            organization_id=organization_id,
-            current_user=mock_user
-        )
+        response = await get_organization(organization_id=organization_id, current_user=mock_user)
 
         assert response.id == organization_id
         assert "Organization" in response.name
@@ -216,10 +198,7 @@ class TestGetOrganization:
         """Test that endpoint returns mock data for development."""
         organization_id = str(uuid4())
 
-        response = await get_organization(
-            organization_id=organization_id,
-            current_user=mock_user
-        )
+        response = await get_organization(organization_id=organization_id, current_user=mock_user)
 
         # Should return mock data
         assert response.subscription_tier == "basic"
@@ -242,7 +221,7 @@ class TestUpdateOrganization:
             name="Updated Organization Name",
             display_name="Updated Display Name",
             description="Updated description",
-            email="updated@example.com"
+            email="updated@example.com",
         )
 
     @pytest.mark.asyncio
@@ -252,9 +231,7 @@ class TestUpdateOrganization:
 
         with pytest.raises(HTTPException) as exc_info:
             await update_organization(
-                organization_id=organization_id,
-                request=update_request,
-                current_user=mock_user
+                organization_id=organization_id, request=update_request, current_user=mock_user
             )
 
         assert exc_info.value.status_code == 404
@@ -265,17 +242,13 @@ class TestUpdateOrganization:
         """Test partial update with only some fields."""
         organization_id = str(uuid4())
 
-        request = OrganizationUpdateRequest(
-            name="New Name Only"
-        )
+        request = OrganizationUpdateRequest(name="New Name Only")
 
         # Note: This will fail with 404 in current mock implementation
         # In real implementation with DB, would test partial updates
         with pytest.raises(HTTPException) as exc_info:
             await update_organization(
-                organization_id=organization_id,
-                request=request,
-                current_user=mock_user
+                organization_id=organization_id, request=request, current_user=mock_user
             )
 
         assert exc_info.value.status_code == 404
@@ -296,10 +269,7 @@ class TestGetOrganizationMembers:
         organization_id = str(uuid4())
 
         response = await get_organization_members(
-            organization_id=organization_id,
-            current_user=mock_user,
-            limit=50,
-            offset=0
+            organization_id=organization_id, current_user=mock_user, limit=50, offset=0
         )
 
         assert isinstance(response, list)
@@ -315,20 +285,14 @@ class TestGetOrganizationMembers:
 
         # Get first page
         response = await get_organization_members(
-            organization_id=organization_id,
-            current_user=mock_user,
-            limit=2,
-            offset=0
+            organization_id=organization_id, current_user=mock_user, limit=2, offset=0
         )
 
         assert len(response) == 2
 
         # Get second page
         response = await get_organization_members(
-            organization_id=organization_id,
-            current_user=mock_user,
-            limit=2,
-            offset=2
+            organization_id=organization_id, current_user=mock_user, limit=2, offset=2
         )
 
         assert len(response) == 1  # Only 1 member left
@@ -339,16 +303,18 @@ class TestGetOrganizationMembers:
         organization_id = str(uuid4())
 
         response = await get_organization_members(
-            organization_id=organization_id,
-            current_user=mock_user,
-            limit=10,
-            offset=0
+            organization_id=organization_id, current_user=mock_user, limit=10, offset=0
         )
 
         member = response[0]
         required_fields = [
-            "id", "username", "email", "role", "organization_role",
-            "joined_at", "is_active"
+            "id",
+            "username",
+            "email",
+            "role",
+            "organization_role",
+            "joined_at",
+            "is_active",
         ]
 
         for field in required_fields:
@@ -370,7 +336,7 @@ class TestCreateInvitation:
         return InvitationCreateRequest(
             email="newuser@example.com",
             role="member",
-            invitation_message="Welcome to our organization!"
+            invitation_message="Welcome to our organization!",
         )
 
     @pytest.mark.asyncio
@@ -381,7 +347,7 @@ class TestCreateInvitation:
         response = await create_invitation(
             organization_id=organization_id,
             request=invitation_request,
-            current_user=mock_admin_user
+            current_user=mock_admin_user,
         )
 
         assert response.email == invitation_request.email
@@ -400,7 +366,7 @@ class TestCreateInvitation:
         response = await create_invitation(
             organization_id=organization_id,
             request=invitation_request,
-            current_user=mock_admin_user
+            current_user=mock_admin_user,
         )
 
         # Should expire in approximately 7 days
@@ -411,18 +377,12 @@ class TestCreateInvitation:
         """Test role validation for invitations."""
         # Valid roles
         for role in ["admin", "manager", "teacher", "member"]:
-            request = InvitationCreateRequest(
-                email="test@example.com",
-                role=role
-            )
+            request = InvitationCreateRequest(email="test@example.com", role=role)
             assert request.role == role
 
         # Invalid role
         with pytest.raises(ValueError):
-            InvitationCreateRequest(
-                email="test@example.com",
-                role="invalid_role"
-            )
+            InvitationCreateRequest(email="test@example.com", role="invalid_role")
 
 
 class TestUpdateSubscription:
@@ -441,7 +401,7 @@ class TestUpdateSubscription:
             max_users=100,
             max_classes=50,
             max_storage_gb=100.0,
-            max_api_calls_per_month=50000
+            max_api_calls_per_month=50000,
         )
 
     @pytest.mark.asyncio
@@ -453,7 +413,7 @@ class TestUpdateSubscription:
             await update_subscription(
                 organization_id=organization_id,
                 request=subscription_request,
-                current_user=mock_admin_user
+                current_user=mock_admin_user,
             )
 
         assert exc_info.value.status_code == 404
@@ -474,19 +434,14 @@ class TestUpdateSubscription:
         """Test that subscription limits are validated."""
         # Valid limits
         request = SubscriptionUpdateRequest(
-            subscription_tier="professional",
-            max_users=100,
-            max_storage_gb=50.0
+            subscription_tier="professional", max_users=100, max_storage_gb=50.0
         )
         assert request.max_users == 100
         assert request.max_storage_gb == 50.0
 
         # Invalid limit (negative users)
         with pytest.raises(ValueError):
-            SubscriptionUpdateRequest(
-                subscription_tier="professional",
-                max_users=-10
-            )
+            SubscriptionUpdateRequest(subscription_tier="professional", max_users=-10)
 
 
 class TestRemoveOrganizationMember:
@@ -505,9 +460,7 @@ class TestRemoveOrganizationMember:
         user_to_remove = str(uuid4())
 
         response = await remove_organization_member(
-            organization_id=organization_id,
-            user_id=user_to_remove,
-            current_user=mock_admin_user
+            organization_id=organization_id, user_id=user_to_remove, current_user=mock_admin_user
         )
 
         assert response["message"] == "Member removed successfully"
@@ -521,7 +474,7 @@ class TestRemoveOrganizationMember:
             await remove_organization_member(
                 organization_id=organization_id,
                 user_id=mock_admin_user.id,
-                current_user=mock_admin_user
+                current_user=mock_admin_user,
             )
 
         assert exc_info.value.status_code == 400
@@ -543,9 +496,7 @@ class TestGetOrganizationUsage:
         organization_id = str(uuid4())
 
         response = await get_organization_usage(
-            organization_id=organization_id,
-            current_user=mock_user,
-            period="current"
+            organization_id=organization_id, current_user=mock_user, period="current"
         )
 
         assert response["period"] == "current"
@@ -560,9 +511,7 @@ class TestGetOrganizationUsage:
         organization_id = str(uuid4())
 
         response = await get_organization_usage(
-            organization_id=organization_id,
-            current_user=mock_user,
-            period="current"
+            organization_id=organization_id, current_user=mock_user, period="current"
         )
 
         # Verify usage categories
@@ -582,9 +531,7 @@ class TestGetOrganizationUsage:
 
         for period in ["current", "last_month", "last_year"]:
             response = await get_organization_usage(
-                organization_id=organization_id,
-                current_user=mock_user,
-                period=period
+                organization_id=organization_id, current_user=mock_user, period=period
             )
 
             assert response["period"] == period
@@ -605,8 +552,7 @@ class TestGetOrganizationFeatures:
         organization_id = str(uuid4())
 
         response = await get_organization_features(
-            organization_id=organization_id,
-            current_user=mock_user
+            organization_id=organization_id, current_user=mock_user
         )
 
         assert response["organization_id"] == organization_id
@@ -621,8 +567,7 @@ class TestGetOrganizationFeatures:
         organization_id = str(uuid4())
 
         response = await get_organization_features(
-            organization_id=organization_id,
-            current_user=mock_user
+            organization_id=organization_id, current_user=mock_user
         )
 
         # Verify enabled features is a list
@@ -635,7 +580,7 @@ class TestGetOrganizationFeatures:
             "content_generation_per_month",
             "api_calls_per_minute",
             "storage_gb",
-            "concurrent_sessions"
+            "concurrent_sessions",
         ]
 
         for limit in expected_limits:

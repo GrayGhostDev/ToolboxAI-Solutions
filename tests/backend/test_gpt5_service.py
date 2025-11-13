@@ -1,18 +1,21 @@
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest_asyncio
+
 """
 Test suite for GPT-5 Service Implementation
 Validates GPT-5 migration with fallback mechanisms
 """
 
-import pytest
 import asyncio
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from datetime import datetime
 import os
+from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import pytest
 
 # Set test environment variables
 os.environ["OPENAI_API_KEY"] = "test-api-key"
@@ -20,8 +23,8 @@ os.environ["GPT5_DEFAULT_MODEL"] = "gpt-5"
 os.environ["GPT5_FALLBACK_ENABLED"] = "true"
 os.environ["GPT5_FALLBACK_MODEL"] = "gpt-4o"
 
-from apps.backend.services.openai_gpt5_service import GPT5Service, get_gpt5_service
 from apps.backend.core.feature_flags import FeatureFlag
+from apps.backend.services.openai_gpt5_service import GPT5Service, get_gpt5_service
 
 
 class TestGPT5Service:

@@ -12,10 +12,10 @@ import sys
 from logging.config import fileConfig
 from pathlib import Path
 
+from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
-from alembic import context
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent.parent
@@ -23,13 +23,6 @@ sys.path.insert(0, str(project_root))
 
 # Import modern base and all models
 from database.models.base_modern import Base
-from database.models.user_modern import User, UserProfile, UserSession
-from database.models.content_modern import (
-    EducationalContent,
-    ContentAttachment,
-    ContentComment,
-    ContentRating,
-)
 
 # this is the Alembic Config object
 config = context.config
@@ -59,9 +52,7 @@ def get_database_url() -> str:
     if database_url:
         # Convert to asyncpg if needed
         if database_url.startswith("postgresql://"):
-            database_url = database_url.replace(
-                "postgresql://", "postgresql+asyncpg://", 1
-            )
+            database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
         return database_url
 
     # Build from components

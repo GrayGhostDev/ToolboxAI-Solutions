@@ -7,58 +7,55 @@ Implements full SendGrid v3 API with comprehensive features
 @since 2025-09-26
 """
 
-import logging
-import asyncio
-import os
-from typing import List, Optional, Dict, Any, Union
-from datetime import datetime, timezone
-from dataclasses import dataclass, field
-from enum import Enum
-import json
 import base64
-import hashlib
+import json
+import logging
+import os
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from enum import Enum
 from pathlib import Path
+from typing import Any
 
 # Configure logger
 logger = logging.getLogger(__name__)
 
 # SendGrid imports with proper error handling
 try:
+    from python_http_client.exceptions import HTTPError
     from sendgrid import SendGridAPIClient
-    from sendgrid.helpers.mail import (
-        Mail,
-        Email,
-        To,
-        Content,
+    from sendgrid.helpers.mail import (  # SandBoxMode removed - now use mail_settings.sandbox_mode = True/False directly
+        Asm,
         Attachment,
+        BatchId,
+        Bcc,
+        BypassListManagement,
+        Category,
+        Cc,
+        ClickTracking,
+        Content,
+        CustomArg,
+        Disposition,
+        Email,
         FileContent,
         FileName,
         FileType,
-        Disposition,
-        Personalization,
-        Substitution,
-        CustomArg,
-        TrackingSettings,
-        ClickTracking,
-        OpenTracking,
-        SubscriptionTracking,
+        FooterSettings,
         Ganalytics,
-        Bcc,
-        Cc,
-        ReplyTo,
-        Header,
-        Category,
-        BatchId,
-        Asm,
         GroupId,
         GroupsToDisplay,
+        Header,
         IpPoolName,
+        Mail,
         MailSettings,
-        BypassListManagement,
-        FooterSettings,
-        # SandBoxMode removed - now use mail_settings.sandbox_mode = True/False directly
+        OpenTracking,
+        Personalization,
+        ReplyTo,
+        SubscriptionTracking,
+        Substitution,
+        To,
+        TrackingSettings,
     )
-    from python_http_client.exceptions import HTTPError
 
     SENDGRID_AVAILABLE = True
     logger.info("SendGrid SDK loaded successfully")
@@ -80,8 +77,8 @@ except ImportError as e:
 
 # Jinja2 for templates
 try:
-    from jinja2 import Environment, FileSystemLoader, select_autoescape
     import jinja2
+    from jinja2 import Environment, FileSystemLoader, select_autoescape
 
     JINJA2_AVAILABLE = True
 except ImportError:
@@ -100,8 +97,8 @@ except ImportError:
     logger.warning("Install with: pip install bleach beautifulsoup4 premailer")
     HTML_PROCESSING_AVAILABLE = False
 
+from apps.backend.core.cache import CacheConfig, CacheKey, cache
 from apps.backend.core.config import settings
-from apps.backend.core.cache import cache, CacheConfig, CacheKey
 
 
 class EmailPriority(str, Enum):
@@ -132,9 +129,9 @@ class EmailRecipient:
     """Email recipient with optional personalization"""
 
     email: str
-    name: Optional[str] = None
-    substitutions: Dict[str, Any] = field(default_factory=dict)
-    custom_args: Dict[str, str] = field(default_factory=dict)
+    name: str | None = None
+    substitutions: dict[str, Any] = field(default_factory=dict)
+    custom_args: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -142,10 +139,10 @@ class EmailAttachment:
     """Email attachment data"""
 
     filename: str
-    content: Union[str, bytes]
+    content: str | bytes
     type: str
     disposition: str = "attachment"
-    content_id: Optional[str] = None
+    content_id: str | None = None
 
 
 class SendGridEmailService:
@@ -204,7 +201,7 @@ class SendGridEmailService:
 
         logger.info(f"SendGrid Email Service initialized (sandbox={self.sandbox_mode})")
 
-    def _initialize_client(self) -> Optional[SendGridAPIClient]:
+    def _initialize_client(self) -> SendGridAPIClient | None:
         """Initialize SendGrid API client"""
         if not SENDGRID_AVAILABLE:
             logger.error("SendGrid SDK not available")
@@ -226,7 +223,7 @@ class SendGridEmailService:
             logger.error(f"Failed to initialize SendGrid client: {e}")
             return None
 
-    def _initialize_templates(self) -> Optional[Environment]:
+    def _initialize_templates(self) -> Environment | None:
         """Initialize Jinja2 template environment"""
         if not JINJA2_AVAILABLE:
             logger.warning("Jinja2 not available, templates disabled")
@@ -251,27 +248,27 @@ class SendGridEmailService:
 
     async def send_email(
         self,
-        to_emails: Union[str, List[str], List[EmailRecipient]],
+        to_emails: str | list[str] | list[EmailRecipient],
         subject: str,
-        html_content: Optional[str] = None,
-        text_content: Optional[str] = None,
-        template_name: Optional[str] = None,
-        template_context: Optional[Dict[str, Any]] = None,
-        from_email: Optional[str] = None,
-        from_name: Optional[str] = None,
-        reply_to: Optional[str] = None,
-        cc: Optional[List[str]] = None,
-        bcc: Optional[List[str]] = None,
-        attachments: Optional[List[EmailAttachment]] = None,
-        categories: Optional[List[str]] = None,
-        custom_args: Optional[Dict[str, str]] = None,
-        send_at: Optional[int] = None,
-        batch_id: Optional[str] = None,
-        asm_group_id: Optional[int] = None,
-        ip_pool_name: Optional[str] = None,
+        html_content: str | None = None,
+        text_content: str | None = None,
+        template_name: str | None = None,
+        template_context: dict[str, Any] | None = None,
+        from_email: str | None = None,
+        from_name: str | None = None,
+        reply_to: str | None = None,
+        cc: list[str] | None = None,
+        bcc: list[str] | None = None,
+        attachments: list[EmailAttachment] | None = None,
+        categories: list[str] | None = None,
+        custom_args: dict[str, str] | None = None,
+        send_at: int | None = None,
+        batch_id: str | None = None,
+        asm_group_id: int | None = None,
+        ip_pool_name: str | None = None,
         priority: EmailPriority = EmailPriority.NORMAL,
         email_type: EmailType = EmailType.TRANSACTIONAL,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Send email through SendGrid
 
@@ -352,19 +349,23 @@ class SendGridEmailService:
 
             # Extract message ID from response
             message_id = None
-            if hasattr(response, 'headers'):
+            if hasattr(response, "headers"):
                 headers = response.headers
                 # SendGrid python client returns headers as a special object
                 # Try to access it safely
                 try:
                     if isinstance(headers, dict):
                         message_id = headers.get("X-Message-Id")
-                    elif hasattr(headers, '__getitem__'):
+                    elif hasattr(headers, "__getitem__"):
                         # Headers object supports bracket notation
-                        message_id = headers.get("X-Message-Id", None) if hasattr(headers, 'get') else headers["X-Message-Id"]
+                        message_id = (
+                            headers.get("X-Message-Id", None)
+                            if hasattr(headers, "get")
+                            else headers["X-Message-Id"]
+                        )
                     else:
                         # Try direct attribute access
-                        for attr in ['X-Message-Id', 'x-message-id', 'X_Message_Id']:
+                        for attr in ["X-Message-Id", "x-message-id", "X_Message_Id"]:
                             if hasattr(headers, attr):
                                 message_id = getattr(headers, attr)
                                 break
@@ -375,6 +376,7 @@ class SendGridEmailService:
             # Generate fallback message ID if needed
             if not message_id:
                 import uuid
+
                 message_id = f"sg-{uuid.uuid4()}"
 
             # Cache email metadata
@@ -390,26 +392,26 @@ class SendGridEmailService:
             return {
                 "success": True,
                 "message_id": message_id,
-                "status_code": getattr(response, 'status_code', 202),
+                "status_code": getattr(response, "status_code", 202),
                 "provider": "sendgrid",
             }
 
         except HTTPError as e:
             error_detail = str(e)
             # Try to get error details if available
-            if hasattr(e, 'to_dict'):
+            if hasattr(e, "to_dict"):
                 try:
                     error_detail = str(e.to_dict)
                 except:
                     pass
-            elif hasattr(e, 'body'):
+            elif hasattr(e, "body"):
                 error_detail = str(e.body)
 
             logger.error(f"SendGrid API error: {error_detail}")
             return {
                 "success": False,
                 "error": error_detail,
-                "status_code": getattr(e, 'status_code', 500),
+                "status_code": getattr(e, "status_code", 500),
                 "provider": "sendgrid",
             }
         except Exception as e:
@@ -418,21 +420,21 @@ class SendGridEmailService:
 
     def _create_mail_object(
         self,
-        to_emails: Union[str, List[str], List[EmailRecipient]],
+        to_emails: str | list[str] | list[EmailRecipient],
         subject: str,
-        html_content: Optional[str],
-        text_content: Optional[str],
+        html_content: str | None,
+        text_content: str | None,
         from_email: str,
         from_name: str,
-        reply_to: Optional[str],
-        cc: Optional[List[str]],
-        bcc: Optional[List[str]],
-        categories: List[str],
-        custom_args: Optional[Dict[str, str]],
-        send_at: Optional[int],
-        batch_id: Optional[str],
-        asm_group_id: Optional[int],
-        ip_pool_name: Optional[str],
+        reply_to: str | None,
+        cc: list[str] | None,
+        bcc: list[str] | None,
+        categories: list[str],
+        custom_args: dict[str, str] | None,
+        send_at: int | None,
+        batch_id: str | None,
+        asm_group_id: int | None,
+        ip_pool_name: str | None,
     ) -> Mail:
         """Create SendGrid Mail object"""
         mail = Mail()
@@ -515,7 +517,7 @@ class SendGridEmailService:
 
         return mail
 
-    def _add_attachments(self, mail: Mail, attachments: List[EmailAttachment]):
+    def _add_attachments(self, mail: Mail, attachments: list[EmailAttachment]):
         """Add attachments to email"""
         for att in attachments:
             attachment = Attachment()
@@ -612,7 +614,7 @@ class SendGridEmailService:
                     "hr",
                 ],
                 attributes={"*": ["style"], "a": ["href", "title"], "img": ["src", "alt"]},
-                strip=True  # Remove disallowed tags instead of escaping
+                strip=True,  # Remove disallowed tags instead of escaping
             )
         except Exception as e:
             logger.warning(f"HTML processing failed: {e}")
@@ -641,7 +643,7 @@ class SendGridEmailService:
             return html_content
 
     async def _render_template(
-        self, template_name: str, context: Dict[str, Any]
+        self, template_name: str, context: dict[str, Any]
     ) -> tuple[str, str]:
         """Render email template"""
         if not self.template_env:
@@ -679,7 +681,7 @@ class SendGridEmailService:
     async def _cache_email_metadata(
         self,
         message_id: str,
-        to_emails: Union[str, List[str], List[EmailRecipient]],
+        to_emails: str | list[str] | list[EmailRecipient],
         subject: str,
         email_type: EmailType,
     ):
@@ -710,8 +712,8 @@ class SendGridEmailService:
     # Convenience methods for common email types
 
     async def send_welcome_email(
-        self, user_email: str, user_name: str, verification_url: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, user_email: str, user_name: str, verification_url: str | None = None
+    ) -> dict[str, Any]:
         """Send welcome email to new user"""
         context = {
             "user_name": user_name,
@@ -730,7 +732,7 @@ class SendGridEmailService:
 
     async def send_password_reset_email(
         self, user_email: str, user_name: str, reset_token: str, reset_url: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Send password reset email"""
         context = {
             "user_name": user_name,
@@ -750,7 +752,7 @@ class SendGridEmailService:
 
     async def send_verification_email(
         self, user_email: str, user_name: str, verification_code: str, verification_url: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Send email verification"""
         context = {
             "user_name": user_name,
@@ -774,8 +776,8 @@ class SendGridEmailService:
         plan_name: str,
         amount: float,
         next_billing_date: datetime,
-        invoice_url: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        invoice_url: str | None = None,
+    ) -> dict[str, Any]:
         """Send subscription confirmation email"""
         context = {
             "user_name": user_name,
@@ -796,7 +798,7 @@ class SendGridEmailService:
 
     # Webhook handling for SendGrid events
 
-    async def handle_webhook(self, events: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def handle_webhook(self, events: list[dict[str, Any]]) -> dict[str, Any]:
         """
         Handle SendGrid webhook events
 
@@ -824,7 +826,7 @@ class SendGridEmailService:
             logger.error(f"Webhook handling failed: {e}")
             return {"success": False, "error": str(e)}
 
-    async def _process_webhook_event(self, event: Dict[str, Any]):
+    async def _process_webhook_event(self, event: dict[str, Any]):
         """Process individual webhook event"""
         event_type = event.get("event")
         email = event.get("email")
@@ -847,7 +849,7 @@ class SendGridEmailService:
 
         logger.info(f"Processed {event_type} event for {email}")
 
-    async def _handle_bounce(self, email: str, event: Dict[str, Any]):
+    async def _handle_bounce(self, email: str, event: dict[str, Any]):
         """Handle bounce event"""
         # Add to suppression list
         bounce_type = event.get("type", "hard")
@@ -855,17 +857,17 @@ class SendGridEmailService:
             # Permanently suppress
             await self.add_to_suppression_list(email, "bounce")
 
-    async def _handle_dropped(self, email: str, event: Dict[str, Any]):
+    async def _handle_dropped(self, email: str, event: dict[str, Any]):
         """Handle dropped email event"""
         reason = event.get("reason", "unknown")
         logger.warning(f"Email dropped for {email}: {reason}")
 
-    async def _handle_spam_report(self, email: str, event: Dict[str, Any]):
+    async def _handle_spam_report(self, email: str, event: dict[str, Any]):
         """Handle spam report"""
         # Add to global suppression
         await self.add_to_suppression_list(email, "spam_report")
 
-    async def _handle_unsubscribe(self, email: str, event: Dict[str, Any]):
+    async def _handle_unsubscribe(self, email: str, event: dict[str, Any]):
         """Handle unsubscribe event"""
         # Add to unsubscribe group
         await self.add_to_suppression_list(email, "unsubscribe")
@@ -977,7 +979,7 @@ class SendGridEmailService:
 
         return True
 
-    async def get_email_status(self, message_id: str) -> Optional[Dict[str, Any]]:
+    async def get_email_status(self, message_id: str) -> dict[str, Any] | None:
         """
         Get email status from cache
 
@@ -1000,7 +1002,7 @@ class SendGridEmailService:
     # Following SendGrid v3 API Documentation for 2025
     # Supports up to 300 templates with versioning
 
-    async def create_template(self, name: str, generation: str = "legacy") -> Optional[str]:
+    async def create_template(self, name: str, generation: str = "legacy") -> str | None:
         """
         Create a new legacy transactional template
 
@@ -1047,10 +1049,10 @@ class SendGridEmailService:
         name: str,
         subject: str,
         html_content: str,
-        plain_content: Optional[str] = None,
+        plain_content: str | None = None,
         active: bool = True,
-        test_data: Optional[Dict[str, Any]] = None,
-    ) -> Optional[str]:
+        test_data: dict[str, Any] | None = None,
+    ) -> str | None:
         """
         Create a new version for an existing template
 
@@ -1158,11 +1160,11 @@ class SendGridEmailService:
         self,
         template_id: str,
         version_id: str,
-        name: Optional[str] = None,
-        subject: Optional[str] = None,
-        html_content: Optional[str] = None,
-        plain_content: Optional[str] = None,
-        active: Optional[bool] = None,
+        name: str | None = None,
+        subject: str | None = None,
+        html_content: str | None = None,
+        plain_content: str | None = None,
+        active: bool | None = None,
     ) -> bool:
         """
         Update an existing template version
@@ -1210,7 +1212,7 @@ class SendGridEmailService:
             logger.error(f"Failed to update template version: {e}")
             return False
 
-    async def get_template(self, template_id: str) -> Optional[Dict[str, Any]]:
+    async def get_template(self, template_id: str) -> dict[str, Any] | None:
         """
         Get template details
 
@@ -1236,7 +1238,7 @@ class SendGridEmailService:
 
     async def get_template_version(
         self, template_id: str, version_id: str
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Get specific template version details
 
@@ -1265,8 +1267,8 @@ class SendGridEmailService:
         self,
         generations: str = "legacy,dynamic",
         page_size: int = 20,
-        page_token: Optional[str] = None,
-    ) -> Optional[Dict[str, Any]]:
+        page_token: str | None = None,
+    ) -> dict[str, Any] | None:
         """
         List all templates
 
@@ -1378,7 +1380,7 @@ class SendGridEmailService:
             logger.error(f"Failed to delete template version: {e}")
             return False
 
-    async def duplicate_template(self, template_id: str, new_name: str) -> Optional[str]:
+    async def duplicate_template(self, template_id: str, new_name: str) -> str | None:
         """
         Duplicate an existing template with all versions
 
@@ -1424,14 +1426,14 @@ class SendGridEmailService:
     async def send_with_template(
         self,
         template_id: str,
-        to_emails: Union[str, List[str]],
-        substitutions: Optional[Dict[str, str]] = None,
-        from_email: Optional[str] = None,
-        from_name: Optional[str] = None,
-        reply_to: Optional[str] = None,
-        categories: Optional[List[str]] = None,
-        send_at: Optional[int] = None,
-    ) -> Optional[str]:
+        to_emails: str | list[str],
+        substitutions: dict[str, str] | None = None,
+        from_email: str | None = None,
+        from_name: str | None = None,
+        reply_to: str | None = None,
+        categories: list[str] | None = None,
+        send_at: int | None = None,
+    ) -> str | None:
         """
         Send email using a template
 
@@ -1522,9 +1524,9 @@ class SendGridEmailService:
     async def preview_template(
         self,
         template_id: str,
-        version_id: Optional[str] = None,
-        substitutions: Optional[Dict[str, str]] = None,
-    ) -> Optional[Dict[str, str]]:
+        version_id: str | None = None,
+        substitutions: dict[str, str] | None = None,
+    ) -> dict[str, str] | None:
         """
         Preview template with substitutions applied
 
@@ -1607,9 +1609,7 @@ class SendGridEmailService:
             logger.error(f"Failed to export template: {e}")
             return False
 
-    async def import_template(
-        self, file_path: str, new_name: Optional[str] = None
-    ) -> Optional[str]:
+    async def import_template(self, file_path: str, new_name: str | None = None) -> str | None:
         """
         Import template from JSON file
 
@@ -1622,7 +1622,7 @@ class SendGridEmailService:
         """
         try:
             # Read template data
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 template_data = json.load(f)
 
             # Create template

@@ -18,7 +18,7 @@ NC='\033[0m' # No Color
 
 # TeamCity configuration
 TEAMCITY_URL="http://localhost:8111"
-SUPER_USER_TOKEN="1564674972001227872"
+SUPER_USER_TOKEN="6346235616814219232"
 PROJECT_ID="ToolboxAISolutions"
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"

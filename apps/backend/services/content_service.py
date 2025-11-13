@@ -5,14 +5,13 @@ Business logic for content generation, management, and retrieval operations.
 """
 
 import asyncio
-import logging
 import uuid
+from collections.abc import AsyncGenerator
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional, AsyncGenerator
+from typing import Any
 
-from apps.backend.core.logging import logging_manager
 from apps.backend.core.config import settings
-from apps.backend.models.schemas import User
+from apps.backend.core.logging import logging_manager
 
 logger = logging_manager.get_logger(__name__)
 
@@ -27,11 +26,11 @@ class ContentService:
         self,
         topic: str,
         user_id: str,
-        subject: Optional[str] = None,
-        grade_level: Optional[str] = None,
+        subject: str | None = None,
+        grade_level: str | None = None,
         content_type: str = "lesson",
-        additional_requirements: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        additional_requirements: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         Generate educational content using AI agents
 
@@ -122,7 +121,7 @@ class ContentService:
             logger.error(f"Content generation failed: {e}")
             raise
 
-    async def get_content(self, content_id: str, user_id: str) -> Optional[Dict[str, Any]]:
+    async def get_content(self, content_id: str, user_id: str) -> dict[str, Any] | None:
         """
         Retrieve content by ID
 
@@ -166,9 +165,9 @@ class ContentService:
         user_id: str,
         limit: int = 20,
         offset: int = 0,
-        content_type: Optional[str] = None,
-        subject: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        content_type: str | None = None,
+        subject: str | None = None,
+    ) -> dict[str, Any]:
         """
         List content for a user
 
@@ -212,8 +211,8 @@ class ContentService:
             return {"items": [], "total": 0, "limit": limit, "offset": offset}
 
     async def update_content(
-        self, content_id: str, user_id: str, updates: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
+        self, content_id: str, user_id: str, updates: dict[str, Any]
+    ) -> dict[str, Any] | None:
         """
         Update content
 
@@ -293,7 +292,7 @@ class ContentService:
 
     async def generate_content_stream(
         self, topic: str, user_id: str, **kwargs
-    ) -> AsyncGenerator[Dict[str, Any], None]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """
         Generate content with streaming updates
 
@@ -358,7 +357,7 @@ class ContentService:
                 "message": f"Generation failed: {str(e)}",
             }
 
-    async def _store_content(self, content_data: Dict[str, Any]) -> None:
+    async def _store_content(self, content_data: dict[str, Any]) -> None:
         """Store content in database"""
         # In a full implementation, this would save to database
         logger.debug(f"Storing content: {content_data['id']}")
@@ -368,20 +367,20 @@ class ContentService:
         # In a full implementation, this would delete from database
         logger.debug(f"Deleting content: {content_id}")
 
-    async def _check_content_access(self, user_id: str, content_data: Dict[str, Any]) -> bool:
+    async def _check_content_access(self, user_id: str, content_data: dict[str, Any]) -> bool:
         """Check if user can access content"""
         # Basic access check - user owns content or is admin
         return content_data.get("user_id") == user_id or await self._is_admin(user_id)
 
     async def _check_content_modify_access(
-        self, user_id: str, content_data: Dict[str, Any]
+        self, user_id: str, content_data: dict[str, Any]
     ) -> bool:
         """Check if user can modify content"""
         # Basic modify check - user owns content or is admin
         return content_data.get("user_id") == user_id or await self._is_admin(user_id)
 
     async def _check_content_delete_access(
-        self, user_id: str, content_data: Dict[str, Any]
+        self, user_id: str, content_data: dict[str, Any]
     ) -> bool:
         """Check if user can delete content"""
         # Basic delete check - user owns content or is admin
@@ -404,7 +403,7 @@ class ContentService:
         )
 
     async def _update_user_activity(
-        self, user_id: str, activity_type: str, metadata: Dict[str, Any]
+        self, user_id: str, activity_type: str, metadata: dict[str, Any]
     ) -> None:
         """Update user activity log"""
         logger.info(

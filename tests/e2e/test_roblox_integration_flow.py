@@ -1,28 +1,32 @@
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest_asyncio
+
 """
 End-to-End Tests for Roblox Integration Flow
 Tests the complete 8-stage conversation flow and environment generation
 """
 
-import os
 import asyncio
+import os
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, AsyncMock
-from httpx import AsyncClient
 from fastapi import status
+from httpx import AsyncClient
+
+from apps.backend.core.prompts.enhanced_conversation_flow import (
+    ConversationStage,
+    EnhancedConversationFlowManager,
+)
 
 # Import services
 from apps.backend.services.roblox.auth import RobloxOAuth2Service, TokenResponse
-from apps.backend.services.roblox.open_cloud import OpenCloudAPIClient, AssetDescription
+from apps.backend.services.roblox.open_cloud import AssetDescription, OpenCloudAPIClient
 from apps.backend.services.roblox.rojo_manager import EnhancedRojoManager, RojoProjectConfig
-from apps.backend.core.prompts.enhanced_conversation_flow import (
-    EnhancedConversationFlowManager,
-    ConversationStage
-)
 
 # Skip tests if environment flag not set
 pytestmark = pytest.mark.skipif(

@@ -16,13 +16,12 @@ Prerequisites:
 - All exporters healthy
 """
 
+import time
+
+import hvac
 import pytest
 import requests
-import hvac
-import time
-from typing import Dict, List, Optional
 from prometheus_client.parser import text_string_to_metric_families
-
 
 # ============================================
 # Configuration
@@ -43,6 +42,7 @@ HEALTH_CHECK_INTERVAL = 2
 # ============================================
 # Fixtures
 # ============================================
+
 
 @pytest.fixture(scope="module")
 def vault_client():
@@ -81,15 +81,13 @@ def wait_for_services():
 # Test Class: Vault Integration
 # ============================================
 
+
 class TestVaultIntegration:
     """Test Vault secrets management functionality."""
 
     def test_vault_healthy(self):
         """Verify Vault health endpoint responds correctly."""
-        response = requests.get(
-            f"{VAULT_ADDR}/v1/sys/health",
-            timeout=REQUEST_TIMEOUT
-        )
+        response = requests.get(f"{VAULT_ADDR}/v1/sys/health", timeout=REQUEST_TIMEOUT)
         assert response.status_code in [200, 429, 473, 501, 503]
 
         health_data = response.json()
@@ -98,19 +96,13 @@ class TestVaultIntegration:
 
     def test_vault_initialized(self):
         """Verify Vault is initialized."""
-        response = requests.get(
-            f"{VAULT_ADDR}/v1/sys/health",
-            timeout=REQUEST_TIMEOUT
-        )
+        response = requests.get(f"{VAULT_ADDR}/v1/sys/health", timeout=REQUEST_TIMEOUT)
         health_data = response.json()
         assert health_data.get("initialized") is True, "Vault is not initialized"
 
     def test_vault_unsealed(self):
         """Verify Vault is unsealed and ready."""
-        response = requests.get(
-            f"{VAULT_ADDR}/v1/sys/health",
-            timeout=REQUEST_TIMEOUT
-        )
+        response = requests.get(f"{VAULT_ADDR}/v1/sys/health", timeout=REQUEST_TIMEOUT)
         health_data = response.json()
         assert health_data.get("sealed") is False, "Vault is sealed"
 
@@ -127,28 +119,18 @@ class TestVaultIntegration:
     def test_vault_read_write_secret(self, vault_client):
         """Test writing and reading a test secret."""
         test_path = "test/integration"
-        test_data = {
-            "test_key": "test_value",
-            "timestamp": str(time.time())
-        }
+        test_data = {"test_key": "test_value", "timestamp": str(time.time())}
 
         # Write secret
-        vault_client.secrets.kv.v2.create_or_update_secret(
-            path=test_path,
-            secret=test_data
-        )
+        vault_client.secrets.kv.v2.create_or_update_secret(path=test_path, secret=test_data)
 
         # Read secret
-        read_response = vault_client.secrets.kv.v2.read_secret_version(
-            path=test_path
-        )
+        read_response = vault_client.secrets.kv.v2.read_secret_version(path=test_path)
 
         assert read_response["data"]["data"]["test_key"] == "test_value"
 
         # Cleanup
-        vault_client.secrets.kv.v2.delete_metadata_and_all_versions(
-            path=test_path
-        )
+        vault_client.secrets.kv.v2.delete_metadata_and_all_versions(path=test_path)
 
     def test_vault_backend_secrets_exist(self, vault_client):
         """Verify essential backend secrets are configured."""
@@ -185,7 +167,7 @@ class TestVaultIntegration:
         response = requests.get(
             f"{VAULT_ADDR}/v1/sys/metrics?format=prometheus",
             headers={"X-Vault-Token": VAULT_TOKEN},
-            timeout=REQUEST_TIMEOUT
+            timeout=REQUEST_TIMEOUT,
         )
         assert response.status_code == 200
         assert "vault_core_unsealed" in response.text
@@ -195,33 +177,25 @@ class TestVaultIntegration:
 # Test Class: Prometheus Integration
 # ============================================
 
+
 class TestPrometheusIntegration:
     """Test Prometheus metrics collection."""
 
     def test_prometheus_healthy(self):
         """Verify Prometheus health endpoint."""
-        response = requests.get(
-            f"{PROMETHEUS_ADDR}/-/healthy",
-            timeout=REQUEST_TIMEOUT
-        )
+        response = requests.get(f"{PROMETHEUS_ADDR}/-/healthy", timeout=REQUEST_TIMEOUT)
         assert response.status_code == 200
         assert response.text == "Prometheus is Healthy."
 
     def test_prometheus_ready(self):
         """Verify Prometheus is ready to serve traffic."""
-        response = requests.get(
-            f"{PROMETHEUS_ADDR}/-/ready",
-            timeout=REQUEST_TIMEOUT
-        )
+        response = requests.get(f"{PROMETHEUS_ADDR}/-/ready", timeout=REQUEST_TIMEOUT)
         assert response.status_code == 200
         assert response.text == "Prometheus is Ready."
 
     def test_prometheus_config_loaded(self):
         """Verify Prometheus configuration is loaded."""
-        response = requests.get(
-            f"{PROMETHEUS_ADDR}/api/v1/status/config",
-            timeout=REQUEST_TIMEOUT
-        )
+        response = requests.get(f"{PROMETHEUS_ADDR}/api/v1/status/config", timeout=REQUEST_TIMEOUT)
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "success"
@@ -229,10 +203,7 @@ class TestPrometheusIntegration:
 
     def test_prometheus_targets_discovered(self):
         """Verify all expected targets are discovered."""
-        response = requests.get(
-            f"{PROMETHEUS_ADDR}/api/v1/targets",
-            timeout=REQUEST_TIMEOUT
-        )
+        response = requests.get(f"{PROMETHEUS_ADDR}/api/v1/targets", timeout=REQUEST_TIMEOUT)
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "success"
@@ -253,31 +224,20 @@ class TestPrometheusIntegration:
 
     def test_prometheus_targets_healthy(self):
         """Verify all targets are up and healthy."""
-        response = requests.get(
-            f"{PROMETHEUS_ADDR}/api/v1/targets",
-            timeout=REQUEST_TIMEOUT
-        )
+        response = requests.get(f"{PROMETHEUS_ADDR}/api/v1/targets", timeout=REQUEST_TIMEOUT)
         data = response.json()
         active_targets = data["data"]["activeTargets"]
 
-        unhealthy_targets = [
-            target for target in active_targets
-            if target["health"] != "up"
-        ]
+        unhealthy_targets = [target for target in active_targets if target["health"] != "up"]
 
         if unhealthy_targets:
-            unhealthy_info = [
-                f"{t['scrapePool']}: {t['lastError']}"
-                for t in unhealthy_targets
-            ]
+            unhealthy_info = [f"{t['scrapePool']}: {t['lastError']}" for t in unhealthy_targets]
             pytest.fail(f"Unhealthy targets found: {unhealthy_info}")
 
     def test_prometheus_scrape_successful(self):
         """Verify Prometheus is successfully scraping metrics."""
         response = requests.get(
-            f"{PROMETHEUS_ADDR}/api/v1/query",
-            params={"query": "up"},
-            timeout=REQUEST_TIMEOUT
+            f"{PROMETHEUS_ADDR}/api/v1/query", params={"query": "up"}, timeout=REQUEST_TIMEOUT
         )
         assert response.status_code == 200
         data = response.json()
@@ -287,19 +247,12 @@ class TestPrometheusIntegration:
         assert len(results) > 0, "No metrics being scraped"
 
         # All targets should be up (value=1)
-        down_targets = [
-            r["metric"]["job"]
-            for r in results
-            if r["value"][1] == "0"
-        ]
+        down_targets = [r["metric"]["job"] for r in results if r["value"][1] == "0"]
         assert len(down_targets) == 0, f"Targets down: {down_targets}"
 
     def test_prometheus_alert_rules_loaded(self):
         """Verify alert rules are loaded."""
-        response = requests.get(
-            f"{PROMETHEUS_ADDR}/api/v1/rules",
-            timeout=REQUEST_TIMEOUT
-        )
+        response = requests.get(f"{PROMETHEUS_ADDR}/api/v1/rules", timeout=REQUEST_TIMEOUT)
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "success"
@@ -313,23 +266,18 @@ class TestPrometheusIntegration:
 # Test Class: PostgreSQL Exporter
 # ============================================
 
+
 class TestPostgreSQLExporter:
     """Test PostgreSQL metrics exporter."""
 
     def test_postgres_exporter_healthy(self):
         """Verify PostgreSQL exporter is healthy."""
-        response = requests.get(
-            f"{POSTGRES_EXPORTER_ADDR}/metrics",
-            timeout=REQUEST_TIMEOUT
-        )
+        response = requests.get(f"{POSTGRES_EXPORTER_ADDR}/metrics", timeout=REQUEST_TIMEOUT)
         assert response.status_code == 200
 
     def test_postgres_exporter_metrics_available(self):
         """Verify PostgreSQL metrics are being collected."""
-        response = requests.get(
-            f"{POSTGRES_EXPORTER_ADDR}/metrics",
-            timeout=REQUEST_TIMEOUT
-        )
+        response = requests.get(f"{POSTGRES_EXPORTER_ADDR}/metrics", timeout=REQUEST_TIMEOUT)
         metrics_text = response.text
 
         # Parse metrics
@@ -350,21 +298,15 @@ class TestPostgreSQLExporter:
 
     def test_postgres_database_up(self):
         """Verify PostgreSQL database is accessible."""
-        response = requests.get(
-            f"{POSTGRES_EXPORTER_ADDR}/metrics",
-            timeout=REQUEST_TIMEOUT
-        )
+        response = requests.get(f"{POSTGRES_EXPORTER_ADDR}/metrics", timeout=REQUEST_TIMEOUT)
         metrics_text = response.text
 
         # Check pg_up metric
-        assert 'pg_up 1' in metrics_text, "PostgreSQL database is down (pg_up != 1)"
+        assert "pg_up 1" in metrics_text, "PostgreSQL database is down (pg_up != 1)"
 
     def test_postgres_connections_metric(self):
         """Verify connection metrics are being collected."""
-        response = requests.get(
-            f"{POSTGRES_EXPORTER_ADDR}/metrics",
-            timeout=REQUEST_TIMEOUT
-        )
+        response = requests.get(f"{POSTGRES_EXPORTER_ADDR}/metrics", timeout=REQUEST_TIMEOUT)
         metrics_text = response.text
 
         # Should have connection metrics
@@ -372,10 +314,7 @@ class TestPostgreSQLExporter:
 
     def test_postgres_cache_hit_ratio_calculable(self):
         """Verify we can calculate cache hit ratio from metrics."""
-        response = requests.get(
-            f"{POSTGRES_EXPORTER_ADDR}/metrics",
-            timeout=REQUEST_TIMEOUT
-        )
+        response = requests.get(f"{POSTGRES_EXPORTER_ADDR}/metrics", timeout=REQUEST_TIMEOUT)
         metrics_text = response.text
 
         # Need both blks_hit and blks_read to calculate ratio
@@ -387,23 +326,18 @@ class TestPostgreSQLExporter:
 # Test Class: Redis Exporter
 # ============================================
 
+
 class TestRedisExporter:
     """Test Redis metrics exporter."""
 
     def test_redis_exporter_healthy(self):
         """Verify Redis exporter is healthy."""
-        response = requests.get(
-            f"{REDIS_EXPORTER_ADDR}/metrics",
-            timeout=REQUEST_TIMEOUT
-        )
+        response = requests.get(f"{REDIS_EXPORTER_ADDR}/metrics", timeout=REQUEST_TIMEOUT)
         assert response.status_code == 200
 
     def test_redis_exporter_metrics_available(self):
         """Verify Redis metrics are being collected."""
-        response = requests.get(
-            f"{REDIS_EXPORTER_ADDR}/metrics",
-            timeout=REQUEST_TIMEOUT
-        )
+        response = requests.get(f"{REDIS_EXPORTER_ADDR}/metrics", timeout=REQUEST_TIMEOUT)
         metrics_text = response.text
 
         # Parse metrics
@@ -425,21 +359,15 @@ class TestRedisExporter:
 
     def test_redis_database_up(self):
         """Verify Redis database is accessible."""
-        response = requests.get(
-            f"{REDIS_EXPORTER_ADDR}/metrics",
-            timeout=REQUEST_TIMEOUT
-        )
+        response = requests.get(f"{REDIS_EXPORTER_ADDR}/metrics", timeout=REQUEST_TIMEOUT)
         metrics_text = response.text
 
         # Check redis_up metric
-        assert 'redis_up 1' in metrics_text, "Redis database is down (redis_up != 1)"
+        assert "redis_up 1" in metrics_text, "Redis database is down (redis_up != 1)"
 
     def test_redis_memory_metrics(self):
         """Verify memory usage metrics are available."""
-        response = requests.get(
-            f"{REDIS_EXPORTER_ADDR}/metrics",
-            timeout=REQUEST_TIMEOUT
-        )
+        response = requests.get(f"{REDIS_EXPORTER_ADDR}/metrics", timeout=REQUEST_TIMEOUT)
         metrics_text = response.text
 
         # Should have memory metrics
@@ -448,10 +376,7 @@ class TestRedisExporter:
 
     def test_redis_cache_hit_rate_calculable(self):
         """Verify we can calculate cache hit rate from metrics."""
-        response = requests.get(
-            f"{REDIS_EXPORTER_ADDR}/metrics",
-            timeout=REQUEST_TIMEOUT
-        )
+        response = requests.get(f"{REDIS_EXPORTER_ADDR}/metrics", timeout=REQUEST_TIMEOUT)
         metrics_text = response.text
 
         # Need both hits and misses to calculate hit rate
@@ -463,6 +388,7 @@ class TestRedisExporter:
 # Test Class: End-to-End Monitoring Pipeline
 # ============================================
 
+
 class TestEndToEndMonitoring:
     """Test complete monitoring pipeline from source to Prometheus."""
 
@@ -471,7 +397,7 @@ class TestEndToEndMonitoring:
         response = requests.get(
             f"{PROMETHEUS_ADDR}/api/v1/query",
             params={"query": "vault_core_unsealed"},
-            timeout=REQUEST_TIMEOUT
+            timeout=REQUEST_TIMEOUT,
         )
         assert response.status_code == 200
         data = response.json()
@@ -487,9 +413,7 @@ class TestEndToEndMonitoring:
     def test_postgres_metrics_in_prometheus(self):
         """Verify PostgreSQL metrics are being scraped by Prometheus."""
         response = requests.get(
-            f"{PROMETHEUS_ADDR}/api/v1/query",
-            params={"query": "pg_up"},
-            timeout=REQUEST_TIMEOUT
+            f"{PROMETHEUS_ADDR}/api/v1/query", params={"query": "pg_up"}, timeout=REQUEST_TIMEOUT
         )
         assert response.status_code == 200
         data = response.json()
@@ -505,9 +429,7 @@ class TestEndToEndMonitoring:
     def test_redis_metrics_in_prometheus(self):
         """Verify Redis metrics are being scraped by Prometheus."""
         response = requests.get(
-            f"{PROMETHEUS_ADDR}/api/v1/query",
-            params={"query": "redis_up"},
-            timeout=REQUEST_TIMEOUT
+            f"{PROMETHEUS_ADDR}/api/v1/query", params={"query": "redis_up"}, timeout=REQUEST_TIMEOUT
         )
         assert response.status_code == 200
         data = response.json()
@@ -525,7 +447,7 @@ class TestEndToEndMonitoring:
         response = requests.get(
             f"{PROMETHEUS_ADDR}/api/v1/query",
             params={"query": 'up{job="backend"}'},
-            timeout=REQUEST_TIMEOUT
+            timeout=REQUEST_TIMEOUT,
         )
         assert response.status_code == 200
         data = response.json()
@@ -542,7 +464,7 @@ class TestEndToEndMonitoring:
         response = requests.get(
             f"{PROMETHEUS_ADDR}/api/v1/query",
             params={"query": 'up{job="prometheus"}'},
-            timeout=REQUEST_TIMEOUT
+            timeout=REQUEST_TIMEOUT,
         )
         assert response.status_code == 200
         data = response.json()
@@ -557,9 +479,7 @@ class TestEndToEndMonitoring:
     def test_all_scrape_targets_successful(self):
         """Verify all configured scrape targets are being scraped successfully."""
         response = requests.get(
-            f"{PROMETHEUS_ADDR}/api/v1/query",
-            params={"query": "up"},
-            timeout=REQUEST_TIMEOUT
+            f"{PROMETHEUS_ADDR}/api/v1/query", params={"query": "up"}, timeout=REQUEST_TIMEOUT
         )
         data = response.json()
         results = data["data"]["result"]
@@ -573,19 +493,14 @@ class TestEndToEndMonitoring:
             target_status[f"{job} ({instance})"] = status
 
         # All should be up
-        down_targets = [
-            target for target, status in target_status.items()
-            if status == "DOWN"
-        ]
+        down_targets = [target for target, status in target_status.items() if status == "DOWN"]
 
         assert len(down_targets) == 0, f"Targets down: {down_targets}"
 
     def test_monitoring_data_freshness(self):
         """Verify monitoring data is fresh (recently scraped)."""
         response = requests.get(
-            f"{PROMETHEUS_ADDR}/api/v1/query",
-            params={"query": "up"},
-            timeout=REQUEST_TIMEOUT
+            f"{PROMETHEUS_ADDR}/api/v1/query", params={"query": "up"}, timeout=REQUEST_TIMEOUT
         )
         data = response.json()
         results = data["data"]["result"]
@@ -605,6 +520,7 @@ class TestEndToEndMonitoring:
 # Test Class: Performance and Resource Usage
 # ============================================
 
+
 class TestPerformanceMetrics:
     """Test performance characteristics of monitoring infrastructure."""
 
@@ -613,9 +529,7 @@ class TestPerformanceMetrics:
         start_time = time.time()
 
         response = requests.get(
-            f"{PROMETHEUS_ADDR}/api/v1/query",
-            params={"query": "up"},
-            timeout=REQUEST_TIMEOUT
+            f"{PROMETHEUS_ADDR}/api/v1/query", params={"query": "up"}, timeout=REQUEST_TIMEOUT
         )
 
         query_time = time.time() - start_time
@@ -633,10 +547,7 @@ class TestPerformanceMetrics:
         for name, addr in exporters.items():
             start_time = time.time()
 
-            response = requests.get(
-                f"{addr}/metrics",
-                timeout=REQUEST_TIMEOUT
-            )
+            response = requests.get(f"{addr}/metrics", timeout=REQUEST_TIMEOUT)
 
             response_time = time.time() - start_time
 
@@ -647,10 +558,7 @@ class TestPerformanceMetrics:
         """Verify Vault API responds quickly."""
         start_time = time.time()
 
-        response = requests.get(
-            f"{VAULT_ADDR}/v1/sys/health",
-            timeout=REQUEST_TIMEOUT
-        )
+        response = requests.get(f"{VAULT_ADDR}/v1/sys/health", timeout=REQUEST_TIMEOUT)
 
         response_time = time.time() - start_time
 
@@ -662,16 +570,17 @@ class TestPerformanceMetrics:
 # Test Summary Report
 # ============================================
 
+
 @pytest.fixture(scope="session", autouse=True)
 def print_test_summary(request):
     """Print test summary at the end of the session."""
     yield
 
     # This runs after all tests
-    if hasattr(request.session, 'testscollected'):
-        print("\n" + "="*60)
+    if hasattr(request.session, "testscollected"):
+        print("\n" + "=" * 60)
         print("Phase 2 Infrastructure Integration Test Summary")
-        print("="*60)
+        print("=" * 60)
         print(f"Total tests collected: {request.session.testscollected}")
         print("\nComponents tested:")
         print("  ✓ HashiCorp Vault (secrets management)")
@@ -680,4 +589,4 @@ def print_test_summary(request):
         print("  ✓ Redis Exporter (cache metrics)")
         print("  ✓ End-to-end monitoring pipeline")
         print("  ✓ Performance characteristics")
-        print("="*60 + "\n")
+        print("=" * 60 + "\n")

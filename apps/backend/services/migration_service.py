@@ -16,20 +16,18 @@ Created: 2025-09-21
 Version: 1.0.0
 """
 
-import asyncio
 import logging
 import os
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Any
 
 # Alembic imports
 try:
     from alembic import command, script
     from alembic.config import Config
-    from alembic.runtime.migration import MigrationContext
     from alembic.operations import Operations
+    from alembic.runtime.migration import MigrationContext
 
     ALEMBIC_AVAILABLE = True
 except ImportError:
@@ -60,9 +58,9 @@ class MigrationService:
     def __init__(self):
         self.supabase_service = get_supabase_service()
         self.alembic_config = self._get_alembic_config()
-        self.migration_status: Dict[str, Any] = {}
+        self.migration_status: dict[str, Any] = {}
 
-    def _get_alembic_config(self) -> Optional[Config]:
+    def _get_alembic_config(self) -> Config | None:
         """Get Alembic configuration"""
         if not ALEMBIC_AVAILABLE:
             logger.warning("Alembic not available")
@@ -85,7 +83,7 @@ class MigrationService:
             logger.error(f"Failed to load Alembic configuration: {e}")
             return None
 
-    async def run_migrations(self, target_revision: str = "head") -> Dict[str, Any]:
+    async def run_migrations(self, target_revision: str = "head") -> dict[str, Any]:
         """
         Run migrations on both PostgreSQL and Supabase.
 
@@ -149,7 +147,7 @@ class MigrationService:
                 # In a real implementation, you would create the table here
                 # For now, we'll just log the issue
 
-    async def get_migration_status(self) -> Dict[str, Any]:
+    async def get_migration_status(self) -> dict[str, Any]:
         """Get current migration status for both databases"""
         status = {
             "postgresql": {"current_revision": None, "available": ALEMBIC_AVAILABLE},
@@ -193,7 +191,7 @@ class MigrationService:
 
         return status
 
-    async def sync_schemas(self) -> Dict[str, Any]:
+    async def sync_schemas(self) -> dict[str, Any]:
         """
         Synchronize schemas between PostgreSQL and Supabase.
 
@@ -241,7 +239,7 @@ class MigrationService:
 
         return sync_results
 
-    async def create_migration(self, message: str) -> Dict[str, Any]:
+    async def create_migration(self, message: str) -> dict[str, Any]:
         """
         Create a new migration for both PostgreSQL and Supabase.
 
@@ -303,7 +301,7 @@ class MigrationService:
 
         return results
 
-    async def rollback(self, target_revision: str) -> Dict[str, Any]:
+    async def rollback(self, target_revision: str) -> dict[str, Any]:
         """
         Rollback migrations on both databases.
 
@@ -345,7 +343,7 @@ class MigrationService:
 
         return results
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Check migration service health"""
         health = {
             "service_available": True,
@@ -367,7 +365,7 @@ class MigrationService:
 
 
 # Global service instance
-_migration_service: Optional[MigrationService] = None
+_migration_service: MigrationService | None = None
 
 
 def get_migration_service() -> MigrationService:

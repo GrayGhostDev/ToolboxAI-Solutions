@@ -4,10 +4,9 @@ Provides template rendering with Jinja2, custom filters, and template management
 """
 
 import logging
-import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from jinja2 import (
     Environment,
@@ -15,7 +14,7 @@ from jinja2 import (
     Template,
     TemplateError,
     TemplateNotFound,
-    select_autoescape
+    select_autoescape,
 )
 from markdown import markdown
 
@@ -37,7 +36,7 @@ class EmailTemplateEngine:
     - Template validation
     """
 
-    def __init__(self, template_dir: Optional[str] = None):
+    def __init__(self, template_dir: str | None = None):
         """
         Initialize template engine
 
@@ -69,7 +68,7 @@ class EmailTemplateEngine:
         self._register_globals()
 
         # Template cache
-        self.template_cache: Dict[str, Template] = {}
+        self.template_cache: dict[str, Template] = {}
 
         logger.info(f"Email template engine initialized with directory: {self.template_dir}")
 
@@ -100,6 +99,7 @@ class EmailTemplateEngine:
         def urlencode(value):
             """URL encode a string"""
             from urllib.parse import quote
+
             return quote(str(value))
 
         # Truncate text
@@ -128,20 +128,19 @@ class EmailTemplateEngine:
 
     def _register_globals(self):
         """Register global variables available in all templates"""
-        self.env.globals.update({
-            "app_name": settings.APP_NAME,
-            "app_url": settings.APP_URL,
-            "support_email": settings.SUPPORT_EMAIL,
-            "company_name": getattr(settings, "COMPANY_NAME", "ToolboxAI"),
-            "current_year": datetime.now().year,
-            "environment": settings.ENVIRONMENT,
-        })
+        self.env.globals.update(
+            {
+                "app_name": settings.APP_NAME,
+                "app_url": settings.APP_URL,
+                "support_email": settings.SUPPORT_EMAIL,
+                "company_name": getattr(settings, "COMPANY_NAME", "ToolboxAI"),
+                "current_year": datetime.now().year,
+                "environment": settings.ENVIRONMENT,
+            }
+        )
 
     async def render_template(
-        self,
-        template_name: str,
-        context: Dict[str, Any],
-        language: str = "en"
+        self, template_name: str, context: dict[str, Any], language: str = "en"
     ) -> str:
         """
         Render email template with context
@@ -177,10 +176,7 @@ class EmailTemplateEngine:
                 template = self.template_cache[template_name]
 
             # Merge with default context
-            full_context = {
-                **self._get_default_context(),
-                **context
-            }
+            full_context = {**self._get_default_context(), **context}
 
             # Render template
             html = await template.render_async(**full_context)
@@ -198,10 +194,7 @@ class EmailTemplateEngine:
             raise TemplateError(f"Failed to render template: {str(e)}")
 
     def render_template_sync(
-        self,
-        template_name: str,
-        context: Dict[str, Any],
-        language: str = "en"
+        self, template_name: str, context: dict[str, Any], language: str = "en"
     ) -> str:
         """
         Synchronous version of render_template
@@ -228,10 +221,7 @@ class EmailTemplateEngine:
             template = self.env.get_template(template_name)
 
             # Merge context
-            full_context = {
-                **self._get_default_context(),
-                **context
-            }
+            full_context = {**self._get_default_context(), **context}
 
             # Render
             return template.render(**full_context)
@@ -240,7 +230,7 @@ class EmailTemplateEngine:
             logger.error(f"Error rendering template: {e}")
             raise
 
-    def _get_default_context(self) -> Dict[str, Any]:
+    def _get_default_context(self) -> dict[str, Any]:
         """Get default context for all templates"""
         return {
             "timestamp": datetime.utcnow(),
@@ -250,7 +240,7 @@ class EmailTemplateEngine:
             "terms_url": f"{settings.APP_URL}/terms",
         }
 
-    def list_templates(self, pattern: str = "*.html") -> List[str]:
+    def list_templates(self, pattern: str = "*.html") -> list[str]:
         """
         List available templates
 
@@ -267,10 +257,8 @@ class EmailTemplateEngine:
         return sorted(set(templates))
 
     def validate_template(
-        self,
-        template_name: str,
-        sample_context: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, template_name: str, sample_context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """
         Validate a template
 
@@ -281,12 +269,7 @@ class EmailTemplateEngine:
         Returns:
             Validation results
         """
-        results = {
-            "valid": False,
-            "errors": [],
-            "warnings": [],
-            "info": {}
-        }
+        results = {"valid": False, "errors": [], "warnings": [], "info": {}}
 
         try:
             # Check if template exists
@@ -325,7 +308,8 @@ class EmailTemplateEngine:
             # Extract template variables
             template_source = template_path.read_text()
             import re
-            variables = re.findall(r'\{\{\s*(\w+)', template_source)
+
+            variables = re.findall(r"\{\{\s*(\w+)", template_source)
             results["info"]["variables"] = list(set(variables))
 
             # Check for required variables
@@ -341,12 +325,7 @@ class EmailTemplateEngine:
 
         return results
 
-    def create_template(
-        self,
-        name: str,
-        content: str,
-        overwrite: bool = False
-    ) -> bool:
+    def create_template(self, name: str, content: str, overwrite: bool = False) -> bool:
         """
         Create a new template
 
@@ -421,7 +400,7 @@ class EmailTemplateEngine:
         self.template_cache.clear()
         logger.info("Template cache cleared")
 
-    def get_template_info(self, name: str) -> Dict[str, Any]:
+    def get_template_info(self, name: str) -> dict[str, Any]:
         """
         Get information about a template
 
@@ -439,7 +418,7 @@ class EmailTemplateEngine:
             "modified": None,
             "variables": [],
             "extends": None,
-            "blocks": []
+            "blocks": [],
         }
 
         try:
@@ -452,16 +431,15 @@ class EmailTemplateEngine:
                 info["exists"] = True
                 info["path"] = str(template_path)
                 info["size"] = template_path.stat().st_size
-                info["modified"] = datetime.fromtimestamp(
-                    template_path.stat().st_mtime
-                ).isoformat()
+                info["modified"] = datetime.fromtimestamp(template_path.stat().st_mtime).isoformat()
 
                 # Parse template content
                 content = template_path.read_text()
 
                 # Extract variables
                 import re
-                info["variables"] = list(set(re.findall(r'\{\{\s*(\w+)', content)))
+
+                info["variables"] = list(set(re.findall(r"\{\{\s*(\w+)", content)))
 
                 # Check for extends
                 extends_match = re.search(r'\{%\s*extends\s*["\']([^"\']+)["\']', content)
@@ -469,7 +447,7 @@ class EmailTemplateEngine:
                     info["extends"] = extends_match.group(1)
 
                 # Extract blocks
-                info["blocks"] = re.findall(r'\{%\s*block\s+(\w+)', content)
+                info["blocks"] = re.findall(r"\{%\s*block\s+(\w+)", content)
 
         except Exception as e:
             logger.error(f"Error getting template info: {e}")
@@ -483,18 +461,14 @@ template_engine = EmailTemplateEngine()
 
 # Convenience functions
 async def render_email_template(
-    template_name: str,
-    context: Dict[str, Any],
-    language: str = "en"
+    template_name: str, context: dict[str, Any], language: str = "en"
 ) -> str:
     """Render email template"""
     return await template_engine.render_template(template_name, context, language)
 
 
 def render_email_template_sync(
-    template_name: str,
-    context: Dict[str, Any],
-    language: str = "en"
+    template_name: str, context: dict[str, Any], language: str = "en"
 ) -> str:
     """Render email template synchronously"""
     return template_engine.render_template_sync(template_name, context, language)

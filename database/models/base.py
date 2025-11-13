@@ -6,14 +6,12 @@ isolation and audit capabilities.
 """
 
 import uuid
-from datetime import datetime
-from typing import Optional, Any
+from typing import Optional
 
-from sqlalchemy import Column, String, DateTime, ForeignKey
+from sqlalchemy import Column, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base, declared_attr, relationship
 from sqlalchemy.sql import func
-
 
 # Create the declarative base
 Base = declarative_base()
@@ -23,6 +21,7 @@ class TimestampMixin:
     """
     Mixin for adding created_at and updated_at timestamps to models.
     """
+
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -31,6 +30,7 @@ class SoftDeleteMixin:
     """
     Mixin for adding soft delete functionality to models.
     """
+
     deleted_at = Column(DateTime(timezone=True))
     deleted_by_id = Column(UUID(as_uuid=True))
 
@@ -50,6 +50,7 @@ class AuditMixin:
     """
     Mixin for adding audit fields to track who created/updated records.
     """
+
     created_by_id = Column(UUID(as_uuid=True))
     updated_by_id = Column(UUID(as_uuid=True))
 
@@ -72,7 +73,7 @@ class TenantMixin:
             UUID(as_uuid=True),
             ForeignKey("organizations.id", ondelete="CASCADE"),
             nullable=False,
-            index=True  # Index for query performance
+            index=True,  # Index for query performance
         )
 
     @declared_attr
@@ -94,13 +95,16 @@ class TenantBaseModel(Base, TenantMixin, TimestampMixin, AuditMixin, SoftDeleteM
     - Timestamps for record lifecycle
     - Soft delete for data retention
     """
+
     __abstract__ = True
 
     # Primary key
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}(id='{self.id}', organization_id='{self.organization_id}')>"
+        return (
+            f"<{self.__class__.__name__}(id='{self.id}', organization_id='{self.organization_id}')>"
+        )
 
     @property
     def tenant_id(self) -> UUID:
@@ -115,6 +119,7 @@ class GlobalBaseModel(Base, TimestampMixin, AuditMixin, SoftDeleteMixin):
     For models that are shared across all organizations or are
     organization-independent (like the Organization model itself).
     """
+
     __abstract__ = True
 
     # Primary key
@@ -194,7 +199,7 @@ class TenantContext:
 
     def __enter__(self):
         # Store current context if any
-        self._previous_context = getattr(TenantContext, '_current_tenant', None)
+        self._previous_context = getattr(TenantContext, "_current_tenant", None)
         # Set new context
         TenantContext._current_tenant = self.organization_id
         return self
@@ -209,7 +214,7 @@ class TenantContext:
     @classmethod
     def get_current_tenant(cls) -> Optional[UUID]:
         """Get the current tenant ID from context"""
-        return getattr(cls, '_current_tenant', None)
+        return getattr(cls, "_current_tenant", None)
 
     @classmethod
     def set_current_tenant(cls, organization_id: UUID) -> None:
@@ -224,13 +229,13 @@ class TenantContext:
 
 # Re-export for convenience
 __all__ = [
-    'Base',
-    'TimestampMixin',
-    'SoftDeleteMixin',
-    'AuditMixin',
-    'TenantMixin',
-    'TenantBaseModel',
-    'GlobalBaseModel',
-    'TenantAwareQuery',
-    'TenantContext'
+    "Base",
+    "TimestampMixin",
+    "SoftDeleteMixin",
+    "AuditMixin",
+    "TenantMixin",
+    "TenantBaseModel",
+    "GlobalBaseModel",
+    "TenantAwareQuery",
+    "TenantContext",
 ]

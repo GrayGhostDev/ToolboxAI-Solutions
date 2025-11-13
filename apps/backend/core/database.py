@@ -4,10 +4,11 @@ Provides database session management for Supabase PostgreSQL
 """
 
 import os
-from typing import Generator
+from collections.abc import Generator
+
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session, sessionmaker
 
 # Get database URL from environment (Supabase pooler by default)
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/postgres")
@@ -15,11 +16,11 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localho
 # Create SQLAlchemy engine with optimized settings for Supabase pooler (pgBouncer)
 engine = create_engine(
     DATABASE_URL,
-    pool_pre_ping=True,        # Test connections before using
-    pool_size=10,               # Increased for pooler (was 5)
-    max_overflow=20,            # Increased overflow (was 10)
-    pool_recycle=3600,          # Recycle connections after 1 hour
-    echo=False
+    pool_pre_ping=True,  # Test connections before using
+    pool_size=10,  # Increased for pooler (was 5)
+    max_overflow=20,  # Increased overflow (was 10)
+    pool_recycle=3600,  # Recycle connections after 1 hour
+    echo=False,
 )
 
 # Create session factory
@@ -44,4 +45,3 @@ def get_db() -> Generator[Session, None, None]:
 def init_db():
     """Initialize database - create all tables"""
     Base.metadata.create_all(bind=engine)
-

@@ -4,12 +4,10 @@ Rate Limit Manager Service
 Centralized rate limiting for the application.
 """
 
-import time
-import hashlib
-from typing import Dict, Tuple, Optional
-from collections import defaultdict
 import asyncio
 import logging
+import time
+from collections import defaultdict
 
 from apps.backend.core.config import settings
 
@@ -20,8 +18,8 @@ class RateLimitManager:
     """Centralized rate limit manager."""
 
     def __init__(self):
-        self.request_counts: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
-        self.window_starts: Dict[str, float] = {}
+        self.request_counts: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+        self.window_starts: dict[str, float] = {}
         self.lock = asyncio.Lock()
         self.mode = "sliding_window"  # Default mode
 
@@ -42,7 +40,7 @@ class RateLimitManager:
         max_requests: int = None,
         window_seconds: int = 60,
         source: str = "api",
-    ) -> Tuple[bool, Optional[int]]:
+    ) -> tuple[bool, int | None]:
         """
         Check if a request is within rate limits.
 
@@ -81,7 +79,7 @@ class RateLimitManager:
 
             return True, None
 
-    def reset_limits(self, identifier: Optional[str] = None):
+    def reset_limits(self, identifier: str | None = None):
         """
         Reset rate limits for an identifier or all identifiers.
 
@@ -102,7 +100,7 @@ class RateLimitManager:
             self.request_counts.clear()
             self.window_starts.clear()
 
-    def get_current_usage(self, identifier: str, source: str = "api") -> Dict[str, any]:
+    def get_current_usage(self, identifier: str, source: str = "api") -> dict[str, any]:
         """
         Get current usage statistics for an identifier.
 

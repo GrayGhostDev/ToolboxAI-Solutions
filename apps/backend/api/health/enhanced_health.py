@@ -12,23 +12,21 @@ This module provides comprehensive health checks including:
 
 import asyncio
 import logging
+import os
 import time
-import json
-from typing import Dict, Any, List, Optional, Union
 from datetime import datetime, timezone
 from enum import Enum
-import os
+from typing import Any
 
-from fastapi import APIRouter, HTTPException, Depends, Request
-from fastapi.responses import JSONResponse
 import asyncpg
-import redis.asyncio as aioredis
 import httpx
+import redis.asyncio as aioredis
+from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from apps.backend.core.config import settings
 from apps.backend.core.metrics import metrics
-from toolboxai_settings import settings as global_settings
 
 logger = logging.getLogger(__name__)
 
@@ -46,11 +44,11 @@ class ComponentHealth(BaseModel):
 
     name: str
     status: HealthStatus
-    response_time_ms: Optional[float] = None
+    response_time_ms: float | None = None
     last_check: datetime
-    error: Optional[str] = None
-    metrics: Dict[str, Any] = Field(default_factory=dict)
-    details: Dict[str, Any] = Field(default_factory=dict)
+    error: str | None = None
+    metrics: dict[str, Any] = Field(default_factory=dict)
+    details: dict[str, Any] = Field(default_factory=dict)
 
 
 class SystemHealth(BaseModel):
@@ -61,9 +59,9 @@ class SystemHealth(BaseModel):
     uptime_seconds: float
     version: str
     environment: str
-    components: List[ComponentHealth]
-    performance_summary: Dict[str, Any] = Field(default_factory=dict)
-    sla_compliance: Dict[str, Any] = Field(default_factory=dict)
+    components: list[ComponentHealth]
+    performance_summary: dict[str, Any] = Field(default_factory=dict)
+    sla_compliance: dict[str, Any] = Field(default_factory=dict)
 
 
 class EnhancedHealthChecker:
@@ -161,7 +159,7 @@ class EnhancedHealthChecker:
 
         return health_status
 
-    async def _quick_health_checks(self) -> List[ComponentHealth]:
+    async def _quick_health_checks(self) -> list[ComponentHealth]:
         """Perform quick health checks for critical components"""
         components = []
 
@@ -186,7 +184,7 @@ class EnhancedHealthChecker:
 
         return components
 
-    async def _comprehensive_health_checks(self) -> List[ComponentHealth]:
+    async def _comprehensive_health_checks(self) -> list[ComponentHealth]:
         """Perform comprehensive health checks for all components"""
         components = []
 
@@ -436,7 +434,7 @@ class EnhancedHealthChecker:
             try:
                 with open(test_file, "w") as f:
                     f.write("health check test")
-                with open(test_file, "r") as f:
+                with open(test_file) as f:
                     content = f.read()
                 os.remove(test_file)
 
@@ -595,7 +593,7 @@ class EnhancedHealthChecker:
                 error=str(e),
             )
 
-    async def _collect_performance_summary(self) -> Dict[str, Any]:
+    async def _collect_performance_summary(self) -> dict[str, Any]:
         """Collect performance metrics summary"""
         try:
             # This would integrate with actual metrics collection
@@ -612,7 +610,7 @@ class EnhancedHealthChecker:
             logger.error(f"Failed to collect performance summary: {e}")
             return {}
 
-    async def _check_sla_compliance(self) -> Dict[str, Any]:
+    async def _check_sla_compliance(self) -> dict[str, Any]:
         """Check SLA compliance metrics"""
         try:
             performance = await self._collect_performance_summary()
@@ -639,7 +637,7 @@ class EnhancedHealthChecker:
             logger.error(f"Failed to check SLA compliance: {e}")
             return {"error": str(e)}
 
-    def _calculate_overall_status(self, components: List[ComponentHealth]) -> HealthStatus:
+    def _calculate_overall_status(self, components: list[ComponentHealth]) -> HealthStatus:
         """Calculate overall system status based on component health"""
         if not components:
             return HealthStatus.UNHEALTHY

@@ -1,13 +1,13 @@
-from fastapi import APIRouter, Depends, Query
-from typing import List, Optional
-from datetime import datetime, timedelta
 import random
+from datetime import datetime, timedelta
+
+from fastapi import APIRouter, Query
 
 router = APIRouter()
 
 
 # Mock leaderboard data for development
-def generate_mock_leaderboard(timeframe: str = "weekly") -> List[dict]:
+def generate_mock_leaderboard(timeframe: str = "weekly") -> list[dict]:
     """Generate mock leaderboard data for development"""
     names = [
         "Alex Thompson",
@@ -71,11 +71,9 @@ def generate_mock_leaderboard(timeframe: str = "weekly") -> List[dict]:
 
 @router.get("/leaderboard")
 async def get_leaderboard(
-    classId: Optional[str] = Query(None, description="Filter by class ID"),
-    timeframe: Optional[str] = Query(
-        "weekly", description="Time period: daily, weekly, monthly, all"
-    ),
-) -> List[dict]:
+    classId: str | None = Query(None, description="Filter by class ID"),
+    timeframe: str | None = Query("weekly", description="Time period: daily, weekly, monthly, all"),
+) -> list[dict]:
     """
     Get gamification leaderboard
 
@@ -94,8 +92,8 @@ async def get_leaderboard(
 
 @router.get("/achievements")
 async def get_achievements(
-    userId: Optional[str] = Query(None, description="User ID to get achievements for")
-) -> List[dict]:
+    userId: str | None = Query(None, description="User ID to get achievements for")
+) -> list[dict]:
     """Get list of available achievements and user progress"""
     achievements = [
         {
@@ -141,8 +139,8 @@ async def get_achievements(
 
 @router.get("/badges")
 async def get_badges(
-    userId: Optional[str] = Query(None, description="User ID to get badges for")
-) -> List[dict]:
+    userId: str | None = Query(None, description="User ID to get badges for")
+) -> list[dict]:
     """Get user's earned badges"""
     badges = [
         {

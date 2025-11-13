@@ -9,24 +9,17 @@ from . import email_service
 
 # Import specific classes and enums for convenience
 # But avoid importing 'email_service' as an instance to prevent module replacement
-from .email_service import (
-    # Classes only - no instances with conflicting names
-    SendGridEmailService,
-    MockEmailService,
-    EmailService,  # Legacy alias for SendGridEmailService
-
-    # Factory functions
-    get_email_service,
-    get_email_service_singleton,
-
-    # Enums and models
-    EmailType,
+from .email_service import (  # Classes only - no instances with conflicting names; Factory functions; Enums and models; Utility
+    EmailAttachment,
     EmailPriority,
     EmailRecipient,
-    EmailAttachment,
-
-    # Utility
+    EmailService,  # Legacy alias for SendGridEmailService
+    EmailType,
+    MockEmailService,
+    SendGridEmailService,
     get_active_service_type,
+    get_email_service,
+    get_email_service_singleton,
 )
 
 # For backwards compatibility, create service instances with different names
@@ -59,35 +52,28 @@ except ImportError:  # pragma: no cover - optional dependency during bootstrap
 __all__ = [
     # Email service MODULE (not instance)
     "email_service",  # This is the MODULE
-
     # Email service instances (with clear names)
     "email_service_instance",
     "default_email_service",
     "sendgrid_email_service",
     "mock_email_service",
-
     # Email service classes
     "EmailService",
     "SendGridEmailService",
     "MockEmailService",
-
     # Instance aliases
     "SendGridServiceInstance",
     "MockEmailServiceInstance",
-
     # Factory functions
     "get_email_service",
     "get_email_service_singleton",
-
     # Enums and models
     "EmailPriority",
     "EmailType",
     "EmailRecipient",
     "EmailAttachment",
-
     # Utility
     "get_active_service_type",
-
     # Other services
     "stripe_service",
     "pusher_service",

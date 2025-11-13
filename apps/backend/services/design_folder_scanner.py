@@ -5,12 +5,10 @@ Scans and processes all files in the design folder, organizing them by type
 and providing a comprehensive overview for chat processing.
 """
 
-import asyncio
 import logging
-from pathlib import Path
-from typing import Dict, Any, List, Optional
 from collections import defaultdict
-import json
+from pathlib import Path
+from typing import Any
 
 from .design_file_converter import design_file_converter
 
@@ -34,7 +32,7 @@ class DesignFolderScanner:
             "other": [],
         }
 
-    async def scan_design_folder(self, include_content: bool = True) -> Dict[str, Any]:
+    async def scan_design_folder(self, include_content: bool = True) -> dict[str, Any]:
         """Scan the entire design folder and organize files by category"""
         if not self.design_root.exists():
             return {
@@ -83,7 +81,7 @@ class DesignFolderScanner:
         logger.info(f"Scan complete: {results['summary']['total_files']} files processed")
         return results
 
-    async def _process_file(self, file_path: Path, results: Dict[str, Any], include_content: bool):
+    async def _process_file(self, file_path: Path, results: dict[str, Any], include_content: bool):
         """Process a single file and add to results"""
         results["summary"]["total_files"] += 1
 
@@ -148,7 +146,7 @@ class DesignFolderScanner:
                 return category
         return "other"
 
-    def _build_folder_structure(self, root_path: Path) -> Dict[str, Any]:
+    def _build_folder_structure(self, root_path: Path) -> dict[str, Any]:
         """Build a tree structure of the folder"""
         structure = {}
 
@@ -214,8 +212,8 @@ class DesignFolderScanner:
         return content
 
     async def search_design_files(
-        self, query: str, category: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+        self, query: str, category: str | None = None
+    ) -> list[dict[str, Any]]:
         """Search for files in the design folder"""
         scan_result = await self.scan_design_folder(include_content=False)
 
@@ -246,7 +244,7 @@ class DesignFolderScanner:
 
         return results
 
-    async def get_folder_contents(self, folder_path: str) -> Dict[str, Any]:
+    async def get_folder_contents(self, folder_path: str) -> dict[str, Any]:
         """Get contents of a specific folder"""
         target_path = self.design_root / folder_path
 

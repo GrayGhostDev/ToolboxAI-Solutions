@@ -7,12 +7,12 @@ communication between Backend, Frontend/Dashboard, and Roblox/Studio.
 
 import asyncio
 import logging
-from typing import Dict, Any, Optional
-from datetime import datetime
+import os
 
 # Import integration agents
 import sys
-import os
+from datetime import datetime
+from typing import Any
 
 # Add project root to path if not already there
 project_root = os.path.dirname(
@@ -22,12 +22,13 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 try:
-    from core.agents.integration import IntegrationPlatform, IntegrationEvent
-    from core.agents.integration.backend import APIGatewayAgent, DatabaseSyncAgent
-    from core.agents.integration.frontend import UISyncAgent, RealtimeUpdateAgent
-    from core.agents.integration.roblox import StudioBridgeAgent
     from core.agents.integration.orchestration import IntegrationCoordinator
+
+    from core.agents.integration import IntegrationEvent, IntegrationPlatform
+    from core.agents.integration.backend import APIGatewayAgent, DatabaseSyncAgent
     from core.agents.integration.data_flow import SchemaValidatorAgent
+    from core.agents.integration.frontend import RealtimeUpdateAgent, UISyncAgent
+    from core.agents.integration.roblox import StudioBridgeAgent
 
     INTEGRATION_AVAILABLE = True
 except ImportError as e:
@@ -145,7 +146,6 @@ except ImportError as e:
 
 # Import existing services for connection
 from apps.backend.core.config import settings
-from apps.backend.services.pusher_realtime import get_pusher_service
 
 logger = logging.getLogger(__name__)
 
@@ -157,8 +157,8 @@ class IntegrationAgentsManager:
 
     def __init__(self):
         """Initialize the integration agents manager"""
-        self.agents: Dict[str, Any] = {}
-        self.coordinator: Optional[IntegrationCoordinator] = None
+        self.agents: dict[str, Any] = {}
+        self.coordinator: IntegrationCoordinator | None = None
         self.initialized = False
         self._shutdown_event = asyncio.Event()
 
@@ -385,10 +385,10 @@ class IntegrationAgentsManager:
         self,
         workflow_name: str,
         workflow_description: str,
-        template: Optional[str] = None,
-        custom_tasks: Optional[list] = None,
-        parameters: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        template: str | None = None,
+        custom_tasks: list | None = None,
+        parameters: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Execute an integration workflow"""
         if not self.coordinator:
             raise RuntimeError("Integration coordinator not initialized")
@@ -418,7 +418,7 @@ class IntegrationAgentsManager:
             logger.error(f"Error executing workflow: {e}")
             return {"success": False, "error": str(e)}
 
-    async def get_agent_status(self, agent_name: Optional[str] = None) -> Dict[str, Any]:
+    async def get_agent_status(self, agent_name: str | None = None) -> dict[str, Any]:
         """Get status of integration agents"""
         status = {
             "initialized": self.initialized,
@@ -469,8 +469,8 @@ class IntegrationAgentsManager:
         return status
 
     async def sync_data(
-        self, source_platform: str, target_platform: str, data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, source_platform: str, target_platform: str, data: dict[str, Any]
+    ) -> dict[str, Any]:
         """Synchronize data between platforms"""
         try:
             source = IntegrationPlatform[source_platform.upper()]
@@ -490,7 +490,7 @@ class IntegrationAgentsManager:
             logger.error(f"Error syncing data: {e}")
             return {"success": False, "error": str(e)}
 
-    async def broadcast_event(self, channel: str, event: str, data: Any) -> Dict[str, Any]:
+    async def broadcast_event(self, channel: str, event: str, data: Any) -> dict[str, Any]:
         """Broadcast an event through the realtime update agent"""
         try:
             result = await self.agents["realtime_update"].broadcast_event(
@@ -573,10 +573,10 @@ async def get_integration_manager() -> IntegrationAgentsManager:
 async def execute_integration_workflow(
     workflow_name: str,
     workflow_description: str,
-    template: Optional[str] = None,
-    custom_tasks: Optional[list] = None,
-    parameters: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
+    template: str | None = None,
+    custom_tasks: list | None = None,
+    parameters: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Execute an integration workflow"""
     manager = await get_integration_manager()
     return await manager.execute_workflow(

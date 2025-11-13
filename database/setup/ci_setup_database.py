@@ -6,16 +6,20 @@ Ensures database tables exist before running tests
 import os
 import sys
 import time
-import psycopg2
-from psycopg2 import sql
 from pathlib import Path
+
+import psycopg2
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+
 def wait_for_db(max_retries=30):
     """Wait for database to be available"""
-    db_url = os.getenv("DATABASE_URL", "postgresql://eduplatform:eduplatform2024@localhost/educational_platform_dev")
+    db_url = os.getenv(
+        "DATABASE_URL",
+        "postgresql://eduplatform:eduplatform2024@localhost/educational_platform_dev",
+    )
 
     for i in range(max_retries):
         try:
@@ -32,16 +36,21 @@ def wait_for_db(max_retries=30):
                 return False
     return False
 
+
 def create_tables():
     """Create essential tables if they don't exist"""
-    db_url = os.getenv("DATABASE_URL", "postgresql://eduplatform:eduplatform2024@localhost/educational_platform_dev")
+    db_url = os.getenv(
+        "DATABASE_URL",
+        "postgresql://eduplatform:eduplatform2024@localhost/educational_platform_dev",
+    )
 
     try:
         conn = psycopg2.connect(db_url)
         cur = conn.cursor()
 
         # Create users table with UUID support
-        cur.execute("""
+        cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS users (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 username VARCHAR(100) UNIQUE NOT NULL,
@@ -54,10 +63,12 @@ def create_tables():
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             )
-        """)
+        """
+        )
 
         # Create dashboard_users table with UUID support
-        cur.execute("""
+        cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS dashboard_users (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 username VARCHAR(100) UNIQUE NOT NULL,
@@ -70,10 +81,12 @@ def create_tables():
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             )
-        """)
+        """
+        )
 
         # Create schools table first (referenced by classes)
-        cur.execute("""
+        cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS schools (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 name VARCHAR(200) NOT NULL,
@@ -82,10 +95,12 @@ def create_tables():
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             )
-        """)
+        """
+        )
 
         # Create courses table (referenced by lessons and classes)
-        cur.execute("""
+        cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS courses (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 title VARCHAR(200) NOT NULL,
@@ -96,10 +111,12 @@ def create_tables():
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             )
-        """)
+        """
+        )
 
         # Create classes table with proper references
-        cur.execute("""
+        cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS classes (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 name VARCHAR(200) NOT NULL,
@@ -110,10 +127,12 @@ def create_tables():
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             )
-        """)
+        """
+        )
 
         # Create lessons table with proper references
-        cur.execute("""
+        cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS lessons (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 course_id UUID,
@@ -125,10 +144,12 @@ def create_tables():
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             )
-        """)
+        """
+        )
 
         # Create student_progress table
-        cur.execute("""
+        cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS student_progress (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 student_id UUID NOT NULL,
@@ -143,10 +164,12 @@ def create_tables():
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(student_id, lesson_id)
             )
-        """)
+        """
+        )
 
         # Create api_keys table for Roblox integration
-        cur.execute("""
+        cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS api_keys (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 key_id VARCHAR(36) UNIQUE NOT NULL,
@@ -166,7 +189,8 @@ def create_tables():
                 rate_limit INTEGER DEFAULT 1000,
                 metadata JSONB DEFAULT '{}'
             )
-        """)
+        """
+        )
 
         # Add foreign key constraints (with error handling)
         constraints = [
@@ -176,7 +200,7 @@ def create_tables():
             "ALTER TABLE lessons ADD CONSTRAINT IF NOT EXISTS fk_lessons_course FOREIGN KEY (course_id) REFERENCES courses(id)",
             "ALTER TABLE student_progress ADD CONSTRAINT IF NOT EXISTS fk_student_progress_student FOREIGN KEY (student_id) REFERENCES users(id)",
             "ALTER TABLE student_progress ADD CONSTRAINT IF NOT EXISTS fk_student_progress_lesson FOREIGN KEY (lesson_id) REFERENCES lessons(id)",
-            "ALTER TABLE api_keys ADD CONSTRAINT IF NOT EXISTS fk_api_keys_user FOREIGN KEY (user_id) REFERENCES users(id)"
+            "ALTER TABLE api_keys ADD CONSTRAINT IF NOT EXISTS fk_api_keys_user FOREIGN KEY (user_id) REFERENCES users(id)",
         ]
 
         for constraint_sql in constraints:
@@ -191,16 +215,27 @@ def create_tables():
         print("✅ All essential tables created/verified")
 
         # Check what tables exist and verify essential ones
-        cur.execute("""
+        cur.execute(
+            """
             SELECT table_name
             FROM information_schema.tables
             WHERE table_schema = 'public'
             ORDER BY table_name
-        """)
+        """
+        )
         tables = cur.fetchall()
         table_names = [t[0] for t in tables]
 
-        essential_tables = ['users', 'dashboard_users', 'schools', 'courses', 'classes', 'lessons', 'student_progress', 'api_keys']
+        essential_tables = [
+            "users",
+            "dashboard_users",
+            "schools",
+            "courses",
+            "classes",
+            "lessons",
+            "student_progress",
+            "api_keys",
+        ]
         missing_tables = set(essential_tables) - set(table_names)
 
         print(f"📊 Found {len(tables)} tables in database")
@@ -223,6 +258,7 @@ def create_tables():
         print(f"❌ Error creating tables: {e}")
         return False
 
+
 def main():
     """Main entry point"""
     print("🚀 Starting CI database setup...")
@@ -238,6 +274,7 @@ def main():
     print("✅ CI database setup complete!")
     print("📋 Database is ready for tests")
     sys.exit(0)
+
 
 if __name__ == "__main__":
     main()

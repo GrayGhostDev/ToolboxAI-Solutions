@@ -6,19 +6,19 @@ A standalone test to verify LangChain configuration without complex imports.
 """
 
 import os
-import sys
-from datetime import datetime
+
 
 def test_langchain_setup():
     """Test LangChain configuration is properly set up."""
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("🧪 LangChain Integration Test - Simple")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     # Load environment variables from .env file or environment
     # DO NOT hardcode keys here
     from dotenv import load_dotenv
+
     load_dotenv()
 
     # Set non-sensitive defaults only
@@ -33,7 +33,7 @@ def test_langchain_setup():
         "LANGCHAIN_API_KEY",
         "LANGCHAIN_PROJECT_ID",
         "LANGCHAIN_PROJECT",
-        "LANGCHAIN_TRACING_V2"
+        "LANGCHAIN_TRACING_V2",
     ]
 
     for var in required_vars:
@@ -54,8 +54,7 @@ def test_langchain_setup():
         from langsmith import Client
 
         client = Client(
-            api_key=os.getenv("LANGCHAIN_API_KEY"),
-            api_url="https://api.smith.langchain.com"
+            api_key=os.getenv("LANGCHAIN_API_KEY"), api_url="https://api.smith.langchain.com"
         )
         print("   ✅ LangSmith client initialized successfully")
 
@@ -74,9 +73,7 @@ def test_langchain_setup():
         from langchain.callbacks.tracers import LangChainTracer
         from langsmith import Client as LangSmithClient
 
-        tracer = LangChainTracer(
-            project_name="ToolboxAI-Test"
-        )
+        tracer = LangChainTracer(project_name="ToolboxAI-Test")
         print("   ✅ LangChain tracer created successfully")
 
     except ImportError as e:
@@ -89,7 +86,7 @@ def test_langchain_setup():
     print("\n4. Checking .env file configuration...")
     env_file_path = "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.env"
     if os.path.exists(env_file_path):
-        with open(env_file_path, 'r') as f:
+        with open(env_file_path) as f:
             content = f.read()
             # Check if LANGCHAIN_API_KEY is present (don't expose the actual value)
             if "LANGCHAIN_API_KEY=" in content and "LANGCHAIN_API_KEY=your_" not in content:
@@ -117,9 +114,9 @@ def test_langchain_setup():
     print(f"      https://smith.langchain.com/project/{project_id}/settings")
 
     # Summary
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("📋 Summary")
-    print("="*60)
+    print("=" * 60)
 
     if env_vars_ok:
         print("✅ LangChain configuration is properly set up!")

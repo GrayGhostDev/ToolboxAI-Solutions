@@ -5,27 +5,24 @@ Provides W3C Trace Context propagation and correlation tracking across
 HTTP requests, WebSocket connections, and async tasks with minimal overhead.
 """
 
-import asyncio
-import uuid
-import time
+import contextvars
 import logging
-from typing import Dict, Any, Optional, List, Set, Callable, TypeVar, Union
+import threading
+import time
+import uuid
+from collections import defaultdict
+from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from functools import wraps
-from collections import defaultdict, deque
-import contextvars
-import json
-import threading
-from concurrent.futures import ThreadPoolExecutor
+from typing import Any, TypeVar
 
 from fastapi import Request, Response, WebSocket
-from starlette.middleware.base import BaseHTTPMiddleware
-from opentelemetry import trace, context, baggage
-from opentelemetry.trace import Tracer, Span, Status, StatusCode, SpanKind
-from opentelemetry.propagate import inject, extract
+from opentelemetry import baggage, context, trace
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+from starlette.middleware.base import BaseHTTPMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -50,16 +47,16 @@ class CorrelationContext:
     correlation_id: str
     trace_id: str
     span_id: str
-    user_id: Optional[str] = None
+    user_id: str | None = None
     request_type: str = "http"
-    parent_correlation_id: Optional[str] = None
-    session_id: Optional[str] = None
-    client_ip: Optional[str] = None
-    user_agent: Optional[str] = None
+    parent_correlation_id: str | None = None
+    session_id: str | None = None
+    client_ip: str | None = None
+    user_agent: str | None = None
     created_at: datetime = field(default_factory=datetime.utcnow)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_headers(self) -> Dict[str, str]:
+    def to_headers(self) -> dict[str, str]:
         """Convert context to HTTP headers"""
         headers = {
             "X-Correlation-ID": self.correlation_id,
@@ -77,7 +74,7 @@ class CorrelationContext:
 
         return headers
 
-    def to_baggage(self) -> Dict[str, str]:
+    def to_baggage(self) -> dict[str, str]:
         """Convert context to OpenTelemetry baggage"""
         baggage_data = {
             "correlation.id": self.correlation_id,
@@ -91,7 +88,7 @@ class CorrelationContext:
 
         return baggage_data
 
-    def to_log_extra(self) -> Dict[str, Any]:
+    def to_log_extra(self) -> dict[str, Any]:
         """Convert context to logging extra fields"""
         return {
             "correlation_id": self.correlation_id,
@@ -110,8 +107,8 @@ class CorrelationStore:
     def __init__(self, max_size: int = 10000, ttl_seconds: int = 3600):
         self.max_size = max_size
         self.ttl_seconds = ttl_seconds
-        self._store: Dict[str, CorrelationContext] = {}
-        self._access_times: Dict[str, float] = {}
+        self._store: dict[str, CorrelationContext] = {}
+        self._access_times: dict[str, float] = {}
         self._lock = threading.RLock()
 
         # Start cleanup task
@@ -162,7 +159,7 @@ class CorrelationStore:
             self._store[context.correlation_id] = context
             self._access_times[context.correlation_id] = time.time()
 
-    def get(self, correlation_id: str) -> Optional[CorrelationContext]:
+    def get(self, correlation_id: str) -> CorrelationContext | None:
         """Get a correlation context"""
         with self._lock:
             context = self._store.get(correlation_id)
@@ -170,12 +167,12 @@ class CorrelationStore:
                 self._access_times[correlation_id] = time.time()
             return context
 
-    def get_all_for_trace(self, trace_id: str) -> List[CorrelationContext]:
+    def get_all_for_trace(self, trace_id: str) -> list[CorrelationContext]:
         """Get all correlation contexts for a trace"""
         with self._lock:
             return [ctx for ctx in self._store.values() if ctx.trace_id == trace_id]
 
-    def get_children(self, parent_correlation_id: str) -> List[CorrelationContext]:
+    def get_children(self, parent_correlation_id: str) -> list[CorrelationContext]:
         """Get all child correlation contexts"""
         with self._lock:
             return [
@@ -195,7 +192,7 @@ class W3CTraceContextPropagator:
     def __init__(self):
         self.propagator = TraceContextTextMapPropagator()
 
-    def extract_from_headers(self, headers: Dict[str, str]) -> Optional[context.Context]:
+    def extract_from_headers(self, headers: dict[str, str]) -> context.Context | None:
         """Extract W3C trace context from headers"""
         try:
             return self.propagator.extract(headers)
@@ -203,7 +200,7 @@ class W3CTraceContextPropagator:
             logger.warning(f"Failed to extract trace context: {e}")
             return None
 
-    def inject_to_headers(self, headers: Dict[str, str], ctx: Optional[context.Context] = None):
+    def inject_to_headers(self, headers: dict[str, str], ctx: context.Context | None = None):
         """Inject W3C trace context into headers"""
         try:
             if ctx is None:
@@ -212,7 +209,7 @@ class W3CTraceContextPropagator:
         except Exception as e:
             logger.warning(f"Failed to inject trace context: {e}")
 
-    def extract_from_websocket(self, websocket: WebSocket) -> Optional[context.Context]:
+    def extract_from_websocket(self, websocket: WebSocket) -> context.Context | None:
         """Extract trace context from WebSocket headers"""
         headers = dict(websocket.headers)
         return self.extract_from_headers(headers)
@@ -224,7 +221,7 @@ class CorrelationManager:
     def __init__(self):
         self.tracer = trace.get_tracer(__name__)
         self.propagator = W3CTraceContextPropagator()
-        self._active_correlations: Set[str] = set()
+        self._active_correlations: set[str] = set()
         self._correlation_metrics = defaultdict(int)
 
     def generate_correlation_id(self) -> str:
@@ -376,14 +373,14 @@ class CorrelationManager:
         with self.correlation_context(context):
             yield context
 
-    def get_current_correlation(self) -> Optional[CorrelationContext]:
+    def get_current_correlation(self) -> CorrelationContext | None:
         """Get current correlation context"""
         correlation_id = correlation_id_var.get()
         if correlation_id:
             return _correlation_store.get(correlation_id)
         return None
 
-    def propagate_to_headers(self, headers: Dict[str, str]):
+    def propagate_to_headers(self, headers: dict[str, str]):
         """Propagate current correlation context to headers"""
         current_context = self.get_current_correlation()
         if current_context:
@@ -392,7 +389,7 @@ class CorrelationManager:
         # Also inject W3C trace context
         self.propagator.inject_to_headers(headers)
 
-    def get_correlation_chain(self, correlation_id: str) -> List[CorrelationContext]:
+    def get_correlation_chain(self, correlation_id: str) -> list[CorrelationContext]:
         """Get the full correlation chain (parent and children)"""
         context = _correlation_store.get(correlation_id)
         if not context:
@@ -416,7 +413,7 @@ class CorrelationManager:
 
         return chain
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Get correlation metrics"""
         return {
             "active_correlations": len(self._active_correlations),
@@ -518,7 +515,7 @@ class WebSocketCorrelationManager:
     """Specialized correlation manager for WebSocket connections"""
 
     def __init__(self):
-        self.active_connections: Dict[str, CorrelationContext] = {}
+        self.active_connections: dict[str, CorrelationContext] = {}
 
     async def connect(self, websocket: WebSocket) -> CorrelationContext:
         """Handle WebSocket connection with correlation"""
@@ -541,7 +538,7 @@ class WebSocketCorrelationManager:
                 extra=context.to_log_extra(),
             )
 
-    def get_connection_context(self, correlation_id: str) -> Optional[CorrelationContext]:
+    def get_connection_context(self, correlation_id: str) -> CorrelationContext | None:
         """Get WebSocket connection context"""
         return self.active_connections.get(correlation_id)
 
@@ -566,7 +563,7 @@ def get_user_id() -> str:
     return user_id_var.get("")
 
 
-def get_correlation_context() -> Optional[CorrelationContext]:
+def get_correlation_context() -> CorrelationContext | None:
     """Get current correlation context"""
     return correlation_manager.get_current_correlation()
 

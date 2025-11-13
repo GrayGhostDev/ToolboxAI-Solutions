@@ -3,8 +3,7 @@ Custom GraphQL directives for authentication and rate limiting
 """
 
 import time
-from typing import Any, Dict, Optional
-from functools import wraps
+from typing import Any
 
 from ariadne import SchemaDirectiveVisitor
 from graphql import GraphQLError, default_field_resolver
@@ -71,7 +70,7 @@ class RateLimitDirective(SchemaDirectiveVisitor):
 
     # Simple in-memory rate limit storage
     # In production, use Redis or similar
-    _rate_limits: Dict[str, Dict[str, Any]] = {}
+    _rate_limits: dict[str, dict[str, Any]] = {}
 
     def visit_field_definition(self, field, object_type):
         """Apply rate limiting to field resolver"""

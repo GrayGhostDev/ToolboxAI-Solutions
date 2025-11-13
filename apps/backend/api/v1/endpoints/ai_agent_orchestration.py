@@ -9,33 +9,37 @@ Provides comprehensive AI agent management and coordination:
 - Agent-to-agent communication protocols
 """
 
+import asyncio
 import logging
 import uuid
-import asyncio
-from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, List, Optional, Union
+from datetime import datetime, timedelta, timezone
 from enum import Enum
+from typing import Any
 
 from fastapi import (
     APIRouter,
+    BackgroundTasks,
     Depends,
     HTTPException,
     Query,
-    BackgroundTasks,
-    status,
     WebSocket,
     WebSocketDisconnect,
+    status,
 )
 from fastapi.security import HTTPBearer
-from pydantic import BaseModel, Field, field_validator, ConfigDict
-from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # Import authentication and dependencies
 try:
-    from apps.backend.api.auth.auth import get_current_user, require_role, require_any_role
+    from apps.backend.services.websocket_handler import websocket_manager
+
+    from apps.backend.api.auth.auth import (
+        get_current_user,
+        require_any_role,
+        require_role,
+    )
     from apps.backend.core.deps import get_db
     from apps.backend.core.security.rate_limit_manager import rate_limit
-    from apps.backend.services.websocket_handler import websocket_manager
 except ImportError:
     # Fallback for development
     def get_current_user():
@@ -70,7 +74,7 @@ except ImportError:
 
 # Import models and services
 try:
-    from apps.backend.models.schemas import User, BaseResponse
+    from apps.backend.models.schemas import BaseResponse, User
     from apps.backend.services.pusher import trigger_event
 except ImportError:
 
@@ -174,15 +178,15 @@ class TaskRequest(BaseModel):
     task_type: str = Field(..., description="Type of task to perform")
     agent_type: AgentType = Field(..., description="Type of agent to handle the task")
     priority: TaskPriority = TaskPriority.NORMAL
-    parameters: Dict[str, Any] = Field(default_factory=dict)
-    context: Dict[str, Any] = Field(default_factory=dict)
+    parameters: dict[str, Any] = Field(default_factory=dict)
+    context: dict[str, Any] = Field(default_factory=dict)
     max_execution_time: int = Field(300, ge=1, le=3600, description="Max execution time in seconds")
     retry_count: int = Field(3, ge=0, le=10)
-    dependencies: List[str] = Field(
+    dependencies: list[str] = Field(
         default_factory=list, description="Task IDs this task depends on"
     )
-    callback_url: Optional[str] = None
-    user_context: Optional[Dict[str, Any]] = None
+    callback_url: str | None = None
+    user_context: dict[str, Any] | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -191,9 +195,9 @@ class AgentConfigurationRequest(BaseModel):
     """Request to configure an agent"""
 
     agent_type: AgentType
-    configuration: Dict[str, Any] = Field(default_factory=dict)
-    resource_limits: Dict[str, Any] = Field(default_factory=dict)
-    performance_thresholds: Dict[str, Any] = Field(default_factory=dict)
+    configuration: dict[str, Any] = Field(default_factory=dict)
+    resource_limits: dict[str, Any] = Field(default_factory=dict)
+    performance_thresholds: dict[str, Any] = Field(default_factory=dict)
     enabled: bool = True
     auto_scale: bool = False
     max_instances: int = Field(1, ge=1, le=10)
@@ -206,11 +210,11 @@ class WorkflowRequest(BaseModel):
 
     workflow_name: str = Field(..., min_length=1, max_length=100)
     description: str = Field(..., max_length=500)
-    steps: List[Dict[str, Any]] = Field(..., min_items=1)
+    steps: list[dict[str, Any]] = Field(..., min_items=1)
     parallel_execution: bool = False
     error_handling: str = Field("stop", description="stop, continue, retry")
     timeout_seconds: int = Field(1800, ge=60, le=7200)
-    context: Dict[str, Any] = Field(default_factory=dict)
+    context: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("steps")
     @classmethod
@@ -231,9 +235,9 @@ class SPARCRequest(BaseModel):
     problem_statement: str = Field(..., min_length=10, max_length=2000)
     domain: str = Field(..., description="Problem domain (e.g., education, programming)")
     complexity_level: str = Field("medium", description="low, medium, high, expert")
-    constraints: List[str] = Field(default_factory=list)
-    objectives: List[str] = Field(..., min_items=1)
-    context: Dict[str, Any] = Field(default_factory=dict)
+    constraints: list[str] = Field(default_factory=list)
+    objectives: list[str] = Field(..., min_items=1)
+    context: dict[str, Any] = Field(default_factory=dict)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -250,7 +254,7 @@ class SwarmConfigurationRequest(BaseModel):
     task_distribution: str = Field(
         "round_robin", description="round_robin, capability_based, load_balanced"
     )
-    performance_metrics: List[str] = Field(default_factory=list)
+    performance_metrics: list[str] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -262,10 +266,10 @@ class AgentInfo(BaseModel):
     agent_id: str
     agent_type: AgentType
     status: AgentStatus
-    configuration: Dict[str, Any]
-    current_task_id: Optional[str] = None
-    performance_metrics: Dict[str, Any] = Field(default_factory=dict)
-    resource_usage: Dict[str, Any] = Field(default_factory=dict)
+    configuration: dict[str, Any]
+    current_task_id: str | None = None
+    performance_metrics: dict[str, Any] = Field(default_factory=dict)
+    resource_usage: dict[str, Any] = Field(default_factory=dict)
     last_activity: datetime
     created_at: datetime
     total_tasks_completed: int = 0
@@ -281,17 +285,17 @@ class TaskResponse(BaseModel):
     task_id: str
     task_type: str
     agent_type: AgentType
-    agent_id: Optional[str] = None
+    agent_id: str | None = None
     status: TaskStatus
     priority: TaskPriority
     progress_percentage: int = Field(0, ge=0, le=100)
-    result: Optional[Dict[str, Any]] = None
-    error_message: Optional[str] = None
-    execution_log: List[str] = Field(default_factory=list)
+    result: dict[str, Any] | None = None
+    error_message: str | None = None
+    execution_log: list[str] = Field(default_factory=list)
     created_at: datetime
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    execution_time_seconds: Optional[float] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    execution_time_seconds: float | None = None
     retry_count: int = 0
     dependencies_met: bool = True
 
@@ -307,12 +311,12 @@ class WorkflowResponse(BaseModel):
     current_step: int = 0
     total_steps: int
     progress_percentage: int = Field(0, ge=0, le=100)
-    steps: List[Dict[str, Any]] = Field(default_factory=list)
-    results: Dict[str, Any] = Field(default_factory=dict)
-    execution_log: List[str] = Field(default_factory=list)
+    steps: list[dict[str, Any]] = Field(default_factory=list)
+    results: dict[str, Any] = Field(default_factory=dict)
+    execution_log: list[str] = Field(default_factory=list)
     created_at: datetime
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
     created_by: str
 
     model_config = ConfigDict(from_attributes=True)
@@ -325,12 +329,12 @@ class SPARCResponse(BaseModel):
     problem_statement: str
     current_phase: SPARCPhase
     progress_percentage: int = Field(0, ge=0, le=100)
-    phases: Dict[SPARCPhase, Dict[str, Any]] = Field(default_factory=dict)
-    final_solution: Optional[Dict[str, Any]] = None
+    phases: dict[SPARCPhase, dict[str, Any]] = Field(default_factory=dict)
+    final_solution: dict[str, Any] | None = None
     confidence_score: float = Field(0.0, ge=0.0, le=1.0)
-    reasoning_chain: List[str] = Field(default_factory=list)
+    reasoning_chain: list[str] = Field(default_factory=list)
     created_at: datetime
-    completed_at: Optional[datetime] = None
+    completed_at: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -342,8 +346,8 @@ class SwarmStatus(BaseModel):
     swarm_size: int
     active_agents: int
     coordination_strategy: str
-    current_tasks: List[str] = Field(default_factory=list)
-    performance_metrics: Dict[str, Any] = Field(default_factory=dict)
+    current_tasks: list[str] = Field(default_factory=list)
+    performance_metrics: dict[str, Any] = Field(default_factory=dict)
     consensus_level: float = Field(0.0, ge=0.0, le=1.0)
     communication_volume: int = 0
     efficiency_score: float = Field(0.0, ge=0.0, le=1.0)
@@ -360,27 +364,27 @@ class AgentPerformanceMetrics(BaseModel):
     tasks_completed: int
     tasks_failed: int
     average_execution_time: float
-    peak_performance_time: Optional[datetime] = None
+    peak_performance_time: datetime | None = None
     resource_efficiency: float = Field(0.0, ge=0.0, le=1.0)
     error_rate: float = Field(0.0, ge=0.0, le=1.0)
     uptime_percentage: float = Field(0.0, ge=0.0, le=100.0)
-    bottlenecks: List[str] = Field(default_factory=list)
-    recommendations: List[str] = Field(default_factory=list)
+    bottlenecks: list[str] = Field(default_factory=list)
+    recommendations: list[str] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
 
 
 # Mock data stores
-_mock_agents_db: Dict[str, AgentInfo] = {}
-_mock_tasks_db: Dict[str, TaskResponse] = {}
-_mock_workflows_db: Dict[str, WorkflowResponse] = {}
-_mock_sparc_db: Dict[str, SPARCResponse] = {}
-_mock_swarms_db: Dict[str, SwarmStatus] = {}
-_mock_task_queue: List[str] = []
+_mock_agents_db: dict[str, AgentInfo] = {}
+_mock_tasks_db: dict[str, TaskResponse] = {}
+_mock_workflows_db: dict[str, WorkflowResponse] = {}
+_mock_sparc_db: dict[str, SPARCResponse] = {}
+_mock_swarms_db: dict[str, SwarmStatus] = {}
+_mock_task_queue: list[str] = []
 
 
 # Utility functions
-async def notify_agent_update(event_type: str, data: Dict[str, Any], user_id: str):
+async def notify_agent_update(event_type: str, data: dict[str, Any], user_id: str):
     """Notify about agent updates"""
     try:
         await trigger_event(
@@ -392,7 +396,7 @@ async def notify_agent_update(event_type: str, data: Dict[str, Any], user_id: st
         logger.warning(f"Failed to send agent update notification: {e}")
 
 
-def get_available_agent(agent_type: AgentType) -> Optional[str]:
+def get_available_agent(agent_type: AgentType) -> str | None:
     """Find an available agent of the specified type"""
     for agent_id, agent in _mock_agents_db.items():
         if agent.agent_type == agent_type and agent.status == AgentStatus.IDLE:
@@ -503,7 +507,7 @@ initialize_mock_agents()
 async def create_task(
     request: TaskRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
 ):
     """
@@ -562,13 +566,13 @@ async def create_task(
         )
 
 
-@router.get("/tasks", response_model=List[TaskResponse])
+@router.get("/tasks", response_model=list[TaskResponse])
 async def list_tasks(
-    status_filter: Optional[TaskStatus] = Query(None, description="Filter by task status"),
-    agent_type: Optional[AgentType] = Query(None, description="Filter by agent type"),
-    priority: Optional[TaskPriority] = Query(None, description="Filter by priority"),
+    status_filter: TaskStatus | None = Query(None, description="Filter by task status"),
+    agent_type: AgentType | None = Query(None, description="Filter by agent type"),
+    priority: TaskPriority | None = Query(None, description="Filter by priority"),
     limit: int = Query(50, ge=1, le=200, description="Maximum results"),
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """
     List agent tasks with filtering options.
@@ -596,7 +600,7 @@ async def list_tasks(
 
 
 @router.get("/tasks/{task_id}", response_model=TaskResponse)
-async def get_task(task_id: str, current_user: Dict = Depends(get_current_user)):
+async def get_task(task_id: str, current_user: dict = Depends(get_current_user)):
     """
     Get specific task details and status.
     """
@@ -616,11 +620,11 @@ async def get_task(task_id: str, current_user: Dict = Depends(get_current_user))
         )
 
 
-@router.get("/agents", response_model=List[AgentInfo])
+@router.get("/agents", response_model=list[AgentInfo])
 async def list_agents(
-    agent_type: Optional[AgentType] = Query(None, description="Filter by agent type"),
-    status_filter: Optional[AgentStatus] = Query(None, description="Filter by agent status"),
-    current_user: Dict = Depends(get_current_user),
+    agent_type: AgentType | None = Query(None, description="Filter by agent type"),
+    status_filter: AgentStatus | None = Query(None, description="Filter by agent status"),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
 ):
     """
@@ -651,7 +655,7 @@ async def list_agents(
 @router.get("/agents/{agent_id}", response_model=AgentInfo)
 async def get_agent(
     agent_id: str,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
 ):
     """
@@ -680,7 +684,7 @@ async def get_agent(
 async def create_workflow(
     request: WorkflowRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
 ):
     """
@@ -735,7 +739,7 @@ async def create_workflow(
 async def start_workflow(
     workflow_id: str,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
 ):
     """
@@ -785,7 +789,7 @@ async def start_workflow(
 async def process_sparc(
     request: SPARCRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
 ):
     """
@@ -848,7 +852,7 @@ async def process_sparc(
 
 
 @router.get("/sparc/{sparc_id}", response_model=SPARCResponse)
-async def get_sparc_status(sparc_id: str, current_user: Dict = Depends(get_current_user)):
+async def get_sparc_status(sparc_id: str, current_user: dict = Depends(get_current_user)):
     """
     Get SPARC process status and results.
     """
@@ -876,7 +880,7 @@ async def get_sparc_status(sparc_id: str, current_user: Dict = Depends(get_curre
 async def create_swarm(
     request: SwarmConfigurationRequest,
     background_tasks: BackgroundTasks,
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_role("admin")),
 ):
     """
@@ -933,7 +937,7 @@ async def create_swarm(
 async def get_agent_performance(
     agent_id: str,
     time_period: str = Query("24h", description="Time period: 1h, 24h, 7d, 30d"),
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     _: None = Depends(require_any_role(["teacher", "admin"])),
 ):
     """
@@ -981,7 +985,7 @@ async def get_agent_performance(
 async def agent_realtime_updates(
     websocket: WebSocket,
     connection_type: str,  # "tasks", "agents", "workflows", or "swarms"
-    current_user: Dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Real-time WebSocket connection for agent system updates.
@@ -1051,9 +1055,9 @@ async def agent_realtime_updates(
         logger.info(f"WebSocket disconnected for {connection_type}")
 
 
-@router.get("/health", response_model=Dict[str, Any])
+@router.get("/health", response_model=dict[str, Any])
 async def get_system_health(
-    current_user: Dict = Depends(get_current_user), _: None = Depends(require_any_role(["admin"]))
+    current_user: dict = Depends(get_current_user), _: None = Depends(require_any_role(["admin"]))
 ):
     """
     Get overall AI agent system health status.

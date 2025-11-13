@@ -7,12 +7,11 @@ rate limiting, authentication, and other core services.
 
 import logging
 import os
-from typing import Optional
 
 from .config import settings
 from .rate_limit_manager import (
-    RateLimitManager,
     RateLimitConfig,
+    RateLimitManager,
     RateLimitMode,
     get_rate_limit_manager,
 )
@@ -20,7 +19,7 @@ from .rate_limit_manager import (
 logger = logging.getLogger(__name__)
 
 
-def initialize_rate_limiting(redis_client: Optional[any] = None) -> RateLimitManager:
+def initialize_rate_limiting(redis_client: any | None = None) -> RateLimitManager:
     """
     Initialize the centralized rate limiting system
 

@@ -1,11 +1,13 @@
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest_asyncio
+from unittest.mock import Mock, patch
 
 import pytest
-from unittest.mock import Mock, patch
+import pytest_asyncio
+
 
 @pytest.fixture
 def mock_db_connection():
@@ -25,14 +27,17 @@ WebSocket connection limits, and overall system performance.
 """
 
 import asyncio
-import time
-import pytest
-import aiohttp
-from tests.fixtures.pusher_mocks import MockPusherService
-from typing import List, Dict, Any
-from concurrent.futures import ThreadPoolExecutor
 import statistics
+import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
+from typing import Any, Dict, List
+
+import aiohttp
+import pytest
+
+from tests.fixtures.pusher_mocks import MockPusherService
+
 
 def make_json_serializable(obj):
     """Convert non-serializable objects to serializable format."""
@@ -50,6 +55,7 @@ import json
 # Add project path
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).parent.parent.parent / "src" / "roblox-environment"))
 
 # Skip all tests in this module as they require external services
@@ -326,9 +332,10 @@ async def test_agent_pool_scaling(self):
     @pytest.mark.asyncio
 async def test_agent_memory_usage(self):
         """Test agent memory usage under sustained load"""
-        import psutil
         import os
-        
+
+        import psutil
+
         from core.agents.supervisor import SupervisorAgent
         
         supervisor = SupervisorAgent()
@@ -623,7 +630,7 @@ async def test_end_to_end_latency(self):
 async def test_resource_usage(self):
         """Test system resource usage under normal load"""
         import psutil
-        
+
         # Get initial system state
         initial_cpu = psutil.cpu_percent(interval=1)
         initial_memory = psutil.virtual_memory().percent

@@ -5,9 +5,10 @@ Logging middleware and utilities for request tracking
 import logging
 import time
 import uuid
-from typing import Callable, Any
-from functools import wraps
+from collections.abc import Callable
 from contextvars import ContextVar
+from functools import wraps
+from typing import Any
 
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware

@@ -1,7 +1,8 @@
-import pytest_asyncio
+from unittest.mock import Mock, patch
 
 import pytest
-from unittest.mock import Mock, patch
+import pytest_asyncio
+
 
 @pytest.fixture
 def mock_db_connection():
@@ -20,8 +21,11 @@ Comprehensive WebSocket connection and message throughput tests
 
 import asyncio
 import time
+
 import pytest
+
 from tests.fixtures.pusher_mocks import MockPusherService
+
 
 def make_json_serializable(obj):
     """Convert non-serializable objects to serializable format."""
@@ -34,10 +38,10 @@ def make_json_serializable(obj):
     else:
         return str(obj)
 
+import concurrent.futures
 import json
 import statistics
-from typing import List, Dict, Any
-import concurrent.futures
+from typing import Any, Dict, List
 
 # Skip all tests in this module as they require external services
 pytestmark = pytest.mark.skip(reason="Performance tests require external services - run with --run-performance")
@@ -259,8 +263,9 @@ async def test_websocket_message_throughput(self):
     @pytest.mark.asyncio
 async def test_websocket_memory_usage(self):
         """Test WebSocket memory usage with many connections"""
-        import psutil
         import os
+
+        import psutil
         
         process = psutil.Process(os.getpid())
         baseline_memory = process.memory_info().rss / 1024 / 1024  # MB

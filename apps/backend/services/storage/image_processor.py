@@ -9,17 +9,16 @@ Created: 2025-01-27
 Version: 1.0.0
 """
 
-import asyncio
 import io
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
-from uuid import uuid4
+from typing import Any
 
 try:
-    from PIL import Image, ImageOps, ImageFilter, ExifTags
+    from PIL import ExifTags, Image, ImageFilter, ImageOps
     from PIL.ExifTags import TAGS
+
     PIL_AVAILABLE = True
 except ImportError:
     PIL_AVAILABLE = False
@@ -30,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 class ImageFormat(str, Enum):
     """Supported image formats"""
+
     JPEG = "JPEG"
     PNG = "PNG"
     WEBP = "WEBP"
@@ -40,8 +40,9 @@ class ImageFormat(str, Enum):
 
 class ResizeMode(str, Enum):
     """Image resize modes"""
-    FIT = "fit"          # Fit within dimensions maintaining aspect ratio
-    FILL = "fill"        # Fill dimensions, may crop
+
+    FIT = "fit"  # Fit within dimensions maintaining aspect ratio
+    FILL = "fill"  # Fill dimensions, may crop
     STRETCH = "stretch"  # Stretch to exact dimensions
     THUMBNAIL = "thumbnail"  # Create thumbnail with aspect ratio
 
@@ -49,21 +50,22 @@ class ResizeMode(str, Enum):
 @dataclass
 class ImageVariant:
     """Processed image variant"""
+
     name: str
     data: bytes
     format: ImageFormat
     width: int
     height: int
     file_size: int
-    quality: Optional[int] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    quality: int | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
     def aspect_ratio(self) -> float:
         """Calculate aspect ratio"""
         return self.width / self.height if self.height > 0 else 1.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization"""
         return {
             "name": self.name,
@@ -73,31 +75,36 @@ class ImageVariant:
             "file_size": self.file_size,
             "quality": self.quality,
             "aspect_ratio": self.aspect_ratio,
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
 
 @dataclass
 class ProcessingOptions:
     """Image processing options"""
+
     generate_thumbnails: bool = True
     optimize: bool = True
     strip_exif: bool = True
     convert_to_webp: bool = False
-    max_width: Optional[int] = None
-    max_height: Optional[int] = None
+    max_width: int | None = None
+    max_height: int | None = None
     quality: int = 85
-    thumbnail_sizes: List[Tuple[int, int]] = field(default_factory=lambda: [
-        (150, 150),  # Small thumbnail
-        (300, 300),  # Medium thumbnail
-        (600, 600),  # Large thumbnail
-    ])
-    responsive_sizes: List[int] = field(default_factory=lambda: [
-        480,   # Mobile
-        768,   # Tablet
-        1024,  # Desktop
-        1920,  # Large desktop
-    ])
+    thumbnail_sizes: list[tuple[int, int]] = field(
+        default_factory=lambda: [
+            (150, 150),  # Small thumbnail
+            (300, 300),  # Medium thumbnail
+            (600, 600),  # Large thumbnail
+        ]
+    )
+    responsive_sizes: list[int] = field(
+        default_factory=lambda: [
+            480,  # Mobile
+            768,  # Tablet
+            1024,  # Desktop
+            1920,  # Large desktop
+        ]
+    )
     progressive_jpeg: bool = True
     lossless_webp: bool = False
 
@@ -115,7 +122,7 @@ class ImageProcessor:
     - Progressive JPEG support
     """
 
-    def __init__(self, default_options: Optional[ProcessingOptions] = None):
+    def __init__(self, default_options: ProcessingOptions | None = None):
         """
         Initialize image processor.
 
@@ -132,10 +139,10 @@ class ImageProcessor:
     async def process_image(
         self,
         image_data: bytes,
-        options: Optional[ProcessingOptions] = None,
+        options: ProcessingOptions | None = None,
         generate_thumbnails: bool = True,
-        optimize: bool = True
-    ) -> Dict[str, ImageVariant]:
+        optimize: bool = True,
+    ) -> dict[str, ImageVariant]:
         """
         Process image with various optimizations and variants.
 
@@ -164,17 +171,13 @@ class ImageProcessor:
             metadata = await self._extract_metadata(original_image)
 
             # Process original image
-            processed_original = await self._process_original(
-                original_image, options, metadata
-            )
+            processed_original = await self._process_original(original_image, options, metadata)
             if processed_original:
                 variants["original"] = processed_original
 
             # Generate thumbnails
             if generate_thumbnails and options.generate_thumbnails:
-                thumbnails = await self._generate_thumbnails(
-                    original_image, options, metadata
-                )
+                thumbnails = await self._generate_thumbnails(original_image, options, metadata)
                 variants.update(thumbnails)
 
             # Generate responsive variants
@@ -185,14 +188,10 @@ class ImageProcessor:
 
             # Convert to WebP if requested
             if options.convert_to_webp:
-                webp_variants = await self._convert_to_webp(
-                    original_image, options, metadata
-                )
+                webp_variants = await self._convert_to_webp(original_image, options, metadata)
                 variants.update(webp_variants)
 
-            logger.info(
-                f"Image processing completed: {len(variants)} variants generated"
-            )
+            logger.info(f"Image processing completed: {len(variants)} variants generated")
 
             return variants
 
@@ -203,10 +202,10 @@ class ImageProcessor:
     async def generate_thumbnail(
         self,
         image_data: bytes,
-        size: Tuple[int, int] = (300, 300),
+        size: tuple[int, int] = (300, 300),
         mode: ResizeMode = ResizeMode.THUMBNAIL,
-        quality: int = 85
-    ) -> Optional[ImageVariant]:
+        quality: int = 85,
+    ) -> ImageVariant | None:
         """
         Generate a single thumbnail.
 
@@ -231,9 +230,7 @@ class ImageProcessor:
             thumbnail = await self._resize_image(original_image, size, mode)
 
             # Convert to bytes
-            thumbnail_data = await self._image_to_bytes(
-                thumbnail, ImageFormat.JPEG, quality
-            )
+            thumbnail_data = await self._image_to_bytes(thumbnail, ImageFormat.JPEG, quality)
 
             return ImageVariant(
                 name="thumbnail",
@@ -242,7 +239,7 @@ class ImageProcessor:
                 width=thumbnail.width,
                 height=thumbnail.height,
                 file_size=len(thumbnail_data),
-                quality=quality
+                quality=quality,
             )
 
         except Exception as e:
@@ -252,11 +249,11 @@ class ImageProcessor:
     async def optimize_image(
         self,
         image_data: bytes,
-        max_width: Optional[int] = None,
-        max_height: Optional[int] = None,
+        max_width: int | None = None,
+        max_height: int | None = None,
         quality: int = 85,
-        format_hint: Optional[ImageFormat] = None
-    ) -> Optional[ImageVariant]:
+        format_hint: ImageFormat | None = None,
+    ) -> ImageVariant | None:
         """
         Optimize image for web delivery.
 
@@ -282,7 +279,7 @@ class ImageProcessor:
             if max_width or max_height:
                 target_size = (
                     max_width or original_image.width,
-                    max_height or original_image.height
+                    max_height or original_image.height,
                 )
                 original_image = await self._resize_image(
                     original_image, target_size, ResizeMode.FIT
@@ -295,9 +292,7 @@ class ImageProcessor:
             optimized_image = await self._optimize_for_web(original_image)
 
             # Convert to bytes
-            optimized_data = await self._image_to_bytes(
-                optimized_image, output_format, quality
-            )
+            optimized_data = await self._image_to_bytes(optimized_image, output_format, quality)
 
             return ImageVariant(
                 name="optimized",
@@ -306,14 +301,14 @@ class ImageProcessor:
                 width=optimized_image.width,
                 height=optimized_image.height,
                 file_size=len(optimized_data),
-                quality=quality
+                quality=quality,
             )
 
         except Exception as e:
             logger.error(f"Image optimization failed: {e}")
             return None
 
-    async def extract_image_info(self, image_data: bytes) -> Dict[str, Any]:
+    async def extract_image_info(self, image_data: bytes) -> dict[str, Any]:
         """
         Extract comprehensive image information.
 
@@ -342,7 +337,7 @@ class ImageProcessor:
                 "file_size": len(image_data),
                 "has_transparency": self._has_transparency(image),
                 "color_mode": image.mode,
-                "bit_depth": self._get_bit_depth(image)
+                "bit_depth": self._get_bit_depth(image),
             }
 
             # EXIF data
@@ -362,7 +357,7 @@ class ImageProcessor:
 
     # Private helper methods
 
-    async def _load_image(self, image_data: bytes) -> Optional[Image.Image]:
+    async def _load_image(self, image_data: bytes) -> Image.Image | None:
         """Load image from bytes"""
         try:
             return Image.open(io.BytesIO(image_data))
@@ -370,13 +365,13 @@ class ImageProcessor:
             logger.error(f"Failed to load image: {e}")
             return None
 
-    async def _extract_metadata(self, image: Image.Image) -> Dict[str, Any]:
+    async def _extract_metadata(self, image: Image.Image) -> dict[str, Any]:
         """Extract image metadata"""
         metadata = {
             "original_format": image.format,
             "original_mode": image.mode,
             "original_size": image.size,
-            "has_transparency": self._has_transparency(image)
+            "has_transparency": self._has_transparency(image),
         }
 
         # Extract EXIF if present
@@ -386,10 +381,10 @@ class ImageProcessor:
 
         return metadata
 
-    async def _extract_exif_data(self, image: Image.Image) -> Optional[Dict[str, Any]]:
+    async def _extract_exif_data(self, image: Image.Image) -> dict[str, Any] | None:
         """Extract EXIF data from image"""
         try:
-            if not hasattr(image, '_getexif') or image._getexif() is None:
+            if not hasattr(image, "_getexif") or image._getexif() is None:
                 return None
 
             exif_dict = image._getexif()
@@ -401,12 +396,12 @@ class ImageProcessor:
                 tag = TAGS.get(tag_id, tag_id)
 
                 # Skip binary data and sensitive information
-                if isinstance(value, bytes) or tag in ['MakerNote', 'UserComment']:
+                if isinstance(value, bytes) or tag in ["MakerNote", "UserComment"]:
                     continue
 
                 # Convert GPS info if present
-                if tag == 'GPSInfo':
-                    exif_data['has_gps'] = True
+                if tag == "GPSInfo":
+                    exif_data["has_gps"] = True
                     # Don't store actual GPS coordinates for privacy
                     continue
 
@@ -419,11 +414,8 @@ class ImageProcessor:
             return None
 
     async def _process_original(
-        self,
-        image: Image.Image,
-        options: ProcessingOptions,
-        metadata: Dict[str, Any]
-    ) -> Optional[ImageVariant]:
+        self, image: Image.Image, options: ProcessingOptions, metadata: dict[str, Any]
+    ) -> ImageVariant | None:
         """Process the original image"""
         try:
             processed_image = image.copy()
@@ -432,10 +424,9 @@ class ImageProcessor:
             if options.max_width or options.max_height:
                 max_size = (
                     options.max_width or processed_image.width,
-                    options.max_height or processed_image.height
+                    options.max_height or processed_image.height,
                 )
-                if (processed_image.width > max_size[0] or
-                    processed_image.height > max_size[1]):
+                if processed_image.width > max_size[0] or processed_image.height > max_size[1]:
                     processed_image = await self._resize_image(
                         processed_image, max_size, ResizeMode.FIT
                     )
@@ -452,9 +443,7 @@ class ImageProcessor:
             output_format = self._get_optimal_format(processed_image)
 
             # Convert to bytes
-            image_data = await self._image_to_bytes(
-                processed_image, output_format, options.quality
-            )
+            image_data = await self._image_to_bytes(processed_image, output_format, options.quality)
 
             return ImageVariant(
                 name="original",
@@ -464,7 +453,7 @@ class ImageProcessor:
                 height=processed_image.height,
                 file_size=len(image_data),
                 quality=options.quality,
-                metadata=metadata
+                metadata=metadata,
             )
 
         except Exception as e:
@@ -472,20 +461,15 @@ class ImageProcessor:
             return None
 
     async def _generate_thumbnails(
-        self,
-        image: Image.Image,
-        options: ProcessingOptions,
-        metadata: Dict[str, Any]
-    ) -> Dict[str, ImageVariant]:
+        self, image: Image.Image, options: ProcessingOptions, metadata: dict[str, Any]
+    ) -> dict[str, ImageVariant]:
         """Generate thumbnail variants"""
         thumbnails = {}
 
         for i, size in enumerate(options.thumbnail_sizes):
             try:
                 # Create thumbnail
-                thumbnail = await self._resize_image(
-                    image, size, ResizeMode.THUMBNAIL
-                )
+                thumbnail = await self._resize_image(image, size, ResizeMode.THUMBNAIL)
 
                 # Optimize thumbnail
                 thumbnail = await self._optimize_for_web(thumbnail)
@@ -510,7 +494,7 @@ class ImageProcessor:
                     width=thumbnail.width,
                     height=thumbnail.height,
                     file_size=len(thumbnail_data),
-                    quality=options.quality
+                    quality=options.quality,
                 )
 
             except Exception as e:
@@ -519,11 +503,8 @@ class ImageProcessor:
         return thumbnails
 
     async def _generate_responsive_variants(
-        self,
-        image: Image.Image,
-        options: ProcessingOptions,
-        metadata: Dict[str, Any]
-    ) -> Dict[str, ImageVariant]:
+        self, image: Image.Image, options: ProcessingOptions, metadata: dict[str, Any]
+    ) -> dict[str, ImageVariant]:
         """Generate responsive image variants"""
         variants = {}
 
@@ -538,9 +519,7 @@ class ImageProcessor:
                 height = int(width * aspect_ratio)
 
                 # Resize image
-                responsive_image = await self._resize_image(
-                    image, (width, height), ResizeMode.FIT
-                )
+                responsive_image = await self._resize_image(image, (width, height), ResizeMode.FIT)
 
                 # Optimize
                 responsive_image = await self._optimize_for_web(responsive_image)
@@ -561,7 +540,7 @@ class ImageProcessor:
                     width=responsive_image.width,
                     height=responsive_image.height,
                     file_size=len(responsive_data),
-                    quality=options.quality
+                    quality=options.quality,
                 )
 
             except Exception as e:
@@ -570,11 +549,8 @@ class ImageProcessor:
         return variants
 
     async def _convert_to_webp(
-        self,
-        image: Image.Image,
-        options: ProcessingOptions,
-        metadata: Dict[str, Any]
-    ) -> Dict[str, ImageVariant]:
+        self, image: Image.Image, options: ProcessingOptions, metadata: dict[str, Any]
+    ) -> dict[str, ImageVariant]:
         """Convert image to WebP format"""
         variants = {}
 
@@ -587,9 +563,7 @@ class ImageProcessor:
 
             # Convert to WebP
             webp_data = await self._image_to_bytes(
-                webp_image,
-                ImageFormat.WEBP,
-                options.quality if not options.lossless_webp else None
+                webp_image, ImageFormat.WEBP, options.quality if not options.lossless_webp else None
             )
 
             variants["webp"] = ImageVariant(
@@ -599,7 +573,7 @@ class ImageProcessor:
                 width=webp_image.width,
                 height=webp_image.height,
                 file_size=len(webp_data),
-                quality=options.quality if not options.lossless_webp else None
+                quality=options.quality if not options.lossless_webp else None,
             )
 
         except Exception as e:
@@ -608,10 +582,7 @@ class ImageProcessor:
         return variants
 
     async def _resize_image(
-        self,
-        image: Image.Image,
-        size: Tuple[int, int],
-        mode: ResizeMode
+        self, image: Image.Image, size: tuple[int, int], mode: ResizeMode
     ) -> Image.Image:
         """Resize image with specified mode"""
         if mode == ResizeMode.THUMBNAIL:
@@ -638,28 +609,25 @@ class ImageProcessor:
     async def _optimize_for_web(self, image: Image.Image) -> Image.Image:
         """Optimize image for web delivery"""
         # Convert to RGB if necessary
-        if image.mode in ('RGBA', 'LA', 'P'):
-            if image.mode == 'P' and 'transparency' in image.info:
+        if image.mode in ("RGBA", "LA", "P"):
+            if image.mode == "P" and "transparency" in image.info:
                 # Preserve transparency for PNG
-                image = image.convert('RGBA')
-            elif image.mode in ('RGBA', 'LA'):
+                image = image.convert("RGBA")
+            elif image.mode in ("RGBA", "LA"):
                 # Keep as is for transparency
                 pass
             else:
                 # Convert to RGB
-                background = Image.new('RGB', image.size, (255, 255, 255))
-                if image.mode == 'P':
-                    image = image.convert('RGBA')
+                background = Image.new("RGB", image.size, (255, 255, 255))
+                if image.mode == "P":
+                    image = image.convert("RGBA")
                 background.paste(image, mask=image.split()[-1] if len(image.split()) > 3 else None)
                 image = background
 
         return image
 
     async def _image_to_bytes(
-        self,
-        image: Image.Image,
-        format: ImageFormat,
-        quality: Optional[int] = None
+        self, image: Image.Image, format: ImageFormat, quality: int | None = None
     ) -> bytes:
         """Convert image to bytes"""
         output = io.BytesIO()
@@ -667,27 +635,17 @@ class ImageProcessor:
         save_kwargs = {}
 
         if format == ImageFormat.JPEG:
-            save_kwargs.update({
-                'format': 'JPEG',
-                'quality': quality or 85,
-                'optimize': True,
-                'progressive': True
-            })
+            save_kwargs.update(
+                {"format": "JPEG", "quality": quality or 85, "optimize": True, "progressive": True}
+            )
         elif format == ImageFormat.PNG:
-            save_kwargs.update({
-                'format': 'PNG',
-                'optimize': True
-            })
+            save_kwargs.update({"format": "PNG", "optimize": True})
         elif format == ImageFormat.WEBP:
-            save_kwargs.update({
-                'format': 'WEBP',
-                'quality': quality or 85,
-                'optimize': True
-            })
+            save_kwargs.update({"format": "WEBP", "quality": quality or 85, "optimize": True})
             if quality is None:  # Lossless
-                save_kwargs['lossless'] = True
+                save_kwargs["lossless"] = True
         else:
-            save_kwargs['format'] = format.value
+            save_kwargs["format"] = format.value
 
         image.save(output, **save_kwargs)
         return output.getvalue()
@@ -699,7 +657,7 @@ class ImageProcessor:
             return ImageFormat.PNG
 
         # For simple images, use PNG
-        if image.mode in ('1', 'L', 'P'):
+        if image.mode in ("1", "L", "P"):
             return ImageFormat.PNG
 
         # Default to JPEG
@@ -707,23 +665,20 @@ class ImageProcessor:
 
     def _has_transparency(self, image: Image.Image) -> bool:
         """Check if image has transparency"""
-        return (
-            image.mode in ('RGBA', 'LA') or
-            (image.mode == 'P' and 'transparency' in image.info)
-        )
+        return image.mode in ("RGBA", "LA") or (image.mode == "P" and "transparency" in image.info)
 
     def _get_bit_depth(self, image: Image.Image) -> int:
         """Get image bit depth"""
         mode_bits = {
-            '1': 1,
-            'L': 8,
-            'P': 8,
-            'RGB': 24,
-            'RGBA': 32,
-            'CMYK': 32,
-            'YCbCr': 24,
-            'LAB': 24,
-            'HSV': 24
+            "1": 1,
+            "L": 8,
+            "P": 8,
+            "RGB": 24,
+            "RGBA": 32,
+            "CMYK": 32,
+            "YCbCr": 24,
+            "LAB": 24,
+            "HSV": 24,
         }
         return mode_bits.get(image.mode, 8)
 
@@ -738,14 +693,14 @@ class ImageProcessor:
         except Exception:
             return image
 
-    async def _analyze_colors(self, image: Image.Image) -> Dict[str, Any]:
+    async def _analyze_colors(self, image: Image.Image) -> dict[str, Any]:
         """Analyze image colors"""
         try:
             # Convert to RGB for analysis
-            rgb_image = image.convert('RGB')
+            rgb_image = image.convert("RGB")
 
             # Get dominant colors (simplified)
-            colors = rgb_image.getcolors(maxcolors=256*256*256)
+            colors = rgb_image.getcolors(maxcolors=256 * 256 * 256)
             if colors:
                 # Sort by frequency
                 colors.sort(key=lambda x: x[0], reverse=True)
@@ -754,7 +709,7 @@ class ImageProcessor:
                 return {
                     "dominant_color": dominant_color,
                     "color_count": len(colors),
-                    "is_grayscale": len(set(dominant_color)) == 1
+                    "is_grayscale": len(set(dominant_color)) == 1,
                 }
 
         except Exception as e:
@@ -765,10 +720,8 @@ class ImageProcessor:
     # Mock methods for when PIL is not available
 
     async def _mock_process_image(
-        self,
-        image_data: bytes,
-        options: ProcessingOptions
-    ) -> Dict[str, ImageVariant]:
+        self, image_data: bytes, options: ProcessingOptions
+    ) -> dict[str, ImageVariant]:
         """Mock image processing"""
         variants = {}
 
@@ -780,7 +733,7 @@ class ImageProcessor:
             width=800,
             height=600,
             file_size=len(image_data),
-            quality=85
+            quality=85,
         )
 
         # Mock thumbnails
@@ -793,16 +746,13 @@ class ImageProcessor:
                 width=size[0],
                 height=size[1],
                 file_size=1000,
-                quality=85
+                quality=85,
             )
 
         return variants
 
     async def _mock_generate_thumbnail(
-        self,
-        image_data: bytes,
-        size: Tuple[int, int],
-        quality: int
+        self, image_data: bytes, size: tuple[int, int], quality: int
     ) -> ImageVariant:
         """Mock thumbnail generation"""
         return ImageVariant(
@@ -812,14 +762,10 @@ class ImageProcessor:
             width=size[0],
             height=size[1],
             file_size=1000,
-            quality=quality
+            quality=quality,
         )
 
-    async def _mock_optimize_image(
-        self,
-        image_data: bytes,
-        quality: int
-    ) -> ImageVariant:
+    async def _mock_optimize_image(self, image_data: bytes, quality: int) -> ImageVariant:
         """Mock image optimization"""
         return ImageVariant(
             name="optimized",
@@ -828,5 +774,5 @@ class ImageProcessor:
             width=800,
             height=600,
             file_size=len(image_data),
-            quality=quality
+            quality=quality,
         )

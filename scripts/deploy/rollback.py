@@ -6,10 +6,10 @@ Emergency rollback to previous stable deployment
 
 import argparse
 import json
+import subprocess
 import sys
 import time
-import subprocess
-from typing import Dict, List, Optional, Tuple
+
 import requests
 
 
@@ -21,39 +21,34 @@ class RollbackManager:
 
         # Environment configurations
         self.configs = {
-            'development': {
-                'cluster': 'toolboxai-dev-cluster',
-                'namespace': 'toolboxai-dev',
-                'health_url': 'https://dev.toolboxai.solutions/health',
-                'history_limit': 5
+            "development": {
+                "cluster": "toolboxai-dev-cluster",
+                "namespace": "toolboxai-dev",
+                "health_url": "https://dev.toolboxai.solutions/health",
+                "history_limit": 5,
             },
-            'staging': {
-                'cluster': 'toolboxai-staging-cluster',
-                'namespace': 'toolboxai-staging',
-                'health_url': 'https://staging.toolboxai.solutions/health',
-                'history_limit': 5
+            "staging": {
+                "cluster": "toolboxai-staging-cluster",
+                "namespace": "toolboxai-staging",
+                "health_url": "https://staging.toolboxai.solutions/health",
+                "history_limit": 5,
             },
-            'production': {
-                'cluster': 'toolboxai-prod-cluster',
-                'namespace': 'toolboxai-prod',
-                'health_url': 'https://app.toolboxai.solutions/health',
-                'history_limit': 10
-            }
+            "production": {
+                "cluster": "toolboxai-prod-cluster",
+                "namespace": "toolboxai-prod",
+                "health_url": "https://app.toolboxai.solutions/health",
+                "history_limit": 10,
+            },
         }
 
         self.config = self.configs.get(environment, {})
         self.rollback_history = []
 
-    def _run_command(self, command: List[str], capture_output: bool = True) -> Tuple[int, str, str]:
+    def _run_command(self, command: list[str], capture_output: bool = True) -> tuple[int, str, str]:
         """Run a command and return exit code, stdout, and stderr."""
         try:
             if capture_output:
-                result = subprocess.run(
-                    command,
-                    capture_output=True,
-                    text=True,
-                    timeout=60
-                )
+                result = subprocess.run(command, capture_output=True, text=True, timeout=60)
                 return result.returncode, result.stdout, result.stderr
             else:
                 result = subprocess.run(command, timeout=60)
@@ -63,35 +58,42 @@ class RollbackManager:
         except Exception as e:
             return 1, "", str(e)
 
-    def get_deployment_history(self) -> List[Dict]:
+    def get_deployment_history(self) -> list[dict]:
         """Get deployment history for rollback options."""
         print("📜 Fetching deployment history...")
 
-        deployments = ['backend', 'dashboard']
+        deployments = ["backend", "dashboard"]
         history = []
 
         for deployment_name in deployments:
             command = [
-                'kubectl', 'rollout', 'history',
-                f'deployment/{deployment_name}',
-                '-n', self.config['namespace']
+                "kubectl",
+                "rollout",
+                "history",
+                f"deployment/{deployment_name}",
+                "-n",
+                self.config["namespace"],
             ]
 
             exit_code, stdout, stderr = self._run_command(command)
 
             if exit_code == 0:
                 # Parse the history output
-                lines = stdout.strip().split('\n')
+                lines = stdout.strip().split("\n")
                 for line in lines[1:]:  # Skip header
                     if line.strip():
                         parts = line.split()
                         if len(parts) >= 1 and parts[0].isdigit():
                             revision = int(parts[0])
-                            history.append({
-                                'deployment': deployment_name,
-                                'revision': revision,
-                                'description': ' '.join(parts[1:]) if len(parts) > 1 else 'No description'
-                            })
+                            history.append(
+                                {
+                                    "deployment": deployment_name,
+                                    "revision": revision,
+                                    "description": (
+                                        " ".join(parts[1:]) if len(parts) > 1 else "No description"
+                                    ),
+                                }
+                            )
 
         return history
 
@@ -100,10 +102,14 @@ class RollbackManager:
         print("🔍 Detecting active deployment color...")
 
         command = [
-            'kubectl', 'get', 'service',
-            f'{self.environment}-service',
-            '-n', self.config['namespace'],
-            '-o', 'json'
+            "kubectl",
+            "get",
+            "service",
+            f"{self.environment}-service",
+            "-n",
+            self.config["namespace"],
+            "-o",
+            "json",
         ]
 
         exit_code, stdout, stderr = self._run_command(command)
@@ -111,20 +117,24 @@ class RollbackManager:
         if exit_code == 0:
             try:
                 service_data = json.loads(stdout)
-                selector = service_data.get('spec', {}).get('selector', {})
-                color = selector.get('deployment', 'unknown')
+                selector = service_data.get("spec", {}).get("selector", {})
+                color = selector.get("deployment", "unknown")
                 print(f"  Current active color: {color}")
                 return color
             except:
                 pass
 
         # Check for blue/green deployments
-        for color in ['blue', 'green']:
+        for color in ["blue", "green"]:
             command = [
-                'kubectl', 'get', 'deployment',
-                f'backend-{color}',
-                '-n', self.config['namespace'],
-                '-o', 'json'
+                "kubectl",
+                "get",
+                "deployment",
+                f"backend-{color}",
+                "-n",
+                self.config["namespace"],
+                "-o",
+                "json",
             ]
 
             exit_code, stdout, stderr = self._run_command(command)
@@ -132,7 +142,7 @@ class RollbackManager:
             if exit_code == 0:
                 try:
                     deployment_data = json.loads(stdout)
-                    replicas = deployment_data.get('spec', {}).get('replicas', 0)
+                    replicas = deployment_data.get("spec", {}).get("replicas", 0)
                     if replicas > 0:
                         print(f"  Active deployment detected: {color}")
                         return color
@@ -140,25 +150,31 @@ class RollbackManager:
                     pass
 
         print("  Unable to detect active color")
-        return 'unknown'
+        return "unknown"
 
-    def rollback_deployment(self, deployment_name: str, revision: Optional[int] = None) -> bool:
+    def rollback_deployment(self, deployment_name: str, revision: int | None = None) -> bool:
         """Rollback a specific deployment to a previous revision."""
         print(f"\n⏮️  Rolling back {deployment_name}...")
 
         if revision:
             command = [
-                'kubectl', 'rollout', 'undo',
-                f'deployment/{deployment_name}',
-                f'--to-revision={revision}',
-                '-n', self.config['namespace']
+                "kubectl",
+                "rollout",
+                "undo",
+                f"deployment/{deployment_name}",
+                f"--to-revision={revision}",
+                "-n",
+                self.config["namespace"],
             ]
         else:
             # Rollback to previous revision
             command = [
-                'kubectl', 'rollout', 'undo',
-                f'deployment/{deployment_name}',
-                '-n', self.config['namespace']
+                "kubectl",
+                "rollout",
+                "undo",
+                f"deployment/{deployment_name}",
+                "-n",
+                self.config["namespace"],
             ]
 
         exit_code, stdout, stderr = self._run_command(command)
@@ -174,22 +190,26 @@ class RollbackManager:
         """Rollback blue-green deployment by switching colors."""
         current_color = self.detect_active_color()
 
-        if current_color == 'unknown':
+        if current_color == "unknown":
             print("❌ Cannot determine active deployment for blue-green rollback")
             return False
 
-        target_color = 'green' if current_color == 'blue' else 'blue'
+        target_color = "green" if current_color == "blue" else "blue"
 
         print(f"\n🔄 Rolling back from {current_color} to {target_color}...")
 
         # First, scale up the target deployment
-        deployments = [f'backend-{target_color}', f'dashboard-{target_color}']
+        deployments = [f"backend-{target_color}", f"dashboard-{target_color}"]
 
         for deployment in deployments:
             command = [
-                'kubectl', 'scale', 'deployment', deployment,
-                '--replicas=3',
-                '-n', self.config['namespace']
+                "kubectl",
+                "scale",
+                "deployment",
+                deployment,
+                "--replicas=3",
+                "-n",
+                self.config["namespace"],
             ]
 
             exit_code, stdout, stderr = self._run_command(command)
@@ -206,10 +226,13 @@ class RollbackManager:
 
         for deployment in deployments:
             command = [
-                'kubectl', 'rollout', 'status',
-                f'deployment/{deployment}',
-                '-n', self.config['namespace'],
-                '--timeout=60s'
+                "kubectl",
+                "rollout",
+                "status",
+                f"deployment/{deployment}",
+                "-n",
+                self.config["namespace"],
+                "--timeout=60s",
             ]
 
             exit_code, stdout, stderr = self._run_command(command)
@@ -221,22 +244,22 @@ class RollbackManager:
         # Switch service selectors
         print(f"  🔄 Switching traffic to {target_color}...")
 
-        services = ['backend-service', 'dashboard-service']
+        services = ["backend-service", "dashboard-service"]
 
         for service in services:
-            patch = {
-                'spec': {
-                    'selector': {
-                        'deployment': target_color
-                    }
-                }
-            }
+            patch = {"spec": {"selector": {"deployment": target_color}}}
 
             command = [
-                'kubectl', 'patch', 'service', service,
-                '--type', 'merge',
-                '-p', json.dumps(patch),
-                '-n', self.config['namespace']
+                "kubectl",
+                "patch",
+                "service",
+                service,
+                "--type",
+                "merge",
+                "-p",
+                json.dumps(patch),
+                "-n",
+                self.config["namespace"],
             ]
 
             exit_code, stdout, stderr = self._run_command(command)
@@ -250,13 +273,17 @@ class RollbackManager:
         # Scale down the problematic deployment
         print(f"  📉 Scaling down {current_color} deployment...")
 
-        problematic_deployments = [f'backend-{current_color}', f'dashboard-{current_color}']
+        problematic_deployments = [f"backend-{current_color}", f"dashboard-{current_color}"]
 
         for deployment in problematic_deployments:
             command = [
-                'kubectl', 'scale', 'deployment', deployment,
-                '--replicas=0',
-                '-n', self.config['namespace']
+                "kubectl",
+                "scale",
+                "deployment",
+                deployment,
+                "--replicas=0",
+                "-n",
+                self.config["namespace"],
             ]
 
             self._run_command(command)
@@ -272,14 +299,17 @@ class RollbackManager:
 
         while time.time() - start_time < timeout:
             command = [
-                'kubectl', 'rollout', 'status',
-                f'deployment/{deployment_name}',
-                '-n', self.config['namespace']
+                "kubectl",
+                "rollout",
+                "status",
+                f"deployment/{deployment_name}",
+                "-n",
+                self.config["namespace"],
             ]
 
             exit_code, stdout, stderr = self._run_command(command)
 
-            if exit_code == 0 and 'successfully rolled out' in stdout:
+            if exit_code == 0 and "successfully rolled out" in stdout:
                 print(f"  ✅ {deployment_name} rollback completed")
                 return True
 
@@ -294,7 +324,7 @@ class RollbackManager:
 
         # Check health endpoint
         try:
-            response = requests.get(self.config['health_url'], timeout=10)
+            response = requests.get(self.config["health_url"], timeout=10)
             if response.status_code == 200:
                 print("  ✅ Health check passed after rollback")
                 return True
@@ -305,31 +335,30 @@ class RollbackManager:
             print(f"  ❌ Health check failed: {e}")
             return False
 
-    def emergency_rollback(self, strategy: str = 'auto',
-                          revision: Optional[int] = None) -> bool:
+    def emergency_rollback(self, strategy: str = "auto", revision: int | None = None) -> bool:
         """Perform emergency rollback based on strategy."""
         print(f"\n{'='*60}")
         print(f"EMERGENCY ROLLBACK - {self.environment.upper()}")
         print(f"{'='*60}")
         print(f"Strategy: {strategy}")
 
-        if strategy == 'auto':
+        if strategy == "auto":
             # Detect deployment type and use appropriate strategy
             active_color = self.detect_active_color()
-            if active_color in ['blue', 'green']:
-                strategy = 'blue-green'
+            if active_color in ["blue", "green"]:
+                strategy = "blue-green"
             else:
-                strategy = 'kubernetes'
+                strategy = "kubernetes"
 
         success = False
 
-        if strategy == 'blue-green':
+        if strategy == "blue-green":
             # Blue-green rollback
             success = self.rollback_blue_green()
 
-        elif strategy == 'kubernetes':
+        elif strategy == "kubernetes":
             # Standard Kubernetes rollback
-            deployments = ['backend', 'dashboard']
+            deployments = ["backend", "dashboard"]
 
             all_success = True
             for deployment in deployments:
@@ -342,7 +371,7 @@ class RollbackManager:
 
             success = all_success
 
-        elif strategy == 'restore':
+        elif strategy == "restore":
             # Restore from backup (would need implementation)
             print("❌ Restore from backup not yet implemented")
             return False
@@ -370,20 +399,22 @@ class RollbackManager:
     def list_rollback_options(self):
         """List available rollback options."""
         print(f"\n📋 Available Rollback Options for {self.environment}:")
-        print("="*50)
+        print("=" * 50)
 
         # Get deployment history
         history = self.get_deployment_history()
 
         if history:
             print("\nDeployment History:")
-            for item in history[:self.config['history_limit']]:
-                print(f"  • {item['deployment']} - Revision {item['revision']}: {item['description']}")
+            for item in history[: self.config["history_limit"]]:
+                print(
+                    f"  • {item['deployment']} - Revision {item['revision']}: {item['description']}"
+                )
 
         # Check for blue-green deployments
         active_color = self.detect_active_color()
-        if active_color in ['blue', 'green']:
-            other_color = 'green' if active_color == 'blue' else 'blue'
+        if active_color in ["blue", "green"]:
+            other_color = "green" if active_color == "blue" else "blue"
             print(f"\nBlue-Green Status:")
             print(f"  • Active: {active_color}")
             print(f"  • Standby: {other_color} (available for rollback)")
@@ -397,34 +428,24 @@ class RollbackManager:
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(description='Emergency Rollback')
+    parser = argparse.ArgumentParser(description="Emergency Rollback")
     parser.add_argument(
-        '--environment',
+        "--environment",
         required=True,
-        choices=['development', 'staging', 'production'],
-        help='Target environment'
+        choices=["development", "staging", "production"],
+        help="Target environment",
     )
     parser.add_argument(
-        '--strategy',
-        choices=['auto', 'blue-green', 'kubernetes', 'restore'],
-        default='auto',
-        help='Rollback strategy to use'
+        "--strategy",
+        choices=["auto", "blue-green", "kubernetes", "restore"],
+        default="auto",
+        help="Rollback strategy to use",
     )
     parser.add_argument(
-        '--revision',
-        type=int,
-        help='Specific revision to rollback to (for kubernetes strategy)'
+        "--revision", type=int, help="Specific revision to rollback to (for kubernetes strategy)"
     )
-    parser.add_argument(
-        '--list',
-        action='store_true',
-        help='List available rollback options'
-    )
-    parser.add_argument(
-        '--force',
-        action='store_true',
-        help='Force rollback without confirmation'
-    )
+    parser.add_argument("--list", action="store_true", help="List available rollback options")
+    parser.add_argument("--force", action="store_true", help="Force rollback without confirmation")
 
     args = parser.parse_args()
 
@@ -439,15 +460,12 @@ def main():
         if not args.force:
             print(f"\n⚠️  WARNING: This will rollback {args.environment} environment!")
             response = input("Are you sure? (yes/no): ")
-            if response.lower() != 'yes':
+            if response.lower() != "yes":
                 print("Rollback cancelled")
                 sys.exit(0)
 
         # Perform rollback
-        success = manager.emergency_rollback(
-            strategy=args.strategy,
-            revision=args.revision
-        )
+        success = manager.emergency_rollback(strategy=args.strategy, revision=args.revision)
 
         if not success:
             sys.exit(1)
@@ -462,5 +480,5 @@ def main():
     sys.exit(0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

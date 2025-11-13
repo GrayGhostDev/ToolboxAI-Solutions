@@ -21,23 +21,16 @@ Standards: Python 3.12, FastAPI async, Pydantic v2
 import logging
 from datetime import datetime
 from enum import Enum
-from typing import Annotated, Optional
+from typing import Annotated
 from uuid import UUID, uuid4
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    Query,
-    BackgroundTasks,
-    status,
-)
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.api.auth.auth import get_current_user, require_any_role
 from apps.backend.core.deps import get_async_db
-from apps.backend.middleware.tenant import get_tenant_context, TenantContext
+from apps.backend.middleware.tenant import TenantContext, get_tenant_context
 from apps.backend.models.schemas import User
 
 logger = logging.getLogger(__name__)
@@ -51,8 +44,10 @@ router = APIRouter(
 
 # === Enums ===
 
+
 class WorkflowStatus(str, Enum):
     """Content workflow status"""
+
     DRAFT = "draft"
     SUBMITTED = "submitted"
     IN_REVIEW = "in_review"
@@ -64,12 +59,14 @@ class WorkflowStatus(str, Enum):
 
 class ReviewDecision(str, Enum):
     """Review decision"""
+
     APPROVE = "approve"
     REJECT = "reject"
     REQUEST_CHANGES = "request_changes"
 
 
 # === Pydantic v2 Models ===
+
 
 class ContentWorkflowInfo(BaseModel):
     """Content workflow information with Pydantic v2"""
@@ -79,13 +76,13 @@ class ContentWorkflowInfo(BaseModel):
     content_id: UUID
     title: str
     status: WorkflowStatus
-    submitted_by: Optional[UUID] = None
-    submitted_by_name: Optional[str] = None
-    submitted_at: Optional[datetime] = None
-    reviewed_by: Optional[UUID] = None
-    reviewed_by_name: Optional[str] = None
-    reviewed_at: Optional[datetime] = None
-    published_at: Optional[datetime] = None
+    submitted_by: UUID | None = None
+    submitted_by_name: str | None = None
+    submitted_at: datetime | None = None
+    reviewed_by: UUID | None = None
+    reviewed_by_name: str | None = None
+    reviewed_at: datetime | None = None
+    published_at: datetime | None = None
     review_comments: list[str] = Field(default_factory=list)
 
 
@@ -94,19 +91,9 @@ class SubmitForReviewRequest(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    submission_notes: Optional[str] = Field(
-        None,
-        max_length=1000,
-        description="Notes for reviewers"
-    )
-    notify_reviewers: bool = Field(
-        default=True,
-        description="Send notification to reviewers"
-    )
-    priority: str = Field(
-        default="normal",
-        pattern="^(low|normal|high|urgent)$"
-    )
+    submission_notes: str | None = Field(None, max_length=1000, description="Notes for reviewers")
+    notify_reviewers: bool = Field(default=True, description="Send notification to reviewers")
+    priority: str = Field(default="normal", pattern="^(low|normal|high|urgent)$")
 
 
 class SubmitForReviewResponse(BaseModel):
@@ -151,9 +138,9 @@ class PublishContentRequest(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     publish_immediately: bool = Field(default=True)
-    scheduled_publish_at: Optional[datetime] = None
+    scheduled_publish_at: datetime | None = None
     notify_subscribers: bool = Field(default=True)
-    publish_notes: Optional[str] = None
+    publish_notes: str | None = None
 
 
 class PublishContentResponse(BaseModel):
@@ -164,7 +151,7 @@ class PublishContentResponse(BaseModel):
     content_id: UUID
     status: WorkflowStatus
     published_at: datetime
-    public_url: Optional[str] = None
+    public_url: str | None = None
     message: str
 
 
@@ -180,8 +167,7 @@ class WorkflowComment(BaseModel):
     comment: str
     created_at: datetime
     is_internal: bool = Field(
-        default=False,
-        description="Internal comments not visible to content author"
+        default=False, description="Internal comments not visible to content author"
     )
 
 
@@ -210,6 +196,7 @@ class PendingReviewsResponse(BaseModel):
 
 
 # === API Endpoints ===
+
 
 @router.post(
     "/{content_id}/submit",
@@ -244,9 +231,7 @@ async def submit_for_review(
         HTTPException: If submission fails
     """
     try:
-        logger.info(
-            f"User {current_user.id} submitting content {content_id} for review"
-        )
+        logger.info(f"User {current_user.id} submitting content {content_id} for review")
 
         # TODO: Implement actual submission logic
         # - Validate content is in draft state
@@ -259,10 +244,7 @@ async def submit_for_review(
         # Schedule notifications
         if request.notify_reviewers:
             background_tasks.add_task(
-                _notify_reviewers,
-                content_id,
-                current_user.id,
-                request.priority
+                _notify_reviewers, content_id, current_user.id, request.priority
             )
 
         return SubmitForReviewResponse(
@@ -279,7 +261,7 @@ async def submit_for_review(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to submit content for review"
+            detail="Failed to submit content for review",
         )
 
 
@@ -316,9 +298,7 @@ async def approve_content(
         HTTPException: If review fails
     """
     try:
-        logger.info(
-            f"User {current_user.id} reviewing content {content_id}: {request.decision}"
-        )
+        logger.info(f"User {current_user.id} reviewing content {content_id}: {request.decision}")
 
         # TODO: Implement actual review logic
         # - Validate user has reviewer permissions
@@ -335,11 +315,7 @@ async def approve_content(
         # Schedule notification
         if request.notify_author:
             background_tasks.add_task(
-                _notify_author,
-                content_id,
-                current_user.id,
-                request.decision,
-                request.comments
+                _notify_author, content_id, current_user.id, request.decision, request.comments
             )
 
         return ReviewContentResponse(
@@ -354,8 +330,7 @@ async def approve_content(
         logger.error(f"Failed to review content: {str(e)}", exc_info=True)
         await session.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to review content"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to review content"
         )
 
 
@@ -406,8 +381,7 @@ async def reject_content(
     except Exception as e:
         logger.error(f"Failed to reject content: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to reject content"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to reject content"
         )
 
 
@@ -461,11 +435,7 @@ async def publish_content(
 
         # Schedule notifications
         if request.notify_subscribers:
-            background_tasks.add_task(
-                _notify_subscribers,
-                content_id,
-                publish_time
-            )
+            background_tasks.add_task(_notify_subscribers, content_id, publish_time)
 
         public_url = f"https://example.com/content/{content_id}"
 
@@ -481,8 +451,7 @@ async def publish_content(
         logger.error(f"Failed to publish content: {str(e)}", exc_info=True)
         await session.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to publish content"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to publish content"
         )
 
 
@@ -497,7 +466,7 @@ async def get_pending_reviews(
     session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     tenant_context: Annotated[TenantContext, Depends(get_tenant_context)],
-    priority_filter: Optional[str] = Query(None, pattern="^(low|normal|high|urgent)$"),
+    priority_filter: str | None = Query(None, pattern="^(low|normal|high|urgent)$"),
 ) -> PendingReviewsResponse:
     """
     Get list of content items pending review.
@@ -536,7 +505,7 @@ async def get_pending_reviews(
         logger.error(f"Failed to get pending reviews: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get pending reviews"
+            detail="Failed to get pending reviews",
         )
 
 
@@ -582,37 +551,28 @@ async def get_workflow_status(
         logger.error(f"Failed to get workflow status: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get workflow status"
+            detail="Failed to get workflow status",
         )
 
 
 # === Background Tasks ===
 
-async def _notify_reviewers(
-    content_id: UUID,
-    submitter_id: UUID,
-    priority: str
-) -> None:
+
+async def _notify_reviewers(content_id: UUID, submitter_id: UUID, priority: str) -> None:
     """Notify reviewers about new submission"""
     logger.info(f"Notifying reviewers about content {content_id}")
     # TODO: Implement actual notification
 
 
 async def _notify_author(
-    content_id: UUID,
-    reviewer_id: UUID,
-    decision: ReviewDecision,
-    comments: str
+    content_id: UUID, reviewer_id: UUID, decision: ReviewDecision, comments: str
 ) -> None:
     """Notify content author about review decision"""
     logger.info(f"Notifying author about {decision} for content {content_id}")
     # TODO: Implement actual notification
 
 
-async def _notify_subscribers(
-    content_id: UUID,
-    publish_time: datetime
-) -> None:
+async def _notify_subscribers(content_id: UUID, publish_time: datetime) -> None:
     """Notify subscribers about published content"""
     logger.info(f"Notifying subscribers about content {content_id}")
     # TODO: Implement actual notification

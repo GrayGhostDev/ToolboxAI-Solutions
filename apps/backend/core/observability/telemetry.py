@@ -6,37 +6,39 @@ for the entire load balancing infrastructure.
 """
 
 import asyncio
-import time
-import json
+import inspect
 import logging
-from typing import Dict, Any, Optional, List, Callable, TypeVar
+import time
+from collections.abc import Callable
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from functools import wraps
-import inspect
+from typing import Any, TypeVar
 
-from opentelemetry import trace, metrics, baggage, context
-from opentelemetry.trace import Tracer, Span, Status, StatusCode, SpanKind
+from opentelemetry import baggage, context, metrics, trace
+from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+from opentelemetry.instrumentation.logging import LoggingInstrumentor
+from opentelemetry.instrumentation.psycopg2 import Psycopg2Instrumentor
+from opentelemetry.instrumentation.redis import RedisInstrumentor
+from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry.metrics import Meter
-from opentelemetry.propagate import inject, extract
+from opentelemetry.propagate import extract, inject
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import (
+    ConsoleMetricExporter,
+    PeriodicExportingMetricReader,
+)
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider, sampling
 from opentelemetry.sdk.trace.export import (
     BatchSpanProcessor,
     ConsoleSpanExporter,
     SimpleSpanProcessor,
 )
-from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader, ConsoleMetricExporter
-from opentelemetry.sdk.resources import Resource
 from opentelemetry.semconv.resource import ResourceAttributes
-from opentelemetry.semconv.trace import SpanAttributes
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
-from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
-from opentelemetry.instrumentation.redis import RedisInstrumentor
-from opentelemetry.instrumentation.psycopg2 import Psycopg2Instrumentor
-from opentelemetry.instrumentation.logging import LoggingInstrumentor
+from opentelemetry.trace import SpanKind, Status, StatusCode, Tracer
+
 # GRPC exporters moved to lazy imports inside methods to avoid module-level crashes
 # from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 # from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
@@ -47,11 +49,14 @@ logger = logging.getLogger(__name__)
 # Optional Jaeger exporter (deprecated but still supported)
 try:
     from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+
     JAEGER_AVAILABLE = True
 except ImportError:
     JAEGER_AVAILABLE = False
     JaegerExporter = None
-    logger.warning("Jaeger exporter not available. Install 'opentelemetry-exporter-jaeger' if needed.")
+    logger.warning(
+        "Jaeger exporter not available. Install 'opentelemetry-exporter-jaeger' if needed."
+    )
 
 T = TypeVar("T")
 
@@ -66,8 +71,8 @@ class TelemetryConfig:
 
     # Tracing
     enable_tracing: bool = True
-    jaeger_endpoint: Optional[str] = None
-    otlp_endpoint: Optional[str] = None
+    jaeger_endpoint: str | None = None
+    otlp_endpoint: str | None = None
     sampling_rate: float = 0.1
 
     # Metrics
@@ -83,7 +88,7 @@ class TelemetryConfig:
     profile_sample_rate: float = 0.01
 
     # Custom attributes
-    custom_attributes: Dict[str, Any] = field(default_factory=dict)
+    custom_attributes: dict[str, Any] = field(default_factory=dict)
 
     # Feature flags
     trace_database_queries: bool = True
@@ -116,12 +121,12 @@ class AdaptiveSampler(sampling.Sampler):
 
     def should_sample(
         self,
-        parent_context: Optional[context.Context],
+        parent_context: context.Context | None,
         trace_id: int,
         name: str,
         kind: SpanKind,
-        attributes: Dict[str, Any] = None,
-        links: List = None,
+        attributes: dict[str, Any] = None,
+        links: list = None,
     ) -> sampling.SamplingResult:
         """Determine if span should be sampled"""
 
@@ -167,9 +172,9 @@ class TelemetryManager:
 
     def __init__(self, config: TelemetryConfig):
         self.config = config
-        self.tracer: Optional[Tracer] = None
-        self.meter: Optional[Meter] = None
-        self.resource: Optional[Resource] = None
+        self.tracer: Tracer | None = None
+        self.meter: Meter | None = None
+        self.resource: Resource | None = None
         self.propagator = TraceContextTextMapPropagator()
 
         # Metrics collectors
@@ -179,7 +184,7 @@ class TelemetryManager:
         self.active_requests = None
 
         # Performance profiling
-        self.profile_data: Dict[str, List[float]] = {}
+        self.profile_data: dict[str, list[float]] = {}
 
     def initialize(self):
         """Initialize telemetry providers"""
@@ -239,7 +244,10 @@ class TelemetryManager:
 
         if self.config.otlp_endpoint:
             try:
-                from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+                from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+                    OTLPSpanExporter,
+                )
+
                 otlp_exporter = OTLPSpanExporter(endpoint=self.config.otlp_endpoint, insecure=True)
                 tracer_provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
             except Exception as e:
@@ -259,8 +267,13 @@ class TelemetryManager:
         # Create metric reader and exporter
         if self.config.otlp_endpoint:
             try:
-                from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
-                metric_exporter = OTLPMetricExporter(endpoint=self.config.otlp_endpoint, insecure=True)
+                from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (
+                    OTLPMetricExporter,
+                )
+
+                metric_exporter = OTLPMetricExporter(
+                    endpoint=self.config.otlp_endpoint, insecure=True
+                )
             except Exception as e:
                 logger.warning(f"OTLP GRPC metric exporter failed, using console: {e}")
                 metric_exporter = ConsoleMetricExporter()
@@ -320,7 +333,7 @@ class TelemetryManager:
         self,
         name: str,
         kind: SpanKind = SpanKind.INTERNAL,
-        attributes: Dict[str, Any] = None,
+        attributes: dict[str, Any] = None,
         record_exception: bool = True,
     ):
         """Context manager for tracing operations"""
@@ -356,7 +369,7 @@ class TelemetryManager:
         self,
         name: str,
         kind: SpanKind = SpanKind.INTERNAL,
-        attributes: Dict[str, Any] = None,
+        attributes: dict[str, Any] = None,
         record_exception: bool = True,
     ):
         """Async context manager for tracing operations"""
@@ -389,9 +402,9 @@ class TelemetryManager:
 
     def trace_function(
         self,
-        name: Optional[str] = None,
+        name: str | None = None,
         kind: SpanKind = SpanKind.INTERNAL,
-        attributes: Dict[str, Any] = None,
+        attributes: dict[str, Any] = None,
     ):
         """Decorator for tracing functions"""
 
@@ -449,11 +462,11 @@ class TelemetryManager:
 
         return decorator
 
-    def inject_context(self, headers: Dict[str, str]):
+    def inject_context(self, headers: dict[str, str]):
         """Inject trace context into headers for propagation"""
         inject(headers)
 
-    def extract_context(self, headers: Dict[str, str]):
+    def extract_context(self, headers: dict[str, str]):
         """Extract trace context from headers"""
         return extract(headers)
 
@@ -461,7 +474,7 @@ class TelemetryManager:
         self,
         name: str,
         value: float,
-        attributes: Dict[str, Any] = None,
+        attributes: dict[str, Any] = None,
         metric_type: str = "counter",
     ):
         """Record a custom metric"""
@@ -494,7 +507,7 @@ class TelemetryManager:
         """Create baggage item for context propagation"""
         return baggage.set_baggage(key, value)
 
-    def get_baggage(self, key: str) -> Optional[str]:
+    def get_baggage(self, key: str) -> str | None:
         """Get baggage item from context"""
         return baggage.get_baggage(key)
 
@@ -594,7 +607,7 @@ class TelemetryManager:
         process = psutil.Process()
         return process.memory_info().rss
 
-    def get_profile_summary(self, name: str) -> Dict[str, Any]:
+    def get_profile_summary(self, name: str) -> dict[str, Any]:
         """Get profiling summary for an operation"""
 
         if name not in self.profile_data or not self.profile_data[name]:
@@ -766,20 +779,22 @@ class MetricsCollector:
         self._metrics = {}
         logger.info("MetricsCollector initialized (compatibility mode)")
 
-    def record_metric(self, name: str, value: float, labels: Dict[str, str] = None):
+    def record_metric(self, name: str, value: float, labels: dict[str, str] = None):
         """Record a metric"""
         if name not in self._metrics:
             self._metrics[name] = []
-        self._metrics[name].append({"value": value, "labels": labels or {}, "timestamp": time.time()})
+        self._metrics[name].append(
+            {"value": value, "labels": labels or {}, "timestamp": time.time()}
+        )
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Get all collected metrics"""
         return self._metrics
 
 
 # Global telemetry instance
-_telemetry_manager: Optional[TelemetryManager] = None
-_metrics_collector: Optional[MetricsCollector] = None
+_telemetry_manager: TelemetryManager | None = None
+_metrics_collector: MetricsCollector | None = None
 
 
 def init_telemetry(config: TelemetryConfig) -> TelemetryManager:
@@ -790,7 +805,7 @@ def init_telemetry(config: TelemetryConfig) -> TelemetryManager:
     return _telemetry_manager
 
 
-def get_telemetry() -> Optional[TelemetryManager]:
+def get_telemetry() -> TelemetryManager | None:
     """Get global telemetry manager"""
     return _telemetry_manager
 

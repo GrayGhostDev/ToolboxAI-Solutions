@@ -24,25 +24,22 @@ Usage:
     pytest tests/performance/test_multi_tenant_performance.py --benchmark-only
 """
 
-import pytest
-import time
-from uuid import uuid4, UUID
-from typing import List, Dict, Any
-from datetime import datetime, timedelta
 import statistics
+import time
+from datetime import datetime
+from typing import Any
+from uuid import UUID, uuid4
 
+import pytest
+from sqlalchemy import text
 from sqlalchemy.orm import Session
-from sqlalchemy import create_engine, text, select
-from sqlalchemy.engine import Engine
+
+from database.models import Organization, User
 
 # Import models
-from database.models.agent_models import AgentInstance, AgentExecution
+from database.models.agent_models import AgentInstance
 from database.models.roblox_models import RobloxEnvironment
-from database.models.payment import Customer, Subscription
-from database.models.content_pipeline_models import EnhancedContentGeneration
-from database.models import Organization, User
 from database.tenant_aware_query import TenantAwareQuery
-
 
 # ============================================================================
 # Test Configuration
@@ -68,16 +65,13 @@ NUM_SUBSCRIPTIONS_PER_ORG = 30
 # Fixtures
 # ============================================================================
 
+
 @pytest.fixture(scope="module")
-def performance_organizations(db_session: Session) -> List[Organization]:
+def performance_organizations(db_session: Session) -> list[Organization]:
     """Create multiple organizations for performance testing"""
     organizations = []
     for i in range(NUM_ORGANIZATIONS):
-        org = Organization(
-            id=uuid4(),
-            name=f"Performance Org {i}",
-            domain=f"perf-org-{i}.test"
-        )
+        org = Organization(id=uuid4(), name=f"Performance Org {i}", domain=f"perf-org-{i}.test")
         organizations.append(org)
 
     db_session.add_all(organizations)
@@ -93,9 +87,8 @@ def performance_organizations(db_session: Session) -> List[Organization]:
 
 @pytest.fixture(scope="module")
 def performance_users(
-    db_session: Session,
-    performance_organizations: List[Organization]
-) -> Dict[UUID, List[User]]:
+    db_session: Session, performance_organizations: list[Organization]
+) -> dict[UUID, list[User]]:
     """Create users for each organization"""
     users_by_org = {}
 
@@ -108,7 +101,7 @@ def performance_users(
                 id=user_id_counter,
                 email=f"user{i}@{org.domain}",
                 username=f"perfuser{user_id_counter}",
-                organization_id=org.id
+                organization_id=org.id,
             )
             users.append(user)
             user_id_counter += 1
@@ -130,9 +123,9 @@ def performance_users(
 @pytest.fixture(scope="module")
 def performance_agents(
     db_session: Session,
-    performance_organizations: List[Organization],
-    performance_users: Dict[UUID, List[User]]
-) -> Dict[UUID, List[AgentInstance]]:
+    performance_organizations: list[Organization],
+    performance_users: dict[UUID, list[User]],
+) -> dict[UUID, list[AgentInstance]]:
     """Create agent instances for each organization"""
     agents_by_org = {}
 
@@ -147,7 +140,7 @@ def performance_agents(
                 agent_type="CONTENT_GENERATOR",
                 status="IDLE" if i % 2 == 0 else "BUSY",
                 organization_id=org.id,
-                created_by_id=users[i % len(users)].id
+                created_by_id=users[i % len(users)].id,
             )
             agents.append(agent)
 
@@ -168,9 +161,9 @@ def performance_agents(
 @pytest.fixture(scope="module")
 def performance_environments(
     db_session: Session,
-    performance_organizations: List[Organization],
-    performance_users: Dict[UUID, List[User]]
-) -> Dict[UUID, List[RobloxEnvironment]]:
+    performance_organizations: list[Organization],
+    performance_users: dict[UUID, list[User]],
+) -> dict[UUID, list[RobloxEnvironment]]:
     """Create Roblox environments for each organization"""
     envs_by_org = {}
 
@@ -183,7 +176,7 @@ def performance_environments(
                 user_id=users[i % len(users)].id,
                 name=f"Perf Env {org.id[:8]} {i}",
                 place_id=f"{1000000 + i}",
-                organization_id=org.id
+                organization_id=org.id,
             )
             environments.append(env)
 
@@ -205,6 +198,7 @@ def performance_environments(
 # Performance Testing Utilities
 # ============================================================================
 
+
 class PerformanceTimer:
     """Context manager for timing operations"""
 
@@ -222,9 +216,7 @@ class PerformanceTimer:
         self.duration_ms = (self.end_time - self.start_time) * 1000
 
 
-def measure_query_performance(
-    func, iterations: int = 100
-) -> Dict[str, float]:
+def measure_query_performance(func, iterations: int = 100) -> dict[str, float]:
     """Measure query performance statistics"""
     timings = []
 
@@ -247,9 +239,7 @@ def measure_query_performance(
     }
 
 
-def verify_index_usage(
-    db_session: Session, query_str: str
-) -> Dict[str, Any]:
+def verify_index_usage(db_session: Session, query_str: str) -> dict[str, Any]:
     """Verify that query uses appropriate indexes"""
     # Get query execution plan
     explain_query = f"EXPLAIN (FORMAT JSON) {query_str}"
@@ -272,22 +262,21 @@ def verify_index_usage(
 # Single Organization Query Performance
 # ============================================================================
 
+
 class TestSingleOrgQueryPerformance:
     """Test query performance for single organization filtering"""
 
     def test_agent_query_performance(
         self,
         db_session: Session,
-        performance_organizations: List[Organization],
-        performance_agents: Dict[UUID, List[AgentInstance]]
+        performance_organizations: list[Organization],
+        performance_agents: dict[UUID, list[AgentInstance]],
     ):
         """Benchmark agent queries with organization filter"""
         org = performance_organizations[0]
 
         def query_agents():
-            return db_session.query(AgentInstance).filter_by(
-                organization_id=org.id
-            ).all()
+            return db_session.query(AgentInstance).filter_by(organization_id=org.id).all()
 
         stats = measure_query_performance(query_agents, iterations=100)
 
@@ -305,16 +294,14 @@ class TestSingleOrgQueryPerformance:
     def test_environment_query_performance(
         self,
         db_session: Session,
-        performance_organizations: List[Organization],
-        performance_environments: Dict[UUID, List[RobloxEnvironment]]
+        performance_organizations: list[Organization],
+        performance_environments: dict[UUID, list[RobloxEnvironment]],
     ):
         """Benchmark Roblox environment queries"""
         org = performance_organizations[0]
 
         def query_environments():
-            return db_session.query(RobloxEnvironment).filter_by(
-                organization_id=org.id
-            ).all()
+            return db_session.query(RobloxEnvironment).filter_by(organization_id=org.id).all()
 
         stats = measure_query_performance(query_environments, iterations=100)
 
@@ -327,16 +314,14 @@ class TestSingleOrgQueryPerformance:
     def test_tenant_aware_query_performance(
         self,
         db_session: Session,
-        performance_organizations: List[Organization],
-        performance_agents: Dict[UUID, List[AgentInstance]]
+        performance_organizations: list[Organization],
+        performance_agents: dict[UUID, list[AgentInstance]],
     ):
         """Benchmark TenantAwareQuery wrapper performance"""
         org = performance_organizations[0]
 
         def query_with_wrapper():
-            return TenantAwareQuery(
-                db_session, AgentInstance, org.id
-            ).all()
+            return TenantAwareQuery(db_session, AgentInstance, org.id).all()
 
         stats = measure_query_performance(query_with_wrapper, iterations=100)
 
@@ -351,13 +336,12 @@ class TestSingleOrgQueryPerformance:
 # Index Utilization Tests
 # ============================================================================
 
+
 class TestIndexUtilization:
     """Verify that queries utilize database indexes effectively"""
 
     def test_agent_organization_index(
-        self,
-        db_session: Session,
-        performance_organizations: List[Organization]
+        self, db_session: Session, performance_organizations: list[Organization]
     ):
         """Verify agent queries use organization_id index"""
         org = performance_organizations[0]
@@ -380,9 +364,7 @@ class TestIndexUtilization:
         assert not plan["uses_seq_scan"], "Query should not use sequential scan"
 
     def test_environment_organization_index(
-        self,
-        db_session: Session,
-        performance_organizations: List[Organization]
+        self, db_session: Session, performance_organizations: list[Organization]
     ):
         """Verify Roblox environment queries use organization_id index"""
         org = performance_organizations[0]
@@ -405,34 +387,29 @@ class TestIndexUtilization:
 # RLS Policy Overhead Tests
 # ============================================================================
 
+
 class TestRLSPolicyOverhead:
     """Measure performance overhead of RLS policies"""
 
     def test_query_with_rls_context(
         self,
         db_session: Session,
-        performance_organizations: List[Organization],
-        performance_agents: Dict[UUID, List[AgentInstance]]
+        performance_organizations: list[Organization],
+        performance_agents: dict[UUID, list[AgentInstance]],
     ):
         """Measure overhead of setting RLS context"""
         org = performance_organizations[0]
 
         # Measure query without RLS context
         def query_without_rls():
-            return db_session.query(AgentInstance).filter_by(
-                organization_id=org.id
-            ).all()
+            return db_session.query(AgentInstance).filter_by(organization_id=org.id).all()
 
         stats_without = measure_query_performance(query_without_rls, iterations=50)
 
         # Measure query with RLS context
         def query_with_rls():
-            db_session.execute(
-                text(f"SET app.current_organization_id = '{org.id}'")
-            )
-            result = db_session.query(AgentInstance).filter_by(
-                organization_id=org.id
-            ).all()
+            db_session.execute(text(f"SET app.current_organization_id = '{org.id}'"))
+            result = db_session.query(AgentInstance).filter_by(organization_id=org.id).all()
             db_session.execute(text("RESET app.current_organization_id"))
             return result
 
@@ -455,14 +432,15 @@ class TestRLSPolicyOverhead:
 # Multi-Organization Aggregation Tests
 # ============================================================================
 
+
 class TestMultiOrgAggregation:
     """Test performance of queries spanning multiple organizations"""
 
     def test_cross_org_analytics_query(
         self,
         db_session: Session,
-        performance_organizations: List[Organization],
-        performance_agents: Dict[UUID, List[AgentInstance]]
+        performance_organizations: list[Organization],
+        performance_agents: dict[UUID, list[AgentInstance]],
     ):
         """Benchmark analytics queries across all organizations"""
 
@@ -470,9 +448,9 @@ class TestMultiOrgAggregation:
             # Count agents by status for each organization
             results = {}
             for org in performance_organizations:
-                counts = db_session.query(AgentInstance.status).filter_by(
-                    organization_id=org.id
-                ).count()
+                counts = (
+                    db_session.query(AgentInstance.status).filter_by(organization_id=org.id).count()
+                )
                 results[org.id] = counts
             return results
 
@@ -489,14 +467,15 @@ class TestMultiOrgAggregation:
 # Concurrent Access Tests
 # ============================================================================
 
+
 class TestConcurrentAccess:
     """Test performance under concurrent multi-tenant access"""
 
     def test_concurrent_org_queries(
         self,
         db_session: Session,
-        performance_organizations: List[Organization],
-        performance_agents: Dict[UUID, List[AgentInstance]]
+        performance_organizations: list[Organization],
+        performance_agents: dict[UUID, list[AgentInstance]],
     ):
         """Simulate concurrent queries from multiple organizations"""
         import concurrent.futures
@@ -505,18 +484,18 @@ class TestConcurrentAccess:
             timer = PerformanceTimer()
             with timer:
                 # Simulate typical user query
-                agents = db_session.query(AgentInstance).filter_by(
-                    organization_id=org_id
-                ).limit(20).all()
+                agents = (
+                    db_session.query(AgentInstance)
+                    .filter_by(organization_id=org_id)
+                    .limit(20)
+                    .all()
+                )
             return timer.duration_ms
 
         # Execute concurrent queries
         timings = []
         with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-            futures = [
-                executor.submit(query_org_data, org.id)
-                for org in performance_organizations
-            ]
+            futures = [executor.submit(query_org_data, org.id) for org in performance_organizations]
             timings = [f.result() for f in concurrent.futures.as_completed(futures)]
 
         timings.sort()
@@ -533,34 +512,35 @@ class TestConcurrentAccess:
 # Large Dataset Performance Tests
 # ============================================================================
 
+
 class TestLargeDatasetPerformance:
     """Test performance with large datasets per organization"""
 
     def test_pagination_performance(
         self,
         db_session: Session,
-        performance_organizations: List[Organization],
-        performance_agents: Dict[UUID, List[AgentInstance]]
+        performance_organizations: list[Organization],
+        performance_agents: dict[UUID, list[AgentInstance]],
     ):
         """Test pagination performance with organization filter"""
         org = performance_organizations[0]
         page_size = 20
 
         def paginated_query(offset: int):
-            return db_session.query(AgentInstance).filter_by(
-                organization_id=org.id
-            ).limit(page_size).offset(offset).all()
+            return (
+                db_session.query(AgentInstance)
+                .filter_by(organization_id=org.id)
+                .limit(page_size)
+                .offset(offset)
+                .all()
+            )
 
         # Test first page (likely in cache)
-        stats_first = measure_query_performance(
-            lambda: paginated_query(0), iterations=50
-        )
+        stats_first = measure_query_performance(lambda: paginated_query(0), iterations=50)
 
         # Test last page (less likely in cache)
         last_offset = NUM_AGENTS_PER_ORG - page_size
-        stats_last = measure_query_performance(
-            lambda: paginated_query(last_offset), iterations=50
-        )
+        stats_last = measure_query_performance(lambda: paginated_query(last_offset), iterations=50)
 
         print(f"\n=== Pagination Performance ===")
         print(f"First Page P95: {stats_first['p95']:.2f}ms")
@@ -575,24 +555,26 @@ class TestLargeDatasetPerformance:
 # Performance Regression Detection
 # ============================================================================
 
+
 class TestPerformanceBaseline:
     """Establish and verify performance baselines"""
 
     def test_establish_baseline(
         self,
         db_session: Session,
-        performance_organizations: List[Organization],
-        performance_agents: Dict[UUID, List[AgentInstance]]
+        performance_organizations: list[Organization],
+        performance_agents: dict[UUID, list[AgentInstance]],
     ):
         """Establish performance baseline for future regression testing"""
         org = performance_organizations[0]
 
         # Standard query pattern
         def standard_query():
-            return db_session.query(AgentInstance).filter_by(
-                organization_id=org.id,
-                status="IDLE"
-            ).all()
+            return (
+                db_session.query(AgentInstance)
+                .filter_by(organization_id=org.id, status="IDLE")
+                .all()
+            )
 
         stats = measure_query_performance(standard_query, iterations=100)
 
@@ -620,9 +602,8 @@ class TestPerformanceBaseline:
 # Performance Summary Report
 # ============================================================================
 
-def generate_performance_report(
-    test_results: Dict[str, Dict[str, float]]
-) -> str:
+
+def generate_performance_report(test_results: dict[str, dict[str, float]]) -> str:
     """Generate comprehensive performance report"""
     report = []
     report.append("=" * 70)
@@ -640,7 +621,7 @@ def generate_performance_report(
 
     for test_name, stats in test_results.items():
         p95 = stats.get("p95", 0)
-        target = PERFORMANCE_TARGETS.get(test_name, float('inf'))
+        target = PERFORMANCE_TARGETS.get(test_name, float("inf"))
         status = "PASS" if p95 < target else "FAIL"
         report.append(f"{test_name:<40} {p95:>8.2f}   {status:<10}")
 

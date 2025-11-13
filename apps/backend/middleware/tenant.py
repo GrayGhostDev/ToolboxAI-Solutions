@@ -9,10 +9,11 @@ with tenant information for the ToolBoxAI Educational Platform.
 import logging
 import time
 import uuid
-from typing import Optional, Dict, Any, Callable, Awaitable
+from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
+from typing import Any
 
-from fastapi import FastAPI, Request, Response, HTTPException, status
+from fastapi import FastAPI, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -22,10 +23,12 @@ from apps.backend.core.config import settings
 logger = logging.getLogger(__name__)
 
 # Context variables for storing tenant information during request processing
-current_tenant_id: ContextVar[Optional[str]] = ContextVar('current_tenant_id', default=None)
-current_organization_id: ContextVar[Optional[str]] = ContextVar('current_organization_id', default=None)
-current_user_id: ContextVar[Optional[str]] = ContextVar('current_user_id', default=None)
-is_super_admin: ContextVar[bool] = ContextVar('is_super_admin', default=False)
+current_tenant_id: ContextVar[str | None] = ContextVar("current_tenant_id", default=None)
+current_organization_id: ContextVar[str | None] = ContextVar(
+    "current_organization_id", default=None
+)
+current_user_id: ContextVar[str | None] = ContextVar("current_user_id", default=None)
+is_super_admin: ContextVar[bool] = ContextVar("is_super_admin", default=False)
 
 
 class TenantContext:
@@ -35,11 +38,11 @@ class TenantContext:
 
     def __init__(
         self,
-        tenant_id: Optional[str] = None,
-        organization_id: Optional[str] = None,
-        user_id: Optional[str] = None,
+        tenant_id: str | None = None,
+        organization_id: str | None = None,
+        user_id: str | None = None,
         is_super_admin: bool = False,
-        permissions: Optional[Dict[str, Any]] = None
+        permissions: dict[str, Any] | None = None,
     ):
         self.tenant_id = tenant_id
         self.organization_id = organization_id
@@ -53,7 +56,7 @@ class TenantContext:
         return self.tenant_id is not None or self.organization_id is not None
 
     @property
-    def effective_tenant_id(self) -> Optional[str]:
+    def effective_tenant_id(self) -> str | None:
         """Get the effective tenant ID (organization_id preferred)"""
         return self.organization_id or self.tenant_id
 
@@ -63,7 +66,7 @@ class TenantContext:
             return True
         return self.effective_tenant_id == tenant_id
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert context to dictionary for logging"""
         return {
             "tenant_id": self.tenant_id,
@@ -71,7 +74,7 @@ class TenantContext:
             "user_id": self.user_id,
             "is_super_admin": self.is_super_admin,
             "has_tenant": self.has_tenant,
-            "effective_tenant_id": self.effective_tenant_id
+            "effective_tenant_id": self.effective_tenant_id,
         }
 
 
@@ -86,7 +89,7 @@ def get_tenant_context() -> TenantContext:
         tenant_id=current_tenant_id.get(),
         organization_id=current_organization_id.get(),
         user_id=current_user_id.get(),
-        is_super_admin=is_super_admin.get()
+        is_super_admin=is_super_admin.get(),
     )
 
 
@@ -119,9 +122,9 @@ class TenantMiddleware(BaseHTTPMiddleware):
         self,
         app: FastAPI,
         require_tenant: bool = True,
-        exclude_paths: Optional[list[str]] = None,
+        exclude_paths: list[str] | None = None,
         super_admin_header: str = "X-Super-Admin",
-        tenant_header: str = "X-Tenant-ID"
+        tenant_header: str = "X-Tenant-ID",
     ):
         super().__init__(app)
         self.require_tenant = require_tenant
@@ -134,7 +137,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
             "/api/v1/auth/login",
             "/api/v1/auth/register",
             "/api/v1/organizations",  # Allow org creation
-            "/migration/status"
+            "/migration/status",
         ]
         self.super_admin_header = super_admin_header
         self.tenant_header = tenant_header
@@ -145,9 +148,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
         )
 
     async def dispatch(
-        self,
-        request: Request,
-        call_next: Callable[[Request], Awaitable[Response]]
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
         """
         Process request and extract tenant context.
@@ -183,23 +184,27 @@ class TenantMiddleware(BaseHTTPMiddleware):
             request.state.tenant_context = tenant_context
 
             # Validate tenant access if required
-            if self.require_tenant and not tenant_context.has_tenant and not tenant_context.is_super_admin:
+            if (
+                self.require_tenant
+                and not tenant_context.has_tenant
+                and not tenant_context.is_super_admin
+            ):
                 logger.warning(
                     f"Request {request_id} rejected: No tenant context available",
                     extra={
                         "request_id": request_id,
                         "path": request.url.path,
                         "method": request.method,
-                        "client_ip": request.client.host
-                    }
+                        "client_ip": request.client.host,
+                    },
                 )
                 return JSONResponse(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     content={
                         "error": "tenant_required",
                         "message": "Request must include valid tenant context",
-                        "details": "Organization ID is required for this operation"
-                    }
+                        "details": "Organization ID is required for this operation",
+                    },
                 )
 
             # Process request
@@ -218,8 +223,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
                     "request_id": request_id,
                     "status_code": e.status_code,
                     "path": request.url.path,
-                    "method": request.method
-                }
+                    "method": request.method,
+                },
             )
             raise
 
@@ -231,9 +236,9 @@ class TenantMiddleware(BaseHTTPMiddleware):
                     "request_id": request_id,
                     "path": request.url.path,
                     "method": request.method,
-                    "error_type": type(e).__name__
+                    "error_type": type(e).__name__,
                 },
-                exc_info=True
+                exc_info=True,
             )
 
             return JSONResponse(
@@ -241,8 +246,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
                 content={
                     "error": "internal_server_error",
                     "message": "An unexpected error occurred",
-                    "request_id": request_id
-                }
+                    "request_id": request_id,
+                },
             )
 
     def _should_skip_tenant_check(self, path: str) -> bool:
@@ -314,7 +319,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
             tenant_id=tenant_id,
             organization_id=organization_id,
             user_id=user_id,
-            is_super_admin=is_admin
+            is_super_admin=is_admin,
         )
 
         logger.debug(f"Final tenant context: {context.to_dict()}")
@@ -332,7 +337,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
         """
         # In production, this would validate against a secure store
         # For now, check against configured super admin key
-        super_admin_key = getattr(settings, 'SUPER_ADMIN_KEY', None)
+        super_admin_key = getattr(settings, "SUPER_ADMIN_KEY", None)
 
         if not super_admin_key:
             logger.warning("Super admin key not configured")
@@ -351,8 +356,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
         request: Request,
         response: Response,
         start_time: float,
-        tenant_context: Optional[TenantContext] = None,
-        skipped: bool = False
+        tenant_context: TenantContext | None = None,
+        skipped: bool = False,
     ) -> None:
         """
         Log request with tenant context information.
@@ -368,21 +373,19 @@ class TenantMiddleware(BaseHTTPMiddleware):
 
         # Build log data
         log_data = {
-            "request_id": getattr(request.state, 'request_id', 'unknown'),
+            "request_id": getattr(request.state, "request_id", "unknown"),
             "method": request.method,
             "path": request.url.path,
             "status_code": response.status_code,
             "duration_ms": round(duration * 1000, 2),
             "client_ip": request.client.host,
             "user_agent": request.headers.get("User-Agent", "unknown"),
-            "tenant_check_skipped": skipped
+            "tenant_check_skipped": skipped,
         }
 
         # Add tenant context if available
         if tenant_context:
-            log_data.update({
-                "tenant_context": tenant_context.to_dict()
-            })
+            log_data.update({"tenant_context": tenant_context.to_dict()})
 
         # Log with appropriate level based on status code
         if response.status_code >= 500:
@@ -421,13 +424,13 @@ def require_tenant_context() -> TenantContext:
     if not context.has_tenant and not context.is_super_admin:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Tenant context is required for this operation"
+            detail="Tenant context is required for this operation",
         )
 
     return context
 
 
-def get_current_tenant_id() -> Optional[str]:
+def get_current_tenant_id() -> str | None:
     """
     Get the current tenant ID from context.
 
@@ -465,5 +468,5 @@ __all__ = [
     "current_tenant_id",
     "current_organization_id",
     "current_user_id",
-    "is_super_admin"
+    "is_super_admin",
 ]

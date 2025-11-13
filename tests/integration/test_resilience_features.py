@@ -6,36 +6,34 @@ Tests circuit breakers, rate limiting, connection pooling, and failover mechanis
 
 import asyncio
 import time
-from typing import List, Dict, Any
-from unittest.mock import Mock, patch, AsyncMock
-import pytest
-import httpx
-import redis.asyncio as aioredis
-from fastapi import FastAPI, HTTPException
-from fastapi.testclient import TestClient
+from unittest.mock import AsyncMock, patch
 
+import httpx
+import pytest
+import redis.asyncio as aioredis
+from database.pool_config_production import (
+    ProductionPoolConfig,
+    ProductionPoolManager,
+    get_production_pool_config,
+)
+from fastapi import FastAPI, HTTPException
+
+from apps.backend.api.middleware.resilience import (
+    BulkheadMiddleware,
+    ResilienceMiddleware,
+    RetryMiddleware,
+)
 from apps.backend.core.circuit_breaker import (
     CircuitBreaker,
     CircuitBreakerConfig,
     CircuitBreakerError,
     CircuitBreakerState,
-    get_circuit_breaker
+    get_circuit_breaker,
 )
 from apps.backend.core.rate_limiter import (
-    RateLimiter,
     RateLimitConfig,
+    RateLimiter,
     RateLimitStrategy,
-    RateLimitScope
-)
-from apps.backend.api.middleware.resilience import (
-    ResilienceMiddleware,
-    RetryMiddleware,
-    BulkheadMiddleware
-)
-from database.pool_config_production import (
-    ProductionPoolConfig,
-    ProductionPoolManager,
-    get_production_pool_config
 )
 
 
@@ -45,11 +43,7 @@ class TestCircuitBreaker:
     @pytest.mark.asyncio
     async def test_circuit_breaker_opens_on_failures(self):
         """Test that circuit breaker opens after threshold failures"""
-        config = CircuitBreakerConfig(
-            failure_threshold=3,
-            reset_timeout=10.0,
-            timeout=1.0
-        )
+        config = CircuitBreakerConfig(failure_threshold=3, reset_timeout=10.0, timeout=1.0)
         breaker = CircuitBreaker("test_service", config)
 
         # Simulate failures
@@ -75,7 +69,7 @@ class TestCircuitBreaker:
             failure_threshold=2,
             success_threshold=2,
             reset_timeout=0.1,  # 100ms for fast testing
-            timeout=1.0
+            timeout=1.0,
         )
         breaker = CircuitBreaker("recovery_test", config)
 
@@ -106,13 +100,11 @@ class TestCircuitBreaker:
     @pytest.mark.asyncio
     async def test_circuit_breaker_fallback(self):
         """Test circuit breaker fallback mechanism"""
+
         async def fallback_func(*args, **kwargs):
             return {"status": "degraded", "message": "Using cached data"}
 
-        config = CircuitBreakerConfig(
-            failure_threshold=1,
-            fallback=fallback_func
-        )
+        config = CircuitBreakerConfig(failure_threshold=1, fallback=fallback_func)
         breaker = CircuitBreaker("fallback_test", config)
 
         # Open circuit with failure
@@ -128,10 +120,7 @@ class TestCircuitBreaker:
     @pytest.mark.asyncio
     async def test_circuit_breaker_metrics(self):
         """Test circuit breaker metrics collection"""
-        config = CircuitBreakerConfig(
-            failure_threshold=5,
-            enable_monitoring=True
-        )
+        config = CircuitBreakerConfig(failure_threshold=5, enable_monitoring=True)
         breaker = CircuitBreaker("metrics_test", config)
 
         # Mix of successful and failed calls
@@ -161,8 +150,7 @@ class TestRateLimiter:
     async def redis_client(self):
         """Create Redis client for testing"""
         client = await aioredis.create_redis_pool(
-            "redis://localhost:6379/15",  # Use test database 15
-            encoding="utf-8"
+            "redis://localhost:6379/15", encoding="utf-8"  # Use test database 15
         )
         yield client
         await client.flushdb()
@@ -172,10 +160,7 @@ class TestRateLimiter:
     @pytest.mark.asyncio
     async def test_sliding_window_rate_limit(self, redis_client):
         """Test sliding window rate limiting algorithm"""
-        config = RateLimitConfig(
-            requests_per_minute=10,
-            strategy=RateLimitStrategy.SLIDING_WINDOW
-        )
+        config = RateLimitConfig(requests_per_minute=10, strategy=RateLimitStrategy.SLIDING_WINDOW)
         limiter = RateLimiter(redis_client, config)
 
         identifier = "test_user_123"
@@ -199,7 +184,7 @@ class TestRateLimiter:
         config = RateLimitConfig(
             token_bucket_capacity=5,
             token_bucket_refill_rate=1.0,  # 1 token per second
-            strategy=RateLimitStrategy.TOKEN_BUCKET
+            strategy=RateLimitStrategy.TOKEN_BUCKET,
         )
         limiter = RateLimiter(redis_client, config)
 
@@ -228,10 +213,7 @@ class TestRateLimiter:
         config = RateLimitConfig(
             requests_per_minute=10,
             enable_user_tiers=True,
-            user_tier_multipliers={
-                "free": 1.0,
-                "premium": 5.0
-            }
+            user_tier_multipliers={"free": 1.0, "premium": 5.0},
         )
         limiter = RateLimiter(redis_client, config)
 
@@ -260,8 +242,8 @@ class TestRateLimiter:
             requests_per_minute=100,  # Default
             endpoint_limits={
                 "/auth/login": {"requests_per_minute": 5},
-                "/api/generate": {"requests_per_minute": 20}
-            }
+                "/api/generate": {"requests_per_minute": 20},
+            },
         )
         limiter = RateLimiter(redis_client, config)
 
@@ -295,16 +277,9 @@ class TestResilienceMiddleware:
         # Add resilience middleware
         app.add_middleware(ResilienceMiddleware)
         app.add_middleware(
-            RetryMiddleware,
-            max_retries=3,
-            retry_delay=0.1,
-            exponential_backoff=True
+            RetryMiddleware, max_retries=3, retry_delay=0.1, exponential_backoff=True
         )
-        app.add_middleware(
-            BulkheadMiddleware,
-            max_concurrent_requests=10,
-            max_queue_size=5
-        )
+        app.add_middleware(BulkheadMiddleware, max_concurrent_requests=10, max_queue_size=5)
 
         # Test endpoints
         @app.get("/api/stable")
@@ -348,15 +323,15 @@ class TestResilienceMiddleware:
         async with httpx.AsyncClient(app=app_with_resilience, base_url="http://test") as client:
             # Send many concurrent slow requests
             tasks = [
-                client.get("/api/slow", timeout=5.0)
-                for _ in range(20)  # More than bulkhead limit
+                client.get("/api/slow", timeout=5.0) for _ in range(20)  # More than bulkhead limit
             ]
 
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
             # Some requests should be rejected due to bulkhead limit
             rejected_count = sum(
-                1 for r in results
+                1
+                for r in results
                 if isinstance(r, httpx.HTTPStatusError) and r.response.status_code == 503
             )
 
@@ -407,7 +382,7 @@ class TestDatabasePooling:
         manager = ProductionPoolManager()
 
         # Mock connection creation
-        with patch.object(manager, '_pre_warm_connections') as mock_pre_warm:
+        with patch.object(manager, "_pre_warm_connections") as mock_pre_warm:
             mock_pre_warm.return_value = asyncio.coroutine(lambda x, y: None)()
 
             await manager.initialize_pools("api_service")
@@ -442,13 +417,11 @@ class TestEndToEndResilience:
         """Test that circuit breakers prevent cascading failures"""
         # Create a chain of services
         database_breaker = get_circuit_breaker(
-            "database",
-            CircuitBreakerConfig(failure_threshold=2, reset_timeout=1.0)
+            "database", CircuitBreakerConfig(failure_threshold=2, reset_timeout=1.0)
         )
 
         api_breaker = get_circuit_breaker(
-            "api",
-            CircuitBreakerConfig(failure_threshold=3, reset_timeout=2.0)
+            "api", CircuitBreakerConfig(failure_threshold=3, reset_timeout=2.0)
         )
 
         # Simulate database failures
@@ -483,10 +456,7 @@ class TestEndToEndResilience:
     async def test_load_shedding_under_pressure(self):
         """Test system sheds load appropriately under pressure"""
         # Simulate high load scenario
-        config = RateLimitConfig(
-            requests_per_second=10,
-            burst_size=5
-        )
+        config = RateLimitConfig(requests_per_second=10, burst_size=5)
 
         # Mock Redis for rate limiting
         redis_mock = AsyncMock()
@@ -515,9 +485,8 @@ class TestEndToEndResilience:
         circuit_breaker = get_circuit_breaker(
             "external_service",
             CircuitBreakerConfig(
-                failure_threshold=1,
-                fallback=lambda: {"data": "cached", "fresh": False}
-            )
+                failure_threshold=1, fallback=lambda: {"data": "cached", "fresh": False}
+            ),
         )
 
         @app.get("/data")

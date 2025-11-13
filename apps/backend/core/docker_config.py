@@ -16,11 +16,11 @@ Created: 2025-09-21
 Version: 1.0.0
 """
 
-import os
 import logging
-from typing import Dict, Any, Optional
+import os
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class DockerServiceConfig:
     redis_host: str = "localhost"
     redis_port: int = 6381  # Docker mapped port
     redis_db: int = 0
-    redis_password: Optional[str] = None
+    redis_password: str | None = None
 
     backend_host: str = "localhost"
     backend_port: int = 8009
@@ -127,7 +127,7 @@ class DockerServiceConfig:
         """Get MCP server WebSocket URL"""
         return f"ws://{self.mcp_host}:{self.mcp_port}"
 
-    def get_service_urls(self) -> Dict[str, str]:
+    def get_service_urls(self) -> dict[str, str]:
         """Get all service URLs"""
         return {
             "postgres": self.get_postgres_url(),
@@ -146,7 +146,7 @@ class DockerServiceConfig:
 
 
 # Global configuration instance
-_docker_config: Optional[DockerServiceConfig] = None
+_docker_config: DockerServiceConfig | None = None
 
 
 def get_docker_config() -> DockerServiceConfig:
@@ -160,7 +160,7 @@ def get_docker_config() -> DockerServiceConfig:
     return _docker_config
 
 
-def get_service_health_endpoints() -> Dict[str, str]:
+def get_service_health_endpoints() -> dict[str, str]:
     """Get health check endpoints for all services"""
     config = get_docker_config()
     base_url = config.get_backend_url()
@@ -175,7 +175,7 @@ def get_service_health_endpoints() -> Dict[str, str]:
     }
 
 
-def get_docker_service_status() -> Dict[str, Any]:
+def get_docker_service_status() -> dict[str, Any]:
     """Get status of all Docker services"""
     config = get_docker_config()
 

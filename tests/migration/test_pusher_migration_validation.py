@@ -1,7 +1,8 @@
 """Pusher migration validation tests"""
-import pytest
-from pathlib import Path
+
 import json
+from pathlib import Path
+
 
 class TestPusherMigrationValidation:
     """Validate Pusher migration completeness"""
@@ -12,7 +13,7 @@ class TestPusherMigrationValidation:
 
         # Check backend has Pusher dependencies
         requirements_path = project_root / "requirements.txt"
-        with open(requirements_path, 'r') as f:
+        with open(requirements_path) as f:
             requirements = f.read()
 
         assert "pusher==" in requirements, "Pusher dependency not found in requirements.txt"
@@ -20,7 +21,7 @@ class TestPusherMigrationValidation:
         # Check frontend has Pusher dependencies
         package_json_path = project_root / "apps/dashboard/package.json"
         if package_json_path.exists():
-            with open(package_json_path, 'r') as f:
+            with open(package_json_path) as f:
                 package_data = json.load(f)
 
             dependencies = package_data.get("dependencies", {})
@@ -32,15 +33,10 @@ class TestPusherMigrationValidation:
 
         # Check .env.example has Pusher variables
         env_example_path = project_root / ".env.example"
-        with open(env_example_path, 'r') as f:
+        with open(env_example_path) as f:
             env_content = f.read()
 
-        pusher_vars = [
-            "PUSHER_APP_ID=",
-            "PUSHER_KEY=",
-            "PUSHER_SECRET=",
-            "PUSHER_CLUSTER="
-        ]
+        pusher_vars = ["PUSHER_APP_ID=", "PUSHER_KEY=", "PUSHER_SECRET=", "PUSHER_CLUSTER="]
 
         for var in pusher_vars:
             assert var in env_content, f"Missing Pusher environment variable: {var}"
@@ -52,16 +48,11 @@ class TestPusherMigrationValidation:
         docker_compose_path = project_root / "infrastructure/docker/docker-compose.dev.yml"
 
         if docker_compose_path.exists():
-            with open(docker_compose_path, 'r') as f:
+            with open(docker_compose_path) as f:
                 compose_content = f.read()
 
             # Check for Pusher environment variables in services
-            pusher_env_vars = [
-                "PUSHER_APP_ID:",
-                "PUSHER_KEY:",
-                "PUSHER_SECRET:",
-                "PUSHER_CLUSTER:"
-            ]
+            pusher_env_vars = ["PUSHER_APP_ID:", "PUSHER_KEY:", "PUSHER_SECRET:", "PUSHER_CLUSTER:"]
 
             for var in pusher_env_vars:
                 assert var in compose_content, f"Missing Pusher env var in Docker Compose: {var}"
@@ -77,18 +68,24 @@ class TestPusherMigrationValidation:
         source_dirs = [
             project_root / "apps/backend",
             project_root / "apps/dashboard/src",
-            project_root / "core"
+            project_root / "core",
         ]
 
         for source_dir in source_dirs:
             if source_dir.exists():
                 # Look for files that might contain legacy WebSocket code
                 for file_path in source_dir.rglob("*.py"):
-                    if file_path.name.startswith("websocket") and "legacy" not in file_path.name.lower():
+                    if (
+                        file_path.name.startswith("websocket")
+                        and "legacy" not in file_path.name.lower()
+                    ):
                         suspicious_files.append(str(file_path))
 
                 for file_path in source_dir.rglob("*.ts"):
-                    if "websocket" in file_path.name.lower() and "legacy" not in file_path.name.lower():
+                    if (
+                        "websocket" in file_path.name.lower()
+                        and "legacy" not in file_path.name.lower()
+                    ):
                         suspicious_files.append(str(file_path))
 
         if suspicious_files:
@@ -108,7 +105,7 @@ class TestPusherMigrationValidation:
 
             for py_file in backend_dir.rglob("*.py"):
                 try:
-                    with open(py_file, 'r', encoding='utf-8') as f:
+                    with open(py_file, encoding="utf-8") as f:
                         content = f.read()
 
                     if "from pusher import" in content or "import pusher" in content:
@@ -131,7 +128,7 @@ class TestPusherMigrationValidation:
 
             for ts_file in frontend_dir.rglob("*.ts"):
                 try:
-                    with open(ts_file, 'r', encoding='utf-8') as f:
+                    with open(ts_file, encoding="utf-8") as f:
                         content = f.read()
 
                     if "pusher-js" in content or "import Pusher" in content:
@@ -142,7 +139,7 @@ class TestPusherMigrationValidation:
 
             for tsx_file in frontend_dir.rglob("*.tsx"):
                 try:
-                    with open(tsx_file, 'r', encoding='utf-8') as f:
+                    with open(tsx_file, encoding="utf-8") as f:
                         content = f.read()
 
                     if "pusher-js" in content or "import Pusher" in content:
@@ -158,16 +155,13 @@ class TestPusherMigrationValidation:
         project_root = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions")
 
         # Look for channel configuration in code
-        source_dirs = [
-            project_root / "apps/backend",
-            project_root / "apps/dashboard/src"
-        ]
+        source_dirs = [project_root / "apps/backend", project_root / "apps/dashboard/src"]
 
         channel_patterns = [
             "dashboard-updates",
             "content-generation",
             "agent-status",
-            "private-"  # Private channels
+            "private-",  # Private channels
         ]
 
         channels_found = []
@@ -178,7 +172,7 @@ class TestPusherMigrationValidation:
 
             for file_path in source_dir.rglob("*.py"):
                 try:
-                    with open(file_path, 'r', encoding='utf-8') as f:
+                    with open(file_path, encoding="utf-8") as f:
                         content = f.read()
 
                     for pattern in channel_patterns:
@@ -189,7 +183,7 @@ class TestPusherMigrationValidation:
 
             for file_path in source_dir.rglob("*.ts"):
                 try:
-                    with open(file_path, 'r', encoding='utf-8') as f:
+                    with open(file_path, encoding="utf-8") as f:
                         content = f.read()
 
                     for pattern in channel_patterns:
@@ -200,7 +194,7 @@ class TestPusherMigrationValidation:
 
             for file_path in source_dir.rglob("*.tsx"):
                 try:
-                    with open(file_path, 'r', encoding='utf-8') as f:
+                    with open(file_path, encoding="utf-8") as f:
                         content = f.read()
 
                     for pattern in channel_patterns:

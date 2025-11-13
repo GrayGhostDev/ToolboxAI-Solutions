@@ -1,4 +1,5 @@
 import pytest_asyncio
+
 """
 Unit tests for Integration Agent Swarm
 
@@ -9,20 +10,22 @@ Tests the basic functionality of the integration agents including:
 - Integration coordinator workflow execution
 """
 
-import pytest
 import asyncio
 from datetime import datetime, timedelta
-from typing import Dict, Any, List
-from unittest.mock import Mock, AsyncMock, patch
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 from core.agents.integration import (
     BaseIntegrationAgent,
-    IntegrationPlatform,
-    IntegrationEvent,
     CircuitBreaker,
-    CircuitBreakerState
+    CircuitBreakerState,
+    IntegrationEvent,
+    IntegrationPlatform,
 )
-from core.agents.integration.backend import APIGatewayAgent, APIEndpoint, APIVersion
+from core.agents.integration.backend import APIEndpoint, APIGatewayAgent, APIVersion
+
 # DatabaseSyncAgent and SyncStrategy not currently exported
 # from core.agents.integration.backend import DatabaseSyncAgent, SyncStrategy
 
@@ -36,10 +39,10 @@ class DatabaseSyncAgent:
     pass
 from core.agents.integration.orchestration import (
     IntegrationCoordinator,
-    IntegrationWorkflow,
     IntegrationTask,
+    IntegrationWorkflow,
+    TaskPriority,
     WorkflowStatus,
-    TaskPriority
 )
 
 

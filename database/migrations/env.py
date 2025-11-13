@@ -5,8 +5,8 @@ import sys
 from logging.config import fileConfig
 from pathlib import Path
 
-from sqlalchemy import engine_from_config, pool
 from alembic import context
+from sqlalchemy import engine_from_config, pool
 
 # Add the project root to the Python path
 project_root = Path(__file__).parent.parent.parent
@@ -15,16 +15,16 @@ sys.path.insert(0, str(project_root))
 # Import your models here
 try:
     from database.models import Base
+
     # Import all models to ensure they're registered
-    from database.models import *
 except ImportError:
     # Fallback to old model locations for compatibility
     try:
         from database.models import Base
-        from database.models import *
     except ImportError:
         print("Warning: Could not import models. Creating empty Base.")
         from sqlalchemy.orm import declarative_base
+
         Base = declarative_base()
 
 # this is the Alembic Config object, which provides

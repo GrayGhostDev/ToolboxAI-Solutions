@@ -18,10 +18,10 @@ Version: 1.0.0
 """
 
 import logging
-import asyncio
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Any
+
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -36,10 +36,10 @@ class AgentHealthResponse(BaseModel):
     agent_id: str = Field(description="Unique agent identifier")
     agent_type: str = Field(description="Type of agent (content, quiz, etc.)")
     status: str = Field(description="Current agent status")
-    last_activity: Optional[str] = Field(description="Last activity timestamp")
+    last_activity: str | None = Field(description="Last activity timestamp")
     error_count: int = Field(description="Number of recent errors", default=0)
-    quality_score: Optional[float] = Field(description="Average quality score", ge=0.0, le=1.0)
-    performance_metrics: Dict[str, Any] = Field(
+    quality_score: float | None = Field(description="Average quality score", ge=0.0, le=1.0)
+    performance_metrics: dict[str, Any] = Field(
         description="Performance metrics", default_factory=dict
     )
     timestamp: str = Field(description="Health check timestamp")
@@ -51,15 +51,17 @@ class SystemAgentHealthResponse(BaseModel):
     status: str = Field(description="Overall system status")
     total_agents: int = Field(description="Total number of agents")
     healthy_agents: int = Field(description="Number of healthy agents")
-    agents: Dict[str, AgentHealthResponse] = Field(description="Individual agent statuses")
-    system_metrics: Dict[str, Any] = Field(description="System-wide metrics", default_factory=dict)
+    agents: dict[str, AgentHealthResponse] = Field(description="Individual agent statuses")
+    system_metrics: dict[str, Any] = Field(description="System-wide metrics", default_factory=dict)
     timestamp: str = Field(description="Health check timestamp")
 
 
 async def get_agent_service():
     """Get agent service instance with error handling"""
     try:
-        from apps.backend.services.agent_service import get_agent_service as _get_agent_service
+        from apps.backend.services.agent_service import (
+            get_agent_service as _get_agent_service,
+        )
 
         return _get_agent_service()
     except ImportError as e:

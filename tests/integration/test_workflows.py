@@ -1,4 +1,5 @@
 import pytest_asyncio
+
 """
 Integration Tests for End-to-End Workflows
 
@@ -8,22 +9,24 @@ and database integration for the ToolboxAI platform.
 
 import asyncio
 import os
-import pytest
-from typing import Dict, Any, List
-from datetime import datetime, timezone
 import uuid
+from datetime import datetime, timezone
+from typing import Any, Dict, List
+
+import pytest
 
 # Skip all tests in this module as they require external services
 pytestmark = pytest.mark.skipif(
     not os.environ.get('RUN_INTEGRATION_TESTS'),
     reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
 )
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
-
 # Add project paths
 import sys
 from pathlib import Path
+
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
+
 # Add parent directory for database imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 # Add current project for agent imports
@@ -32,8 +35,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 try:
     from database.connection import DatabaseManager, get_db
     from database.core.repositories import (
-        UserRepository, CourseRepository, LessonRepository,
-        QuizRepository, ProgressRepository, AnalyticsRepository
+        AnalyticsRepository,
+        CourseRepository,
+        LessonRepository,
+        ProgressRepository,
+        QuizRepository,
+        UserRepository,
     )
     from database.models.models import Base, UserRole
 except ImportError:
@@ -51,9 +58,9 @@ except ImportError:
     Base.metadata = Mock
     Base.metadata.create_all = Mock
     UserRole = Mock
+from apps.backend.api.auth.auth import JWTManager
 from core.agents.orchestrator import Orchestrator
 from core.agents.supervisor import SupervisorAgent
-from apps.backend.api.auth.auth import JWTManager
 
 
 @pytest.fixture

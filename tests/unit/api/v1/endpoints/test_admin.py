@@ -6,25 +6,23 @@ Tests administrative functionality for user management.
 Phase 1 Week 1: Authentication & user management endpoint tests
 """
 
-import pytest
 from datetime import datetime, timezone
-from uuid import uuid4
 from unittest.mock import AsyncMock, Mock, patch
+from uuid import uuid4
 
+import pytest
 from fastapi import HTTPException, status
 
 # Import endpoint functions
 from apps.backend.api.v1.endpoints.admin import (
-    list_users,
     create_user,
-    get_user,
-    update_user,
-    deactivate_user,
     db_service,
+    deactivate_user,
+    get_user,
+    list_users,
+    update_user,
 )
-
 from database.models import User
-
 
 # ============================================================================
 # Fixtures

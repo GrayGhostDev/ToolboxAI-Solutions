@@ -14,6 +14,9 @@ Features:
 """
 
 import logging
+
+# Fix imports for standalone execution
+import os
 import sys
 import threading
 import time
@@ -21,18 +24,17 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, cast
-
-from apps.backend.core.security.input_sanitizer import sanitize_for_logging, get_safe_error_response
+from typing import Any, cast
 
 import redis
 import requests
 from flask import Flask, Response, jsonify, request
 from flask_cors import CORS
 
-# Fix imports for standalone execution
-import os
-import sys
+from apps.backend.core.security.input_sanitizer import (
+    get_safe_error_response,
+    sanitize_for_logging,
+)
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -45,9 +47,9 @@ from apps.backend.core.security.rate_limit_manager import get_rate_limit_manager
 # Import agent systems for integration
 try:
     from core.agents.supervisor import SupervisorAgent
+    from core.mcp.context_manager import ContextManager
     from core.sparc.state_manager import StateManager  # Fixed: was SPARCStateManager
     from core.swarm.swarm_controller import SwarmController
-    from core.mcp.context_manager import ContextManager
 
     AGENT_INTEGRATION = True
 except ImportError:
@@ -381,7 +383,7 @@ class PersistentMemoryStore:
             try:
                 import json
 
-                with open(backup_file, "r") as f:
+                with open(backup_file) as f:
                     self.store = json.load(f)
             except Exception as e:
                 logger.warning(f"Failed to load backup: {sanitize_for_logging(e)}")
@@ -479,11 +481,11 @@ class PluginManager:
     """Manages Roblox Studio plugin registrations and sessions"""
 
     def __init__(self):
-        self.plugins: Dict[str, Dict[str, Any]] = {}
-        self.sessions: Dict[str, Dict[str, Any]] = {}
+        self.plugins: dict[str, dict[str, Any]] = {}
+        self.sessions: dict[str, dict[str, Any]] = {}
         self.security = plugin_security
 
-    def register_plugin(self, plugin_data: Dict[str, Any]) -> str:
+    def register_plugin(self, plugin_data: dict[str, Any]) -> str:
         """Register a new plugin instance"""
         # Validate plugin data
         validation_errors = self.security.validate_plugin_data(plugin_data)
@@ -526,11 +528,11 @@ class PluginManager:
         logger.info("Plugin registered: %s (Studio: %s)", plugin_id, studio_id)
         return plugin_id
 
-    def get_plugin(self, plugin_id: str) -> Optional[Dict[str, Any]]:
+    def get_plugin(self, plugin_id: str) -> dict[str, Any] | None:
         """Get plugin information"""
         if redis_client:
             plugin_data = redis_client.hgetall(f"plugin:{plugin_id}")
-            plugin_map = cast(Dict[str, Any], plugin_data) if plugin_data else None
+            plugin_map = cast(dict[str, Any], plugin_data) if plugin_data else None
             return plugin_map
         else:
             return memory_store.get(f"plugin:{plugin_id}")
@@ -554,7 +556,7 @@ class PluginManager:
 
         return True
 
-    def list_active_plugins(self) -> List[Dict[str, Any]]:
+    def list_active_plugins(self) -> list[dict[str, Any]]:
         """List all active plugins"""
         active_plugins = []
         cutoff_time = datetime.now(timezone.utc) - timedelta(minutes=5)
@@ -563,7 +565,7 @@ class PluginManager:
             for key in redis_client.scan_iter(match="plugin:*"):
                 plugin_data = redis_client.hgetall(key)
                 if plugin_data:
-                    plugin_map = cast(Dict[str, Any], plugin_data)
+                    plugin_map = cast(dict[str, Any], plugin_data)
                     last_heartbeat = datetime.fromisoformat(
                         plugin_map.get("last_heartbeat", "1970-01-01")
                     )
@@ -595,7 +597,7 @@ class PluginManager:
             for key in redis_client.scan_iter(match="plugin:*"):
                 plugin_data = redis_client.hgetall(key)
                 if plugin_data:
-                    plugin_map = cast(Dict[str, Any], plugin_data)
+                    plugin_map = cast(dict[str, Any], plugin_data)
                     last_heartbeat = datetime.fromisoformat(
                         plugin_map.get("last_heartbeat", "1970-01-01")
                     )
@@ -633,7 +635,7 @@ class ContentBridge:
     """Bridges content requests between Roblox and FastAPI server"""
 
     def __init__(self):
-        self.fastapi_base_url = "http://{}:{}".format(settings.API_HOST, settings.API_PORT)
+        self.fastapi_base_url = f"http://{settings.API_HOST}:{settings.API_PORT}"
         self.cache = LRUCache(
             max_size=config_manager.get("cache_max_size", 1000),
             ttl=config_manager.get("cache_ttl", 300),
@@ -650,11 +652,11 @@ class ContentBridge:
                 self.sparc_manager = StateManager()  # Fixed: was SPARCStateManager
 
                 # Initialize SwarmController with all required dependencies
-                from core.swarm.worker_pool import WorkerPool
-                from core.swarm.task_distributor import TaskDistributor
                 from core.swarm.consensus_engine import ConsensusEngine
                 from core.swarm.load_balancer import LoadBalancer
                 from core.swarm.swarm_controller import SwarmConfig
+                from core.swarm.task_distributor import TaskDistributor
+                from core.swarm.worker_pool import WorkerPool
 
                 swarm_config = SwarmConfig()
                 worker_pool = WorkerPool(max_workers=swarm_config.max_workers)
@@ -680,7 +682,7 @@ class ContentBridge:
                 self.swarm_controller = None
                 self.mcp_context = None
 
-    async def generate_content(self, content_request: Dict[str, Any]) -> Dict[str, Any]:
+    async def generate_content(self, content_request: dict[str, Any]) -> dict[str, Any]:
         """Forward content generation request to FastAPI server"""
         # Check cache first
         cached_result = self._check_cache(content_request)
@@ -699,7 +701,7 @@ class ContentBridge:
             logger.error("Content bridge error: %s", e)
             return self._error_response(f"Content generation error: {str(e)}")
 
-    def _check_cache(self, content_request: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _check_cache(self, content_request: dict[str, Any]) -> dict[str, Any] | None:
         """Check if content is cached"""
         cache_key = self._generate_cache_key(content_request)
         cached_result = self.cache.get(cache_key)
@@ -709,7 +711,7 @@ class ContentBridge:
         metrics.increment("cache_misses")
         return None
 
-    async def _forward_to_fastapi(self, content_request: Dict[str, Any]) -> Dict[str, Any]:
+    async def _forward_to_fastapi(self, content_request: dict[str, Any]) -> dict[str, Any]:
         """Forward request to FastAPI server with real authentication"""
         # Get real authentication token
         auth_token = await self._get_auth_token()
@@ -734,7 +736,7 @@ class ContentBridge:
             logger.error("FastAPI request failed: %d", response.status_code)
             return self._error_response(f"Content generation failed: {response.status_code}")
 
-    def _cache_result(self, content_request: Dict[str, Any], content_data: Dict[str, Any]):
+    def _cache_result(self, content_request: dict[str, Any], content_data: dict[str, Any]):
         """Cache successful result"""
         cache_key = self._generate_cache_key(content_request)
         self.cache.set(cache_key, content_data)
@@ -743,15 +745,15 @@ class ContentBridge:
         """Check if a key is in cache"""
         return self.cache.get(cache_key) is not None
 
-    def _cache_response(self, cache_key: str, data: Dict[str, Any]) -> None:
+    def _cache_response(self, cache_key: str, data: dict[str, Any]) -> None:
         """Cache a response with a given key"""
         self.cache.set(cache_key, data)
 
-    def _get_cached(self, cache_key: str) -> Optional[Dict[str, Any]]:
+    def _get_cached(self, cache_key: str) -> dict[str, Any] | None:
         """Get cached data by key"""
         return self.cache.get(cache_key)
 
-    def _error_response(self, message: str) -> Dict[str, Any]:
+    def _error_response(self, message: str) -> dict[str, Any]:
         """Create error response"""
         return {
             "success": False,
@@ -807,7 +809,7 @@ class ContentBridge:
         # Return a demo token as last resort
         return "demo-token-flask-bridge"
 
-    def _generate_cache_key(self, request_data: Dict[str, Any]) -> str:
+    def _generate_cache_key(self, request_data: dict[str, Any]) -> str:
         """Generate cache key from request data"""
         key_parts = [
             request_data.get("subject", ""),
@@ -817,7 +819,7 @@ class ContentBridge:
         ]
         return "_".join(key_parts).lower().replace(" ", "_")
 
-    def generate_cache_key(self, request_data: Dict[str, Any]) -> str:
+    def generate_cache_key(self, request_data: dict[str, Any]) -> str:
         """Public method for generating cache keys"""
         return self._generate_cache_key(request_data)
 
@@ -840,7 +842,7 @@ class InputValidator:
         field_name: str,
         max_length: int = 1000,
         allow_empty: bool = False,
-        pattern: Optional[str] = None,
+        pattern: str | None = None,
     ) -> str:
         """Validate string input"""
         if value is None:
@@ -880,8 +882,8 @@ class InputValidator:
     def validate_integer(
         value: Any,
         field_name: str,
-        min_val: Optional[int] = None,
-        max_val: Optional[int] = None,
+        min_val: int | None = None,
+        max_val: int | None = None,
     ) -> int:
         """Validate integer input"""
         if value is None:
@@ -905,8 +907,8 @@ class InputValidator:
         value: Any,
         field_name: str,
         max_items: int = 100,
-        item_validator: Optional[Any] = None,
-    ) -> List[Any]:
+        item_validator: Any | None = None,
+    ) -> list[Any]:
         """Validate list input"""
         if value is None:
             return []
@@ -938,7 +940,7 @@ class InputValidator:
         return re.sub(clean, "", value)
 
     @staticmethod
-    def validate_plugin_data(data: Dict[str, Any]) -> Dict[str, Any]:
+    def validate_plugin_data(data: dict[str, Any]) -> dict[str, Any]:
         """Validate plugin registration data"""
         if not isinstance(data, dict):
             raise TypeError("Plugin data must be a dictionary")
@@ -957,7 +959,7 @@ class InputValidator:
         return validated
 
     @staticmethod
-    def validate_content_request(data: Dict[str, Any]) -> Dict[str, Any]:
+    def validate_content_request(data: dict[str, Any]) -> dict[str, Any]:
         """Validate content generation request"""
         if not isinstance(data, dict):
             raise TypeError("Content request must be a dictionary")
@@ -1009,7 +1011,7 @@ def check_redis():
 def check_fastapi():
     try:
         response = requests.get(
-            "{}/health".format(content_bridge.fastapi_base_url),
+            f"{content_bridge.fastapi_base_url}/health",
             timeout=HEALTH_CHECK_TIMEOUT_SECONDS,
         )
         return response.status_code == 200
@@ -1196,7 +1198,7 @@ def generate_simple_content():
 
         # Run the async generator in a fresh loop using the shared helper
         result_any = run_async(content_bridge.generate_content(full_request))
-        result = cast(Dict[str, Any], result_any)
+        result = cast(dict[str, Any], result_any)
         return jsonify(result)
 
     except (ValueError, KeyError, TypeError, requests.RequestException) as e:
@@ -1228,7 +1230,7 @@ def generate_terrain():
         return jsonify(get_safe_error_response(e)), 500
 
 
-def _extract_terrain_params(request_data: Dict[str, Any]) -> Dict[str, Any]:
+def _extract_terrain_params(request_data: dict[str, Any]) -> dict[str, Any]:
     """Extract terrain parameters from request"""
     return {
         "theme": request_data.get("theme", "forest"),
@@ -1239,7 +1241,7 @@ def _extract_terrain_params(request_data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def _forward_terrain_request(terrain_params: Dict[str, Any]) -> requests.Response:
+def _forward_terrain_request(terrain_params: dict[str, Any]) -> requests.Response:
     """Forward terrain generation request to FastAPI"""
     headers = {
         "Content-Type": "application/json",
@@ -1288,7 +1290,7 @@ def generate_quiz():
         return jsonify(get_safe_error_response(e)), 500
 
 
-def _extract_quiz_params(request_data: Dict[str, Any]) -> Dict[str, Any]:
+def _extract_quiz_params(request_data: dict[str, Any]) -> dict[str, Any]:
     """Extract quiz parameters from request"""
     return {
         "subject": request_data.get("subject", "Mathematics"),
@@ -1299,7 +1301,7 @@ def _extract_quiz_params(request_data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def _forward_quiz_request(quiz_params: Dict[str, Any]) -> requests.Response:
+def _forward_quiz_request(quiz_params: dict[str, Any]) -> requests.Response:
     """Forward quiz generation request to FastAPI"""
     headers = {
         "Content-Type": "application/json",
@@ -1569,7 +1571,7 @@ def update_config():
 
 
 # Missing test functions for compatibility
-def handle_plugin_request(request_data: Dict[str, Any]) -> Dict[str, Any]:
+def handle_plugin_request(request_data: dict[str, Any]) -> dict[str, Any]:
     """Handle plugin communication requests"""
     action = request_data.get("action")
     data = request_data.get("data", {})
@@ -1585,7 +1587,7 @@ def handle_plugin_request(request_data: Dict[str, Any]) -> Dict[str, Any]:
         return {"status": "error", "message": f"Unknown action: {action}"}
 
 
-def sync_with_main_server(sync_data: Dict[str, Any]) -> Dict[str, Any]:
+def sync_with_main_server(sync_data: dict[str, Any]) -> dict[str, Any]:
     """Synchronize data with FastAPI main server"""
     try:
         # Build sync request
@@ -1605,7 +1607,7 @@ def sync_with_main_server(sync_data: Dict[str, Any]) -> Dict[str, Any]:
         return {"status": "error", "message": str(e)}
 
 
-def generate_roblox_script(script_type: str, parameters: Dict[str, Any]) -> str:
+def generate_roblox_script(script_type: str, parameters: dict[str, Any]) -> str:
     """Generate Roblox Lua script based on type and parameters"""
     scripts = {
         "quiz_ui": """-- Generated Quiz UI Script
@@ -1738,8 +1740,8 @@ def query_database():
             return jsonify({"status": "error", "message": "Authentication required"}), 401
 
         # Import database helper
-        from database.core.roblox_models import RobloxDatabaseHelper
         from database import get_db
+        from database.core.roblox_models import RobloxDatabaseHelper
 
         query_type = request_data.get("query_type")
         params = request_data.get("params", {})

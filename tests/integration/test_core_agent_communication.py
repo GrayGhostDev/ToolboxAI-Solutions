@@ -1,4 +1,5 @@
 import pytest_asyncio
+
 #!/usr/bin/env python3
 """
 Core Agent Communication Test
@@ -8,6 +9,7 @@ This test validates the basic agent communication without complex dependencies.
 
 import asyncio
 import os
+
 
 def make_json_serializable(obj):
     """Convert non-serializable objects to serializable format."""
@@ -24,9 +26,10 @@ import json
 import logging
 import sys
 import time
-from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional
 import uuid
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
+
 import pytest
 
 # Skip all tests in this module as they require external services
@@ -60,12 +63,12 @@ class CoreAgentCommunicationTester:
         """Initialize agents with error handling"""
         try:
             from core.agents.base_agent import BaseAgent, TaskResult
-            from core.agents.supervisor import SupervisorAgent
             from core.agents.content_agent import ContentAgent
             from core.agents.quiz_agent import QuizAgent
-            from core.agents.terrain_agent import TerrainAgent
-            from core.agents.script_agent import ScriptAgent
             from core.agents.review_agent import ReviewAgent
+            from core.agents.script_agent import ScriptAgent
+            from core.agents.supervisor import SupervisorAgent
+            from core.agents.terrain_agent import TerrainAgent
 
             self.agents = {
                 "supervisor": SupervisorAgent(),

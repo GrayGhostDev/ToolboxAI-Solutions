@@ -10,22 +10,22 @@ Tests various performance aspects of the Pusher real-time system:
 - Connection recovery performance
 """
 
-import pytest
 import asyncio
-import time
-import statistics
-import psutil
-import threading
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from unittest.mock import Mock, AsyncMock
-from dataclasses import dataclass
-from typing import List, Dict, Any
 import json
+import statistics
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass
+from typing import Any
+
+import psutil
+import pytest
 
 
 @dataclass
 class PerformanceMetrics:
     """Performance measurement data structure"""
+
     operation: str
     duration: float
     success: bool
@@ -51,7 +51,7 @@ class PerformanceMonitor:
         self.start_memory = self.process.memory_info().rss
         self.start_cpu_times = self.process.cpu_times()
 
-    def stop(self) -> Dict[str, float]:
+    def stop(self) -> dict[str, float]:
         """Stop monitoring and return metrics"""
         end_time = time.time()
         end_memory = self.process.memory_info().rss
@@ -59,14 +59,15 @@ class PerformanceMonitor:
 
         duration = end_time - self.start_time
         memory_delta = end_memory - self.start_memory
-        cpu_delta = (end_cpu_times.user - self.start_cpu_times.user) + \
-                   (end_cpu_times.system - self.start_cpu_times.system)
+        cpu_delta = (end_cpu_times.user - self.start_cpu_times.user) + (
+            end_cpu_times.system - self.start_cpu_times.system
+        )
 
         return {
             "duration": duration,
             "memory_delta_mb": memory_delta / (1024 * 1024),
             "cpu_usage_percent": (cpu_delta / duration) * 100 if duration > 0 else 0,
-            "current_memory_mb": end_memory / (1024 * 1024)
+            "current_memory_mb": end_memory / (1024 * 1024),
         }
 
 
@@ -100,7 +101,7 @@ class MockPusherService:
         self.channels[channel].add(connection_id)
         return True
 
-    async def send_message(self, channel: str, data: Dict[str, Any]) -> bool:
+    async def send_message(self, channel: str, data: dict[str, Any]) -> bool:
         """Mock message sending"""
         await asyncio.sleep(self.latency_ms / 1000)
         if self.error_rate > 0 and time.time() % 1 < self.error_rate:
@@ -137,11 +138,9 @@ class TestPusherPerformance:
 
         tasks = []
         for i in range(message_count):
-            task = pusher_service.send_message(channel, {
-                "id": f"msg-{i}",
-                "data": f"test message {i}",
-                "timestamp": time.time()
-            })
+            task = pusher_service.send_message(
+                channel, {"id": f"msg-{i}", "data": f"test message {i}", "timestamp": time.time()}
+            )
             tasks.append(task)
 
         # Execute all messages concurrently
@@ -179,14 +178,16 @@ class TestPusherPerformance:
             connection_results = await asyncio.gather(*tasks, return_exceptions=True)
             metrics = performance_monitor.stop()
 
-            successful_connections = sum(1 for r in connection_results if not isinstance(r, Exception))
+            successful_connections = sum(
+                1 for r in connection_results if not isinstance(r, Exception)
+            )
             connection_rate = successful_connections / metrics["duration"]
 
             results[conn_count] = {
                 "success_rate": successful_connections / conn_count,
                 "connection_rate": connection_rate,
                 "memory_usage": metrics["memory_delta_mb"],
-                "cpu_usage": metrics["cpu_usage_percent"]
+                "cpu_usage": metrics["cpu_usage_percent"],
             }
 
             # Cleanup connections
@@ -200,10 +201,12 @@ class TestPusherPerformance:
         # Print scaling results
         print("\nConnection Scaling Results:")
         for conn_count, result in results.items():
-            print(f"{conn_count} connections: "
-                  f"{result['success_rate']:.2%} success, "
-                  f"{result['connection_rate']:.1f} conn/sec, "
-                  f"{result['memory_usage']:.1f} MB")
+            print(
+                f"{conn_count} connections: "
+                f"{result['success_rate']:.2%} success, "
+                f"{result['connection_rate']:.1f} conn/sec, "
+                f"{result['memory_usage']:.1f} MB"
+            )
 
     @pytest.mark.asyncio
     async def test_channel_subscription_limits(self, pusher_service, performance_monitor):
@@ -224,7 +227,9 @@ class TestPusherPerformance:
         subscription_results = await asyncio.gather(*tasks, return_exceptions=True)
         metrics = performance_monitor.stop()
 
-        successful_subscriptions = sum(1 for r in subscription_results if not isinstance(r, Exception))
+        successful_subscriptions = sum(
+            1 for r in subscription_results if not isinstance(r, Exception)
+        )
         subscription_rate = successful_subscriptions / metrics["duration"]
 
         assert successful_subscriptions >= channel_count * 0.95  # 95% success rate
@@ -250,7 +255,7 @@ class TestPusherPerformance:
             message_data = {
                 "id": f"size-test-{size_kb}kb",
                 "data": "x" * (size_kb * 1024),  # Create payload of specified size
-                "metadata": {"size_kb": size_kb}
+                "metadata": {"size_kb": size_kb},
             }
 
             performance_monitor.start()
@@ -270,7 +275,7 @@ class TestPusherPerformance:
             size_results[size_kb] = {
                 "success_rate": successful_sends / len(tasks),
                 "avg_latency_ms": avg_latency * 1000,
-                "throughput_mb_per_sec": (size_kb * successful_sends / 1024) / metrics["duration"]
+                "throughput_mb_per_sec": (size_kb * successful_sends / 1024) / metrics["duration"],
             }
 
             # Verify acceptable performance
@@ -280,10 +285,12 @@ class TestPusherPerformance:
         # Print size performance results
         print("\nMessage Size Performance:")
         for size_kb, result in size_results.items():
-            print(f"{size_kb}KB messages: "
-                  f"{result['success_rate']:.2%} success, "
-                  f"{result['avg_latency_ms']:.1f}ms latency, "
-                  f"{result['throughput_mb_per_sec']:.2f} MB/sec")
+            print(
+                f"{size_kb}KB messages: "
+                f"{result['success_rate']:.2%} success, "
+                f"{result['avg_latency_ms']:.1f}ms latency, "
+                f"{result['throughput_mb_per_sec']:.2f} MB/sec"
+            )
 
     @pytest.mark.asyncio
     async def test_burst_traffic_handling(self, pusher_service, performance_monitor):
@@ -302,11 +309,10 @@ class TestPusherPerformance:
             # Send burst of messages
             tasks = []
             for i in range(burst_size):
-                task = pusher_service.send_message(channel, {
-                    "id": f"burst-{i}",
-                    "burst_size": burst_size,
-                    "timestamp": time.time()
-                })
+                task = pusher_service.send_message(
+                    channel,
+                    {"id": f"burst-{i}", "burst_size": burst_size, "timestamp": time.time()},
+                )
                 tasks.append(task)
 
             # Execute all at once (burst)
@@ -320,7 +326,7 @@ class TestPusherPerformance:
                 "success_rate": successful_sends / burst_size,
                 "throughput": burst_throughput,
                 "duration": metrics["duration"],
-                "memory_usage": metrics["memory_delta_mb"]
+                "memory_usage": metrics["memory_delta_mb"],
             }
 
             # Verify burst handling
@@ -330,10 +336,12 @@ class TestPusherPerformance:
         # Print burst results
         print("\nBurst Traffic Results:")
         for burst_size, result in burst_results.items():
-            print(f"Burst {burst_size}: "
-                  f"{result['success_rate']:.2%} success, "
-                  f"{result['throughput']:.1f} msg/sec, "
-                  f"{result['duration']:.2f}s")
+            print(
+                f"Burst {burst_size}: "
+                f"{result['success_rate']:.2%} success, "
+                f"{result['throughput']:.1f} msg/sec, "
+                f"{result['duration']:.2f}s"
+            )
 
     @pytest.mark.asyncio
     async def test_connection_recovery_performance(self, pusher_service, performance_monitor):
@@ -388,11 +396,9 @@ class TestPusherPerformance:
             # Send batch of messages
             tasks = []
             for i in range(100):
-                task = pusher_service.send_message(channel, {
-                    "cycle": cycle,
-                    "message": i,
-                    "data": "x" * 1024  # 1KB payload
-                })
+                task = pusher_service.send_message(
+                    channel, {"cycle": cycle, "message": i, "data": "x" * 1024}  # 1KB payload
+                )
                 tasks.append(task)
 
             await asyncio.gather(*tasks)
@@ -407,7 +413,7 @@ class TestPusherPerformance:
         # Analyze memory trend
         memory_trend = []
         for i in range(1, len(memory_samples)):
-            memory_delta = memory_samples[i] - memory_samples[i-1]
+            memory_delta = memory_samples[i] - memory_samples[i - 1]
             memory_trend.append(memory_delta)
 
         # Check for consistent memory growth (potential leak)
@@ -425,6 +431,7 @@ class TestPusherPerformance:
 
     def test_cpu_usage_under_load(self, pusher_service):
         """Test CPU usage under sustained load"""
+
         def cpu_intensive_task():
             """Simulate CPU-intensive message processing"""
             start_time = time.time()
@@ -483,10 +490,9 @@ class TestPusherPerformance:
         for i in range(message_count):
             start_time = time.time()
 
-            await pusher_service.send_message(channel, {
-                "id": f"latency-test-{i}",
-                "timestamp": start_time
-            })
+            await pusher_service.send_message(
+                channel, {"id": f"latency-test-{i}", "timestamp": start_time}
+            )
 
             end_time = time.time()
             latency = (end_time - start_time) * 1000  # Convert to milliseconds
@@ -575,10 +581,9 @@ class TestPusherStressTest:
 
         tasks = []
         for i in range(message_count):
-            task = pusher_service.send_message(channel, {
-                "flood_id": i,
-                "data": f"flood message {i}"
-            })
+            task = pusher_service.send_message(
+                channel, {"flood_id": i, "data": f"flood message {i}"}
+            )
             tasks.append(task)
 
         # Execute flood

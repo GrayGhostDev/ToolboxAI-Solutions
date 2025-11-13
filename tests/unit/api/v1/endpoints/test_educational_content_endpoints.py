@@ -4,24 +4,19 @@ Unit Tests for Educational Content Endpoints
 Tests CRUD operations, content generation, analytics, and publishing functionality.
 """
 
-import pytest
-from datetime import datetime
-from unittest.mock import Mock, patch
-from fastapi.testclient import TestClient
-from fastapi import status, FastAPI
 from uuid import uuid4
 
+import pytest
+from fastapi import FastAPI, status
+from fastapi.testclient import TestClient
+
 from apps.backend.api.v1.endpoints.educational_content import (
-    router,
-    ContentType,
-    DifficultyLevel,
-    ContentStatus,
-    SubjectArea,
+    _mock_analytics_db,
     _mock_content_db,
-    _mock_analytics_db
+    router,
 )
 from apps.backend.core.security.jwt_handler import create_access_token
-from tests.utils import APITestHelper, MockDataGenerator
+from tests.utils import APITestHelper
 
 
 @pytest.fixture(autouse=True)
@@ -104,7 +99,7 @@ def sample_content_request():
             {
                 "description": "Understand basic algebraic expressions",
                 "bloom_level": "understand",
-                "assessment_criteria": "Can identify variables and constants"
+                "assessment_criteria": "Can identify variables and constants",
             }
         ],
         "curriculum_standards": [
@@ -112,20 +107,20 @@ def sample_content_request():
                 "standard_id": "CCSS.MATH.7.EE.A.1",
                 "description": "Apply properties of operations",
                 "grade_level": 7,
-                "subject_area": "mathematics"
+                "subject_area": "mathematics",
             }
         ],
         "content_data": {
             "sections": ["Introduction", "Examples", "Practice"],
-            "materials": ["Worksheet", "Video"]
+            "materials": ["Worksheet", "Video"],
         },
         "metadata": {
             "estimated_duration": 45,
             "prerequisites": [],
             "tags": ["algebra", "math", "7th-grade"],
             "language": "en",
-            "accessibility_features": []
-        }
+            "accessibility_features": [],
+        },
     }
 
 
@@ -135,14 +130,11 @@ class TestCreateContentEndpoint:
     def test_create_content_with_valid_data(self, client, teacher_headers, sample_content_request):
         """Test creating content with valid request."""
         response = client.post(
-            "/educational-content/create",
-            json=sample_content_request,
-            headers=teacher_headers
+            "/educational-content/create", json=sample_content_request, headers=teacher_headers
         )
 
         data = APITestHelper.assert_success_response(
-            response,
-            expected_status=status.HTTP_201_CREATED
+            response, expected_status=status.HTTP_201_CREATED
         )
 
         # Verify response structure
@@ -154,28 +146,19 @@ class TestCreateContentEndpoint:
 
     def test_create_content_requires_authentication(self, client, sample_content_request):
         """Test create content requires authentication."""
-        response = client.post(
-            "/educational-content/create",
-            json=sample_content_request
-        )
+        response = client.post("/educational-content/create", json=sample_content_request)
 
-        assert response.status_code in [
-            status.HTTP_401_UNAUTHORIZED,
-            status.HTTP_403_FORBIDDEN
-        ]
+        assert response.status_code in [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN]
 
-    def test_create_content_requires_teacher_or_admin(self, client, student_headers, sample_content_request):
+    def test_create_content_requires_teacher_or_admin(
+        self, client, student_headers, sample_content_request
+    ):
         """Test students cannot create content."""
         response = client.post(
-            "/educational-content/create",
-            json=sample_content_request,
-            headers=student_headers
+            "/educational-content/create", json=sample_content_request, headers=student_headers
         )
 
-        assert response.status_code in [
-            status.HTTP_401_UNAUTHORIZED,
-            status.HTTP_403_FORBIDDEN
-        ]
+        assert response.status_code in [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN]
 
     def test_create_quiz_validates_content_data(self, client, teacher_headers):
         """Test quiz content validation requires questions and scoring."""
@@ -186,27 +169,16 @@ class TestCreateContentEndpoint:
             "subject_area": "mathematics",
             "grade_level": 7,
             "difficulty_level": "beginner",
-            "learning_objectives": [
-                {
-                    "description": "Test math skills",
-                    "bloom_level": "apply"
-                }
-            ],
+            "learning_objectives": [{"description": "Test math skills", "bloom_level": "apply"}],
             "content_data": {
                 # Missing required "questions" and "scoring" fields
                 "time_limit": 30
             },
-            "metadata": {
-                "estimated_duration": 30,
-                "tags": ["quiz"],
-                "language": "en"
-            }
+            "metadata": {"estimated_duration": 30, "tags": ["quiz"], "language": "en"},
         }
 
         response = client.post(
-            "/educational-content/create",
-            json=request_data,
-            headers=teacher_headers
+            "/educational-content/create", json=request_data, headers=teacher_headers
         )
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
@@ -221,52 +193,43 @@ class TestCreateContentEndpoint:
             "grade_level": 7,
             "difficulty_level": "intermediate",
             "learning_objectives": [
-                {
-                    "description": "Understand scientific method",
-                    "bloom_level": "understand"
-                }
+                {"description": "Understand scientific method", "bloom_level": "understand"}
             ],
             "content_data": {
                 # Missing required "sections" and "materials" fields
                 "duration": 45
             },
-            "metadata": {
-                "estimated_duration": 45,
-                "tags": ["science"],
-                "language": "en"
-            }
+            "metadata": {"estimated_duration": 45, "tags": ["science"], "language": "en"},
         }
 
         response = client.post(
-            "/educational-content/create",
-            json=request_data,
-            headers=teacher_headers
+            "/educational-content/create", json=request_data, headers=teacher_headers
         )
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    def test_create_content_validates_title_length(self, client, teacher_headers, sample_content_request):
+    def test_create_content_validates_title_length(
+        self, client, teacher_headers, sample_content_request
+    ):
         """Test title validation."""
         # Title too short
         sample_content_request["title"] = "AB"
 
         response = client.post(
-            "/educational-content/create",
-            json=sample_content_request,
-            headers=teacher_headers
+            "/educational-content/create", json=sample_content_request, headers=teacher_headers
         )
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    def test_create_content_validates_grade_level(self, client, teacher_headers, sample_content_request):
+    def test_create_content_validates_grade_level(
+        self, client, teacher_headers, sample_content_request
+    ):
         """Test grade level validation."""
         # Invalid grade level
         sample_content_request["grade_level"] = 15  # Must be 1-12
 
         response = client.post(
-            "/educational-content/create",
-            json=sample_content_request,
-            headers=teacher_headers
+            "/educational-content/create", json=sample_content_request, headers=teacher_headers
         )
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
@@ -277,10 +240,7 @@ class TestListContentEndpoint:
 
     def test_list_content_returns_empty_list(self, client, teacher_headers):
         """Test listing content with no content created."""
-        response = client.get(
-            "/educational-content/list",
-            headers=teacher_headers
-        )
+        response = client.get("/educational-content/list", headers=teacher_headers)
 
         data = APITestHelper.assert_success_response(response)
 
@@ -292,8 +252,7 @@ class TestListContentEndpoint:
     def test_list_content_with_pagination(self, client, teacher_headers):
         """Test content listing with pagination."""
         response = client.get(
-            "/educational-content/list?page=1&page_size=10",
-            headers=teacher_headers
+            "/educational-content/list?page=1&page_size=10", headers=teacher_headers
         )
 
         data = APITestHelper.assert_success_response(response)
@@ -308,8 +267,7 @@ class TestListContentEndpoint:
     def test_list_content_filters_by_subject(self, client, teacher_headers):
         """Test filtering content by subject area."""
         response = client.get(
-            "/educational-content/list?subject_area=mathematics",
-            headers=teacher_headers
+            "/educational-content/list?subject_area=mathematics", headers=teacher_headers
         )
 
         data = APITestHelper.assert_success_response(response)
@@ -319,10 +277,7 @@ class TestListContentEndpoint:
 
     def test_list_content_filters_by_grade_level(self, client, teacher_headers):
         """Test filtering content by grade level."""
-        response = client.get(
-            "/educational-content/list?grade_level=7",
-            headers=teacher_headers
-        )
+        response = client.get("/educational-content/list?grade_level=7", headers=teacher_headers)
 
         data = APITestHelper.assert_success_response(response)
 
@@ -331,8 +286,7 @@ class TestListContentEndpoint:
     def test_list_content_filters_by_content_type(self, client, teacher_headers):
         """Test filtering content by type."""
         response = client.get(
-            "/educational-content/list?content_type=quiz",
-            headers=teacher_headers
+            "/educational-content/list?content_type=quiz", headers=teacher_headers
         )
 
         data = APITestHelper.assert_success_response(response)
@@ -341,31 +295,25 @@ class TestListContentEndpoint:
 
     def test_list_content_supports_search(self, client, teacher_headers):
         """Test content search functionality."""
-        response = client.get(
-            "/educational-content/list?search=algebra",
-            headers=teacher_headers
-        )
+        response = client.get("/educational-content/list?search=algebra", headers=teacher_headers)
 
         data = APITestHelper.assert_success_response(response)
 
         assert data["filters_applied"]["search"] == "algebra"
 
-    def test_students_only_see_published_content(self, client, teacher_headers, student_headers, sample_content_request):
+    def test_students_only_see_published_content(
+        self, client, teacher_headers, student_headers, sample_content_request
+    ):
         """Test students can only see published content."""
         # Create draft content as teacher
         create_response = client.post(
-            "/educational-content/create",
-            json=sample_content_request,
-            headers=teacher_headers
+            "/educational-content/create", json=sample_content_request, headers=teacher_headers
         )
 
         assert create_response.status_code == status.HTTP_201_CREATED
 
         # Student list should be empty (draft content not visible)
-        response = client.get(
-            "/educational-content/list",
-            headers=student_headers
-        )
+        response = client.get("/educational-content/list", headers=student_headers)
 
         data = response.json()
         assert len(data["items"]) == 0
@@ -378,18 +326,13 @@ class TestGetContentEndpoint:
         """Test retrieving specific content by ID."""
         # Create content first
         create_response = client.post(
-            "/educational-content/create",
-            json=sample_content_request,
-            headers=teacher_headers
+            "/educational-content/create", json=sample_content_request, headers=teacher_headers
         )
 
         content_id = create_response.json()["id"]
 
         # Get content
-        response = client.get(
-            f"/educational-content/{content_id}",
-            headers=teacher_headers
-        )
+        response = client.get(f"/educational-content/{content_id}", headers=teacher_headers)
 
         data = APITestHelper.assert_success_response(response)
 
@@ -398,29 +341,23 @@ class TestGetContentEndpoint:
 
     def test_get_nonexistent_content_returns_404(self, client, teacher_headers):
         """Test getting non-existent content returns 404."""
-        response = client.get(
-            f"/educational-content/{uuid4()}",
-            headers=teacher_headers
-        )
+        response = client.get(f"/educational-content/{uuid4()}", headers=teacher_headers)
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    def test_students_cannot_access_draft_content(self, client, teacher_headers, student_headers, sample_content_request):
+    def test_students_cannot_access_draft_content(
+        self, client, teacher_headers, student_headers, sample_content_request
+    ):
         """Test students cannot access draft content."""
         # Create draft content
         create_response = client.post(
-            "/educational-content/create",
-            json=sample_content_request,
-            headers=teacher_headers
+            "/educational-content/create", json=sample_content_request, headers=teacher_headers
         )
 
         content_id = create_response.json()["id"]
 
         # Student tries to access
-        response = client.get(
-            f"/educational-content/{content_id}",
-            headers=student_headers
-        )
+        response = client.get(f"/educational-content/{content_id}", headers=student_headers)
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
@@ -432,9 +369,7 @@ class TestUpdateContentEndpoint:
         """Test updating content with valid data."""
         # Create content first
         create_response = client.post(
-            "/educational-content/create",
-            json=sample_content_request,
-            headers=teacher_headers
+            "/educational-content/create", json=sample_content_request, headers=teacher_headers
         )
 
         content_id = create_response.json()["id"]
@@ -442,13 +377,11 @@ class TestUpdateContentEndpoint:
         # Update content
         update_data = {
             "title": "Updated Title",
-            "description": "Updated description for the content"
+            "description": "Updated description for the content",
         }
 
         response = client.put(
-            f"/educational-content/{content_id}",
-            json=update_data,
-            headers=teacher_headers
+            f"/educational-content/{content_id}", json=update_data, headers=teacher_headers
         )
 
         data = APITestHelper.assert_success_response(response)
@@ -459,20 +392,18 @@ class TestUpdateContentEndpoint:
     def test_update_nonexistent_content_returns_404(self, client, teacher_headers):
         """Test updating non-existent content returns 404."""
         response = client.put(
-            f"/educational-content/{uuid4()}",
-            json={"title": "New Title"},
-            headers=teacher_headers
+            f"/educational-content/{uuid4()}", json={"title": "New Title"}, headers=teacher_headers
         )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    def test_teachers_can_only_update_own_content(self, client, teacher_headers, admin_headers, sample_content_request):
+    def test_teachers_can_only_update_own_content(
+        self, client, teacher_headers, admin_headers, sample_content_request
+    ):
         """Test teachers can only update their own content."""
         # Admin creates content
         create_response = client.post(
-            "/educational-content/create",
-            json=sample_content_request,
-            headers=admin_headers
+            "/educational-content/create", json=sample_content_request, headers=admin_headers
         )
 
         content_id = create_response.json()["id"]
@@ -481,18 +412,18 @@ class TestUpdateContentEndpoint:
         response = client.put(
             f"/educational-content/{content_id}",
             json={"title": "Unauthorized Update"},
-            headers=teacher_headers
+            headers=teacher_headers,
         )
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    def test_students_cannot_update_content(self, client, teacher_headers, student_headers, sample_content_request):
+    def test_students_cannot_update_content(
+        self, client, teacher_headers, student_headers, sample_content_request
+    ):
         """Test students cannot update content."""
         # Create content as teacher
         create_response = client.post(
-            "/educational-content/create",
-            json=sample_content_request,
-            headers=teacher_headers
+            "/educational-content/create", json=sample_content_request, headers=teacher_headers
         )
 
         content_id = create_response.json()["id"]
@@ -501,13 +432,10 @@ class TestUpdateContentEndpoint:
         response = client.put(
             f"/educational-content/{content_id}",
             json={"title": "Student Update"},
-            headers=student_headers
+            headers=student_headers,
         )
 
-        assert response.status_code in [
-            status.HTTP_401_UNAUTHORIZED,
-            status.HTTP_403_FORBIDDEN
-        ]
+        assert response.status_code in [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN]
 
 
 class TestDeleteContentEndpoint:
@@ -517,54 +445,40 @@ class TestDeleteContentEndpoint:
         """Test deleting content."""
         # Create content first
         create_response = client.post(
-            "/educational-content/create",
-            json=sample_content_request,
-            headers=teacher_headers
+            "/educational-content/create", json=sample_content_request, headers=teacher_headers
         )
 
         content_id = create_response.json()["id"]
 
         # Delete content
-        response = client.delete(
-            f"/educational-content/{content_id}",
-            headers=teacher_headers
-        )
+        response = client.delete(f"/educational-content/{content_id}", headers=teacher_headers)
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
         # Verify content is deleted
-        get_response = client.get(
-            f"/educational-content/{content_id}",
-            headers=teacher_headers
-        )
+        get_response = client.get(f"/educational-content/{content_id}", headers=teacher_headers)
 
         assert get_response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_delete_nonexistent_content_returns_404(self, client, teacher_headers):
         """Test deleting non-existent content returns 404."""
-        response = client.delete(
-            f"/educational-content/{uuid4()}",
-            headers=teacher_headers
-        )
+        response = client.delete(f"/educational-content/{uuid4()}", headers=teacher_headers)
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    def test_teachers_can_only_delete_own_content(self, client, teacher_headers, admin_headers, sample_content_request):
+    def test_teachers_can_only_delete_own_content(
+        self, client, teacher_headers, admin_headers, sample_content_request
+    ):
         """Test teachers can only delete their own content."""
         # Admin creates content
         create_response = client.post(
-            "/educational-content/create",
-            json=sample_content_request,
-            headers=admin_headers
+            "/educational-content/create", json=sample_content_request, headers=admin_headers
         )
 
         content_id = create_response.json()["id"]
 
         # Teacher tries to delete admin's content
-        response = client.delete(
-            f"/educational-content/{content_id}",
-            headers=teacher_headers
-        )
+        response = client.delete(f"/educational-content/{content_id}", headers=teacher_headers)
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
@@ -580,23 +494,17 @@ class TestGenerateContentEndpoint:
             "topic": "Linear Equations",
             "content_type": "lesson",
             "difficulty_level": "intermediate",
-            "learning_objectives": [
-                "Solve linear equations",
-                "Graph linear functions"
-            ],
+            "learning_objectives": ["Solve linear equations", "Graph linear functions"],
             "curriculum_standards": ["CCSS.MATH.7.EE.B.4"],
-            "target_duration": 45
+            "target_duration": 45,
         }
 
         response = client.post(
-            "/educational-content/generate",
-            json=request_data,
-            headers=teacher_headers
+            "/educational-content/generate", json=request_data, headers=teacher_headers
         )
 
         data = APITestHelper.assert_success_response(
-            response,
-            expected_status=status.HTTP_202_ACCEPTED
+            response, expected_status=status.HTTP_202_ACCEPTED
         )
 
         assert "generation_id" in data
@@ -611,19 +519,14 @@ class TestGenerateContentEndpoint:
             "topic": "Algebra",
             "content_type": "lesson",
             "difficulty_level": "beginner",
-            "learning_objectives": ["Learn algebra"]
+            "learning_objectives": ["Learn algebra"],
         }
 
         response = client.post(
-            "/educational-content/generate",
-            json=request_data,
-            headers=student_headers
+            "/educational-content/generate", json=request_data, headers=student_headers
         )
 
-        assert response.status_code in [
-            status.HTTP_401_UNAUTHORIZED,
-            status.HTTP_403_FORBIDDEN
-        ]
+        assert response.status_code in [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN]
 
 
 class TestContentAnalyticsEndpoint:
@@ -633,17 +536,14 @@ class TestContentAnalyticsEndpoint:
         """Test retrieving content analytics."""
         # Create content first
         create_response = client.post(
-            "/educational-content/create",
-            json=sample_content_request,
-            headers=teacher_headers
+            "/educational-content/create", json=sample_content_request, headers=teacher_headers
         )
 
         content_id = create_response.json()["id"]
 
         # Get analytics
         response = client.get(
-            f"/educational-content/{content_id}/analytics",
-            headers=teacher_headers
+            f"/educational-content/{content_id}/analytics", headers=teacher_headers
         )
 
         data = APITestHelper.assert_success_response(response)
@@ -655,27 +555,23 @@ class TestContentAnalyticsEndpoint:
         assert "completion_rate" in data
         assert "average_time_spent" in data
 
-    def test_analytics_requires_teacher_or_admin(self, client, teacher_headers, student_headers, sample_content_request):
+    def test_analytics_requires_teacher_or_admin(
+        self, client, teacher_headers, student_headers, sample_content_request
+    ):
         """Test students cannot access analytics."""
         # Create content
         create_response = client.post(
-            "/educational-content/create",
-            json=sample_content_request,
-            headers=teacher_headers
+            "/educational-content/create", json=sample_content_request, headers=teacher_headers
         )
 
         content_id = create_response.json()["id"]
 
         # Student tries to get analytics
         response = client.get(
-            f"/educational-content/{content_id}/analytics",
-            headers=student_headers
+            f"/educational-content/{content_id}/analytics", headers=student_headers
         )
 
-        assert response.status_code in [
-            status.HTTP_401_UNAUTHORIZED,
-            status.HTTP_403_FORBIDDEN
-        ]
+        assert response.status_code in [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN]
 
 
 class TestPublishContentEndpoint:
@@ -685,38 +581,34 @@ class TestPublishContentEndpoint:
         """Test publishing content."""
         # Create content first
         create_response = client.post(
-            "/educational-content/create",
-            json=sample_content_request,
-            headers=teacher_headers
+            "/educational-content/create", json=sample_content_request, headers=teacher_headers
         )
 
         content_id = create_response.json()["id"]
 
         # Publish content
         response = client.post(
-            f"/educational-content/{content_id}/publish",
-            headers=teacher_headers
+            f"/educational-content/{content_id}/publish", headers=teacher_headers
         )
 
         data = APITestHelper.assert_success_response(response)
 
         assert data["status"] == "published"
 
-    def test_teachers_can_only_publish_own_content(self, client, teacher_headers, admin_headers, sample_content_request):
+    def test_teachers_can_only_publish_own_content(
+        self, client, teacher_headers, admin_headers, sample_content_request
+    ):
         """Test teachers can only publish their own content."""
         # Admin creates content
         create_response = client.post(
-            "/educational-content/create",
-            json=sample_content_request,
-            headers=admin_headers
+            "/educational-content/create", json=sample_content_request, headers=admin_headers
         )
 
         content_id = create_response.json()["id"]
 
         # Teacher tries to publish admin's content
         response = client.post(
-            f"/educational-content/{content_id}/publish",
-            headers=teacher_headers
+            f"/educational-content/{content_id}/publish", headers=teacher_headers
         )
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -728,8 +620,7 @@ class TestSearchCurriculumStandards:
     def test_search_curriculum_standards(self, client, teacher_headers):
         """Test searching curriculum standards."""
         response = client.get(
-            "/educational-content/standards/search?query=math",
-            headers=teacher_headers
+            "/educational-content/standards/search?query=math", headers=teacher_headers
         )
 
         data = APITestHelper.assert_success_response(response)
@@ -740,7 +631,7 @@ class TestSearchCurriculumStandards:
         """Test searching standards with subject and grade filters."""
         response = client.get(
             "/educational-content/standards/search?query=math&subject_area=mathematics&grade_level=5",
-            headers=teacher_headers
+            headers=teacher_headers,
         )
 
         data = APITestHelper.assert_success_response(response)
@@ -750,8 +641,7 @@ class TestSearchCurriculumStandards:
     def test_search_standards_validates_query_length(self, client, teacher_headers):
         """Test search requires minimum query length."""
         response = client.get(
-            "/educational-content/standards/search?query=a",
-            headers=teacher_headers
+            "/educational-content/standards/search?query=a", headers=teacher_headers
         )
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY

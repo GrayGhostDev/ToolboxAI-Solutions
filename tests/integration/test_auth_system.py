@@ -1,17 +1,19 @@
-import pytest_asyncio
+from unittest.mock import Mock, patch
 
 import pytest
-from unittest.mock import Mock, patch
+import pytest_asyncio
+
 
 @pytest.fixture
 def mock_db_connection():
     """Mock database connection for tests"""
-    with patch('psycopg2.connect') as mock_connect:
+    with patch("psycopg2.connect") as mock_connect:
         mock_conn = Mock()
         mock_cursor = Mock()
         mock_conn.cursor.return_value = mock_cursor
         mock_connect.return_value = mock_conn
         yield mock_conn
+
 
 #!/usr/bin/env python3
 """
@@ -20,15 +22,16 @@ Test authentication system with real database users
 
 import asyncio
 import os
-import httpx
-import pytest
-import psycopg2
 from datetime import datetime
+
+import httpx
+import psycopg2
+import pytest
 
 # Skip all tests in this module as they require external services
 pytestmark = pytest.mark.skipif(
-    not os.environ.get('RUN_INTEGRATION_TESTS'),
-    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable"
+    not os.environ.get("RUN_INTEGRATION_TESTS"),
+    reason="Integration tests disabled. Set RUN_INTEGRATION_TESTS=1 to enable",
 )
 
 
@@ -46,17 +49,19 @@ async def test_authentication_with_real_users():
             host="localhost",
             database="educational_platform_dev",
             user="eduplatform",
-            password="eduplatform2024"
+            password="eduplatform2024",
         )
         cur = conn.cursor()
 
         # Get real users from database
-        cur.execute("""
+        cur.execute(
+            """
             SELECT username, email, role
             FROM users
             WHERE is_active = true
             LIMIT 5
-        """)
+        """
+        )
         users = cur.fetchall()
 
         print(f"✅ Found {len(users)} active users in database:")
@@ -84,10 +89,7 @@ async def test_authentication_with_real_users():
         for creds in test_credentials:
             try:
                 # Try login endpoint
-                response = await client.post(
-                    f"{base_url}/auth/login",
-                    json=creds
-                )
+                response = await client.post(f"{base_url}/auth/login", json=creds)
 
                 if response.status_code == 200:
                     print(f"  ✅ Login successful for {creds['username']}")
@@ -96,10 +98,7 @@ async def test_authentication_with_real_users():
                 elif response.status_code == 404:
                     print(f"  ⚠️  Login endpoint not found - trying /login")
                     # Try alternative endpoint
-                    response = await client.post(
-                        f"{base_url}/login",
-                        json=creds
-                    )
+                    response = await client.post(f"{base_url}/login", json=creds)
                     if response.status_code == 200:
                         print(f"  ✅ Login successful for {creds['username']} on /login")
                     else:
@@ -120,10 +119,7 @@ async def test_authentication_with_real_users():
 
             # Create test user
             test_user = User(
-                id="test-id",
-                username="john_teacher",
-                email="john@teacher.com",
-                role="teacher"
+                id="test-id", username="john_teacher", email="john@teacher.com", role="teacher"
             )
 
             token = create_user_token(test_user)
@@ -160,10 +156,7 @@ async def test_protected_endpoints():
     from apps.backend.models.schemas import User
 
     test_user = User(
-        id="teacher-123",
-        username="test_teacher",
-        email="test@teacher.com",
-        role="teacher"
+        id="teacher-123", username="test_teacher", email="test@teacher.com", role="teacher"
     )
 
     token = create_user_token(test_user)
@@ -173,34 +166,36 @@ async def test_protected_endpoints():
     async with httpx.AsyncClient() as client:
         # Test various protected endpoints
         endpoints = [
-            ("/generate_content", "POST", {
-                "subject": "Science",
-                "grade_level": 7,
-                "learning_objectives": ["Solar System"],
-                "environment_type": "space_station"
-            }),
-            ("/quiz/generate", "POST", {
-                "subject": "Science",
-                "topic": "Solar System",
-                "num_questions": 5,
-                "difficulty": "medium"
-            }),
+            (
+                "/generate_content",
+                "POST",
+                {
+                    "subject": "Science",
+                    "grade_level": 7,
+                    "learning_objectives": ["Solar System"],
+                    "environment_type": "space_station",
+                },
+            ),
+            (
+                "/quiz/generate",
+                "POST",
+                {
+                    "subject": "Science",
+                    "topic": "Solar System",
+                    "num_questions": 5,
+                    "difficulty": "medium",
+                },
+            ),
             ("/analytics", "GET", None),
         ]
 
         for endpoint, method, data in endpoints:
             try:
                 if method == "GET":
-                    response = await client.get(
-                        f"{base_url}{endpoint}",
-                        headers=headers
-                    )
+                    response = await client.get(f"{base_url}{endpoint}", headers=headers)
                 else:
                     response = await client.post(
-                        f"{base_url}{endpoint}",
-                        json=data,
-                        headers=headers,
-                        timeout=10.0
+                        f"{base_url}{endpoint}", json=data, headers=headers, timeout=10.0
                     )
 
                 if response.status_code == 200:
@@ -230,6 +225,7 @@ async def main():
 if __name__ == "__main__":
     # Ensure server modules are importable
     import sys
-    sys.path.insert(0, '/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions')
+
+    sys.path.insert(0, "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions")
 
     asyncio.run(main())

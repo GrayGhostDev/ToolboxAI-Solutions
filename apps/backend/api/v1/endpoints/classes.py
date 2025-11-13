@@ -3,31 +3,28 @@ Classes API Endpoints for ToolboxAI Educational Platform
 Provides class management functionality for all user roles.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from typing import Dict, Any, List, Optional
-from datetime import datetime, timedelta
 import logging
+from datetime import datetime
+from typing import Any
 from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from apps.backend.api.auth.auth import get_current_user
 from apps.backend.models.classes import (
     ClassCreate,
-    ClassUpdate,
-    ClassSummary,
     ClassDetails,
-    ClassResponse,
-    ClassListResponse,
-    ClassDetailsResponse,
+    ClassSummary,
+    ClassUpdate,
 )
-from database.models.models import Class, ClassEnrollment, User
 from database.database_service import DatabaseService
+from database.models.models import Class, ClassEnrollment, User
 
 # Create database service instance
 database_service = DatabaseService()
-from sqlalchemy import and_, func, select
-from sqlalchemy.orm import selectinload
+
 from pydantic import BaseModel
-from typing import Optional as Opt
+from sqlalchemy import and_, func, select
 
 
 # User model for type hints (keeping for backward compatibility)
@@ -35,7 +32,7 @@ class UserModel(BaseModel):
     id: str
     username: str
     role: str
-    email: Optional[str] = None
+    email: str | None = None
 
 
 logger = logging.getLogger(__name__)
@@ -55,15 +52,15 @@ classes_router = APIRouter(prefix="/classes", tags=["Classes"])
 router = classes_router
 
 
-@classes_router.get("/", response_model=List[ClassSummary])
+@classes_router.get("/", response_model=list[ClassSummary])
 async def get_classes(
     current_user: UserModel = Depends(get_current_user),
     limit: int = Query(default=20, le=100),
     offset: int = Query(default=0, ge=0),
-    subject: Optional[str] = None,
-    grade_level: Optional[int] = None,
+    subject: str | None = None,
+    grade_level: int | None = None,
     session=Depends(get_db_session),
-) -> List[ClassSummary]:
+) -> list[ClassSummary]:
     """Get classes based on user role."""
 
     try:
@@ -372,7 +369,7 @@ async def get_class_details(
 
         return class_details
 
-    except ValueError as e:
+    except ValueError:
         # Invalid UUID
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid class ID format"
@@ -393,7 +390,7 @@ async def get_class_students(
     class_id: str,
     current_user: UserModel = Depends(get_current_user),
     session=Depends(get_db_session),
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Get students enrolled in a class."""
 
     role = current_user.role.lower()
@@ -664,7 +661,7 @@ async def enroll_student(
     student_id: str,
     current_user: UserModel = Depends(get_current_user),
     session=Depends(get_db_session),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Enroll a student in a class."""
 
     role = current_user.role.lower()
@@ -697,16 +694,12 @@ async def enroll_student(
             )
 
         # Check if student exists and is actually a student
-        student_query = select(User).where(
-            and_(User.id == student_uuid, User.role == "student")
-        )
+        student_query = select(User).where(and_(User.id == student_uuid, User.role == "student"))
         student_result = await db_session.execute(student_query)
         student = student_result.scalar_one_or_none()
 
         if not student:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Student not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student not found")
 
         # Check if already enrolled
         existing_query = select(ClassEnrollment).where(
@@ -782,7 +775,7 @@ async def unenroll_student(
     student_id: str,
     current_user: UserModel = Depends(get_current_user),
     session=Depends(get_db_session),
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Remove a student from a class."""
 
     role = current_user.role.lower()
@@ -851,10 +844,10 @@ async def unenroll_student(
 @classes_router.post("/{class_id}/students/batch")
 async def batch_enroll_students(
     class_id: str,
-    student_ids: List[str],
+    student_ids: list[str],
     current_user: UserModel = Depends(get_current_user),
     session=Depends(get_db_session),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Enroll multiple students in a class at once."""
 
     role = current_user.role.lower()
@@ -972,7 +965,7 @@ async def delete_class(
     class_id: str,
     current_user: UserModel = Depends(get_current_user),
     session=Depends(get_db_session),
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Delete a class (admins only)."""
 
     if current_user.role.lower() != "admin":

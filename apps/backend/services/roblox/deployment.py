@@ -3,24 +3,22 @@ Roblox Content Deployment Pipeline
 Manages queuing and deployment of content to Roblox environments using Redis
 """
 
-import json
 import asyncio
+import hashlib
+import json
 import logging
-import os
-import base64
 import mimetypes
-from typing import Dict, Any, Optional, List, Tuple
+import os
+import uuid
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
+from typing import Any
+
+import aiofiles
 import redis.asyncio as redis
 from pydantic import BaseModel, Field
-import hashlib
-import uuid
-import aiofiles
-import httpx
 
-from apps.backend.core.config import settings
 from apps.backend.services.supabase_service import SupabaseService
 
 logger = logging.getLogger(__name__)
@@ -60,12 +58,12 @@ class DeploymentRequest(BaseModel):
     deployment_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     content_type: ContentType
     content_data: str
-    target_place_id: Optional[str] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    target_place_id: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
     priority: int = Field(default=5, ge=1, le=10)
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    user_id: Optional[str] = None
-    checksum: Optional[str] = None
+    user_id: str | None = None
+    checksum: str | None = None
 
 
 class DeploymentResult(BaseModel):
@@ -73,11 +71,11 @@ class DeploymentResult(BaseModel):
 
     deployment_id: str
     status: DeploymentStatus
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    error_message: Optional[str] = None
-    deployment_url: Optional[str] = None
-    version: Optional[str] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    error_message: str | None = None
+    deployment_url: str | None = None
+    version: str | None = None
 
 
 class AssetMetadata(BaseModel):
@@ -88,18 +86,18 @@ class AssetMetadata(BaseModel):
     content_type: ContentType
     file_size: int
     file_hash: str
-    mime_type: Optional[str] = None
-    dimensions: Optional[Dict[str, int]] = None  # For images/models
-    duration: Optional[float] = None  # For sounds/animations
-    tags: List[str] = Field(default_factory=list)
-    creator_id: Optional[str] = None
+    mime_type: str | None = None
+    dimensions: dict[str, int] | None = None  # For images/models
+    duration: float | None = None  # For sounds/animations
+    tags: list[str] = Field(default_factory=list)
+    creator_id: str | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: Optional[datetime] = None
+    updated_at: datetime | None = None
     version: int = 1
-    parent_asset_id: Optional[str] = None  # For versioning
-    roblox_asset_id: Optional[str] = None  # After upload to Roblox
-    storage_path: Optional[str] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    parent_asset_id: str | None = None  # For versioning
+    roblox_asset_id: str | None = None  # After upload to Roblox
+    storage_path: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class AssetBundle(BaseModel):
@@ -107,12 +105,12 @@ class AssetBundle(BaseModel):
 
     bundle_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
-    description: Optional[str] = None
-    assets: List[AssetMetadata] = Field(default_factory=list)
-    dependencies: Dict[str, str] = Field(default_factory=dict)  # asset_name: asset_id
+    description: str | None = None
+    assets: list[AssetMetadata] = Field(default_factory=list)
+    dependencies: dict[str, str] = Field(default_factory=dict)  # asset_name: asset_id
     created_at: datetime = Field(default_factory=datetime.utcnow)
     total_size: int = 0
-    deployment_order: List[str] = Field(default_factory=list)  # Ordered asset IDs
+    deployment_order: list[str] = Field(default_factory=list)  # Ordered asset IDs
 
 
 class RobloxDeploymentPipeline:
@@ -120,7 +118,7 @@ class RobloxDeploymentPipeline:
 
     def __init__(self, redis_url: str = "redis://localhost:6379"):
         self.redis_url = redis_url
-        self.redis_client: Optional[redis.Redis] = None
+        self.redis_client: redis.Redis | None = None
         self.deployment_queue = "roblox:deployment:queue"
         self.deployment_status = "roblox:deployment:status"
         self.deployment_history = "roblox:deployment:history"
@@ -184,7 +182,7 @@ class RobloxDeploymentPipeline:
             logger.error(f"Failed to queue deployment: {e}")
             raise
 
-    async def get_deployment_status(self, deployment_id: str) -> Optional[DeploymentResult]:
+    async def get_deployment_status(self, deployment_id: str) -> DeploymentResult | None:
         """Get current deployment status"""
         try:
             status_data = await self.redis_client.hget(self.deployment_status, deployment_id)
@@ -197,7 +195,7 @@ class RobloxDeploymentPipeline:
             logger.error(f"Failed to get deployment status: {e}")
             return None
 
-    async def get_queue_status(self) -> Dict[str, Any]:
+    async def get_queue_status(self) -> dict[str, Any]:
         """Get overall queue status"""
         try:
             # Get queue length
@@ -277,7 +275,7 @@ class RobloxDeploymentPipeline:
             return False
 
     async def _publish_update(
-        self, deployment_id: str, status: DeploymentStatus, message: Optional[str] = None
+        self, deployment_id: str, status: DeploymentStatus, message: str | None = None
     ):
         """Publish deployment status update"""
         try:
@@ -434,7 +432,7 @@ class RobloxDeploymentPipeline:
             logger.error(f"Model deployment failed: {e}")
             return False
 
-    async def get_deployment_history(self, limit: int = 10) -> List[DeploymentResult]:
+    async def get_deployment_history(self, limit: int = 10) -> list[DeploymentResult]:
         """Get recent deployment history"""
         try:
             history_data = await self.redis_client.lrange(self.deployment_history, 0, limit - 1)
@@ -480,10 +478,7 @@ class RobloxDeploymentPipeline:
     # ==================== Asset Management Methods ====================
 
     async def upload_asset(
-        self,
-        file_path: str,
-        content_type: ContentType,
-        metadata: Optional[Dict[str, Any]] = None
+        self, file_path: str, content_type: ContentType, metadata: dict[str, Any] | None = None
     ) -> AssetMetadata:
         """
         Upload an asset file for deployment
@@ -516,7 +511,7 @@ class RobloxDeploymentPipeline:
                 file_size=file_size,
                 file_hash=file_hash,
                 mime_type=mime_type,
-                metadata=metadata or {}
+                metadata=metadata or {},
             )
 
             # Store file in Supabase storage
@@ -537,7 +532,7 @@ class RobloxDeploymentPipeline:
         """Calculate SHA256 hash of file"""
         hash_sha256 = hashlib.sha256()
 
-        async with aiofiles.open(file_path, 'rb') as f:
+        async with aiofiles.open(file_path, "rb") as f:
             while chunk := await f.read(8192):
                 hash_sha256.update(chunk)
 
@@ -547,7 +542,9 @@ class RobloxDeploymentPipeline:
         """Store asset file in Supabase storage"""
         try:
             # Create storage path
-            storage_path = f"roblox_assets/{asset.content_type.value}/{asset.asset_id}/{file_path.name}"
+            storage_path = (
+                f"roblox_assets/{asset.content_type.value}/{asset.asset_id}/{file_path.name}"
+            )
 
             # TODO: Implement actual Supabase storage upload
             # For now, just return the path
@@ -563,10 +560,7 @@ class RobloxDeploymentPipeline:
         """Store asset metadata in Redis"""
         try:
             asset_key = f"roblox:assets:{asset.asset_id}"
-            await self.redis_client.hset(
-                asset_key,
-                mapping={"metadata": asset.model_dump_json()}
-            )
+            await self.redis_client.hset(asset_key, mapping={"metadata": asset.model_dump_json()})
 
             # Add to asset index by type
             index_key = f"roblox:assets:index:{asset.content_type.value}"
@@ -578,7 +572,7 @@ class RobloxDeploymentPipeline:
         except Exception as e:
             logger.error(f"Failed to store asset metadata: {e}")
 
-    async def get_asset(self, asset_id: str) -> Optional[AssetMetadata]:
+    async def get_asset(self, asset_id: str) -> AssetMetadata | None:
         """Get asset metadata by ID"""
         try:
             asset_key = f"roblox:assets:{asset_id}"
@@ -594,10 +588,8 @@ class RobloxDeploymentPipeline:
             return None
 
     async def list_assets(
-        self,
-        content_type: Optional[ContentType] = None,
-        limit: int = 50
-    ) -> List[AssetMetadata]:
+        self, content_type: ContentType | None = None, limit: int = 50
+    ) -> list[AssetMetadata]:
         """List assets with optional filtering"""
         try:
             assets = []
@@ -625,17 +617,11 @@ class RobloxDeploymentPipeline:
             return []
 
     async def create_asset_bundle(
-        self,
-        name: str,
-        asset_ids: List[str],
-        description: Optional[str] = None
+        self, name: str, asset_ids: list[str], description: str | None = None
     ) -> AssetBundle:
         """Create a bundle of related assets"""
         try:
-            bundle = AssetBundle(
-                name=name,
-                description=description
-            )
+            bundle = AssetBundle(name=name, description=description)
 
             # Fetch assets and add to bundle
             total_size = 0
@@ -650,10 +636,7 @@ class RobloxDeploymentPipeline:
 
             # Store bundle in Redis
             bundle_key = f"roblox:bundles:{bundle.bundle_id}"
-            await self.redis_client.hset(
-                bundle_key,
-                mapping={"bundle": bundle.model_dump_json()}
-            )
+            await self.redis_client.hset(bundle_key, mapping={"bundle": bundle.model_dump_json()})
 
             # Add to bundle index
             await self.redis_client.sadd("roblox:bundles:index", bundle.bundle_id)
@@ -666,10 +649,7 @@ class RobloxDeploymentPipeline:
             raise
 
     async def deploy_asset_bundle(
-        self,
-        bundle_id: str,
-        target_place_id: str,
-        priority: int = 5
+        self, bundle_id: str, target_place_id: str, priority: int = 5
     ) -> str:
         """Deploy an entire asset bundle"""
         try:
@@ -696,8 +676,8 @@ class RobloxDeploymentPipeline:
                         metadata={
                             "bundle_id": bundle_id,
                             "asset_id": asset_id,
-                            "asset_name": asset.name
-                        }
+                            "asset_name": asset.name,
+                        },
                     )
 
                     # Queue deployment
@@ -711,7 +691,7 @@ class RobloxDeploymentPipeline:
             logger.error(f"Failed to deploy asset bundle: {e}")
             raise
 
-    async def get_asset_versions(self, asset_name: str) -> List[AssetMetadata]:
+    async def get_asset_versions(self, asset_name: str) -> list[AssetMetadata]:
         """Get all versions of an asset"""
         try:
             versions = []
@@ -736,11 +716,7 @@ class RobloxDeploymentPipeline:
             logger.error(f"Failed to get asset versions: {e}")
             return []
 
-    async def validate_asset_deployment(
-        self,
-        asset_id: str,
-        place_id: str
-    ) -> bool:
+    async def validate_asset_deployment(self, asset_id: str, place_id: str) -> bool:
         """Validate that an asset was successfully deployed"""
         try:
             # TODO: Implement actual validation using Roblox API
@@ -755,10 +731,7 @@ class RobloxDeploymentPipeline:
             return False
 
     async def rollback_asset_deployment(
-        self,
-        asset_id: str,
-        place_id: str,
-        previous_version: Optional[str] = None
+        self, asset_id: str, place_id: str, previous_version: str | None = None
     ) -> bool:
         """Rollback an asset deployment"""
         try:
@@ -776,8 +749,8 @@ class RobloxDeploymentPipeline:
                         metadata={
                             "rollback": True,
                             "original_asset": asset_id,
-                            "previous_version": previous_version
-                        }
+                            "previous_version": previous_version,
+                        },
                     )
                     await self.queue_deployment(request)
                     return True
@@ -798,8 +771,8 @@ class RobloxAssetManager:
 
     def __init__(self, redis_url: str = None):
         self.redis_url = redis_url or os.getenv("REDIS_URL", "redis://localhost:6379")
-        self.redis_client: Optional[redis.Redis] = None
-        self.supabase = SupabaseService() if hasattr(SupabaseService, '__init__') else None
+        self.redis_client: redis.Redis | None = None
+        self.supabase = SupabaseService() if hasattr(SupabaseService, "__init__") else None
 
         # Roblox API configuration
         self.roblox_api_key = os.getenv("ROBLOX_API_KEY")
@@ -808,18 +781,12 @@ class RobloxAssetManager:
     async def initialize(self):
         """Initialize connections"""
         self.redis_client = await redis.from_url(
-            self.redis_url,
-            encoding="utf-8",
-            decode_responses=True
+            self.redis_url, encoding="utf-8", decode_responses=True
         )
         await self.redis_client.ping()
         logger.info("Asset manager initialized")
 
-    async def import_from_roblox(
-        self,
-        asset_id: str,
-        asset_type: ContentType
-    ) -> AssetMetadata:
+    async def import_from_roblox(self, asset_id: str, asset_type: ContentType) -> AssetMetadata:
         """Import an existing Roblox asset"""
         try:
             # TODO: Use Roblox API to fetch asset details
@@ -831,7 +798,7 @@ class RobloxAssetManager:
                 content_type=asset_type,
                 file_size=0,  # Will be updated after download
                 file_hash="",  # Will be calculated
-                roblox_asset_id=asset_id
+                roblox_asset_id=asset_id,
             )
 
             return metadata
@@ -840,11 +807,7 @@ class RobloxAssetManager:
             logger.error(f"Failed to import Roblox asset: {e}")
             raise
 
-    async def export_to_roblox(
-        self,
-        asset: AssetMetadata,
-        place_id: str
-    ) -> str:
+    async def export_to_roblox(self, asset: AssetMetadata, place_id: str) -> str:
         """Export asset to Roblox"""
         try:
             # TODO: Implement actual Roblox API upload
@@ -859,8 +822,8 @@ class RobloxAssetManager:
 
 
 # Singleton instances
-_deployment_pipeline: Optional[RobloxDeploymentPipeline] = None
-_asset_manager: Optional[RobloxAssetManager] = None
+_deployment_pipeline: RobloxDeploymentPipeline | None = None
+_asset_manager: RobloxAssetManager | None = None
 
 
 async def get_deployment_pipeline() -> RobloxDeploymentPipeline:

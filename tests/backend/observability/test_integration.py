@@ -6,28 +6,23 @@ anomaly detection, and alerting system.
 """
 
 import asyncio
-import time
+
 import pytest
-from typing import List
-from unittest.mock import Mock, AsyncMock
-
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from starlette.middleware.base import BaseHTTPMiddleware
 
+from .anomaly_detection import (
+    AnomalyAlert,
+    alert_manager,
+    anomaly_engine,
+    track_errors,
+    track_latency,
+)
 from .correlation import (
     CorrelationMiddleware,
-    correlation_manager,
     correlate_async_task,
+    correlation_manager,
     get_correlation_context,
-    get_correlation_id
-)
-from .anomaly_detection import (
-    anomaly_engine,
-    alert_manager,
-    AnomalyAlert,
-    track_latency,
-    track_errors
 )
 
 
@@ -51,7 +46,7 @@ class TestObservabilityIntegration:
             context = get_correlation_context()
             return {
                 "correlation_id": context.correlation_id if context else None,
-                "trace_id": context.trace_id if context else None
+                "trace_id": context.trace_id if context else None,
             }
 
         with TestClient(app) as client:
@@ -77,11 +72,13 @@ class TestObservabilityIntegration:
         @correlate_async_task("test_task")
         async def test_task(task_id: str):
             context = get_correlation_context()
-            results.append({
-                "task_id": task_id,
-                "correlation_id": context.correlation_id if context else None,
-                "request_type": context.request_type if context else None
-            })
+            results.append(
+                {
+                    "task_id": task_id,
+                    "correlation_id": context.correlation_id if context else None,
+                    "request_type": context.request_type if context else None,
+                }
+            )
 
         # Create a parent context
         app = FastAPI()
@@ -238,7 +235,7 @@ class TestObservabilityIntegration:
 
             return {
                 "parent_correlation_id": parent_correlation_id,
-                "child_correlation_id": child_correlation_id
+                "child_correlation_id": child_correlation_id,
             }
 
         with TestClient(app) as client:
@@ -277,11 +274,13 @@ class TestObservabilityIntegration:
             # Create WebSocket correlation context
             context = correlation_manager.create_context_from_websocket(websocket)
 
-            await websocket.send_json({
-                "correlation_id": context.correlation_id,
-                "request_type": context.request_type,
-                "trace_id": context.trace_id
-            })
+            await websocket.send_json(
+                {
+                    "correlation_id": context.correlation_id,
+                    "request_type": context.request_type,
+                    "trace_id": context.trace_id,
+                }
+            )
 
             await websocket.close()
 

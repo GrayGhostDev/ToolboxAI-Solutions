@@ -5,20 +5,19 @@ This module implements comprehensive accessibility testing using axe-core
 and Playwright to ensure WCAG 2.1 AA compliance.
 """
 
-import os
-import json
-import asyncio
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
-from datetime import datetime
-from dataclasses import dataclass, field
-from playwright.async_api import async_playwright, Page, Browser
-from rich.console import Console
-from rich.table import Table
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
-from rich.panel import Panel
-from rich.markdown import Markdown
 import argparse
+import asyncio
+import json
+from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+from playwright.async_api import Page, async_playwright
+from rich.console import Console
+from rich.panel import Panel
+from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
+from rich.table import Table
 
 console = Console()
 
@@ -32,8 +31,8 @@ class AccessibilityViolation:
     description: str
     help: str
     help_url: str
-    tags: List[str]
-    nodes: List[Dict[str, Any]]
+    tags: list[str]
+    nodes: list[dict[str, Any]]
     page_url: str
     timestamp: str
 
@@ -44,7 +43,7 @@ class A11yTestResult:
 
     page_name: str
     url: str
-    violations: List[AccessibilityViolation]
+    violations: list[AccessibilityViolation]
     passes: int
     incomplete: int
     inapplicable: int
@@ -56,12 +55,12 @@ class A11yTestResult:
 class AccessibilityTester:
     """Comprehensive accessibility testing system."""
 
-    def __init__(self, config: Optional[Dict] = None):
+    def __init__(self, config: dict | None = None):
         self.config = config or self._default_config()
-        self.test_results: List[A11yTestResult] = []
+        self.test_results: list[A11yTestResult] = []
         self.axe_script = self._load_axe_script()
 
-    def _default_config(self) -> Dict:
+    def _default_config(self) -> dict:
         """Default accessibility testing configuration."""
         return {
             "wcag_level": "AA",  # A, AA, or AAA
@@ -134,12 +133,7 @@ class AccessibilityTester:
         # For now, return CDN URL
         return "https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.7.2/axe.min.js"
 
-    async def test_page(
-        self,
-        page: Page,
-        page_name: str,
-        url: str
-    ) -> A11yTestResult:
+    async def test_page(self, page: Page, page_name: str, url: str) -> A11yTestResult:
         """Test a single page for accessibility."""
         console.print(f"Testing accessibility for: [cyan]{page_name}[/cyan]")
 
@@ -152,15 +146,19 @@ class AccessibilityTester:
         await page.wait_for_timeout(1000)  # Wait for script to load
 
         # Configure axe
-        await page.evaluate("""
+        await page.evaluate(
+            """
             axe.configure({
                 rules: arguments[0].rules.enabled.map(id => ({ id, enabled: true }))
                     .concat(arguments[0].rules.disabled.map(id => ({ id, enabled: false })))
             });
-        """, self.config)
+        """,
+            self.config,
+        )
 
         # Run accessibility tests
-        results = await page.evaluate("""
+        results = await page.evaluate(
+            """
             async () => {
                 const results = await axe.invoke();
                 return {
@@ -170,22 +168,25 @@ class AccessibilityTester:
                     inapplicable: results.inapplicable.length,
                 };
             }
-        """)
+        """
+        )
 
         # Parse violations
         violations = []
         for violation in results["violations"]:
-            violations.append(AccessibilityViolation(
-                id=violation["id"],
-                impact=violation["impact"],
-                description=violation["description"],
-                help=violation["help"],
-                help_url=violation["helpUrl"],
-                tags=violation["tags"],
-                nodes=violation["nodes"],
-                page_url=url,
-                timestamp=datetime.now().isoformat(),
-            ))
+            violations.append(
+                AccessibilityViolation(
+                    id=violation["id"],
+                    impact=violation["impact"],
+                    description=violation["description"],
+                    help=violation["help"],
+                    help_url=violation["helpUrl"],
+                    tags=violation["tags"],
+                    nodes=violation["nodes"],
+                    page_url=url,
+                    timestamp=datetime.now().isoformat(),
+                )
+            )
 
         # Calculate compliance score
         score = self._calculate_compliance_score(violations, results["passes"])
@@ -205,9 +206,7 @@ class AccessibilityTester:
         return result
 
     def _calculate_compliance_score(
-        self,
-        violations: List[AccessibilityViolation],
-        passes: int
+        self, violations: list[AccessibilityViolation], passes: int
     ) -> float:
         """Calculate accessibility compliance score."""
         # Weight violations by impact
@@ -233,7 +232,7 @@ class AccessibilityTester:
 
         return score
 
-    async def test_keyboard_navigation(self, page: Page) -> Dict[str, Any]:
+    async def test_keyboard_navigation(self, page: Page) -> dict[str, Any]:
         """Test keyboard navigation accessibility."""
         results = {
             "focusable_elements": 0,
@@ -248,7 +247,8 @@ class AccessibilityTester:
         results["skip_links"] = len(skip_links) > 0
 
         # Get all focusable elements
-        focusable = await page.evaluate("""
+        focusable = await page.evaluate(
+            """
             () => {
                 const selector = 'a, button, input, textarea, select, [tabindex]:not([tabindex="-1"])';
                 const elements = document.querySelectorAll(selector);
@@ -259,7 +259,8 @@ class AccessibilityTester:
                     rect: el.getBoundingClientRect(),
                 }));
             }
-        """)
+        """
+        )
 
         results["focusable_elements"] = len(focusable)
 
@@ -276,22 +277,27 @@ class AccessibilityTester:
         trap_candidates = await page.query_selector_all('div[tabindex="0"], span[tabindex="0"]')
         for element in trap_candidates:
             # Check if element has proper keyboard interaction
-            has_key_handler = await element.evaluate("""
+            has_key_handler = await element.evaluate(
+                """
                 el => el.onkeydown !== null || el.onkeyup !== null || el.onkeypress !== null
-            """)
+            """
+            )
             if not has_key_handler:
                 results["keyboard_traps"].append(await element.evaluate("el => el.outerHTML"))
 
         # Test focus visibility
-        await page.evaluate("""
+        await page.evaluate(
+            """
             () => {
                 // Trigger focus on first focusable element
                 const firstFocusable = document.querySelector('a, button, input, textarea, select');
                 if (firstFocusable) firstFocusable.focus();
             }
-        """)
+        """
+        )
 
-        focus_styles = await page.evaluate("""
+        focus_styles = await page.evaluate(
+            """
             () => {
                 const focused = document.activeElement;
                 if (!focused) return null;
@@ -303,20 +309,21 @@ class AccessibilityTester:
                     border: styles.border,
                 };
             }
-        """)
+        """
+        )
 
         # Check if focus is visually indicated
         if focus_styles:
             has_focus_indicator = (
-                (focus_styles["outline"] != "none" and focus_styles["outlineWidth"] != "0px") or
-                "box-shadow" in focus_styles["boxShadow"] or
-                focus_styles["border"] != "none"
+                (focus_styles["outline"] != "none" and focus_styles["outlineWidth"] != "0px")
+                or "box-shadow" in focus_styles["boxShadow"]
+                or focus_styles["border"] != "none"
             )
             results["focus_visible"] = has_focus_indicator
 
         return results
 
-    async def test_screen_reader(self, page: Page) -> Dict[str, Any]:
+    async def test_screen_reader(self, page: Page) -> dict[str, Any]:
         """Test screen reader compatibility."""
         results = {
             "aria_landmarks": 0,
@@ -329,15 +336,20 @@ class AccessibilityTester:
         }
 
         # Check ARIA landmarks
-        landmarks = await page.query_selector_all('[role="main"], [role="navigation"], [role="banner"], [role="contentinfo"], [role="complementary"]')
+        landmarks = await page.query_selector_all(
+            '[role="main"], [role="navigation"], [role="banner"], [role="contentinfo"], [role="complementary"]'
+        )
         results["aria_landmarks"] = len(landmarks)
 
         # Check ARIA labels
-        labeled = await page.query_selector_all('[aria-label], [aria-labelledby], [aria-describedby]')
+        labeled = await page.query_selector_all(
+            "[aria-label], [aria-labelledby], [aria-describedby]"
+        )
         results["aria_labels"] = len(labeled)
 
         # Check heading structure
-        headings = await page.evaluate("""
+        headings = await page.evaluate(
+            """
             () => {
                 const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
                 return Array.from(headings).map(h => ({
@@ -345,7 +357,8 @@ class AccessibilityTester:
                     text: h.textContent,
                 }));
             }
-        """)
+        """
+        )
 
         # Validate heading hierarchy
         previous_level = 0
@@ -356,7 +369,8 @@ class AccessibilityTester:
             previous_level = heading["level"]
 
         # Check images
-        images = await page.evaluate("""
+        images = await page.evaluate(
+            """
             () => {
                 const imgs = document.querySelectorAll('img');
                 return {
@@ -364,11 +378,13 @@ class AccessibilityTester:
                     with_alt: Array.from(imgs).filter(img => img.alt).length,
                 };
             }
-        """)
+        """
+        )
         results["images_with_alt"] = images["with_alt"] if images["total"] > 0 else 100
 
         # Check form labels
-        form_inputs = await page.evaluate("""
+        form_inputs = await page.evaluate(
+            """
             () => {
                 const inputs = document.querySelectorAll('input, textarea, select');
                 const labeled = Array.from(inputs).filter(input => {
@@ -381,13 +397,15 @@ class AccessibilityTester:
                     labeled: labeled.length,
                 };
             }
-        """)
+        """
+        )
 
         if form_inputs["total"] > 0:
             results["forms_labeled"] = form_inputs["labeled"] == form_inputs["total"]
 
         # Check tables
-        tables = await page.evaluate("""
+        tables = await page.evaluate(
+            """
             () => {
                 const tables = document.querySelectorAll('table');
                 return Array.from(tables).every(table => {
@@ -396,7 +414,8 @@ class AccessibilityTester:
                     return headers.length > 0 || caption !== null;
                 });
             }
-        """)
+        """
+        )
         results["tables_accessible"] = tables
 
         # Check live regions
@@ -405,7 +424,7 @@ class AccessibilityTester:
 
         return results
 
-    async def test_color_contrast(self, page: Page) -> Dict[str, Any]:
+    async def test_color_contrast(self, page: Page) -> dict[str, Any]:
         """Test color contrast for WCAG compliance."""
         results = {
             "issues": [],
@@ -414,7 +433,8 @@ class AccessibilityTester:
         }
 
         # Inject color contrast checking script
-        contrast_results = await page.evaluate("""
+        contrast_results = await page.evaluate(
+            """
             () => {
                 function getLuminance(r, g, b) {
                     const [rs, gs, bs] = [r, g, b].map(c => {
@@ -472,23 +492,26 @@ class AccessibilityTester:
 
                 return results;
             }
-        """)
+        """
+        )
 
         for item in contrast_results:
             if item["passed"]:
                 results["passed"] += 1
             else:
                 results["failed"] += 1
-                results["issues"].append({
-                    "element": item["element"],
-                    "ratio": item["ratio"],
-                    "required": item["required"],
-                    "text": item["text"],
-                })
+                results["issues"].append(
+                    {
+                        "element": item["element"],
+                        "ratio": item["ratio"],
+                        "required": item["required"],
+                        "text": item["text"],
+                    }
+                )
 
         return results
 
-    async def test_responsive_accessibility(self, page: Page) -> Dict[str, Any]:
+    async def test_responsive_accessibility(self, page: Page) -> dict[str, Any]:
         """Test accessibility across different viewport sizes."""
         results = {
             "mobile": {},
@@ -508,7 +531,8 @@ class AccessibilityTester:
 
             # Check touch target sizes for mobile/tablet
             if device in ["mobile", "tablet"]:
-                touch_targets = await page.evaluate("""
+                touch_targets = await page.evaluate(
+                    """
                     () => {
                         const clickable = document.querySelectorAll('a, button, [onclick]');
                         return Array.from(clickable).map(el => {
@@ -520,7 +544,8 @@ class AccessibilityTester:
                             };
                         });
                     }
-                """)
+                """
+                )
 
                 adequate = sum(1 for t in touch_targets if t["adequate"])
                 results[device]["touch_targets"] = {
@@ -530,7 +555,8 @@ class AccessibilityTester:
                 }
 
             # Check zoom capability
-            zoom_test = await page.evaluate("""
+            zoom_test = await page.evaluate(
+                """
                 () => {
                     const viewport = document.querySelector('meta[name="viewport"]');
                     if (!viewport) return { zoomable: true };
@@ -544,28 +570,31 @@ class AccessibilityTester:
                         viewport_tag: content,
                     };
                 }
-            """)
+            """
+            )
 
             results[device]["zoom_capable"] = zoom_test["zoomable"]
 
             # Check text reflow at 200% zoom
             await page.evaluate("document.body.style.zoom = '200%'")
-            horizontal_scroll = await page.evaluate("""
+            horizontal_scroll = await page.evaluate(
+                """
                 () => document.documentElement.scrollWidth > window.innerWidth
-            """)
+            """
+            )
             results[device]["text_reflows"] = not horizontal_scroll
             await page.evaluate("document.body.style.zoom = '100%'")
 
         return results
 
-    async def run_comprehensive_test(self, base_url: str, pages: List[Dict[str, str]]):
+    async def run_comprehensive_test(self, base_url: str, pages: list[dict[str, str]]):
         """Run comprehensive accessibility testing on multiple pages."""
         console.print(
             Panel.fit(
                 "[bold cyan]Accessibility Testing[/bold cyan]\n"
                 f"WCAG Level: {self.config['wcag_level']}\n"
                 f"Pages to test: {len(pages)}",
-                title="A11y Testing"
+                title="A11y Testing",
             )
         )
 
@@ -591,9 +620,7 @@ class AccessibilityTester:
                     try:
                         # Basic accessibility test
                         result = await self.test_page(
-                            page,
-                            page_info["name"],
-                            base_url + page_info["path"]
+                            page, page_info["name"], base_url + page_info["path"]
                         )
                         self.test_results.append(result)
 
@@ -716,8 +743,7 @@ class AccessibilityTester:
 
         # Overall assessment
         total_critical = sum(
-            sum(1 for v in r.violations if v.impact == "critical")
-            for r in self.test_results
+            sum(1 for v in r.violations if v.impact == "critical") for r in self.test_results
         )
         avg_score = sum(r.compliance_score for r in self.test_results) / len(self.test_results)
 

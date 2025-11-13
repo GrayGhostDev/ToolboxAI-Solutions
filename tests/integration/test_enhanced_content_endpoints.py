@@ -1,5 +1,6 @@
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 """
@@ -18,19 +19,14 @@ Created: 2025-09-19
 Version: 2.0.0
 """
 
-import asyncio
-import json
-import pytest
 from datetime import datetime
-from typing import Dict, Any
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
 
-import pytest_asyncio
+import pytest
 from fastapi.testclient import TestClient
-from httpx import AsyncClient
 
-from apps.backend.main import app
 from apps.backend.api.auth.auth import get_current_user
+from apps.backend.main import app
 from apps.backend.models.schemas import User
 
 
@@ -51,28 +47,20 @@ class TestEnhancedContentEndpoints:
             email="test@example.com",
             role="teacher",
             first_name="Test",
-            last_name="User"
+            last_name="User",
         )
 
     @pytest.fixture
     def mock_student_user(self):
         """Mock student user"""
         return User(
-            id="student-123",
-            username="test_student",
-            email="student@example.com",
-            role="student"
+            id="student-123", username="test_student", email="student@example.com", role="student"
         )
 
     @pytest.fixture
     def mock_admin_user(self):
         """Mock admin user"""
-        return User(
-            id="admin-123",
-            username="admin",
-            email="admin@example.com",
-            role="admin"
-        )
+        return User(id="admin-123", username="admin", email="admin@example.com", role="admin")
 
     @pytest.fixture
     def valid_content_request(self):
@@ -84,15 +72,12 @@ class TestEnhancedContentEndpoints:
             "learning_objectives": [
                 "Understand basic algebraic concepts",
                 "Solve simple equations",
-                "Apply algebra to real-world problems"
+                "Apply algebra to real-world problems",
             ],
             "difficulty_level": "medium",
             "duration_minutes": 45,
             "personalization_enabled": True,
-            "roblox_requirements": {
-                "environment_type": "classroom",
-                "max_players": 25
-            }
+            "roblox_requirements": {"environment_type": "classroom", "max_players": 25},
         }
 
     @pytest.fixture
@@ -103,26 +88,17 @@ class TestEnhancedContentEndpoints:
                 "id": "test-content-123",
                 "title": "Introduction to Algebra",
                 "description": "Basic algebra concepts for middle school",
-                "learning_objectives": [
-                    "Understand variables",
-                    "Solve simple equations"
-                ],
+                "learning_objectives": ["Understand variables", "Solve simple equations"],
                 "scripts": [
                     {
                         "name": "MainScript",
-                        "code": "local game = require(game:GetService('ReplicatedStorage'):WaitForChild('GameModule'))"
+                        "code": "local game = require(game:GetService('ReplicatedStorage'):WaitForChild('GameModule'))",
                     }
                 ],
-                "assets": [
-                    {
-                        "name": "WhiteBoard",
-                        "type": "Model",
-                        "file_size_mb": 2.5
-                    }
-                ]
+                "assets": [{"name": "WhiteBoard", "type": "Model", "file_size_mb": 2.5}],
             },
             "content_type": "lesson",
-            "target_age": 12
+            "target_age": 12,
         }
 
     def test_generate_content_success(self, client, mock_user, valid_content_request):
@@ -132,10 +108,7 @@ class TestEnhancedContentEndpoints:
         app.dependency_overrides[get_current_user] = lambda: mock_user
 
         try:
-            response = client.post(
-                "/api/v1/content/generate",
-                json=valid_content_request
-            )
+            response = client.post("/api/v1/content/generate", json=valid_content_request)
 
             assert response.status_code == 200
 
@@ -163,10 +136,7 @@ class TestEnhancedContentEndpoints:
                 # Missing grade_level, content_type, learning_objectives
             }
 
-            response = client.post(
-                "/api/v1/content/generate",
-                json=invalid_request
-            )
+            response = client.post("/api/v1/content/generate", json=invalid_request)
 
             assert response.status_code == 422  # Validation error
 
@@ -182,10 +152,7 @@ class TestEnhancedContentEndpoints:
             invalid_request = valid_content_request.copy()
             invalid_request["content_type"] = "invalid_type"
 
-            response = client.post(
-                "/api/v1/content/generate",
-                json=invalid_request
-            )
+            response = client.post("/api/v1/content/generate", json=invalid_request)
 
             assert response.status_code == 422  # Validation error
 
@@ -195,14 +162,11 @@ class TestEnhancedContentEndpoints:
     def test_generate_content_unauthorized(self, client, valid_content_request):
         """Test content generation without authentication"""
 
-        response = client.post(
-            "/api/v1/content/generate",
-            json=valid_content_request
-        )
+        response = client.post("/api/v1/content/generate", json=valid_content_request)
 
         assert response.status_code == 401
 
-    @patch('apps.backend.api.v1.endpoints.enhanced_content.generation_sessions')
+    @patch("apps.backend.api.v1.endpoints.enhanced_content.generation_sessions")
     def test_get_status_success(self, mock_sessions, client, mock_user):
         """Test successful pipeline status retrieval"""
 
@@ -212,14 +176,16 @@ class TestEnhancedContentEndpoints:
             # Mock pipeline session
             pipeline_id = "test-pipeline-123"
             mock_sessions.__contains__ = Mock(return_value=True)
-            mock_sessions.__getitem__ = Mock(return_value={
-                "user_id": mock_user.id,
-                "status": "processing",
-                "current_stage": "generation",
-                "progress": 45.0,
-                "started_at": datetime.now(),
-                "pipeline_state": Mock(errors=[])
-            })
+            mock_sessions.__getitem__ = Mock(
+                return_value={
+                    "user_id": mock_user.id,
+                    "status": "processing",
+                    "current_stage": "generation",
+                    "progress": 45.0,
+                    "started_at": datetime.now(),
+                    "pipeline_state": Mock(errors=[]),
+                }
+            )
 
             response = client.get(f"/api/v1/content/status/{pipeline_id}")
 
@@ -247,7 +213,7 @@ class TestEnhancedContentEndpoints:
         finally:
             app.dependency_overrides.clear()
 
-    @patch('apps.backend.api.v1.endpoints.enhanced_content.generation_sessions')
+    @patch("apps.backend.api.v1.endpoints.enhanced_content.generation_sessions")
     def test_get_status_access_denied(self, mock_sessions, client, mock_user):
         """Test pipeline status access denied for different user"""
 
@@ -257,10 +223,12 @@ class TestEnhancedContentEndpoints:
             # Mock pipeline session belonging to different user
             pipeline_id = "test-pipeline-123"
             mock_sessions.__contains__ = Mock(return_value=True)
-            mock_sessions.__getitem__ = Mock(return_value={
-                "user_id": "different-user-123",  # Different user
-                "status": "processing"
-            })
+            mock_sessions.__getitem__ = Mock(
+                return_value={
+                    "user_id": "different-user-123",  # Different user
+                    "status": "processing",
+                }
+            )
 
             response = client.get(f"/api/v1/content/status/{pipeline_id}")
 
@@ -269,7 +237,7 @@ class TestEnhancedContentEndpoints:
         finally:
             app.dependency_overrides.clear()
 
-    @patch('apps.backend.api.v1.endpoints.enhanced_content.generation_sessions')
+    @patch("apps.backend.api.v1.endpoints.enhanced_content.generation_sessions")
     def test_get_content_success(self, mock_sessions, client, mock_user):
         """Test successful content retrieval"""
 
@@ -285,7 +253,7 @@ class TestEnhancedContentEndpoints:
                 "request": {
                     "content_type": "lesson",
                     "subject": "Mathematics",
-                    "grade_level": "6-8"
+                    "grade_level": "6-8",
                 },
                 "started_at": datetime.now(),
                 "quality_score": 0.85,
@@ -294,8 +262,8 @@ class TestEnhancedContentEndpoints:
                 "pipeline_state": Mock(
                     final_content={"title": "Test Lesson"},
                     scripts=[{"name": "TestScript"}],
-                    assets=[{"name": "TestAsset"}]
-                )
+                    assets=[{"name": "TestAsset"}],
+                ),
             }
 
             # Mock finding content in sessions
@@ -323,7 +291,9 @@ class TestEnhancedContentEndpoints:
         app.dependency_overrides[get_current_user] = lambda: mock_user
 
         try:
-            with patch('apps.backend.api.v1.endpoints.enhanced_content.get_quality_validator') as mock_validator:
+            with patch(
+                "apps.backend.api.v1.endpoints.enhanced_content.get_quality_validator"
+            ) as mock_validator:
                 # Mock validation report
                 mock_report = Mock()
                 mock_report.overall_score = 0.85
@@ -340,17 +310,14 @@ class TestEnhancedContentEndpoints:
                     "overall_score": 0.85,
                     "compliant": True,
                     "issues": [],
-                    "recommendations": ["Add more interactive elements"]
+                    "recommendations": ["Add more interactive elements"],
                 }
 
                 mock_validator_instance = Mock()
                 mock_validator_instance.validate_content = AsyncMock(return_value=mock_report)
                 mock_validator.return_value = mock_validator_instance
 
-                response = client.post(
-                    "/api/v1/content/validate",
-                    json=valid_validation_request
-                )
+                response = client.post("/api/v1/content/validate", json=valid_validation_request)
 
                 assert response.status_code == 200
 
@@ -363,7 +330,7 @@ class TestEnhancedContentEndpoints:
         finally:
             app.dependency_overrides.clear()
 
-    @patch('apps.backend.api.v1.endpoints.enhanced_content.generation_sessions')
+    @patch("apps.backend.api.v1.endpoints.enhanced_content.generation_sessions")
     def test_get_history_success(self, mock_sessions, client, mock_user):
         """Test successful content history retrieval"""
 
@@ -379,17 +346,17 @@ class TestEnhancedContentEndpoints:
                     "request": {
                         "content_type": "lesson",
                         "subject": "Mathematics",
-                        "grade_level": "6-8"
+                        "grade_level": "6-8",
                     },
                     "status": "completed",
                     "started_at": datetime.now(),
-                    "quality_score": 0.85
+                    "quality_score": 0.85,
                 },
                 {
                     "user_id": "other-user",
                     "pipeline_id": "pipeline-2",
-                    "request": {"content_type": "quiz"}
-                }
+                    "request": {"content_type": "quiz"},
+                },
             ]
 
             mock_sessions.values = Mock(return_value=mock_sessions_data)
@@ -407,7 +374,7 @@ class TestEnhancedContentEndpoints:
         finally:
             app.dependency_overrides.clear()
 
-    @patch('apps.backend.api.v1.endpoints.enhanced_content.generation_sessions')
+    @patch("apps.backend.api.v1.endpoints.enhanced_content.generation_sessions")
     def test_apply_personalization_success(self, mock_sessions, client, mock_user):
         """Test successful content personalization"""
 
@@ -420,7 +387,7 @@ class TestEnhancedContentEndpoints:
             mock_session_data = {
                 "user_id": mock_user.id,
                 "content_id": content_id,
-                "status": "completed"
+                "status": "completed",
             }
 
             mock_sessions.values = Mock(return_value=[mock_session_data])
@@ -429,15 +396,12 @@ class TestEnhancedContentEndpoints:
                 "content_id": content_id,
                 "personalization_params": {
                     "visual_style": "colorful",
-                    "difficulty_adjustment": "easier"
+                    "difficulty_adjustment": "easier",
                 },
-                "learning_style": "visual"
+                "learning_style": "visual",
             }
 
-            response = client.post(
-                "/api/v1/content/personalize",
-                json=personalization_request
-            )
+            response = client.post("/api/v1/content/personalize", json=personalization_request)
 
             assert response.status_code == 200
 
@@ -457,10 +421,7 @@ class TestEnhancedContentEndpoints:
         try:
             # This test would need to be run with actual rate limiting enabled
             # For now, just test that the endpoint accepts the request
-            response = client.post(
-                "/api/v1/content/generate",
-                json=valid_content_request
-            )
+            response = client.post("/api/v1/content/generate", json=valid_content_request)
 
             # Should succeed (first request)
             assert response.status_code == 200
@@ -474,7 +435,9 @@ class TestEnhancedContentEndpoints:
         app.dependency_overrides[get_current_user] = lambda: mock_admin_user
 
         try:
-            with patch('apps.backend.api.v1.endpoints.enhanced_content.generation_sessions') as mock_sessions:
+            with patch(
+                "apps.backend.api.v1.endpoints.enhanced_content.generation_sessions"
+            ) as mock_sessions:
                 # Mock another user's content
                 mock_session_data = {
                     "user_id": "other-user-123",
@@ -482,14 +445,12 @@ class TestEnhancedContentEndpoints:
                     "request": {
                         "content_type": "lesson",
                         "subject": "Science",
-                        "grade_level": "K-2"
+                        "grade_level": "K-2",
                     },
                     "started_at": datetime.now(),
                     "pipeline_state": Mock(
-                        final_content={"title": "Science Lesson"},
-                        scripts=[],
-                        assets=[]
-                    )
+                        final_content={"title": "Science Lesson"}, scripts=[], assets=[]
+                    ),
                 }
 
                 mock_sessions.values = Mock(return_value=[mock_session_data])
@@ -527,16 +488,21 @@ class TestEnhancedContentEndpoints:
         app.dependency_overrides[get_current_user] = lambda: mock_user
 
         try:
-            valid_types = ['lesson', 'quiz', 'activity', 'scenario', 'assessment', 'project', 'simulation']
+            valid_types = [
+                "lesson",
+                "quiz",
+                "activity",
+                "scenario",
+                "assessment",
+                "project",
+                "simulation",
+            ]
 
             for content_type in valid_types:
                 request = valid_content_request.copy()
                 request["content_type"] = content_type
 
-                response = client.post(
-                    "/api/v1/content/generate",
-                    json=request
-                )
+                response = client.post("/api/v1/content/generate", json=request)
 
                 assert response.status_code == 200, f"Failed for content_type: {content_type}"
 
@@ -549,16 +515,13 @@ class TestEnhancedContentEndpoints:
         app.dependency_overrides[get_current_user] = lambda: mock_user
 
         try:
-            valid_grades = ['K-2', '3-5', '6-8', '9-12', 'college', 'adult']
+            valid_grades = ["K-2", "3-5", "6-8", "9-12", "college", "adult"]
 
             for grade in valid_grades:
                 request = valid_content_request.copy()
                 request["grade_level"] = grade
 
-                response = client.post(
-                    "/api/v1/content/generate",
-                    json=request
-                )
+                response = client.post("/api/v1/content/generate", json=request)
 
                 assert response.status_code == 200, f"Failed for grade_level: {grade}"
 
@@ -575,20 +538,14 @@ class TestEnhancedContentEndpoints:
             request = valid_content_request.copy()
             request["learning_objectives"] = []  # Empty list should fail
 
-            response = client.post(
-                "/api/v1/content/generate",
-                json=request
-            )
+            response = client.post("/api/v1/content/generate", json=request)
 
             assert response.status_code == 422  # Validation error
 
             # Test with too many objectives
             request["learning_objectives"] = [f"Objective {i}" for i in range(15)]  # More than max
 
-            response = client.post(
-                "/api/v1/content/generate",
-                json=request
-            )
+            response = client.post("/api/v1/content/generate", json=request)
 
             assert response.status_code == 422  # Validation error
 
@@ -605,20 +562,14 @@ class TestEnhancedContentEndpoints:
             request = valid_content_request.copy()
             request["duration_minutes"] = 2  # Below minimum
 
-            response = client.post(
-                "/api/v1/content/generate",
-                json=request
-            )
+            response = client.post("/api/v1/content/generate", json=request)
 
             assert response.status_code == 422
 
             # Test with too long duration
             request["duration_minutes"] = 150  # Above maximum
 
-            response = client.post(
-                "/api/v1/content/generate",
-                json=request
-            )
+            response = client.post("/api/v1/content/generate", json=request)
 
             assert response.status_code == 422
 
@@ -633,7 +584,7 @@ class TestEnhancedContentIntegration:
     @pytest.mark.asyncio
     @pytest.mark.skipif(
         not pytest.importorskip("core.agents.enhanced_content_pipeline"),
-        reason="Enhanced content pipeline not available"
+        reason="Enhanced content pipeline not available",
     )
     async def test_full_pipeline_integration(self):
         """Test integration with actual pipeline components"""

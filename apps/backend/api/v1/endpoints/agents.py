@@ -3,27 +3,29 @@ Agent system endpoints
 """
 
 import asyncio
-from typing import List, Dict, Any, Optional
+from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, status
+from fastapi import APIRouter, BackgroundTasks, Depends
 from pydantic import BaseModel
 
-from apps.backend.core.dependencies import (
-    get_current_active_user,
-    get_admin_user,
-    get_agent_service,
-    validate_agent_id,
-)
-from apps.backend.core.logging import logging_manager
-from apps.backend.core.exceptions import NotFoundError, ExternalServiceError, ValidationError
-from apps.backend.models.schemas import BaseResponse, User
 from apps.backend.agents.agent import (
-    agent_manager,
-    generate_educational_content,
     get_agent_health,
     initialize_agents,
     shutdown_agents,
 )
+from apps.backend.core.dependencies import (
+    get_admin_user,
+    get_agent_service,
+    get_current_active_user,
+    validate_agent_id,
+)
+from apps.backend.core.exceptions import (
+    ExternalServiceError,
+    NotFoundError,
+    ValidationError,
+)
+from apps.backend.core.logging import logging_manager
+from apps.backend.models.schemas import BaseResponse, User
 
 # Initialize logger
 logger = logging_manager.get_logger(__name__)
@@ -36,26 +38,26 @@ router = APIRouter()
 class AgentExecuteRequest(BaseModel):
     agent_type: str
     task: str
-    parameters: Optional[Dict[str, Any]] = {}
-    priority: Optional[int] = 1
+    parameters: dict[str, Any] | None = {}
+    priority: int | None = 1
 
 
 class AgentHealthResponse(BaseModel):
     agent_id: str
     status: str
     uptime: float
-    last_heartbeat: Optional[str] = None
-    metrics: Optional[Dict[str, Any]] = {}
+    last_heartbeat: str | None = None
+    metrics: dict[str, Any] | None = {}
 
 
 class AgentListResponse(BaseModel):
-    agents: List[Dict[str, Any]]
+    agents: list[dict[str, Any]]
     total: int
     active: int
     inactive: int
 
 
-@router.get("/health", response_model=List[AgentHealthResponse])
+@router.get("/health", response_model=list[AgentHealthResponse])
 async def get_agents_health(current_user: User = Depends(get_current_active_user)):
     """Get health status of all agents"""
     try:
@@ -206,7 +208,11 @@ async def get_agent_status(
             extra={"agent_id": agent_id, "user_id": getattr(current_user, "id", "unknown")},
         )
 
-        return BaseResponse(success=True, message=f"Agent {agent_id} status retrieved successfully", data=status_info)
+        return BaseResponse(
+            success=True,
+            message=f"Agent {agent_id} status retrieved successfully",
+            data=status_info,
+        )
 
     except (NotFoundError, ExternalServiceError):
         raise
@@ -288,7 +294,7 @@ async def shutdown_agent_system(current_user: User = Depends(get_admin_user)):
 
 # Background task function
 async def _execute_agent_task_background(
-    agent_service, agent_type: str, task: str, parameters: Dict[str, Any], user_id: str
+    agent_service, agent_type: str, task: str, parameters: dict[str, Any], user_id: str
 ):
     """Execute agent task in background"""
     try:

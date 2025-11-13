@@ -9,8 +9,8 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, Optional
+from datetime import datetime, timezone
+from typing import Any
 
 import redis.asyncio as redis  # type: ignore
 
@@ -35,18 +35,18 @@ async def set_status(ticket: str, status: str) -> None:
     await client.set(KEY_STATUS.format(ticket=ticket), status, ex=EXPORT_TTL_SECONDS)
 
 
-async def get_status(ticket: str) -> Optional[str]:
+async def get_status(ticket: str) -> str | None:
     client = await _get_redis()
     return await client.get(KEY_STATUS.format(ticket=ticket))
 
 
-async def store_export(ticket: str, data: Dict[str, Any]) -> None:
+async def store_export(ticket: str, data: dict[str, Any]) -> None:
     client = await _get_redis()
     payload = json.dumps(data, default=str)
     await client.set(KEY_EXPORT.format(ticket=ticket), payload, ex=EXPORT_TTL_SECONDS)
 
 
-async def get_export(ticket: str) -> Optional[Dict[str, Any]]:
+async def get_export(ticket: str) -> dict[str, Any] | None:
     client = await _get_redis()
     payload = await client.get(KEY_EXPORT.format(ticket=ticket))
     if not payload:

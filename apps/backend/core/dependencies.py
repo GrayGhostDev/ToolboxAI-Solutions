@@ -2,17 +2,16 @@
 Centralized dependency injection for the FastAPI application
 """
 
-import asyncio
+from collections.abc import AsyncGenerator
 from functools import lru_cache
-from typing import Optional, AsyncGenerator
 
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.core.config import settings
 from apps.backend.core.logging import logging_manager
-from apps.backend.services.database import db_service
 from apps.backend.models.schemas import User
+from apps.backend.services.database import db_service
 
 # Initialize logger
 logger = logging_manager.get_logger(__name__)
@@ -33,7 +32,7 @@ async def get_database_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 # Settings dependency
-@lru_cache()
+@lru_cache
 def get_settings():
     """Get application settings (cached)"""
     return settings
@@ -43,10 +42,13 @@ def get_settings():
 def _get_current_user_dependency():
     """Lazy import of get_current_user to avoid circular imports at module level"""
     from apps.backend.core.deps import get_current_user
+
     return get_current_user
 
 
-async def get_current_active_user(current_user: User = Depends(_get_current_user_dependency())) -> User:
+async def get_current_active_user(
+    current_user: User = Depends(_get_current_user_dependency()),
+) -> User:
     """Get current active user"""
     if not current_user:
         raise HTTPException(
@@ -71,7 +73,7 @@ async def get_admin_user(current_user: User = Depends(get_current_active_user)) 
 
 
 # Service dependencies
-@lru_cache()
+@lru_cache
 def get_agent_service():
     """Get agent service instance"""
     try:
@@ -83,7 +85,7 @@ def get_agent_service():
         return None
 
 
-@lru_cache()
+@lru_cache
 def get_pusher_service():
     """Get Pusher service instance"""
     try:
@@ -95,7 +97,7 @@ def get_pusher_service():
         return None
 
 
-@lru_cache()
+@lru_cache
 def get_mcp_service():
     """Get MCP service instance"""
     try:

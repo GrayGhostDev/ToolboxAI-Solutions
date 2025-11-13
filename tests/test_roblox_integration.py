@@ -4,8 +4,6 @@ Quick test script to verify Roblox integration setup
 """
 
 import os
-import sys
-import json
 from pathlib import Path
 
 # Load environment variables from .env.local
@@ -20,14 +18,15 @@ if env_path.exists():
 else:
     print("⚠️  .env.local not found")
 
-print("\n" + "="*60)
+print("\n" + "=" * 60)
 print("ROBLOX INTEGRATION TEST")
-print("="*60)
+print("=" * 60)
 
 # Test 1: Check encryption service
 print("\n1. Testing Encryption Service...")
 try:
     from apps.backend.services.encryption import CredentialEncryption
+
     cipher = CredentialEncryption()
     test_data = "test_credential"
     encrypted, hash_val = cipher.encrypt_credential(test_data)
@@ -41,6 +40,7 @@ except Exception as e:
 print("\n2. Testing Credential Manager...")
 try:
     from apps.backend.services.credential_manager import get_credential_manager
+
     manager = get_credential_manager()
 
     # Check if credentials are available
@@ -67,9 +67,9 @@ except Exception as e:
 print("\n3. Testing Roblox Schemas...")
 try:
     from apps.backend.schemas.roblox import (
-        OAuth2InitiateRequest,
         ConversationStartRequest,
-        RojoCheckResponse
+        OAuth2InitiateRequest,
+        RojoCheckResponse,
     )
 
     # Test schema validation
@@ -92,8 +92,8 @@ try:
 
     endpoints = []
     for route in router.routes:
-        if hasattr(route, 'path'):
-            methods = list(route.methods) if hasattr(route, 'methods') else ['GET']
+        if hasattr(route, "path"):
+            methods = list(route.methods) if hasattr(route, "methods") else ["GET"]
             endpoints.append(f"{methods[0]} {route.path}")
 
     print(f"   ✅ Router loaded with {len(endpoints)} endpoints:")
@@ -115,7 +115,7 @@ config_vars = [
     "ROBLOX_CLIENT_ID",
     "ROBLOX_UNIVERSE_ID",
     "ROJO_SERVER_PORT",
-    "ENABLE_ROBLOX_INTEGRATION"
+    "ENABLE_ROBLOX_INTEGRATION",
 ]
 
 missing = []
@@ -134,14 +134,11 @@ if missing:
     print(f"\n   ⚠️  Missing environment variables: {', '.join(missing)}")
 
 # Summary
-print("\n" + "="*60)
+print("\n" + "=" * 60)
 print("SUMMARY")
-print("="*60)
+print("=" * 60)
 
-if not missing and all([
-    "Encryption service working" in locals(),
-    "Router loaded" in locals()
-]):
+if not missing and all(["Encryption service working" in locals(), "Router loaded" in locals()]):
     print("✅ Roblox integration is properly configured!")
     print("\nNext steps:")
     print("1. Start the backend: uvicorn apps.backend.main:app --port 8009")

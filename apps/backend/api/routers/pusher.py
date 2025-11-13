@@ -5,16 +5,14 @@ Handles Pusher authentication, webhooks, and realtime event triggering.
 """
 
 import json
-import logging
-from typing import Dict, Any, Optional
+from typing import Any
 
-from fastapi import APIRouter, HTTPException, Request, Depends
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from apps.backend.core.logging import logging_manager, log_audit
-from apps.backend.core.config import settings
-from apps.backend.models.schemas import User
 from apps.backend.api.auth.auth import get_current_user
+from apps.backend.core.logging import log_audit, logging_manager
+from apps.backend.models.schemas import User
 
 logger = logging_manager.get_logger(__name__)
 
@@ -63,7 +61,9 @@ async def authenticate_pusher_channel(
             raise HTTPException(status_code=403, detail="Insufficient permissions for this channel")
 
         # Authenticate with Pusher
-        from apps.backend.services.pusher import authenticate_channel as pusher_authenticate
+        from apps.backend.services.pusher import (
+            authenticate_channel as pusher_authenticate,
+        )
 
         auth_response = pusher_authenticate(
             socket_id=socket_id,
@@ -350,7 +350,7 @@ def _user_has_role(user: User, required_roles: list) -> bool:
     return user_role in required_roles if user_role else False
 
 
-async def _process_webhook_event(event: Dict[str, Any]) -> Dict[str, Any]:
+async def _process_webhook_event(event: dict[str, Any]) -> dict[str, Any]:
     """
     Process a single webhook event
 

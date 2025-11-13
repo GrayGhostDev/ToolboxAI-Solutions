@@ -3,21 +3,24 @@ Clerk Authentication Module for ToolboxAI (2025)
 Provides JWT verification for Clerk-authenticated requests
 """
 
-import os
 import logging
-from typing import Optional, Dict, Any
+import os
 from datetime import datetime, timezone
+from typing import Any, Dict, Optional
+
 import httpx
-from jose import jwt, JWTError
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from jose import JWTError, jwt
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
 # Clerk configuration from environment
 CLERK_SECRET_KEY = os.getenv("CLERK_SECRET_KEY")
-CLERK_JWKS_URL = os.getenv("CLERK_JWKS_URL", "https://casual-firefly-39.clerk.accounts.dev/.well-known/jwks.json")
+CLERK_JWKS_URL = os.getenv(
+    "CLERK_JWKS_URL", "https://casual-firefly-39.clerk.accounts.dev/.well-known/jwks.json"
+)
 CLERK_ISSUER = os.getenv("CLERK_FRONTEND_API_URL", "https://casual-firefly-39.clerk.accounts.dev")
 
 # Security scheme
@@ -31,6 +34,7 @@ JWKS_CACHE_DURATION = 3600  # 1 hour
 
 class ClerkUser(BaseModel):
     """Clerk user model from JWT claims"""
+
     user_id: str
     email: Optional[str] = None
     username: Optional[str] = None
@@ -46,6 +50,7 @@ class ClerkUser(BaseModel):
 
 class ClerkAuthError(HTTPException):
     """Clerk authentication error"""
+
     def __init__(self, detail: str = "Authentication failed"):
         super().__init__(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -127,7 +132,7 @@ async def verify_clerk_token(token: str) -> ClerkUser:
                 "verify_signature": True,
                 "verify_exp": True,
                 "verify_aud": False,  # Clerk doesn't always set audience
-            }
+            },
         )
 
         # Extract user information from claims
@@ -146,7 +151,7 @@ async def verify_clerk_token(token: str) -> ClerkUser:
                 "phone_number": payload.get("phone_number"),
                 "public_metadata": payload.get("public_metadata", {}),
                 "unsafe_metadata": payload.get("unsafe_metadata", {}),
-            }
+            },
         )
 
         # Extract role from metadata
@@ -164,7 +169,7 @@ async def verify_clerk_token(token: str) -> ClerkUser:
 
 
 async def get_current_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme)
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
 ) -> ClerkUser:
     """
     Dependency to get the current authenticated user from Clerk token
@@ -194,11 +199,12 @@ async def require_role(required_role: str):
     Returns:
         Dependency function that validates the user's role
     """
+
     async def role_checker(user: ClerkUser = Depends(get_current_user)) -> ClerkUser:
         if user.role != required_role and user.role != "admin":
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Insufficient permissions. Required role: {required_role}"
+                detail=f"Insufficient permissions. Required role: {required_role}",
             )
         return user
 
@@ -213,7 +219,7 @@ RequireStudent = Depends(require_role("student"))
 
 # Optional: Backward compatibility with existing auth
 async def get_current_user_compatible(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme)
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
 ) -> Dict[str, Any]:
     """
     Backward compatible version that returns user dict like the old system
@@ -221,6 +227,7 @@ async def get_current_user_compatible(
     if not credentials:
         # Try to fall back to old JWT auth if available
         from apps.backend.api.auth.auth import get_current_user as get_jwt_user
+
         return await get_jwt_user(credentials)
 
     try:
@@ -242,4 +249,5 @@ async def get_current_user_compatible(
     except:
         # Fall back to old auth
         from apps.backend.api.auth.auth import get_current_user as get_jwt_user
+
         return await get_jwt_user(credentials)

@@ -1,4 +1,4 @@
-import pytest_asyncio
+
 """
 Tests for Large File Detection Agent.
 """
@@ -7,7 +7,7 @@ import asyncio
 import os
 import tempfile
 from pathlib import Path
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -36,8 +36,8 @@ def temp_repo(tmp_path):
 def create_test_file(path: Path, size_mb: int) -> Path:
     """Create a test file of specified size."""
     file_path = path / f"test_{size_mb}mb.dat"
-    with open(file_path, 'wb') as f:
-        f.write(b'0' * (size_mb * 1024 * 1024))
+    with open(file_path, "wb") as f:
+        f.write(b"0" * (size_mb * 1024 * 1024))
     return file_path
 
 
@@ -47,9 +47,9 @@ async def test_detection_agent_initialization():
     """Test agent initialization."""
     agent = LargeFileDetectionAgent()
     assert agent is not None
-    assert agent.size_thresholds['warning_mb'] == 25
-    assert agent.size_thresholds['critical_mb'] == 50
-    assert agent.size_thresholds['github_limit_mb'] == 100
+    assert agent.size_thresholds["warning_mb"] == 25
+    assert agent.size_thresholds["critical_mb"] == 50
+    assert agent.size_thresholds["github_limit_mb"] == 100
 
 
 @pytest.mark.asyncio
@@ -70,14 +70,14 @@ async def test_analyze_file_size_categories(detection_agent):
         assert small_info is None  # Below threshold
 
         warning_info = detection_agent._analyze_file(warning_file, warning_file.stat().st_size)
-        assert warning_info['severity'] == 'warning'
+        assert warning_info["severity"] == "warning"
 
         critical_info = detection_agent._analyze_file(critical_file, critical_file.stat().st_size)
-        assert critical_info['severity'] == 'critical'
+        assert critical_info["severity"] == "critical"
 
         blocker_info = detection_agent._analyze_file(blocker_file, blocker_file.stat().st_size)
-        assert blocker_info['severity'] == 'blocker'
-        assert blocker_info['exceeds_github_limit'] is True
+        assert blocker_info["severity"] == "blocker"
+        assert blocker_info["exceeds_github_limit"] is True
 
 
 @pytest.mark.asyncio
@@ -96,7 +96,7 @@ async def test_generate_recommendations(detection_agent):
     large_files = [
         {"severity": "blocker", "file_type": ".json", "size_mb": 150},
         {"severity": "critical", "file_type": ".png", "size_mb": 75},
-        {"severity": "warning", "file_type": ".fig", "size_mb": 30}
+        {"severity": "warning", "file_type": ".fig", "size_mb": 30},
     ]
 
     recommendations = detection_agent._generate_recommendations(large_files)
@@ -113,8 +113,8 @@ async def test_generate_recommendations(detection_agent):
 @pytest.mark.asyncio
 async def test_pre_commit_check(detection_agent):
     """Test pre-commit check functionality."""
-    with patch.object(detection_agent, '_get_staged_files', new_callable=AsyncMock) as mock_staged:
-        with patch.object(detection_agent, 'get_repository_root') as mock_root:
+    with patch.object(detection_agent, "_get_staged_files", new_callable=AsyncMock) as mock_staged:
+        with patch.object(detection_agent, "get_repository_root") as mock_root:
             with tempfile.TemporaryDirectory() as tmpdir:
                 tmp_path = Path(tmpdir)
                 mock_root.return_value = tmp_path
@@ -125,17 +125,17 @@ async def test_pre_commit_check(detection_agent):
 
                 result = await detection_agent.execute_action("pre_commit_check")
 
-                assert result['success'] is False
-                assert 'Large files detected' in result['message']
-                assert len(result['large_files']) > 0
-                assert result['large_files'][0]['severity'] == 'blocker'
+                assert result["success"] is False
+                assert "Large files detected" in result["message"]
+                assert len(result["large_files"]) > 0
+                assert result["large_files"][0]["severity"] == "blocker"
 
 
 @pytest.mark.asyncio
 @pytest.mark.asyncio
 async def test_generate_report_json(detection_agent):
     """Test JSON report generation."""
-    with patch.object(detection_agent, 'analyze', new_callable=AsyncMock) as mock_analyze:
+    with patch.object(detection_agent, "analyze", new_callable=AsyncMock) as mock_analyze:
         mock_analyze.return_value = {
             "success": True,
             "large_files": [
@@ -146,9 +146,9 @@ async def test_generate_report_json(detection_agent):
                 "total_size": "100 MB",
                 "blockers": 1,
                 "critical": 0,
-                "warnings": 0
+                "warnings": 0,
             },
-            "recommendations": ["Remove large files"]
+            "recommendations": ["Remove large files"],
         }
 
         report = await detection_agent.generate_report("json")
@@ -160,7 +160,7 @@ async def test_generate_report_json(detection_agent):
 @pytest.mark.asyncio
 async def test_generate_report_markdown(detection_agent):
     """Test Markdown report generation."""
-    with patch.object(detection_agent, 'analyze', new_callable=AsyncMock) as mock_analyze:
+    with patch.object(detection_agent, "analyze", new_callable=AsyncMock) as mock_analyze:
         mock_analyze.return_value = {
             "success": True,
             "large_files": [
@@ -172,9 +172,9 @@ async def test_generate_report_markdown(detection_agent):
                 "total_size_mb": 100,
                 "blockers": 1,
                 "critical": 0,
-                "warnings": 0
+                "warnings": 0,
             },
-            "recommendations": ["Remove large files"]
+            "recommendations": ["Remove large files"],
         }
 
         report = await detection_agent.generate_report("markdown")
@@ -198,22 +198,24 @@ async def test_exempt_patterns(detection_agent):
 @pytest.mark.asyncio
 async def test_metrics_tracking(detection_agent):
     """Test that metrics are properly tracked."""
-    initial_ops = detection_agent.metrics['operations_performed']
+    initial_ops = detection_agent.metrics["operations_performed"]
 
-    with patch.object(detection_agent, '_get_staged_files', new_callable=AsyncMock) as mock_staged:
-        with patch.object(detection_agent, '_get_tracked_files', new_callable=AsyncMock) as mock_tracked:
-            with patch.object(detection_agent, 'get_repository_root') as mock_root:
+    with patch.object(detection_agent, "_get_staged_files", new_callable=AsyncMock) as mock_staged:
+        with patch.object(
+            detection_agent, "_get_tracked_files", new_callable=AsyncMock
+        ) as mock_tracked:
+            with patch.object(detection_agent, "get_repository_root") as mock_root:
                 mock_root.return_value = Path("/test")
                 mock_staged.return_value = []
                 mock_tracked.return_value = []
 
                 await detection_agent.analyze()
 
-                assert detection_agent.metrics['operations_performed'] > initial_ops
+                assert detection_agent.metrics["operations_performed"] > initial_ops
 
                 summary = detection_agent.get_metrics_summary()
-                assert 'runtime_seconds' in summary
-                assert 'success_rate' in summary
+                assert "runtime_seconds" in summary
+                assert "success_rate" in summary
 
 
 if __name__ == "__main__":

@@ -8,15 +8,16 @@ Based on production best practices for 2025 with async support.
 """
 
 import asyncio
-import time
 import logging
-from typing import Optional, Callable, Any, Dict, List
-from enum import Enum
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from functools import wraps
 import random
+import time
 from collections import deque
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from functools import wraps
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ class CircuitBreakerConfig:
     # Behavior
     expected_exceptions: tuple = (Exception,)  # Exceptions that trigger the breaker
     excluded_exceptions: tuple = ()  # Exceptions that don't trigger the breaker
-    fallback: Optional[Callable] = None  # Fallback function when open
+    fallback: Callable | None = None  # Fallback function when open
 
     # Monitoring
     enable_monitoring: bool = True
@@ -79,14 +80,14 @@ class CircuitBreakerMetrics:
     rejected_calls: int = 0
     fallback_calls: int = 0
 
-    state_transitions: List[Dict[str, Any]] = field(default_factory=list)
+    state_transitions: list[dict[str, Any]] = field(default_factory=list)
     recent_calls: deque = field(default_factory=lambda: deque(maxlen=100))
 
-    last_failure_time: Optional[datetime] = None
-    last_success_time: Optional[datetime] = None
-    circuit_opened_at: Optional[datetime] = None
+    last_failure_time: datetime | None = None
+    last_success_time: datetime | None = None
+    circuit_opened_at: datetime | None = None
 
-    def add_call(self, success: bool, duration: float, error: Optional[Exception] = None):
+    def add_call(self, success: bool, duration: float, error: Exception | None = None):
         """Record a call"""
         self.total_calls += 1
         call_record = {
@@ -141,7 +142,7 @@ class CircuitBreaker:
             return await external_api_call()
     """
 
-    def __init__(self, name: str, config: Optional[CircuitBreakerConfig] = None):
+    def __init__(self, name: str, config: CircuitBreakerConfig | None = None):
         self.name = name
         self.config = config or CircuitBreakerConfig()
         self.state = CircuitBreakerState.CLOSED
@@ -149,7 +150,7 @@ class CircuitBreaker:
 
         self._failure_count = 0
         self._success_count = 0
-        self._last_failure_time: Optional[float] = None
+        self._last_failure_time: float | None = None
         self._half_open_calls = 0
         self._lock = asyncio.Lock()
 
@@ -357,7 +358,7 @@ class CircuitBreaker:
             self._last_failure_time = None
             logger.info(f"Circuit breaker '{self.name}' manually reset")
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get current status and metrics"""
         return {
             "name": self.name,
@@ -390,17 +391,17 @@ class CircuitBreaker:
 
 
 # Global circuit breaker registry
-_circuit_breakers: Dict[str, CircuitBreaker] = {}
+_circuit_breakers: dict[str, CircuitBreaker] = {}
 
 
-def get_circuit_breaker(name: str, config: Optional[CircuitBreakerConfig] = None) -> CircuitBreaker:
+def get_circuit_breaker(name: str, config: CircuitBreakerConfig | None = None) -> CircuitBreaker:
     """Get or create a circuit breaker instance"""
     if name not in _circuit_breakers:
         _circuit_breakers[name] = CircuitBreaker(name, config)
     return _circuit_breakers[name]
 
 
-def circuit_breaker(name: Optional[str] = None, **config_kwargs) -> Callable:
+def circuit_breaker(name: str | None = None, **config_kwargs) -> Callable:
     """
     Decorator for applying circuit breaker to functions
 
@@ -419,6 +420,6 @@ def circuit_breaker(name: Optional[str] = None, **config_kwargs) -> Callable:
     return decorator
 
 
-async def get_all_circuit_breakers_status() -> Dict[str, Any]:
+async def get_all_circuit_breakers_status() -> dict[str, Any]:
     """Get status of all circuit breakers"""
     return {name: breaker.get_status() for name, breaker in _circuit_breakers.items()}

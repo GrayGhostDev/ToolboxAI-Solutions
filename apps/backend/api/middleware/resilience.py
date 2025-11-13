@@ -5,10 +5,12 @@ Integrates circuit breakers, retries, and fault tolerance patterns
 into the FastAPI application middleware stack.
 """
 
-import time
 import logging
-from typing import Callable, Optional, Dict, Any
-from fastapi import Request, Response, HTTPException
+import time
+from collections.abc import Callable
+from typing import Any
+
+from fastapi import HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -16,8 +18,8 @@ from apps.backend.core.circuit_breaker import (
     CircuitBreaker,
     CircuitBreakerConfig,
     CircuitBreakerError,
-    get_circuit_breaker,
     get_all_circuit_breakers_status,
+    get_circuit_breaker,
 )
 
 logger = logging.getLogger(__name__)
@@ -28,7 +30,7 @@ class ResilienceMiddleware(BaseHTTPMiddleware):
     Middleware that adds resilience patterns to FastAPI endpoints
     """
 
-    def __init__(self, app, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, app, config: dict[str, Any] | None = None):
         super().__init__(app)
         self.config = config or {}
         self._setup_circuit_breakers()
@@ -123,7 +125,7 @@ class ResilienceMiddleware(BaseHTTPMiddleware):
                 },
             )
 
-    def _get_circuit_breaker_for_path(self, path: str) -> Optional[CircuitBreaker]:
+    def _get_circuit_breaker_for_path(self, path: str) -> CircuitBreaker | None:
         """Determine which circuit breaker to use based on path"""
 
         # Database operations
@@ -317,6 +319,6 @@ def setup_resilience_middleware(app):
     logger.info("Resilience middleware configured successfully")
 
 
-async def get_resilience_status() -> Dict[str, Any]:
+async def get_resilience_status() -> dict[str, Any]:
     """Get status of all resilience components"""
     return {"circuit_breakers": await get_all_circuit_breakers_status(), "timestamp": time.time()}

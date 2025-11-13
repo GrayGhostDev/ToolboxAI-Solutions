@@ -3,9 +3,8 @@ GraphQL application setup using Ariadne
 """
 
 import logging
-import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ariadne import (
     load_schema_from_path,
@@ -15,14 +14,15 @@ from ariadne import (
 )
 from ariadne.asgi import GraphQL
 from ariadne.explorer import ExplorerGraphiQL
-from fastapi import FastAPI, Depends, Request
+from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 from apps.backend.core.config import settings
-from .resolvers import query, mutation, subscription
-from .directives import AuthDirective, RateLimitDirective
+
 from .context import get_context
-from .scalars import datetime_scalar, uuid_scalar, json_scalar, email_scalar, url_scalar
+from .directives import AuthDirective, RateLimitDirective
+from .resolvers import mutation, query, subscription
+from .scalars import datetime_scalar, email_scalar, json_scalar, url_scalar, uuid_scalar
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ def create_graphql_schema():
     return schema
 
 
-def error_formatter(error: Exception, debug: bool = False) -> Dict[str, Any]:
+def error_formatter(error: Exception, debug: bool = False) -> dict[str, Any]:
     """Format GraphQL errors for response"""
     formatted = {
         "message": str(error),

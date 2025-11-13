@@ -5,17 +5,18 @@ This endpoint provides robust JWT-based authentication for Pusher channels,
 supporting both private and presence channels with proper user validation.
 """
 
-from fastapi import APIRouter, HTTPException, Request, Depends
+import json
+import logging
+from typing import Any, Dict, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
-import logging
-import json
 
-from apps.backend.services.pusher import authenticate_channel, PusherUnavailable
-from apps.backend.api.auth.auth import get_current_user, JWTManager, AuthenticationError
-from apps.backend.models.schemas import User
+from apps.backend.api.auth.auth import AuthenticationError, JWTManager, get_current_user
 from apps.backend.core.config import settings
+from apps.backend.models.schemas import User
+from apps.backend.services.pusher import PusherUnavailable, authenticate_channel
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +47,7 @@ class PusherAuthResponse(BaseModel):
 
 class TriggerEventRequest(BaseModel):
     """Request model for triggering Pusher events"""
+
     channel: str
     event: str
     data: Dict[str, Any]
@@ -68,10 +70,7 @@ async def _get_user_from_auth_header(request: Request) -> Optional[User]:
         if token.startswith("dev-token-") and settings.DEBUG:
             logger.info("Using development token for Pusher auth")
             return User(
-                id="dev-user-001",
-                username="dev_user",
-                email="dev@toolboxai.com",
-                role="teacher"
+                id="dev-user-001", username="dev_user", email="dev@toolboxai.com", role="teacher"
             )
 
         # Validate JWT token
@@ -88,7 +87,7 @@ async def _get_user_from_auth_header(request: Request) -> Optional[User]:
             id=user_id,
             username=payload.get("username", "unknown"),
             email=payload.get("email", "unknown@example.com"),
-            role=payload.get("role", "student")
+            role=payload.get("role", "student"),
         )
 
     except Exception as e:
@@ -139,7 +138,7 @@ def _can_access_channel(user: Optional[User], channel_name: str) -> bool:
         "private-dashboard-updates",
         "presence-dashboard-updates",
         "private-content-generation",
-        "presence-content-generation"
+        "presence-content-generation",
     ]
 
     if channel_name in educational_channels:
@@ -177,7 +176,7 @@ async def pusher_auth(request: Request) -> Dict[str, Any]:
             form_data = await request.form()
             body = {
                 "socket_id": form_data.get("socket_id"),
-                "channel_name": form_data.get("channel_name")
+                "channel_name": form_data.get("channel_name"),
             }
         else:
             # Try to parse as JSON anyway (fallback)
@@ -192,8 +191,7 @@ async def pusher_auth(request: Request) -> Dict[str, Any]:
 
         if not socket_id or not channel_name:
             raise HTTPException(
-                status_code=400,
-                detail="Missing required fields: socket_id and channel_name"
+                status_code=400, detail="Missing required fields: socket_id and channel_name"
             )
 
         logger.info(f"Pusher auth request for channel: {channel_name}")
@@ -203,10 +201,7 @@ async def pusher_auth(request: Request) -> Dict[str, Any]:
 
         # Check channel access permissions
         if not _can_access_channel(current_user, channel_name):
-            raise HTTPException(
-                status_code=403,
-                detail="Insufficient permissions for this channel"
-            )
+            raise HTTPException(status_code=403, detail="Insufficient permissions for this channel")
 
         # Prepare user data for presence channels
         user_id = None
@@ -219,18 +214,17 @@ async def pusher_auth(request: Request) -> Dict[str, Any]:
                 "name": getattr(current_user, "name", current_user.username),
                 "username": current_user.username,
                 "email": current_user.email,
-                "role": current_user.role
+                "role": current_user.role,
             }
 
         # Authenticate the channel with Pusher
         auth_response = authenticate_channel(
-            socket_id=socket_id,
-            channel_name=channel_name,
-            user_id=user_id,
-            user_info=user_info
+            socket_id=socket_id, channel_name=channel_name, user_id=user_id, user_info=user_info
         )
 
-        logger.info(f"Successfully authenticated channel {channel_name} for user {user_id or 'anonymous'}")
+        logger.info(
+            f"Successfully authenticated channel {channel_name} for user {user_id or 'anonymous'}"
+        )
         return auth_response
 
     except PusherUnavailable as e:
@@ -245,8 +239,7 @@ async def pusher_auth(request: Request) -> Dict[str, Any]:
 
 @router.post("/trigger")
 async def trigger_pusher_event(
-    request: TriggerEventRequest,
-    current_user: User = Depends(get_current_user)
+    request: TriggerEventRequest, current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """
     Trigger a Pusher event on a specified channel.
@@ -263,8 +256,7 @@ async def trigger_pusher_event(
         # Validate channel access permissions
         if not _can_trigger_event(current_user, request.channel, request.event):
             raise HTTPException(
-                status_code=403,
-                detail="Insufficient permissions to trigger this event"
+                status_code=403, detail="Insufficient permissions to trigger this event"
             )
 
         # Add user context to event data
@@ -273,16 +265,12 @@ async def trigger_pusher_event(
             "_meta": {
                 "triggered_by": str(current_user.id),
                 "user_role": current_user.role,
-                "timestamp": "utc_now"
-            }
+                "timestamp": "utc_now",
+            },
         }
 
         # Trigger the event
-        result = trigger_event(
-            channel=request.channel,
-            event=request.event,
-            data=event_data
-        )
+        result = trigger_event(channel=request.channel, event=request.event, data=event_data)
 
         logger.info(
             f"Event '{request.event}' triggered on channel '{request.channel}' "
@@ -294,7 +282,7 @@ async def trigger_pusher_event(
             "channel": request.channel,
             "event": request.event,
             "triggered_by": str(current_user.id),
-            "result": result
+            "result": result,
         }
 
     except PusherUnavailable as e:
@@ -329,10 +317,17 @@ def _can_trigger_event(user: User, channel: str, event: str) -> bool:
     # Teachers can trigger educational events
     if user_role == "teacher":
         teacher_events = [
-            "content-created", "content-updated", "content-deleted",
-            "lesson-started", "lesson-completed", "lesson-updated",
-            "assessment-created", "assessment-updated", "assessment-graded",
-            "class-announcement", "homework-assigned"
+            "content-created",
+            "content-updated",
+            "content-deleted",
+            "lesson-started",
+            "lesson-completed",
+            "lesson-updated",
+            "assessment-created",
+            "assessment-updated",
+            "assessment-graded",
+            "class-announcement",
+            "homework-assigned",
         ]
         if any(event.startswith(prefix) for prefix in teacher_events):
             return True
@@ -348,16 +343,17 @@ def _can_trigger_event(user: User, channel: str, event: str) -> bool:
     # Students can trigger student-specific events
     if user_role == "student":
         student_events = [
-            "progress-updated", "assignment-submitted", "question-asked",
-            "activity-completed", "badge-earned"
+            "progress-updated",
+            "assignment-submitted",
+            "question-asked",
+            "activity-completed",
+            "badge-earned",
         ]
         if any(event.startswith(prefix) for prefix in student_events):
             return True
 
     # Common events that all authenticated users can trigger
-    common_events = [
-        "user-status-updated", "typing-indicator", "user-joined", "user-left"
-    ]
+    common_events = ["user-status-updated", "typing-indicator", "user-joined", "user-left"]
     if event in common_events:
         return True
 
@@ -401,17 +397,9 @@ async def pusher_webhook(request: Request):
             channel = event.get("channel")
 
             logger.info(f"Processing webhook event: {event_name} on {channel}")
-            processed.append({
-                "event": event_name,
-                "channel": channel,
-                "processed": True
-            })
+            processed.append({"event": event_name, "channel": channel, "processed": True})
 
-        return {
-            "status": "success",
-            "events_processed": len(processed),
-            "events": processed
-        }
+        return {"status": "success", "events_processed": len(processed), "events": processed}
 
     except HTTPException:
         raise
@@ -423,8 +411,7 @@ async def pusher_webhook(request: Request):
 # Realtime endpoints
 @realtime_router.post("/trigger")
 async def realtime_trigger_event(
-    request: TriggerEventRequest,
-    current_user: User = Depends(get_current_user)
+    request: TriggerEventRequest, current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """
     Trigger a realtime event via Pusher.
@@ -443,14 +430,14 @@ async def realtime_trigger_event(
     """
     try:
         # Import here to avoid circular imports
-        from apps.backend.services.pusher import trigger_event
         from datetime import datetime, timezone
+
+        from apps.backend.services.pusher import trigger_event
 
         # Validate channel access permissions
         if not _can_trigger_event(current_user, request.channel, request.event):
             raise HTTPException(
-                status_code=403,
-                detail="Insufficient permissions to trigger this event"
+                status_code=403, detail="Insufficient permissions to trigger this event"
             )
 
         # Add user context and timestamp to event data
@@ -460,16 +447,12 @@ async def realtime_trigger_event(
                 "triggered_by": str(current_user.id),
                 "user_role": current_user.role,
                 "username": current_user.username,
-                "timestamp": datetime.now(timezone.utc).isoformat()
-            }
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            },
         }
 
         # Trigger the event
-        result = trigger_event(
-            channel=request.channel,
-            event=request.event,
-            data=event_data
-        )
+        result = trigger_event(channel=request.channel, event=request.event, data=event_data)
 
         logger.info(
             f"Realtime event '{request.event}' triggered on channel '{request.channel}' "
@@ -483,9 +466,9 @@ async def realtime_trigger_event(
                 "channel": request.channel,
                 "event": request.event,
                 "triggered_by": str(current_user.id),
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             },
-            "result": result
+            "result": result,
         }
 
     except PusherUnavailable as e:
@@ -514,7 +497,7 @@ async def realtime_status(current_user: User = Depends(get_current_user)) -> Dic
                 "status": "success",
                 "message": "Realtime system operational",
                 "service": "pusher",
-                "user_access": True
+                "user_access": True,
             }
 
         # Get Pusher service status for admin users
@@ -528,10 +511,10 @@ async def realtime_status(current_user: User = Depends(get_current_user)) -> Dic
                 "cluster": settings.PUSHER_CLUSTER,
                 "ssl": settings.PUSHER_SSL,
                 "app_id": settings.PUSHER_APP_ID[:8] + "..." if settings.PUSHER_APP_ID else None,
-                "key": settings.PUSHER_KEY[:8] + "..." if settings.PUSHER_KEY else None
+                "key": settings.PUSHER_KEY[:8] + "..." if settings.PUSHER_KEY else None,
             },
             "user_access": True,
-            "admin_access": True
+            "admin_access": True,
         }
 
     except PusherUnavailable as e:

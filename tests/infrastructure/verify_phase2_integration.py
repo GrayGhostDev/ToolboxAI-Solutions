@@ -9,9 +9,8 @@ Run with: python tests/infrastructure/verify_phase2_integration.py
 """
 
 import sys
+
 import requests
-import time
-from typing import Dict, List, Tuple
 
 # Configuration
 VAULT_ADDR = "http://localhost:8200"
@@ -30,9 +29,11 @@ skipped = 0
 
 def test(name: str):
     """Decorator to mark test functions."""
+
     def decorator(func):
         func.__test_name__ = name
         return func
+
     return decorator
 
 
@@ -55,7 +56,7 @@ def run_test(func):
     """Run a test function and track results."""
     global passed, failed, skipped
 
-    test_name = getattr(func, '__test_name__', func.__name__)
+    test_name = getattr(func, "__test_name__", func.__name__)
     try:
         result = func()
         if result is None or result is True:
@@ -110,7 +111,7 @@ def test_vault_metrics():
     response = requests.get(
         f"{VAULT_ADDR}/v1/sys/metrics?format=prometheus",
         headers={"X-Vault-Token": VAULT_TOKEN},
-        timeout=REQUEST_TIMEOUT
+        timeout=REQUEST_TIMEOUT,
     )
     if response.status_code != 200:
         return f"Status code: {response.status_code}"
@@ -293,7 +294,7 @@ def test_vault_metrics_in_prometheus():
     response = requests.get(
         f"{PROMETHEUS_ADDR}/api/v1/query",
         params={"query": "vault_core_unsealed"},
-        timeout=REQUEST_TIMEOUT
+        timeout=REQUEST_TIMEOUT,
     )
     data = response.json()
     results = data["data"]["result"]
@@ -310,9 +311,7 @@ def test_vault_metrics_in_prometheus():
 @test("PostgreSQL metrics in Prometheus")
 def test_postgres_metrics_in_prometheus():
     response = requests.get(
-        f"{PROMETHEUS_ADDR}/api/v1/query",
-        params={"query": "pg_up"},
-        timeout=REQUEST_TIMEOUT
+        f"{PROMETHEUS_ADDR}/api/v1/query", params={"query": "pg_up"}, timeout=REQUEST_TIMEOUT
     )
     data = response.json()
     results = data["data"]["result"]
@@ -329,9 +328,7 @@ def test_postgres_metrics_in_prometheus():
 @test("Redis metrics in Prometheus")
 def test_redis_metrics_in_prometheus():
     response = requests.get(
-        f"{PROMETHEUS_ADDR}/api/v1/query",
-        params={"query": "redis_up"},
-        timeout=REQUEST_TIMEOUT
+        f"{PROMETHEUS_ADDR}/api/v1/query", params={"query": "redis_up"}, timeout=REQUEST_TIMEOUT
     )
     data = response.json()
     results = data["data"]["result"]
@@ -348,9 +345,7 @@ def test_redis_metrics_in_prometheus():
 @test("All scrape targets successful")
 def test_all_targets_up():
     response = requests.get(
-        f"{PROMETHEUS_ADDR}/api/v1/query",
-        params={"query": "up"},
-        timeout=REQUEST_TIMEOUT
+        f"{PROMETHEUS_ADDR}/api/v1/query", params={"query": "up"}, timeout=REQUEST_TIMEOUT
     )
     data = response.json()
     results = data["data"]["result"]

@@ -3,11 +3,11 @@ Encryption Manager for ToolboxAI
 Handles encryption key management, rotation, and data re-encryption
 """
 
-import os
 import logging
-from typing import List, Optional
+import os
 from datetime import datetime, timedelta
-from cryptography.fernet import Fernet, MultiFernet, InvalidToken
+
+from cryptography.fernet import Fernet, InvalidToken, MultiFernet
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ class EncryptionManager:
     - Secure key storage recommendations
     """
 
-    def __init__(self, primary_key: Optional[str] = None, rotation_keys: Optional[List[str]] = None):
+    def __init__(self, primary_key: str | None = None, rotation_keys: list[str] | None = None):
         """
         Initialize encryption manager.
 
@@ -35,19 +35,25 @@ class EncryptionManager:
         self.rotation_keys = rotation_keys or self._load_rotation_keys()
 
         if not self.primary_key:
-            raise ValueError("Primary encryption key must be provided or set in DATA_ENCRYPTION_KEY")
+            raise ValueError(
+                "Primary encryption key must be provided or set in DATA_ENCRYPTION_KEY"
+            )
 
         # Create Fernet instances
-        self.primary_fernet = Fernet(self.primary_key.encode() if isinstance(self.primary_key, str) else self.primary_key)
+        self.primary_fernet = Fernet(
+            self.primary_key.encode() if isinstance(self.primary_key, str) else self.primary_key
+        )
 
         # Create MultiFernet with rotation keys for backward compatibility
         if self.rotation_keys:
-            rotation_fernets = [Fernet(key.encode() if isinstance(key, str) else key) for key in self.rotation_keys]
+            rotation_fernets = [
+                Fernet(key.encode() if isinstance(key, str) else key) for key in self.rotation_keys
+            ]
             self.multi_fernet = MultiFernet([self.primary_fernet] + rotation_fernets)
         else:
             self.multi_fernet = MultiFernet([self.primary_fernet])
 
-    def _load_rotation_keys(self) -> List[str]:
+    def _load_rotation_keys(self) -> list[str]:
         """Load rotation keys from environment variables."""
         keys = []
         for i in range(1, 6):  # Support up to 5 rotation keys
@@ -190,7 +196,7 @@ class EncryptionManager:
         return {
             "total_users": len(users),
             "rotated_count": rotated_count,
-            "completed_at": datetime.utcnow().isoformat()
+            "completed_at": datetime.utcnow().isoformat(),
         }
 
 

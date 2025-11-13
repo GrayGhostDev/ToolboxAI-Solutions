@@ -9,21 +9,16 @@ import asyncio
 import json
 import os
 import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Union
-import pytest
-import asyncpg
-import aiohttp
-import httpx
-from pathlib import Path
-import tempfile
 import uuid
 
+import asyncpg
+import httpx
+import pytest
+
 from core.agents.supabase.supabase_migration_agent import SupabaseMigrationAgent
-from core.agents.supabase.tools.storage_migration import StorageMigrationTool
 from core.agents.supabase.tools.edge_function_converter import EdgeFunctionConverter
+from core.agents.supabase.tools.storage_migration import StorageMigrationTool
 from core.agents.supabase.tools.type_generator import TypeGenerator
-from tests.fixtures.supabase_migration import SupabaseMigrationFixture
 
 
 @pytest.mark.integration
@@ -43,7 +38,7 @@ class TestSupabaseIntegration:
             "port": int(os.getenv("SUPABASE_DB_PORT", "54322")),
             "database": os.getenv("SUPABASE_DB_NAME", "postgres"),
             "user": os.getenv("SUPABASE_DB_USER", "postgres"),
-            "password": os.getenv("SUPABASE_DB_PASS", "postgres")
+            "password": os.getenv("SUPABASE_DB_PASS", "postgres"),
         }
 
         # Initialize tools
@@ -99,7 +94,7 @@ class TestSupabaseIntegration:
             headers = {
                 "Authorization": f"Bearer {self.supabase_anon_key}",
                 "apikey": self.supabase_anon_key,
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             }
 
             try:
@@ -110,11 +105,16 @@ class TestSupabaseIntegration:
                 service_headers = {
                     "Authorization": f"Bearer {self.supabase_service_key}",
                     "apikey": self.supabase_service_key,
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 }
 
-                response = await client.get(f"{self.supabase_url}/rest/v1/", headers=service_headers)
-                assert response.status_code in [200, 404], f"Service API returned {response.status_code}"
+                response = await client.get(
+                    f"{self.supabase_url}/rest/v1/", headers=service_headers
+                )
+                assert response.status_code in [
+                    200,
+                    404,
+                ], f"Service API returned {response.status_code}"
 
             except Exception as e:
                 pytest.skip(f"Cannot connect to Supabase REST API: {e}")
@@ -128,41 +128,49 @@ class TestSupabaseIntegration:
 
             # Create test table with RLS
             test_table = f"test_rls_table_{int(time.time())}"
-            await conn.execute(f"""
+            await conn.execute(
+                f"""
                 CREATE TABLE public.{test_table} (
                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                     user_id UUID NOT NULL,
                     content TEXT,
                     created_at TIMESTAMPTZ DEFAULT NOW()
                 );
-            """)
+            """
+            )
 
             # Enable RLS
             await conn.execute(f"ALTER TABLE public.{test_table} ENABLE ROW LEVEL SECURITY;")
 
             # Create RLS policy
             policy_name = f"policy_{test_table}"
-            await conn.execute(f"""
+            await conn.execute(
+                f"""
                 CREATE POLICY {policy_name}
                 ON public.{test_table}
                 FOR ALL
                 USING (auth.uid() = user_id);
-            """)
+            """
+            )
 
             # Verify RLS is enabled
-            rls_enabled = await conn.fetchval(f"""
+            rls_enabled = await conn.fetchval(
+                f"""
                 SELECT relrowsecurity
                 FROM pg_class
                 WHERE relname = '{test_table}';
-            """)
+            """
+            )
             assert rls_enabled, "RLS should be enabled on test table"
 
             # Verify policy exists
-            policy_exists = await conn.fetchval(f"""
+            policy_exists = await conn.fetchval(
+                f"""
                 SELECT 1
                 FROM pg_policies
                 WHERE tablename = '{test_table}' AND policyname = '{policy_name}';
-            """)
+            """
+            )
             assert policy_exists == 1, "RLS policy should exist"
 
             # Cleanup
@@ -182,7 +190,7 @@ class TestSupabaseIntegration:
             headers = {
                 "Authorization": f"Bearer {self.supabase_service_key}",
                 "apikey": self.supabase_service_key,
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             }
 
             try:
@@ -190,20 +198,23 @@ class TestSupabaseIntegration:
                 bucket_data = {
                     "id": self.test_bucket_name,
                     "name": self.test_bucket_name,
-                    "public": False
+                    "public": False,
                 }
 
                 response = await client.post(
-                    f"{self.supabase_url}/storage/v1/bucket",
-                    headers=headers,
-                    json=bucket_data
+                    f"{self.supabase_url}/storage/v1/bucket", headers=headers, json=bucket_data
                 )
 
                 # 201 (created) or 409 (already exists) are acceptable
-                assert response.status_code in [201, 409], f"Bucket creation returned {response.status_code}"
+                assert response.status_code in [
+                    201,
+                    409,
+                ], f"Bucket creation returned {response.status_code}"
 
                 # List buckets
-                response = await client.get(f"{self.supabase_url}/storage/v1/bucket", headers=headers)
+                response = await client.get(
+                    f"{self.supabase_url}/storage/v1/bucket", headers=headers
+                )
                 assert response.status_code == 200, "Should be able to list buckets"
 
                 buckets = response.json()
@@ -222,14 +233,17 @@ class TestSupabaseIntegration:
                 response = await client.post(
                     f"{self.supabase_url}/storage/v1/object/{self.test_bucket_name}/test.txt",
                     headers=upload_headers,
-                    files=files
+                    files=files,
                 )
-                assert response.status_code in [200, 201], f"File upload returned {response.status_code}"
+                assert response.status_code in [
+                    200,
+                    201,
+                ], f"File upload returned {response.status_code}"
 
                 # List objects in bucket
                 response = await client.get(
                     f"{self.supabase_url}/storage/v1/object/list/{self.test_bucket_name}",
-                    headers=headers
+                    headers=headers,
                 )
                 assert response.status_code == 200, "Should be able to list objects"
 
@@ -240,22 +254,24 @@ class TestSupabaseIntegration:
                 # Download file
                 response = await client.get(
                     f"{self.supabase_url}/storage/v1/object/{self.test_bucket_name}/test.txt",
-                    headers=headers
+                    headers=headers,
                 )
                 assert response.status_code == 200, "Should be able to download file"
-                assert response.content == test_file_content, "Downloaded content should match uploaded content"
+                assert (
+                    response.content == test_file_content
+                ), "Downloaded content should match uploaded content"
 
                 # Delete file
                 response = await client.delete(
                     f"{self.supabase_url}/storage/v1/object/{self.test_bucket_name}/test.txt",
-                    headers=headers
+                    headers=headers,
                 )
                 assert response.status_code in [200, 204], "Should be able to delete file"
 
                 # Delete bucket
                 response = await client.delete(
                     f"{self.supabase_url}/storage/v1/bucket/{self.test_bucket_name}",
-                    headers=headers
+                    headers=headers,
                 )
                 assert response.status_code in [200, 204], "Should be able to delete bucket"
 
@@ -286,21 +302,17 @@ serve(async (req) => {
             headers = {
                 "Authorization": f"Bearer {self.supabase_service_key}",
                 "apikey": self.supabase_service_key,
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             }
 
             try:
                 # Deploy Edge Function
-                deploy_data = {
-                    "slug": function_name,
-                    "body": function_code,
-                    "verify_jwt": False
-                }
+                deploy_data = {"slug": function_name, "body": function_code, "verify_jwt": False}
 
                 response = await client.post(
                     f"{self.supabase_url}/functions/v1/{function_name}",
                     headers=headers,
-                    json=deploy_data
+                    json=deploy_data,
                 )
 
                 if response.status_code not in [200, 201]:
@@ -311,14 +323,16 @@ serve(async (req) => {
                 response = await client.post(
                     f"{self.supabase_url}/functions/v1/{function_name}",
                     headers=headers,
-                    json=invoke_data
+                    json=invoke_data,
                 )
 
                 assert response.status_code == 200, "Edge Function should execute successfully"
 
                 result = response.json()
                 assert "message" in result, "Edge Function should return message"
-                assert "Hello Test!" in result["message"], "Edge Function should process input correctly"
+                assert (
+                    "Hello Test!" in result["message"]
+                ), "Edge Function should process input correctly"
 
             except Exception as e:
                 pytest.skip(f"Edge Functions test failed: {e}")
@@ -337,14 +351,14 @@ serve(async (req) => {
 
             try:
                 async with async_mock_pusher_context() as pusher:
-        # Connect using Pusherf"{ws_url}{params}", timeout=10) as websocket:
+                    # Connect using Pusherf"{ws_url}{params}", timeout=10) as websocket:
 
                     # Send join message
                     join_message = {
                         "topic": "realtime:public:test_table",
                         "event": "phx_join",
                         "payload": {},
-                        "ref": "1"
+                        "ref": "1",
                     }
 
                     await pusher.trigger(json.dumps(join_message))
@@ -377,24 +391,24 @@ serve(async (req) => {
                         "columns": {
                             "id": {"type": "uuid", "primary_key": True},
                             "email": {"type": "text", "unique": True},
-                            "created_at": {"type": "timestamptz", "default": "now()"}
+                            "created_at": {"type": "timestamptz", "default": "now()"},
                         },
                         "rls": True,
                         "policies": [
                             {
                                 "name": "user_select_own",
                                 "action": "SELECT",
-                                "using": "auth.uid() = id"
+                                "using": "auth.uid() = id",
                             }
-                        ]
+                        ],
                     }
                 },
                 "storage": {
                     "buckets": [
                         {"name": "avatars", "public": False},
-                        {"name": "documents", "public": False}
+                        {"name": "documents", "public": False},
                     ]
-                }
+                },
             }
 
             migration_plan = await self.migration_agent.generate_migration_plan(target_config)
@@ -416,7 +430,7 @@ serve(async (req) => {
             # Test bucket migration plan
             target_buckets = [
                 {"name": "user-uploads", "public": False, "file_size_limit": 10485760},
-                {"name": "public-assets", "public": True, "file_size_limit": 52428800}
+                {"name": "public-assets", "public": True, "file_size_limit": 52428800},
             ]
 
             migration_plan = await self.storage_tool.plan_bucket_migration(target_buckets)
@@ -435,13 +449,13 @@ serve(async (req) => {
 
         try:
             # Test Python to Deno conversion
-            python_code = '''
+            python_code = """
 def handler(request):
     import json
     data = request.get_json()
     name = data.get("name", "World")
     return {"message": f"Hello {name}!"}
-'''
+"""
 
             deno_code = await self.edge_function_converter.convert_python_to_deno(python_code)
             assert isinstance(deno_code, str), "Conversion should return string"
@@ -468,7 +482,7 @@ def handler(request):
                             "id": {"type": "uuid", "nullable": False},
                             "email": {"type": "text", "nullable": False},
                             "name": {"type": "text", "nullable": True},
-                            "created_at": {"type": "timestamptz", "nullable": False}
+                            "created_at": {"type": "timestamptz", "nullable": False},
                         }
                     },
                     "posts": {
@@ -476,9 +490,9 @@ def handler(request):
                             "id": {"type": "uuid", "nullable": False},
                             "user_id": {"type": "uuid", "nullable": False},
                             "title": {"type": "text", "nullable": False},
-                            "content": {"type": "text", "nullable": True}
+                            "content": {"type": "text", "nullable": True},
                         }
-                    }
+                    },
                 }
             }
 
@@ -505,12 +519,14 @@ def handler(request):
             headers = {
                 "Authorization": f"Bearer {self.supabase_anon_key}",
                 "apikey": self.supabase_anon_key,
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             }
 
             try:
                 # Test auth settings endpoint
-                response = await client.get(f"{self.supabase_url}/auth/v1/settings", headers=headers)
+                response = await client.get(
+                    f"{self.supabase_url}/auth/v1/settings", headers=headers
+                )
 
                 if response.status_code != 200:
                     pytest.skip(f"Auth not available: {response.status_code}")
@@ -520,15 +536,10 @@ def handler(request):
 
                 # Test user creation (signup)
                 test_email = f"test-{uuid.uuid4()}@example.com"
-                signup_data = {
-                    "email": test_email,
-                    "password": "testpassword123"
-                }
+                signup_data = {"email": test_email, "password": "testpassword123"}
 
                 response = await client.post(
-                    f"{self.supabase_url}/auth/v1/signup",
-                    headers=headers,
-                    json=signup_data
+                    f"{self.supabase_url}/auth/v1/signup", headers=headers, json=signup_data
                 )
 
                 # May require email confirmation, so 200 or 422 acceptable
@@ -551,7 +562,8 @@ def handler(request):
 
             # Create test function
             function_name = f"test_function_{int(time.time())}"
-            await conn.execute(f"""
+            await conn.execute(
+                f"""
                 CREATE OR REPLACE FUNCTION {function_name}(input_text TEXT)
                 RETURNS TEXT
                 LANGUAGE plpgsql
@@ -560,7 +572,8 @@ def handler(request):
                     RETURN 'Hello ' || input_text;
                 END;
                 $$;
-            """)
+            """
+            )
 
             # Test function execution
             result = await conn.fetchval(f"SELECT {function_name}('World');")
@@ -568,17 +581,20 @@ def handler(request):
 
             # Create test table and trigger
             trigger_table = f"test_trigger_table_{int(time.time())}"
-            await conn.execute(f"""
+            await conn.execute(
+                f"""
                 CREATE TABLE {trigger_table} (
                     id SERIAL PRIMARY KEY,
                     data TEXT,
                     updated_at TIMESTAMPTZ DEFAULT NOW()
                 );
-            """)
+            """
+            )
 
             # Create trigger function
             trigger_function = f"update_timestamp_{int(time.time())}"
-            await conn.execute(f"""
+            await conn.execute(
+                f"""
                 CREATE OR REPLACE FUNCTION {trigger_function}()
                 RETURNS TRIGGER
                 LANGUAGE plpgsql
@@ -588,22 +604,27 @@ def handler(request):
                     RETURN NEW;
                 END;
                 $$;
-            """)
+            """
+            )
 
             # Create trigger
-            await conn.execute(f"""
+            await conn.execute(
+                f"""
                 CREATE TRIGGER update_timestamp_trigger
                 BEFORE UPDATE ON {trigger_table}
                 FOR EACH ROW
                 EXECUTE FUNCTION {trigger_function}();
-            """)
+            """
+            )
 
             # Test trigger
             await conn.execute(f"INSERT INTO {trigger_table} (data) VALUES ('test');")
             await asyncio.sleep(0.1)  # Small delay
             await conn.execute(f"UPDATE {trigger_table} SET data = 'updated' WHERE id = 1;")
 
-            updated_at = await conn.fetchval(f"SELECT updated_at FROM {trigger_table} WHERE id = 1;")
+            updated_at = await conn.fetchval(
+                f"SELECT updated_at FROM {trigger_table} WHERE id = 1;"
+            )
             assert updated_at is not None, "Trigger should update timestamp"
 
             # Cleanup
@@ -635,7 +656,7 @@ class TestSupabasePerformanceIntegration:
                 database="postgres",
                 user="postgres",
                 password="postgres",
-                timeout=10
+                timeout=10,
             )
             result = await conn.fetchval("SELECT 1;")
             await conn.close()
@@ -663,8 +684,12 @@ class TestSupabasePerformanceIntegration:
         conn = None
         try:
             conn = await asyncpg.connect(
-                host="localhost", port=54322, database="postgres",
-                user="postgres", password="postgres", timeout=30
+                host="localhost",
+                port=54322,
+                database="postgres",
+                user="postgres",
+                password="postgres",
+                timeout=30,
             )
 
             # Test simple query performance
@@ -678,13 +703,15 @@ class TestSupabasePerformanceIntegration:
 
             # Test bulk insert performance
             test_table = f"perf_test_{int(time.time())}"
-            await conn.execute(f"""
+            await conn.execute(
+                f"""
                 CREATE TABLE {test_table} (
                     id SERIAL PRIMARY KEY,
                     data TEXT,
                     created_at TIMESTAMPTZ DEFAULT NOW()
                 );
-            """)
+            """
+            )
 
             start_time = time.time()
             values = [(f"data_{i}",) for i in range(1000)]
@@ -722,7 +749,7 @@ class TestSupabasePerformanceIntegration:
                 response = await client.post(
                     f"{os.getenv('SUPABASE_URL', 'http://localhost:54321')}/storage/v1/bucket",
                     headers={**headers, "Content-Type": "application/json"},
-                    json=bucket_data
+                    json=bucket_data,
                 )
 
                 if response.status_code not in [201, 409]:
@@ -736,7 +763,7 @@ class TestSupabasePerformanceIntegration:
                 response = await client.post(
                     f"{os.getenv('SUPABASE_URL')}/storage/v1/object/{bucket_name}/test.bin",
                     headers=headers,
-                    files=files
+                    files=files,
                 )
                 end_time = time.time()
 
@@ -747,11 +774,10 @@ class TestSupabasePerformanceIntegration:
                 # Cleanup
                 await client.delete(
                     f"{os.getenv('SUPABASE_URL')}/storage/v1/object/{bucket_name}/test.bin",
-                    headers=headers
+                    headers=headers,
                 )
                 await client.delete(
-                    f"{os.getenv('SUPABASE_URL')}/storage/v1/bucket/{bucket_name}",
-                    headers=headers
+                    f"{os.getenv('SUPABASE_URL')}/storage/v1/bucket/{bucket_name}", headers=headers
                 )
 
             except Exception as e:
@@ -771,13 +797,18 @@ class TestSupabaseSecurityIntegration:
         conn = None
         try:
             conn = await asyncpg.connect(
-                host="localhost", port=54322, database="postgres",
-                user="postgres", password="postgres", timeout=30
+                host="localhost",
+                port=54322,
+                database="postgres",
+                user="postgres",
+                password="postgres",
+                timeout=30,
             )
 
             # Create test table with RLS
             test_table = f"security_test_{int(time.time())}"
-            await conn.execute(f"""
+            await conn.execute(
+                f"""
                 CREATE TABLE {test_table} (
                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                     user_id UUID NOT NULL,
@@ -786,16 +817,19 @@ class TestSupabaseSecurityIntegration:
                 ALTER TABLE {test_table} ENABLE ROW LEVEL SECURITY;
                 CREATE POLICY user_policy ON {test_table}
                 FOR ALL USING (user_id = auth.uid());
-            """)
+            """
+            )
 
             # Insert test data
             user1_id = str(uuid.uuid4())
             user2_id = str(uuid.uuid4())
 
-            await conn.execute(f"""
+            await conn.execute(
+                f"""
                 INSERT INTO {test_table} (user_id, secret_data)
                 VALUES ('{user1_id}', 'user1 secret'), ('{user2_id}', 'user2 secret');
-            """)
+            """
+            )
 
             # Test without auth context (should see nothing)
             rows = await conn.fetch(f"SELECT * FROM {test_table};")
@@ -821,13 +855,13 @@ class TestSupabaseSecurityIntegration:
             invalid_headers = {
                 "Authorization": "Bearer invalid-key",
                 "apikey": "invalid-key",
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             }
 
             try:
                 response = await client.get(
                     f"{os.getenv('SUPABASE_URL', 'http://localhost:54321')}/rest/v1/",
-                    headers=invalid_headers
+                    headers=invalid_headers,
                 )
 
                 # Should reject invalid API key
@@ -843,23 +877,31 @@ class TestSupabaseSecurityIntegration:
         conn = None
         try:
             conn = await asyncpg.connect(
-                host="localhost", port=54322, database="postgres",
-                user="postgres", password="postgres", timeout=30
+                host="localhost",
+                port=54322,
+                database="postgres",
+                user="postgres",
+                password="postgres",
+                timeout=30,
             )
 
             # Create test table
             test_table = f"injection_test_{int(time.time())}"
-            await conn.execute(f"""
+            await conn.execute(
+                f"""
                 CREATE TABLE {test_table} (
                     id SERIAL PRIMARY KEY,
                     name TEXT
                 );
                 INSERT INTO {test_table} (name) VALUES ('test1'), ('test2');
-            """)
+            """
+            )
 
             # Test parameterized query (safe)
             malicious_input = "'; DROP TABLE " + test_table + "; --"
-            result = await conn.fetchval(f"SELECT name FROM {test_table} WHERE name = $1;", malicious_input)
+            result = await conn.fetchval(
+                f"SELECT name FROM {test_table} WHERE name = $1;", malicious_input
+            )
             assert result is None, "Parameterized query should be safe"
 
             # Verify table still exists

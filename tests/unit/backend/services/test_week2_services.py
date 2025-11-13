@@ -8,35 +8,35 @@ Date: September 2025
 """
 
 import asyncio
-import hashlib
-import json
-import os
 from datetime import datetime, timedelta
-from typing import Dict, Any, Optional, List
-from unittest.mock import AsyncMock, MagicMock, patch, Mock
-from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import pytest_asyncio
-from redis import asyncio as aioredis
 from redis.exceptions import ConnectionError as RedisConnectionError
+
+from apps.backend.services.api_key_manager import APIKeyManager, APIKeyScope
+from apps.backend.services.cached_ai_service import CachedAIService
+from apps.backend.services.roblox.deployment import AssetType, RobloxAssetManager
 
 # Import Week 2 services
 from apps.backend.services.semantic_cache import SemanticCacheService
-from apps.backend.services.cached_ai_service import CachedAIService
-from apps.backend.services.api_key_manager import APIKeyManager, APIKeyScope
 from apps.backend.services.supabase_migration_manager import (
-    SupabaseMigrationManager, MigrationStrategy, Migration, MigrationStatus
+    Migration,
+    MigrationStatus,
+    MigrationStrategy,
+    SupabaseMigrationManager,
 )
-from apps.backend.services.roblox.deployment import RobloxAssetManager, AssetType
 from infrastructure.backups.scripts.backup_manager import (
-    BackupManager, BackupType, BackupJob, BackupStatus
+    BackupManager,
+    BackupStatus,
+    BackupType,
 )
-
 
 # ============================================
 # FIXTURES
 # ============================================
+
 
 @pytest.fixture
 def redis_mock():
@@ -63,8 +63,8 @@ def langcache_mock():
 
     # Mock set response
     set_response = MagicMock()
-    set_response.status = 'success'
-    set_response.entry_id = 'test-entry-id'
+    set_response.status = "success"
+    set_response.entry_id = "test-entry-id"
     mock.set = MagicMock(return_value=set_response)
 
     return mock
@@ -75,7 +75,7 @@ def supabase_mock():
     """Mock Supabase client for testing"""
     mock = AsyncMock()
     mock.table = MagicMock()
-    mock.rpc = AsyncMock(return_value={'success': True})
+    mock.rpc = AsyncMock(return_value={"success": True})
     return mock
 
 
@@ -85,7 +85,7 @@ def s3_mock():
     mock = AsyncMock()
     mock.upload_file = AsyncMock(return_value=True)
     mock.download_file = AsyncMock(return_value=True)
-    mock.list_objects_v2 = AsyncMock(return_value={'Contents': []})
+    mock.list_objects_v2 = AsyncMock(return_value={"Contents": []})
     return mock
 
 
@@ -93,14 +93,17 @@ def s3_mock():
 # SEMANTIC CACHE TESTS
 # ============================================
 
+
 class TestSemanticCache:
     """Test suite for SemanticCacheService"""
 
     @pytest_asyncio.fixture
     async def semantic_cache(self, redis_mock, langcache_mock):
         """Create SemanticCacheService instance with mocks"""
-        with patch('apps.backend.services.semantic_cache.aioredis.from_url', return_value=redis_mock):
-            with patch('apps.backend.services.semantic_cache.lang_cache', langcache_mock):
+        with patch(
+            "apps.backend.services.semantic_cache.aioredis.from_url", return_value=redis_mock
+        ):
+            with patch("apps.backend.services.semantic_cache.lang_cache", langcache_mock):
                 cache = SemanticCacheService()
                 await cache.initialize()
                 yield cache
@@ -122,7 +125,7 @@ class TestSemanticCache:
         match = MagicMock()
         match.response = "Cached response"
         match.similarity = 0.98
-        match.metadata = {'timestamp': '2025-09-27', 'model': 'gpt-4'}
+        match.metadata = {"timestamp": "2025-09-27", "model": "gpt-4"}
 
         search_response = MagicMock()
         search_response.matches = [match]
@@ -132,9 +135,9 @@ class TestSemanticCache:
         result = await semantic_cache.get("test prompt", model="gpt-4")
 
         assert result is not None
-        assert result['response'] == "Cached response"
-        assert result['cached'] is True
-        assert result['similarity'] == 0.98
+        assert result["response"] == "Cached response"
+        assert result["cached"] is True
+        assert result["similarity"] == 0.98
         assert semantic_cache.hits == 1
         assert semantic_cache.misses == 0
 
@@ -158,16 +161,13 @@ class TestSemanticCache:
         """Test saving to cache"""
         # Setup successful save response
         save_response = MagicMock()
-        save_response.status = 'success'
-        save_response.entry_id = 'test-entry-123'
+        save_response.status = "success"
+        save_response.entry_id = "test-entry-123"
         langcache_mock.set.return_value = save_response
 
         # Test saving
         success = await semantic_cache.set(
-            "test prompt",
-            "test response",
-            model="gpt-4",
-            temperature=0.7
+            "test prompt", "test response", model="gpt-4", temperature=0.7
         )
 
         assert success is True
@@ -181,26 +181,22 @@ class TestSemanticCache:
         semantic_cache.langcache_client = None
 
         # Save to fallback cache
-        success = await semantic_cache.set(
-            "test prompt",
-            "test response",
-            model="gpt-4"
-        )
+        success = await semantic_cache.set("test prompt", "test response", model="gpt-4")
         assert success is True
 
         # Retrieve from fallback cache
         semantic_cache.fallback_cache[
             semantic_cache._create_cache_key("test prompt", "gpt-4", 0.7)
         ] = {
-            'response': "test response",
-            'model': 'gpt-4',
-            'temperature': 0.7,
-            'timestamp': datetime.utcnow().isoformat()
+            "response": "test response",
+            "model": "gpt-4",
+            "temperature": 0.7,
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
         result = await semantic_cache.get("test prompt", model="gpt-4")
         assert result is not None
-        assert result['response'] == "test response"
+        assert result["response"] == "test response"
 
     @pytest.mark.asyncio
     async def test_calculate_savings(self, semantic_cache):
@@ -209,16 +205,17 @@ class TestSemanticCache:
         semantic_cache.hits = 100
         semantic_cache.misses = 50
 
-        savings = semantic_cache.calculate_savings(model='gpt-4')
+        savings = semantic_cache.calculate_savings(model="gpt-4")
 
-        assert savings['hit_rate'] == pytest.approx(0.667, rel=0.01)
-        assert savings['estimated_monthly_savings'] > 0
-        assert savings['tokens_saved'] > 0
+        assert savings["hit_rate"] == pytest.approx(0.667, rel=0.01)
+        assert savings["estimated_monthly_savings"] > 0
+        assert savings["tokens_saved"] > 0
 
 
 # ============================================
 # API KEY MANAGER TESTS
 # ============================================
+
 
 class TestAPIKeyManager:
     """Test suite for APIKeyManager service"""
@@ -226,8 +223,12 @@ class TestAPIKeyManager:
     @pytest_asyncio.fixture
     async def api_key_manager(self, redis_mock, supabase_mock):
         """Create APIKeyManager instance with mocks"""
-        with patch('apps.backend.services.api_key_manager.aioredis.from_url', return_value=redis_mock):
-            with patch('apps.backend.services.api_key_manager.create_client', return_value=supabase_mock):
+        with patch(
+            "apps.backend.services.api_key_manager.aioredis.from_url", return_value=redis_mock
+        ):
+            with patch(
+                "apps.backend.services.api_key_manager.create_client", return_value=supabase_mock
+            ):
                 manager = APIKeyManager()
                 await manager.initialize()
                 yield manager
@@ -239,41 +240,37 @@ class TestAPIKeyManager:
         key_data = await api_key_manager.generate_api_key(
             name="Test API Key",
             scopes=[APIKeyScope.READ, APIKeyScope.WRITE],
-            organization="TestOrg"
+            organization="TestOrg",
         )
 
         assert key_data is not None
-        assert 'key' in key_data
-        assert 'key_id' in key_data
-        assert key_data['key'].startswith('tk_')  # Test key prefix
-        assert len(key_data['key']) > 32
+        assert "key" in key_data
+        assert "key_id" in key_data
+        assert key_data["key"].startswith("tk_")  # Test key prefix
+        assert len(key_data["key"]) > 32
 
     @pytest.mark.asyncio
     async def test_validate_api_key(self, api_key_manager, supabase_mock):
         """Test API key validation"""
         # Setup mock response
         supabase_mock.rpc.return_value = {
-            'is_valid': True,
-            'key_id': 'test-key-id',
-            'name': 'Test Key',
-            'scopes': ['read', 'write'],
-            'rate_limits': {
-                'per_minute': 60,
-                'per_hour': 1000
-            }
+            "is_valid": True,
+            "key_id": "test-key-id",
+            "name": "Test Key",
+            "scopes": ["read", "write"],
+            "rate_limits": {"per_minute": 60, "per_hour": 1000},
         }
 
         # Generate and validate key
         key_data = await api_key_manager.generate_api_key(
-            name="Test Key",
-            scopes=[APIKeyScope.READ]
+            name="Test Key", scopes=[APIKeyScope.READ]
         )
 
-        validation = await api_key_manager.validate_api_key(key_data['key'])
+        validation = await api_key_manager.validate_api_key(key_data["key"])
 
-        assert validation['is_valid'] is True
-        assert validation['key_id'] == 'test-key-id'
-        assert 'read' in validation['scopes']
+        assert validation["is_valid"] is True
+        assert validation["key_id"] == "test-key-id"
+        assert "read" in validation["scopes"]
 
     @pytest.mark.asyncio
     async def test_rate_limiting(self, api_key_manager, redis_mock):
@@ -283,21 +280,13 @@ class TestAPIKeyManager:
         redis_mock.expire = AsyncMock(return_value=True)
 
         # Check rate limit
-        allowed = await api_key_manager.check_rate_limit(
-            key_id='test-key',
-            limit=10,
-            window=60
-        )
+        allowed = await api_key_manager.check_rate_limit(key_id="test-key", limit=10, window=60)
 
         assert allowed is True
 
         # Exceed rate limit
         redis_mock.incr.return_value = 11
-        allowed = await api_key_manager.check_rate_limit(
-            key_id='test-key',
-            limit=10,
-            window=60
-        )
+        allowed = await api_key_manager.check_rate_limit(key_id="test-key", limit=10, window=60)
 
         assert allowed is False
 
@@ -306,31 +295,27 @@ class TestAPIKeyManager:
         """Test API key rotation"""
         # Create initial key
         original_key = await api_key_manager.generate_api_key(
-            name="Rotation Test",
-            scopes=[APIKeyScope.ADMIN]
+            name="Rotation Test", scopes=[APIKeyScope.ADMIN]
         )
 
         # Rotate key
-        new_key = await api_key_manager.rotate_api_key(
-            key_id=original_key['key_id']
-        )
+        new_key = await api_key_manager.rotate_api_key(key_id=original_key["key_id"])
 
         assert new_key is not None
-        assert new_key['key'] != original_key['key']
-        assert new_key['key_id'] == original_key['key_id']
+        assert new_key["key"] != original_key["key"]
+        assert new_key["key_id"] == original_key["key_id"]
 
     @pytest.mark.asyncio
     async def test_revoke_api_key(self, api_key_manager, supabase_mock):
         """Test API key revocation"""
         # Setup mock
         supabase_mock.table.return_value.update.return_value.execute.return_value = {
-            'data': [{'status': 'revoked'}]
+            "data": [{"status": "revoked"}]
         }
 
         # Revoke key
         success = await api_key_manager.revoke_api_key(
-            key_id='test-key-id',
-            reason='Security violation'
+            key_id="test-key-id", reason="Security violation"
         )
 
         assert success is True
@@ -340,14 +325,21 @@ class TestAPIKeyManager:
 # MIGRATION MANAGER TESTS
 # ============================================
 
+
 class TestSupabaseMigrationManager:
     """Test suite for SupabaseMigrationManager"""
 
     @pytest_asyncio.fixture
     async def migration_manager(self, supabase_mock, redis_mock):
         """Create MigrationManager instance with mocks"""
-        with patch('apps.backend.services.supabase_migration_manager.create_client', return_value=supabase_mock):
-            with patch('apps.backend.services.supabase_migration_manager.aioredis.from_url', return_value=redis_mock):
+        with patch(
+            "apps.backend.services.supabase_migration_manager.create_client",
+            return_value=supabase_mock,
+        ):
+            with patch(
+                "apps.backend.services.supabase_migration_manager.aioredis.from_url",
+                return_value=redis_mock,
+            ):
                 manager = SupabaseMigrationManager()
                 await manager.initialize()
                 yield manager
@@ -358,15 +350,15 @@ class TestSupabaseMigrationManager:
         """Test blue-green migration strategy"""
         # Create test migration
         migration = Migration(
-            id='test-migration-001',
-            name='Add indexes',
-            up_sql='CREATE INDEX idx_test ON users(email);',
-            down_sql='DROP INDEX idx_test;',
-            strategy=MigrationStrategy.BLUE_GREEN
+            id="test-migration-001",
+            name="Add indexes",
+            up_sql="CREATE INDEX idx_test ON users(email);",
+            down_sql="DROP INDEX idx_test;",
+            strategy=MigrationStrategy.BLUE_GREEN,
         )
 
         # Mock successful execution
-        supabase_mock.rpc.return_value = {'success': True}
+        supabase_mock.rpc.return_value = {"success": True}
 
         # Run migration
         result = await migration_manager.apply_migration(migration)
@@ -380,17 +372,17 @@ class TestSupabaseMigrationManager:
         """Test migration rollback on failure"""
         # Create failing migration
         migration = Migration(
-            id='test-migration-002',
-            name='Bad migration',
-            up_sql='INVALID SQL;',
-            down_sql='DROP TABLE test;',
-            strategy=MigrationStrategy.ROLLING
+            id="test-migration-002",
+            name="Bad migration",
+            up_sql="INVALID SQL;",
+            down_sql="DROP TABLE test;",
+            strategy=MigrationStrategy.ROLLING,
         )
 
         # Mock failure then successful rollback
         supabase_mock.rpc.side_effect = [
             Exception("SQL Error"),  # Migration fails
-            {'success': True}  # Rollback succeeds
+            {"success": True},  # Rollback succeeds
         ]
 
         # Run migration
@@ -404,10 +396,10 @@ class TestSupabaseMigrationManager:
         """Test migration validation"""
         # Valid migration
         valid_migration = Migration(
-            id='test-valid',
-            name='Valid migration',
-            up_sql='CREATE TABLE test (id INT);',
-            down_sql='DROP TABLE test;'
+            id="test-valid",
+            name="Valid migration",
+            up_sql="CREATE TABLE test (id INT);",
+            down_sql="DROP TABLE test;",
         )
 
         is_valid = await migration_manager.validate_migration(valid_migration)
@@ -415,10 +407,7 @@ class TestSupabaseMigrationManager:
 
         # Invalid migration (empty SQL)
         invalid_migration = Migration(
-            id='test-invalid',
-            name='Invalid migration',
-            up_sql='',
-            down_sql=''
+            id="test-invalid", name="Invalid migration", up_sql="", down_sql=""
         )
 
         is_valid = await migration_manager.validate_migration(invalid_migration)
@@ -429,7 +418,7 @@ class TestSupabaseMigrationManager:
         """Test post-migration health check"""
         # Mock healthy database
         supabase_mock.table.return_value.select.return_value.execute.return_value = {
-            'data': [{'id': 1}]
+            "data": [{"id": 1}]
         }
 
         # Run health check
@@ -442,23 +431,24 @@ class TestSupabaseMigrationManager:
         """Test distributed migration locking"""
         # Test acquiring lock
         redis_mock.set.return_value = True
-        lock_acquired = await migration_manager.acquire_migration_lock('test-migration')
+        lock_acquired = await migration_manager.acquire_migration_lock("test-migration")
         assert lock_acquired is True
 
         # Test lock already held
         redis_mock.set.return_value = False
-        lock_acquired = await migration_manager.acquire_migration_lock('test-migration')
+        lock_acquired = await migration_manager.acquire_migration_lock("test-migration")
         assert lock_acquired is False
 
         # Test releasing lock
         redis_mock.delete.return_value = 1
-        await migration_manager.release_migration_lock('test-migration')
+        await migration_manager.release_migration_lock("test-migration")
         redis_mock.delete.assert_called()
 
 
 # ============================================
 # BACKUP MANAGER TESTS
 # ============================================
+
 
 class TestBackupManager:
     """Test suite for BackupManager"""
@@ -467,24 +457,15 @@ class TestBackupManager:
     async def backup_manager(self, s3_mock):
         """Create BackupManager instance with mocks"""
         config = {
-            'backup_path': '/tmp/test_backups',
-            'retention': {
-                'daily': 7,
-                'weekly': 4,
-                'monthly': 12
-            },
-            'encryption': {
-                'enabled': True,
-                'key': 'test_encryption_key_32_characters'
-            },
-            's3': {
-                'enabled': True,
-                'bucket': 'test-backups',
-                'region': 'us-east-1'
-            }
+            "backup_path": "/tmp/test_backups",
+            "retention": {"daily": 7, "weekly": 4, "monthly": 12},
+            "encryption": {"enabled": True, "key": "test_encryption_key_32_characters"},
+            "s3": {"enabled": True, "bucket": "test-backups", "region": "us-east-1"},
         }
 
-        with patch('infrastructure.backups.scripts.backup_manager.boto3.client', return_value=s3_mock):
+        with patch(
+            "infrastructure.backups.scripts.backup_manager.boto3.client", return_value=s3_mock
+        ):
             manager = BackupManager(config)
             await manager.initialize()
             yield manager
@@ -494,9 +475,7 @@ class TestBackupManager:
     async def test_full_backup(self, backup_manager, s3_mock):
         """Test full backup creation"""
         # Create test backup
-        backup_job = await backup_manager.create_backup(
-            backup_type=BackupType.FULL
-        )
+        backup_job = await backup_manager.create_backup(backup_type=BackupType.FULL)
 
         assert backup_job is not None
         assert backup_job.type == BackupType.FULL
@@ -510,9 +489,7 @@ class TestBackupManager:
         full_backup = await backup_manager.create_backup(BackupType.FULL)
 
         # Create incremental backup
-        incremental_backup = await backup_manager.create_backup(
-            backup_type=BackupType.INCREMENTAL
-        )
+        incremental_backup = await backup_manager.create_backup(backup_type=BackupType.INCREMENTAL)
 
         assert incremental_backup.type == BackupType.INCREMENTAL
         assert incremental_backup.parent_id == full_backup.id
@@ -521,13 +498,10 @@ class TestBackupManager:
     async def test_backup_encryption(self, backup_manager):
         """Test backup encryption"""
         # Create encrypted backup
-        backup_job = await backup_manager.create_backup(
-            backup_type=BackupType.FULL,
-            encrypt=True
-        )
+        backup_job = await backup_manager.create_backup(backup_type=BackupType.FULL, encrypt=True)
 
         assert backup_job.encrypted is True
-        assert backup_job.encryption_method == 'AES-256'
+        assert backup_job.encryption_method == "AES-256"
 
     @pytest.mark.asyncio
     async def test_backup_restore(self, backup_manager):
@@ -537,8 +511,7 @@ class TestBackupManager:
 
         # Restore backup
         restore_success = await backup_manager.restore_backup(
-            backup_id=backup_job.id,
-            target_path='/tmp/restore_test'
+            backup_id=backup_job.id, target_path="/tmp/restore_test"
         )
 
         assert restore_success is True
@@ -580,8 +553,7 @@ class TestBackupManager:
         # Restore to specific point in time
         target_time = datetime.utcnow() - timedelta(minutes=5)
         restore_success = await backup_manager.restore_to_point_in_time(
-            target_time=target_time,
-            target_path='/tmp/pitr_test'
+            target_time=target_time, target_path="/tmp/pitr_test"
         )
 
         assert restore_success is True
@@ -591,13 +563,16 @@ class TestBackupManager:
 # ROBLOX DEPLOYMENT TESTS
 # ============================================
 
+
 class TestRobloxAssetManager:
     """Test suite for enhanced Roblox deployment"""
 
     @pytest_asyncio.fixture
     async def asset_manager(self, redis_mock):
         """Create RobloxAssetManager instance with mocks"""
-        with patch('apps.backend.services.roblox_deployment.aioredis.from_url', return_value=redis_mock):
+        with patch(
+            "apps.backend.services.roblox_deployment.aioredis.from_url", return_value=redis_mock
+        ):
             manager = RobloxAssetManager()
             await manager.initialize()
             yield manager
@@ -608,13 +583,10 @@ class TestRobloxAssetManager:
         """Test asset upload with validation"""
         # Create test asset
         asset_data = {
-            'name': 'TestScript',
-            'type': AssetType.SCRIPT,
-            'content': 'print("Hello Roblox")',
-            'metadata': {
-                'version': '1.0.0',
-                'author': 'TestUser'
-            }
+            "name": "TestScript",
+            "type": AssetType.SCRIPT,
+            "content": 'print("Hello Roblox")',
+            "metadata": {"version": "1.0.0", "author": "TestUser"},
         }
 
         # Upload asset
@@ -628,60 +600,58 @@ class TestRobloxAssetManager:
         """Test asset bundling for deployment"""
         # Create multiple assets
         assets = [
-            {'name': 'Script1', 'type': AssetType.SCRIPT, 'content': 'code1'},
-            {'name': 'Model1', 'type': AssetType.MODEL, 'content': 'model1'},
-            {'name': 'Image1', 'type': AssetType.IMAGE, 'content': b'image_data'}
+            {"name": "Script1", "type": AssetType.SCRIPT, "content": "code1"},
+            {"name": "Model1", "type": AssetType.MODEL, "content": "model1"},
+            {"name": "Image1", "type": AssetType.IMAGE, "content": b"image_data"},
         ]
 
         # Create bundle
-        bundle_id = await asset_manager.create_bundle(
-            assets=assets,
-            bundle_name='TestBundle'
-        )
+        bundle_id = await asset_manager.create_bundle(assets=assets, bundle_name="TestBundle")
 
         assert bundle_id is not None
         bundle_info = await asset_manager.get_bundle_info(bundle_id)
-        assert bundle_info['asset_count'] == 3
+        assert bundle_info["asset_count"] == 3
 
     @pytest.mark.asyncio
     async def test_version_control(self, asset_manager):
         """Test asset version control"""
         # Upload initial version
-        v1_id = await asset_manager.upload_asset({
-            'name': 'VersionedScript',
-            'type': AssetType.SCRIPT,
-            'content': 'v1 content',
-            'version': '1.0.0'
-        })
+        v1_id = await asset_manager.upload_asset(
+            {
+                "name": "VersionedScript",
+                "type": AssetType.SCRIPT,
+                "content": "v1 content",
+                "version": "1.0.0",
+            }
+        )
 
         # Upload new version
-        v2_id = await asset_manager.upload_asset({
-            'name': 'VersionedScript',
-            'type': AssetType.SCRIPT,
-            'content': 'v2 content',
-            'version': '2.0.0'
-        })
+        v2_id = await asset_manager.upload_asset(
+            {
+                "name": "VersionedScript",
+                "type": AssetType.SCRIPT,
+                "content": "v2 content",
+                "version": "2.0.0",
+            }
+        )
 
         # Get version history
-        history = await asset_manager.get_version_history('VersionedScript')
+        history = await asset_manager.get_version_history("VersionedScript")
 
         assert len(history) == 2
-        assert history[0]['version'] == '1.0.0'
-        assert history[1]['version'] == '2.0.0'
+        assert history[0]["version"] == "1.0.0"
+        assert history[1]["version"] == "2.0.0"
 
     @pytest.mark.asyncio
     async def test_deployment_rollback(self, asset_manager):
         """Test deployment rollback capability"""
         # Deploy assets
         deployment_id = await asset_manager.deploy_assets(
-            environment='production',
-            assets=['asset1', 'asset2']
+            environment="production", assets=["asset1", "asset2"]
         )
 
         # Simulate failure and rollback
-        rollback_success = await asset_manager.rollback_deployment(
-            deployment_id=deployment_id
-        )
+        rollback_success = await asset_manager.rollback_deployment(deployment_id=deployment_id)
 
         assert rollback_success is True
 
@@ -708,14 +678,17 @@ class TestRobloxAssetManager:
 # INTEGRATION TESTS
 # ============================================
 
+
 class TestWeek2Integration:
     """Integration tests for Week 2 services working together"""
 
     @pytest.mark.asyncio
     async def test_cached_ai_service_integration(self, redis_mock, langcache_mock):
         """Test CachedAIService with SemanticCache"""
-        with patch('apps.backend.services.semantic_cache.aioredis.from_url', return_value=redis_mock):
-            with patch('apps.backend.services.semantic_cache.lang_cache', langcache_mock):
+        with patch(
+            "apps.backend.services.semantic_cache.aioredis.from_url", return_value=redis_mock
+        ):
+            with patch("apps.backend.services.semantic_cache.lang_cache", langcache_mock):
                 # Initialize services
                 cache = SemanticCacheService()
                 await cache.initialize()
@@ -723,12 +696,9 @@ class TestWeek2Integration:
                 ai_service = CachedAIService(cache=cache)
 
                 # Mock AI response
-                with patch.object(ai_service, '_call_ai_model', return_value="AI Response"):
+                with patch.object(ai_service, "_call_ai_model", return_value="AI Response"):
                     # First call - cache miss
-                    response1 = await ai_service.generate(
-                        prompt="Test prompt",
-                        model="gpt-4"
-                    )
+                    response1 = await ai_service.generate(prompt="Test prompt", model="gpt-4")
 
                     assert response1 == "AI Response"
                     assert cache.misses == 1
@@ -744,10 +714,7 @@ class TestWeek2Integration:
                     search_response.matches = [match]
                     langcache_mock.search.return_value = search_response
 
-                    response2 = await ai_service.generate(
-                        prompt="Test prompt",
-                        model="gpt-4"
-                    )
+                    response2 = await ai_service.generate(prompt="Test prompt", model="gpt-4")
 
                     assert response2 == "AI Response"
                     assert cache.hits == 1
@@ -759,20 +726,19 @@ class TestWeek2Integration:
         """Test migration with automatic backup"""
         # Initialize services
         migration_manager = SupabaseMigrationManager()
-        backup_manager = BackupManager({
-            'backup_path': '/tmp/migration_backups',
-            'encryption': {'enabled': True}
-        })
+        backup_manager = BackupManager(
+            {"backup_path": "/tmp/migration_backups", "encryption": {"enabled": True}}
+        )
 
         # Create backup before migration
         backup_job = await backup_manager.create_backup(BackupType.FULL)
 
         # Run migration
         migration = Migration(
-            id='test-migration',
-            name='Schema update',
-            up_sql='ALTER TABLE users ADD COLUMN age INT;',
-            down_sql='ALTER TABLE users DROP COLUMN age;'
+            id="test-migration",
+            name="Schema update",
+            up_sql="ALTER TABLE users ADD COLUMN age INT;",
+            down_sql="ALTER TABLE users DROP COLUMN age;",
         )
 
         result = await migration_manager.apply_migration(migration)
@@ -790,17 +756,13 @@ class TestWeek2Integration:
 
         # Generate API key with rate limits
         key_data = await api_manager.generate_api_key(
-            name="Rate Limited Key",
-            scopes=[APIKeyScope.READ],
-            rate_limit_per_minute=10
+            name="Rate Limited Key", scopes=[APIKeyScope.READ], rate_limit_per_minute=10
         )
 
         # Simulate API requests
         for i in range(15):
             allowed = await api_manager.check_rate_limit(
-                key_id=key_data['key_id'],
-                limit=10,
-                window=60
+                key_id=key_data["key_id"], limit=10, window=60
             )
 
             if i < 10:
@@ -814,9 +776,7 @@ class TestWeek2Integration:
         from apps.backend.core.circuit_breaker import CircuitBreaker
 
         breaker = CircuitBreaker(
-            failure_threshold=3,
-            recovery_timeout=60,
-            expected_exception=Exception
+            failure_threshold=3, recovery_timeout=60, expected_exception=Exception
         )
 
         # Simulate failures
@@ -828,18 +788,19 @@ class TestWeek2Integration:
                 pass
 
         # Circuit should be open
-        assert breaker.state == 'OPEN'
+        assert breaker.state == "OPEN"
 
         # Wait for recovery
         await asyncio.sleep(61)
 
         # Circuit should be half-open
-        assert breaker.state == 'HALF_OPEN'
+        assert breaker.state == "HALF_OPEN"
 
 
 # ============================================
 # PERFORMANCE TESTS
 # ============================================
+
 
 class TestWeek2Performance:
     """Performance tests for Week 2 services"""
@@ -869,10 +830,7 @@ class TestWeek2Performance:
 
         # Simple migration
         migration = Migration(
-            id='perf-test',
-            name='Performance test',
-            up_sql='SELECT 1;',
-            down_sql='SELECT 1;'
+            id="perf-test", name="Performance test", up_sql="SELECT 1;", down_sql="SELECT 1;"
         )
 
         start = time.time()
@@ -890,10 +848,7 @@ class TestWeek2Performance:
         test_data = "x" * 10000  # Highly compressible
 
         # Create compressed backup
-        backup_job = await backup_manager.create_backup(
-            backup_type=BackupType.FULL,
-            compress=True
-        )
+        backup_job = await backup_manager.create_backup(backup_type=BackupType.FULL, compress=True)
 
         # Check compression ratio
         assert backup_job.compression_ratio > 0.5  # At least 50% compression
@@ -903,14 +858,13 @@ class TestWeek2Performance:
         """Test concurrent API key validation performance"""
         # Generate test key
         key_data = await api_key_manager.generate_api_key(
-            name="Perf Test",
-            scopes=[APIKeyScope.READ]
+            name="Perf Test", scopes=[APIKeyScope.READ]
         )
 
         # Validate key concurrently
         tasks = []
         for _ in range(50):
-            task = api_key_manager.validate_api_key(key_data['key'])
+            task = api_key_manager.validate_api_key(key_data["key"])
             tasks.append(task)
 
         start = time.time()
@@ -919,12 +873,13 @@ class TestWeek2Performance:
 
         # Should handle 50 concurrent validations in under 2 seconds
         assert elapsed < 2.0
-        assert all(r['is_valid'] for r in results)
+        assert all(r["is_valid"] for r in results)
 
 
 # ============================================
 # SECURITY TESTS
 # ============================================
+
 
 class TestWeek2Security:
     """Security tests for Week 2 services"""
@@ -933,15 +888,14 @@ class TestWeek2Security:
     async def test_api_key_entropy(self, api_key_manager):
         """Test API key has sufficient entropy"""
         key_data = await api_key_manager.generate_api_key(
-            name="Entropy Test",
-            scopes=[APIKeyScope.ADMIN]
+            name="Entropy Test", scopes=[APIKeyScope.ADMIN]
         )
 
         # Key should be at least 32 characters
-        assert len(key_data['key']) >= 32
+        assert len(key_data["key"]) >= 32
 
         # Test randomness (no repeated patterns)
-        key = key_data['key'].replace('tk_', '')  # Remove prefix
+        key = key_data["key"].replace("tk_", "")  # Remove prefix
         unique_chars = len(set(key))
         assert unique_chars > 20  # High character diversity
 
@@ -949,14 +903,11 @@ class TestWeek2Security:
     async def test_backup_encryption_strength(self, backup_manager):
         """Test backup encryption security"""
         # Create encrypted backup
-        backup_job = await backup_manager.create_backup(
-            backup_type=BackupType.FULL,
-            encrypt=True
-        )
+        backup_job = await backup_manager.create_backup(backup_type=BackupType.FULL, encrypt=True)
 
         # Verify encryption
         assert backup_job.encrypted is True
-        assert backup_job.encryption_method == 'AES-256'
+        assert backup_job.encryption_method == "AES-256"
 
         # Test that encrypted data is not readable
         with pytest.raises(Exception):
@@ -968,10 +919,10 @@ class TestWeek2Security:
         """Test protection against SQL injection in migrations"""
         # Malicious migration attempt
         malicious_migration = Migration(
-            id='sql-injection-test',
-            name='Malicious',
+            id="sql-injection-test",
+            name="Malicious",
             up_sql="'; DROP TABLE users; --",
-            down_sql='SELECT 1;'
+            down_sql="SELECT 1;",
         )
 
         # Should reject dangerous SQL
@@ -982,32 +933,26 @@ class TestWeek2Security:
     async def test_rate_limit_bypass_prevention(self, api_key_manager):
         """Test that rate limits cannot be bypassed"""
         key_data = await api_key_manager.generate_api_key(
-            name="Rate Limit Test",
-            scopes=[APIKeyScope.READ],
-            rate_limit_per_minute=5
+            name="Rate Limit Test", scopes=[APIKeyScope.READ], rate_limit_per_minute=5
         )
 
         # Try to bypass with different techniques
         techniques = [
-            key_data['key'],  # Original key
-            key_data['key'].upper(),  # Case variation
-            key_data['key'] + ' ',  # Whitespace
+            key_data["key"],  # Original key
+            key_data["key"].upper(),  # Case variation
+            key_data["key"] + " ",  # Whitespace
         ]
 
         for technique in techniques:
             # Each should be counted towards same limit
             for _ in range(6):
                 await api_key_manager.check_rate_limit(
-                    key_id=key_data['key_id'],
-                    limit=5,
-                    window=60
+                    key_id=key_data["key_id"], limit=5, window=60
                 )
 
             # Should be rate limited
             allowed = await api_key_manager.check_rate_limit(
-                key_id=key_data['key_id'],
-                limit=5,
-                window=60
+                key_id=key_data["key_id"], limit=5, window=60
             )
             assert allowed is False
 
@@ -1015,6 +960,7 @@ class TestWeek2Security:
 # ============================================
 # ERROR HANDLING TESTS
 # ============================================
+
 
 class TestWeek2ErrorHandling:
     """Error handling tests for Week 2 services"""
@@ -1050,16 +996,16 @@ class TestWeek2ErrorHandling:
     async def test_migration_rollback_failure(self, migration_manager, supabase_mock):
         """Test handling of rollback failure"""
         migration = Migration(
-            id='rollback-fail-test',
-            name='Failing migration',
-            up_sql='INVALID SQL;',
-            down_sql='ALSO INVALID;'
+            id="rollback-fail-test",
+            name="Failing migration",
+            up_sql="INVALID SQL;",
+            down_sql="ALSO INVALID;",
         )
 
         # Both migration and rollback fail
         supabase_mock.rpc.side_effect = [
             Exception("Migration failed"),
-            Exception("Rollback failed")
+            Exception("Rollback failed"),
         ]
 
         result = await migration_manager.apply_migration(migration)
@@ -1088,12 +1034,14 @@ class TestWeek2ErrorHandling:
 
 if __name__ == "__main__":
     # Run tests with coverage
-    pytest.main([
-        __file__,
-        "-v",
-        "--cov=apps.backend.services",
-        "--cov=infrastructure.backups",
-        "--cov-report=term-missing",
-        "--cov-report=html",
-        "--cov-fail-under=90"
-    ])
+    pytest.main(
+        [
+            __file__,
+            "-v",
+            "--cov=apps.backend.services",
+            "--cov=infrastructure.backups",
+            "--cov-report=term-missing",
+            "--cov-report=html",
+            "--cov-fail-under=90",
+        ]
+    )

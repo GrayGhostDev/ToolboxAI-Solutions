@@ -3,39 +3,42 @@ Pydantic Schemas for ToolboxAI Educational Platform
 Request/Response validation for API endpoints
 """
 
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
-from typing import Optional, List
 from datetime import datetime
 from uuid import UUID
 
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 # ============================================
 # USER SCHEMAS
 # ============================================
 
+
 class UserBase(BaseModel):
     email: EmailStr
-    username: Optional[str] = None
-    full_name: Optional[str] = None
-    avatar_url: Optional[str] = None
-    bio: Optional[str] = None
+    username: str | None = None
+    full_name: str | None = None
+    avatar_url: str | None = None
+    bio: str | None = None
     role: str = "student"
+
 
 class UserCreate(UserBase):
     pass
 
+
 class UserUpdate(BaseModel):
-    username: Optional[str] = None
-    full_name: Optional[str] = None
-    avatar_url: Optional[str] = None
-    bio: Optional[str] = None
-    role: Optional[str] = None
+    username: str | None = None
+    full_name: str | None = None
+    avatar_url: str | None = None
+    bio: str | None = None
+    role: str | None = None
+
 
 class UserResponse(UserBase):
     id: UUID
     created_at: datetime
     updated_at: datetime
-    last_login_at: Optional[datetime] = None
+    last_login_at: datetime | None = None
     is_active: bool
 
     model_config = ConfigDict(from_attributes=True)
@@ -45,62 +48,71 @@ class UserResponse(UserBase):
 # COURSE SCHEMAS
 # ============================================
 
+
 class CourseBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=255)
-    description: Optional[str] = None
-    thumbnail_url: Optional[str] = None
+    description: str | None = None
+    thumbnail_url: str | None = None
     difficulty_level: str = "beginner"
     is_published: bool = False
     price: float = Field(default=0.00, ge=0)
 
+
 class CourseCreate(CourseBase):
-    instructor_id: Optional[UUID] = None
+    instructor_id: UUID | None = None
+
 
 class CourseUpdate(BaseModel):
-    title: Optional[str] = Field(None, min_length=1, max_length=255)
-    description: Optional[str] = None
-    thumbnail_url: Optional[str] = None
-    difficulty_level: Optional[str] = None
-    is_published: Optional[bool] = None
-    price: Optional[float] = Field(None, ge=0)
+    title: str | None = Field(None, min_length=1, max_length=255)
+    description: str | None = None
+    thumbnail_url: str | None = None
+    difficulty_level: str | None = None
+    is_published: bool | None = None
+    price: float | None = Field(None, ge=0)
+
 
 class CourseResponse(CourseBase):
     id: UUID
-    instructor_id: Optional[UUID] = None
+    instructor_id: UUID | None = None
     created_at: datetime
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class CourseWithInstructor(CourseResponse):
-    instructor: Optional[UserResponse] = None
-    lesson_count: Optional[int] = 0
+    instructor: UserResponse | None = None
+    lesson_count: int | None = 0
 
 
 # ============================================
 # LESSON SCHEMAS
 # ============================================
 
+
 class LessonBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=255)
-    description: Optional[str] = None
-    content: Optional[str] = None
-    video_url: Optional[str] = None
+    description: str | None = None
+    content: str | None = None
+    video_url: str | None = None
     order_index: int = Field(..., ge=0)
-    duration_minutes: Optional[int] = Field(None, ge=0)
+    duration_minutes: int | None = Field(None, ge=0)
     is_free: bool = False
+
 
 class LessonCreate(LessonBase):
     course_id: UUID
 
+
 class LessonUpdate(BaseModel):
-    title: Optional[str] = Field(None, min_length=1, max_length=255)
-    description: Optional[str] = None
-    content: Optional[str] = None
-    video_url: Optional[str] = None
-    order_index: Optional[int] = Field(None, ge=0)
-    duration_minutes: Optional[int] = Field(None, ge=0)
-    is_free: Optional[bool] = None
+    title: str | None = Field(None, min_length=1, max_length=255)
+    description: str | None = None
+    content: str | None = None
+    video_url: str | None = None
+    order_index: int | None = Field(None, ge=0)
+    duration_minutes: int | None = Field(None, ge=0)
+    is_free: bool | None = None
+
 
 class LessonResponse(LessonBase):
     id: UUID
@@ -115,42 +127,48 @@ class LessonResponse(LessonBase):
 # ENROLLMENT SCHEMAS
 # ============================================
 
+
 class EnrollmentCreate(BaseModel):
     course_id: UUID
+
 
 class EnrollmentResponse(BaseModel):
     id: UUID
     user_id: UUID
     course_id: UUID
     enrolled_at: datetime
-    completed_at: Optional[datetime] = None
+    completed_at: datetime | None = None
     progress_percentage: float
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class EnrollmentWithCourse(EnrollmentResponse):
-    course: Optional[CourseResponse] = None
+    course: CourseResponse | None = None
 
 
 # ============================================
 # LESSON PROGRESS SCHEMAS
 # ============================================
 
+
 class LessonProgressCreate(BaseModel):
     lesson_id: UUID
     completed: bool = False
     time_spent_minutes: int = Field(default=0, ge=0)
 
+
 class LessonProgressUpdate(BaseModel):
-    completed: Optional[bool] = None
-    time_spent_minutes: Optional[int] = Field(None, ge=0)
+    completed: bool | None = None
+    time_spent_minutes: int | None = Field(None, ge=0)
+
 
 class LessonProgressResponse(BaseModel):
     id: UUID
     user_id: UUID
     lesson_id: UUID
     completed: bool
-    completed_at: Optional[datetime] = None
+    completed_at: datetime | None = None
     time_spent_minutes: int
     created_at: datetime
     updated_at: datetime
@@ -162,22 +180,26 @@ class LessonProgressResponse(BaseModel):
 # ASSIGNMENT SCHEMAS
 # ============================================
 
+
 class AssignmentBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=255)
-    description: Optional[str] = None
-    instructions: Optional[str] = None
-    due_date: Optional[datetime] = None
+    description: str | None = None
+    instructions: str | None = None
+    due_date: datetime | None = None
     max_score: int = Field(default=100, ge=0, le=1000)
+
 
 class AssignmentCreate(AssignmentBase):
     lesson_id: UUID
 
+
 class AssignmentUpdate(BaseModel):
-    title: Optional[str] = Field(None, min_length=1, max_length=255)
-    description: Optional[str] = None
-    instructions: Optional[str] = None
-    due_date: Optional[datetime] = None
-    max_score: Optional[int] = Field(None, ge=0, le=1000)
+    title: str | None = Field(None, min_length=1, max_length=255)
+    description: str | None = None
+    instructions: str | None = None
+    due_date: datetime | None = None
+    max_score: int | None = Field(None, ge=0, le=1000)
+
 
 class AssignmentResponse(AssignmentBase):
     id: UUID
@@ -192,29 +214,33 @@ class AssignmentResponse(AssignmentBase):
 # SUBMISSION SCHEMAS
 # ============================================
 
+
 class SubmissionCreate(BaseModel):
     assignment_id: UUID
-    content: Optional[str] = None
-    file_url: Optional[str] = None
+    content: str | None = None
+    file_url: str | None = None
+
 
 class SubmissionUpdate(BaseModel):
-    content: Optional[str] = None
-    file_url: Optional[str] = None
+    content: str | None = None
+    file_url: str | None = None
+
 
 class SubmissionGrade(BaseModel):
     score: int = Field(..., ge=0)
-    feedback: Optional[str] = None
+    feedback: str | None = None
+
 
 class SubmissionResponse(BaseModel):
     id: UUID
     assignment_id: UUID
     user_id: UUID
-    content: Optional[str] = None
-    file_url: Optional[str] = None
-    score: Optional[int] = None
-    feedback: Optional[str] = None
+    content: str | None = None
+    file_url: str | None = None
+    score: int | None = None
+    feedback: str | None = None
     submitted_at: datetime
-    graded_at: Optional[datetime] = None
+    graded_at: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -223,42 +249,49 @@ class SubmissionResponse(BaseModel):
 # COMMENT SCHEMAS
 # ============================================
 
+
 class CommentCreate(BaseModel):
     lesson_id: UUID
     content: str = Field(..., min_length=1)
-    parent_comment_id: Optional[UUID] = None
+    parent_comment_id: UUID | None = None
+
 
 class CommentUpdate(BaseModel):
     content: str = Field(..., min_length=1)
+
 
 class CommentResponse(BaseModel):
     id: UUID
     user_id: UUID
     lesson_id: UUID
     content: str
-    parent_comment_id: Optional[UUID] = None
+    parent_comment_id: UUID | None = None
     created_at: datetime
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class CommentWithUser(CommentResponse):
-    user: Optional[UserResponse] = None
-    replies: Optional[List['CommentWithUser']] = []
+    user: UserResponse | None = None
+    replies: list["CommentWithUser"] | None = []
 
 
 # ============================================
 # ACHIEVEMENT SCHEMAS
 # ============================================
 
+
 class AchievementBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
-    description: Optional[str] = None
-    icon_url: Optional[str] = None
+    description: str | None = None
+    icon_url: str | None = None
     points: int = Field(default=0, ge=0)
+
 
 class AchievementCreate(AchievementBase):
     pass
+
 
 class AchievementResponse(AchievementBase):
     id: UUID
@@ -266,12 +299,13 @@ class AchievementResponse(AchievementBase):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class UserAchievementResponse(BaseModel):
     id: UUID
     user_id: UUID
     achievement_id: UUID
     earned_at: datetime
-    achievement: Optional[AchievementResponse] = None
+    achievement: AchievementResponse | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -280,21 +314,23 @@ class UserAchievementResponse(BaseModel):
 # PAGINATION & FILTERS
 # ============================================
 
+
 class PaginationParams(BaseModel):
     skip: int = Field(default=0, ge=0)
     limit: int = Field(default=20, ge=1, le=100)
 
+
 class CourseFilters(BaseModel):
-    difficulty_level: Optional[str] = None
-    is_published: Optional[bool] = None
-    instructor_id: Optional[UUID] = None
-    min_price: Optional[float] = None
-    max_price: Optional[float] = None
+    difficulty_level: str | None = None
+    is_published: bool | None = None
+    instructor_id: UUID | None = None
+    min_price: float | None = None
+    max_price: float | None = None
+
 
 class PaginatedResponse(BaseModel):
-    items: List
+    items: list
     total: int
     skip: int
     limit: int
     has_more: bool
-

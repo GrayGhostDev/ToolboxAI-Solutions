@@ -12,7 +12,7 @@ Defines all data structures used throughout the application including:
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -95,7 +95,7 @@ class BaseResponse(BaseModel):
 
     success: bool = Field(..., description="Whether the operation was successful")
     message: str = Field(..., description="Human-readable message")
-    data: Optional[Dict[str, Any]] = Field(default=None, description="Optional response data")
+    data: dict[str, Any] | None = Field(default=None, description="Optional response data")
     timestamp: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         description="Response timestamp",
@@ -121,12 +121,12 @@ class PaginationModel(BaseModel):
 class LearningObjective(BaseModel):
     """Individual learning objective"""
 
-    id: Optional[str] = Field(
+    id: str | None = Field(
         default_factory=lambda: str(uuid.uuid4()), description="Unique identifier"
     )
     title: str = Field(..., min_length=1, max_length=200, description="Objective title")
-    description: Optional[str] = Field(None, max_length=1000, description="Detailed description")
-    bloom_level: Optional[str] = Field(None, description="Bloom's taxonomy level")
+    description: str | None = Field(None, max_length=1000, description="Detailed description")
+    bloom_level: str | None = Field(None, description="Bloom's taxonomy level")
     measurable: bool = Field(True, description="Whether the objective is measurable")
 
 
@@ -135,7 +135,7 @@ class ContentRequest(BaseModel):
 
     subject: SubjectType = Field(..., description="Educational subject")
     grade_level: int = Field(..., ge=1, le=12, description="Grade level (K-12)")
-    learning_objectives: List[LearningObjective] = Field(
+    learning_objectives: list[LearningObjective] = Field(
         ..., min_items=1, max_items=10, description="Learning objectives"
     )
     environment_type: EnvironmentType = Field(
@@ -152,7 +152,7 @@ class ContentRequest(BaseModel):
     max_students: int = Field(30, ge=1, le=100, description="Maximum number of students")
     accessibility_features: bool = Field(False, description="Include accessibility features")
     multilingual: bool = Field(False, description="Support multiple languages")
-    custom_requirements: Optional[str] = Field(
+    custom_requirements: str | None = Field(
         None, max_length=1000, description="Additional custom requirements"
     )
 
@@ -169,8 +169,8 @@ class GeneratedScript(BaseModel):
     name: str = Field(..., description="Script name")
     content: str = Field(..., description="Lua script content")
     script_type: Literal["server", "client", "module"] = Field(..., description="Type of script")
-    dependencies: List[str] = Field(default_factory=list, description="Required dependencies")
-    description: Optional[str] = Field(None, description="Script description")
+    dependencies: list[str] = Field(default_factory=list, description="Required dependencies")
+    description: str | None = Field(None, description="Script description")
 
 
 class TerrainConfiguration(BaseModel):
@@ -178,11 +178,11 @@ class TerrainConfiguration(BaseModel):
 
     material: str = Field("Grass", description="Primary terrain material")
     size: TerrainSize = Field(TerrainSize.MEDIUM, description="Terrain size")
-    features: List[str] = Field(
+    features: list[str] = Field(
         default_factory=list, description="Terrain features (hills, water, etc.)"
     )
     biome: str = Field("temperate", description="Terrain biome")
-    elevation_map: Optional[Dict[str, Any]] = Field(None, description="Custom elevation data")
+    elevation_map: dict[str, Any] | None = Field(None, description="Custom elevation data")
 
 
 class GameMechanics(BaseModel):
@@ -199,19 +199,17 @@ class GameMechanics(BaseModel):
 class ContentResponse(BaseResponse):
     """Response model for content generation"""
 
-    content: Dict[str, Any] = Field(..., description="Generated content data")
-    scripts: List[GeneratedScript] = Field(
+    content: dict[str, Any] = Field(..., description="Generated content data")
+    scripts: list[GeneratedScript] = Field(
         default_factory=list, description="Generated Lua scripts"
     )
-    terrain: Optional[TerrainConfiguration] = Field(None, description="Terrain configuration")
-    game_mechanics: Optional[GameMechanics] = Field(None, description="Game mechanics settings")
+    terrain: TerrainConfiguration | None = Field(None, description="Terrain configuration")
+    game_mechanics: GameMechanics | None = Field(None, description="Game mechanics settings")
     estimated_build_time: int = Field(0, description="Estimated build time in minutes")
-    resource_requirements: Dict[str, int] = Field(
+    resource_requirements: dict[str, int] = Field(
         default_factory=dict, description="Resource requirements"
     )
-    content_id: Optional[str] = Field(
-        None, description="Unique identifier for the generated content"
-    )
+    content_id: str | None = Field(None, description="Unique identifier for the generated content")
 
 
 # Quiz Models
@@ -221,7 +219,7 @@ class QuizOption(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), description="Option ID")
     text: str = Field(..., min_length=1, max_length=500, description="Option text")
     is_correct: bool = Field(False, description="Whether this option is correct")
-    explanation: Optional[str] = Field(
+    explanation: str | None = Field(
         None, max_length=1000, description="Explanation for this option"
     )
 
@@ -232,15 +230,13 @@ class QuizQuestion(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), description="Question ID")
     question_type: QuizType = Field(..., description="Type of question")
     question_text: str = Field(..., min_length=1, max_length=1000, description="Question text")
-    options: List[QuizOption] = Field(default_factory=list, description="Answer options")
-    correct_answer: Optional[str] = Field(
-        None, description="Correct answer for non-multiple choice"
-    )
+    options: list[QuizOption] = Field(default_factory=list, description="Answer options")
+    correct_answer: str | None = Field(None, description="Correct answer for non-multiple choice")
     difficulty: DifficultyLevel = Field(DifficultyLevel.MEDIUM, description="Question difficulty")
     points: int = Field(1, ge=1, le=10, description="Points for correct answer")
-    time_limit: Optional[int] = Field(None, ge=10, le=600, description="Time limit in seconds")
-    hint: Optional[str] = Field(None, max_length=500, description="Hint for the question")
-    explanation: Optional[str] = Field(
+    time_limit: int | None = Field(None, ge=10, le=600, description="Time limit in seconds")
+    hint: str | None = Field(None, max_length=500, description="Hint for the question")
+    explanation: str | None = Field(
         None, max_length=1000, description="Explanation of correct answer"
     )
 
@@ -257,13 +253,13 @@ class Quiz(BaseModel):
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), description="Quiz ID")
     title: str = Field(..., min_length=1, max_length=200, description="Quiz title")
-    description: Optional[str] = Field(None, max_length=1000, description="Quiz description")
+    description: str | None = Field(None, max_length=1000, description="Quiz description")
     subject: SubjectType = Field(..., description="Quiz subject")
     grade_level: int = Field(..., ge=1, le=12, description="Target grade level")
-    questions: List[QuizQuestion] = Field(
+    questions: list[QuizQuestion] = Field(
         ..., min_items=1, max_items=50, description="Quiz questions"
     )
-    time_limit: Optional[int] = Field(
+    time_limit: int | None = Field(
         None, ge=60, le=3600, description="Total quiz time limit in seconds"
     )
     passing_score: int = Field(70, ge=0, le=100, description="Passing score percentage")
@@ -281,8 +277,8 @@ class QuizResponse(BaseResponse):
     """Response model for quiz generation"""
 
     quiz: Quiz = Field(..., description="Generated quiz")
-    lua_script: Optional[str] = Field(None, description="Lua script for Roblox implementation")
-    ui_elements: List[Dict[str, Any]] = Field(
+    lua_script: str | None = Field(None, description="Lua script for Roblox implementation")
+    ui_elements: list[dict[str, Any]] = Field(
         default_factory=list, description="UI element configurations"
     )
 
@@ -297,15 +293,15 @@ class User(BaseModel):
     role: Literal["student", "teacher", "admin", "parent"] = Field(
         "student", description="User role"
     )
-    grade_level: Optional[int] = Field(None, ge=1, le=12, description="Grade level (for students)")
-    subjects: List[SubjectType] = Field(
+    grade_level: int | None = Field(None, ge=1, le=12, description="Grade level (for students)")
+    subjects: list[SubjectType] = Field(
         default_factory=list, description="Subjects of interest/teaching"
     )
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         description="Account creation timestamp",
     )
-    last_active: Optional[datetime] = Field(None, description="Last activity timestamp")
+    last_active: datetime | None = Field(None, description="Last activity timestamp")
 
     model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat() if v else None})
 
@@ -315,8 +311,8 @@ class Session(BaseModel):
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), description="Session ID")
     user_id: str = Field(..., description="User ID")
-    roblox_user_id: Optional[str] = Field(None, description="Roblox user ID")
-    studio_id: Optional[str] = Field(None, description="Roblox Studio ID")
+    roblox_user_id: str | None = Field(None, description="Roblox user ID")
+    studio_id: str | None = Field(None, description="Roblox Studio ID")
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         description="Session creation timestamp",
@@ -339,7 +335,7 @@ class PluginRegistration(BaseModel):
         default_factory=lambda: datetime.now(timezone.utc),
         description="Registration timestamp",
     )
-    last_heartbeat: Optional[datetime] = Field(None, description="Last heartbeat timestamp")
+    last_heartbeat: datetime | None = Field(None, description="Last heartbeat timestamp")
     active: bool = Field(True, description="Whether plugin is active")
 
 
@@ -349,12 +345,12 @@ class PluginMessage(BaseModel):
     type: Literal["command", "response", "event", "heartbeat"] = Field(
         ..., description="Message type"
     )
-    payload: Dict[str, Any] = Field(default_factory=dict, description="Message payload")
+    payload: dict[str, Any] = Field(default_factory=dict, description="Message payload")
     timestamp: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         description="Message timestamp",
     )
-    request_id: Optional[str] = Field(None, description="Request ID for response tracking")
+    request_id: str | None = Field(None, description="Request ID for response tracking")
 
 
 # LMS Integration Models
@@ -363,9 +359,9 @@ class LMSCourse(BaseModel):
 
     id: str = Field(..., description="Course ID")
     title: str = Field(..., description="Course title")
-    description: Optional[str] = Field(None, description="Course description")
-    subject: Optional[SubjectType] = Field(None, description="Course subject")
-    grade_level: Optional[int] = Field(None, description="Grade level")
+    description: str | None = Field(None, description="Course description")
+    subject: SubjectType | None = Field(None, description="Course subject")
+    grade_level: int | None = Field(None, description="Grade level")
     instructor: str = Field(..., description="Instructor name")
     platform: Literal["schoology", "canvas", "blackboard", "moodle"] = Field(
         ..., description="LMS platform"
@@ -379,10 +375,10 @@ class LMSAssignment(BaseModel):
     id: str = Field(..., description="Assignment ID")
     course_id: str = Field(..., description="Course ID")
     title: str = Field(..., description="Assignment title")
-    description: Optional[str] = Field(None, description="Assignment description")
-    due_date: Optional[datetime] = Field(None, description="Due date")
-    points_possible: Optional[int] = Field(None, description="Maximum points")
-    submission_types: List[str] = Field(
+    description: str | None = Field(None, description="Assignment description")
+    due_date: datetime | None = Field(None, description="Due date")
+    points_possible: int | None = Field(None, description="Maximum points")
+    submission_types: list[str] = Field(
         default_factory=list, description="Allowed submission types"
     )
 
@@ -395,7 +391,7 @@ class UsageMetrics(BaseModel):
     method: str = Field(..., description="HTTP method")
     response_time: float = Field(..., description="Response time in seconds")
     status_code: int = Field(..., description="HTTP status code")
-    user_id: Optional[str] = Field(None, description="User ID if authenticated")
+    user_id: str | None = Field(None, description="User ID if authenticated")
     timestamp: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         description="Request timestamp",
@@ -411,7 +407,7 @@ class HealthCheck(BaseModel):
         default_factory=lambda: datetime.now(timezone.utc),
         description="Check timestamp",
     )
-    checks: Dict[str, bool] = Field(default_factory=dict, description="Individual component checks")
+    checks: dict[str, bool] = Field(default_factory=dict, description="Individual component checks")
     uptime: float = Field(..., description="Uptime in seconds")
 
     model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat() if v else None})
@@ -423,8 +419,8 @@ class ErrorDetail(BaseModel):
 
     code: str = Field(..., description="Error code")
     message: str = Field(..., description="Error message")
-    field: Optional[str] = Field(None, description="Field that caused the error")
-    context: Optional[Dict[str, Any]] = Field(None, description="Additional error context")
+    field: str | None = Field(None, description="Field that caused the error")
+    context: dict[str, Any] | None = Field(None, description="Additional error context")
 
 
 class ErrorResponse(BaseResponse):
@@ -432,7 +428,7 @@ class ErrorResponse(BaseResponse):
 
     success: bool = Field(False, description="Always false for error responses")
     error_type: str = Field(..., description="Type of error")
-    details: List[ErrorDetail] = Field(
+    details: list[ErrorDetail] = Field(
         default_factory=list, description="Detailed error information"
     )
 
@@ -442,12 +438,12 @@ class WebSocketMessage(BaseModel):
     """WebSocket message model"""
 
     type: str = Field(..., description="Message type")
-    data: Dict[str, Any] = Field(default_factory=dict, description="Message data")
+    data: dict[str, Any] = Field(default_factory=dict, description="Message data")
     timestamp: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         description="Message timestamp",
     )
-    client_id: Optional[str] = Field(None, description="Client identifier")
+    client_id: str | None = Field(None, description="Client identifier")
 
 
 class WebSocketResponse(BaseModel):
@@ -455,8 +451,8 @@ class WebSocketResponse(BaseModel):
 
     type: str = Field(..., description="Response type")
     success: bool = Field(..., description="Whether operation was successful")
-    data: Optional[Dict[str, Any]] = Field(None, description="Response data")
-    error: Optional[str] = Field(None, description="Error message if failed")
+    data: dict[str, Any] | None = Field(None, description="Response data")
+    error: str | None = Field(None, description="Error message if failed")
     timestamp: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         description="Response timestamp",

@@ -6,41 +6,50 @@ database models. It should be used instead of models.py after the
 multi-tenancy migration is applied.
 """
 
-# Import all existing enums and non-model classes
-from database.models.models import (
-    UserRole, ContentStatus, DifficultyLevel, AchievementType,
-    RobloxSessionStatus, RobloxContentType
-)
-
 # Import the tenant-aware base classes
 from database.models.base import (
-    Base, TenantBaseModel, GlobalBaseModel, TenantMixin,
-    TimestampMixin, SoftDeleteMixin, AuditMixin, TenantContext
+    Base,
+    GlobalBaseModel,
+    TenantBaseModel,
+    TenantContext,
+)
+
+# Import all existing enums and non-model classes
+from database.models.models import (
+    AchievementType,
+    ContentStatus,
+    DifficultyLevel,
+    RobloxContentType,
+    RobloxSessionStatus,
+    UserRole,
 )
 
 # Import the organization models
 from database.models.tenant import (
-    Organization, OrganizationInvitation, OrganizationUsageLog,
-    OrganizationStatus, SubscriptionTier
+    Organization,
+    OrganizationInvitation,
+    OrganizationStatus,
+    OrganizationUsageLog,
+    SubscriptionTier,
 )
 
 # Re-export Base for compatibility
 __all__ = [
-    'Base',
-    'TenantBaseModel',
-    'GlobalBaseModel',
-    'Organization',
-    'OrganizationInvitation',
-    'OrganizationUsageLog',
-    'TenantContext',
-    'UserRole',
-    'ContentStatus',
-    'DifficultyLevel',
-    'AchievementType',
-    'RobloxSessionStatus',
-    'RobloxContentType',
-    'OrganizationStatus',
-    'SubscriptionTier'
+    "Base",
+    "TenantBaseModel",
+    "GlobalBaseModel",
+    "Organization",
+    "OrganizationInvitation",
+    "OrganizationUsageLog",
+    "TenantContext",
+    "UserRole",
+    "ContentStatus",
+    "DifficultyLevel",
+    "AchievementType",
+    "RobloxSessionStatus",
+    "RobloxContentType",
+    "OrganizationStatus",
+    "SubscriptionTier",
 ]
 
 # Note: After migration, the existing models in models.py will automatically

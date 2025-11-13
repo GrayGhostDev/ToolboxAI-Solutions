@@ -9,10 +9,10 @@ This module provides a comprehensive prompt template system that:
 - Uses Pydantic models for validation and structure
 """
 
+from .content_validation import ContentValidationSystem
 from .conversation_flow import ConversationFlowManager
 from .template_engine import PromptTemplateEngine
 from .user_guidance import UserGuidanceSystem
-from .content_validation import ContentValidationSystem
 from .workflow_orchestrator import WorkflowOrchestrator
 
 __all__ = [

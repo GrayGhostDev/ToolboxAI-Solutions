@@ -1,12 +1,13 @@
 """Session and authentication test data factories."""
 
+from datetime import datetime, timedelta, timezone
+
 import factory
+import jwt
 from factory import fuzzy
 from faker import Faker
-from datetime import datetime, timezone, timedelta
-import jwt
-import hashlib
-from .base_factory import DictFactory, AsyncMixin
+
+from .base_factory import AsyncMixin, DictFactory
 
 fake = Faker()
 
@@ -27,9 +28,7 @@ class SessionFactory(DictFactory, AsyncMixin):
 
     # Device and location
     ip_address = factory.LazyFunction(lambda: fake.ipv4())
-    user_agent = factory.LazyFunction(
-        lambda: fake.user_agent()
-    )
+    user_agent = factory.LazyFunction(lambda: fake.user_agent())
 
     device_info = factory.LazyFunction(
         lambda: {
@@ -82,10 +81,16 @@ class SessionFactory(DictFactory, AsyncMixin):
     actions_performed = factory.LazyFunction(
         lambda: [
             {
-                "action": fake.random_element([
-                    "view_content", "create_quiz", "submit_answer",
-                    "download_resource", "send_message", "update_profile"
-                ]),
+                "action": fake.random_element(
+                    [
+                        "view_content",
+                        "create_quiz",
+                        "submit_answer",
+                        "download_resource",
+                        "send_message",
+                        "update_profile",
+                    ]
+                ),
                 "timestamp": fake.date_time_this_week().isoformat(),
                 "details": fake.sentence() if fake.boolean() else None,
             }
@@ -97,7 +102,7 @@ class SessionFactory(DictFactory, AsyncMixin):
     permissions = factory.LazyFunction(
         lambda: fake.random_elements(
             ["read", "write", "delete", "admin", "moderate", "analyze"],
-            length=fake.random_int(1, 6)
+            length=fake.random_int(1, 6),
         )
     )
 
@@ -107,7 +112,7 @@ class SessionFactory(DictFactory, AsyncMixin):
         return cls.create(
             expires_at=(datetime.now(timezone.utc) - timedelta(hours=1)).isoformat(),
             is_active=False,
-            **kwargs
+            **kwargs,
         )
 
     @classmethod
@@ -138,15 +143,12 @@ class AuthTokenFactory(DictFactory):
 
     # Token metadata
     issued_at = factory.LazyFunction(lambda: datetime.now(timezone.utc))
-    expires_at = factory.LazyFunction(
-        lambda: datetime.now(timezone.utc) + timedelta(hours=1)
-    )
+    expires_at = factory.LazyFunction(lambda: datetime.now(timezone.utc) + timedelta(hours=1))
 
     # Additional claims
     permissions = factory.LazyFunction(
         lambda: fake.random_elements(
-            ["read", "write", "delete", "admin"],
-            length=fake.random_int(1, 4)
+            ["read", "write", "delete", "admin"], length=fake.random_int(1, 4)
         )
     )
 
@@ -181,7 +183,7 @@ class AuthTokenFactory(DictFactory):
         access_data = cls.create_token(
             token_type="access",
             expires_at=datetime.now(timezone.utc) + timedelta(minutes=15),
-            **kwargs
+            **kwargs,
         )
 
         # Refresh token (long-lived)
@@ -189,7 +191,7 @@ class AuthTokenFactory(DictFactory):
             token_type="refresh",
             expires_at=datetime.now(timezone.utc) + timedelta(days=7),
             permissions=[],  # Refresh tokens have minimal permissions
-            **kwargs
+            **kwargs,
         )
 
         return {
@@ -203,8 +205,7 @@ class AuthTokenFactory(DictFactory):
     def expired_token(cls, **kwargs):
         """Create an expired token."""
         return cls.create_token(
-            expires_at=datetime.now(timezone.utc) - timedelta(hours=1),
-            **kwargs
+            expires_at=datetime.now(timezone.utc) - timedelta(hours=1), **kwargs
         )
 
 
@@ -223,10 +224,11 @@ class OAuth2Factory(DictFactory):
     token_type = "Bearer"
     expires_in = factory.LazyFunction(lambda: fake.random_int(3600, 7200))
     scope = factory.LazyFunction(
-        lambda: " ".join(fake.random_elements(
-            ["openid", "profile", "email", "offline_access"],
-            length=fake.random_int(2, 4)
-        ))
+        lambda: " ".join(
+            fake.random_elements(
+                ["openid", "profile", "email", "offline_access"], length=fake.random_int(2, 4)
+            )
+        )
     )
 
     # User info from provider
@@ -267,16 +269,25 @@ class APIKeyFactory(DictFactory):
         lambda: fake.date_time_this_month().isoformat() if fake.boolean() else None
     )
     expires_at = factory.LazyFunction(
-        lambda: (datetime.now(timezone.utc) + timedelta(days=fake.random_int(30, 365))).isoformat()
-        if fake.boolean() else None
+        lambda: (
+            (datetime.now(timezone.utc) + timedelta(days=fake.random_int(30, 365))).isoformat()
+            if fake.boolean()
+            else None
+        )
     )
 
     # Permissions
     scopes = factory.LazyFunction(
         lambda: fake.random_elements(
-            ["read:content", "write:content", "read:users", "write:users",
-             "read:analytics", "admin:system"],
-            length=fake.random_int(1, 6)
+            [
+                "read:content",
+                "write:content",
+                "read:users",
+                "write:users",
+                "read:analytics",
+                "admin:system",
+            ],
+            length=fake.random_int(1, 6),
         )
     )
 
@@ -304,5 +315,9 @@ class APIKeyFactory(DictFactory):
     is_active = factory.LazyFunction(lambda: fake.boolean(chance_of_getting_true=90))
     revoked = factory.LazyFunction(lambda: fake.boolean(chance_of_getting_true=10))
     revoked_at = factory.LazyFunction(
-        lambda: fake.date_time_this_month().isoformat() if fake.boolean(chance_of_getting_true=10) else None
+        lambda: (
+            fake.date_time_this_month().isoformat()
+            if fake.boolean(chance_of_getting_true=10)
+            else None
+        )
     )

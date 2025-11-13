@@ -2,11 +2,12 @@
 Pydantic models for prompt template organization and user guidance
 """
 
-from typing import Dict, List, Optional, Any, Literal, Union
+import uuid
 from datetime import datetime
 from enum import Enum
-from pydantic import BaseModel, Field, validator
-import uuid
+from typing import Any, Literal
+
+from pydantic import BaseModel, Field
 
 
 class ConversationStage(str, Enum):
@@ -118,14 +119,12 @@ class UserProfile(BaseModel):
     user_id: str
     role: str
     experience_level: Literal["beginner", "intermediate", "advanced"] = "beginner"
-    preferred_learning_styles: List[LearningStyle] = Field(default_factory=list)
-    interests: List[str] = Field(default_factory=list)
-    cultural_background: Optional[str] = None
-    teaching_philosophy: Optional[str] = None
+    preferred_learning_styles: list[LearningStyle] = Field(default_factory=list)
+    interests: list[str] = Field(default_factory=list)
+    cultural_background: str | None = None
+    teaching_philosophy: str | None = None
     technology_comfort: Literal["low", "medium", "high"] = "medium"
-    time_available: Optional[int] = Field(
-        None, description="Minutes available for content creation"
-    )
+    time_available: int | None = Field(None, description="Minutes available for content creation")
 
 
 class ContentRequirements(BaseModel):
@@ -134,38 +133,38 @@ class ContentRequirements(BaseModel):
     content_type: ContentType
     subject_area: SubjectArea
     grade_level: GradeLevel
-    learning_objectives: List[str] = Field(..., min_items=1)
-    duration_minutes: Optional[int] = None
-    student_count: Optional[int] = None
-    prerequisites: List[str] = Field(default_factory=list)
-    assessment_type: Optional[str] = None
+    learning_objectives: list[str] = Field(..., min_items=1)
+    duration_minutes: int | None = None
+    student_count: int | None = None
+    prerequisites: list[str] = Field(default_factory=list)
+    assessment_type: str | None = None
     engagement_level: EngagementLevel = EngagementLevel.MODERATE
-    accessibility_requirements: List[str] = Field(default_factory=list)
-    technology_constraints: List[str] = Field(default_factory=list)
+    accessibility_requirements: list[str] = Field(default_factory=list)
+    technology_constraints: list[str] = Field(default_factory=list)
 
 
 class PersonalizationData(BaseModel):
     """Data for personalizing content"""
 
-    student_names: List[str] = Field(default_factory=list)
-    local_landmarks: List[str] = Field(default_factory=list)
-    cultural_elements: List[str] = Field(default_factory=list)
-    current_trends: List[str] = Field(default_factory=list)
-    school_theme: Optional[str] = None
-    mascot: Optional[str] = None
-    colors: List[str] = Field(default_factory=list)
-    music_style: Optional[str] = None
-    story_elements: List[str] = Field(default_factory=list)
+    student_names: list[str] = Field(default_factory=list)
+    local_landmarks: list[str] = Field(default_factory=list)
+    cultural_elements: list[str] = Field(default_factory=list)
+    current_trends: list[str] = Field(default_factory=list)
+    school_theme: str | None = None
+    mascot: str | None = None
+    colors: list[str] = Field(default_factory=list)
+    music_style: str | None = None
+    story_elements: list[str] = Field(default_factory=list)
 
 
 class UniquenessEnhancement(BaseModel):
     """Enhancements to make content unique"""
 
-    factors: List[UniquenessFactor] = Field(default_factory=list)
-    custom_elements: Dict[str, Any] = Field(default_factory=dict)
-    creative_twists: List[str] = Field(default_factory=list)
-    personal_touches: List[str] = Field(default_factory=list)
-    trending_elements: List[str] = Field(default_factory=list)
+    factors: list[UniquenessFactor] = Field(default_factory=list)
+    custom_elements: dict[str, Any] = Field(default_factory=dict)
+    creative_twists: list[str] = Field(default_factory=list)
+    personal_touches: list[str] = Field(default_factory=list)
+    trending_elements: list[str] = Field(default_factory=list)
 
 
 class PromptTemplate(BaseModel):
@@ -174,12 +173,12 @@ class PromptTemplate(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
     stage: ConversationStage
-    content_type: Optional[ContentType] = None
+    content_type: ContentType | None = None
     template_text: str
-    variables: List[str] = Field(default_factory=list)
-    validation_rules: Dict[str, Any] = Field(default_factory=dict)
-    next_stages: List[ConversationStage] = Field(default_factory=list)
-    agent_assignments: List[str] = Field(default_factory=list)
+    variables: list[str] = Field(default_factory=list)
+    validation_rules: dict[str, Any] = Field(default_factory=dict)
+    next_stages: list[ConversationStage] = Field(default_factory=list)
+    agent_assignments: list[str] = Field(default_factory=list)
     priority: int = Field(default=1, ge=1, le=10)
     is_active: bool = True
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -192,13 +191,13 @@ class ConversationContext(BaseModel):
     conversation_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_profile: UserProfile
     current_stage: ConversationStage = ConversationStage.GREETING
-    completed_stages: List[ConversationStage] = Field(default_factory=list)
-    requirements: Optional[ContentRequirements] = None
-    personalization: Optional[PersonalizationData] = None
-    uniqueness: Optional[UniquenessEnhancement] = None
-    collected_data: Dict[str, Any] = Field(default_factory=dict)
-    conversation_history: List[Dict[str, Any]] = Field(default_factory=list)
-    agent_assignments: Dict[str, str] = Field(default_factory=dict)
+    completed_stages: list[ConversationStage] = Field(default_factory=list)
+    requirements: ContentRequirements | None = None
+    personalization: PersonalizationData | None = None
+    uniqueness: UniquenessEnhancement | None = None
+    collected_data: dict[str, Any] = Field(default_factory=dict)
+    conversation_history: list[dict[str, Any]] = Field(default_factory=list)
+    agent_assignments: dict[str, str] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -208,12 +207,12 @@ class PromptResponse(BaseModel):
 
     template_id: str
     generated_text: str
-    variables_used: Dict[str, Any]
-    next_questions: List[str] = Field(default_factory=list)
-    suggested_actions: List[str] = Field(default_factory=list)
-    agent_triggers: List[str] = Field(default_factory=list)
+    variables_used: dict[str, Any]
+    next_questions: list[str] = Field(default_factory=list)
+    suggested_actions: list[str] = Field(default_factory=list)
+    agent_triggers: list[str] = Field(default_factory=list)
     confidence_score: float = Field(ge=0.0, le=1.0)
-    validation_results: Dict[str, bool] = Field(default_factory=dict)
+    validation_results: dict[str, bool] = Field(default_factory=dict)
 
 
 class WorkflowStep(BaseModel):
@@ -223,10 +222,10 @@ class WorkflowStep(BaseModel):
     name: str
     description: str
     agent_type: str
-    required_data: List[str] = Field(default_factory=list)
-    output_data: List[str] = Field(default_factory=list)
-    dependencies: List[str] = Field(default_factory=list)
-    estimated_duration: Optional[int] = Field(None, description="Minutes")
+    required_data: list[str] = Field(default_factory=list)
+    output_data: list[str] = Field(default_factory=list)
+    dependencies: list[str] = Field(default_factory=list)
+    estimated_duration: int | None = Field(None, description="Minutes")
     priority: int = Field(default=1, ge=1, le=10)
     is_parallel: bool = False
 
@@ -236,11 +235,11 @@ class ContentGenerationPlan(BaseModel):
 
     plan_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     conversation_context: ConversationContext
-    workflow_steps: List[WorkflowStep]
+    workflow_steps: list[WorkflowStep]
     estimated_total_time: int
-    required_agents: List[str]
-    expected_outputs: List[str]
-    quality_metrics: Dict[str, Any] = Field(default_factory=dict)
+    required_agents: list[str]
+    expected_outputs: list[str]
+    quality_metrics: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -248,9 +247,9 @@ class ValidationResult(BaseModel):
     """Result of content validation"""
 
     is_valid: bool
-    errors: List[str] = Field(default_factory=list)
-    warnings: List[str] = Field(default_factory=list)
-    suggestions: List[str] = Field(default_factory=list)
+    errors: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    suggestions: list[str] = Field(default_factory=list)
     completeness_score: float = Field(ge=0.0, le=1.0)
     uniqueness_score: float = Field(ge=0.0, le=1.0)
     educational_value_score: float = Field(ge=0.0, le=1.0)
@@ -262,6 +261,6 @@ class AgentTrigger(BaseModel):
 
     agent_name: str
     trigger_type: Literal["data_ready", "stage_complete", "user_request", "error"]
-    trigger_data: Dict[str, Any]
+    trigger_data: dict[str, Any]
     priority: int = Field(default=1, ge=1, le=10)
     created_at: datetime = Field(default_factory=datetime.utcnow)

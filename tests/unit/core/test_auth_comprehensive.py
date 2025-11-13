@@ -1,17 +1,19 @@
 import pytest_asyncio
+
 """
 Comprehensive Authentication Module Test Suite
 Tests all authentication functions with high coverage
 """
-import sys
-from pathlib import Path
-import pytest
-import jwt
-import json
 import asyncio
-from datetime import datetime, timedelta, timezone
-from unittest.mock import Mock, patch, AsyncMock, MagicMock
+import json
 import os
+import sys
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import jwt
+import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
@@ -23,22 +25,22 @@ os.environ["JWT_SECRET_KEY"] = "test-secret-key-for-testing-only-32-chars-minimu
 os.environ["TESTING"] = "true"
 
 from apps.backend.api.auth.auth import (
-    JWTManager,
-    SessionManager,
-    RateLimiter,
     AuthenticationError,
     AuthorizationError,
+    JWTManager,
+    RateLimiter,
     RateLimitError,
-    get_current_user,
-    require_role,
+    SessionManager,
+    _safe_redis_int,
     create_user_token,
-    verify_token,
+    get_current_user,
     hash_password,
+    require_role,
     verify_password,
-    _safe_redis_int
+    verify_token,
 )
-from apps.backend.models.schemas import User, Session
 from apps.backend.core.config import settings
+from apps.backend.models.schemas import Session, User
 
 
 class TestJWTManager:
@@ -396,7 +398,7 @@ class TestUserAuthentication:
         """Test require_role with admin role success"""
         # Import here to avoid import issues
         sys.path.append(str(Path(__file__).parent.parent.parent))
-        from tests.utils.fastapi_test_utils import create_mock_user, MockRoleChecker
+        from tests.utils.fastapi_test_utils import MockRoleChecker, create_mock_user
 
         mock_user = create_mock_user(role="admin")
         role_checker = MockRoleChecker("admin")
@@ -409,7 +411,7 @@ class TestUserAuthentication:
         """Test require_role with admin role failure"""
         # Import here to avoid import issues
         sys.path.append(str(Path(__file__).parent.parent.parent))
-        from tests.utils.fastapi_test_utils import create_mock_user, MockRoleChecker
+        from tests.utils.fastapi_test_utils import MockRoleChecker, create_mock_user
 
         mock_user = create_mock_user(role="student")
         role_checker = MockRoleChecker("admin")
@@ -425,7 +427,7 @@ class TestUserAuthentication:
         """Test require_role with teacher role success"""
         # Import here to avoid import issues
         sys.path.append(str(Path(__file__).parent.parent.parent))
-        from tests.utils.fastapi_test_utils import create_mock_user, MockRoleChecker
+        from tests.utils.fastapi_test_utils import MockRoleChecker, create_mock_user
 
         mock_user = create_mock_user(role="teacher")
         role_checker = MockRoleChecker("teacher")

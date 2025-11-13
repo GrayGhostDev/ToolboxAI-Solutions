@@ -18,46 +18,46 @@ Version: 1.0.0
 """
 
 import enum
-from datetime import datetime, timedelta
-from typing import Optional, Dict, Any, List
+from datetime import datetime
 from uuid import uuid4
 
 from sqlalchemy import (
-    Column,
-    String,
-    Integer,
+    JSON,
     BigInteger,
     Boolean,
-    DateTime,
-    ForeignKey,
-    Enum,
-    JSON,
-    Text,
-    Float,
-    Index,
     CheckConstraint,
+    Column,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
     UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship, validates
 from sqlalchemy.sql import func
 
-from database.models.base import TenantBaseModel, GlobalBaseModel, TimestampMixin, AuditMixin
+from database.models.base import AuditMixin, GlobalBaseModel, TenantBaseModel, TimestampMixin
 
 
 class FileStatus(enum.Enum):
     """File status enumeration"""
-    PENDING = "pending"           # Upload in progress
-    PROCESSING = "processing"     # Virus scanning, optimization
-    AVAILABLE = "available"       # Ready for use
+
+    PENDING = "pending"  # Upload in progress
+    PROCESSING = "processing"  # Virus scanning, optimization
+    AVAILABLE = "available"  # Ready for use
     QUARANTINED = "quarantined"  # Failed virus scan
-    DELETED = "deleted"           # Soft deleted
-    ARCHIVED = "archived"         # Long-term archive
-    ERROR = "error"               # Processing error
+    DELETED = "deleted"  # Soft deleted
+    ARCHIVED = "archived"  # Long-term archive
+    ERROR = "error"  # Processing error
 
 
 class FileCategory(enum.Enum):
     """File category for compliance and retention"""
+
     EDUCATIONAL_CONTENT = "educational_content"
     STUDENT_SUBMISSION = "student_submission"
     ASSESSMENT = "assessment"
@@ -70,6 +70,7 @@ class FileCategory(enum.Enum):
 
 class ShareType(enum.Enum):
     """File sharing type"""
+
     PUBLIC_LINK = "public_link"
     ORGANIZATION = "organization"
     SPECIFIC_USERS = "specific_users"
@@ -81,13 +82,14 @@ class File(TenantBaseModel, TimestampMixin, AuditMixin):
     """
     Main file storage model with multi-tenant isolation
     """
+
     __tablename__ = "files"
     __table_args__ = (
-        Index('idx_files_organization_status', 'organization_id', 'status'),
-        Index('idx_files_category', 'category'),
-        Index('idx_files_uploaded_by', 'uploaded_by'),
-        Index('idx_files_created_at', 'created_at'),
-        CheckConstraint('file_size > 0', name='check_file_size_positive'),
+        Index("idx_files_organization_status", "organization_id", "status"),
+        Index("idx_files_category", "category"),
+        Index("idx_files_uploaded_by", "uploaded_by"),
+        Index("idx_files_created_at", "created_at"),
+        CheckConstraint("file_size > 0", name="check_file_size_positive"),
     )
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -128,7 +130,9 @@ class File(TenantBaseModel, TimestampMixin, AuditMixin):
     title = Column(String(255))
     description = Column(Text)
     tags = Column(JSON, default=list)  # Array of tags
-    file_metadata = Column(JSON, default=dict)  # Additional metadata (renamed from 'metadata' to avoid SQLAlchemy reserved word)
+    file_metadata = Column(
+        JSON, default=dict
+    )  # Additional metadata (renamed from 'metadata' to avoid SQLAlchemy reserved word)
 
     # Access tracking
     download_count = Column(Integer, default=0)
@@ -138,30 +142,30 @@ class File(TenantBaseModel, TimestampMixin, AuditMixin):
     versions = relationship("FileVersion", back_populates="file", cascade="all, delete-orphan")
     shares = relationship("FileShare", back_populates="file", cascade="all, delete-orphan")
 
-    @validates('mime_type')
+    @validates("mime_type")
     def validate_mime_type(self, key, mime_type):
         """Validate MIME type format"""
-        if not mime_type or '/' not in mime_type:
+        if not mime_type or "/" not in mime_type:
             raise ValueError(f"Invalid MIME type: {mime_type}")
         return mime_type
 
     @property
     def is_image(self) -> bool:
         """Check if file is an image"""
-        return self.mime_type.startswith('image/')
+        return self.mime_type.startswith("image/")
 
     @property
     def is_video(self) -> bool:
         """Check if file is a video"""
-        return self.mime_type.startswith('video/')
+        return self.mime_type.startswith("video/")
 
     @property
     def is_document(self) -> bool:
         """Check if file is a document"""
         return self.mime_type in [
-            'application/pdf',
-            'application/msword',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         ]
 
     def get_size_mb(self) -> float:
@@ -179,10 +183,11 @@ class FileVersion(TenantBaseModel, TimestampMixin):
     """
     File version tracking for audit and rollback
     """
+
     __tablename__ = "file_versions"
     __table_args__ = (
-        Index('idx_file_versions_file_id', 'file_id'),
-        Index('idx_file_versions_created_at', 'created_at'),
+        Index("idx_file_versions_file_id", "file_id"),
+        Index("idx_file_versions_created_at", "created_at"),
     )
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -206,11 +211,12 @@ class FileShare(TenantBaseModel, TimestampMixin):
     """
     File sharing and access control
     """
+
     __tablename__ = "file_shares"
     __table_args__ = (
-        Index('idx_file_shares_file_id', 'file_id'),
-        Index('idx_file_shares_share_token', 'share_token'),
-        UniqueConstraint('share_token', name='uq_file_shares_token'),
+        Index("idx_file_shares_file_id", "file_id"),
+        Index("idx_file_shares_share_token", "share_token"),
+        UniqueConstraint("share_token", name="uq_file_shares_token"),
     )
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -262,14 +268,17 @@ class StorageQuota(GlobalBaseModel, TimestampMixin):
     """
     Storage quota management per organization
     """
+
     __tablename__ = "storage_quotas"
     __table_args__ = (
-        Index('idx_storage_quotas_organization', 'organization_id'),
-        UniqueConstraint('organization_id', name='uq_storage_quotas_org'),
+        Index("idx_storage_quotas_organization", "organization_id"),
+        UniqueConstraint("organization_id", name="uq_storage_quotas_org"),
     )
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False, unique=True)
+    organization_id = Column(
+        UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False, unique=True
+    )
 
     # Quota limits (in bytes)
     total_quota = Column(BigInteger, nullable=False, default=1073741824)  # 1GB default
@@ -322,11 +331,12 @@ class FileAccessLog(GlobalBaseModel):
     """
     Audit log for file access (FERPA compliance)
     """
+
     __tablename__ = "file_access_logs"
     __table_args__ = (
-        Index('idx_file_access_logs_file', 'file_id'),
-        Index('idx_file_access_logs_user', 'user_id'),
-        Index('idx_file_access_logs_timestamp', 'accessed_at'),
+        Index("idx_file_access_logs_file", "file_id"),
+        Index("idx_file_access_logs_user", "user_id"),
+        Index("idx_file_access_logs_timestamp", "accessed_at"),
     )
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -343,4 +353,6 @@ class FileAccessLog(GlobalBaseModel):
     # Additional context
     access_granted = Column(Boolean, default=True)
     denial_reason = Column(String(255))
-    access_metadata = Column(JSON, default=dict)  # Renamed from 'metadata' to avoid SQLAlchemy reserved word
+    access_metadata = Column(
+        JSON, default=dict
+    )  # Renamed from 'metadata' to avoid SQLAlchemy reserved word

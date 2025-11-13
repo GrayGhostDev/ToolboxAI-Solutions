@@ -9,17 +9,13 @@ Created: 2025-09-21
 Version: 1.0.0
 """
 
-import asyncio
 import logging
-import uuid
 from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+
 from core.mcp.ai_driven_context_mcp import (
     AIDrivenContextMCP,
-    ContextEntry,
-    PrefetchPrediction,
     PruningStrategy,
     RelevanceModel,
 )
@@ -29,12 +25,9 @@ from core.mcp.enhanced_security_mcp import (
     AuthProvider,
     EnhancedSecurityMCP,
     MFAMethod,
-    MFASetup,
     OAuthCredentials,
-    RateLimitType,
 )
 from core.mcp.performance_mcp import (
-    CacheStrategy,
     ClusterNode,
     LoadBalancingStrategy,
     PerformanceMCP,
@@ -56,10 +49,10 @@ class TestEnhancedSecurityMCP:
     async def test_security_mcp_initialization(self, security_mcp):
         """Test security MCP initialization"""
         assert security_mcp is not None
-        assert hasattr(security_mcp, 'oauth_providers')
-        assert hasattr(security_mcp, 'mfa_setups')
-        assert hasattr(security_mcp, 'rate_limit_rules')
-        assert hasattr(security_mcp, 'security_events')
+        assert hasattr(security_mcp, "oauth_providers")
+        assert hasattr(security_mcp, "mfa_setups")
+        assert hasattr(security_mcp, "rate_limit_rules")
+        assert hasattr(security_mcp, "security_events")
 
         # Check default configurations
         assert len(security_mcp.rate_limit_rules) >= 3  # Should have default rules
@@ -73,7 +66,7 @@ class TestEnhancedSecurityMCP:
             client_id="test_client_id",
             client_secret="test_client_secret",
             redirect_uri="https://localhost:3000/auth/callback",
-            scope=["openid", "email", "profile"]
+            scope=["openid", "email", "profile"],
         )
 
         result = await security_mcp.setup_oauth_provider(AuthProvider.GOOGLE, credentials)
@@ -92,7 +85,7 @@ class TestEnhancedSecurityMCP:
             client_id="github_client",
             client_secret="github_secret",
             redirect_uri="https://localhost:3000/auth/github",
-            scope=["user:email"]
+            scope=["user:email"],
         )
 
         setup_result = await security_mcp.setup_oauth_provider(AuthProvider.GITHUB, credentials)
@@ -100,9 +93,7 @@ class TestEnhancedSecurityMCP:
 
         # Test authentication
         auth_result = await security_mcp.authenticate_with_oauth(
-            AuthProvider.GITHUB,
-            "test_auth_code",
-            "test_state"
+            AuthProvider.GITHUB, "test_auth_code", "test_state"
         )
 
         assert auth_result is not None
@@ -162,7 +153,7 @@ class TestEnhancedSecurityMCP:
             "resource": "/api/test",
             "user_id": "test_user",
             "ip_address": "127.0.0.1",
-            "user_agent": "test_agent"
+            "user_agent": "test_agent",
         }
 
         # First request should be allowed
@@ -185,7 +176,7 @@ class TestEnhancedSecurityMCP:
             "resource": "/api/content/generate",
             "user_id": "trusted_user",
             "ip_address": "192.168.1.100",
-            "user_agent": "Mozilla/5.0"
+            "user_agent": "Mozilla/5.0",
         }
 
         # Simulate trusted user behavior
@@ -212,8 +203,8 @@ class TestEnhancedSecurityMCP:
                 client_id="test",
                 client_secret="test",
                 redirect_uri="https://test.com",
-                scope=["email"]
-            )
+                scope=["email"],
+            ),
         )
 
         metrics = security_mcp.get_security_metrics()
@@ -248,7 +239,7 @@ class TestPerformanceMCP:
             "redis_port": 6379,
             "clustering_enabled": True,
             "cache_strategy": "adaptive",
-            "auto_scaling": False
+            "auto_scaling": False,
         }
         return PerformanceMCP(config)
 
@@ -256,10 +247,10 @@ class TestPerformanceMCP:
     async def test_performance_mcp_initialization(self, performance_mcp):
         """Test performance MCP initialization"""
         assert performance_mcp is not None
-        assert hasattr(performance_mcp, 'redis_config')
-        assert hasattr(performance_mcp, 'cluster_config')
-        assert hasattr(performance_mcp, 'cache_config')
-        assert hasattr(performance_mcp, 'performance_metrics')
+        assert hasattr(performance_mcp, "redis_config")
+        assert hasattr(performance_mcp, "cluster_config")
+        assert hasattr(performance_mcp, "cache_config")
+        assert hasattr(performance_mcp, "performance_metrics")
 
         # Test initialization
         init_result = await performance_mcp.initialize()
@@ -279,9 +270,9 @@ class TestPerformanceMCP:
         await performance_mcp.initialize()
 
         # Test optimization
-        optimization_result = await performance_mcp.optimize_performance({
-            "optimization_type": "comprehensive"
-        })
+        optimization_result = await performance_mcp.optimize_performance(
+            {"optimization_type": "comprehensive"}
+        )
 
         assert optimization_result is not None
         assert optimization_result.get("success") is True
@@ -302,7 +293,7 @@ class TestPerformanceMCP:
                 host="localhost",
                 port=9876 + i,
                 weight=1.0,
-                max_connections=100
+                max_connections=100,
             )
             for i in range(3)
         ]
@@ -333,7 +324,7 @@ class TestPerformanceMCP:
                 max_connections=100,
                 current_connections=10,
                 cpu_usage=0.3,
-                memory_usage=0.4
+                memory_usage=0.4,
             ),
             ClusterNode(
                 node_id="node_2",
@@ -343,8 +334,8 @@ class TestPerformanceMCP:
                 max_connections=100,
                 current_connections=50,
                 cpu_usage=0.7,
-                memory_usage=0.8
-            )
+                memory_usage=0.8,
+            ),
         ]
 
         for node in nodes:
@@ -357,7 +348,10 @@ class TestPerformanceMCP:
         assert selected_node.node_id in ["node_1", "node_2"]
 
         # Should prefer less loaded node (node_1)
-        if performance_mcp.cluster_config["load_balancing_strategy"] == LoadBalancingStrategy.PERFORMANCE_BASED:
+        if (
+            performance_mcp.cluster_config["load_balancing_strategy"]
+            == LoadBalancingStrategy.PERFORMANCE_BASED
+        ):
             assert selected_node.node_id == "node_1"
 
     @pytest.mark.asyncio
@@ -376,7 +370,7 @@ class TestPerformanceMCP:
                 cpu_usage_percent=20.0,
                 cache_hit_rate=0.9,
                 error_count=0,
-                throughput_ops_per_second=150.0
+                throughput_ops_per_second=150.0,
             )
             for _ in range(10)
         ]
@@ -395,7 +389,9 @@ class TestPerformanceMCP:
         performance_score = performance_analysis.get("performance_score", 0)
 
         # Performance score should meet 85% threshold
-        assert performance_score >= 0.85, f"Performance score {performance_score:.3f} below 85% threshold"
+        assert (
+            performance_score >= 0.85
+        ), f"Performance score {performance_score:.3f} below 85% threshold"
 
     @pytest.mark.asyncio
     async def test_cluster_health_monitoring(self, performance_mcp):
@@ -407,7 +403,7 @@ class TestPerformanceMCP:
             port=9876,
             weight=1.0,
             max_connections=100,
-            is_healthy=True
+            is_healthy=True,
         )
 
         performance_mcp.cluster_nodes[test_node.node_id] = test_node
@@ -435,7 +431,7 @@ class TestAIDrivenContextMCP:
         config = {
             "relevance_model": "educational_optimized",
             "pruning_strategy": "ai_optimized",
-            "similarity_threshold": 0.7
+            "similarity_threshold": 0.7,
         }
         return AIDrivenContextMCP(config)
 
@@ -443,10 +439,10 @@ class TestAIDrivenContextMCP:
     async def test_ai_context_mcp_initialization(self, ai_context_mcp):
         """Test AI context MCP initialization"""
         assert ai_context_mcp is not None
-        assert hasattr(ai_context_mcp, 'context_store')
-        assert hasattr(ai_context_mcp, 'relevance_cache')
-        assert hasattr(ai_context_mcp, 'semantic_index')
-        assert hasattr(ai_context_mcp, 'prefetch_predictions')
+        assert hasattr(ai_context_mcp, "context_store")
+        assert hasattr(ai_context_mcp, "relevance_cache")
+        assert hasattr(ai_context_mcp, "semantic_index")
+        assert hasattr(ai_context_mcp, "prefetch_predictions")
 
         # Check AI configuration
         assert ai_context_mcp.ai_config["relevance_model"] == RelevanceModel.EDUCATIONAL_OPTIMIZED
@@ -461,13 +457,13 @@ class TestAIDrivenContextMCP:
             "content": "Learn about fractions and decimals",
             "learning_objectives": ["Understand fractions", "Convert to decimals"],
             "difficulty": "medium",
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         query_context = {
             "subject": "Mathematics",
             "topic": "fractions",
-            "user_level": "intermediate"
+            "user_level": "intermediate",
         }
 
         relevance_score = await ai_context_mcp.score_context_relevance(test_context, query_context)
@@ -476,7 +472,9 @@ class TestAIDrivenContextMCP:
         assert 0.0 <= relevance_score <= 1.0
 
         # Educational content should score high
-        assert relevance_score >= 0.7, f"Educational content relevance {relevance_score:.3f} below 70%"
+        assert (
+            relevance_score >= 0.7
+        ), f"Educational content relevance {relevance_score:.3f} below 70%"
 
     @pytest.mark.asyncio
     async def test_intelligent_pruning(self, ai_context_mcp):
@@ -488,7 +486,7 @@ class TestAIDrivenContextMCP:
                 "subject": "Mathematics" if i % 2 == 0 else "Science",
                 "content": f"Test content {i}" * 100,  # Make it substantial
                 "educational_value": 0.9 if i < 3 else 0.3,  # Some high educational value
-                "timestamp": (datetime.now(timezone.utc) - timedelta(hours=i)).isoformat()
+                "timestamp": (datetime.now(timezone.utc) - timedelta(hours=i)).isoformat(),
             }
             for i in range(10)
         ]
@@ -499,8 +497,7 @@ class TestAIDrivenContextMCP:
 
         # Test pruning
         prune_result = await ai_context_mcp.intelligent_prune(
-            max_tokens=5000,  # Force pruning
-            preserve_educational=True
+            max_tokens=5000, preserve_educational=True  # Force pruning
         )
 
         assert prune_result is not None
@@ -513,9 +510,7 @@ class TestAIDrivenContextMCP:
 
         # High educational value content should be preserved
         remaining_entries = list(ai_context_mcp.context_store.values())
-        high_value_preserved = any(
-            entry.educational_value > 0.8 for entry in remaining_entries
-        )
+        high_value_preserved = any(entry.educational_value > 0.8 for entry in remaining_entries)
         assert high_value_preserved, "High educational value content should be preserved"
 
     @pytest.mark.asyncio
@@ -526,13 +521,13 @@ class TestAIDrivenContextMCP:
             "learning_style": "visual",
             "subject_preferences": ["Mathematics", "Science"],
             "difficulty_level": "medium",
-            "recent_topics": ["fractions", "algebra"]
+            "recent_topics": ["fractions", "algebra"],
         }
 
         current_context = {
             "subject": "Mathematics",
             "topic": "fractions",
-            "content": "Learning about fractions"
+            "content": "Learning about fractions",
         }
 
         prefetch_results = await ai_context_mcp.predictive_prefetch(user_patterns, current_context)
@@ -559,7 +554,7 @@ class TestAIDrivenContextMCP:
             {"content": "Mathematics fractions and decimals", "subject": "Mathematics"},
             {"content": "Science photosynthesis and plants", "subject": "Science"},
             {"content": "History ancient civilizations", "subject": "History"},
-            {"content": "Mathematics algebra and equations", "subject": "Mathematics"}
+            {"content": "Mathematics algebra and equations", "subject": "Mathematics"},
         ]
 
         for i, context in enumerate(test_contexts):
@@ -568,8 +563,7 @@ class TestAIDrivenContextMCP:
 
         # Search for mathematics content
         search_results = await ai_context_mcp.query_by_semantic_similarity(
-            "mathematics fractions",
-            max_results=5
+            "mathematics fractions", max_results=5
         )
 
         assert isinstance(search_results, list)
@@ -593,7 +587,7 @@ class TestAIDrivenContextMCP:
             "learning_objectives": ["Understand chlorophyll", "Learn about oxygen production"],
             "grade_level": 7,
             "curriculum": "NGSS standards",
-            "assessment": "quiz included"
+            "assessment": "quiz included",
         }
 
         high_value_score = await ai_context_mcp._calculate_educational_value(high_value_context)
@@ -601,17 +595,23 @@ class TestAIDrivenContextMCP:
         # Low educational value content
         low_value_context = {
             "content": "Random text without educational purpose",
-            "type": "general"
+            "type": "general",
         }
 
         low_value_score = await ai_context_mcp._calculate_educational_value(low_value_context)
 
         # High value content should score significantly higher
-        assert high_value_score >= 0.8, f"High educational value content scored {high_value_score:.3f}, below 80%"
-        assert low_value_score < high_value_score, "Low value content should score lower than high value"
+        assert (
+            high_value_score >= 0.8
+        ), f"High educational value content scored {high_value_score:.3f}, below 80%"
+        assert (
+            low_value_score < high_value_score
+        ), "Low value content should score lower than high value"
 
         # Educational content should meet quality threshold
-        assert high_value_score >= 0.85, f"Educational content score {high_value_score:.3f} below 85% threshold"
+        assert (
+            high_value_score >= 0.85
+        ), f"Educational content score {high_value_score:.3f} below 85% threshold"
 
     @pytest.mark.asyncio
     async def test_ai_metrics_quality(self, ai_context_mcp):
@@ -623,7 +623,7 @@ class TestAIDrivenContextMCP:
                 "subject": "Science",
                 "content": f"Educational content about topic {i}",
                 "learning_objectives": [f"Learn topic {i}"],
-                "difficulty": "medium"
+                "difficulty": "medium",
             }
             for i in range(5)
         ]
@@ -640,7 +640,7 @@ class TestAIDrivenContextMCP:
             "user_id": "test_user",
             "learning_style": "visual",
             "subject_preferences": ["Science"],
-            "recent_topics": ["biology"]
+            "recent_topics": ["biology"],
         }
 
         await ai_context_mcp.predictive_prefetch(user_patterns)
@@ -672,17 +672,19 @@ class TestMCPIntegration:
         mcps = [
             ("enhanced_security", EnhancedSecurityMCP()),
             ("performance", PerformanceMCP()),
-            ("ai_driven_context", AIDrivenContextMCP())
+            ("ai_driven_context", AIDrivenContextMCP()),
         ]
 
         initialization_scores = {}
 
         for mcp_name, mcp in mcps:
             try:
-                if hasattr(mcp, 'initialize'):
+                if hasattr(mcp, "initialize"):
                     result = await mcp.initialize()
                     if isinstance(result, dict):
-                        initialization_scores[mcp_name] = 1.0 if result.get("success", False) else 0.8
+                        initialization_scores[mcp_name] = (
+                            1.0 if result.get("success", False) else 0.8
+                        )
                     else:
                         initialization_scores[mcp_name] = 0.9  # Initialized without explicit result
                 else:
@@ -699,7 +701,9 @@ class TestMCPIntegration:
 
         # Overall initialization quality
         overall_quality = sum(initialization_scores.values()) / len(initialization_scores)
-        assert overall_quality >= 0.9, f"Overall MCP initialization quality {overall_quality:.3f} below 90%"
+        assert (
+            overall_quality >= 0.9
+        ), f"Overall MCP initialization quality {overall_quality:.3f} below 90%"
 
     @pytest.mark.asyncio
     async def test_mcp_performance_benchmarks(self):
@@ -715,15 +719,12 @@ class TestMCPIntegration:
                 "id": f"perf_test_{i}",
                 "subject": "Mathematics",
                 "content": f"Performance test content {i}",
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
             await ai_context_mcp.add_context(context)
 
         # Perform relevance scoring
-        test_context = {
-            "subject": "Mathematics",
-            "content": "Test query for relevance"
-        }
+        test_context = {"subject": "Mathematics", "content": "Test query for relevance"}
 
         for i in range(10):
             await ai_context_mcp.score_context_relevance(test_context)
@@ -735,7 +736,9 @@ class TestMCPIntegration:
 
         # Check operation efficiency
         operations_per_second = 30 / total_time  # 20 adds + 10 scores
-        assert operations_per_second >= 10, f"Operations per second {operations_per_second:.1f} below 10"
+        assert (
+            operations_per_second >= 10
+        ), f"Operations per second {operations_per_second:.1f} below 10"
 
     @pytest.mark.asyncio
     async def test_mcp_quality_assurance(self):
@@ -751,8 +754,8 @@ class TestMCPIntegration:
                 client_id="test",
                 client_secret="test",
                 redirect_uri="https://test.com",
-                scope=["email"]
-            )
+                scope=["email"],
+            ),
         )
 
         security_metrics = security_mcp.get_security_metrics()
@@ -771,7 +774,7 @@ class TestMCPIntegration:
             "subject": "Science",
             "content": "Educational content about biology",
             "learning_objectives": ["Understand cells"],
-            "grade_level": 6
+            "grade_level": 6,
         }
 
         add_result = await ai_mcp.add_context(test_context)
@@ -781,7 +784,7 @@ class TestMCPIntegration:
         mcp_qualities = {
             "security": security_score,
             "performance": performance_quality,
-            "ai_context": ai_quality
+            "ai_context": ai_quality,
         }
 
         for mcp_name, quality in mcp_qualities.items():
@@ -791,8 +794,10 @@ class TestMCPIntegration:
         overall_quality = sum(mcp_qualities.values()) / len(mcp_qualities)
         assert overall_quality >= 0.9, f"Overall MCP quality {overall_quality:.3f} below 90%"
 
-        logger.info("All MCPs meet quality standards: %s",
-                   {name: f"{quality:.1%}" for name, quality in mcp_qualities.items()})
+        logger.info(
+            "All MCPs meet quality standards: %s",
+            {name: f"{quality:.1%}" for name, quality in mcp_qualities.items()},
+        )
 
 
 class TestMCPErrorHandling:
@@ -809,7 +814,7 @@ class TestMCPErrorHandling:
             client_id="",  # Invalid empty client ID
             client_secret="",
             redirect_uri="invalid_uri",
-            scope=[]
+            scope=[],
         )
 
         result = await security_mcp.setup_oauth_provider(AuthProvider.GOOGLE, invalid_credentials)
@@ -827,7 +832,7 @@ class TestMCPErrorHandling:
         invalid_config = {
             "redis_host": "invalid_host",
             "redis_port": -1,
-            "cluster_nodes": "invalid"
+            "cluster_nodes": "invalid",
         }
 
         performance_mcp = PerformanceMCP(invalid_config)
@@ -848,12 +853,7 @@ class TestMCPErrorHandling:
         ai_mcp = AIDrivenContextMCP()
 
         # Test with invalid context data
-        invalid_contexts = [
-            None,
-            {},
-            {"invalid": "structure"},
-            {"content": None}
-        ]
+        invalid_contexts = [None, {}, {"invalid": "structure"}, {"content": None}]
 
         error_handling_scores = []
 
@@ -883,7 +883,9 @@ class TestMCPErrorHandling:
 
         # Error handling quality should be high
         avg_error_handling = sum(error_handling_scores) / len(error_handling_scores)
-        assert avg_error_handling >= 0.85, f"Error handling quality {avg_error_handling:.3f} below 85%"
+        assert (
+            avg_error_handling >= 0.85
+        ), f"Error handling quality {avg_error_handling:.3f} below 85%"
 
 
 if __name__ == "__main__":

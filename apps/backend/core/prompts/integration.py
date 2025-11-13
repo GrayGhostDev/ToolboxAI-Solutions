@@ -3,24 +3,22 @@ Main integration module for the prompt template organization system
 """
 
 import logging
-from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime
-import asyncio
+from typing import Any
 
+from .content_validation import ContentValidationSystem
+from .conversation_flow import ConversationFlowManager
 from .models import (
     ConversationContext,
-    UserProfile,
-    ContentRequirements,
-    PersonalizationData,
-    UniquenessEnhancement,
-    PromptResponse,
     FlowDecision,
+    PersonalizationData,
+    PromptResponse,
+    UniquenessEnhancement,
+    UserProfile,
     ValidationResult,
 )
-from .conversation_flow import ConversationFlowManager
 from .template_engine import PromptTemplateEngine
 from .user_guidance import UserGuidanceSystem
-from .content_validation import ContentValidationSystem
 from .workflow_orchestrator import WorkflowOrchestrator
 
 logger = logging.getLogger(__name__)
@@ -41,7 +39,7 @@ class PromptTemplateIntegration:
 
         # Integration status
         self.is_initialized = False
-        self.active_conversations: Dict[str, ConversationContext] = {}
+        self.active_conversations: dict[str, ConversationContext] = {}
 
         logger.info("Prompt Template Integration initialized")
 
@@ -64,8 +62,8 @@ class PromptTemplateIntegration:
         pass
 
     async def start_educational_content_creation(
-        self, user_profile: UserProfile, initial_message: Optional[str] = None
-    ) -> Tuple[ConversationContext, PromptResponse]:
+        self, user_profile: UserProfile, initial_message: str | None = None
+    ) -> tuple[ConversationContext, PromptResponse]:
         """
         Start the educational content creation process with a new conversation
         """
@@ -90,8 +88,8 @@ class PromptTemplateIntegration:
         self,
         conversation_id: str,
         user_input: str,
-        additional_context: Optional[Dict[str, Any]] = None,
-    ) -> Tuple[PromptResponse, FlowDecision, Dict[str, Any]]:
+        additional_context: dict[str, Any] | None = None,
+    ) -> tuple[PromptResponse, FlowDecision, dict[str, Any]]:
         """
         Process user input and provide intelligent response with guidance
         """
@@ -131,8 +129,8 @@ class PromptTemplateIntegration:
         return prompt_response, flow_decision, response_metadata
 
     async def enhance_content_uniqueness(
-        self, conversation_id: str, uniqueness_factors: List[str], creative_elements: List[str]
-    ) -> Dict[str, Any]:
+        self, conversation_id: str, uniqueness_factors: list[str], creative_elements: list[str]
+    ) -> dict[str, Any]:
         """
         Enhance content uniqueness based on user preferences
         """
@@ -162,7 +160,7 @@ class PromptTemplateIntegration:
 
     async def personalize_content(
         self, conversation_id: str, personalization_data: PersonalizationData
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Personalize content based on user-provided data
         """
@@ -183,7 +181,7 @@ class PromptTemplateIntegration:
             "suggestions": await self._get_personalization_suggestions(context),
         }
 
-    async def validate_and_optimize(self, conversation_id: str) -> Dict[str, Any]:
+    async def validate_and_optimize(self, conversation_id: str) -> dict[str, Any]:
         """
         Validate current conversation state and provide optimization suggestions
         """
@@ -210,7 +208,7 @@ class PromptTemplateIntegration:
             "readiness_score": await self._calculate_readiness_score(context, validation_result),
         }
 
-    async def generate_content_workflow(self, conversation_id: str) -> Dict[str, Any]:
+    async def generate_content_workflow(self, conversation_id: str) -> dict[str, Any]:
         """
         Generate a complete content creation workflow based on conversation context
         """
@@ -405,7 +403,7 @@ This personalized approach will make your students feel like the content was cre
 
         return min(1.0, score)
 
-    async def _get_uniqueness_suggestions(self, context: ConversationContext) -> List[str]:
+    async def _get_uniqueness_suggestions(self, context: ConversationContext) -> list[str]:
         """Get suggestions for enhancing uniqueness"""
 
         suggestions = []
@@ -421,7 +419,7 @@ This personalized approach will make your students feel like the content was cre
 
         return suggestions
 
-    async def _get_personalization_suggestions(self, context: ConversationContext) -> List[str]:
+    async def _get_personalization_suggestions(self, context: ConversationContext) -> list[str]:
         """Get suggestions for enhancing personalization"""
 
         suggestions = []
@@ -439,7 +437,7 @@ This personalized approach will make your students feel like the content was cre
 
     async def _get_optimization_suggestions(
         self, context: ConversationContext, validation_result: ValidationResult
-    ) -> List[str]:
+    ) -> list[str]:
         """Get optimization suggestions based on validation results"""
 
         suggestions = []
@@ -458,7 +456,7 @@ This personalized approach will make your students feel like the content was cre
 
         return suggestions
 
-    async def _calculate_quality_metrics(self, context: ConversationContext) -> Dict[str, float]:
+    async def _calculate_quality_metrics(self, context: ConversationContext) -> dict[str, float]:
         """Calculate overall quality metrics"""
 
         validation_result = await self.validation_system.validate_conversation_context(context)
@@ -494,13 +492,13 @@ This personalized approach will make your students feel like the content was cre
 
         return min(1.0, base_score + progress_bonus)
 
-    async def _workflow_progress_callback(self, progress_data: Dict[str, Any]):
+    async def _workflow_progress_callback(self, progress_data: dict[str, Any]):
         """Callback for workflow progress updates"""
         logger.info(
             f"Workflow progress: {progress_data['progress_percentage']:.1f}% - {progress_data.get('current_step', 'Unknown')}"
         )
 
-    async def get_conversation_analytics(self, conversation_id: str) -> Dict[str, Any]:
+    async def get_conversation_analytics(self, conversation_id: str) -> dict[str, Any]:
         """Get analytics for a conversation"""
 
         context = self.active_conversations.get(conversation_id)
@@ -532,11 +530,11 @@ This personalized approach will make your students feel like the content was cre
 
         return False
 
-    def get_active_conversations(self) -> List[str]:
+    def get_active_conversations(self) -> list[str]:
         """Get list of active conversation IDs"""
         return list(self.active_conversations.keys())
 
-    async def get_system_status(self) -> Dict[str, Any]:
+    async def get_system_status(self) -> dict[str, Any]:
         """Get overall system status"""
 
         return {

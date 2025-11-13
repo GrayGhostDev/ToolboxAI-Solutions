@@ -20,18 +20,19 @@ import hashlib
 import logging
 import re
 import time
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
-from dataclasses import dataclass
 
-from fastapi import HTTPException, status, Depends, Request
+import redis
+from fastapi import Depends, HTTPException, Request, status
 from passlib.context import CryptContext
 from pydantic import BaseModel, Field, field_validator, model_validator
-import redis
 
-from apps.backend.core.security.session_manager import get_session_manager, SessionManager
 from apps.backend.core.config import settings
-from .auth import hash_password, verify_password, get_current_user
+from apps.backend.core.security.session_manager import SessionManager, get_session_manager
+
+from .auth import get_current_user, hash_password, verify_password
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 class PasswordStrengthRequirements:
     """Password strength requirements based on NIST guidelines"""
+
     MIN_LENGTH = 8
     MAX_LENGTH = 128
     REQUIRE_UPPERCASE = True
@@ -51,8 +53,16 @@ class PasswordStrengthRequirements:
 
     # Common passwords to block (simplified list - use full list in production)
     COMMON_PASSWORDS = {
-        "password", "12345678", "qwerty", "abc123", "password123",
-        "admin", "letmein", "welcome", "monkey", "dragon"
+        "password",
+        "12345678",
+        "qwerty",
+        "abc123",
+        "password123",
+        "admin",
+        "letmein",
+        "welcome",
+        "monkey",
+        "dragon",
     }
 
     # Patterns to detect (keyboard walks, repeated characters, etc.)
@@ -67,6 +77,7 @@ class PasswordStrengthRequirements:
 @dataclass
 class PasswordValidationResult:
     """Result of password validation"""
+
     is_valid: bool
     score: int  # 0-100
     issues: List[str]
@@ -75,29 +86,31 @@ class PasswordValidationResult:
 
 class PasswordChangeRequest(BaseModel):
     """Request model for password change"""
+
     current_password: str = Field(..., min_length=1, description="Current password")
     new_password: str = Field(..., min_length=8, max_length=128, description="New password")
     confirm_password: str = Field(..., description="Password confirmation")
     logout_all_devices: bool = Field(default=True, description="Logout from all devices")
 
-    @field_validator('confirm_password')
+    @field_validator("confirm_password")
     @classmethod
     def passwords_match(cls, v, info):
         """Validate that passwords match using Pydantic v2 field_validator."""
-        if hasattr(info, 'data') and 'new_password' in info.data and v != info.data['new_password']:
-            raise ValueError('Passwords do not match')
+        if hasattr(info, "data") and "new_password" in info.data and v != info.data["new_password"]:
+            raise ValueError("Passwords do not match")
         return v
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def validate_passwords_match(self):
         """Additional validation to ensure passwords match."""
         if self.new_password != self.confirm_password:
-            raise ValueError('Passwords do not match')
+            raise ValueError("Passwords do not match")
         return self
 
 
 class PasswordResetRequest(BaseModel):
     """Request model for password reset (admin/forgot password)"""
+
     user_id: str = Field(..., description="User ID to reset password for")
     new_password: str = Field(..., min_length=8, max_length=128, description="New password")
     reason: str = Field(..., description="Reason for password reset")
@@ -128,24 +141,26 @@ class PasswordValidator:
         # Length check
         if len(password) < self.requirements.MIN_LENGTH:
             issues.append(f"Password must be at least {self.requirements.MIN_LENGTH} characters")
-            suggestions.append(f"Add {self.requirements.MIN_LENGTH - len(password)} more characters")
+            suggestions.append(
+                f"Add {self.requirements.MIN_LENGTH - len(password)} more characters"
+            )
             score -= 30
         elif len(password) > self.requirements.MAX_LENGTH:
             issues.append(f"Password must not exceed {self.requirements.MAX_LENGTH} characters")
             score -= 10
 
         # Character type requirements
-        if self.requirements.REQUIRE_UPPERCASE and not re.search(r'[A-Z]', password):
+        if self.requirements.REQUIRE_UPPERCASE and not re.search(r"[A-Z]", password):
             issues.append("Password must contain at least one uppercase letter")
             suggestions.append("Add an uppercase letter (A-Z)")
             score -= 15
 
-        if self.requirements.REQUIRE_LOWERCASE and not re.search(r'[a-z]', password):
+        if self.requirements.REQUIRE_LOWERCASE and not re.search(r"[a-z]", password):
             issues.append("Password must contain at least one lowercase letter")
             suggestions.append("Add a lowercase letter (a-z)")
             score -= 15
 
-        if self.requirements.REQUIRE_DIGIT and not re.search(r'\d', password):
+        if self.requirements.REQUIRE_DIGIT and not re.search(r"\d", password):
             issues.append("Password must contain at least one digit")
             suggestions.append("Add a number (0-9)")
             score -= 15
@@ -153,7 +168,9 @@ class PasswordValidator:
         if self.requirements.REQUIRE_SPECIAL:
             if not any(char in self.requirements.SPECIAL_CHARS for char in password):
                 issues.append("Password must contain at least one special character")
-                suggestions.append(f"Add a special character ({self.requirements.SPECIAL_CHARS[:10]}...)")
+                suggestions.append(
+                    f"Add a special character ({self.requirements.SPECIAL_CHARS[:10]}...)"
+                )
                 score -= 15
 
         # Check for common passwords
@@ -184,10 +201,7 @@ class PasswordValidator:
         score = max(0, min(100, score))
 
         return PasswordValidationResult(
-            is_valid=len(issues) == 0,
-            score=score,
-            issues=issues,
-            suggestions=suggestions
+            is_valid=len(issues) == 0, score=score, issues=issues, suggestions=suggestions
         )
 
 
@@ -213,7 +227,7 @@ class PasswordHistoryManager:
             if user_id not in self._memory_history:
                 self._memory_history[user_id] = []
             self._memory_history[user_id].insert(0, password_hash)
-            self._memory_history[user_id] = self._memory_history[user_id][:self.MAX_HISTORY]
+            self._memory_history[user_id] = self._memory_history[user_id][: self.MAX_HISTORY]
 
     def is_password_reused(self, user_id: str, password: str) -> bool:
         """Check if password was recently used"""
@@ -226,7 +240,7 @@ class PasswordHistoryManager:
         for old_hash in history:
             # Handle both string and bytes from Redis
             if isinstance(old_hash, bytes):
-                old_hash = old_hash.decode('utf-8')
+                old_hash = old_hash.decode("utf-8")
             if verify_password(password, old_hash):
                 return True
 
@@ -236,11 +250,7 @@ class PasswordHistoryManager:
 class PasswordChangeService:
     """Service for handling password changes with security features"""
 
-    def __init__(
-        self,
-        session_manager: SessionManager,
-        redis_client: Optional[redis.Redis] = None
-    ):
+    def __init__(self, session_manager: SessionManager, redis_client: Optional[redis.Redis] = None):
         self.session_manager = session_manager
         self.redis_client = redis_client
         self.validator = PasswordValidator()
@@ -279,7 +289,7 @@ class PasswordChangeService:
         current_password: str,
         new_password: str,
         request_ip: Optional[str] = None,
-        user_agent: Optional[str] = None
+        user_agent: Optional[str] = None,
     ) -> Dict[str, any]:
         """
         Change user password with comprehensive security checks.
@@ -304,7 +314,7 @@ class PasswordChangeService:
             logger.warning(f"Password change rate limit exceeded for user {user_id}")
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail=f"Too many password change attempts. Try again tomorrow."
+                detail=f"Too many password change attempts. Try again tomorrow.",
             )
 
         # Validate new password strength
@@ -316,15 +326,15 @@ class PasswordChangeService:
                     "message": "Password does not meet security requirements",
                     "issues": validation_result.issues,
                     "suggestions": validation_result.suggestions,
-                    "score": validation_result.score
-                }
+                    "score": validation_result.score,
+                },
             )
 
         # Check password history
         if self.history_manager.is_password_reused(user_id, new_password):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="This password was recently used. Please choose a different password."
+                detail="This password was recently used. Please choose a different password.",
             )
 
         # Hash new password
@@ -335,8 +345,7 @@ class PasswordChangeService:
 
         # CRITICAL: Invalidate all existing sessions
         invalidated_count = self.session_manager.invalidate_all_user_sessions(
-            user_id=user_id,
-            reason="password_change"
+            user_id=user_id, reason="password_change"
         )
 
         # Log password change event
@@ -348,8 +357,8 @@ class PasswordChangeService:
                 "ip_address": request_ip,
                 "user_agent": user_agent,
                 "sessions_invalidated": invalidated_count,
-                "timestamp": datetime.utcnow().isoformat()
-            }
+                "timestamp": datetime.utcnow().isoformat(),
+            },
         )
 
         return {
@@ -358,7 +367,7 @@ class PasswordChangeService:
             "sessions_invalidated": invalidated_count,
             "remaining_changes_today": remaining - 1,
             "password_strength_score": validation_result.score,
-            "action_required": "Please log in again with your new password"
+            "action_required": "Please log in again with your new password",
         }
 
     async def reset_password(
@@ -367,7 +376,7 @@ class PasswordChangeService:
         target_user_id: str,
         new_password: str,
         reason: str,
-        force_logout: bool = True
+        force_logout: bool = True,
     ) -> Dict[str, any]:
         """
         Admin function to reset a user's password.
@@ -390,8 +399,8 @@ class PasswordChangeService:
                 detail={
                     "message": "Password is too weak even for admin reset",
                     "score": validation_result.score,
-                    "minimum_score": 50
-                }
+                    "minimum_score": 50,
+                },
             )
 
         # Hash new password
@@ -404,8 +413,7 @@ class PasswordChangeService:
         invalidated_count = 0
         if force_logout:
             invalidated_count = self.session_manager.invalidate_all_user_sessions(
-                user_id=target_user_id,
-                reason="admin_password_reset"
+                user_id=target_user_id, reason="admin_password_reset"
             )
 
         # Log admin password reset
@@ -416,8 +424,8 @@ class PasswordChangeService:
                 "target_user_id": target_user_id,
                 "reason": reason,
                 "sessions_invalidated": invalidated_count,
-                "timestamp": datetime.utcnow().isoformat()
-            }
+                "timestamp": datetime.utcnow().isoformat(),
+            },
         )
 
         return {
@@ -426,7 +434,7 @@ class PasswordChangeService:
             "sessions_invalidated": invalidated_count,
             "password_hash": new_password_hash,  # Return hash for database update
             "reset_by": admin_user_id,
-            "reset_reason": reason
+            "reset_reason": reason,
         }
 
 
@@ -435,8 +443,7 @@ _password_service: Optional[PasswordChangeService] = None
 
 
 def get_password_service(
-    session_manager: Optional[SessionManager] = None,
-    redis_client: Optional[redis.Redis] = None
+    session_manager: Optional[SessionManager] = None, redis_client: Optional[redis.Redis] = None
 ) -> PasswordChangeService:
     """Get or create the global password change service"""
     global _password_service
@@ -446,11 +453,11 @@ def get_password_service(
             session_manager = get_session_manager(redis_client)
 
         _password_service = PasswordChangeService(
-            session_manager=session_manager,
-            redis_client=redis_client
+            session_manager=session_manager, redis_client=redis_client
         )
 
     return _password_service
+
 
 def check_password_strength(password: str) -> dict:
     """Check password strength and return requirements"""
@@ -460,15 +467,17 @@ def check_password_strength(password: str) -> dict:
         "uppercase": any(c.isupper() for c in password),
         "lowercase": any(c.islower() for c in password),
         "digit": any(c.isdigit() for c in password),
-        "special": any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password)
+        "special": any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password),
     }
 
-    result["strong"] = all([
-        result["length"],
-        result["uppercase"],
-        result["lowercase"],
-        result["digit"],
-        result["special"]
-    ])
+    result["strong"] = all(
+        [
+            result["length"],
+            result["uppercase"],
+            result["lowercase"],
+            result["digit"],
+            result["special"],
+        ]
+    )
 
     return result

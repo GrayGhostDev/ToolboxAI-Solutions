@@ -11,11 +11,12 @@ import hashlib
 import json
 import logging
 import time
-from datetime import datetime, timedelta, timezone
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from collections.abc import Callable
+from datetime import datetime, timezone
+from typing import Any
 
 import redis.asyncio as redis
-from fastapi import Request, Response
+from fastapi import Request
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,7 +32,7 @@ class CacheManager:
 
     def __init__(
         self,
-        redis_url: Optional[str] = None,
+        redis_url: str | None = None,
         default_ttl: int = 300,  # 5 minutes
         max_memory_items: int = 1000,
     ):
@@ -46,8 +47,8 @@ class CacheManager:
         self.redis_url = redis_url or getattr(settings, "REDIS_URL", None)
         self.default_ttl = default_ttl
         self.max_memory_items = max_memory_items
-        self.redis_client: Optional[redis.Redis] = None
-        self.memory_cache: Dict[str, Tuple[Any, float]] = {}
+        self.redis_client: redis.Redis | None = None
+        self.memory_cache: dict[str, tuple[Any, float]] = {}
         self.cache_stats = {"hits": 0, "misses": 0, "sets": 0, "deletes": 0, "errors": 0}
 
     async def initialize(self):
@@ -75,7 +76,7 @@ class CacheManager:
         key_hash = hashlib.md5(key_str.encode()).hexdigest()
         return f"{namespace}:{key_hash}"
 
-    async def get(self, key: str) -> Optional[Any]:
+    async def get(self, key: str) -> Any | None:
         """Get value from cache"""
         try:
             # Try Redis first
@@ -103,7 +104,7 @@ class CacheManager:
             self.cache_stats["errors"] += 1
             return None
 
-    async def set(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
+    async def set(self, key: str, value: Any, ttl: int | None = None) -> bool:
         """Set value in cache with TTL"""
         try:
             ttl = ttl or self.default_ttl
@@ -196,7 +197,7 @@ class CacheManager:
             for key, _ in items[:remove_count]:
                 del self.memory_cache[key]
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get cache statistics"""
         total_requests = self.cache_stats["hits"] + self.cache_stats["misses"]
         hit_rate = self.cache_stats["hits"] / total_requests * 100 if total_requests > 0 else 0
@@ -209,7 +210,7 @@ class CacheManager:
         }
 
 
-def cache_result(namespace: str, ttl: int = 300, key_params: Optional[List[str]] = None):
+def cache_result(namespace: str, ttl: int = 300, key_params: list[str] | None = None):
     """
     Decorator to cache function results
 
@@ -268,8 +269,8 @@ class QueryOptimizer:
 
     @staticmethod
     async def explain_query(
-        session: AsyncSession, query: str, params: Optional[Dict] = None
-    ) -> List[Dict]:
+        session: AsyncSession, query: str, params: dict | None = None
+    ) -> list[dict]:
         """
         Get query execution plan
 
@@ -331,7 +332,7 @@ class QueryOptimizer:
             return False
 
     @staticmethod
-    async def get_slow_queries(session: AsyncSession, threshold_ms: int = 1000) -> List[Dict]:
+    async def get_slow_queries(session: AsyncSession, threshold_ms: int = 1000) -> list[dict]:
         """
         Get slow queries from PostgreSQL
 
@@ -390,8 +391,8 @@ class ConnectionPool:
             max_connections: Maximum number of connections
         """
         self.max_connections = max_connections
-        self.connections: Dict[str, List[Any]] = {}
-        self.in_use: Dict[str, Set[Any]] = {}
+        self.connections: dict[str, list[Any]] = {}
+        self.in_use: dict[str, Set[Any]] = {}
         self.stats = {"acquired": 0, "released": 0, "created": 0, "destroyed": 0}
 
     async def acquire(self, service: str, factory: Callable, timeout: float = 5.0) -> Any:
@@ -463,7 +464,7 @@ class ConnectionPool:
         if hasattr(conn, "close"):
             await conn.close()
 
-    async def clear(self, service: Optional[str] = None):
+    async def clear(self, service: str | None = None):
         """Clear connections for service or all services"""
         services = [service] if service else list(self.connections.keys())
 
@@ -483,7 +484,7 @@ class ConnectionPool:
                 self.connections[svc] = []
                 self.in_use[svc] = set()
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get pool statistics"""
         service_stats = {}
         for service in self.connections:
@@ -534,7 +535,7 @@ class PerformanceMonitor:
         """Record cache miss"""
         self.metrics["cache_misses"] += 1
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Get performance metrics"""
         uptime = time.time() - self.start_time
         response_times = self.metrics["response_times"]
@@ -595,7 +596,7 @@ async def performance_middleware(request: Request, call_next):
 
 
 # Health check endpoint
-async def performance_health_check() -> Dict[str, Any]:
+async def performance_health_check() -> dict[str, Any]:
     """Get performance health status"""
     metrics = performance_monitor.get_metrics()
     cache_stats = cache_manager.get_stats()

@@ -12,29 +12,29 @@ Reference: https://docs.sqlalchemy.org/en/20/
 
 from datetime import datetime
 from enum import Enum as PyEnum
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    Computed,
+    Enum,
+    Index,
+    Integer,
     String,
     Text,
-    Integer,
-    Boolean,
-    Index,
-    CheckConstraint,
-    Enum,
-    Computed,
-    ForeignKey,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import JSONB, ARRAY, TSVECTOR
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB, TSVECTOR
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.models.base_modern import TenantBaseModel
 
 
 class ContentStatus(PyEnum):
     """Content approval and workflow status."""
+
     DRAFT = "draft"
     PENDING = "pending_review"
     APPROVED = "approved"
@@ -45,6 +45,7 @@ class ContentStatus(PyEnum):
 
 class DifficultyLevel(PyEnum):
     """Difficulty level for educational content."""
+
     BEGINNER = "beginner"
     INTERMEDIATE = "intermediate"
     ADVANCED = "advanced"
@@ -53,6 +54,7 @@ class DifficultyLevel(PyEnum):
 
 class ContentType(PyEnum):
     """Type of educational content."""
+
     LESSON = "lesson"
     TUTORIAL = "tutorial"
     EXERCISE = "exercise"
@@ -72,6 +74,7 @@ class EducationalContent(TenantBaseModel):
     - Metadata storage (JSONB)
     - Status workflow
     """
+
     __tablename__ = "educational_content"
 
     # Basic Information
@@ -326,6 +329,7 @@ class ContentAttachment(TenantBaseModel):
 
     Supports images, documents, videos, etc.
     """
+
     __tablename__ = "content_attachments"
 
     # Foreign key to content
@@ -403,6 +407,7 @@ class ContentComment(TenantBaseModel):
 
     Supports threaded discussions.
     """
+
     __tablename__ = "content_comments"
 
     # Foreign keys
@@ -478,6 +483,7 @@ class ContentRating(TenantBaseModel):
 
     One rating per user per content item.
     """
+
     __tablename__ = "content_ratings"
 
     # Foreign keys

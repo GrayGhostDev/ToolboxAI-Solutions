@@ -5,26 +5,29 @@ Provides high-level business logic for multi-tenant operations including
 organization management, user provisioning, and subscription handling.
 """
 
+import hashlib
 import logging
 import secrets
-import hashlib
-from typing import Optional, List, Dict, Any, Tuple
-from uuid import UUID
 from datetime import datetime, timedelta
+from typing import Any, Dict, Optional, Tuple
+from uuid import UUID
 
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import select, func
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models.tenant import (
-    Organization, OrganizationInvitation, OrganizationUsageLog,
-    OrganizationStatus, SubscriptionTier
-)
 from database.models.models import User, UserRole
-from database.repositories.tenant_repository import (
-    OrganizationRepository, TenantRepository, TenantContextManager
+from database.models.tenant import (
+    Organization,
+    OrganizationInvitation,
+    OrganizationStatus,
+    OrganizationUsageLog,
+    SubscriptionTier,
 )
-
+from database.repositories.tenant_repository import (
+    OrganizationRepository,
+    TenantContextManager,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +47,7 @@ class TenantService:
         admin_first_name: str = "",
         admin_last_name: str = "",
         organization_type: str = "education",
-        subscription_tier: SubscriptionTier = SubscriptionTier.FREE
+        subscription_tier: SubscriptionTier = SubscriptionTier.FREE,
     ) -> Tuple[Organization, User]:
         """
         Create a new organization with an admin user.
@@ -74,7 +77,7 @@ class TenantService:
                 status=OrganizationStatus.TRIAL,
                 email=admin_email,
                 trial_started_at=func.now(),
-                trial_expires_at=func.now() + timedelta(days=30)
+                trial_expires_at=func.now() + timedelta(days=30),
             )
 
             # Create admin user within the organization context
@@ -93,11 +96,11 @@ class TenantService:
                     last_name=admin_last_name,
                     display_name=f"{admin_first_name} {admin_last_name}".strip(),
                     is_active=True,
-                    is_verified=True
+                    is_verified=True,
                 )
 
             # Update organization usage
-            await self.org_repo.update_usage(org.id, 'users', 1)
+            await self.org_repo.update_usage(org.id, "users", 1)
 
             await self.session.commit()
 
@@ -116,7 +119,7 @@ class TenantService:
         role: UserRole,
         invited_by_id: UUID,
         invitation_message: Optional[str] = None,
-        expires_in_days: int = 7
+        expires_in_days: int = 7,
     ) -> OrganizationInvitation:
         """
         Invite a user to join an organization.
@@ -133,7 +136,7 @@ class TenantService:
             OrganizationInvitation instance
         """
         # Check if organization has capacity for new users
-        if not await self.org_repo.check_limits(organization_id, 'users'):
+        if not await self.org_repo.check_limits(organization_id, "users"):
             raise ValueError("Organization has reached maximum user limit")
 
         # Generate secure invitation token
@@ -146,7 +149,7 @@ class TenantService:
             invited_by_id=invited_by_id,
             invitation_token=invitation_token,
             expires_at=func.now() + timedelta(days=expires_in_days),
-            invitation_message=invitation_message
+            invitation_message=invitation_message,
         )
 
         self.session.add(invitation)
@@ -166,7 +169,7 @@ class TenantService:
         user_id: UUID,
         password: str,
         first_name: str = "",
-        last_name: str = ""
+        last_name: str = "",
     ) -> Tuple[User, Organization]:
         """
         Accept an organization invitation and create user account.
@@ -200,7 +203,7 @@ class TenantService:
             raise ValueError("Organization not found")
 
         # Check if organization can accept new users
-        if not await self.org_repo.check_limits(org.id, 'users'):
+        if not await self.org_repo.check_limits(org.id, "users"):
             raise ValueError("Organization has reached maximum user limit")
 
         try:
@@ -211,16 +214,13 @@ class TenantService:
                 # Check if user already exists with this email
                 existing_users = await user_repo.get_all()
                 existing_user = next(
-                    (u for u in existing_users if u.email == invitation.email),
-                    None
+                    (u for u in existing_users if u.email == invitation.email), None
                 )
 
                 if existing_user:
                     # User already exists, just update role if needed
                     user = await user_repo.update(
-                        existing_user.id,
-                        role=UserRole(invitation.role),
-                        is_active=True
+                        existing_user.id, role=UserRole(invitation.role), is_active=True
                     )
                 else:
                     # Create new user
@@ -235,11 +235,11 @@ class TenantService:
                         last_name=last_name,
                         display_name=f"{first_name} {last_name}".strip(),
                         is_active=True,
-                        is_verified=True
+                        is_verified=True,
                     )
 
                     # Update organization usage
-                    await self.org_repo.update_usage(org.id, 'users', 1)
+                    await self.org_repo.update_usage(org.id, "users", 1)
 
             # Mark invitation as accepted
             invitation.accepted_at = func.now()
@@ -259,7 +259,7 @@ class TenantService:
         self,
         organization_id: UUID,
         new_tier: SubscriptionTier,
-        updated_by_id: Optional[UUID] = None
+        updated_by_id: Optional[UUID] = None,
     ) -> Organization:
         """
         Upgrade organization subscription tier.
@@ -279,40 +279,40 @@ class TenantService:
         # Define tier limits
         tier_limits = {
             SubscriptionTier.FREE: {
-                'max_users': 5,
-                'max_classes': 2,
-                'max_storage_gb': 0.5,
-                'max_api_calls_per_month': 500,
-                'max_roblox_sessions': 2
+                "max_users": 5,
+                "max_classes": 2,
+                "max_storage_gb": 0.5,
+                "max_api_calls_per_month": 500,
+                "max_roblox_sessions": 2,
             },
             SubscriptionTier.BASIC: {
-                'max_users': 25,
-                'max_classes': 10,
-                'max_storage_gb': 5.0,
-                'max_api_calls_per_month': 5000,
-                'max_roblox_sessions': 10
+                "max_users": 25,
+                "max_classes": 10,
+                "max_storage_gb": 5.0,
+                "max_api_calls_per_month": 5000,
+                "max_roblox_sessions": 10,
             },
             SubscriptionTier.PROFESSIONAL: {
-                'max_users': 100,
-                'max_classes': 50,
-                'max_storage_gb': 25.0,
-                'max_api_calls_per_month': 25000,
-                'max_roblox_sessions': 25
+                "max_users": 100,
+                "max_classes": 50,
+                "max_storage_gb": 25.0,
+                "max_api_calls_per_month": 25000,
+                "max_roblox_sessions": 25,
             },
             SubscriptionTier.ENTERPRISE: {
-                'max_users': 1000,
-                'max_classes': 500,
-                'max_storage_gb': 100.0,
-                'max_api_calls_per_month': 100000,
-                'max_roblox_sessions': 100
+                "max_users": 1000,
+                "max_classes": 500,
+                "max_storage_gb": 100.0,
+                "max_api_calls_per_month": 100000,
+                "max_roblox_sessions": 100,
             },
             SubscriptionTier.EDUCATION: {
-                'max_users': 500,
-                'max_classes': 100,
-                'max_storage_gb': 50.0,
-                'max_api_calls_per_month': 50000,
-                'max_roblox_sessions': 50
-            }
+                "max_users": 500,
+                "max_classes": 100,
+                "max_storage_gb": 50.0,
+                "max_api_calls_per_month": 50000,
+                "max_roblox_sessions": 50,
+            },
         }
 
         limits = tier_limits.get(new_tier, tier_limits[SubscriptionTier.FREE])
@@ -362,20 +362,20 @@ class TenantService:
                 limits_exceeded.append(metric)
 
         return {
-            'organization_id': organization_id,
-            'usage_percentage': usage_percentage,
-            'warnings': warnings,
-            'limits_exceeded': limits_exceeded,
-            'subscription_tier': org.subscription_tier.value,
-            'subscription_active': org.is_subscription_active,
-            'trial_days_remaining': org.trial_days_remaining
+            "organization_id": organization_id,
+            "usage_percentage": usage_percentage,
+            "warnings": warnings,
+            "limits_exceeded": limits_exceeded,
+            "subscription_tier": org.subscription_tier.value,
+            "subscription_active": org.is_subscription_active,
+            "trial_days_remaining": org.trial_days_remaining,
         }
 
     async def generate_usage_report(
         self,
         organization_id: UUID,
         start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None
+        end_date: Optional[datetime] = None,
     ) -> Dict[str, Any]:
         """
         Generate usage report for an organization.
@@ -394,13 +394,17 @@ class TenantService:
             end_date = datetime.utcnow()
 
         # Get usage logs for the period
-        query = select(OrganizationUsageLog).where(
-            and_(
-                OrganizationUsageLog.organization_id == organization_id,
-                OrganizationUsageLog.log_date >= start_date,
-                OrganizationUsageLog.log_date <= end_date
+        query = (
+            select(OrganizationUsageLog)
+            .where(
+                and_(
+                    OrganizationUsageLog.organization_id == organization_id,
+                    OrganizationUsageLog.log_date >= start_date,
+                    OrganizationUsageLog.log_date <= end_date,
+                )
             )
-        ).order_by(OrganizationUsageLog.log_date)
+            .order_by(OrganizationUsageLog.log_date)
+        )
 
         result = await self.session.execute(query)
         usage_logs = result.scalars().all()
@@ -410,37 +414,37 @@ class TenantService:
         current_stats = await self.org_repo.get_usage_stats(organization_id)
 
         return {
-            'organization_id': organization_id,
-            'organization_name': org.name if org else 'Unknown',
-            'report_period': {
-                'start_date': start_date.isoformat(),
-                'end_date': end_date.isoformat()
+            "organization_id": organization_id,
+            "organization_name": org.name if org else "Unknown",
+            "report_period": {
+                "start_date": start_date.isoformat(),
+                "end_date": end_date.isoformat(),
             },
-            'current_stats': current_stats,
-            'historical_data': [
+            "current_stats": current_stats,
+            "historical_data": [
                 {
-                    'date': log.log_date.isoformat(),
-                    'users_count': log.users_count,
-                    'classes_count': log.classes_count,
-                    'storage_gb': log.storage_gb,
-                    'api_calls_count': log.api_calls_count,
-                    'roblox_sessions_count': log.roblox_sessions_count,
-                    'active_users_count': log.active_users_count
+                    "date": log.log_date.isoformat(),
+                    "users_count": log.users_count,
+                    "classes_count": log.classes_count,
+                    "storage_gb": log.storage_gb,
+                    "api_calls_count": log.api_calls_count,
+                    "roblox_sessions_count": log.roblox_sessions_count,
+                    "active_users_count": log.active_users_count,
                 }
                 for log in usage_logs
             ],
-            'summary': {
-                'total_logs': len(usage_logs),
-                'peak_users': max((log.users_count for log in usage_logs), default=0),
-                'peak_storage': max((log.storage_gb for log in usage_logs), default=0),
-                'total_api_calls': sum(log.api_calls_count for log in usage_logs)
-            }
+            "summary": {
+                "total_logs": len(usage_logs),
+                "peak_users": max((log.users_count for log in usage_logs), default=0),
+                "peak_storage": max((log.storage_gb for log in usage_logs), default=0),
+                "total_api_calls": sum(log.api_calls_count for log in usage_logs),
+            },
         }
 
     async def _generate_organization_slug(self, name: str) -> str:
         """Generate a unique slug for an organization"""
-        base_slug = name.lower().replace(' ', '-').replace('_', '-')
-        base_slug = ''.join(c for c in base_slug if c.isalnum() or c == '-')
+        base_slug = name.lower().replace(" ", "-").replace("_", "-")
+        base_slug = "".join(c for c in base_slug if c.isalnum() or c == "-")
 
         # Try the base slug first
         if not await self._slug_exists(base_slug):
@@ -467,21 +471,19 @@ class TenantContextService:
     async def set_tenant_context(session: AsyncSession, organization_id: UUID):
         """Set the tenant context for the current database session"""
         await session.execute(
-            select(func.set_config('app.current_organization_id', str(organization_id), True))
+            select(func.set_config("app.current_organization_id", str(organization_id), True))
         )
 
     @staticmethod
     async def clear_tenant_context(session: AsyncSession):
         """Clear the tenant context for the current database session"""
-        await session.execute(
-            select(func.set_config('app.current_organization_id', '', True))
-        )
+        await session.execute(select(func.set_config("app.current_organization_id", "", True)))
 
     @staticmethod
     async def get_current_tenant(session: AsyncSession) -> Optional[UUID]:
         """Get the current tenant from the database session"""
         result = await session.execute(
-            select(func.current_setting('app.current_organization_id', True))
+            select(func.current_setting("app.current_organization_id", True))
         )
         tenant_id_str = result.scalar()
 

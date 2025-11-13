@@ -3,10 +3,8 @@ import sys
 from logging.config import fileConfig
 from pathlib import Path
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
 from alembic import context
+from sqlalchemy import engine_from_config, pool
 
 # Add the project root to Python path
 project_root = Path(__file__).parent.parent
@@ -15,6 +13,7 @@ sys.path.insert(0, str(project_root))
 # Load environment variables
 try:
     from dotenv import load_dotenv
+
     load_dotenv(project_root / ".env")
     load_dotenv(project_root / "apps" / "backend" / ".env", override=True)
 except ImportError:
@@ -32,6 +31,7 @@ if config.config_file_name is not None:
 # Import our database models for autogenerate support
 try:
     from database.models import Base
+
     target_metadata = Base.metadata
 except ImportError as e:
     print(f"Warning: Could not import database models: {e}")
@@ -91,9 +91,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

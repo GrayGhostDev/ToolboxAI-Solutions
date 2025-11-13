@@ -10,26 +10,24 @@ Features:
 - OpenAPI documentation
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from fastapi.responses import JSONResponse
-from typing import Optional, Dict, Any
-from datetime import datetime, timezone
 import logging
+from datetime import datetime, timezone
+from typing import Any
 
-from pydantic import BaseModel, Field, ConfigDict
-
-from apps.backend.core.cache import RedisCache
-from apps.backend.core.rate_limiter import RateLimiter, RateLimitConfig
-from apps.backend.core.config import settings
-from apps.backend.services.dashboard_metrics_service import (
-    DashboardMetricsService,
-    DashboardMetricsResponse,
-    ActivityMetrics,
-)
-from apps.backend.api.auth.auth import get_current_user
-from apps.backend.models.schemas import User
-from apps.backend.core.dependencies import get_db_session
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from apps.backend.api.auth.auth import get_current_user
+from apps.backend.core.cache import RedisCache
+from apps.backend.core.dependencies import get_db_session
+from apps.backend.core.rate_limiter import RateLimitConfig, RateLimiter
+from apps.backend.models.schemas import User
+from apps.backend.services.dashboard_metrics_service import (
+    ActivityMetrics,
+    DashboardMetricsResponse,
+    DashboardMetricsService,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +70,7 @@ class StatisticsResponse(BaseModel):
     model_config = ConfigDict()
 
     period: str = Field(..., description="Time period: 24h, 7d, 30d")
-    statistics: Dict[str, Any] = Field(..., description="Statistical data")
+    statistics: dict[str, Any] = Field(..., description="Statistical data")
     generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -87,6 +85,7 @@ async def get_metrics_service(request: Request) -> DashboardMetricsService:
     if not hasattr(request.app.state, "redis_cache"):
         # Initialize cache if not exists
         from apps.backend.core.cache import RedisConnectionManager
+
         manager = RedisConnectionManager()
         await manager.initialize()
         cache = RedisCache(manager.client)
@@ -102,6 +101,7 @@ async def get_rate_limiter(request: Request) -> RateLimiter:
     # Get Redis client from app state
     if not hasattr(request.app.state, "redis_client"):
         from apps.backend.core.cache import RedisConnectionManager
+
         manager = RedisConnectionManager()
         await manager.initialize()
         request.app.state.redis_client = manager.client
@@ -434,8 +434,8 @@ async def export_metrics(
             )
 
         # Generate export (placeholder - would actually generate file)
-        from datetime import timedelta
         import uuid
+        from datetime import timedelta
 
         export_id = str(uuid.uuid4())
         download_url = f"/api/v1/metrics/download/{export_id}"
@@ -481,7 +481,7 @@ async def invalidate_metrics_cache(
     request: Request,
     current_user: User = Depends(get_current_user),
     metrics_service: DashboardMetricsService = Depends(get_metrics_service),
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Invalidate metrics cache (admin only)."""
     try:
         # Check if user is admin

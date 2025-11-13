@@ -5,22 +5,19 @@ Example implementations showing how to integrate multi-tenancy
 with FastAPI endpoints and middleware.
 """
 
-from typing import Optional, Dict, Any, List
-from uuid import UUID
 import logging
-from datetime import datetime
+from typing import Dict, List, Optional
+from uuid import UUID
 
 from fastapi import Depends, HTTPException, Request, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import sessionmaker
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.services.tenant_service import TenantService, TenantContextService
-from database.repositories.tenant_repository import TenantContextManager
-from database.models.tenant import Organization, SubscriptionTier, OrganizationStatus
 from database.models.models import User, UserRole
-
+from database.models.tenant import Organization, OrganizationStatus, SubscriptionTier
+from database.repositories.tenant_repository import TenantContextManager
+from database.services.tenant_service import TenantService
 
 logger = logging.getLogger(__name__)
 security = HTTPBearer()
@@ -29,7 +26,7 @@ security = HTTPBearer()
 # Pydantic models for API requests/responses
 class OrganizationCreate(BaseModel):
     name: str = Field(..., min_length=2, max_length=200)
-    admin_email: str = Field(..., regex=r'^[^@]+@[^@]+\.[^@]+$')
+    admin_email: str = Field(..., regex=r"^[^@]+@[^@]+\.[^@]+$")
     admin_password: str = Field(..., min_length=8)
     admin_first_name: str = Field(default="", max_length=100)
     admin_last_name: str = Field(default="", max_length=100)
@@ -53,7 +50,7 @@ class OrganizationResponse(BaseModel):
 
 
 class UserInvite(BaseModel):
-    email: str = Field(..., regex=r'^[^@]+@[^@]+\.[^@]+$')
+    email: str = Field(..., regex=r"^[^@]+@[^@]+\.[^@]+$")
     role: UserRole
     invitation_message: Optional[str] = Field(default=None, max_length=500)
 
@@ -77,7 +74,7 @@ async def get_db_session() -> AsyncSession:
 # Dependency to get current user from JWT token
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    session: AsyncSession = Depends(get_db_session)
+    session: AsyncSession = Depends(get_db_session),
 ) -> User:
     """
     Extract current user from JWT token.
@@ -95,25 +92,20 @@ async def get_current_user(
     # return user
 
     raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Not implemented - add JWT validation"
+        status_code=status.HTTP_401_UNAUTHORIZED, detail="Not implemented - add JWT validation"
     )
 
 
 # Dependency to get current organization from user context
 async def get_current_organization(
-    user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_db_session)
+    user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)
 ) -> Organization:
     """Get current organization from user context"""
     tenant_service = TenantService(session)
     org = await tenant_service.org_repo.get_by_id(user.organization_id)
 
     if not org:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Organization not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
 
     return org
 
@@ -168,10 +160,7 @@ class TenantContextMiddleware:
 def require_admin(user: User = Depends(get_current_user)):
     """Require user to be admin"""
     if user.role != UserRole.ADMIN:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
     return user
 
 
@@ -179,8 +168,7 @@ def require_teacher_or_admin(user: User = Depends(get_current_user)):
     """Require user to be teacher or admin"""
     if user.role not in [UserRole.TEACHER, UserRole.ADMIN]:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Teacher or admin access required"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Teacher or admin access required"
         )
     return user
 
@@ -191,8 +179,7 @@ class TenantAPI:
 
     @staticmethod
     async def create_organization(
-        org_data: OrganizationCreate,
-        session: AsyncSession = Depends(get_db_session)
+        org_data: OrganizationCreate, session: AsyncSession = Depends(get_db_session)
     ) -> OrganizationResponse:
         """Create a new organization with admin user"""
         tenant_service = TenantService(session)
@@ -205,7 +192,7 @@ class TenantAPI:
                 admin_first_name=org_data.admin_first_name,
                 admin_last_name=org_data.admin_last_name,
                 organization_type=org_data.organization_type,
-                subscription_tier=org_data.subscription_tier
+                subscription_tier=org_data.subscription_tier,
             )
 
             return OrganizationResponse(
@@ -217,20 +204,17 @@ class TenantAPI:
                 current_users=org.current_users,
                 max_users=org.max_users,
                 trial_days_remaining=org.trial_days_remaining,
-                is_subscription_active=org.is_subscription_active
+                is_subscription_active=org.is_subscription_active,
             )
 
         except Exception as e:
             logger.error(f"Failed to create organization: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=str(e)
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
     @staticmethod
     async def get_organization_info(
         org: Organization = Depends(get_current_organization),
-        user: User = Depends(get_current_user)
+        user: User = Depends(get_current_user),
     ) -> OrganizationResponse:
         """Get current organization information"""
         return OrganizationResponse(
@@ -242,7 +226,7 @@ class TenantAPI:
             current_users=org.current_users,
             max_users=org.max_users,
             trial_days_remaining=org.trial_days_remaining,
-            is_subscription_active=org.is_subscription_active
+            is_subscription_active=org.is_subscription_active,
         )
 
     @staticmethod
@@ -250,7 +234,7 @@ class TenantAPI:
         invite_data: UserInvite,
         org: Organization = Depends(get_current_organization),
         user: User = Depends(require_admin),
-        session: AsyncSession = Depends(get_db_session)
+        session: AsyncSession = Depends(get_db_session),
     ) -> Dict[str, str]:
         """Invite a user to the organization"""
         tenant_service = TenantService(session)
@@ -261,27 +245,24 @@ class TenantAPI:
                 email=invite_data.email,
                 role=invite_data.role,
                 invited_by_id=user.id,
-                invitation_message=invite_data.invitation_message
+                invitation_message=invite_data.invitation_message,
             )
 
             return {
                 "message": f"Invitation sent to {invite_data.email}",
                 "invitation_token": invitation.invitation_token,
-                "expires_at": invitation.expires_at.isoformat()
+                "expires_at": invitation.expires_at.isoformat(),
             }
 
         except Exception as e:
             logger.error(f"Failed to send invitation: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=str(e)
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
     @staticmethod
     async def get_usage_stats(
         org: Organization = Depends(get_current_organization),
         user: User = Depends(require_admin),
-        session: AsyncSession = Depends(get_db_session)
+        session: AsyncSession = Depends(get_db_session),
     ) -> UsageStats:
         """Get organization usage statistics"""
         tenant_service = TenantService(session)
@@ -294,7 +275,7 @@ class TenantAPI:
             logger.error(f"Failed to get usage stats: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to retrieve usage statistics"
+                detail="Failed to retrieve usage statistics",
             )
 
     @staticmethod
@@ -302,16 +283,14 @@ class TenantAPI:
         new_tier: SubscriptionTier,
         org: Organization = Depends(get_current_organization),
         user: User = Depends(require_admin),
-        session: AsyncSession = Depends(get_db_session)
+        session: AsyncSession = Depends(get_db_session),
     ) -> OrganizationResponse:
         """Upgrade organization subscription"""
         tenant_service = TenantService(session)
 
         try:
             updated_org = await tenant_service.upgrade_subscription(
-                organization_id=org.id,
-                new_tier=new_tier,
-                updated_by_id=user.id
+                organization_id=org.id, new_tier=new_tier, updated_by_id=user.id
             )
 
             await session.commit()
@@ -325,21 +304,17 @@ class TenantAPI:
                 current_users=updated_org.current_users,
                 max_users=updated_org.max_users,
                 trial_days_remaining=updated_org.trial_days_remaining,
-                is_subscription_active=updated_org.is_subscription_active
+                is_subscription_active=updated_org.is_subscription_active,
             )
 
         except Exception as e:
             logger.error(f"Failed to upgrade subscription: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=str(e)
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 # Example of how to use tenant context in a repository operation
 async def example_tenant_aware_operation(
-    organization_id: UUID,
-    session: AsyncSession
+    organization_id: UUID, session: AsyncSession
 ) -> List[User]:
     """Example of performing tenant-aware database operations"""
 
@@ -368,15 +343,14 @@ def register_tenant_routes(app):
 
     @app.post("/organizations/", response_model=OrganizationResponse)
     async def create_organization_endpoint(
-        org_data: OrganizationCreate,
-        session: AsyncSession = Depends(get_db_session)
+        org_data: OrganizationCreate, session: AsyncSession = Depends(get_db_session)
     ):
         return await TenantAPI.create_organization(org_data, session)
 
     @app.get("/organizations/me", response_model=OrganizationResponse)
     async def get_my_organization(
         org: Organization = Depends(get_current_organization),
-        user: User = Depends(get_current_user)
+        user: User = Depends(get_current_user),
     ):
         return await TenantAPI.get_organization_info(org, user)
 
@@ -385,7 +359,7 @@ def register_tenant_routes(app):
         invite_data: UserInvite,
         org: Organization = Depends(get_current_organization),
         user: User = Depends(require_admin),
-        session: AsyncSession = Depends(get_db_session)
+        session: AsyncSession = Depends(get_db_session),
     ):
         return await TenantAPI.invite_user(invite_data, org, user, session)
 
@@ -393,7 +367,7 @@ def register_tenant_routes(app):
     async def get_usage_stats_endpoint(
         org: Organization = Depends(get_current_organization),
         user: User = Depends(require_admin),
-        session: AsyncSession = Depends(get_db_session)
+        session: AsyncSession = Depends(get_db_session),
     ):
         return await TenantAPI.get_usage_stats(org, user, session)
 
@@ -402,7 +376,7 @@ def register_tenant_routes(app):
         new_tier: SubscriptionTier,
         org: Organization = Depends(get_current_organization),
         user: User = Depends(require_admin),
-        session: AsyncSession = Depends(get_db_session)
+        session: AsyncSession = Depends(get_db_session),
     ):
         return await TenantAPI.upgrade_subscription(new_tier, org, user, session)
 

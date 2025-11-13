@@ -1,25 +1,27 @@
 import pytest_asyncio
+
 """
 Comprehensive test suite for GPT API migration
 September 2025 - Phase 2 Implementation
 """
 
-import pytest
 import asyncio
 import json
 import time
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
+
 import httpx
+import pytest
 from freezegun import freeze_time
 
 from core.api.gpt_migration_client import (
+    MODEL_CAPABILITIES,
     GPTMigrationClient,
     GPTModel,
     MigrationConfig,
-    ResponseCompatibilityLayer,
     PerformanceMonitor,
-    MODEL_CAPABILITIES
+    ResponseCompatibilityLayer,
 )
 
 

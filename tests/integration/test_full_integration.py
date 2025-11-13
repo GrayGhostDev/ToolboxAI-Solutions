@@ -1,7 +1,8 @@
-import pytest_asyncio
+from unittest.mock import Mock, patch
 
 import pytest
-from unittest.mock import Mock, patch
+import pytest_asyncio
+
 
 @pytest.fixture
 def mock_db_connection():
@@ -22,6 +23,7 @@ Tests all components working together in a realistic scenario
 import asyncio
 import os
 
+
 def make_json_serializable(obj):
     """Convert non-serializable objects to serializable format."""
     if hasattr(obj, '__dict__'):
@@ -33,18 +35,20 @@ def make_json_serializable(obj):
     else:
         return str(obj)
 
+import concurrent.futures
 import json
-import time
-from typing import Dict, Any, List
-import aiohttp
-from tests.fixtures.pusher_mocks import MockPusherService
 import logging
+import time
+from datetime import datetime, timezone
+from typing import Any, Dict, List
+
+import aiohttp
 import psycopg2
+import pytest
 import redis
 import socketio
-import concurrent.futures
-from datetime import datetime, timezone
-import pytest
+
+from tests.fixtures.pusher_mocks import MockPusherService
 
 # Skip all tests in this module as they require external services
 pytestmark = pytest.mark.skipif(

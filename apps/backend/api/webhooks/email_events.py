@@ -8,7 +8,7 @@ import hmac
 import json
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from fastapi.responses import JSONResponse
@@ -24,22 +24,23 @@ router = APIRouter(prefix="/webhooks/email", tags=["Email Webhooks"])
 
 class EmailEvent(BaseModel):
     """SendGrid event model"""
+
     email: EmailStr
     event: str
     timestamp: int
-    sg_message_id: Optional[str] = Field(None, alias="sg_message_id")
-    sg_event_id: Optional[str] = Field(None, alias="sg_event_id")
-    category: Optional[List[str]] = None
-    reason: Optional[str] = None
-    status: Optional[str] = None
-    attempt: Optional[int] = None
-    response: Optional[str] = None
-    tls: Optional[int] = None
-    ip: Optional[str] = None
-    useragent: Optional[str] = None
-    url: Optional[str] = None
-    url_offset: Optional[Dict[str, int]] = None
-    metadata: Optional[Dict[str, Any]] = None
+    sg_message_id: str | None = Field(None, alias="sg_message_id")
+    sg_event_id: str | None = Field(None, alias="sg_event_id")
+    category: list[str] | None = None
+    reason: str | None = None
+    status: str | None = None
+    attempt: int | None = None
+    response: str | None = None
+    tls: int | None = None
+    ip: str | None = None
+    useragent: str | None = None
+    url: str | None = None
+    url_offset: dict[str, int] | None = None
+    metadata: dict[str, Any] | None = None
 
     class Config:
         populate_by_name = True
@@ -49,12 +50,7 @@ class SendGridWebhookValidator:
     """Validates SendGrid webhook signatures"""
 
     @staticmethod
-    def validate_signature(
-        body: bytes,
-        signature: str,
-        timestamp: str,
-        webhook_key: str
-    ) -> bool:
+    def validate_signature(body: bytes, signature: str, timestamp: str, webhook_key: str) -> bool:
         """
         Validate SendGrid webhook signature
 
@@ -73,9 +69,7 @@ class SendGridWebhookValidator:
 
             # Generate expected signature
             expected_signature = hmac.new(
-                webhook_key.encode(),
-                signed_content,
-                hashlib.sha256
+                webhook_key.encode(), signed_content, hashlib.sha256
             ).hexdigest()
 
             # Compare signatures
@@ -92,8 +86,8 @@ validator = SendGridWebhookValidator()
 
 async def verify_sendgrid_webhook(
     request: Request,
-    x_twilio_email_event_webhook_signature: Optional[str] = Header(None),
-    x_twilio_email_event_webhook_timestamp: Optional[str] = Header(None)
+    x_twilio_email_event_webhook_signature: str | None = Header(None),
+    x_twilio_email_event_webhook_timestamp: str | None = Header(None),
 ) -> bytes:
     """
     Dependency to verify SendGrid webhook signature
@@ -122,29 +116,25 @@ async def verify_sendgrid_webhook(
     if not x_twilio_email_event_webhook_signature or not x_twilio_email_event_webhook_timestamp:
         logger.error("Missing SendGrid webhook headers")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing webhook signature headers"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing webhook signature headers"
         )
 
     if not validator.validate_signature(
         body,
         x_twilio_email_event_webhook_signature,
         x_twilio_email_event_webhook_timestamp,
-        webhook_key
+        webhook_key,
     ):
         logger.error("Invalid SendGrid webhook signature")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid webhook signature"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid webhook signature"
         )
 
     return body
 
 
 @router.post("/sendgrid", status_code=status.HTTP_200_OK)
-async def handle_sendgrid_events(
-    body: bytes = Depends(verify_sendgrid_webhook)
-):
+async def handle_sendgrid_events(body: bytes = Depends(verify_sendgrid_webhook)):
     """
     Handle SendGrid webhook events
 
@@ -176,20 +166,16 @@ async def handle_sendgrid_events(
 
         return JSONResponse(
             content={"status": "success", "events_processed": len(events)},
-            status_code=status.HTTP_200_OK
+            status_code=status.HTTP_200_OK,
         )
 
     except json.JSONDecodeError as e:
         logger.error(f"Invalid JSON in webhook: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid JSON payload"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid JSON payload")
     except Exception as e:
         logger.error(f"Error handling SendGrid webhook: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error"
         )
 
 
@@ -258,8 +244,8 @@ async def handle_bounce_event(event: EmailEvent):
             "reason": event.reason,
             "status": event.status,
             "response": event.response,
-            "timestamp": event.timestamp
-        }
+            "timestamp": event.timestamp,
+        },
     )
 
     logger.warning(f"Bounce ({bounce_type}): {event.email} - {event.reason}")
@@ -271,10 +257,7 @@ async def handle_dropped_event(event: EmailEvent):
     await email_queue.handle_bounce(
         email_address=event.email,
         bounce_type="hard",
-        details={
-            "reason": event.reason or "dropped",
-            "timestamp": event.timestamp
-        }
+        details={"reason": event.reason or "dropped", "timestamp": event.timestamp},
     )
 
     logger.warning(f"Dropped: {event.email} - {event.reason}")
@@ -285,11 +268,7 @@ async def handle_spam_report_event(event: EmailEvent):
     await email_queue.handle_complaint(
         email_address=event.email,
         complaint_type="spam",
-        details={
-            "timestamp": event.timestamp,
-            "ip": event.ip,
-            "useragent": event.useragent
-        }
+        details={"timestamp": event.timestamp, "ip": event.ip, "useragent": event.useragent},
     )
 
     logger.warning(f"Spam report: {event.email}")
@@ -298,10 +277,7 @@ async def handle_spam_report_event(event: EmailEvent):
 async def handle_unsubscribe_event(event: EmailEvent):
     """Handle unsubscribe event"""
     # Add to suppression list
-    await email_queue._add_to_suppression_list(
-        email_address=event.email,
-        reason="unsubscribe"
-    )
+    await email_queue._add_to_suppression_list(email_address=event.email, reason="unsubscribe")
 
     # Store unsubscribe record
     # You may want to update user preferences in database here
@@ -313,8 +289,7 @@ async def handle_deferred_event(event: EmailEvent):
     """Handle deferred delivery event"""
     # Log deferred attempts
     logger.warning(
-        f"Deferred delivery: {event.email} - "
-        f"Attempt {event.attempt} - {event.response}"
+        f"Deferred delivery: {event.email} - " f"Attempt {event.attempt} - {event.response}"
     )
 
     # If too many deferrals, consider as soft bounce
@@ -326,8 +301,8 @@ async def handle_deferred_event(event: EmailEvent):
                 "reason": "excessive_deferrals",
                 "attempts": event.attempt,
                 "response": event.response,
-                "timestamp": event.timestamp
-            }
+                "timestamp": event.timestamp,
+            },
         )
 
 
@@ -380,13 +355,15 @@ async def store_event_for_analytics(event: EmailEvent):
             event_key = f"email_events:{event.email}:{event.event}"
             await email_queue.redis_client.lpush(
                 event_key,
-                json.dumps({
-                    "timestamp": event.timestamp,
-                    "sg_message_id": event.sg_message_id,
-                    "sg_event_id": event.sg_event_id,
-                    "category": event.category,
-                    "metadata": event.metadata
-                })
+                json.dumps(
+                    {
+                        "timestamp": event.timestamp,
+                        "sg_message_id": event.sg_message_id,
+                        "sg_event_id": event.sg_event_id,
+                        "category": event.category,
+                        "metadata": event.metadata,
+                    }
+                ),
             )
             # Expire after 30 days
             await email_queue.redis_client.expire(event_key, 86400 * 30)
@@ -407,11 +384,7 @@ async def get_email_stats(email: EmailStr):
         Email statistics including bounces, complaints, opens, clicks
     """
     try:
-        stats = {
-            "email": email,
-            "suppressed": await email_queue.is_suppressed(email),
-            "events": {}
-        }
+        stats = {"email": email, "suppressed": await email_queue.is_suppressed(email), "events": {}}
 
         if email_queue.redis_client:
             # Get bounce information
@@ -431,9 +404,7 @@ async def get_email_stats(email: EmailStr):
                 event_key = f"email_events:{email}:{event_type}"
                 events = await email_queue.redis_client.lrange(event_key, 0, 9)
                 if events:
-                    stats["events"][event_type] = [
-                        json.loads(e) for e in events
-                    ]
+                    stats["events"][event_type] = [json.loads(e) for e in events]
 
         return JSONResponse(content=stats)
 
@@ -441,7 +412,7 @@ async def get_email_stats(email: EmailStr):
         logger.error(f"Error getting email stats: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve email statistics"
+            detail="Failed to retrieve email statistics",
         )
 
 
@@ -459,7 +430,7 @@ async def test_webhook_endpoint():
             "timestamp": int(datetime.utcnow().timestamp()),
             "sg_message_id": "test-msg-001",
             "sg_event_id": "test-event-001",
-            "response": "250 OK"
+            "response": "250 OK",
         },
         {
             "email": "bounce@example.com",
@@ -468,8 +439,8 @@ async def test_webhook_endpoint():
             "sg_message_id": "test-msg-002",
             "sg_event_id": "test-event-002",
             "reason": "550 5.1.1 User unknown",
-            "status": "5.1.1"
-        }
+            "status": "5.1.1",
+        },
     ]
 
     for event_data in test_events:
@@ -480,6 +451,6 @@ async def test_webhook_endpoint():
         content={
             "status": "success",
             "message": "Test events processed",
-            "events": len(test_events)
+            "events": len(test_events),
         }
     )

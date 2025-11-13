@@ -9,26 +9,26 @@ Tests tenant administration functionality including:
 - Multi-tenant isolation
 """
 
-import pytest
-from datetime import datetime, timedelta, timezone
-from unittest.mock import Mock, AsyncMock, patch
+from datetime import datetime, timezone
+from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
+import pytest
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.api.v1.endpoints.tenant_admin import (
-    create_tenant,
-    list_tenants,
-    get_tenant,
-    update_tenant,
-    delete_tenant,
-    provision_tenant,
-    update_tenant_limits,
     TenantCreateRequest,
-    TenantUpdateRequest,
     TenantLimitsUpdateRequest,
     TenantProvisionRequest,
+    TenantUpdateRequest,
+    create_tenant,
+    delete_tenant,
+    get_tenant,
+    list_tenants,
+    provision_tenant,
+    update_tenant,
+    update_tenant_limits,
 )
 from database.models.tenant import Organization, OrganizationStatus, SubscriptionTier
 
@@ -92,17 +92,17 @@ class TestTenantCreation:
             slug="new-org",
             email="new@org.com",
             subscription_tier=SubscriptionTier.BASIC,
-            trial_days=14
+            trial_days=14,
         )
-        
+
         # Mock no existing tenant
         mock_result = AsyncMock()
         mock_result.scalar_one_or_none = AsyncMock(return_value=None)
         mock_session.execute.return_value = mock_result
-        
+
         # Act
         result = await create_tenant(request, mock_session, mock_admin_user)
-        
+
         # Assert
         assert result.name == "New Organization"
         assert result.slug == "new-org"
@@ -114,21 +114,19 @@ class TestTenantCreation:
         """Test tenant creation with duplicate slug."""
         # Arrange
         request = TenantCreateRequest(
-            name="New Organization",
-            slug="existing-slug",
-            email="new@org.com"
+            name="New Organization", slug="existing-slug", email="new@org.com"
         )
-        
+
         # Mock existing tenant
         existing_org = Mock()
         mock_result = AsyncMock()
         mock_result.scalar_one_or_none = AsyncMock(return_value=existing_org)
         mock_session.execute.return_value = mock_result
-        
+
         # Act & Assert
         with pytest.raises(HTTPException) as exc_info:
             await create_tenant(request, mock_session, mock_admin_user)
-        
+
         assert exc_info.value.status_code == status.HTTP_409_CONFLICT
         assert "already exists" in str(exc_info.value.detail)
 
@@ -137,19 +135,16 @@ class TestTenantCreation:
         """Test tenant creation with trial period."""
         # Arrange
         request = TenantCreateRequest(
-            name="Trial Organization",
-            slug="trial-org",
-            email="trial@org.com",
-            trial_days=30
+            name="Trial Organization", slug="trial-org", email="trial@org.com", trial_days=30
         )
-        
+
         mock_result = AsyncMock()
         mock_result.scalar_one_or_none = AsyncMock(return_value=None)
         mock_session.execute.return_value = mock_result
-        
+
         # Act
         result = await create_tenant(request, mock_session, mock_admin_user)
-        
+
         # Assert
         assert result.status == OrganizationStatus.TRIAL
         mock_session.commit.assert_called_once()
@@ -170,19 +165,19 @@ class TestTenantListing:
             org.is_active = True
             org.status = OrganizationStatus.ACTIVE
             org.subscription_tier = SubscriptionTier.BASIC
-        
+
         # Mock query results
         mock_count_result = AsyncMock()
         mock_count_result.scalar = AsyncMock(return_value=3)
-        
+
         mock_list_result = AsyncMock()
         mock_list_result.scalars = Mock(return_value=Mock(all=Mock(return_value=mock_orgs)))
-        
+
         mock_session.execute.side_effect = [mock_count_result, mock_list_result]
-        
+
         # Act
         result = await list_tenants(mock_session, page=1, page_size=10)
-        
+
         # Assert
         assert result.total == 3
         assert len(result.tenants) == 3
@@ -196,22 +191,22 @@ class TestTenantListing:
         mock_orgs[0].id = uuid4()
         mock_orgs[0].status = OrganizationStatus.TRIAL
         mock_orgs[0].subscription_tier = SubscriptionTier.PROFESSIONAL
-        
+
         mock_count_result = AsyncMock()
         mock_count_result.scalar = AsyncMock(return_value=1)
-        
+
         mock_list_result = AsyncMock()
         mock_list_result.scalars = Mock(return_value=Mock(all=Mock(return_value=mock_orgs)))
-        
+
         mock_session.execute.side_effect = [mock_count_result, mock_list_result]
-        
+
         # Act
         result = await list_tenants(
             mock_session,
             status_filter=OrganizationStatus.TRIAL,
-            tier_filter=SubscriptionTier.PROFESSIONAL
+            tier_filter=SubscriptionTier.PROFESSIONAL,
         )
-        
+
         # Assert
         assert result.total == 1
         assert result.tenants[0].status == OrganizationStatus.TRIAL
@@ -222,15 +217,15 @@ class TestTenantListing:
         # Arrange
         mock_count_result = AsyncMock()
         mock_count_result.scalar = AsyncMock(return_value=50)
-        
+
         mock_list_result = AsyncMock()
         mock_list_result.scalars = Mock(return_value=Mock(all=Mock(return_value=[])))
-        
+
         mock_session.execute.side_effect = [mock_count_result, mock_list_result]
-        
+
         # Act
         result = await list_tenants(mock_session, page=2, page_size=20)
-        
+
         # Assert
         assert result.page == 2
         assert result.page_size == 20
@@ -247,10 +242,10 @@ class TestTenantRetrieval:
         mock_result = AsyncMock()
         mock_result.scalar_one_or_none = AsyncMock(return_value=sample_organization)
         mock_session.execute.return_value = mock_result
-        
+
         # Act
         result = await get_tenant(sample_organization.id, mock_session)
-        
+
         # Assert
         assert result.id == sample_organization.id
         assert result.name == sample_organization.name
@@ -263,11 +258,11 @@ class TestTenantRetrieval:
         mock_result = AsyncMock()
         mock_result.scalar_one_or_none = AsyncMock(return_value=None)
         mock_session.execute.return_value = mock_result
-        
+
         # Act & Assert
         with pytest.raises(HTTPException) as exc_info:
             await get_tenant(tenant_id, mock_session)
-        
+
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
 
 
@@ -278,18 +273,15 @@ class TestTenantUpdate:
     async def test_update_tenant_success(self, mock_session, sample_organization):
         """Test successful tenant update."""
         # Arrange
-        request = TenantUpdateRequest(
-            name="Updated Name",
-            description="Updated description"
-        )
-        
+        request = TenantUpdateRequest(name="Updated Name", description="Updated description")
+
         mock_result = AsyncMock()
         mock_result.scalar_one_or_none = AsyncMock(return_value=sample_organization)
         mock_session.execute.return_value = mock_result
-        
+
         # Act
         result = await update_tenant(sample_organization.id, request, mock_session)
-        
+
         # Assert
         assert result.name == "Updated Name"
         mock_session.commit.assert_called_once()
@@ -300,15 +292,15 @@ class TestTenantUpdate:
         # Arrange
         tenant_id = uuid4()
         request = TenantUpdateRequest(name="Updated")
-        
+
         mock_result = AsyncMock()
         mock_result.scalar_one_or_none = AsyncMock(return_value=None)
         mock_session.execute.return_value = mock_result
-        
+
         # Act & Assert
         with pytest.raises(HTTPException) as exc_info:
             await update_tenant(tenant_id, request, mock_session)
-        
+
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
 
 
@@ -322,10 +314,10 @@ class TestTenantDeletion:
         mock_result = AsyncMock()
         mock_result.scalar_one_or_none = AsyncMock(return_value=sample_organization)
         mock_session.execute.return_value = mock_result
-        
+
         # Act
         await delete_tenant(sample_organization.id, mock_session, permanent=False)
-        
+
         # Assert
         assert sample_organization.is_active is False
         assert sample_organization.status == OrganizationStatus.CANCELLED
@@ -339,10 +331,10 @@ class TestTenantDeletion:
         mock_result = AsyncMock()
         mock_result.scalar_one_or_none = AsyncMock(return_value=sample_organization)
         mock_session.execute.return_value = mock_result
-        
+
         # Act
         await delete_tenant(sample_organization.id, mock_session, permanent=True)
-        
+
         # Assert
         mock_session.delete.assert_called_once_with(sample_organization)
         mock_session.commit.assert_called_once()
@@ -352,36 +344,35 @@ class TestTenantProvisioning:
     """Test tenant provisioning workflow."""
 
     @pytest.mark.asyncio
-    @patch('apps.backend.api.v1.endpoints.tenant_admin.TenantProvisioner')
-    async def test_provision_tenant_success(self, mock_provisioner_class, mock_session, sample_organization):
+    @patch("apps.backend.api.v1.endpoints.tenant_admin.TenantProvisioner")
+    async def test_provision_tenant_success(
+        self, mock_provisioner_class, mock_session, sample_organization
+    ):
         """Test successful tenant provisioning."""
         # Arrange
         mock_result = AsyncMock()
         mock_result.scalar_one_or_none = AsyncMock(return_value=sample_organization)
         mock_session.execute.return_value = mock_result
-        
+
         request = TenantProvisionRequest(
-            create_admin_user=True,
-            admin_email="admin@test.com",
-            send_welcome_email=True
+            create_admin_user=True, admin_email="admin@test.com", send_welcome_email=True
         )
-        
+
         mock_provisioner = Mock()
-        mock_provisioner.provision_tenant = AsyncMock(return_value={
-            "status": "success",
-            "admin_user_id": str(uuid4()),
-            "message": "Tenant provisioned successfully"
-        })
+        mock_provisioner.provision_tenant = AsyncMock(
+            return_value={
+                "status": "success",
+                "admin_user_id": str(uuid4()),
+                "message": "Tenant provisioned successfully",
+            }
+        )
         mock_provisioner_class.return_value = mock_provisioner
-        
+
         # Act
         result = await provision_tenant(
-            sample_organization.id,
-            request,
-            mock_session,
-            Mock()  # background_tasks
+            sample_organization.id, request, mock_session, Mock()  # background_tasks
         )
-        
+
         # Assert
         assert result.status == "success"
         assert result.tenant_id == sample_organization.id
@@ -393,15 +384,15 @@ class TestTenantProvisioning:
         # Arrange
         tenant_id = uuid4()
         request = TenantProvisionRequest()
-        
+
         mock_result = AsyncMock()
         mock_result.scalar_one_or_none = AsyncMock(return_value=None)
         mock_session.execute.return_value = mock_result
-        
+
         # Act & Assert
         with pytest.raises(HTTPException) as exc_info:
             await provision_tenant(tenant_id, request, mock_session, Mock())
-        
+
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
 
 
@@ -412,19 +403,15 @@ class TestTenantLimits:
     async def test_update_tenant_limits_success(self, mock_session, sample_organization):
         """Test successful limits update."""
         # Arrange
-        request = TenantLimitsUpdateRequest(
-            max_users=100,
-            max_classes=50,
-            max_storage_gb=200.0
-        )
-        
+        request = TenantLimitsUpdateRequest(max_users=100, max_classes=50, max_storage_gb=200.0)
+
         mock_result = AsyncMock()
         mock_result.scalar_one_or_none = AsyncMock(return_value=sample_organization)
         mock_session.execute.return_value = mock_result
-        
+
         # Act
         result = await update_tenant_limits(sample_organization.id, request, mock_session)
-        
+
         # Assert
         assert result.max_users == 100
         assert result.max_classes == 50
@@ -436,15 +423,15 @@ class TestTenantLimits:
         # Arrange
         tenant_id = uuid4()
         request = TenantLimitsUpdateRequest(max_users=100)
-        
+
         mock_result = AsyncMock()
         mock_result.scalar_one_or_none = AsyncMock(return_value=None)
         mock_session.execute.return_value = mock_result
-        
+
         # Act & Assert
         with pytest.raises(HTTPException) as exc_info:
             await update_tenant_limits(tenant_id, request, mock_session)
-        
+
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
 
 

@@ -5,8 +5,7 @@ Service class for interacting with Roblox Open Cloud API
 """
 
 import logging
-from typing import Dict, Any, Optional
-import httpx
+from typing import Any
 
 from apps.backend.core.config import settings
 
@@ -21,35 +20,32 @@ class RobloxService:
     Roblox environments for educational content delivery.
     """
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None):
         """
         Initialize Roblox service
 
         Args:
             api_key: Optional Roblox API key (uses settings if not provided)
         """
-        self.api_key = api_key or getattr(settings, 'ROBLOX_API_KEY', None)
+        self.api_key = api_key or getattr(settings, "ROBLOX_API_KEY", None)
         self.base_url = "https://apis.roblox.com"
         self.timeout = 30.0
 
-    def _get_headers(self, api_key: Optional[str] = None) -> Dict[str, str]:
+    def _get_headers(self, api_key: str | None = None) -> dict[str, str]:
         """Get request headers with API key"""
         key = api_key or self.api_key
         if not key:
             logger.warning("No Roblox API key configured")
 
-        return {
-            "x-api-key": key or "",
-            "Content-Type": "application/json"
-        }
+        return {"x-api-key": key or "", "Content-Type": "application/json"}
 
     def upload_script(
         self,
         universe_id: str,
         script_name: str,
         script_content: str,
-        script_type: str = "ModuleScript"
-    ) -> Dict[str, Any]:
+        script_type: str = "ModuleScript",
+    ) -> dict[str, Any]:
         """
         Upload a Lua script to Roblox
 
@@ -65,29 +61,24 @@ class RobloxService:
         try:
             # For now, return a mock success since we don't have real Roblox API credentials
             # In production, this would make an actual API call to Roblox Open Cloud
-            logger.info(f"Mock upload script: {script_name} ({script_type}) to universe {universe_id}")
+            logger.info(
+                f"Mock upload script: {script_name} ({script_type}) to universe {universe_id}"
+            )
 
             return {
                 "success": True,
                 "script_name": script_name,
                 "script_type": script_type,
-                "message": "Script uploaded successfully (mock)"
+                "message": "Script uploaded successfully (mock)",
             }
 
         except Exception as e:
             logger.error(f"Failed to upload script {script_name}: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     def upload_asset(
-        self,
-        universe_id: str,
-        asset_name: str,
-        asset_data: bytes,
-        asset_type: str = "Model"
-    ) -> Dict[str, Any]:
+        self, universe_id: str, asset_name: str, asset_data: bytes, asset_type: str = "Model"
+    ) -> dict[str, Any]:
         """
         Upload an asset (model, image, sound) to Roblox
 
@@ -108,22 +99,14 @@ class RobloxService:
                 "asset_name": asset_name,
                 "asset_type": asset_type,
                 "size_bytes": len(asset_data),
-                "message": "Asset uploaded successfully (mock)"
+                "message": "Asset uploaded successfully (mock)",
             }
 
         except Exception as e:
             logger.error(f"Failed to upload asset {asset_name}: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
-    def update_datastore(
-        self,
-        universe_id: str,
-        key: str,
-        value: str
-    ) -> Dict[str, Any]:
+    def update_datastore(self, universe_id: str, key: str, value: str) -> dict[str, Any]:
         """
         Update a value in Roblox DataStore
 
@@ -142,23 +125,16 @@ class RobloxService:
                 "success": True,
                 "key": key,
                 "value_length": len(value),
-                "message": "DataStore updated successfully (mock)"
+                "message": "DataStore updated successfully (mock)",
             }
 
         except Exception as e:
             logger.error(f"Failed to update DataStore key {key}: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     def upload_place(
-        self,
-        universe_id: str,
-        place_id: str,
-        place_data: bytes,
-        api_key: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, universe_id: str, place_id: str, place_data: bytes, api_key: str | None = None
+    ) -> dict[str, Any]:
         """
         Upload a place file to Roblox
 
@@ -172,7 +148,9 @@ class RobloxService:
             Upload result with success status and version number
         """
         try:
-            logger.info(f"Mock upload place: {place_id} ({len(place_data)} bytes) to universe {universe_id}")
+            logger.info(
+                f"Mock upload place: {place_id} ({len(place_data)} bytes) to universe {universe_id}"
+            )
 
             return {
                 "success": True,
@@ -180,21 +158,14 @@ class RobloxService:
                 "universe_id": universe_id,
                 "version_number": 1,
                 "size_bytes": len(place_data),
-                "message": "Place uploaded successfully (mock)"
+                "message": "Place uploaded successfully (mock)",
             }
 
         except Exception as e:
             logger.error(f"Failed to upload place {place_id}: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
-    def publish_place(
-        self,
-        universe_id: str,
-        place_id: str
-    ) -> Dict[str, Any]:
+    def publish_place(self, universe_id: str, place_id: str) -> dict[str, Any]:
         """
         Publish a place to make it live
 
@@ -212,20 +183,14 @@ class RobloxService:
                 "success": True,
                 "place_id": place_id,
                 "universe_id": universe_id,
-                "message": "Place published successfully (mock)"
+                "message": "Place published successfully (mock)",
             }
 
         except Exception as e:
             logger.error(f"Failed to publish place {place_id}: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
-    def get_asset_info(
-        self,
-        asset_id: str
-    ) -> Optional[Dict[str, Any]]:
+    def get_asset_info(self, asset_id: str) -> dict[str, Any] | None:
         """
         Get information about a Roblox asset
 
@@ -245,17 +210,14 @@ class RobloxService:
                 "name": f"Asset {asset_id}",
                 "size_bytes": 10240,
                 "content_rating": "G",
-                "created": "2025-01-01T00:00:00Z"
+                "created": "2025-01-01T00:00:00Z",
             }
 
         except Exception as e:
             logger.error(f"Failed to get asset info for {asset_id}: {e}")
             return None
 
-    def get_script_content(
-        self,
-        asset_id: str
-    ) -> Optional[str]:
+    def get_script_content(self, asset_id: str) -> str | None:
         """
         Get the content of a script asset
 

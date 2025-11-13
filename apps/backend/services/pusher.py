@@ -8,12 +8,10 @@ Pusher Channels integration helpers for FastAPI backend.
 
 from __future__ import annotations
 
-import hmac
 import json
 import logging
 from datetime import datetime
-from hashlib import sha256
-from typing import Any, Dict, Optional, List
+from typing import Any
 
 try:
     import pusher  # type: ignore
@@ -105,7 +103,7 @@ class PusherService:
                 "Pusher client not initialized. Check pusher package installation and configuration."
             )
 
-    def trigger(self, channel: str, event: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    def trigger(self, channel: str, event: str, data: dict[str, Any]) -> dict[str, Any]:
         """Trigger an event on a channel."""
         self._ensure_client_available()
 
@@ -135,15 +133,15 @@ class PusherService:
 
         return {"channel": channel, "event": event}
 
-    def trigger_batch(self, events: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def trigger_batch(self, events: list[dict[str, Any]]) -> dict[str, Any]:
         """Trigger multiple events at once."""
         self._ensure_client_available()
         self.client.trigger_batch(events)
         return {"status": "success", "events_count": len(events)}
 
     def authenticate(
-        self, channel: str, socket_id: str, user_data: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, channel: str, socket_id: str, user_data: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Authenticate a channel subscription."""
         self._ensure_client_available()
 
@@ -157,8 +155,8 @@ class PusherService:
             return self.client.authenticate(channel=channel, socket_id=socket_id)
 
     def channels_info(
-        self, prefix_filter: Optional[str] = None, attributes: Optional[List[str]] = None
-    ) -> Dict[str, Any]:
+        self, prefix_filter: str | None = None, attributes: list[str] | None = None
+    ) -> dict[str, Any]:
         """Get information about all channels."""
         self._ensure_client_available()
 
@@ -170,7 +168,7 @@ class PusherService:
 
         return self.client.channels_info(**kwargs)
 
-    def channel_info(self, channel: str, attributes: Optional[List[str]] = None) -> Dict[str, Any]:
+    def channel_info(self, channel: str, attributes: list[str] | None = None) -> dict[str, Any]:
         """Get information about a specific channel."""
         self._ensure_client_available()
 
@@ -179,7 +177,7 @@ class PusherService:
         else:
             return self.client.channel_info(channel)
 
-    def users_info(self, channel: str) -> Dict[str, Any]:
+    def users_info(self, channel: str) -> dict[str, Any]:
         """Get users information for a presence channel."""
         self._ensure_client_available()
         return self.client.users_info(channel)
@@ -189,7 +187,7 @@ class PusherService:
         self._ensure_client_available()
         return self.client.validate_webhook(key, signature, body)
 
-    async def async_trigger(self, channel: str, event: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def async_trigger(self, channel: str, event: str, data: dict[str, Any]) -> dict[str, Any]:
         """Async version of trigger for compatibility with async tests."""
         return self.trigger(channel, event, data)
 
@@ -219,7 +217,7 @@ def get_pusher_client():
     return client
 
 
-def trigger_event(channel: str, event: str, data: Dict[str, Any]) -> Dict[str, Any]:
+def trigger_event(channel: str, event: str, data: dict[str, Any]) -> dict[str, Any]:
     client = get_pusher_client()
 
     # Custom JSON encoder to handle datetime objects
@@ -251,9 +249,9 @@ def trigger_event(channel: str, event: str, data: Dict[str, Any]) -> Dict[str, A
 def authenticate_channel(
     socket_id: str,
     channel_name: str,
-    user_id: Optional[str] = None,
-    user_info: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
+    user_id: str | None = None,
+    user_info: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Return auth payload for private/presence channels."""
     client = get_pusher_client()
     if channel_name.startswith("presence-") and user_id:
@@ -270,7 +268,7 @@ def authenticate_channel(
     return auth
 
 
-def verify_webhook(headers: Dict[str, str], body: bytes) -> Optional[Dict[str, Any]]:
+def verify_webhook(headers: dict[str, str], body: bytes) -> dict[str, Any] | None:
     """Verify webhook signature and return parsed events if valid."""
     _ensure_pusher_available()
     webhook = pusher.Webhook(  # type: ignore[attr-defined]
@@ -288,7 +286,7 @@ def verify_webhook(headers: Dict[str, str], body: bytes) -> Optional[Dict[str, A
 
 
 async def trigger_agent_event(
-    event_type: str, agent_id: str, data: Dict[str, Any], user_id: Optional[str] = None
+    event_type: str, agent_id: str, data: dict[str, Any], user_id: str | None = None
 ) -> None:
     """
     Trigger an agent-specific event via Pusher.
@@ -330,8 +328,8 @@ async def trigger_task_event(
     event_type: str,
     task_id: str,
     agent_id: str,
-    data: Dict[str, Any],
-    user_id: Optional[str] = None,
+    data: dict[str, Any],
+    user_id: str | None = None,
 ) -> None:
     """
     Trigger a task-specific event via Pusher.
@@ -376,9 +374,7 @@ async def trigger_task_event(
         logger.error(f"Error triggering task event: {e}")
 
 
-async def trigger_metrics_update(
-    metrics_data: Dict[str, Any], agent_id: Optional[str] = None
-) -> None:
+async def trigger_metrics_update(metrics_data: dict[str, Any], agent_id: str | None = None) -> None:
     """
     Trigger metrics update event via Pusher.
 
@@ -406,7 +402,7 @@ async def trigger_metrics_update(
         logger.error(f"Error triggering metrics update: {e}")
 
 
-async def trigger_health_update(health_data: Dict[str, Any]) -> None:
+async def trigger_health_update(health_data: dict[str, Any]) -> None:
     """
     Trigger system health update event via Pusher.
 
@@ -429,7 +425,7 @@ async def trigger_agent_status_change(
     agent_id: str,
     old_status: str,
     new_status: str,
-    additional_data: Optional[Dict[str, Any]] = None,
+    additional_data: dict[str, Any] | None = None,
 ) -> None:
     """
     Trigger agent status change event via Pusher.
@@ -468,12 +464,12 @@ async def trigger_agent_status_change(
         logger.error(f"Error triggering agent status change: {e}")
 
 
-def get_agent_channels() -> Dict[str, str]:
+def get_agent_channels() -> dict[str, str]:
     """Get available agent channels."""
     return AGENT_CHANNELS.copy()
 
 
-def get_agent_events() -> Dict[str, str]:
+def get_agent_events() -> dict[str, str]:
     """Get available agent events."""
     return AGENT_EVENTS.copy()
 

@@ -1,11 +1,13 @@
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest_asyncio
+from unittest.mock import Mock, patch
 
 import pytest
-from unittest.mock import Mock, patch
+import pytest_asyncio
+
 
 @pytest.fixture
 def mock_db_connection():
@@ -36,23 +38,26 @@ import json
 import logging
 import os
 import time
-from typing import Dict, Any, List
-from unittest.mock import Mock, patch, AsyncMock
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
 
-import pytest
 import httpx
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # Import application components
 try:
-    from apps.backend.main import app
     from apps.backend.core.config import settings
-    from database.connection import get_async_session, AsyncSessionLocal
+    from apps.backend.main import app
+    from database.connection import AsyncSessionLocal, get_async_session
     from database.models import (
-        User, Agent, ContentGenerationRequest,
-        EnhancedContentGeneration, ContentGenerationBatch
+        Agent,
+        ContentGenerationBatch,
+        ContentGenerationRequest,
+        EnhancedContentGeneration,
+        User,
     )
 except ImportError as e:
     pytest.skip(f"Required modules not available: {e}", allow_module_level=True)
@@ -249,8 +254,8 @@ class TestAgentSystem:
 async def test_agent_coordination(self):
         """Test agent coordination and communication"""
         try:
-            from core.agents.orchestrator import AgentOrchestrator
             from core.agents.base_agent import BaseAgent
+            from core.agents.orchestrator import AgentOrchestrator
 
             orchestrator = AgentOrchestrator()
 

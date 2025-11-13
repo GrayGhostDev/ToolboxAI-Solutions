@@ -5,17 +5,19 @@ Authentication endpoints for ToolboxAI
 import os
 from datetime import datetime, timedelta
 from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-
 from pydantic import BaseModel
-
-from apps.backend.core.security.jwt_handler import (
-    Token, TokenData, create_access_token, get_current_user
-)
 
 # Use direct bcrypt implementation (2025 best practice)
 from apps.backend.core.security.bcrypt_handler import BcryptHandler
+from apps.backend.core.security.jwt_handler import (
+    Token,
+    TokenData,
+    create_access_token,
+    get_current_user,
+)
 
 # Configuration from environment
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
@@ -27,11 +29,13 @@ bcrypt_handler = BcryptHandler(rounds=12)
 # Router setup
 auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
 
+
 # Pydantic models
 class UserLogin(BaseModel):
     username: Optional[str] = None
     email: Optional[str] = None
     password: str
+
 
 # Mock user database with demo users matching frontend
 fake_users_db = {
@@ -39,39 +43,41 @@ fake_users_db = {
         "username": "admin",
         "email": "admin@toolboxai.com",
         "hashed_password": bcrypt_handler.hash_password("Admin123!"),
-        "role": "admin"
+        "role": "admin",
     },
     "jane.smith@school.edu": {
         "username": "jane_smith",
         "email": "jane.smith@school.edu",
         "hashed_password": bcrypt_handler.hash_password("Teacher123!"),
-        "role": "teacher"
+        "role": "teacher",
     },
     "alex.johnson@student.edu": {
         "username": "alex_johnson",
         "email": "alex.johnson@student.edu",
         "hashed_password": bcrypt_handler.hash_password("Student123!"),
-        "role": "student"
+        "role": "student",
     },
     # Keep old test users for backwards compatibility
     "test_teacher": {
         "username": "test_teacher",
         "email": "test_teacher@test.com",
         "hashed_password": bcrypt_handler.hash_password("TestPass123!"),
-        "role": "teacher"
+        "role": "teacher",
     },
     "test_student": {
         "username": "test_student",
         "email": "test_student@test.com",
         "hashed_password": bcrypt_handler.hash_password("StudentPass123!"),
-        "role": "student"
-    }
+        "role": "student",
+    },
 }
+
 
 def verify_password(plain_password, hashed_password):
     """Verify a password against its hash"""
     # Direct bcrypt with SHA-256 pre-hashing handles any length password
     return bcrypt_handler.verify_password(plain_password, hashed_password)
+
 
 def authenticate_user(username: Optional[str], email: Optional[str], password: str):
     """
@@ -96,8 +102,9 @@ def authenticate_user(username: Optional[str], email: Optional[str], password: s
     if not user:
         for user_data in fake_users_db.values():
             # Check if username or email matches
-            if (username and user_data.get("username") == username) or \
-               (email and user_data.get("email") == email):
+            if (username and user_data.get("username") == username) or (
+                email and user_data.get("email") == email
+            ):
                 user = user_data
                 break
 
@@ -111,7 +118,9 @@ def authenticate_user(username: Optional[str], email: Optional[str], password: s
 
     return user
 
+
 # Use the imported create_access_token from jwt_handler
+
 
 @auth_router.post("/login")
 async def login(user_credentials: UserLogin):
@@ -150,7 +159,9 @@ async def login(user_credentials: UserLogin):
         token = response["access_token"]
         ```
     """
-    user = authenticate_user(user_credentials.username, user_credentials.email, user_credentials.password)
+    user = authenticate_user(
+        user_credentials.username, user_credentials.email, user_credentials.password
+    )
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -161,7 +172,7 @@ async def login(user_credentials: UserLogin):
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user["username"], "role": user["role"], "user_id": 1},
-        expires_delta=access_token_expires
+        expires_delta=access_token_expires,
     )
 
     # Return token with user information for frontend
@@ -175,9 +186,10 @@ async def login(user_credentials: UserLogin):
             "username": user["username"],
             "email": user.get("email", ""),
             "displayName": user.get("displayName", user["username"]),
-            "role": user["role"]
-        }
+            "role": user["role"],
+        },
     }
+
 
 @auth_router.post("/refresh", response_model=Token)
 async def refresh_token(current_user: TokenData = Depends(get_current_user)):
@@ -190,17 +202,18 @@ async def refresh_token(current_user: TokenData = Depends(get_current_user)):
         data={
             "sub": current_user.username,
             "role": current_user.role,
-            "user_id": current_user.user_id
+            "user_id": current_user.user_id,
         },
-        expires_delta=access_token_expires
+        expires_delta=access_token_expires,
     )
 
     return Token(
         access_token=access_token,
         token_type="bearer",
         expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        role=current_user.role
+        role=current_user.role,
     )
+
 
 @auth_router.post("/logout")
 async def logout():
@@ -210,6 +223,7 @@ async def logout():
     # In a real application, you would invalidate the token here
     # For now, just return success
     return {"message": "Successfully logged out"}
+
 
 @auth_router.post("/demo-login")
 async def demo_login(role: str = "teacher"):
@@ -232,29 +246,29 @@ async def demo_login(role: str = "teacher"):
             "email": "admin@demo.com",
             "displayName": "Demo Admin",
             "role": "admin",
-            "id": 1
+            "id": 1,
         },
         "teacher": {
             "username": "teacher_demo",
             "email": "teacher@demo.com",
             "displayName": "Demo Teacher",
             "role": "teacher",
-            "id": 2
+            "id": 2,
         },
         "student": {
             "username": "student_demo",
             "email": "student@demo.com",
             "displayName": "Demo Student",
             "role": "student",
-            "id": 3
+            "id": 3,
         },
         "parent": {
             "username": "parent_demo",
             "email": "parent@demo.com",
             "displayName": "Demo Parent",
             "role": "parent",
-            "id": 4
-        }
+            "id": 4,
+        },
     }
 
     # Get the demo user based on role
@@ -263,12 +277,8 @@ async def demo_login(role: str = "teacher"):
     # Create access token for demo user
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={
-            "sub": demo_user["username"],
-            "role": demo_user["role"],
-            "user_id": demo_user["id"]
-        },
-        expires_delta=access_token_expires
+        data={"sub": demo_user["username"], "role": demo_user["role"], "user_id": demo_user["id"]},
+        expires_delta=access_token_expires,
     )
 
     # Return token with user information
@@ -277,8 +287,9 @@ async def demo_login(role: str = "teacher"):
         "token_type": "bearer",
         "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         "role": demo_user["role"],
-        "user": demo_user
+        "user": demo_user,
     }
+
 
 # Export router with the expected name
 router = auth_router

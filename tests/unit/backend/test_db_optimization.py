@@ -8,24 +8,29 @@ Target: >95% code coverage for database optimization components.
 """
 
 import asyncio
-import pytest
-import time
-from datetime import datetime
-from unittest.mock import Mock, patch, AsyncMock, MagicMock, call
-from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.pool import QueuePool
 
 from apps.backend.core.db_optimization import (
-    DatabaseConfig, QueryStats, OptimizedAsyncEngine, QueryCache,
-    PreparedStatements, DatabaseOptimizer, cached_query,
-    optimizer, initialize_db_optimization, get_db_health,
-    get_user_dashboard_optimized, setup_prepared_statements,
-    _db_engine, _query_cache, _prepared_statements, _query_stats
+    DatabaseConfig,
+    DatabaseOptimizer,
+    OptimizedAsyncEngine,
+    PreparedStatements,
+    QueryCache,
+    QueryStats,
+    _db_engine,
+    _prepared_statements,
+    _query_cache,
+    _query_stats,
+    cached_query,
+    get_db_health,
+    get_user_dashboard_optimized,
+    initialize_db_optimization,
+    setup_prepared_statements,
 )
-from apps.backend.core.cache import CacheConfig
 
 
 @pytest.mark.unit
@@ -120,9 +125,9 @@ class TestQueryStats:
         stats = QueryStats()
         stats.record_query(0.001, from_cache=True)  # Hit
         stats.record_query(0.001, from_cache=True)  # Hit
-        stats.record_query(0.1, from_cache=False)   # Miss
+        stats.record_query(0.1, from_cache=False)  # Miss
 
-        assert stats.cache_hit_rate == 2/3  # 2 hits out of 3 total
+        assert stats.cache_hit_rate == 2 / 3  # 2 hits out of 3 total
 
     def test_cache_hit_rate_no_queries(self):
         """Test cache hit rate with no queries."""
@@ -154,7 +159,7 @@ class TestOptimizedAsyncEngine:
     @pytest.fixture
     def mock_settings(self):
         """Mock database settings."""
-        with patch('apps.backend.core.db_optimization.settings') as mock:
+        with patch("apps.backend.core.db_optimization.settings") as mock:
             mock.DATABASE_URL = "postgresql+asyncpg://test:test@localhost/test"
             yield mock
 
@@ -163,10 +168,11 @@ class TestOptimizedAsyncEngine:
         """Create fresh engine instance for testing."""
         return OptimizedAsyncEngine()
 
-    @patch('sqlalchemy.ext.asyncio.create_async_engine')
-    @patch('sqlalchemy.ext.asyncio.async_sessionmaker')
-    async def test_initialize_success(self, mock_sessionmaker, mock_create_engine,
-                                    engine_instance, mock_settings):
+    @patch("sqlalchemy.ext.asyncio.create_async_engine")
+    @patch("sqlalchemy.ext.asyncio.async_sessionmaker")
+    async def test_initialize_success(
+        self, mock_sessionmaker, mock_create_engine, engine_instance, mock_settings
+    ):
         """Test successful engine initialization."""
         mock_engine = Mock()
         mock_create_engine.return_value = mock_engine
@@ -183,8 +189,8 @@ class TestOptimizedAsyncEngine:
         mock_create_engine.assert_called_once()
         call_args = mock_create_engine.call_args
         assert call_args[0][0] == mock_settings.DATABASE_URL
-        assert call_args[1]['poolclass'] == QueuePool
-        assert call_args[1]['pool_size'] == DatabaseConfig.POOL_SIZE
+        assert call_args[1]["poolclass"] == QueuePool
+        assert call_args[1]["pool_size"] == DatabaseConfig.POOL_SIZE
 
     async def test_initialize_already_initialized(self, engine_instance, mock_settings):
         """Test that double initialization is prevented."""
@@ -197,7 +203,7 @@ class TestOptimizedAsyncEngine:
         # Engine should remain the same
         assert engine_instance.engine == original_engine
 
-    @patch('sqlalchemy.ext.asyncio.create_async_engine')
+    @patch("sqlalchemy.ext.asyncio.create_async_engine")
     async def test_initialize_error(self, mock_create_engine, engine_instance, mock_settings):
         """Test initialization with database connection error."""
         mock_create_engine.side_effect = Exception("Database connection failed")
@@ -209,7 +215,7 @@ class TestOptimizedAsyncEngine:
 
     async def test_get_session_not_initialized(self, engine_instance):
         """Test getting session when engine not initialized."""
-        with patch.object(engine_instance, 'initialize') as mock_init:
+        with patch.object(engine_instance, "initialize") as mock_init:
             mock_session_maker = Mock()
             mock_session = AsyncMock()
             mock_session_maker.return_value.__aenter__.return_value = mock_session
@@ -255,7 +261,7 @@ class TestOptimizedAsyncEngine:
         engine_instance.engine = mock_engine
 
         # Test that event listeners are set up
-        with patch('sqlalchemy.engine.events.event.listens_for') as mock_listens_for:
+        with patch("sqlalchemy.engine.events.event.listens_for") as mock_listens_for:
             engine_instance._setup_event_listeners()
 
             # Should set up before and after cursor execute listeners
@@ -312,7 +318,7 @@ class TestQueryCache:
         cached_data = [{"id": 1, "name": "John"}]
         mock_cache.get.return_value = cached_data
 
-        with patch('apps.backend.core.db_optimization._query_stats') as mock_stats:
+        with patch("apps.backend.core.db_optimization._query_stats") as mock_stats:
             result = await query_cache.get_cached_result("SELECT * FROM users", (1,))
 
             assert result == cached_data
@@ -371,7 +377,7 @@ class TestPreparedStatements:
         query = "SELECT * FROM users WHERE id = :user_id"
         statements.register_statement("get_user", query)
 
-        with patch('apps.backend.core.db_optimization._query_stats') as mock_stats:
+        with patch("apps.backend.core.db_optimization._query_stats") as mock_stats:
             statement = statements.get_statement("get_user")
 
             assert statement is not None
@@ -402,7 +408,7 @@ class TestPreparedStatements:
 class TestSetupPreparedStatements:
     """Test prepared statement setup functionality."""
 
-    @patch('apps.backend.core.db_optimization._prepared_statements')
+    @patch("apps.backend.core.db_optimization._prepared_statements")
     def test_setup_prepared_statements(self, mock_statements):
         """Test that all expected prepared statements are registered."""
         setup_prepared_statements()
@@ -455,7 +461,9 @@ class TestDatabaseOptimizer:
         assert result == cached_result
         mock_query_cache.get_cached_result.assert_called_once()
 
-    async def test_execute_optimized_query_cache_miss(self, optimizer_instance, mock_engine, mock_query_cache):
+    async def test_execute_optimized_query_cache_miss(
+        self, optimizer_instance, mock_engine, mock_query_cache
+    ):
         """Test optimized query execution with cache miss."""
         mock_query_cache.get_cached_result.return_value = None
 
@@ -468,7 +476,7 @@ class TestDatabaseOptimizer:
         mock_result.fetchall.return_value = [Mock(_mapping={"id": 1, "name": "John"})]
         mock_session.execute.return_value = mock_result
 
-        with patch('apps.backend.core.db_optimization._query_stats') as mock_stats:
+        with patch("apps.backend.core.db_optimization._query_stats") as mock_stats:
             result = await optimizer_instance.execute_optimized_query(
                 "SELECT * FROM users", {"id": 1}, use_cache=True
             )
@@ -477,7 +485,9 @@ class TestDatabaseOptimizer:
             mock_query_cache.cache_result.assert_called_once()
             mock_stats.record_query.assert_called_once()
 
-    async def test_execute_optimized_query_no_cache(self, optimizer_instance, mock_engine, mock_query_cache):
+    async def test_execute_optimized_query_no_cache(
+        self, optimizer_instance, mock_engine, mock_query_cache
+    ):
         """Test optimized query execution without caching."""
         mock_session = AsyncMock()
         mock_engine.get_session.return_value.__aenter__.return_value = mock_session
@@ -495,7 +505,9 @@ class TestDatabaseOptimizer:
         mock_query_cache.get_cached_result.assert_not_called()
         mock_query_cache.cache_result.assert_not_called()
 
-    async def test_execute_optimized_query_slow_query_warning(self, optimizer_instance, mock_engine, mock_query_cache):
+    async def test_execute_optimized_query_slow_query_warning(
+        self, optimizer_instance, mock_engine, mock_query_cache
+    ):
         """Test slow query warning logging."""
         mock_query_cache.get_cached_result.return_value = None
 
@@ -512,8 +524,8 @@ class TestDatabaseOptimizer:
 
         mock_session.execute = slow_execute
 
-        with patch('apps.backend.core.db_optimization.logger') as mock_logger:
-            with patch('apps.backend.core.db_optimization._query_stats') as mock_stats:
+        with patch("apps.backend.core.db_optimization.logger") as mock_logger:
+            with patch("apps.backend.core.db_optimization._query_stats") as mock_stats:
                 await optimizer_instance.execute_optimized_query("SELECT * FROM users")
 
                 # Should log warning for slow query
@@ -524,11 +536,11 @@ class TestDatabaseOptimizer:
 
     async def test_execute_prepared_statement_success(self, optimizer_instance):
         """Test executing prepared statement."""
-        with patch('apps.backend.core.db_optimization._prepared_statements') as mock_statements:
+        with patch("apps.backend.core.db_optimization._prepared_statements") as mock_statements:
             mock_statement = text("SELECT * FROM users WHERE id = :user_id")
             mock_statements.get_statement.return_value = mock_statement
 
-            with patch.object(optimizer_instance, 'execute_optimized_query') as mock_execute:
+            with patch.object(optimizer_instance, "execute_optimized_query") as mock_execute:
                 mock_execute.return_value = [{"id": 1, "name": "John"}]
 
                 result = await optimizer_instance.execute_prepared_statement(
@@ -541,7 +553,7 @@ class TestDatabaseOptimizer:
 
     async def test_execute_prepared_statement_not_found(self, optimizer_instance):
         """Test executing non-existent prepared statement."""
-        with patch('apps.backend.core.db_optimization._prepared_statements') as mock_statements:
+        with patch("apps.backend.core.db_optimization._prepared_statements") as mock_statements:
             mock_statements.get_statement.return_value = None
 
             with pytest.raises(ValueError, match="Prepared statement 'nonexistent' not found"):
@@ -551,10 +563,10 @@ class TestDatabaseOptimizer:
         """Test warming query cache with common queries."""
         queries = [
             ("SELECT COUNT(*) FROM users", {}),
-            ("SELECT * FROM users WHERE active = :active", {"active": True})
+            ("SELECT * FROM users WHERE active = :active", {"active": True}),
         ]
 
-        with patch.object(optimizer_instance, 'execute_optimized_query') as mock_execute:
+        with patch.object(optimizer_instance, "execute_optimized_query") as mock_execute:
             mock_execute.return_value = [{"count": 100}]
 
             await optimizer_instance.warm_query_cache(queries)
@@ -566,17 +578,17 @@ class TestDatabaseOptimizer:
         queries = [
             ("SELECT COUNT(*) FROM users", {}),
             ("INVALID SQL QUERY", {}),
-            ("SELECT * FROM profiles", {})
+            ("SELECT * FROM profiles", {}),
         ]
 
-        with patch.object(optimizer_instance, 'execute_optimized_query') as mock_execute:
+        with patch.object(optimizer_instance, "execute_optimized_query") as mock_execute:
             mock_execute.side_effect = [
                 [{"count": 100}],  # Success
                 Exception("SQL syntax error"),  # Error
-                [{"id": 1}]  # Success
+                [{"id": 1}],  # Success
             ]
 
-            with patch('apps.backend.core.db_optimization.logger') as mock_logger:
+            with patch("apps.backend.core.db_optimization.logger") as mock_logger:
                 await optimizer_instance.warm_query_cache(queries)
 
                 # Should log error but continue with other queries
@@ -614,7 +626,7 @@ class TestDatabaseOptimizer:
 
     def test_get_query_stats(self, optimizer_instance):
         """Test getting query performance statistics."""
-        with patch('apps.backend.core.db_optimization._query_stats') as mock_stats:
+        with patch("apps.backend.core.db_optimization._query_stats") as mock_stats:
             mock_stats.to_dict.return_value = {"query_count": 100, "avg_time": 0.05}
 
             stats = optimizer_instance.get_query_stats()
@@ -624,7 +636,7 @@ class TestDatabaseOptimizer:
 
     def test_get_prepared_statement_stats(self, optimizer_instance):
         """Test getting prepared statement statistics."""
-        with patch('apps.backend.core.db_optimization._prepared_statements') as mock_statements:
+        with patch("apps.backend.core.db_optimization._prepared_statements") as mock_statements:
             mock_statements.statements = {"stmt1": Mock(), "stmt2": Mock()}
             mock_statements.get_usage_stats.return_value = {"stmt1": 10, "stmt2": 5}
 
@@ -639,8 +651,8 @@ class TestDatabaseOptimizer:
 class TestCachedQueryDecorator:
     """Test the @cached_query decorator."""
 
-    @patch('apps.backend.core.db_optimization.cache')
-    @patch('apps.backend.core.db_optimization._query_stats')
+    @patch("apps.backend.core.db_optimization.cache")
+    @patch("apps.backend.core.db_optimization._query_stats")
     async def test_cached_query_decorator_hit(self, mock_stats, mock_cache):
         """Test cached query decorator with cache hit."""
         mock_cache.get.return_value = [{"id": 1, "name": "John"}]
@@ -656,8 +668,8 @@ class TestCachedQueryDecorator:
         mock_cache.set.assert_not_called()
         mock_stats.record_query.assert_called_once_with(0.001, from_cache=True)
 
-    @patch('apps.backend.core.db_optimization.cache')
-    @patch('apps.backend.core.db_optimization._query_stats')
+    @patch("apps.backend.core.db_optimization.cache")
+    @patch("apps.backend.core.db_optimization._query_stats")
     async def test_cached_query_decorator_miss(self, mock_stats, mock_cache):
         """Test cached query decorator with cache miss."""
         mock_cache.get.return_value = None
@@ -682,8 +694,8 @@ class TestCachedQueryDecorator:
 class TestConvenienceFunctions:
     """Test convenience functions for common database operations."""
 
-    @patch('apps.backend.core.db_optimization.get_cached_dashboard')
-    @patch('apps.backend.core.db_optimization.optimizer')
+    @patch("apps.backend.core.db_optimization.get_cached_dashboard")
+    @patch("apps.backend.core.db_optimization.optimizer")
     async def test_get_user_dashboard_optimized_cached(self, mock_optimizer, mock_get_cached):
         """Test dashboard retrieval with cached data."""
         cached_data = {"user_id": 123, "role": "student", "cached": True}
@@ -694,10 +706,12 @@ class TestConvenienceFunctions:
         assert result == cached_data
         mock_optimizer.execute_prepared_statement.assert_not_called()
 
-    @patch('apps.backend.core.db_optimization.get_cached_dashboard')
-    @patch('apps.backend.core.db_optimization.cache_dashboard')
-    @patch('apps.backend.core.db_optimization.optimizer')
-    async def test_get_user_dashboard_optimized_not_cached(self, mock_optimizer, mock_cache_dashboard, mock_get_cached):
+    @patch("apps.backend.core.db_optimization.get_cached_dashboard")
+    @patch("apps.backend.core.db_optimization.cache_dashboard")
+    @patch("apps.backend.core.db_optimization.optimizer")
+    async def test_get_user_dashboard_optimized_not_cached(
+        self, mock_optimizer, mock_cache_dashboard, mock_get_cached
+    ):
         """Test dashboard retrieval without cached data."""
         mock_get_cached.return_value = None
         mock_optimizer.execute_prepared_statement.return_value = [
@@ -712,9 +726,11 @@ class TestConvenienceFunctions:
         )
         mock_cache_dashboard.assert_called_once()
 
-    @patch('apps.backend.core.db_optimization.get_cached_dashboard')
-    @patch('apps.backend.core.db_optimization.optimizer')
-    async def test_get_user_dashboard_optimized_user_not_found(self, mock_optimizer, mock_get_cached):
+    @patch("apps.backend.core.db_optimization.get_cached_dashboard")
+    @patch("apps.backend.core.db_optimization.optimizer")
+    async def test_get_user_dashboard_optimized_user_not_found(
+        self, mock_optimizer, mock_get_cached
+    ):
         """Test dashboard retrieval when user not found."""
         mock_get_cached.return_value = None
         mock_optimizer.execute_prepared_statement.return_value = []
@@ -728,8 +744,8 @@ class TestConvenienceFunctions:
 class TestInitializationAndHealth:
     """Test database optimization initialization and health checking."""
 
-    @patch('apps.backend.core.db_optimization._db_engine')
-    @patch('apps.backend.core.db_optimization.setup_prepared_statements')
+    @patch("apps.backend.core.db_optimization._db_engine")
+    @patch("apps.backend.core.db_optimization.setup_prepared_statements")
     async def test_initialize_db_optimization_success(self, mock_setup, mock_engine):
         """Test successful database optimization initialization."""
         mock_engine.initialize.return_value = None
@@ -739,7 +755,7 @@ class TestInitializationAndHealth:
         mock_engine.initialize.assert_called_once()
         mock_setup.assert_called_once()
 
-    @patch('apps.backend.core.db_optimization._db_engine')
+    @patch("apps.backend.core.db_optimization._db_engine")
     async def test_initialize_db_optimization_error(self, mock_engine):
         """Test database optimization initialization with error."""
         mock_engine.initialize.side_effect = Exception("Database connection failed")
@@ -747,17 +763,14 @@ class TestInitializationAndHealth:
         with pytest.raises(Exception, match="Database connection failed"):
             await initialize_db_optimization()
 
-    @patch('apps.backend.core.db_optimization.optimizer')
+    @patch("apps.backend.core.db_optimization.optimizer")
     async def test_get_db_health_success(self, mock_optimizer):
         """Test successful database health check."""
-        mock_optimizer.get_connection_pool_stats.return_value = {
-            "pool_size": 20, "checked_out": 5
-        }
-        mock_optimizer.get_query_stats.return_value = {
-            "query_count": 100, "avg_time": 0.05
-        }
+        mock_optimizer.get_connection_pool_stats.return_value = {"pool_size": 20, "checked_out": 5}
+        mock_optimizer.get_query_stats.return_value = {"query_count": 100, "avg_time": 0.05}
         mock_optimizer.get_prepared_statement_stats.return_value = {
-            "registered_statements": 5, "total_usage": 50
+            "registered_statements": 5,
+            "total_usage": 50,
         }
 
         health = await get_db_health()
@@ -768,7 +781,7 @@ class TestInitializationAndHealth:
         assert health["query_performance"]["query_count"] == 100
         assert health["prepared_statements"]["registered_statements"] == 5
 
-    @patch('apps.backend.core.db_optimization.optimizer')
+    @patch("apps.backend.core.db_optimization.optimizer")
     async def test_get_db_health_error(self, mock_optimizer):
         """Test database health check with error."""
         mock_optimizer.get_connection_pool_stats.side_effect = Exception("Database error")
@@ -806,21 +819,21 @@ class TestDatabaseOptimizationIntegration:
     @pytest.fixture
     def mock_database_setup(self):
         """Setup mock database environment for integration testing."""
-        with patch('apps.backend.core.db_optimization.settings') as mock_settings:
+        with patch("apps.backend.core.db_optimization.settings") as mock_settings:
             mock_settings.DATABASE_URL = "postgresql+asyncpg://test:test@localhost/test"
 
-            with patch('sqlalchemy.ext.asyncio.create_async_engine') as mock_create_engine:
+            with patch("sqlalchemy.ext.asyncio.create_async_engine") as mock_create_engine:
                 mock_engine = Mock()
                 mock_create_engine.return_value = mock_engine
 
-                with patch('sqlalchemy.ext.asyncio.async_sessionmaker') as mock_sessionmaker:
+                with patch("sqlalchemy.ext.asyncio.async_sessionmaker") as mock_sessionmaker:
                     mock_session_maker = Mock()
                     mock_sessionmaker.return_value = mock_session_maker
 
                     yield {
                         "engine": mock_engine,
                         "session_maker": mock_session_maker,
-                        "settings": mock_settings
+                        "settings": mock_settings,
                     }
 
     async def test_full_optimization_workflow(self, mock_database_setup):
@@ -830,7 +843,7 @@ class TestDatabaseOptimizationIntegration:
         optimizer.engine = OptimizedAsyncEngine()
 
         # Mock successful initialization
-        with patch.object(optimizer.engine, 'initialize'):
+        with patch.object(optimizer.engine, "initialize"):
             # Test query execution with caching
             mock_session = AsyncMock()
             optimizer.engine.get_session = AsyncMock()
@@ -850,7 +863,9 @@ class TestDatabaseOptimizationIntegration:
 
             # Mock cache hit for second query
             optimizer.query_cache = AsyncMock()
-            optimizer.query_cache.get_cached_result.return_value = [{"id": 1, "name": "John", "cached": True}]
+            optimizer.query_cache.get_cached_result.return_value = [
+                {"id": 1, "name": "John", "cached": True}
+            ]
 
             # Second query - cache hit
             result2 = await optimizer.execute_optimized_query(
@@ -863,10 +878,7 @@ class TestDatabaseOptimizationIntegration:
         """Test prepared statement integration."""
         # Setup prepared statements
         statements = PreparedStatements()
-        statements.register_statement(
-            "get_user",
-            "SELECT * FROM users WHERE id = :user_id"
-        )
+        statements.register_statement("get_user", "SELECT * FROM users WHERE id = :user_id")
 
         # Test statement usage
         statement = statements.get_statement("get_user")

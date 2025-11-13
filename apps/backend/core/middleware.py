@@ -4,7 +4,7 @@ Centralized middleware configuration for the FastAPI application
 
 import time
 import uuid
-from typing import Callable, Optional
+from collections.abc import Callable
 
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,15 +12,20 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from apps.backend.core.config import settings
-from apps.backend.core.logging import logging_manager, CorrelationIDMiddleware
-from apps.backend.core.security.cors import SecureCORSConfig, CORSMiddlewareWithLogging
-from apps.backend.core.security.headers import SecurityHeadersMiddleware, SecurityHeadersConfig
-from apps.backend.core.security.compression import CompressionMiddleware, CompressionConfig
 from apps.backend.core.errors import ErrorHandlingMiddleware
+from apps.backend.core.logging import CorrelationIDMiddleware, logging_manager
+from apps.backend.core.security.compression import (
+    CompressionConfig,
+    CompressionMiddleware,
+)
+from apps.backend.core.security.headers import (
+    SecurityHeadersConfig,
+    SecurityHeadersMiddleware,
+)
 from apps.backend.core.versioning import (
     APIVersionMiddleware,
-    create_version_manager,
     VersionStrategy,
+    create_version_manager,
 )
 
 # Initialize logger
@@ -29,11 +34,11 @@ logger = logging_manager.get_logger(__name__)
 # Import resilience middleware if available
 try:
     from apps.backend.api.middleware.resilience import (
+        BulkheadMiddleware,
         ResilienceMiddleware,
         RetryMiddleware,
-        BulkheadMiddleware,
     )
-    from apps.backend.core.rate_limiter import RateLimitMiddleware, RateLimitConfig
+    from apps.backend.core.rate_limiter import RateLimitConfig, RateLimitMiddleware
 
     RESILIENCE_AVAILABLE = True
 except ImportError as e:
@@ -143,7 +148,7 @@ class MetricsMiddleware(BaseHTTPMiddleware):
 
             return response
 
-        except Exception as e:
+        except Exception:
             self.error_count += 1
             raise
 
@@ -153,9 +158,11 @@ def configure_cors_middleware(app: FastAPI) -> None:
     try:
         # Parse CORS origins from settings
         cors_origins = []
-        if hasattr(settings, 'CORS_ORIGINS'):
+        if hasattr(settings, "CORS_ORIGINS"):
             if isinstance(settings.CORS_ORIGINS, str):
-                cors_origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(',') if origin.strip()]
+                cors_origins = [
+                    origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()
+                ]
             elif isinstance(settings.CORS_ORIGINS, list):
                 cors_origins = settings.CORS_ORIGINS
 
@@ -184,10 +191,10 @@ def configure_cors_middleware(app: FastAPI) -> None:
         cors_origins.extend(deployment_origins)
 
         # Check for wildcard Vercel domains
-        has_vercel_wildcard = any('*.vercel.app' in origin for origin in cors_origins)
+        has_vercel_wildcard = any("*.vercel.app" in origin for origin in cors_origins)
 
         # Remove wildcards (CORS doesn't support them, we'll use allow_origin_regex instead)
-        cors_origins = [origin for origin in cors_origins if '*' not in origin]
+        cors_origins = [origin for origin in cors_origins if "*" not in origin]
 
         # Remove duplicates while preserving order
         cors_origins = list(dict.fromkeys(cors_origins))
@@ -329,6 +336,7 @@ def configure_all_middleware(app: FastAPI) -> None:
     # 3. API Gateway (routing, versioning, circuit breakers)
     try:
         from apps.backend.middleware.api_gateway import APIGatewayMiddleware
+
         app.add_middleware(APIGatewayMiddleware)
         logger.info("API Gateway middleware configured")
     except ImportError as e:
@@ -337,6 +345,7 @@ def configure_all_middleware(app: FastAPI) -> None:
     # 4. Request Validation (security checks, input sanitization)
     try:
         from apps.backend.middleware.request_validator import RequestValidatorMiddleware
+
         app.add_middleware(RequestValidatorMiddleware)
         logger.info("Request Validator middleware configured")
     except ImportError as e:
@@ -345,6 +354,7 @@ def configure_all_middleware(app: FastAPI) -> None:
     # 5. Tenant Middleware
     try:
         from apps.backend.middleware.tenant_middleware import TenantMiddleware
+
         app.add_middleware(TenantMiddleware)
         logger.info("Tenant middleware configured")
     except ImportError as e:
@@ -363,6 +373,7 @@ def configure_all_middleware(app: FastAPI) -> None:
     # Add Prometheus middleware if available
     try:
         from apps.backend.middleware.prometheus_middleware import PrometheusMiddleware
+
         app.add_middleware(PrometheusMiddleware)
         logger.info("Prometheus middleware configured")
     except ImportError as e:
@@ -373,7 +384,10 @@ def configure_all_middleware(app: FastAPI) -> None:
 
     # 9. Response Transformation (should be late for final formatting)
     try:
-        from apps.backend.middleware.response_transformer import ResponseTransformerMiddleware
+        from apps.backend.middleware.response_transformer import (
+            ResponseTransformerMiddleware,
+        )
+
         app.add_middleware(ResponseTransformerMiddleware)
         logger.info("Response Transformer middleware configured")
     except ImportError as e:

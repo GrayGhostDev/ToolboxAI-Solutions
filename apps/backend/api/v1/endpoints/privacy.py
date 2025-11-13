@@ -13,21 +13,21 @@ Notes:
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import uuid
-import asyncio
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 
 try:
     # Primary import path in this repo
     from apps.backend.api.auth.auth import get_current_user
     from apps.backend.models.schemas import User
 except Exception:  # pragma: no cover - fallback for alternate paths
-    from ..auth.auth import get_current_user  # type: ignore
     from ...models.schemas import User  # type: ignore
+    from ..auth.auth import get_current_user  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ def _new_ticket(prefix: str) -> str:
 async def request_data_export(
     background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Initiate a data export (DSAR). Returns a ticket for asynchronous processing.
     Also provides a temporary download URL for demonstration purposes.
@@ -82,7 +82,7 @@ async def request_data_export(
 @router.get("/export/{ticket}")
 async def download_export(
     ticket: str, current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Return export bundle if ready, else a 404 with message.
     """
@@ -104,7 +104,7 @@ async def download_export(
 async def request_data_deletion(
     background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Initiate a data deletion request (right to be forgotten) for the current user.
     Returns a ticket for asynchronous processing and verification.
@@ -135,7 +135,7 @@ async def request_data_deletion(
 @router.get("/export-status/{ticket}")
 async def export_status(
     ticket: str, current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     try:
         from apps.backend.services.dsar_service import get_status
 
@@ -147,7 +147,7 @@ async def export_status(
 
 
 @router.get("/consents")
-async def list_consents(current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+async def list_consents(current_user: User = Depends(get_current_user)) -> dict[str, Any]:
     """
     Return the current user's consent records (placeholder structure).
     Replace with database-backed records as implemented.
@@ -165,9 +165,9 @@ async def list_consents(current_user: User = Depends(get_current_user)) -> Dict[
 
 @router.post("/consents/parent-verify")
 async def verify_parental_consent(
-    payload: Dict[str, Any],
-    current_user: Optional[User] = Depends(get_current_user),
-) -> Dict[str, Any]:
+    payload: dict[str, Any],
+    current_user: User | None = Depends(get_current_user),
+) -> dict[str, Any]:
     """
     Placeholder parental consent verification endpoint. Accepts a verification code or token
     issued out-of-band (email/SMS/video). Replace with real verification.
