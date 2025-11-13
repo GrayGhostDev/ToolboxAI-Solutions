@@ -56,7 +56,7 @@ langchain-openai==1.0.2             # OpenAI integration
 langchain-text-splitters==1.0.0     # Text splitting utilities
 langgraph==1.0.3                    # LangGraph workflow orchestration
 langsmith==0.4.42                   # LangSmith tracing
-openai>=1.61.0                       # OpenAI API client (explicit dependency)
+openai>=1.52.0,<2.0.0                # OpenAI API client (LangChain 1.0.x compatible)
 tiktoken==0.12.0                     # OpenAI tokenizer
 
 # ============================================================================
@@ -147,8 +147,8 @@ opentelemetry-exporter-jaeger==1.21.0  # Jaeger tracing exporter
 opentelemetry-util-http==0.42b0      # HTTP utilities
 backoff<3.0.0,>=1.10.0               # Retry with backoff
 grpcio==1.75.1                       # gRPC framework
-googleapis-common-protos==1.52.0     # Google API protos (compatible with OpenTelemetry 1.21.0)
-protobuf==4.25.8                     # Protocol buffers
+googleapis-common-protos==1.70.0     # Google API protos (pinned for protobuf 3.20.x compatibility)
+protobuf==3.20.3                     # Protocol buffers pinned for 3.12 runtime
 
 # ============================================================================
 # DATA PROCESSING & ANALYTICS
