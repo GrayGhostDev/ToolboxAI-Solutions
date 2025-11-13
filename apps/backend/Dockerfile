@@ -4,7 +4,7 @@
 # Multi-stage build for optimized production image
 
 # Stage 1: Builder
-FROM python:3.14-slim as builder
+FROM python:3.12-slim as builder
 
 WORKDIR /app
 
@@ -15,11 +15,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
-COPY ../../requirements.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir --user -r requirements.txt
 
 # Stage 2: Runtime
-FROM python:3.14-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
@@ -61,6 +61,8 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 EXPOSE ${PORT}
 
 # Run application with gunicorn for production
+# Set protobuf implementation before starting to avoid C++ descriptor issues
+ENV PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
 CMD ["gunicorn", "apps.backend.main:app", \
      "--bind", "0.0.0.0:8000", \
      "--workers", "2", \
