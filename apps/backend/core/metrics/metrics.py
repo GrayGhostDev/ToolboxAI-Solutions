@@ -13,7 +13,9 @@ REQUEST_COUNT = Counter(
 )
 
 REQUEST_DURATION = Histogram(
-    "http_request_duration_seconds", "HTTP request duration in seconds", ["method", "endpoint"]
+    "http_request_duration_seconds",
+    "HTTP request duration in seconds",
+    ["method", "endpoint"],
 )
 
 # GPT-4.1 metrics
@@ -102,6 +104,26 @@ def track_gpt41_request(model: str):
                 duration = time.time() - start_time
                 GPT41_REQUESTS.labels(model, status).inc()
                 GPT41_LATENCY.labels(model).observe(duration)
+
+        return wrapper
+
+    return decorator
+
+
+def track_db_query(query_type: str):
+    """Decorator to track database query performance"""
+
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            start_time = time.time()
+
+            try:
+                result = await func(*args, **kwargs)
+                return result
+            finally:
+                duration = time.time() - start_time
+                DB_QUERY_DURATION.labels(query_type).observe(duration)
 
         return wrapper
 

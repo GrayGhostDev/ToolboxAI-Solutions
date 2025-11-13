@@ -46,15 +46,10 @@ logger = logging.getLogger(__name__)
 sys.path.append(str(Path(__file__).parent.parent))
 
 try:
-    from core.agents.content_agent import ContentAgent  # type: ignore
     from core.agents.orchestrator import (
         Orchestrator as OrchestrationEngine,  # type: ignore
     )
-    from core.agents.quiz_agent import QuizAgent  # type: ignore
-    from core.agents.review_agent import ReviewAgent  # type: ignore
-    from core.agents.script_agent import ScriptAgent  # type: ignore
     from core.agents.supervisor import SupervisorAgent  # type: ignore
-    from core.agents.terrain_agent import TerrainAgent  # type: ignore
     from core.coordinators.main_coordinator import MainCoordinator  # type: ignore
     from core.mcp.context_manager import (
         MCPContextManager as ContextManager,  # type: ignore
@@ -126,7 +121,11 @@ except ImportError as e:
                 # Find alternative agent with lower load
                 for agent in sorted(self.agent_load.keys(), key=lambda x: self.agent_load[x]):
                     if self.agent_load[agent] < 3:
-                        logger.info("Load balancing: Routing from %s to %s", selected_agent, agent)
+                        logger.info(
+                            "Load balancing: Routing from %s to %s",
+                            selected_agent,
+                            agent,
+                        )
                         selected_agent = agent
                         break
 
@@ -149,9 +148,17 @@ except ImportError as e:
             # Set up workflow definitions
             self.workflow_definitions = {
                 "content_generation": [
-                    {"agent": "content", "action": "generate_content", "parallel": False},
+                    {
+                        "agent": "content",
+                        "action": "generate_content",
+                        "parallel": False,
+                    },
                     {"agent": "quiz", "action": "generate_quiz", "parallel": True},
-                    {"agent": "terrain", "action": "generate_terrain", "parallel": True},
+                    {
+                        "agent": "terrain",
+                        "action": "generate_terrain",
+                        "parallel": True,
+                    },
                     {"agent": "script", "action": "generate_script", "parallel": False},
                     {"agent": "review", "action": "review_code", "parallel": False},
                 ],
@@ -161,7 +168,11 @@ except ImportError as e:
                     {"agent": "review", "action": "review_code", "parallel": False},
                 ],
                 "environment_setup": [
-                    {"agent": "terrain", "action": "generate_terrain", "parallel": False},
+                    {
+                        "agent": "terrain",
+                        "action": "generate_terrain",
+                        "parallel": False,
+                    },
                     {"agent": "script", "action": "generate_script", "parallel": True},
                     {"agent": "review", "action": "review_code", "parallel": False},
                 ],
@@ -177,7 +188,8 @@ except ImportError as e:
             self.task_dependencies = {}
 
             logger.info(
-                "OrchestrationEngine initialized with %d workflows", len(self.workflow_definitions)
+                "OrchestrationEngine initialized with %d workflows",
+                len(self.workflow_definitions),
             )
 
         async def orchestrate(self, workflow_name: str, context: dict, *args, **kwargs):
@@ -368,7 +380,11 @@ except ImportError as e:
                 # Update state history
                 self._update_state_history(cycle_result)
 
-                logger.info("SPARC cycle completed: Action=%s, Reward=%f", action["type"], reward)
+                logger.info(
+                    "SPARC cycle completed: Action=%s, Reward=%f",
+                    action["type"],
+                    reward,
+                )
 
                 return cycle_result
 
@@ -412,7 +428,11 @@ except ImportError as e:
 
             # Policy decision logic
             if content_needed:
-                action = {"type": "load_content", "priority": "high", "urgency": "immediate"}
+                action = {
+                    "type": "load_content",
+                    "priority": "high",
+                    "urgency": "immediate",
+                }
             elif user_struggling:
                 action = {
                     "type": "provide_assistance",
@@ -432,7 +452,11 @@ except ImportError as e:
                     "assessment_type": "adaptive",
                 }
             else:
-                action = {"type": "continue_lesson", "priority": "low", "mode": "standard"}
+                action = {
+                    "type": "continue_lesson",
+                    "priority": "low",
+                    "mode": "standard",
+                }
 
             # Add personalization parameters
             action["personalization"] = {
@@ -708,7 +732,10 @@ except ImportError as e:
 
             if successful_results:
                 # Return result with best execution time among successful ones
-                return min(successful_results, key=lambda r: r.get("execution_time", float("inf")))
+                return min(
+                    successful_results,
+                    key=lambda r: r.get("execution_time", float("inf")),
+                )
             else:
                 # If no successful results, return the one with least severe error
                 return min(results, key=lambda r: len(r.get("error", "")))
@@ -854,12 +881,17 @@ class AgentPool:
         self.active_agents: dict[str, int] = {}
         self._lock = asyncio.Lock()
         self.executor = ThreadPoolExecutor(max_workers=pool_size)
+        self._initialized = False
 
-        # Initialize agent pools
-        self._initialize_pools()
+        # Don't initialize agent pools immediately - do it lazily on first use
+        # This prevents ChatOpenAI initialization at import time
+        logger.info("AgentPool created (lazy initialization enabled)")
 
     def _initialize_pools(self):
         """Initialize agent pools for different types"""
+        if self._initialized:
+            return
+
         agent_types = ["content", "quiz", "terrain", "script", "review"]
 
         for agent_type in agent_types:
@@ -871,6 +903,7 @@ class AgentPool:
                 agent = self._create_agent(agent_type)
                 self.agents[agent_type].append(agent)
 
+        self._initialized = True
         logger.info("Initialized agent pools with %d types", len(agent_types))
 
     def _create_agent(self, agent_type: str) -> Any:
@@ -898,6 +931,10 @@ class AgentPool:
 
     async def get_agent(self, agent_type: str) -> Any:
         """Get an available agent from the pool"""
+        # Lazy initialization on first use
+        if not self._initialized:
+            self._initialize_pools()
+
         async with self._lock:
             if not self.agents.get(agent_type):
                 # Create agent if pool is empty
@@ -1283,7 +1320,12 @@ class AgentManager:
 
             # 11. Broadcast context update via MCP
             await self.mcp_server.broadcast_context(
-                {"task_id": task_id, "status": "completed", "reward": reward, "content_id": task_id}
+                {
+                    "task_id": task_id,
+                    "status": "completed",
+                    "reward": reward,
+                    "content_id": task_id,
+                }
             )
 
             # Update task status
@@ -1422,33 +1464,43 @@ class AgentManager:
         logger.info("AgentManager shutdown completed")
 
 
-# Global agent manager instance
-agent_manager = AgentManager()
+# Global agent manager instance (lazy initialization)
+_agent_manager: AgentManager | None = None
+
+
+def get_agent_manager() -> AgentManager:
+    """Get or create the global agent manager instance (lazy initialization)"""
+    global _agent_manager
+    if _agent_manager is None:
+        logger.info("Creating AgentManager instance (first access)")
+        _agent_manager = AgentManager()
+    return _agent_manager
 
 
 # Convenience functions for external use
 async def initialize_agents():
     """Initialize the agent system"""
     logger.info("Initializing agent system")
-    # Agent manager is already initialized
-    return agent_manager
+    # Get or create agent manager
+    return get_agent_manager()
 
 
 async def generate_educational_content(
     request: ContentRequest, user: User | None = None
 ) -> ContentResponse:
     """Generate educational content"""
-    return await agent_manager.generate_content(request, user)
+    return await get_agent_manager().generate_content(request, user)
 
 
 async def get_agent_health():
     """Get agent system health status"""
-    return await agent_manager.get_agent_status()
+    return await get_agent_manager().get_agent_status()
 
 
 async def shutdown_agents():
     """Shutdown agent system"""
-    await agent_manager.shutdown()
+    manager = get_agent_manager()
+    await manager.shutdown()
 
 
 # Export public interface
@@ -1457,7 +1509,7 @@ __all__ = [
     "AgentPool",
     "TaskRouter",
     "ResultAggregator",
-    "agent_manager",
+    "get_agent_manager",
     "initialize_agents",
     "generate_educational_content",
     "get_agent_health",
