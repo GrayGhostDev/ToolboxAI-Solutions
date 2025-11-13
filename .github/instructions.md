@@ -467,11 +467,37 @@ Example tools:
 
 ---
 
-## 🤖 GitHub Copilot Agents
+## 🤖 GitHub Copilot Configuration
 
-### Available Copilot Agents
+### Copilot Integration
 
-ToolBoxAI-Solutions has **specialized GitHub Copilot agents** to assist with development tasks. These agents have deep knowledge of the codebase and can help with specific areas.
+GitHub Copilot is deeply integrated into ToolBoxAI-Solutions with:
+- **6 specialized agents** for domain-specific assistance
+- **4 automated workflows** for issue/PR automation
+- **Automatic labeling** and agent activation
+- **Quality checks** and **security scanning**
+
+**Configuration Files:**
+- `.github/instructions.md` - This file (Copilot workspace instructions)
+- `.github/agents/` - Specialized agent definitions
+- `.github/workflows/copilot-agent-triggers.yml` - Agent automation
+- `.github/workflows/auto-resolve-issues.yml` - Issue analysis
+- `.github/workflows/pr-auto-review.yml` - PR review automation
+- `.github/workflows/auto-label.yml` - Automatic labeling
+- `CLAUDE.md` - Claude AI assistant configuration
+
+### GitHub Copilot Workspace Features
+
+This repository is configured as a **GitHub Copilot Workspace** which means:
+
+1. **Context-Aware Assistance**: Copilot understands the ToolBoxAI architecture
+2. **Smart Suggestions**: Code suggestions follow our tech stack and patterns
+3. **Agent Activation**: Specialized agents trigger automatically
+4. **Quality Automation**: Automated code review and security scanning
+
+### Available Specialized Agents
+
+ToolBoxAI-Solutions has **6 specialized GitHub Copilot agents** with deep knowledge of the codebase.
 
 **Location:** `.github/agents/`
 
@@ -697,6 +723,573 @@ gh copilot generate "using frontend-specialist create TypeScript interface for U
 - Test thoroughly before merging
 - Agents follow repository standards but may need corrections
 - Complex tasks may need breaking down into steps
+
+---
+
+## 🔄 Automated Workflows
+
+### Workflow-Triggered Automation
+
+ToolBoxAI has **4 automated workflows** that trigger based on labels and events:
+
+#### 1. Copilot Agent Auto-Trigger (`copilot-agent-triggers.yml`)
+
+**Purpose**: Automatically activates specialized agents when labels are added
+
+**Triggers**:
+- Issues: labeled, opened, edited
+- Pull Requests: labeled, opened, edited, synchronize
+- Comments: created
+
+**What it does**:
+```yaml
+Label Added → Agent Activated → Comment Posted
+
+backend → Backend Specialist → Guidance + Best Practices
+frontend → Frontend Specialist → Mantine UI tips + TypeScript examples
+ai/agents → AI Agent Specialist → LangChain patterns + Examples
+infrastructure → DevOps Specialist → Docker + TeamCity + Deployment guides
+documentation → Documentation Specialist → Style guide + Templates
+security → Security Analysis → Vulnerability scanning + Compliance checklist
+```
+
+**Example**: Add `backend` label to issue → Backend Specialist automatically posts:
+- Agent capabilities
+- Best practices checklist
+- Documentation links
+- Example commands
+- Technology reminders (BasedPyright, async/await, Pydantic v2)
+
+#### 2. Auto-Resolve Issues (`auto-resolve-issues.yml`)
+
+**Purpose**: Automated issue analysis and fix suggestions
+
+**Triggers**:
+- Issues with `backend` + `bug` labels
+- Issues with `frontend` + `bug` labels
+- Issues with `security` label
+- Comment: `@copilot create-fix-branch`
+- Comment: `@copilot auto-fix`
+
+**What it does**:
+
+**For Backend Bugs**:
+1. Runs BasedPyright type checking
+2. Runs pytest test suite
+3. Analyzes error output
+4. Posts detailed troubleshooting guide
+5. Suggests fix commands
+
+**For Frontend Bugs**:
+1. Runs TypeScript type checking
+2. Runs ESLint linting
+3. Runs Vitest tests
+4. Checks for forbidden patterns (Material-UI, Socket.IO)
+5. Posts fix suggestions
+
+**For Security Issues**:
+1. Runs Bandit code security scan
+2. Runs Safety dependency vulnerability check
+3. Runs pip-audit for comprehensive audit
+4. Generates security report (artifact)
+5. Posts compliance checklist (COPPA, FERPA, GDPR, SOC 2)
+
+**For Auto-Fix Branch**:
+1. Creates `fix/issue-{number}-auto-generated` branch
+2. Posts checkout and setup instructions
+3. Includes test commands
+
+#### 3. PR Auto-Review (`pr-auto-review.yml`)
+
+**Purpose**: Automated PR quality checking and review
+
+**Triggers**:
+- Pull Requests: opened, synchronize, reopened, labeled
+- PR review comments: created
+
+**What it does**:
+
+**Change Detection**:
+- Backend files: `apps/backend/**/*.py`
+- Frontend files: `apps/dashboard/**/*.{tsx,ts,jsx,js}`
+- AI agents: `apps/backend/agents/**/*.py`
+- Infrastructure: `infrastructure/**/*`, `Dockerfile*`, `.github/workflows/**/*`
+- Documentation: `docs/**/*.md`, `README.md`, `CLAUDE.md`
+
+**Backend Review** (if backend files changed):
+- ✅ BasedPyright type checking
+- ✅ Black code formatting check
+- ✅ Flake8 linting
+- ✅ pytest test execution
+- ✅ Posts review comment with results + checklist
+
+**Frontend Review** (if frontend files changed):
+- ✅ TypeScript type checking
+- ✅ ESLint linting
+- ✅ Vitest test execution
+- ✅ Forbidden pattern detection:
+  - ❌ Material-UI usage (should use Mantine UI v8)
+  - ❌ Socket.IO usage (should use Pusher Channels)
+  - ❌ Wrong ports (3000 → 5179, 8000 → 8009)
+- ✅ Posts review comment with results + checklist
+
+**Infrastructure Review** (if infrastructure files changed):
+- ✅ Docker best practices check
+- ✅ Multi-stage build verification
+- ✅ Version tag validation (no :latest)
+- ✅ Posts review comment with checklist
+
+**Security Review** (always runs):
+- ✅ Secret detection in PR diffs
+- ✅ .env file commit detection
+- ✅ Blocks PR if security issues found
+- ✅ Adds `security` label automatically
+- ✅ Posts remediation instructions
+
+#### 4. Auto-Label (`auto-label.yml`)
+
+**Purpose**: Automatic issue and PR labeling
+
+**Triggers**:
+- Pull Requests: opened, synchronize
+- Issues: opened, edited
+
+**What it does**:
+
+**PR Labeling** (based on changed files):
+```
+apps/backend/**/*.py → backend, python
+apps/dashboard/**/*.{tsx,ts,jsx,js} → frontend
+apps/backend/agents/**/*.py → ai, agents
+infrastructure/**/* → infrastructure
+.github/workflows/**/* → infrastructure
+docs/**/*.md → documentation
+Dockerfile* → docker
+```
+
+**Issue Labeling** (based on content keywords):
+```
+Keywords: fastapi, api, endpoint, backend → backend
+Keywords: react, mantine, component, ui → frontend
+Keywords: langchain, agent, gpt, openai → ai
+Keywords: docker, deployment, vercel, render → infrastructure
+Keywords: docs, documentation, guide → documentation
+Keywords: bug, error, crash, fail → bug
+Keywords: feature, enhancement, improve → enhancement
+```
+
+**Label Creation**:
+Ensures these labels exist in the repository:
+- `ai` - AI/ML and agent-related issues
+- `agents` - LangChain/LangGraph agent development
+- `langchain` - LangChain framework related
+- `deployment` - Deployment and infrastructure
+- `docker` - Docker and containerization
+- `docs` - Documentation
+- `copilot-agent` - GitHub Copilot agent related
+
+### Workflow Integration
+
+All workflows work together:
+
+```
+1. Issue Created
+   ↓
+2. Auto-Label → Adds 'backend' label
+   ↓
+3. Copilot Agent Trigger → Backend Specialist posts guidance
+   ↓
+4. Developer adds 'bug' label
+   ↓
+5. Auto-Resolve → Runs analysis, posts fix suggestions
+   ↓
+6. Developer comments '@copilot create-fix-branch'
+   ↓
+7. Auto-Resolve → Creates fix branch
+   ↓
+8. Developer creates PR
+   ↓
+9. Auto-Label → Labels PR as 'backend', 'python'
+   ↓
+10. PR Auto-Review → Runs type check, lint, tests
+    ↓
+11. PR Auto-Review → Posts review comment with results
+    ↓
+12. All checks pass → Merge to main
+```
+
+### Using Workflows
+
+**To trigger Backend Specialist**:
+1. Add `backend` label to issue or PR
+2. OR create issue mentioning "fastapi" or "api"
+3. OR change files in `apps/backend/`
+
+**To trigger automated analysis**:
+1. Add `bug` label to issue with `backend` or `frontend` label
+2. OR comment `@copilot auto-fix` on any issue
+3. Workflow runs and posts detailed analysis
+
+**To create auto-fix branch**:
+1. Comment `@copilot create-fix-branch` on any issue
+2. Workflow creates `fix/issue-{number}-auto-generated` branch
+3. Posts checkout and testing instructions
+
+**To trigger security scan**:
+1. Add `security` label to issue
+2. OR create PR (security always runs)
+3. Workflow runs Bandit, Safety, pip-audit
+4. Posts security report
+
+---
+
+## 🎯 Application-Specific Copilot Guidelines
+
+### ToolBoxAI Code Patterns
+
+When using GitHub Copilot in this repository, follow these patterns:
+
+#### Backend (Python/FastAPI)
+
+**Endpoint Pattern**:
+```python
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
+from typing import List
+
+router = APIRouter(prefix="/api/v1/resource", tags=["resource"])
+
+class ResourceCreate(BaseModel):
+    name: str
+    description: str | None = None
+
+class ResourceResponse(BaseModel):
+    id: int
+    name: str
+    created_at: datetime
+
+@router.post(
+    "/",
+    response_model=ResourceResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a new resource"
+)
+async def create_resource(
+    resource: ResourceCreate,
+    user: dict = Depends(get_current_user)  # Clerk authentication
+) -> ResourceResponse:
+    """Create a new resource with Clerk authentication."""
+    # Implementation
+    pass
+```
+
+**Database Pattern** (Supabase/AsyncPG):
+```python
+from apps.backend.core.database import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+
+async def get_resource(db: AsyncSession, resource_id: int):
+    result = await db.execute(
+        select(Resource).where(Resource.id == resource_id)
+    )
+    return result.scalar_one_or_none()
+```
+
+**Celery Task Pattern**:
+```python
+from apps.backend.celery_app import celery_app
+
+@celery_app.task(name="process_quiz_submission")
+def process_quiz_submission(submission_id: int) -> dict:
+    """Process quiz submission in background."""
+    # Implementation
+    return {"status": "completed", "submission_id": submission_id}
+```
+
+**LangChain Agent Pattern**:
+```python
+from langchain_openai import ChatOpenAI
+from langgraph.graph import StateGraph, END
+from typing import TypedDict
+
+class AgentState(TypedDict):
+    messages: List[str]
+    context: dict
+
+llm = ChatOpenAI(model="gpt-4-1106-preview", temperature=0.7)
+
+workflow = StateGraph(AgentState)
+# Define workflow nodes and edges
+```
+
+#### Frontend (React/TypeScript/Mantine)
+
+**Component Pattern**:
+```typescript
+import { FC } from 'react';
+import { Card, Text, Button, Group } from '@mantine/core';
+
+interface QuizCardProps {
+  id: number;
+  title: string;
+  description?: string;
+  onStart: (id: number) => void;
+}
+
+export const QuizCard: FC<QuizCardProps> = ({ id, title, description, onStart }) => {
+  return (
+    <Card shadow="sm" padding="lg" radius="md" withBorder>
+      <Text size="lg" fw={500}>
+        {title}
+      </Text>
+      {description && (
+        <Text size="sm" c="dimmed" mt="sm">
+          {description}
+        </Text>
+      )}
+      <Group mt="md">
+        <Button onClick={() => onStart(id)}>Start Quiz</Button>
+      </Group>
+    </Card>
+  );
+};
+```
+
+**RTK Query Pattern**:
+```typescript
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { baseQuery } from './baseQuery';
+
+export const quizApi = createApi({
+  reducerPath: 'quizApi',
+  baseQuery,
+  tagTypes: ['Quiz'],
+  endpoints: (builder) => ({
+    getQuizzes: builder.query<Quiz[], void>({
+      query: () => '/api/v1/quizzes',
+      providesTags: ['Quiz'],
+    }),
+    createQuiz: builder.mutation<Quiz, CreateQuizDto>({
+      query: (quiz) => ({
+        url: '/api/v1/quizzes',
+        method: 'POST',
+        body: quiz,
+      }),
+      invalidatesTags: ['Quiz'],
+    }),
+  }),
+});
+
+export const { useGetQuizzesQuery, useCreateQuizMutation } = quizApi;
+```
+
+**Clerk Auth Pattern**:
+```typescript
+import { useAuth, useUser } from '@clerk/clerk-react';
+
+export const ProtectedComponent: FC = () => {
+  const { isLoaded, userId } = useAuth();
+  const { user } = useUser();
+
+  if (!isLoaded) return <Loader />;
+  if (!userId) return <Navigate to="/sign-in" />;
+
+  return <div>Protected content for {user?.fullName}</div>;
+};
+```
+
+**Pusher Real-time Pattern**:
+```typescript
+import Pusher from 'pusher-js';
+import { useEffect } from 'react';
+
+const pusher = new Pusher(import.meta.env.VITE_PUSHER_KEY, {
+  cluster: import.meta.env.VITE_PUSHER_CLUSTER,
+});
+
+export const useLiveQuizUpdates = (quizId: number) => {
+  useEffect(() => {
+    const channel = pusher.subscribe(`quiz-${quizId}`);
+    
+    channel.bind('submission', (data) => {
+      // Handle real-time submission
+    });
+
+    return () => {
+      channel.unbind_all();
+      channel.unsubscribe();
+    };
+  }, [quizId]);
+};
+```
+
+### Technology Constraints
+
+When Copilot suggests code, ensure it follows these constraints:
+
+#### ✅ USE THESE
+- **Backend**: FastAPI, Pydantic v2, BasedPyright, asyncpg, Celery, LangChain v1.0
+- **Frontend**: React 19, Mantine UI v8, TypeScript strict, RTK Query, Pusher Channels
+- **Auth**: Clerk (complete auth solution)
+- **Database**: Supabase (PostgreSQL 16 + pgvector)
+- **Real-time**: Pusher Channels
+- **Package Manager**: pnpm (frontend), pip (backend)
+- **Type Checking**: BasedPyright (NOT mypy)
+- **Virtual Env**: `venv/` directory
+
+#### ❌ DO NOT USE
+- **Backend**: Flask, Django, mypy, sync SQLAlchemy
+- **Frontend**: Material-UI (use Mantine), Socket.IO (use Pusher), npm/yarn (use pnpm)
+- **Ports**: 3000 (use 5179), 8000 (use 8009), 5173 (use 5179)
+- **Virtual Env**: `.venv` (use `venv/`)
+
+### Copilot Chat Shortcuts
+
+Use these shortcuts in GitHub Copilot Chat:
+
+```
+/explain - Explain the selected code
+/fix - Suggest a fix for the selected code
+/tests - Generate tests for the selected code
+/doc - Add documentation to the selected code
+
+# Custom workspace commands
+@workspace /explain auth flow - Explain Clerk authentication
+@workspace /fix backend endpoint - Fix FastAPI endpoint
+@workspace /tests component - Generate Vitest tests for component
+```
+
+### Copilot in Different IDEs
+
+**VS Code**:
+- Install GitHub Copilot extension
+- Copilot automatically reads `.github/instructions.md`
+- Agents available via `@copilot using <agent-name>`
+
+**JetBrains (PyCharm, WebStorm)**:
+- Install GitHub Copilot plugin
+- Configure workspace to use `.github/instructions.md`
+
+**Neovim**:
+- Install copilot.vim or copilot.lua
+- Configure to load workspace instructions
+
+---
+
+## 📋 Copilot Best Practices for ToolBoxAI
+
+### 1. Always Specify Context
+
+**❌ Bad**:
+```
+Create a user endpoint
+```
+
+**✅ Good**:
+```
+@copilot using backend-specialist
+
+Create an async FastAPI endpoint for user profile retrieval:
+- Endpoint: GET /api/v1/users/{user_id}/profile
+- Use Clerk JWT authentication
+- Validate with Pydantic v2
+- Query Supabase via asyncpg
+- Return role-based filtered data
+- Include OpenAPI documentation
+```
+
+### 2. Reference Architecture
+
+**❌ Bad**:
+```
+Add real-time notifications
+```
+
+**✅ Good**:
+```
+@copilot using frontend-specialist
+
+Add Pusher Channels real-time notifications for quiz submissions:
+- Use VITE_PUSHER_KEY from environment
+- Subscribe to channel: quiz-{quizId}
+- Listen for 'submission' events
+- Update Redux state via RTK Query invalidation
+- Show Mantine notification toast
+```
+
+### 3. Include Security Requirements
+
+**❌ Bad**:
+```
+Create quiz submission endpoint
+```
+
+**✅ Good**:
+```
+@copilot using backend-specialist
+
+Create secure quiz submission endpoint:
+- Require Clerk authentication
+- Validate student role
+- Check quiz availability window
+- Prevent duplicate submissions
+- Rate limit: 1 submission per quiz
+- Store in Supabase with audit trail
+- Comply with COPPA (no PII in logs)
+```
+
+### 4. Specify Testing Requirements
+
+**✅ Good**:
+```
+@copilot using backend-specialist
+
+Create endpoint with tests:
+1. Unit tests with pytest
+2. Test success case
+3. Test authentication failures
+4. Test validation errors
+5. Test rate limiting
+6. Mock Supabase interactions
+```
+
+### 5. Request Documentation
+
+**✅ Good**:
+```
+@copilot using documentation-specialist
+
+Document the quiz submission flow:
+- API endpoint specification (OpenAPI)
+- Request/response examples
+- Error codes and handling
+- Rate limiting details
+- Security considerations
+- User guide for educators
+```
+
+---
+
+## 🔗 Additional Resources
+
+### GitHub Copilot Documentation
+- [GitHub Copilot Docs](https://docs.github.com/en/copilot)
+- [Copilot Workspace](https://docs.github.com/en/copilot/using-github-copilot/using-github-copilot-in-the-command-line)
+- [Copilot Chat](https://docs.github.com/en/copilot/github-copilot-chat/about-github-copilot-chat)
+- [Copilot Best Practices](https://docs.github.com/en/copilot/using-github-copilot/getting-started-with-github-copilot)
+
+### ToolBoxAI Documentation
+- [Project README](../README.md)
+- [Claude AI Guide](../CLAUDE.md)
+- [API Documentation](../docs/03-api/)
+- [Architecture Docs](../docs/02-architecture/)
+- [Contributing Guide](CONTRIBUTING.md)
+
+---
+
+**Last Updated**: November 13, 2025  
+**Copilot Workspace Version**: 2.0.0  
+**Maintained by**: ToolBoxAI Development Team
 
 ---
 

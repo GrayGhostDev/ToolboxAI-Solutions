@@ -1,8 +1,27 @@
 # ToolBoxAI-Solutions - Claude Code Guide
 
-**Last Updated:** November 13, 2025
-**Project Type:** Full-Stack AI-Powered Educational Platform
-**Status:** Production-Ready
+**Last Updated:** November 13, 2025  
+**Project Type:** Full-Stack AI-Powered Educational Platform  
+**Status:** Production-Ready  
+**Claude Code Version:** Compatible with Claude 3.7+ (Sonnet, Opus)
+
+---
+
+## 📘 About This File
+
+This file provides context to **Claude AI assistants** (including Claude Code, Claude API, and Claude in various IDEs) when working with the ToolBoxAI-Solutions codebase.
+
+**Purpose**: Help Claude understand:
+- Project architecture and technology stack
+- Coding standards and best practices
+- File organization and naming conventions
+- Development workflows and tools
+- GitHub Copilot agent integration
+- Security and compliance requirements
+
+**For Anthropic Claude Users**: This guide is optimized for Claude 3.7 Sonnet and Opus models with extended context windows (200K+ tokens).
+
+**For Claude Code IDE**: This file is automatically loaded as workspace context. Claude Code will reference it when providing assistance.
 
 ---
 
@@ -11,22 +30,28 @@
 **ToolBoxAI-Solutions** is an AI-powered educational platform with Roblox integration, designed to provide interactive learning experiences for K-12 students.
 
 ### Key Features
-- **AI-Powered Learning:** Integrated with GPT-4.1 and LangChain for intelligent tutoring
+- **AI-Powered Learning:** Integrated with GPT-4.1 and LangChain v1.0 for intelligent tutoring
 - **Roblox Integration:** Seamless connection with Roblox games for educational experiences
-- **Real-Time Collaboration:** Pusher Channels for live interactions
+- **Real-Time Collaboration:** Pusher Channels (NOT Socket.IO) for live interactions
 - **Role-Based Access:** Student, Educator, Parent, and Administrator roles
 - **Progress Tracking:** Comprehensive analytics and gamification
 - **Secure & Compliant:** COPPA, FERPA, GDPR, and SOC 2 Type 2 compliant
 
+### Target Users
+- **Students**: K-12 students using the platform for learning
+- **Educators**: Teachers creating content and tracking progress
+- **Parents**: Monitoring student activity and progress
+- **Administrators**: Managing the platform and users
+
 ---
 
-## 🤖 GitHub Copilot Agents & Triggers
+## 🤖 GitHub Copilot & Claude Integration
 
-### Available Specialized Agents
+### GitHub Copilot Agents
 
 **Location:** `.github/agents/`
 
-ToolBoxAI has **6 specialized GitHub Copilot agents** for different development tasks:
+ToolBoxAI has **6 specialized GitHub Copilot agents** for development tasks. Claude Code can reference these agents when providing assistance:
 
 1. **Issue Resolution Agent** (`my-agent.agent.md`)
    - **Triggers**: Issues, PRs, bug labels
@@ -35,41 +60,671 @@ ToolBoxAI has **6 specialized GitHub Copilot agents** for different development 
 2. **Backend Development Specialist** (`backend-specialist.agent.md`)
    - **Triggers**: `apps/backend/**/*.py`, labels: `backend`, `api`
    - **Use for**: FastAPI, SQLAlchemy, Celery, LangChain development
+   - **Technologies**: Python 3.12, FastAPI, Pydantic v2, BasedPyright
 
 3. **Frontend Development Specialist** (`frontend-specialist.agent.md`)
    - **Triggers**: `apps/dashboard/**/*.{tsx,ts}`, labels: `frontend`, `ui`
-   - **Use for**: React 19, Mantine UI, TypeScript, Redux development
+   - **Use for**: React 19, Mantine UI v8, TypeScript, Redux development
+   - **Technologies**: React 19, TypeScript 5.9, Mantine UI v8, RTK Query
 
 4. **AI Agent Development Specialist** (`ai-agent-specialist.agent.md`)
    - **Triggers**: `apps/backend/agents/**/*.py`, labels: `ai`, `agents`
-   - **Use for**: LangChain, LangGraph, OpenAI agent development
+   - **Use for**: LangChain v1.0, LangGraph, OpenAI agent development
+   - **Technologies**: LangChain 1.0.5, LangGraph 1.0.3, OpenAI GPT-4.1
 
 5. **DevOps & Infrastructure Specialist** (`devops-specialist.agent.md`)
    - **Triggers**: `infrastructure/**/*`, labels: `deployment`, `docker`
    - **Use for**: Docker, TeamCity, Render, Vercel deployment
+   - **Technologies**: Docker 25.x, TeamCity Cloud, Render, Vercel
+
+6. **Documentation Specialist** (`documentation-specialist.agent.md`)
+   - **Triggers**: `docs/**/*.md`, labels: `documentation`
+   - **Use for**: Technical writing, API docs, user guides
+   - **Technologies**: Markdown, OpenAPI, MkDocs
+
+### When to Reference Copilot Agents
+
+When Claude Code is asked to help with a task, reference the appropriate Copilot agent's knowledge:
+
+```
+User: "Create a FastAPI endpoint for user authentication"
+Claude: [References backend-specialist.agent.md]
+        [Provides FastAPI code using Clerk, async/await, Pydantic v2]
+        [Suggests: "@copilot using backend-specialist for more help"]
+```
+
+### Automated Workflows
+
+The repository has **4 automated workflows** that Claude should be aware of:
+
+1. **copilot-agent-triggers.yml**: Auto-activates agents on label events
+2. **auto-resolve-issues.yml**: Automated issue analysis and fixing
+3. **pr-auto-review.yml**: Automated PR review with quality checks
+4. **auto-label.yml**: Automatic labeling of issues/PRs
+
+**For Claude**: When suggesting fixes, mention relevant automated workflows.
+
+---
+
+## 🏗️ Technology Stack & Constraints
+
+### Required Technologies (✅ Use These)
+
+#### Backend
+- **Framework**: FastAPI 0.121.1 (NOT Flask or Django)
+- **Runtime**: Python 3.12+ (NOT Python 3.11 or earlier)
+- **Type Checking**: BasedPyright (NOT mypy)
+- **Validation**: Pydantic v2 (NOT v1)
+- **Database Driver**: asyncpg (async PostgreSQL)
+- **ORM**: SQLAlchemy 2.0 with async
+- **Task Queue**: Celery 5.5.3 + Redis
+- **Testing**: pytest + pytest-asyncio
+- **Port**: 8009 (NOT 8000)
+
+#### Frontend
+- **Framework**: React 19.1.0 (NOT React 18 or earlier)
+- **Build Tool**: Vite 6 (NOT webpack or Create React App)
+- **Language**: TypeScript 5.9.2 with strict mode
+- **UI Library**: Mantine UI v8 (NOT Material-UI/MUI)
+- **State**: Redux Toolkit + RTK Query
+- **Real-time**: Pusher Channels 3.3.2 (NOT Socket.IO)
+- **Testing**: Vitest + React Testing Library
+- **Port**: 5179 (NOT 3000 or 5173)
+
+#### AI/ML
+- **LLM**: OpenAI GPT-4.1 (gpt-4-1106-preview)
+- **Framework**: LangChain 1.0.5 (v1 API, NOT v0.x)
+- **Orchestration**: LangGraph 1.0.3
+- **Observability**: LangSmith 0.4.42
+- **Vector Store**: Supabase pgvector
+
+#### Infrastructure
+- **Container**: Docker 25.x with BuildKit
+- **Orchestration**: Docker Compose
+- **CI/CD**: TeamCity Cloud (Docker-based) + GitHub Actions
+- **Package Manager**: pnpm 9.15.0 (frontend), pip (backend)
+- **Virtual Env**: `venv/` directory (NOT `.venv`)
+
+#### External Services
+- **Authentication**: Clerk (OAuth/OIDC)
+- **Database**: Supabase (PostgreSQL 16 + pgvector + Realtime)
+- **Deployment**: Render (backend), Vercel (frontend)
+
+### Forbidden Technologies (❌ Do NOT Use)
+
+- **Backend**: Flask, Django, mypy, synchronous SQLAlchemy
+- **Frontend**: Material-UI (MUI), Socket.IO, npm, yarn, Create React App
+- **Ports**: 3000 (use 5179), 8000 (use 8009), 5173 (use 5179)
+- **Virtual Env**: `.venv` (use `venv/`)
+- **LangChain**: v0.x API (use v1.0+)
+- **React**: Class components (use functional components)
+- **Python**: Type hints without BasedPyright checking
+
+---
+
+## 📚 Documentation Location Rules
+
+### CRITICAL: Documentation Guidelines for Claude
+
+**Claude Code Memory:**
+- ✅ **All documentation in Markdown files** must be placed in the correct `/docs` location
+- ❌ **NO documentation files in root directory** (except CLAUDE.md and README.md)
+- ✅ **Only create status and summary documents** upon successful completion of a complete Phase or Task
+- ❌ **Stop creating summary documents** unless they go in `/docs/11-reports/` folder
+- ✅ **Always check FILE_RELOCATION_MAP.md** before creating or moving files
+
+### Documentation Structure
+
+All documentation is centralized in `/docs/` with the following structure:
+
+```
+docs/
+├── 01-getting-started/      # Setup and onboarding
+├── 02-architecture/         # System architecture
+├── 03-api/                  # API documentation
+├── 04-implementation/       # Implementation guides
+├── 05-features/             # Feature documentation
+├── 06-user-guides/          # Role-specific guides
+├── 08-operations/           # DevOps, deployment, CI/CD
+│   ├── docker/              # Docker guides
+│   ├── deployment/          # Deployment procedures
+│   ├── ci-cd/               # CI/CD documentation
+│   ├── monitoring/          # Monitoring setup
+│   └── github-projects/     # Project management
+├── 10-security/             # Security documentation
+├── 11-reports/              # Status reports ONLY
+├── FILE_RELOCATION_MAP.md   # Track moved files
+└── README.md                # Documentation index
+```
+
+**Reference:** See `/docs/README.md` for complete documentation structure.
+
+### File Creation Rules for Claude
+
+When Claude creates or suggests creating files:
+
+1. **Check Location First**: Always verify the correct directory
+2. **Update FILE_RELOCATION_MAP.md**: If moving a file
+3. **Follow Naming Conventions**: Use kebab-case for files
+4. **Include Headers**: Add title, date, and metadata
+5. **No Root Docs**: Except CLAUDE.md, README.md
+
+**Example**:
+```markdown
+# ❌ Bad (creates doc in root)
+/new-feature-doc.md
+
+# ✅ Good (creates doc in correct location)
+/docs/05-features/quiz-system.md
+```
+
+---
+
 
 6. **Documentation Specialist** (`documentation-specialist.agent.md`)
    - **Triggers**: `docs/**/*.md`, labels: `documentation`
    - **Use for**: Technical writing, API docs, user guides
 
-### How to Invoke Agents
+### How Claude Should Work With Copilot Agents
 
-**In code comments:**
+When providing assistance, Claude Code should:
+
+1. **Reference Relevant Agents**: Mention which Copilot agent specializes in the task
+2. **Follow Agent Patterns**: Use the same patterns and standards as the agents
+3. **Suggest Agent Usage**: Recommend using `@copilot using <agent>` for follow-up
+4. **Complement Agents**: Provide deeper explanation and context beyond agents
+
+**Example**:
+```
+User: "Help me create a FastAPI endpoint"
+
+Claude: I'll help you create a FastAPI endpoint following the backend-specialist patterns.
+[Provides detailed implementation with async/await, Pydantic v2, Clerk auth]
+
+For automated assistance, you can also use:
+@copilot using backend-specialist create <endpoint description>
+
+The backend specialist agent can help with:
+- Type checking (BasedPyright)
+- Testing (pytest)
+- OpenAPI documentation
+- Best practices validation
+```
+
+---
+
+## 💻 Claude Code IDE Integration
+
+### Using Claude Code with ToolBoxAI
+
+**Claude Code** is Anthropic's AI-powered IDE assistant. This section helps Claude Code understand how to work optimally with ToolBoxAI-Solutions.
+
+### Context Loading
+
+Claude Code automatically loads:
+1. **This file** (CLAUDE.md) - As primary context
+2. **.github/instructions.md** - For GitHub Copilot integration
+3. **README.md** - For project overview
+4. **Recent files** - Files you're actively editing
+
+### Workspace Commands
+
+Claude Code users can use these commands:
+
+```
+/explain - Explain code or architecture
+/fix - Suggest fixes for bugs or errors
+/refactor - Improve code structure
+/test - Generate tests
+/doc - Add documentation
+/review - Review code for issues
+```
+
+**ToolBoxAI-specific commands**:
+```
+@workspace /explain auth flow - Explain Clerk authentication
+@workspace /explain agent system - Explain LangChain agent architecture
+@workspace /explain deployment - Explain Render + Vercel deployment
+@workspace /fix backend - Fix backend issues with correct patterns
+@workspace /test component - Generate Vitest tests for React components
+```
+
+### Claude Code Best Practices for ToolBoxAI
+
+#### 1. Always Check Technology Stack
+
+Before suggesting code, verify the tech stack:
+
+**❌ Bad**:
 ```python
-# @copilot using backend-specialist
-# Create async FastAPI endpoint for user creation with Pydantic validation
+# Suggests Material-UI for frontend
+from @mui/material import Button
 ```
 
-**In PRs/Issues:**
-```markdown
-@copilot using frontend-specialist
-Create a Mantine Card component for displaying quiz results
+**✅ Good**:
+```typescript
+// Uses Mantine UI v8 as required
+import { Button } from '@mantine/core';
 ```
 
-**In terminal:**
-```bash
-gh copilot suggest "using ai-agent-specialist create LangGraph workflow"
+#### 2. Follow Async Patterns
+
+**❌ Bad** (sync code):
+```python
+def get_user(user_id: int):
+    return db.query(User).filter(User.id == user_id).first()
 ```
+
+**✅ Good** (async code):
+```python
+async def get_user(db: AsyncSession, user_id: int) -> User | None:
+    result = await db.execute(
+        select(User).where(User.id == user_id)
+    )
+    return result.scalar_one_or_none()
+```
+
+#### 3. Use Correct Type Checking
+
+**❌ Bad** (mypy hints):
+```python
+from typing import Optional
+def func(x: Optional[str]) -> Optional[int]:
+    pass
+```
+
+**✅ Good** (BasedPyright with modern syntax):
+```python
+def func(x: str | None) -> int | None:
+    """BasedPyright will check this."""
+    pass
+```
+
+#### 4. Reference Documentation
+
+When explaining concepts, reference ToolBoxAI docs:
+
+**✅ Good**:
+```
+The authentication flow uses Clerk. See:
+- Architecture: docs/02-architecture/authentication.md
+- Implementation: docs/04-implementation/clerk-integration.md
+- Security: docs/10-security/authentication-security.md
+```
+
+### Claude's Role vs Copilot Agents
+
+**Claude Code excels at**:
+- Deep architectural explanations
+- Complex refactoring
+- Multi-file changes
+- Design discussions
+- Debugging complex issues
+- Learning and education
+
+**Copilot Agents excel at**:
+- Quick code generation
+- Pattern-based suggestions
+- File-specific help
+- Automated quality checks
+- Triggered assistance
+
+**Use both**: Claude for understanding, Copilot for quick assistance.
+
+---
+
+## 🔧 Development Workflows for Claude
+
+### Common Development Tasks
+
+When assisting with these tasks, Claude should follow these patterns:
+
+#### Task: Create New API Endpoint
+
+**Steps Claude should guide**:
+1. Create endpoint in `apps/backend/api/`
+2. Define Pydantic models in `apps/backend/models/`
+3. Add business logic in `apps/backend/services/`
+4. Write tests in `tests/backend/`
+5. Update OpenAPI documentation
+6. Test with pytest
+7. Verify with BasedPyright
+
+**Code pattern**:
+```python
+# apps/backend/api/v1/resources.py
+from fastapi import APIRouter, Depends, HTTPException, status
+from apps.backend.models.resource import ResourceCreate, ResourceResponse
+from apps.backend.services.resource_service import ResourceService
+from apps.backend.core.auth import get_current_user
+
+router = APIRouter(prefix="/api/v1/resources", tags=["resources"])
+
+@router.post("/", response_model=ResourceResponse, status_code=status.HTTP_201_CREATED)
+async def create_resource(
+    resource: ResourceCreate,
+    user: dict = Depends(get_current_user),
+    service: ResourceService = Depends()
+) -> ResourceResponse:
+    """
+    Create a new resource.
+    
+    Requires:
+    - Clerk authentication
+    - Valid resource data
+    
+    Returns:
+    - Created resource with ID
+    """
+    return await service.create(resource, user_id=user["id"])
+```
+
+#### Task: Create React Component
+
+**Steps Claude should guide**:
+1. Create component in `apps/dashboard/src/components/`
+2. Define TypeScript interfaces
+3. Use Mantine UI v8 components
+4. Implement with hooks
+5. Connect to Redux if needed
+6. Add Vitest tests
+7. Verify TypeScript compilation
+
+**Code pattern**:
+```typescript
+// apps/dashboard/src/components/ResourceCard/ResourceCard.tsx
+import { FC } from 'react';
+import { Card, Text, Button, Group } from '@mantine/core';
+import { useResourceMutation } from '@/api/resources';
+
+interface ResourceCardProps {
+  id: number;
+  title: string;
+  description?: string;
+}
+
+export const ResourceCard: FC<ResourceCardProps> = ({ 
+  id, 
+  title, 
+  description 
+}) => {
+  const [deleteResource, { isLoading }] = useResourceMutation();
+
+  const handleDelete = async () => {
+    await deleteResource(id);
+  };
+
+  return (
+    <Card shadow="sm" padding="lg" radius="md" withBorder>
+      <Text size="lg" fw={500}>{title}</Text>
+      {description && <Text size="sm" c="dimmed" mt="sm">{description}</Text>}
+      <Group mt="md">
+        <Button onClick={handleDelete} loading={isLoading} color="red">
+          Delete
+        </Button>
+      </Group>
+    </Card>
+  );
+};
+```
+
+#### Task: Create LangChain Agent
+
+**Steps Claude should guide**:
+1. Create agent in `apps/backend/agents/`
+2. Define state with TypedDict
+3. Create LangGraph workflow
+4. Add custom tools
+5. Configure LLM (GPT-4.1)
+6. Add LangSmith tracing
+7. Test agent behavior
+
+**Code pattern**:
+```python
+# apps/backend/agents/content_reviewer.py
+from typing import TypedDict, List
+from langchain_openai import ChatOpenAI
+from langgraph.graph import StateGraph, END
+from langsmith import traceable
+
+class ReviewState(TypedDict):
+    content: str
+    feedback: List[str]
+    approved: bool
+
+llm = ChatOpenAI(model="gpt-4-1106-preview", temperature=0.7)
+
+@traceable(name="content_review_agent")
+async def review_content(state: ReviewState) -> ReviewState:
+    """Review educational content for quality."""
+    # Agent implementation
+    pass
+
+# Build workflow
+workflow = StateGraph(ReviewState)
+workflow.add_node("review", review_content)
+workflow.set_entry_point("review")
+workflow.add_edge("review", END)
+
+content_reviewer = workflow.compile()
+```
+
+---
+
+## 📝 Claude Communication Guidelines
+
+### How Claude Should Respond
+
+When providing assistance in ToolBoxAI-Solutions:
+
+#### 1. Be Explicit About Technology Choices
+
+**❌ Vague**:
+```
+Use a UI library for the button component.
+```
+
+**✅ Explicit**:
+```
+Use Mantine UI v8 for the button component (NOT Material-UI):
+
+import { Button } from '@mantine/core';
+```
+
+#### 2. Provide Context and Rationale
+
+**❌ Just code**:
+```python
+async def get_users(db: AsyncSession):
+    return await db.execute(select(User))
+```
+
+**✅ With context**:
+```python
+# Using async/await as required by ToolBoxAI's asyncpg setup
+# BasedPyright will type-check this pattern
+async def get_users(db: AsyncSession) -> list[User]:
+    """
+    Retrieve all users from Supabase.
+    
+    Uses:
+    - AsyncSession for non-blocking database queries
+    - Modern Python 3.12 type hints (list[User] not List[User])
+    - BasedPyright type checking
+    """
+    result = await db.execute(select(User))
+    return result.scalars().all()
+```
+
+#### 3. Reference Documentation
+
+Always point to relevant docs:
+
+**✅ Good**:
+```
+For more details on authentication:
+- See docs/02-architecture/authentication.md
+- Implementation: docs/04-implementation/clerk-integration.md
+- GitHub Copilot: Use @copilot using backend-specialist for auth help
+```
+
+#### 4. Warn About Common Mistakes
+
+**✅ Helpful**:
+```
+⚠️ Common mistake: Don't use Material-UI (MUI) in this project.
+✅ Use Mantine UI v8 instead.
+
+❌ Bad: import Button from '@mui/material/Button'
+✅ Good: import { Button } from '@mantine/core'
+```
+
+#### 5. Suggest Next Steps
+
+**✅ Complete**:
+```
+Next steps:
+1. ✅ Code implementation provided
+2. 📝 Add tests: pytest tests/backend/test_resources.py
+3. 🔍 Type check: basedpyright apps/backend
+4. 🚀 Run locally: uvicorn main:app --reload --port 8009
+5. 📚 Update docs: docs/03-api/resources-endpoint.md
+```
+
+---
+
+## 🔒 Security & Compliance for Claude
+
+### CRITICAL: Security Rules
+
+When generating code, Claude MUST ensure:
+
+#### 1. No Secrets in Code
+
+**❌ NEVER**:
+```python
+OPENAI_API_KEY = "sk-proj-..."
+SUPABASE_KEY = "eyJhbGc..."
+```
+
+**✅ ALWAYS**:
+```python
+import os
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+if not OPENAI_API_KEY:
+    raise ValueError("OPENAI_API_KEY environment variable required")
+```
+
+#### 2. Input Validation
+
+**✅ ALWAYS use Pydantic v2**:
+```python
+from pydantic import BaseModel, Field, field_validator
+
+class QuizCreate(BaseModel):
+    title: str = Field(..., min_length=1, max_length=200)
+    questions: list[str] = Field(..., min_length=1, max_length=50)
+    
+    @field_validator('title')
+    @classmethod
+    def title_must_be_clean(cls, v: str) -> str:
+        # Validate and sanitize
+        return v.strip()
+```
+
+#### 3. Authentication Required
+
+**❌ BAD** (no auth):
+```python
+@router.get("/sensitive-data")
+async def get_sensitive():
+    return {"data": "secret"}
+```
+
+**✅ GOOD** (Clerk auth):
+```python
+from apps.backend.core.auth import get_current_user
+
+@router.get("/sensitive-data")
+async def get_sensitive(user: dict = Depends(get_current_user)):
+    # Clerk authentication verified
+    return {"data": "secret", "user_id": user["id"]}
+```
+
+#### 4. COPPA Compliance
+
+**For K-12 platform**:
+- ❌ NO PII in logs
+- ❌ NO tracking without consent
+- ✅ Parental consent for students under 13
+- ✅ Data minimization
+- ✅ Secure data storage
+
+**Example**:
+```python
+import logging
+
+logger = logging.getLogger(__name__)
+
+# ❌ BAD: Logs PII
+logger.info(f"User {email} logged in")
+
+# ✅ GOOD: No PII
+logger.info(f"User {user_id} logged in")
+```
+
+---
+
+## 🎓 Educational Context for Claude
+
+### Understanding ToolBoxAI's Purpose
+
+ToolBoxAI-Solutions is an **educational platform** for K-12 students. When providing assistance, Claude should:
+
+1. **Consider Educational Use Cases**:
+   - Students aged 5-18
+   - Various skill levels
+   - Accessibility requirements (WCAG 2.1 AA)
+   - Parent/teacher oversight
+
+2. **Prioritize Safety**:
+   - Content filtering
+   - Age-appropriate interactions
+   - Moderation capabilities
+   - Audit trails
+
+3. **Support Learning Goals**:
+   - Progress tracking
+   - Gamification
+   - Personalized feedback
+   - Adaptive difficulty
+
+### Example Educational Features
+
+When implementing features, consider:
+
+**Quiz System**:
+- Multiple question types
+- Adaptive difficulty
+- Immediate feedback
+- Progress tracking
+- Parent/teacher visibility
+
+**AI Tutor**:
+- Age-appropriate language
+- Encouraging tone
+- Learning-focused responses
+- Safe content filtering
+- Session limits
+
+**Roblox Integration**:
+- Educational game sync
+- Progress transfer
+- Safe social features
+- Moderated chat
+- Parent controls
 
 ---
 
