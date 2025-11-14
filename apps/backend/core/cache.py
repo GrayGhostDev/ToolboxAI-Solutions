@@ -500,6 +500,10 @@ cache = _cache
 warmer = CacheWarmer(_cache)
 invalidator = CacheInvalidator(_cache)
 
+# Backward compatibility: CacheService is an alias for RedisCache
+# This allows legacy code to import CacheService from this module
+CacheService = RedisCache
+
 
 # Convenience functions for common operations
 async def get_cached_dashboard(user_id: int, role: str) -> dict[str, Any] | None:

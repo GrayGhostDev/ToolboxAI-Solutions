@@ -4,20 +4,18 @@ Quiz Agent - Specializes in creating interactive quizzes and assessments
 Generates educational assessments for Roblox learning environments.
 """
 
+import json
 import logging
 import random
-from typing import Dict, Any, List, Optional, Tuple
-from datetime import datetime
-import json
-import uuid
-import asyncio
 import sys
+import uuid
+from datetime import datetime
 from pathlib import Path
+from typing import Any, Optional
 
-from langchain_core.messages import HumanMessage, AIMessage
 from pydantic import BaseModel, Field
 
-from .base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
+from .base_agent import AgentConfig, AgentState, BaseAgent
 
 # Add project paths for database imports
 project_root = Path(__file__).parent.parent.parent
@@ -25,53 +23,59 @@ sys.path.insert(0, str(project_root))
 
 # Database integration
 try:
+    from database import get_async_session
     from database.core.repositories import (
-        QuizRepository, ContentRepository, 
-        LessonRepository, ProgressRepository,
-        AnalyticsRepository
+        AnalyticsRepository,
+        ContentRepository,
+        LessonRepository,
+        ProgressRepository,
+        QuizRepository,
     )
-    from database.models.models import (
-        Quiz as DBQuiz, QuizQuestion as DBQuizQuestion,
-        QuizAttempt, QuizResponse, DifficultyLevel
-    )
-    from database.connection_manager import get_async_session
+    from database.models.models import DifficultyLevel, QuizAttempt, QuizResponse
+    from database.models.models import Quiz as DBQuiz
+    from database.models.models import QuizQuestion as DBQuizQuestion
+
     DATABASE_AVAILABLE = True
-except ImportError as e:
+except ImportError:
     DATABASE_AVAILABLE = False
     # Define DifficultyLevel locally if database models not available
     from enum import Enum
+
     class DifficultyLevel(Enum):
         BEGINNER = "beginner"
         INTERMEDIATE = "intermediate"
         ADVANCED = "advanced"
         EXPERT = "expert"
+
     QuizRepository = None
     ContentRepository = None
-    
+
 # SPARC Framework integration
 try:
-    from core.sparc.state_manager import StateManager
-    from core.sparc.policy_engine import PolicyEngine
     from core.sparc.action_executor import ActionExecutor
-    from core.sparc.reward_calculator import RewardCalculator
     from core.sparc.context_tracker import ContextTracker
+    from core.sparc.policy_engine import PolicyEngine
+    from core.sparc.reward_calculator import RewardCalculator
+    from core.sparc.state_manager import StateManager
+
     SPARC_AVAILABLE = True
 except ImportError:
     SPARC_AVAILABLE = False
     StateManager = None
     PolicyEngine = None
-    
+
 # MCP Context management
 try:
     from core.mcp.context_manager import MCPContextManager
+
     MCP_AVAILABLE = True
 except ImportError:
     MCP_AVAILABLE = False
     MCPContextManager = None
 
 # Environment configuration
-import sys
 import os
+import sys
 
 # Add the project root to the path
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -80,13 +84,15 @@ if project_root not in sys.path:
 
 try:
     from toolboxai_settings import settings
+
     env_config = settings
 except ImportError as e:
     # If still can't import, create a minimal fallback
     import logging
+
     logger = logging.getLogger(__name__)
     logger.warning(f"Could not import toolboxai_settings: {e}")
-    
+
     class FallbackConfig:
         def __init__(self):
             self.use_mock_llm = os.getenv("USE_MOCK_LLM", "true").lower() == "true"
@@ -98,7 +104,7 @@ except ImportError as e:
             self.require_auth = False
             self.validate_ssl = False
             self.cache_enabled = True
-    
+
     env_config = FallbackConfig()
 
 logger = logging.getLogger(__name__)
@@ -108,7 +114,7 @@ class QuizQuestion(BaseModel):
     """Model for a quiz question"""
 
     question: str
-    options: List[str]
+    options: list[str]
     correct_answer: int  # Index of correct option
     explanation: str
     difficulty: str = "medium"
@@ -122,12 +128,12 @@ class Quiz(BaseModel):
 
     title: str
     description: str
-    questions: List[QuizQuestion]
+    questions: list[QuizQuestion]
     time_limit: Optional[int] = None  # in seconds
     passing_score: int = 70  # percentage
     randomize: bool = True
     allow_review: bool = True
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class QuizAgent(BaseAgent):
@@ -155,7 +161,14 @@ class QuizAgent(BaseAgent):
         super().__init__(config)
 
         # Question type templates
-        self.question_types = ["multiple_choice", "true_false", "fill_blank", "matching", "ordering", "short_answer"]
+        self.question_types = [
+            "multiple_choice",
+            "true_false",
+            "fill_blank",
+            "matching",
+            "ordering",
+            "short_answer",
+        ]
 
         # Difficulty levels
         self.difficulty_levels = {
@@ -166,14 +179,21 @@ class QuizAgent(BaseAgent):
         }
 
         # Bloom's Taxonomy levels for question design
-        self.blooms_levels = ["Remember", "Understand", "Apply", "Analyze", "Evaluate", "Create"]
-        
+        self.blooms_levels = [
+            "Remember",
+            "Understand",
+            "Apply",
+            "Analyze",
+            "Evaluate",
+            "Create",
+        ]
+
         # Initialize database repositories if available
         self.quiz_repo = None
         self.content_repo = None
         self.analytics_repo = None
         self.db_session = None
-        
+
         # Initialize SPARC components if available
         if SPARC_AVAILABLE:
             self.state_manager = StateManager()
@@ -184,23 +204,20 @@ class QuizAgent(BaseAgent):
         else:
             self.state_manager = None
             self.policy_engine = None
-            
+
         # Initialize MCP context manager if available
         if MCP_AVAILABLE:
-            self.mcp_context = MCPContextManager(
-                max_tokens=8000,
-                model="gpt-4"
-            )
+            self.mcp_context = MCPContextManager(max_tokens=8000, model="gpt-4")
         else:
             self.mcp_context = None
-            
+
         # Track quiz generation metrics
         self.generation_metrics = {
             "total_quizzes": 0,
             "total_questions": 0,
             "average_quality_score": 0.0,
             "database_saves": 0,
-            "api_calls": 0
+            "api_calls": 0,
         }
 
     def _get_quiz_prompt(self) -> str:
@@ -235,7 +252,7 @@ Question Quality Criteria:
         """Process quiz generation task with database and SPARC integration"""
         task = state["task"]
         context = state["context"]
-        
+
         # Initialize database session if available
         await self._init_database_session()
 
@@ -249,18 +266,20 @@ Question Quality Criteria:
         learning_objectives = context.get("learning_objectives", [])
         lesson_id = context.get("lesson_id")  # Optional lesson association
         user_id = context.get("user_id")  # Optional for adaptive quiz
-        
+
         # SPARC: Initialize state tracking
         sparc_state = None
         if self.state_manager:
-            sparc_state = await self.state_manager.update_state({
-                "agent": "QuizAgent",
-                "task": task,
-                "subject": subject,
-                "topic": topic,
-                "grade_level": grade_level
-            })
-            
+            sparc_state = await self.state_manager.update_state(
+                {
+                    "agent": "QuizAgent",
+                    "task": task,
+                    "subject": subject,
+                    "topic": topic,
+                    "grade_level": grade_level,
+                }
+            )
+
         # Get curriculum standards from database if available
         if DATABASE_AVAILABLE and self.content_repo and lesson_id:
             try:
@@ -279,15 +298,15 @@ Question Quality Criteria:
             num_questions=num_questions,
             difficulty=difficulty,
             question_types=question_types,
-            objectives=learning_objectives
+            objectives=learning_objectives,
         )
-        
+
         # SPARC: Execute quiz generation action
         if self.action_executor and sparc_state:
             try:
                 # Create a proper Action object for SPARC
-                from dataclasses import dataclass
                 import uuid
+                from dataclasses import dataclass
 
                 @dataclass
                 class SimpleAction:
@@ -304,13 +323,10 @@ Question Quality Criteria:
                 action = SimpleAction(
                     action_id=str(uuid.uuid4()),
                     type="quiz_creation",
-                    parameters={
-                        "quiz_data": quiz.model_dump(),
-                        "state": sparc_state
-                    }
+                    parameters={"quiz_data": quiz.model_dump(), "state": sparc_state},
                 )
 
-                action_result = await self.action_executor.execute(action)
+                await self.action_executor.execute(action)
             except Exception as e:
                 logger.warning(f"Failed to execute SPARC action: {e}")
 
@@ -330,34 +346,38 @@ Question Quality Criteria:
 
         # Create feedback system
         feedback_system = self._create_feedback_system(quiz)
-        
+
         # SPARC: Calculate rewards based on quiz quality
         quality_score = 0.0
         if self.reward_calculator:
-            quality_score = await self.reward_calculator.calculate_rewards({
-                "quiz": quiz.model_dump(),
-                "num_questions": len(quiz.questions),
-                "has_explanations": all(q.explanation for q in quiz.questions),
-                "has_hints": any(q.hint for q in quiz.questions),
-                "difficulty_variety": len(set(q.difficulty for q in quiz.questions))
-            })
-            
+            quality_score = await self.reward_calculator.calculate_rewards(
+                {
+                    "quiz": quiz.model_dump(),
+                    "num_questions": len(quiz.questions),
+                    "has_explanations": all(q.explanation for q in quiz.questions),
+                    "has_hints": any(q.hint for q in quiz.questions),
+                    "difficulty_variety": len(set(q.difficulty for q in quiz.questions)),
+                }
+            )
+
         # Update MCP context if available
         if self.mcp_context:
             try:
-                await self.mcp_context.update_context({
-                    "quiz_generated": {
-                        "id": str(db_quiz_id) if db_quiz_id else None,
-                        "title": quiz.title,
-                        "subject": subject,
-                        "topic": topic,
-                        "num_questions": len(quiz.questions),
-                        "quality_score": quality_score
+                await self.mcp_context.update_context(
+                    {
+                        "quiz_generated": {
+                            "id": str(db_quiz_id) if db_quiz_id else None,
+                            "title": quiz.title,
+                            "subject": subject,
+                            "topic": topic,
+                            "num_questions": len(quiz.questions),
+                            "quality_score": quality_score,
+                        }
                     }
-                })
+                )
             except Exception as e:
                 logger.warning(f"Failed to update MCP context: {e}")
-        
+
         # Track analytics if available
         if DATABASE_AVAILABLE and self.analytics_repo:
             try:
@@ -369,17 +389,17 @@ Question Quality Criteria:
                         "subject": subject,
                         "topic": topic,
                         "num_questions": num_questions,
-                        "quality_score": quality_score
-                    }
+                        "quality_score": quality_score,
+                    },
                 )
             except Exception as e:
                 logger.warning(f"Failed to track analytics: {e}")
-        
+
         # Update metrics
         self.generation_metrics["total_quizzes"] += 1
         self.generation_metrics["total_questions"] += len(quiz.questions)
         self.generation_metrics["api_calls"] += 1
-        
+
         # Commit database changes if needed
         if self.db_session:
             try:
@@ -402,9 +422,9 @@ Question Quality Criteria:
                 "generated_at": datetime.now().isoformat(),
                 "sparc_tracked": sparc_state is not None,
                 "database_saved": db_quiz_id is not None,
-                "mcp_updated": self.mcp_context is not None
+                "mcp_updated": self.mcp_context is not None,
             },
-            "metrics": self.generation_metrics.copy()
+            "metrics": self.generation_metrics.copy(),
         }
 
         return result
@@ -416,14 +436,16 @@ Question Quality Criteria:
         grade_level: str,
         num_questions: int,
         difficulty: str,
-        question_types: List[str],
-        objectives: List[str],
+        question_types: list[str],
+        objectives: list[str],
     ) -> Quiz:
         """Generate a complete quiz"""
 
         # Create quiz generation prompt
         objectives_text = (
-            "\n".join(f"- {obj}" for obj in objectives) if objectives else "- Assess understanding of the topic"
+            "\n".join(f"- {obj}" for obj in objectives)
+            if objectives
+            else "- Assess understanding of the topic"
         )
 
         prompt = f"""Create a quiz for a Roblox educational game:
@@ -470,11 +492,15 @@ Format as JSON."""
             passing_score=70,
             randomize=True,
             allow_review=True,
-            metadata={"subject": subject, "grade_level": grade_level, "objectives": objectives},
+            metadata={
+                "subject": subject,
+                "grade_level": grade_level,
+                "objectives": objectives,
+            },
         )
 
         return quiz
-    
+
     async def _init_database_session(self):
         """Initialize database session if available"""
         if DATABASE_AVAILABLE and not self.db_session:
@@ -494,33 +520,28 @@ Format as JSON."""
                 self.quiz_repo = None
                 self.content_repo = None
                 self.analytics_repo = None
-    
-    async def _fetch_curriculum_standards(self, lesson_id: str) -> List[str]:
+
+    async def _fetch_curriculum_standards(self, lesson_id: str) -> list[str]:
         """Fetch real curriculum standards from database"""
         standards = []
         try:
             if self.content_repo:
                 # Get lesson content to extract learning objectives
-                content_items = await self.content_repo.get_by_lesson(
-                    uuid.UUID(lesson_id)
-                )
+                content_items = await self.content_repo.get_by_lesson(uuid.UUID(lesson_id))
                 for item in content_items:
                     if item.metadata and "learning_objectives" in item.metadata:
                         standards.extend(item.metadata["learning_objectives"])
         except Exception as e:
             logger.warning(f"Error fetching curriculum standards: {e}")
         return standards
-    
+
     async def _save_quiz_to_database(
-        self, 
-        quiz: Quiz, 
-        lesson_id: str,
-        created_by_id: Optional[str] = None
+        self, quiz: Quiz, lesson_id: str, created_by_id: Optional[str] = None
     ) -> uuid.UUID:
         """Save generated quiz to database"""
         if not self.quiz_repo:
             return None
-            
+
         try:
             # Create quiz in database
             db_quiz = await self.quiz_repo.create(
@@ -535,9 +556,9 @@ Format as JSON."""
                 randomize_questions=quiz.randomize,
                 show_feedback=quiz.allow_review,
                 metadata=quiz.metadata,
-                is_active=True
+                is_active=True,
             )
-            
+
             # Add questions to database
             for idx, question in enumerate(quiz.questions):
                 db_question = DBQuizQuestion(
@@ -551,17 +572,17 @@ Format as JSON."""
                     points=question.points,
                     order_index=idx,
                     difficulty=self._map_difficulty(question.difficulty),
-                    metadata={"category": question.category}
+                    metadata={"category": question.category},
                 )
                 self.db_session.add(db_question)
-            
+
             await self.db_session.flush()
             return db_quiz.id
-            
+
         except Exception as e:
             logger.error(f"Failed to save quiz to database: {e}")
             raise
-    
+
     def _map_difficulty(self, difficulty: str) -> DifficultyLevel:
         """Map string difficulty to enum"""
         mapping = {
@@ -571,11 +592,11 @@ Format as JSON."""
             "intermediate": DifficultyLevel.INTERMEDIATE,
             "hard": DifficultyLevel.ADVANCED,
             "advanced": DifficultyLevel.ADVANCED,
-            "expert": DifficultyLevel.EXPERT
+            "expert": DifficultyLevel.EXPERT,
         }
         return mapping.get(difficulty.lower(), DifficultyLevel.INTERMEDIATE)
 
-    def _parse_quiz_response(self, response: str, num_questions: int) -> List[QuizQuestion]:
+    def _parse_quiz_response(self, response: str, num_questions: int) -> list[QuizQuestion]:
         """Parse LLM response into quiz questions"""
         questions = []
 
@@ -661,7 +682,7 @@ function QuizModule.new(gui)
     self.answers = {}
     self.startTime = tick()
     self.timeLeft = QUIZ_DATA.timeLimit
-    
+
     return self
 end
 
@@ -678,10 +699,10 @@ function QuizModule:LoadQuestion(questionNumber)
         self:EndQuiz()
         return
     end
-    
+
     local questionData = QUIZ_DATA.questions[questionNumber]
     self.currentQuestion = questionNumber
-    
+
     -- Update UI
     self:UpdateQuestionDisplay(questionData)
     self:UpdateProgressBar()
@@ -691,7 +712,7 @@ function QuizModule:UpdateQuestionDisplay(questionData)
     -- Update question text
     local questionLabel = self.gui.QuestionFrame.QuestionText
     questionLabel.Text = questionData.question
-    
+
     -- Update options
     local optionsFrame = self.gui.QuestionFrame.OptionsFrame
     for i, option in ipairs(questionData.options) do
@@ -701,7 +722,7 @@ function QuizModule:UpdateQuestionDisplay(questionData)
             button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         end
     end
-    
+
     -- Update question number
     local progressLabel = self.gui.QuestionFrame.ProgressLabel
     progressLabel.Text = "Question " .. self.currentQuestion .. " of " .. #QUIZ_DATA.questions
@@ -710,14 +731,14 @@ end
 function QuizModule:SelectAnswer(optionNumber)
     local questionData = QUIZ_DATA.questions[self.currentQuestion]
     local isCorrect = optionNumber == questionData.correctAnswer
-    
+
     -- Store answer
     self.answers[self.currentQuestion] = {
         selected = optionNumber,
         correct = questionData.correctAnswer,
         isCorrect = isCorrect
     }
-    
+
     -- Update score
     if isCorrect then
         self.score = self.score + questionData.points
@@ -725,7 +746,7 @@ function QuizModule:SelectAnswer(optionNumber)
     else
         self:ShowFeedback(false, questionData.explanation)
     end
-    
+
     -- Auto-advance after delay
     wait(2)
     self:NextQuestion()
@@ -734,7 +755,7 @@ end
 function QuizModule:ShowFeedback(isCorrect, explanation)
     local feedbackFrame = self.gui.FeedbackFrame
     feedbackFrame.Visible = true
-    
+
     if isCorrect then
         feedbackFrame.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
         feedbackFrame.StatusText.Text = "Correct!"
@@ -742,7 +763,7 @@ function QuizModule:ShowFeedback(isCorrect, explanation)
         feedbackFrame.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
         feedbackFrame.StatusText.Text = "Incorrect"
     end
-    
+
     feedbackFrame.ExplanationText.Text = explanation
 end
 
@@ -754,10 +775,10 @@ function QuizModule:EndQuiz()
     -- Calculate final score
     local percentage = (self.score / self:GetMaxScore()) * 100
     local passed = percentage >= QUIZ_DATA.passingScore
-    
+
     -- Show results
     self:ShowResults(percentage, passed)
-    
+
     -- Fire completion event
     game.ReplicatedStorage.QuizCompleted:Fire({
         score = self.score,
@@ -778,10 +799,10 @@ end
 function QuizModule:ShowResults(percentage, passed)
     local resultsFrame = self.gui.ResultsFrame
     resultsFrame.Visible = true
-    
-    resultsFrame.ScoreText.Text = string.format("Score: %d/%d (%.1f%%)", 
+
+    resultsFrame.ScoreText.Text = string.format("Score: %d/%d (%.1f%%)",
         self.score, self:GetMaxScore(), percentage)
-    
+
     if passed then
         resultsFrame.StatusText.Text = "PASSED!"
         resultsFrame.StatusText.TextColor3 = Color3.fromRGB(0, 255, 0)
@@ -797,7 +818,7 @@ function QuizModule:StartTimer()
             wait(1)
             self.timeLeft = self.timeLeft - 1
             self:UpdateTimerDisplay()
-            
+
             if self.timeLeft <= 0 then
                 self:EndQuiz()
                 break
@@ -811,7 +832,7 @@ function QuizModule:UpdateTimerDisplay()
     local minutes = math.floor(self.timeLeft / 60)
     local seconds = self.timeLeft % 60
     timerLabel.Text = string.format("%d:%02d", minutes, seconds)
-    
+
     -- Change color when time is running out
     if self.timeLeft <= 30 then
         timerLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
@@ -831,7 +852,7 @@ return QuizModule
 
         return script
 
-    def _create_feedback_system(self, quiz: Quiz) -> Dict[str, Any]:
+    def _create_feedback_system(self, quiz: Quiz) -> dict[str, Any]:
         """Create a comprehensive feedback system for the quiz"""
 
         feedback_system = {
@@ -865,13 +886,21 @@ return QuizModule
         feedback_system["achievement_triggers"] = [
             {"condition": "percentage >= 100", "achievement": "Perfect Score!"},
             {"condition": "percentage >= 90", "achievement": "Quiz Master"},
-            {"condition": "time_spent < time_limit * 0.5", "achievement": "Speed Demon"},
-            {"condition": "first_attempt and passed", "achievement": "First Try Success"},
+            {
+                "condition": "time_spent < time_limit * 0.5",
+                "achievement": "Speed Demon",
+            },
+            {
+                "condition": "first_attempt and passed",
+                "achievement": "First Try Success",
+            },
         ]
 
         return feedback_system
 
-    async def generate_adaptive_quiz(self, student_performance: Dict[str, Any], subject: str, topic: str) -> Quiz:
+    async def generate_adaptive_quiz(
+        self, student_performance: dict[str, Any], subject: str, topic: str
+    ) -> Quiz:
         """Generate an adaptive quiz based on student performance"""
 
         # Analyze student performance
@@ -911,14 +940,14 @@ Create 8-10 questions with appropriate difficulty progression."""
             randomize=False,  # Keep adaptive order
             metadata={"type": "adaptive", "student_profile": student_performance},
         )
-        
+
         # Save adaptive quiz to database if available
         if DATABASE_AVAILABLE and self.quiz_repo:
             try:
                 await self._save_quiz_to_database(
-                    quiz, 
+                    quiz,
                     lesson_id=None,  # Adaptive quizzes may not have lesson
-                    created_by_id=user_id
+                    created_by_id=user_id,
                 )
             except Exception as e:
                 logger.warning(f"Failed to save adaptive quiz: {e}")
@@ -952,37 +981,34 @@ Format as a structured quiz."""
         )
 
         return quiz
-    
-    async def get_quiz_statistics(
-        self, 
-        quiz_id: str
-    ) -> Dict[str, Any]:
+
+    async def get_quiz_statistics(self, quiz_id: str) -> dict[str, Any]:
         """Get quiz statistics from database"""
         if not DATABASE_AVAILABLE or not self.quiz_repo:
             return {"error": "Database not available"}
-        
+
         try:
             quiz_uuid = uuid.UUID(quiz_id)
-            
+
             # Get quiz with attempts
             quiz = await self.quiz_repo.get_with_questions(quiz_uuid)
             if not quiz:
                 return {"error": "Quiz not found"}
-            
+
             # Get attempt statistics
-            stmt = f"""SELECT 
+            stmt = f"""SELECT
                           COUNT(*) as total_attempts,
                           AVG(percentage) as avg_score,
                           MAX(percentage) as highest_score,
                           MIN(percentage) as lowest_score,
                           AVG(time_taken) as avg_time
-                       FROM quiz_attempts 
-                       WHERE quiz_id = '{quiz_uuid}' 
+                       FROM quiz_attempts
+                       WHERE quiz_id = '{quiz_uuid}'
                        AND status = 'completed'"""
-            
+
             result = await self.db_session.execute(stmt)
             stats = result.fetchone()
-            
+
             return {
                 "quiz_id": quiz_id,
                 "title": quiz.title,
@@ -992,25 +1018,26 @@ Format as a structured quiz."""
                 "lowest_score": float(stats.lowest_score or 0),
                 "average_time_seconds": int(stats.avg_time or 0),
                 "num_questions": len(quiz.questions),
-                "passing_score": quiz.passing_score
+                "passing_score": quiz.passing_score,
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to get quiz statistics: {e}")
             return {"error": str(e)}
-    
-    def get_metrics(self) -> Dict[str, Any]:
+
+    def get_metrics(self) -> dict[str, Any]:
         """Get agent generation metrics"""
         avg_quality = (
-            self.generation_metrics["average_quality_score"] 
+            self.generation_metrics["average_quality_score"]
             if self.generation_metrics["total_quizzes"] == 0
-            else self.generation_metrics["average_quality_score"] / self.generation_metrics["total_quizzes"]
+            else self.generation_metrics["average_quality_score"]
+            / self.generation_metrics["total_quizzes"]
         )
-        
+
         return {
             **self.generation_metrics,
             "average_quality_score": avg_quality,
             "database_integration": DATABASE_AVAILABLE,
             "sparc_integration": SPARC_AVAILABLE,
-            "mcp_integration": MCP_AVAILABLE
+            "mcp_integration": MCP_AVAILABLE,
         }

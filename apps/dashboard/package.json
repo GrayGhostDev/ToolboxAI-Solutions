@@ -26,7 +26,9 @@
     "@babel/plugin-proposal-class-properties": "npm:@babel/plugin-transform-class-properties@^7.25.9",
     "@babel/plugin-proposal-object-rest-spread": "npm:@babel/plugin-transform-object-rest-spread@^7.25.9",
     "node-domexception": "^1.0.0",
-    "esbuild": "^0.25.0"
+    "esbuild": "^0.25.0",
+    "undici": "^7.0.0",
+    "path-to-regexp": "^8.2.0"
   },
   "scripts": {
     "postinstall": "node -e \"try { require('@rollup/rollup-linux-x64-gnu'); require('@rollup/rollup-darwin-arm64'); } catch (e) { console.log('Rollup binaries check:', e.message); }\"",

@@ -148,7 +148,7 @@ opentelemetry-util-http==0.42b0      # HTTP utilities
 backoff<3.0.0,>=1.10.0               # Retry with backoff
 grpcio==1.75.1                       # gRPC framework
 googleapis-common-protos~=1.52       # Google API protos (OpenTelemetry 1.21.0 compatible)
-protobuf==3.20.3                     # Protocol buffers pinned for 3.12 runtime
+protobuf>=4.25.5,<6.0.0              # Protocol buffers (fixed CVE-2024-7254)
 
 # ============================================================================
 # DATA PROCESSING & ANALYTICS

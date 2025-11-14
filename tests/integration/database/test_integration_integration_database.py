@@ -31,7 +31,7 @@ from sqlalchemy import text
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from database.connection_manager import db_manager, get_session, health_check
+from database import db_manager, get_session, health_check
 
 
 class DatabaseIntegrationTest:
@@ -195,8 +195,8 @@ class DatabaseIntegrationTest:
                 result = session.execute(
                     text(
                         """
-                    SELECT username, email, role, is_active, is_verified 
-                    FROM users 
+                    SELECT username, email, role, is_active, is_verified
+                    FROM users
                     WHERE email = 'test@example.com'
                 """
                     )

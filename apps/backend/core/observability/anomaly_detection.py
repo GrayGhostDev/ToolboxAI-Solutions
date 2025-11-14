@@ -45,9 +45,9 @@ logger = logging.getLogger(__name__)
 
 # Log availability warnings after logger is defined
 if not SCIPY_AVAILABLE:
-    logger.warning("scipy not available - trend anomaly detection will be disabled")
+    logger.debug("scipy not available - trend anomaly detection will be disabled")
 if not SKLEARN_AVAILABLE:
-    logger.warning("sklearn not available - some advanced features will be disabled")
+    logger.debug("sklearn not available - some advanced features will be disabled")
 
 
 class AnomalyType(Enum):

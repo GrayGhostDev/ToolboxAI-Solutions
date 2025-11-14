@@ -3,9 +3,10 @@ Workflow Orchestrator for coordinating agents and MCP integration
 """
 
 import logging
+from collections.abc import Callable
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable
+from typing import Any
 
 from .content_validation import ContentValidationSystem
 from .conversation_flow import ConversationFlowManager
@@ -442,7 +443,7 @@ class WorkflowOrchestrator:
         return plan
 
     async def execute_workflow(
-        self, plan_id: str, progress_callback: Callable | None = None
+        self, plan_id: str, progress_callback: Callable[..., Any] | None = None
     ) -> dict[str, Any]:
         """Execute a workflow plan with progress tracking"""
 

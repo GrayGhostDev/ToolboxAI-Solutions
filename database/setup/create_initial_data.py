@@ -14,7 +14,7 @@ sys.path.insert(0, str(project_root))
 
 from sqlalchemy import text
 
-from database.connection_manager import get_session
+from database import get_session
 
 
 def create_initial_data():
@@ -37,7 +37,7 @@ def create_initial_data():
             # Create AI agents
             ai_agents_sql = """
             INSERT INTO ai_agents (name, agent_type, description, version, model_config, capabilities, is_active)
-            VALUES 
+            VALUES
             ('supervisor', 'supervisor', 'Main orchestration agent', '1.0.0', '{"model": "gpt-4"}', ARRAY['["orchestration", "task_management", "workflow_coordination"]'::jsonb], true),
             ('content', 'content_generator', 'Educational content generation', '1.0.0', '{"model": "gpt-4"}', ARRAY['["content_creation", "curriculum_alignment"]'::jsonb], true),
             ('quiz', 'quiz_generator', 'Quiz and assessment creation', '1.0.0', '{"model": "gpt-4"}', ARRAY['["quiz_creation", "assessment_design"]'::jsonb], true),
@@ -50,7 +50,7 @@ def create_initial_data():
             # Create achievements
             achievements_sql = """
             INSERT INTO achievements (name, description, type, points, icon_url)
-            VALUES 
+            VALUES
             ('First Steps', 'Complete your first lesson', 'milestone', 10, '/icons/first-steps.png'),
             ('Quiz Master', 'Score 100% on a quiz', 'performance', 25, '/icons/quiz-master.png'),
             ('Streak Keeper', 'Maintain a 7-day learning streak', 'consistency', 50, '/icons/streak.png'),
@@ -62,7 +62,7 @@ def create_initial_data():
             # Create leaderboards
             leaderboards_sql = """
             INSERT INTO leaderboards (name, description, type, scope, criteria)
-            VALUES 
+            VALUES
             ('Weekly Top Performers', 'Top students by weekly progress', 'performance', 'global', '{"period": "weekly", "metric": "xp"}'),
             ('Quiz Champions', 'Students with highest quiz scores', 'academic', 'global', '{"metric": "quiz_average"}'),
             ('Most Helpful', 'Students who help others the most', 'social', 'global', '{"metric": "help_count"}'),

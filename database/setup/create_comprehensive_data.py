@@ -19,7 +19,7 @@ import hashlib
 
 from sqlalchemy import text
 
-from database.connection_manager import get_session
+from database import get_session
 
 
 def hash_password(password: str) -> str:
@@ -42,24 +42,24 @@ def create_comprehensive_data():
 
             # Teacher accounts
             teachers_sql = """
-            INSERT INTO users (id, username, email, password_hash, first_name, last_name, 
-                             role, grade_level, school_name, is_active, is_verified, 
+            INSERT INTO users (id, username, email, password_hash, first_name, last_name,
+                             role, grade_level, school_name, is_active, is_verified,
                              subjects_taught, bio, created_at)
-            VALUES 
-            (gen_random_uuid(), 'john_smith', 'john.smith@school.edu', 
-             :pwd1, 'John', 'Smith', 'teacher', 7, 'Lincoln Middle School', 
-             true, true, ARRAY['["Science", "Physics"]'::jsonb], 
+            VALUES
+            (gen_random_uuid(), 'john_smith', 'john.smith@school.edu',
+             :pwd1, 'John', 'Smith', 'teacher', 7, 'Lincoln Middle School',
+             true, true, ARRAY['["Science", "Physics"]'::jsonb],
              'Experienced science teacher with 10 years of teaching middle school physics and chemistry.',
              NOW()),
-            
-            (gen_random_uuid(), 'sarah_johnson', 'sarah.johnson@school.edu', 
-             :pwd2, 'Sarah', 'Johnson', 'teacher', 8, 'Lincoln Middle School', 
+
+            (gen_random_uuid(), 'sarah_johnson', 'sarah.johnson@school.edu',
+             :pwd2, 'Sarah', 'Johnson', 'teacher', 8, 'Lincoln Middle School',
              true, true, ARRAY['["Mathematics", "Algebra"]'::jsonb],
              'Math department head, specializing in algebra and geometry.',
              NOW()),
-             
-            (gen_random_uuid(), 'michael_brown', 'michael.brown@school.edu', 
-             :pwd3, 'Michael', 'Brown', 'teacher', 7, 'Lincoln Middle School', 
+
+            (gen_random_uuid(), 'michael_brown', 'michael.brown@school.edu',
+             :pwd3, 'Michael', 'Brown', 'teacher', 7, 'Lincoln Middle School',
              true, true, ARRAY['["History", "Social Studies"]'::jsonb],
              'History teacher passionate about making ancient civilizations come alive.',
              NOW())
@@ -149,9 +149,9 @@ def create_comprehensive_data():
 
             for username, email, first, last, grade, bio in students:
                 student_sql = """
-                INSERT INTO users (username, email, password_hash, first_name, last_name, 
+                INSERT INTO users (username, email, password_hash, first_name, last_name,
                                  role, grade_level, school_name, is_active, is_verified, bio)
-                VALUES (:username, :email, :password_hash, :first_name, :last_name, 'student', :grade_level, 'Lincoln Middle School', 
+                VALUES (:username, :email, :password_hash, :first_name, :last_name, 'student', :grade_level, 'Lincoln Middle School',
                         true, true, :bio)
                 ON CONFLICT (email) DO NOTHING;
                 """
@@ -171,9 +171,9 @@ def create_comprehensive_data():
 
             # Admin account
             admin_sql = """
-            INSERT INTO users (username, email, password_hash, first_name, last_name, 
+            INSERT INTO users (username, email, password_hash, first_name, last_name,
                              role, is_active, is_verified, bio)
-            VALUES ('admin', 'admin@toolboxai.com', :password_hash, 'System', 'Administrator', 
+            VALUES ('admin', 'admin@toolboxai.com', :password_hash, 'System', 'Administrator',
                     'admin', true, true, 'Platform administrator with full system access')
             ON CONFLICT (email) DO NOTHING;
             """
@@ -202,9 +202,21 @@ def create_comprehensive_data():
                             45,
                         ),
                         ("The Inner Planets", "Mercury, Venus, Earth, and Mars", 60),
-                        ("The Outer Planets", "Jupiter, Saturn, Uranus, and Neptune", 60),
-                        ("Moons and Asteroids", "Natural satellites and small bodies", 45),
-                        ("Space Exploration", "History and future of space missions", 50),
+                        (
+                            "The Outer Planets",
+                            "Jupiter, Saturn, Uranus, and Neptune",
+                            60,
+                        ),
+                        (
+                            "Moons and Asteroids",
+                            "Natural satellites and small bodies",
+                            45,
+                        ),
+                        (
+                            "Space Exploration",
+                            "History and future of space missions",
+                            50,
+                        ),
                     ],
                 },
                 {
@@ -240,7 +252,11 @@ def create_comprehensive_data():
                     ],
                     "description": "Master the fundamentals of linear equations and their applications.",
                     "lessons": [
-                        ("Introduction to Equations", "What are equations and why they matter", 45),
+                        (
+                            "Introduction to Equations",
+                            "What are equations and why they matter",
+                            45,
+                        ),
                         ("One-Step Equations", "Solving simple equations", 50),
                         ("Two-Step Equations", "More complex equation solving", 55),
                         ("Graphing Lines", "Visualizing linear equations", 60),
@@ -320,8 +336,8 @@ def create_comprehensive_data():
                     title, subject, grade_level, description,
                     environment_type, content_data, is_published, created_by
                 )
-                VALUES (:title, :subject, :grade_level, :description, 
-                        :environment_type, :content_data, true, 
+                VALUES (:title, :subject, :grade_level, :description,
+                        :environment_type, :content_data, true,
                         (SELECT id FROM users WHERE role = 'teacher' LIMIT 1))
                 ON CONFLICT (title) DO NOTHING
                 RETURNING id;
@@ -486,7 +502,13 @@ def create_comprehensive_data():
                             10,
                         ),
                         ("If 3x = 18, what is x?", "short_answer", ["6"], 0, 10),
-                        ("Solve: 4x + 2 = 2x + 10", "short_answer", ["x = 4", "4"], 0, 20),
+                        (
+                            "Solve: 4x + 2 = 2x + 10",
+                            "short_answer",
+                            ["x = 4", "4"],
+                            0,
+                            20,
+                        ),
                         (
                             "What is the y-intercept of y = 2x - 5?",
                             "multiple_choice",
@@ -523,7 +545,7 @@ def create_comprehensive_data():
                 # Create quiz
                 quiz_sql = """
                 INSERT INTO quizzes (
-                    title, description, subject, grade_level, 
+                    title, description, subject, grade_level,
                     total_points, time_limit_minutes, is_published,
                     created_by
                 )
@@ -548,9 +570,13 @@ def create_comprehensive_data():
 
                 # Create questions
                 if quiz_id:
-                    for idx, (question, q_type, options, correct_idx, points) in enumerate(
-                        quiz["questions"], 1
-                    ):
+                    for idx, (
+                        question,
+                        q_type,
+                        options,
+                        correct_idx,
+                        points,
+                    ) in enumerate(quiz["questions"], 1):
                         question_sql = """
                         INSERT INTO quiz_questions (
                             quiz_id, question_text, question_type,
@@ -584,25 +610,25 @@ def create_comprehensive_data():
             print("\n🤖 Creating AI agent configurations...")
 
             agents_sql = """
-            INSERT INTO ai_agents (name, agent_type, description, version, model_config, 
+            INSERT INTO ai_agents (name, agent_type, description, version, model_config,
                                   capabilities, is_active, performance_metrics)
-            VALUES 
-            ('supervisor', 'supervisor', 
-             'Main orchestration agent that coordinates all sub-agents for complex educational tasks', 
-             '2.0.0', 
+            VALUES
+            ('supervisor', 'supervisor',
+             'Main orchestration agent that coordinates all sub-agents for complex educational tasks',
+             '2.0.0',
              '{"model": "gpt-4", "temperature": 0.7, "max_tokens": 4000, "top_p": 0.95}'::jsonb,
-             ARRAY['["orchestration", "task_management", "workflow_coordination", "quality_control"]'::jsonb], 
+             ARRAY['["orchestration", "task_management", "workflow_coordination", "quality_control"]'::jsonb],
              true,
              '{"success_rate": 0.95, "avg_response_time": 2.3, "tasks_completed": 1543}'::jsonb),
-            
-            ('content_generator', 'content', 
-             'Specialized in creating educational content aligned with curriculum standards', 
+
+            ('content_generator', 'content',
+             'Specialized in creating educational content aligned with curriculum standards',
              '2.0.0',
              '{"model": "gpt-4", "temperature": 0.8, "max_tokens": 8000, "top_p": 0.9}'::jsonb,
              ARRAY['["content_creation", "curriculum_alignment", "adaptive_learning", "multimodal_content"]'::jsonb],
              true,
              '{"success_rate": 0.92, "avg_response_time": 3.5, "content_created": 2156}'::jsonb),
-            
+
             ('quiz_master', 'quiz',
              'Creates assessments and quizzes with varying difficulty levels',
              '2.0.0',
@@ -610,7 +636,7 @@ def create_comprehensive_data():
              ARRAY['["quiz_creation", "assessment_design", "adaptive_testing", "answer_validation"]'::jsonb],
              true,
              '{"success_rate": 0.94, "avg_response_time": 2.8, "quizzes_created": 892}'::jsonb),
-            
+
             ('terrain_builder', 'terrain',
              'Generates immersive 3D environments for Roblox educational experiences',
              '2.0.0',
@@ -618,7 +644,7 @@ def create_comprehensive_data():
              ARRAY['["terrain_creation", "environment_design", "3d_modeling", "physics_simulation"]'::jsonb],
              true,
              '{"success_rate": 0.89, "avg_response_time": 4.2, "environments_created": 445}'::jsonb),
-            
+
             ('script_wizard', 'script',
              'Generates optimized Lua scripts for Roblox game mechanics',
              '2.0.0',
@@ -626,7 +652,7 @@ def create_comprehensive_data():
              ARRAY['["script_creation", "code_generation", "optimization", "debugging", "roblox_api"]'::jsonb],
              true,
              '{"success_rate": 0.91, "avg_response_time": 3.8, "scripts_generated": 1789}'::jsonb),
-            
+
             ('quality_reviewer', 'review',
              'Reviews and validates all generated content for quality and accuracy',
              '2.0.0',
@@ -634,7 +660,7 @@ def create_comprehensive_data():
              ARRAY['["content_review", "quality_assurance", "fact_checking", "improvement_suggestions"]'::jsonb],
              true,
              '{"success_rate": 0.97, "avg_response_time": 2.1, "reviews_completed": 3421}'::jsonb)
-            ON CONFLICT (name) DO UPDATE 
+            ON CONFLICT (name) DO UPDATE
             SET model_config = EXCLUDED.model_config,
                 performance_metrics = EXCLUDED.performance_metrics;
             """
@@ -646,49 +672,49 @@ def create_comprehensive_data():
             print("\n🏆 Creating achievements and gamification elements...")
 
             achievements_sql = """
-            INSERT INTO achievements (name, description, type, points, icon_url, criteria, 
+            INSERT INTO achievements (name, description, type, points, icon_url, criteria,
                                     tier, unlock_message)
-            VALUES 
-            ('First Steps', 'Complete your first lesson', 'milestone', 10, 
+            VALUES
+            ('First Steps', 'Complete your first lesson', 'milestone', 10,
              '/icons/first-steps.png', '{"lessons_completed": 1}'::jsonb, 'bronze',
              'Welcome to your learning journey!'),
-            
-            ('Quiz Master', 'Score 100% on any quiz', 'performance', 25, 
+
+            ('Quiz Master', 'Score 100% on any quiz', 'performance', 25,
              '/icons/quiz-master.png', '{"perfect_score": true}'::jsonb, 'silver',
              'Perfect score! You''re a true Quiz Master!'),
-            
-            ('Week Warrior', 'Maintain a 7-day learning streak', 'consistency', 50, 
+
+            ('Week Warrior', 'Maintain a 7-day learning streak', 'consistency', 50,
              '/icons/streak.png', '{"streak_days": 7}'::jsonb, 'gold',
              'One week of consistent learning!'),
-            
-            ('Content Creator', 'Create your first educational content', 'creative', 30, 
+
+            ('Content Creator', 'Create your first educational content', 'creative', 30,
              '/icons/creator.png', '{"content_created": 1}'::jsonb, 'silver',
              'You''re now a content creator!'),
-            
-            ('Team Player', 'Collaborate with 5 different students', 'social', 20, 
+
+            ('Team Player', 'Collaborate with 5 different students', 'social', 20,
              '/icons/team.png', '{"unique_collaborators": 5}'::jsonb, 'bronze',
              'Teamwork makes the dream work!'),
-            
+
             ('Science Explorer', 'Complete all science modules', 'subject', 100,
              '/icons/science.png', '{"subject": "Science", "completion": 100}'::jsonb, 'platinum',
              'You''ve mastered Science!'),
-            
+
             ('Math Genius', 'Solve 100 math problems correctly', 'subject', 75,
              '/icons/math.png', '{"subject": "Mathematics", "problems_solved": 100}'::jsonb, 'gold',
              'Mathematical excellence achieved!'),
-            
+
             ('History Buff', 'Complete all history lessons', 'subject', 80,
              '/icons/history.png', '{"subject": "History", "completion": 100}'::jsonb, 'gold',
              'You know your history!'),
-            
+
             ('Speed Learner', 'Complete a lesson in under 10 minutes', 'performance', 15,
              '/icons/speed.png', '{"time_under": 600}'::jsonb, 'bronze',
              'Lightning fast learning!'),
-            
+
             ('Perfectionist', 'Get 10 perfect quiz scores', 'performance', 150,
              '/icons/perfect.png', '{"perfect_scores": 10}'::jsonb, 'platinum',
              'Absolute perfection!')
-            ON CONFLICT (name) DO UPDATE 
+            ON CONFLICT (name) DO UPDATE
             SET points = EXCLUDED.points,
                 criteria = EXCLUDED.criteria;
             """
@@ -700,33 +726,33 @@ def create_comprehensive_data():
             print("\n📊 Creating leaderboards...")
 
             leaderboards_sql = """
-            INSERT INTO leaderboards (name, description, type, scope, criteria, 
+            INSERT INTO leaderboards (name, description, type, scope, criteria,
                                      reset_period, is_active)
-            VALUES 
-            ('Weekly Top Learners', 'Students with most XP gained this week', 
+            VALUES
+            ('Weekly Top Learners', 'Students with most XP gained this week',
              'performance', 'global', '{"metric": "xp_gained", "period": "weekly"}'::jsonb,
              'weekly', true),
-            
-            ('Quiz Champions', 'Highest average quiz scores', 
+
+            ('Quiz Champions', 'Highest average quiz scores',
              'academic', 'global', '{"metric": "quiz_average", "min_quizzes": 5}'::jsonb,
              'monthly', true),
-            
-            ('Helping Hands', 'Students who help others the most', 
+
+            ('Helping Hands', 'Students who help others the most',
              'social', 'global', '{"metric": "help_given", "type": "count"}'::jsonb,
              'monthly', true),
-            
-            ('Class Leaders', 'Top performers in each class', 
+
+            ('Class Leaders', 'Top performers in each class',
              'performance', 'class', '{"metric": "overall_score", "scope": "class"}'::jsonb,
              'weekly', true),
-            
-            ('Subject Masters', 'Top students by subject', 
+
+            ('Subject Masters', 'Top students by subject',
              'academic', 'subject', '{"metric": "subject_score", "group_by": "subject"}'::jsonb,
              'monthly', true),
-            
-            ('Streak Warriors', 'Longest learning streaks', 
+
+            ('Streak Warriors', 'Longest learning streaks',
              'consistency', 'global', '{"metric": "streak_days", "active": true}'::jsonb,
              'never', true)
-            ON CONFLICT (name) DO UPDATE 
+            ON CONFLICT (name) DO UPDATE
             SET criteria = EXCLUDED.criteria,
                 is_active = EXCLUDED.is_active;
             """
@@ -754,7 +780,7 @@ def create_comprehensive_data():
 
                     progress_sql = f"""
                     INSERT INTO user_progress (
-                        user_id, content_id, progress_percentage, 
+                        user_id, content_id, progress_percentage,
                         xp_earned, time_spent_minutes, last_accessed
                     )
                     VALUES (:user_id, :content_id, :progress_percentage, :xp_earned, :time_spent, NOW() - INTERVAL '{random.randint(0, 7)} days')
@@ -783,7 +809,7 @@ def create_comprehensive_data():
             INSERT INTO educational_analytics (
                 user_id, event_type, event_data, created_at
             )
-            SELECT 
+            SELECT
                 u.id,
                 CASE (random() * 4)::int
                     WHEN 0 THEN 'lesson_completed'
@@ -795,7 +821,7 @@ def create_comprehensive_data():
                 jsonb_build_object(
                     'duration', (random() * 60 + 10)::int,
                     'score', (random() * 100)::int,
-                    'device', CASE (random() * 3)::int 
+                    'device', CASE (random() * 3)::int
                         WHEN 0 THEN 'desktop'
                         WHEN 1 THEN 'tablet'
                         ELSE 'mobile'

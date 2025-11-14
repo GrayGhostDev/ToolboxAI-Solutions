@@ -29,6 +29,9 @@ def init_sentry() -> None:
     # Only initialize if DSN is provided and not in development
     if not sentry_dsn or environment == "development":
         logger.info("Sentry disabled in development mode")
+        # Reduce Sentry SDK debug logging in development
+        sentry_logger = logging.getLogger("sentry_sdk")
+        sentry_logger.setLevel(logging.WARNING)
         return
 
     try:
@@ -151,7 +154,10 @@ def capture_message(message: str, level: str = "info") -> None:
 
 
 def add_breadcrumb(
-    message: str, category: str = "default", level: str = "info", data: dict | None = None
+    message: str,
+    category: str = "default",
+    level: str = "info",
+    data: dict | None = None,
 ) -> None:
     """
     Add a breadcrumb for debugging

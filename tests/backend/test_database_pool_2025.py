@@ -1,18 +1,18 @@
 from unittest.mock import Mock, patch
 
 import pytest
-import pytest_asyncio
 
 
 @pytest.fixture
 def mock_db_connection():
     """Mock database connection for tests"""
-    with patch('psycopg2.connect') as mock_connect:
+    with patch("psycopg2.connect") as mock_connect:
         mock_conn = Mock()
         mock_cursor = Mock()
         mock_conn.cursor.return_value = mock_cursor
         mock_connect.return_value = mock_conn
         yield mock_conn
+
 
 """
 Test Database Connection Pool Configuration
@@ -22,10 +22,7 @@ Tests SQLAlchemy 2.0 and PostgreSQL 16+ optimizations (2025 best practices)
 import asyncio
 import os
 import sys
-import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime
-from typing import List
 
 import pytest
 
@@ -34,8 +31,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlalchemy import text
 
-from database.connection_manager import (
-    cleanup_databases,
+from database import (
     db_manager,
     get_async_session,
     get_session,
@@ -43,7 +39,6 @@ from database.connection_manager import (
     initialize_databases,
 )
 from database.core.pool_config import (
-    PoolConfig,
     PoolConfigFactory,
     PoolMonitor,
     PoolStrategy,
@@ -79,8 +74,7 @@ class TestDatabasePool2025:
 
         # Test production configuration
         prod_config = PoolConfigFactory.create_config(
-            strategy=PoolStrategy.OPTIMIZED,
-            environment="production"
+            strategy=PoolStrategy.OPTIMIZED, environment="production"
         )
 
         # Verify SQLAlchemy 2.0 settings
@@ -90,12 +84,18 @@ class TestDatabasePool2025:
 
         # Verify PostgreSQL 16+ settings
         assert prod_config.pg_lock_timeout == 10000, "Lock timeout should be set"
-        assert prod_config.pg_idle_in_transaction_timeout == 60000, "Idle transaction timeout should be set"
-        assert prod_config.prepared_statement_cache_size == 512, "Prepared statement cache should be configured"
+        assert (
+            prod_config.pg_idle_in_transaction_timeout == 60000
+        ), "Idle transaction timeout should be set"
+        assert (
+            prod_config.prepared_statement_cache_size == 512
+        ), "Prepared statement cache should be configured"
         assert prod_config.jit == "off", "JIT should be disabled for consistent performance"
 
         # Verify monitoring settings
-        assert prod_config.enable_pool_events == True, "Pool events should be enabled for monitoring"
+        assert (
+            prod_config.enable_pool_events == True
+        ), "Pool events should be enabled for monitoring"
         assert prod_config.slow_query_threshold == 1.0, "Slow query threshold should be set"
 
         logger.logger.info("✅ Pool configuration follows 2025 best practices")
@@ -154,7 +154,9 @@ class TestDatabasePool2025:
         server_settings = connect_args["server_settings"]
         assert "application_name" in server_settings
         assert "statement_timeout" in server_settings
-        assert server_settings["statement_timeout"].endswith("ms")  # Should be in milliseconds format
+        assert server_settings["statement_timeout"].endswith(
+            "ms"
+        )  # Should be in milliseconds format
 
         logger.logger.info("✅ Async engine kwargs properly configured for asyncpg")
 
@@ -182,8 +184,7 @@ class TestDatabasePool2025:
         logger.logger.info("✅ Database initialization successful with pool monitoring")
 
     @pytest.mark.asyncio(loop_scope="function")
-    @pytest.mark.asyncio
-async def test_connection_pool_monitoring(self):
+    async def test_connection_pool_monitoring(self):
         """Test that pool monitoring events are working"""
         logger.logger.info("Testing connection pool monitoring")
 
@@ -204,7 +205,9 @@ async def test_connection_pool_monitoring(self):
         final_checkouts = monitor.metrics.get("checkout_count", 0)
         assert final_checkouts >= initial_checkouts, "Checkout count should not decrease"
 
-        logger.logger.info(f"✅ Pool monitoring active: {final_checkouts - initial_checkouts} checkouts tracked")
+        logger.logger.info(
+            f"✅ Pool monitoring active: {final_checkouts - initial_checkouts} checkouts tracked"
+        )
 
     def test_pool_optimization_calculator(self):
         """Test pool optimization calculations"""
@@ -216,7 +219,7 @@ async def test_connection_pool_monitoring(self):
         # Test optimization calculations
         recommendations = monitor.calculate_optimal_size(
             concurrent_requests=100,
-            avg_query_time=0.05  # 50ms average query time
+            avg_query_time=0.05,  # 50ms average query time
         )
 
         assert "pool_size" in recommendations
@@ -226,13 +229,17 @@ async def test_connection_pool_monitoring(self):
         # Verify recommendations are reasonable
         assert 5 <= recommendations["pool_size"] <= 100
         assert recommendations["max_overflow"] > 0
-        assert recommendations["total_connections"] == recommendations["pool_size"] + recommendations["max_overflow"]
+        assert (
+            recommendations["total_connections"]
+            == recommendations["pool_size"] + recommendations["max_overflow"]
+        )
 
-        logger.logger.info(f"✅ Pool optimization calculator working: recommended size {recommendations['pool_size']}")
+        logger.logger.info(
+            f"✅ Pool optimization calculator working: recommended size {recommendations['pool_size']}"
+        )
 
     @pytest.mark.asyncio(loop_scope="function")
-    @pytest.mark.asyncio
-async def test_async_connection_pool(self):
+    async def test_async_connection_pool(self):
         """Test async connection pool with asyncpg"""
         logger.logger.info("Testing async connection pool")
 
@@ -300,7 +307,9 @@ async def test_async_connection_pool(self):
         config = get_database_pool_config(environment="production")
 
         # Verify recycle time is appropriate for cloud databases
-        assert config.pool_recycle <= 1800, "Pool recycle should be 30 minutes or less for cloud databases"
+        assert (
+            config.pool_recycle <= 1800
+        ), "Pool recycle should be 30 minutes or less for cloud databases"
 
         # Verify timeout settings are reasonable
         assert config.pool_timeout >= 10, "Pool timeout should be at least 10 seconds"
@@ -343,6 +352,7 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"❌ {test_method.__name__} failed: {e}")
             import traceback
+
             traceback.print_exc()
             failed_tests.append(test_method.__name__)
         finally:

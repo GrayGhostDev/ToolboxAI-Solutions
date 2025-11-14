@@ -346,7 +346,10 @@ def pytest_sessionstart(session):
 
     # Initialize test cleanup manager
     cleanup_manager = TestCleanupManager(
-        test_log_dir=TEST_LOG_DIR, retention_days=7, max_files_per_type=10, auto_cleanup=True
+        test_log_dir=TEST_LOG_DIR,
+        retention_days=7,
+        max_files_per_type=10,
+        auto_cleanup=True,
     )
     session.cleanup_manager = cleanup_manager
 
@@ -401,11 +404,17 @@ def mock_pusher_as_websocket():
                 last_msg = json.loads(self.messages[-1])
                 if last_msg.get("type") == "subscribe":
                     return json.dumps(
-                        {"type": "subscribed", "channel": last_msg.get("channel", "default")}
+                        {
+                            "type": "subscribed",
+                            "channel": last_msg.get("channel", "default"),
+                        }
                     )
                 elif last_msg.get("type") == "join_lesson":
                     return json.dumps(
-                        {"type": "lesson_joined", "lesson_id": last_msg.get("lesson_id")}
+                        {
+                            "type": "lesson_joined",
+                            "lesson_id": last_msg.get("lesson_id"),
+                        }
                     )
                 elif last_msg.get("type") == "activity_complete":
                     return json.dumps(
@@ -507,7 +516,11 @@ def http_client():
                 return MockResponse(200, {"status": "synced"})
             elif "publish_to_roblox" in url:
                 return MockResponse(
-                    200, {"status": "published", "place_url": "https://roblox.com/place/123"}
+                    200,
+                    {
+                        "status": "published",
+                        "place_url": "https://roblox.com/place/123",
+                    },
                 )
             elif "upload_asset" in url:
                 return MockResponse(200, {"status": "uploaded", "asset_id": "12345"})
@@ -818,7 +831,7 @@ async def cleanup_database_pools():
 
     # Try to close all database pools if the module exists
     try:
-        from database.connection_manager import OptimizedConnectionManager
+        from database.core.connection_manager import OptimizedConnectionManager
 
         # Get the singleton instance if it exists
         if hasattr(OptimizedConnectionManager, "_instance"):
@@ -906,7 +919,10 @@ def worker_id(request):
 @pytest_asyncio.fixture(loop_scope="module")
 async def module_db_pool(worker_id):
     """Module-scoped database pool per worker"""
-    from database.connection_manager import ConnectionConfig, OptimizedConnectionManager
+    from database.core.connection_manager import (
+        ConnectionConfig,
+        OptimizedConnectionManager,
+    )
 
     # Create isolated database per worker
     db_name = f"test_db_{worker_id}" if worker_id != "master" else "test_db"
@@ -1018,10 +1034,12 @@ def fix_all_tests():
     patches = [
         patch("apps.backend.api.auth.auth.decode_access_token", side_effect=mock_decode),
         patch(
-            "apps.backend.services.websocket_handler.decode_access_token", side_effect=mock_decode
+            "apps.backend.services.websocket_handler.decode_access_token",
+            side_effect=mock_decode,
         ),
         patch(
-            "apps.backend.services.websocket_handler.increment_metric", side_effect=increment_metric
+            "apps.backend.services.websocket_handler.increment_metric",
+            side_effect=increment_metric,
         ),
         patch(
             "apps.backend.core.security.cors.CORSConfig.validate_origin",

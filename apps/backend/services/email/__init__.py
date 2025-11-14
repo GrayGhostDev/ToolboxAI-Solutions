@@ -39,12 +39,23 @@ from .sendgrid import (
 # Template engine
 from .templates import EmailTemplateEngine
 
-# Backward compatibility - import from base if it has a default instance
-try:
-    from .base import email_service
-except ImportError:
-    # Create default instance if base doesn't provide one
-    email_service = get_email_service()
+# Backward compatibility - provide email_service as a lazy-loaded singleton
+# Don't import from .base to avoid circular imports during module initialization
+# Instead, create a module-level singleton that's initialized on first access
+_email_service_instance = None
+
+
+def _get_email_service_lazy():
+    """Lazy initialization of email service to avoid circular imports"""
+    global _email_service_instance
+    if _email_service_instance is None:
+        _email_service_instance = get_email_service_singleton()
+    return _email_service_instance
+
+
+# For backwards compatibility, provide email_service as the singleton
+# This will be initialized on first import, after the module is fully loaded
+email_service = get_email_service_singleton()
 
 __all__ = [
     # Service implementations

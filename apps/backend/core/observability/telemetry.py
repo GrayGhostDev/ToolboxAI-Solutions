@@ -298,7 +298,9 @@ class TelemetryManager:
         )
 
         self.request_duration = self.meter.create_histogram(
-            "http_request_duration_seconds", description="HTTP request duration", unit="s"
+            "http_request_duration_seconds",
+            description="HTTP request duration",
+            unit="s",
         )
 
         self.error_counter = self.meter.create_counter(
@@ -306,7 +308,9 @@ class TelemetryManager:
         )
 
         self.active_requests = self.meter.create_up_down_counter(
-            "http_active_requests", description="Number of active HTTP requests", unit="1"
+            "http_active_requests",
+            description="Number of active HTTP requests",
+            unit="1",
         )
 
     def _initialize_logging(self):
@@ -317,16 +321,29 @@ class TelemetryManager:
         """Auto-instrument common libraries"""
 
         # HTTP clients
-        HTTPXClientInstrumentor().instrument()
+        try:
+            HTTPXClientInstrumentor().instrument()
+        except Exception as e:
+            logger.warning(f"Could not instrument HTTPX: {e}")
 
         # Databases
         if self.config.trace_database_queries:
-            SQLAlchemyInstrumentor().instrument()
-            Psycopg2Instrumentor().instrument()
+            try:
+                SQLAlchemyInstrumentor().instrument()
+            except Exception as e:
+                logger.warning(f"Could not instrument SQLAlchemy: {e}")
+
+            try:
+                Psycopg2Instrumentor().instrument()
+            except Exception as e:
+                logger.debug(f"Could not instrument psycopg2 (expected if using asyncpg): {e}")
 
         # Cache
         if self.config.trace_cache_operations:
-            RedisInstrumentor().instrument()
+            try:
+                RedisInstrumentor().instrument()
+            except Exception as e:
+                logger.warning(f"Could not instrument Redis: {e}")
 
     @contextmanager
     def trace_operation(
@@ -343,7 +360,10 @@ class TelemetryManager:
             return
 
         with self.tracer.start_as_current_span(
-            name, kind=kind, attributes=attributes or {}, record_exception=record_exception
+            name,
+            kind=kind,
+            attributes=attributes or {},
+            record_exception=record_exception,
         ) as span:
             start_time = time.time()
 
@@ -379,7 +399,10 @@ class TelemetryManager:
             return
 
         with self.tracer.start_as_current_span(
-            name, kind=kind, attributes=attributes or {}, record_exception=record_exception
+            name,
+            kind=kind,
+            attributes=attributes or {},
+            record_exception=record_exception,
         ) as span:
             start_time = time.time()
 
@@ -551,7 +574,8 @@ class TelemetryManager:
                     if current_span:
                         current_span.set_attribute(f"profile.{name}.duration_ms", duration * 1000)
                         current_span.set_attribute(
-                            f"profile.{name}.memory_delta_mb", memory_delta / 1024 / 1024
+                            f"profile.{name}.memory_delta_mb",
+                            memory_delta / 1024 / 1024,
                         )
 
             @wraps(func)
@@ -590,7 +614,8 @@ class TelemetryManager:
                     if current_span:
                         current_span.set_attribute(f"profile.{name}.duration_ms", duration * 1000)
                         current_span.set_attribute(
-                            f"profile.{name}.memory_delta_mb", memory_delta / 1024 / 1024
+                            f"profile.{name}.memory_delta_mb",
+                            memory_delta / 1024 / 1024,
                         )
 
             if asyncio.iscoroutinefunction(func):
@@ -693,7 +718,8 @@ class LoadBalancerInstrumentor:
         @wraps(original_check)
         async def traced_check(identifier: str, endpoint: str = None, **kwargs):
             async with self.telemetry.trace_async_operation(
-                "rate_limiter.check", attributes={"identifier": identifier, "endpoint": endpoint}
+                "rate_limiter.check",
+                attributes={"identifier": identifier, "endpoint": endpoint},
             ) as span:
                 result = await original_check(identifier, endpoint, **kwargs)
 
@@ -758,7 +784,8 @@ class LoadBalancerInstrumentor:
         @wraps(original_set)
         async def traced_set(key: str, entry, tier=None, config=None):
             async with self.telemetry.trace_async_operation(
-                "cache.set", attributes={"key": key[:50], "tier": tier.value if tier else None}
+                "cache.set",
+                attributes={"key": key[:50], "tier": tier.value if tier else None},
             ) as span:
                 result = await original_set(key, entry, tier, config)
 

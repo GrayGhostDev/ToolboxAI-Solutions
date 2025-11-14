@@ -5,21 +5,21 @@ Provides comprehensive error management, automatic recovery strategies,
 alerting, and error pattern analysis for the ToolboxAI Roblox Environment.
 """
 
-import asyncio
-import logging
-from typing import Dict, Any, List, Optional, Callable, Union
-from datetime import datetime, timedelta
-from dataclasses import dataclass, asdict, field
-from collections import defaultdict, deque
-from enum import Enum
-import json
-import traceback
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-import uuid
-import operator
 import ast
+import asyncio
+import json
+import logging
+import operator
+import smtplib
+import traceback
+import uuid
+from collections import defaultdict, deque
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timedelta
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from fastapi import FastAPI, HTTPException
 
@@ -118,9 +118,7 @@ class ErrorCoordinator:
         self.max_error_history = self.config.get("max_error_history", 10000)
         self.enable_auto_recovery = self.config.get("enable_auto_recovery", True)
         self.enable_notifications = self.config.get("enable_notifications", True)
-        self.notification_cooldown = self.config.get(
-            "notification_cooldown", 300
-        )  # 5 minutes
+        self.notification_cooldown = self.config.get("notification_cooldown", 300)  # 5 minutes
 
         # Email configuration
         self.smtp_server = self.config.get("smtp_server", "localhost")
@@ -391,9 +389,7 @@ class ErrorCoordinator:
 
         return error_id
 
-    async def _update_component_error_stats(
-        self, component: str, error_record: ErrorRecord
-    ):
+    async def _update_component_error_stats(self, component: str, error_record: ErrorRecord):
         """Update error statistics for a component"""
         stats = self.component_error_stats[component]
 
@@ -417,9 +413,7 @@ class ErrorCoordinator:
             stats["error_rate"] = stats["total_errors"] / max(time_span_hours, 1)
 
         # Calculate mean time between errors
-        component_errors = [
-            err for err in self.error_history if err.component == component
-        ]
+        component_errors = [err for err in self.error_history if err.component == component]
         if len(component_errors) > 1:
             time_diffs = []
             for i in range(1, len(component_errors)):
@@ -445,9 +439,7 @@ class ErrorCoordinator:
             ]
 
             if not applicable_strategies:
-                logger.info(
-                    f"No recovery strategies found for error {error_record.error_id}"
-                )
+                logger.info(f"No recovery strategies found for error {error_record.error_id}")
                 return
 
             # Try strategies in order of priority
@@ -474,9 +466,7 @@ class ErrorCoordinator:
                         self.recovery_success_rates[strategy.strategy_id] * 0.9 + 0.1
                     )
 
-                    logger.info(
-                        f"Recovery successful for error {error_record.error_id}"
-                    )
+                    logger.info(f"Recovery successful for error {error_record.error_id}")
 
                     # Publish recovery event
                     await self._publish_recovery_event(error_record, strategy, True)
@@ -508,9 +498,7 @@ class ErrorCoordinator:
                     await self._escalate_error(error_record)
 
         except Exception as e:
-            logger.error(
-                f"Recovery attempt failed for error {error_record.error_id}: {e}"
-            )
+            logger.error(f"Recovery attempt failed for error {error_record.error_id}: {e}")
             self.active_recoveries[recovery_id] = RecoveryStatus.FAILED
 
     async def _execute_recovery_strategy(
@@ -527,9 +515,7 @@ class ErrorCoordinator:
                         return True
                 else:
                     # Use built-in recovery logic
-                    success = await self._default_recovery(
-                        strategy, error_record, attempt
-                    )
+                    success = await self._default_recovery(strategy, error_record, attempt)
                     if success:
                         return True
 
@@ -561,9 +547,7 @@ class ErrorCoordinator:
 
         return False
 
-    async def _recover_connection(
-        self, error_record: ErrorRecord, attempt: int
-    ) -> bool:
+    async def _recover_connection(self, error_record: ErrorRecord, attempt: int) -> bool:
         """Recover connection-related errors"""
         try:
             component = error_record.component
@@ -578,8 +562,8 @@ class ErrorCoordinator:
 
             elif component == "database":
                 # Reinitialize database connection
-                from database.connection_manager import get_session
-                
+                from database import get_session
+
                 # Test database connection
                 try:
                     with get_session("education") as session:
@@ -595,9 +579,7 @@ class ErrorCoordinator:
             logger.error(f"Connection recovery failed: {e}")
             return False
 
-    async def _recover_service_restart(
-        self, error_record: ErrorRecord, attempt: int
-    ) -> bool:
+    async def _recover_service_restart(self, error_record: ErrorRecord, attempt: int) -> bool:
         """Recover by restarting services"""
         try:
             component = error_record.component
@@ -623,9 +605,7 @@ class ErrorCoordinator:
             logger.error(f"Service restart recovery failed: {e}")
             return False
 
-    async def _recover_resource_cleanup(
-        self, error_record: ErrorRecord, attempt: int
-    ) -> bool:
+    async def _recover_resource_cleanup(self, error_record: ErrorRecord, attempt: int) -> bool:
         """Recover by cleaning up resources"""
         try:
             # Force garbage collection
@@ -664,9 +644,7 @@ class ErrorCoordinator:
             logger.error(f"API quota recovery failed: {e}")
             return False
 
-    async def _recover_data_rollback(
-        self, error_record: ErrorRecord, attempt: int
-    ) -> bool:
+    async def _recover_data_rollback(self, error_record: ErrorRecord, attempt: int) -> bool:
         """Recover by rolling back to previous state"""
         try:
             component = error_record.component
@@ -707,12 +685,8 @@ class ErrorCoordinator:
                 continue
 
             # Check time window
-            time_threshold = datetime.now() - timedelta(
-                minutes=rule.time_window_minutes
-            )
-            recent_errors = [
-                err for err in self.error_history if err.timestamp > time_threshold
-            ]
+            time_threshold = datetime.now() - timedelta(minutes=rule.time_window_minutes)
+            recent_errors = [err for err in self.error_history if err.timestamp > time_threshold]
 
             # Evaluate condition
             context = {
@@ -731,9 +705,7 @@ class ErrorCoordinator:
             except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.error(f"Alert rule evaluation failed for {rule.rule_id}: {e}")
 
-    def _evaluate_condition_safely(
-        self, condition: str, context: Dict[str, Any]
-    ) -> bool:
+    def _evaluate_condition_safely(self, condition: str, context: Dict[str, Any]) -> bool:
         """Safely evaluate a condition without using ast.literal_eval()"""
         # Define allowed operators for safe evaluation
         allowed_operators = {
@@ -783,16 +755,12 @@ class ErrorCoordinator:
                         return all(values)
                     elif isinstance(node.op, ast.Or):
                         return any(values)
-                raise ValueError(
-                    f"Unsupported boolean operator: {type(node.op).__name__}"
-                )
+                raise ValueError(f"Unsupported boolean operator: {type(node.op).__name__}")
             elif isinstance(node, ast.UnaryOp):
                 op = allowed_operators.get(type(node.op))
                 if op:
                     return op(safe_eval(node.operand))
-                raise ValueError(
-                    f"Unsupported unary operator: {type(node.op).__name__}"
-                )
+                raise ValueError(f"Unsupported unary operator: {type(node.op).__name__}")
             else:
                 raise ValueError(f"Unsupported expression type: {type(node).__name__}")
 
@@ -817,15 +785,15 @@ class ErrorCoordinator:
         # Create alert message
         alert_message = f"""
         Alert: {rule.name}
-        
+
         Error ID: {error_record.error_id}
         Component: {error_record.component}
         Error Type: {error_record.error_type}
         Severity: {error_record.severity.value}
         Message: {error_record.message}
-        
+
         Context: {json.dumps(context, indent=2)}
-        
+
         Time: {error_record.timestamp.isoformat()}
         """
 
@@ -839,9 +807,7 @@ class ErrorCoordinator:
                 elif channel == "slack":
                     await self._send_slack_alert(rule.name, alert_message)
                 elif channel == "webhook":
-                    await self._send_webhook_alert(
-                        rule.name, alert_message, error_record
-                    )
+                    await self._send_webhook_alert(rule.name, alert_message, error_record)
 
             except Exception as e:
                 logger.error(f"Failed to send {channel} alert: {e}")
@@ -887,9 +853,7 @@ class ErrorCoordinator:
         # Implementation would depend on Slack webhook configuration
         logger.info(f"Slack alert (not implemented): {title}")
 
-    async def _send_webhook_alert(
-        self, title: str, message: str, error_record: ErrorRecord
-    ):
+    async def _send_webhook_alert(self, title: str, message: str, error_record: ErrorRecord):
         """Send webhook alert"""
         # Implementation would depend on webhook configuration
         logger.info(f"Webhook alert (not implemented): {title}")
@@ -901,13 +865,13 @@ class ErrorCoordinator:
         # Create escalation alert
         escalation_message = f"""
         ESCALATION: Unresolved error requiring manual intervention
-        
+
         Error ID: {error_record.error_id}
         Component: {error_record.component}
         Error Type: {error_record.error_type}
         Age: {error_record.age_minutes:.1f} minutes
         Recovery Attempts: {len(error_record.recovery_attempts)}
-        
+
         Message: {error_record.message}
         Context: {json.dumps(error_record.context, indent=2)}
         """
@@ -984,9 +948,7 @@ class ErrorCoordinator:
 
         # Recent trend analysis
         recent_threshold = datetime.now() - timedelta(hours=24)
-        recent_errors = [
-            err for err in self.error_history if err.timestamp > recent_threshold
-        ]
+        recent_errors = [err for err in self.error_history if err.timestamp > recent_threshold]
 
         analysis["recent_trend"] = {
             "total_recent_errors": len(recent_errors),
@@ -1043,9 +1005,7 @@ class ErrorCoordinator:
     async def _evaluate_alert_rule(self, rule: AlertRule):
         """Evaluate a specific alert rule"""
         try:
-            time_threshold = datetime.now() - timedelta(
-                minutes=rule.time_window_minutes
-            )
+            time_threshold = datetime.now() - timedelta(minutes=rule.time_window_minutes)
             recent_errors = [
                 err
                 for err in self.error_history
@@ -1118,9 +1078,7 @@ class ErrorCoordinator:
     async def get_error_summary(self, time_window_hours: int = 24) -> Dict[str, Any]:
         """Get error summary for specified time window"""
         time_threshold = datetime.now() - timedelta(hours=time_window_hours)
-        recent_errors = [
-            err for err in self.error_history if err.timestamp > time_threshold
-        ]
+        recent_errors = [err for err in self.error_history if err.timestamp > time_threshold]
 
         # Severity breakdown
         severity_counts = defaultdict(int)
@@ -1139,9 +1097,7 @@ class ErrorCoordinator:
 
         # Resolution stats
         resolved_errors = len([err for err in recent_errors if err.resolved])
-        resolution_rate = (
-            (resolved_errors / len(recent_errors) * 100) if recent_errors else 0
-        )
+        resolution_rate = (resolved_errors / len(recent_errors) * 100) if recent_errors else 0
 
         return {
             "time_window_hours": time_window_hours,
@@ -1193,8 +1149,7 @@ class ErrorCoordinator:
             # Check background tasks
             background_tasks_healthy = all(
                 [
-                    self.pattern_analyzer_task
-                    and not self.pattern_analyzer_task.done(),
+                    self.pattern_analyzer_task and not self.pattern_analyzer_task.done(),
                     self.alert_processor_task and not self.alert_processor_task.done(),
                     self.cleanup_task and not self.cleanup_task.done(),
                 ]
@@ -1256,17 +1211,11 @@ class ErrorCoordinator:
             filtered_errors = list(self.error_history)
 
             if component:
-                filtered_errors = [
-                    e for e in filtered_errors if e.component == component
-                ]
+                filtered_errors = [e for e in filtered_errors if e.component == component]
             if error_type:
-                filtered_errors = [
-                    e for e in filtered_errors if e.error_type == error_type
-                ]
+                filtered_errors = [e for e in filtered_errors if e.error_type == error_type]
             if severity:
-                filtered_errors = [
-                    e for e in filtered_errors if e.severity.value == severity
-                ]
+                filtered_errors = [e for e in filtered_errors if e.severity.value == severity]
 
             # Return most recent errors first
             return [asdict(error) for error in filtered_errors[-limit:]][::-1]
@@ -1287,9 +1236,7 @@ class ErrorCoordinator:
                         success = await self._execute_recovery_strategy(strategy, error)
                         return {"success": success}
                     else:
-                        raise HTTPException(
-                            status_code=400, detail="Unknown recovery strategy"
-                        )
+                        raise HTTPException(status_code=400, detail="Unknown recovery strategy")
 
             raise HTTPException(status_code=404, detail="Error not found")
 

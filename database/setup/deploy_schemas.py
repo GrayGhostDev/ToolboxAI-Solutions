@@ -15,7 +15,7 @@ sys.path.insert(0, str(project_root))
 
 from sqlalchemy import text
 
-from database.connection_manager import db_manager, get_session
+from database import db_manager, get_session
 
 
 class SchemaDeployer:
@@ -90,7 +90,7 @@ class SchemaDeployer:
 
                     print(f"📝 Deploying {schema_file}...")
 
-                    with open(schema_path, "r") as f:
+                    with open(schema_path) as f:
                         schema_sql = f.read()
 
                     # Split by semicolon and execute each statement
