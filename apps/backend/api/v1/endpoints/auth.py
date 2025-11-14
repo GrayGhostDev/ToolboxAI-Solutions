@@ -122,6 +122,97 @@ def authenticate_user(username: Optional[str], email: Optional[str], password: s
 # Use the imported create_access_token from jwt_handler
 
 
+class UserRegister(BaseModel):
+    email: str
+    password: str
+    username: str
+    first_name: str
+    last_name: str
+    role: str = "student"  # Default role
+
+
+@auth_router.post("/register")
+async def register(user_data: UserRegister):
+    """
+    Register a new user account.
+
+    Args:
+        user_data (UserRegister): Registration data containing:
+            - email (required): User's email address
+            - password (required): User's password
+            - username (required): Desired username
+            - first_name (required): User's first name
+            - last_name (required): User's last name
+            - role (optional): User role (default: student)
+
+    Returns:
+        dict: Authentication response containing:
+            - access_token (str): JWT access token
+            - token_type (str): Token type ("bearer")
+            - expires_in (int): Token expiration time in seconds
+            - role (str): User's role
+            - user (dict): User profile information
+
+    Raises:
+        HTTPException: 400 if user already exists
+    """
+    # Check if user already exists
+    if user_data.email in fake_users_db:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User with this email already exists",
+        )
+
+    # Check if username already exists
+    for existing_user in fake_users_db.values():
+        if existing_user.get("username") == user_data.username:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username already taken",
+            )
+
+    # Hash password
+    hashed_password = bcrypt_handler.hash_password(user_data.password)
+
+    # Create new user
+    new_user = {
+        "username": user_data.username,
+        "email": user_data.email,
+        "hashed_password": hashed_password,
+        "role": user_data.role,
+        "first_name": user_data.first_name,
+        "last_name": user_data.last_name,
+        "displayName": f"{user_data.first_name} {user_data.last_name}",
+    }
+
+    # Store user in fake database
+    fake_users_db[user_data.email] = new_user
+
+    # Create access token
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": new_user["username"], "role": new_user["role"], "user_id": len(fake_users_db)},
+        expires_delta=access_token_expires,
+    )
+
+    # Return same format as login
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        "role": new_user["role"],
+        "user": {
+            "id": len(fake_users_db),  # Simple ID based on count
+            "username": new_user["username"],
+            "email": new_user["email"],
+            "displayName": new_user["displayName"],
+            "firstName": new_user["first_name"],
+            "lastName": new_user["last_name"],
+            "role": new_user["role"],
+        },
+    }
+
+
 @auth_router.post("/login")
 async def login(user_credentials: UserLogin):
     """
