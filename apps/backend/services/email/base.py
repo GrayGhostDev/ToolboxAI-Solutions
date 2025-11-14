@@ -88,19 +88,52 @@ except ImportError as e:
     mock_instance = None
     MockEmailServiceInstance = None
 
-# Create our own email_service instance using the SINGLETON factory
-# This ensures consistency across all imports
-if get_email_service_singleton:
-    email_service = get_email_service_singleton()
-    logger.info(f"Primary email service initialized: {type(email_service).__name__}")
-else:
-    # Fallback to mock if factory not available
-    if mock_instance:
-        email_service = mock_instance
-        logger.warning("Using mock email service as fallback")
-    else:
-        logger.error("No email service available!")
-        email_service = None
+# DO NOT create email_service at module level - this causes circular imports
+# Instead, provide a lazy initialization function
+_email_service_instance = None
+
+
+def get_email_service_instance():
+    """
+    Get the email service instance lazily to avoid circular imports.
+    This should be used instead of importing email_service directly.
+    """
+    global _email_service_instance
+    
+    if _email_service_instance is None:
+        if get_email_service_singleton:
+            _email_service_instance = get_email_service_singleton()
+            logger.info(f"Primary email service initialized: {type(_email_service_instance).__name__}")
+        else:
+            # Fallback to mock if factory not available
+            if mock_instance:
+                _email_service_instance = mock_instance
+                logger.warning("Using mock email service as fallback")
+            else:
+                logger.error("No email service available!")
+                _email_service_instance = None
+    
+    return _email_service_instance
+
+
+# For backward compatibility, create a proxy object
+class _EmailServiceProxy:
+    """Proxy that lazily initializes email service on first access"""
+    
+    def __getattr__(self, name):
+        instance = get_email_service_instance()
+        if instance is None:
+            raise RuntimeError("Email service not available")
+        return getattr(instance, name)
+    
+    def __call__(self, *args, **kwargs):
+        instance = get_email_service_instance()
+        if instance is None:
+            raise RuntimeError("Email service not available")
+        return instance(*args, **kwargs)
+
+
+email_service = _EmailServiceProxy()
 
 # PRESERVE ALL GLOBAL INSTANCES FOR BOTH PRODUCTION AND MOCK
 # These are maintained for backwards compatibility and to ensure

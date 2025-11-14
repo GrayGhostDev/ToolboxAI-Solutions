@@ -123,5 +123,6 @@ def get_email_service_singleton(force_mock: bool = False):
     return _email_service
 
 
-# Convenience export
-email_service = get_email_service_singleton()
+# DO NOT create singleton at import time - this causes circular imports
+# Instead, users should call get_email_service_singleton() or get_email_service()
+# email_service = get_email_service_singleton()  # REMOVED to prevent circular import

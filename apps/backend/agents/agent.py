@@ -888,7 +888,7 @@ class AgentPool:
         logger.info("AgentPool created (lazy initialization enabled)")
 
     def _initialize_pools(self):
-        """Initialize agent pools for different types"""
+        """Initialize agent pools for different types - LAZY, no agents created yet"""
         if self._initialized:
             return
 
@@ -898,13 +898,12 @@ class AgentPool:
             self.agents[agent_type] = []
             self.active_agents[agent_type] = 0
 
-            # Create initial pool of agents
-            for _ in range(min(2, self.pool_size)):  # Start with 2 agents per type
-                agent = self._create_agent(agent_type)
-                self.agents[agent_type].append(agent)
+            # DO NOT create agents here - create them on-demand in get_agent()
+            # This prevents ChatOpenAI initialization at import time which causes
+            # circular import issues and HTTP client type mismatches
 
         self._initialized = True
-        logger.info("Initialized agent pools with %d types", len(agent_types))
+        logger.info("Initialized agent pool structure for %d types (agents created on-demand)", len(agent_types))
 
     def _create_agent(self, agent_type: str) -> Any:
         """Create an agent of specified type"""
